@@ -439,3 +439,43 @@ rotasyon_kopyalari:
       sahip: null
       tuketici: "hermes CLI GLOBAL env — motorun hermes._agent_call yolu (kind=review/generic; timer'sız, restart gerekmez)"
       not: "KEŞİF 2026-09-12: 09-08 rotasyonu bu kopyayı ATLADI (envanterde yoktu) → akşam inceleme çağrısı 401 'User not found', self_review/validation/nous_eval 4 gün atlandı (TSK-181). Değer profillerden farklı ELE ALINMAZ: aynı OpenRouter anahtarı"
+
+    # ---- KAPI YÖNETİM ANAHTARI (TSK-064 Faz-1C, spec §3 madde 4; repo tarafı 2026-09-13) --------
+    # `APISIX_ADMIN_KEY` `KAPI_APIKEY`den AYRI BİR SIRDIR ve karıştırmak pahalıdır: `KAPI_APIKEY`
+    # kapının TÜKETİCİ anahtarıdır (`motor_meridian` key-auth, proxy 9080), bu ise Admin API'nin
+    # (9180, yalnız loopback) YÖNETİM anahtarıdır. Ayrı yüzey, ayrı kanıt, ayrı alt komut
+    # (`sir_rotasyon.sh --apisix-admin`).
+    #
+    # FAZ NOTU — BU İKİ SATIR BİR GEÇİŞİN İKİ UCUDUR, bir kopya çifti değil.
+    #   · `env` satırı KAPININ KENDİ KANALIDIR ve Faz-1C'den SONRA da KALIR: apisix konteyneri
+    #     `/opt/apisix/.env-apisix`i `--env-file` ile okur ve `config.yaml`taki
+    #     `${{APISIX_ADMIN_KEY}}` oradan çözülür (B sınıfı yarım kazanım — spec §2). Yani TSK-049
+    #     faz-2'deki gibi "sonra silinecek satır" DEĞİLDİR; silinirse KAPI AÇILMAZ.
+    #   · `dosya` satırı `ops/apisix_uygula.py`nin Faz-1C kaynağıdır (0400 root). Bir
+    #     `LoadCredential=` kaynağı DEĞİLDİR (hiçbir birim onu açılışta aramaz) — okuyucu
+    #     operatörün eliyle koştuğu ops aracıdır ve araç her koşumda okuduğu KANALI bildirir.
+    #   · REFERANS `env` SATIRIDIR (tabloda ÖNCE gelir): credential kaynağı A1'de elle kurulana
+    #     kadar YOKTUR ve ilk sıraya konsaydı `--envanter`/`--esitle` "referans kopya YOK" ile
+    #     dururdu. Gerekçenin tamamı `sir_rotasyon.sh::_kopyalar` altındaki şerhtedir.
+    #   · A1 UYGULAMASI AÇIK KALEM: dosya henüz YARATILMADI (`sir_credential_gecis.sh
+    #     --faz1-apisix`, operatör/Rol-1 penceresi) ve `mod`/`sahip` alanları o günün ÖLÇÜMÜ değil
+    #     betiğin YAZACAĞI değerdir. Aracın 0400 root bir kaynağı okuyabilmesi `sudo` ile koşmasına
+    #     bağlıdır; kimlik kararı (0400 root:root ↔ 0440 root:ubuntu) Rol-1'dedir.
+    - alt_komut: apisix-admin
+      sir: APISIX_ADMIN_KEY
+      tur: env
+      yol: "/opt/apisix/.env-apisix"
+      alan: APISIX_ADMIN_KEY
+      mod: null                # korunur (dosya 640 → faz0_hedef_mod 600; `dosyalar:` bloğunda ölçülü)
+      sahip: null
+      tuketici: "apisix.service (docker --env-file; config.yaml ${{APISIX_ADMIN_KEY}} çözümü — RESTART gerekir, reload yetmez)"
+      not: "REFERANS kopya: kapının kendi kanalı, Faz-1C'den sonra da KALIR (silinirse kapı açılmaz)"
+    - alt_komut: apisix-admin
+      sir: APISIX_ADMIN_KEY
+      tur: dosya
+      yol: "/etc/meridian/apisix_admin_key"
+      alan: null
+      mod: "400"
+      sahip: "root"
+      tuketici: "ops/apisix_uygula.py (operatör eliyle koşan ops aracı; birim DEĞİL, restart yok)"
+      not: "TSK-064 Faz-1C kaynağı — A1'de HENÜZ YOK (sir_credential_gecis.sh --faz1-apisix yaratır); LoadCredential kaynağı DEĞİL"

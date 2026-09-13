@@ -40,6 +40,10 @@
 #   sudo ./sir_rotasyon.sh --db           → Postgres `hindsight` rol parolası
 #   sudo ./sir_rotasyon.sh --dash         → MERIDIAN_DASH_TOKEN
 #   sudo ./sir_rotasyon.sh --openrouter   → OpenRouter anahtarları (operatör YAPIŞTIRIR, `read -s`)
+#   sudo ./sir_rotasyon.sh --apisix-admin → APISIX_ADMIN_KEY (kapı ADMIN API anahtarı; `--kapi`
+#                                           DEĞİL: o kapının TÜKETİCİ anahtarıdır, bu kapının
+#                                           YÖNETİM anahtarıdır — ayrı sır, ayrı yüzey, ayrı kopya
+#                                           kümesi. TSK-064 Faz-1C, spec §3 madde 4.)
 #   ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 #                                           başlayacağını listeler, HİÇBİR ŞEY yazmaz
 #   sudo ./sir_rotasyon.sh --<alt> --esitle → EŞİTLEME (TSK-181, 2026-09-13): değer ÜRETİLMEZ, SORULMAZ,
@@ -169,6 +173,10 @@ HINDSIGHT="${SIR_ROT_HINDSIGHT:-http://127.0.0.1:8888}"
 #: yazılmış bir port sessizce ayrışırdı (tek-kaynak yasası).
 KAPI_KOK="${SIR_ROT_KAPI_KOK:-http://127.0.0.1:9080}"
 KAPI_UC="${SIR_ROT_KAPI:-$KAPI_KOK/llm/v1}"
+#: KAPININ YÖNETİM YÜZEYİ — proxy'den AYRI bir PORTTUR (9180, yalnız loopback) ve bu yüzden ayrı
+#: bir sabittir: `KAPI_KOK`tan türetilemez. `--apisix-admin`in kanıtı buraya gider
+#: (`GET /routes` — yeni anahtar 200, eski 401): yönetim anahtarının ölçülebildiği tek yüzey.
+ADMIN_KOK="${SIR_ROT_ADMIN:-http://127.0.0.1:9180/apisix/admin}"
 
 #: HAZIRLIK BEKLEME penceresi. Ölçüm 2026-09-08 (A1, elle rotasyon penceresi): meridian
 #: `/healthz` 6-8 s, hindsight `/health` 3-10 s, apisix `/healthz` 5-10 s. Tavan o ölçümün ~6
@@ -244,8 +252,19 @@ openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/profiles/bekci/.env OPENR
 openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/profiles/karne/.env OPENROUTER_API_KEY koru koru -
 openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/profiles/sef/.env OPENROUTER_API_KEY koru koru -
 openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/.env OPENROUTER_API_KEY koru koru -
+apisix-admin APISIX_ADMIN_KEY env /opt/apisix/.env-apisix APISIX_ADMIN_KEY koru koru -
+apisix-admin APISIX_ADMIN_KEY dosya /etc/meridian/apisix_admin_key - 0400 root:root -
 KOPYA_SON
 }
+
+#: `--apisix-admin`de REFERANS SIRASI TERSTİR (env ÖNCE, credential SONRA) ve bu bir üslup tercihi
+#: değil ÖLÇÜLMÜŞ bir zorunluluktur. Öteki sırlarda ilk satır credential kaynağıdır çünkü O kaynak
+#: her zaman VARDIR (kaynağı olmayan birim hiç açılmaz). Burada credential kaynağı Faz-1C elle
+#: uygulanana kadar YOKTUR — ilk satıra konsaydı `--envanter`in referansı ve `--esitle`nin kaynağı
+#: "YOK" olur, ikisi de daha ilk satırda dururdu. Kapının KENDİ kanalı (`.env-apisix`) ise her
+#: zaman vardır ve canlıda YÜRÜRLÜKTEKİ değeri taşır (konteyner onu `--env-file` ile okur), yani
+#: doğru referans odur. Yan kazanç: `--apisix-admin --esitle` tam olarak Faz-1C'nin elle adımını
+#: yapar — kapının değerini credential kaynağına taşır.
 
 #: SIR → TÜKETİCİ BİRİMLER. Rotasyon bir sırrın DEĞERİNİ okuyan birimi yeniden başlatır; okumayanı
 #: DEĞİL. Ölçüm 2026-09-08 07:3xZ (A1): `--openrouter`in NOUS negatif kontrolü ÜÇ birimi birden
@@ -269,6 +288,10 @@ _sir_birimleri() {
     MERIDIAN_DASH_TOKEN)          echo "meridian.service" ;;
     NOUS_API_KEY)                 echo "meridian.service" ;;
     OPENROUTER_API_KEY)           echo "apisix.service hindsight-api.service" ;;
+    #: Yönetim anahtarını YALNIZ kapı tüketir: `ops/apisix_uygula.py` bir BİRİM DEĞİLDİR (operatör
+    #: eliyle koşan ops aracı) ve her koşumda dosyayı yeniden okur — restart istemez. Kapı ise
+    #: `${{APISIX_ADMIN_KEY}}` çözümünü YALNIZ açılışta yapar: reload yetmez, RESTART gerekir.
+    APISIX_ADMIN_KEY)             echo "apisix.service" ;;
     *) return 1 ;;
   esac
 }
@@ -1341,6 +1364,33 @@ kapi() {
   echo ">> geri alma: sudo cp -p $YEDEK/etc/meridian/kapi_apikey /etc/meridian/kapi_apikey (+ .env-apisix) ve $(_birimler kapi) yeniden başlat"
 }
 
+# KAPININ YÖNETİM ANAHTARI — `--kapi` İLE KARIŞTIRILMAZ. `KAPI_APIKEY` kapının TÜKETİCİ anahtarıdır
+# (`motor_meridian` key-auth); `APISIX_ADMIN_KEY` Admin API'nin (9180, loopback) YÖNETİM
+# anahtarıdır. İkisini tek alt komuta toplamak, iki ayrı yüzeyin kanıtını tek pencereye sıkıştırıp
+# hangisinin döndüğünü ölçülemez kılardı — ve her koşum TEK sır döndürür (bkz. `--kopyalar` şerhi).
+#
+# NEGATİF KONTROL YOK, ÇÜNKÜ GEREKMİYOR: kanıt yüzeyi anahtarı İSTEKTE alır (`X-API-KEY`), yani
+# "eski değerle 401" DOĞRUDAN ölçülebilir (`_farksal`). `--openrouter`de negatif kontrol vardı
+# çünkü orada yüzey isteğin anahtarını UPSTREAM'e taşımıyordu ve fark ancak yazımla üretilebiliyordu.
+# Bir yüzey doğrudan ölçülebiliyorken bilerek bozuk değer yazmak, karşılıksız iki restart demektir.
+apisix_admin() {
+  echo "=== ROTASYON: APISIX_ADMIN_KEY (kapı Admin API yönetim anahtarı) ==="
+  [ "$KURU" = 0 ] || { _kuru_rapor apisix-admin; return 0; }
+  _yedek_al apisix-admin
+  # ESKİ DEĞER YEDEKTEKİ `.env-apisix`TEN OKUNUR, credential kaynağından DEĞİL: Faz-1C elle
+  # uygulanmadan önce o kaynak YOKTUR ve `py cikar` okunamayan bir dosyada durur — rotasyon, geçiş
+  # penceresinin HANGİ ucunda olursak olalım koşabilmeli (aksi halde iki iş birbirinin rehinesi).
+  py cikar env "$YEDEK/opt/apisix/.env-apisix" APISIX_ADMIN_KEY - "$ISLIK/eski"
+  _uret b64
+  _yaz apisix-admin
+  _yeniden_baslat apisix-admin
+  _farksal "kapı admin /routes" "$ISLIK/yeni" "$ISLIK/eski" \
+           "$ADMIN_KOK/routes" "X-API-KEY" "-" "200" "401 403"
+  echo "  · ops/apisix_uygula.py yeniden başlatılmaz: birim değil, operatörün koştuğu araçtır —"
+  echo "    yeni değeri bir sonraki koşumda kaynaktan okur (kanalı stderr'e bildirir)."
+  echo ">> geri alma: $YEDEK altındaki iki kopyayı geri koy ve $(_birimler apisix-admin) yeniden başlat"
+}
+
 tenant() {
   echo "=== ROTASYON: HINDSIGHT_API_TENANT_API_KEY ==="
   [ "$KURU" = 0 ] || { _kuru_rapor tenant; return 0; }
@@ -1769,9 +1819,14 @@ _aranan_adlar() {
 # `_2_`, …) elle listelemek aynı körlüğü bir SONRAKİ üyede tekrarlardı; onun yerine dosyanın KENDİ
 # alan adları okunur (`py alanlar`) ve sır ADI GİBİ görünen her alan tabloya karşı sınanır.
 # SÖZLÜK BİLEREK DAR — ve bu bir KAPSAM BEYANIDIR, bir eksiklik değil: `*_KEY` (`BOT_KEY_*`,
-# `APISIX_ADMIN_KEY`, `HINDSIGHT_CP_ACCESS_KEY`) ve `*_PAROLA` (`PANO_GIRIS_PAROLA`) biçimleri bu
-# betiğin DÖNDÜRDÜĞÜ sırlar değildir; hepsini "beyan dışı kopya" diye bağırmak gerçek bulguyu
-# gürültüde boğardı (bedel yasası). Sözlüğe uymayan bir sır adı bu taramaya GÖRÜNMEZ.
+# `APISIX_ADMIN_KEY`, `HINDSIGHT_CP_ACCESS_KEY`) ve `*_PAROLA` (`PANO_GIRIS_PAROLA`) biçimleri
+# sözlüğe UYMAZ; hepsini "beyan dışı kopya" diye bağırmak gerçek bulguyu gürültüde boğardı
+# (bedel yasası). Sözlüğe uymayan bir sır adı bu taramaya GÖRÜNMEZ.
+# 2026-09-13 DÜZELTME (TSK-064 Faz-1C): `APISIX_ADMIN_KEY` ARTIK bu betiğin döndürdüğü bir sırdır
+# (`--apisix-admin`) — ama SÖZLÜK YİNE DE GENİŞLEMEZ ve genişlemesine GEREK de yoktur: tabloya
+# girdiği an `_aranan_adlar`ın BİRİNCİ kaynağı (sır KİMLİĞİ) onu zaten görür. Sözlük yalnız
+# tablonun HİÇ DUYMADIĞI adlar içindir; tabloya giren her ad ondan bağımsız olarak taranır.
+# Yani buradaki "uymuyor" cümlesi bir kapsam boşluğu DEĞİL, iki kaynağın iş bölümüdür.
 # BEDEL ÖLÇÜLDÜ, VARSAYILMADI — Rol-1, A1, 2026-09-08 (7 taranan dosya, YALNIZ ADLAR okundu):
 # sözlüğün DIŞINDA kalan üçüncü-taraf adları `HINDSIGHT_CP_ACCESS_KEY` · `APISIX_ADMIN_KEY` ·
 # `PANO_GIRIS_PAROLA`; HİÇBİRİ `_API_KEY`/`_TOKEN`/`_SECRET`/`_PASSWORD` sonekli DEĞİL, yani
@@ -1952,13 +2007,13 @@ for _a in "$@"; do
   case "$_a" in
     --kuru) KURU=1 ;;
     --esitle) ESITLE=1 ;;
-    --kapi|--tenant|--db|--dash|--openrouter|--envanter|--kopyalar)
+    --kapi|--tenant|--db|--dash|--openrouter|--apisix-admin|--envanter|--kopyalar)
       [ -z "$ALT" ] || die "iki alt komut verildi: --$ALT ve $_a — her koşum TEK sır döndürür"
       ALT="${_a#--}" ;;
-    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --envanter | --kopyalar [| --kuru | --esitle])" ;;
+    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --envanter | --kopyalar [| --kuru | --esitle])" ;;
   esac
 done
-[ -n "$ALT" ] || die "alt komut ZORUNLU: --kapi | --tenant | --db | --dash | --openrouter | --envanter | --kopyalar (+ --kuru)"
+[ -n "$ALT" ] || die "alt komut ZORUNLU: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --envanter | --kopyalar (+ --kuru)"
 
 # `--kuru` YALNIZ ROTASYON alt komutlarında anlamlıdır. `--envanter`/`--kopyalar` bayrağı hiç
 # okumaz ve `--envanter --kuru` SESSİZCE tam envanteri koşardı: kuru koşum isteyen operatör
@@ -1966,13 +2021,13 @@ done
 # ama etkisizlik SÖYLENİR — sessiz kabul, olmayan bir sözleşmeyi var gibi gösterir.
 KURU_ONERILIR=0
 case "$ALT" in
-  kapi|tenant|db|dash|openrouter) KURU_ONERILIR=1 ;;
+  kapi|tenant|db|dash|openrouter|apisix-admin) KURU_ONERILIR=1 ;;
   *) [ "$KURU" = 0 ] || echo "!! --kuru bu alt komutta ETKİSİZDİR: --$ALT zaten hiçbir şey yazmaz." >&2 ;;
 esac
 # `--esitle` YALNIZ rotasyon alt komutlarıyla anlamlıdır: neyi eşitleyeceği kopya tablosunun
 # alt komut sütunundan gelir; `--envanter --esitle` ne ölçer ne yazar — sessiz kabul yerine dur.
 [ "$ESITLE" = 0 ] || [ "$KURU_ONERILIR" = 1 ] \
-  || die "--esitle yalnız rotasyon alt komutlarıyla: --kapi | --tenant | --db | --dash | --openrouter (+ --esitle [--kuru]); --$ALT ile anlamsız"
+  || die "--esitle yalnız rotasyon alt komutlarıyla: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin (+ --esitle [--kuru]); --$ALT ile anlamsız"
 
 # `--kopyalar` gömülü tabloyu basar: hiçbir dosya açmaz, hiçbir uca konuşmaz, hiçbir şey yazmaz —
 # ve çivinin sözleşme yüzeyidir. Root kapısının ÜSTÜNDE durması bilinçlidir: kapıyı buraya da
@@ -2006,5 +2061,6 @@ case "$ALT" in
   db)         db ;;
   dash)       dash ;;
   openrouter) openrouter ;;
+  apisix-admin) apisix_admin ;;
   envanter)   envanter ;;
 esac

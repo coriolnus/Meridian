@@ -9,7 +9,21 @@ SÖZLEŞME KOMUT SATIRIDIR (CLAUDE.md §1). A1'de koşar (admin 9180 yalnız loo
 
 TEK KAYNAK: deploy/apisix/routes.yaml. `?ttl=` HİÇBİR istekte kullanılmaz (kaynağı sessizce
 siler — TSK-089). Sır taşınmaz: $ENV:// referansları OLDUĞU GİBİ gider, çözüm APISIX'te.
-Admin anahtarı /opt/apisix/.env-apisix'ten okunur, hiçbir çıktıya yazılmaz.
+
+ADMIN ANAHTARI — İKİ KANAL, SIRALI (TSK-064 Faz-1C, `docs/TASARIM-SIR-YOL1-2026-09-03.md` §3.4).
+Önce CREDENTIAL dosyası (`/etc/meridian/apisix_admin_key`, 0400 root), bulunamazsa `.env-apisix`
+YEDEĞİ. Değer hiçbir çıktıya yazılmaz; okunan KANALIN ADI her koşumda stderr'e bildirilir
+(`kanal_bildir`) — "araç hangi kanaldan okudu" sorusu Faz-1C'nin kabul ölçütüdür ve bildirilmeyen
+bir kanal ölçülmemiş bir kanaldır (Yasa 6; okuyucu OPERATÖRDÜR).
+YEDEK BURADA KALICIDIR, geçici değil: `.env-apisix` apisix konteynerinin `--env-file`ıdır ve
+`APISIX_ADMIN_KEY` satırı kapının KENDİ `config.yaml` çözümü için orada YAŞAMAYA DEVAM EDER
+(B sınıfı yarım kazanım, spec §2). Yani TSK-049 faz-2'deki gibi "sonra silinecek satır" DEĞİL,
+BAŞKA BİR TÜKETİCİNİN kanalıdır — bu araç ikisini de tanımak zorundadır.
+KİMLİK/İZİN KAPISI OPERATÖRDE: 0400 root bir kaynağı `ubuntu` OKUYAMAZ, yani credential kanalı
+ancak `sudo python3 ops/apisix_uygula.py …` ile okunur. Okunamayan bir kaynak `PermissionError`
+verir ve "anahtar yok" gibi görünürdü — o yüzden düşüş SESSİZ değil: iki kanal da boşsa hata
+metni izin sınıfını ADIYLA anar. Çivi: `tests/test_apisix_admin_credential_v476.py`.
+
 Drift kıyası NORMALİZE edilmiş gövdede: Admin API'nin eklediği alanlar (create_time,
 update_time, status, priority varsayılanı) kıyastan düşülür — yalnız bizim beyan ettiğimiz
 alanlar kıyaslanır (uri + plugins).
@@ -33,15 +47,104 @@ import urllib.request
 
 KOK = pathlib.Path(__file__).resolve().parents[1]
 ROTA_DOSYASI = KOK / "deploy" / "apisix" / "routes.yaml"
+#: Sır ADI = credential KİMLİĞİ = `.env` ALAN ADI. Üçü ayrışsaydı geçiş betiği bir dosyaya yazar,
+#: bu araç başka bir adı arardı (v439 F4'ün bu yüzeydeki karşılığı).
+ADMIN_ALAN = "APISIX_ADMIN_KEY"
+#: Faz-1C credential kaynağı (0400 root:root). `deploy/sir_envanteri.yaml` → `rotasyon_kopyalari`
+#: `apisix-admin` bloğunda beyanlıdır ve `sir_rotasyon.sh --apisix-admin` onu döndürür; üç yüzeyin
+#: ayrışmadığı v476 E1/E2/E3 ile ölçülür.
+KRED_DOSYASI = pathlib.Path("/etc/meridian/apisix_admin_key")
 ENV_DOSYASI = pathlib.Path("/opt/apisix/.env-apisix")
 BASE = "http://127.0.0.1:9180/apisix/admin"
 
 
+def _kredensiyel_degeri(ham: str) -> str | None:
+    """Credential kaynağının BİÇİM SÖZLEŞMESİ — `meridian.secrets.credential_oku` ile AYNI.
+
+    KOPYA, VE BEYANLI. Bu araç A1'de sistem `python3`üyle koşar (`ops/` sözleşmesi KOMUT
+    SATIRIdır) ve `meridian`ı ithal ETMEZ: pytest dışında `meridian.obs`a ulaşan bir ithal canlı
+    yerel deftere yazar (CLAUDE.md §2, üç vaka 2026-08-30). Kopya kaçınılmaz olduğu için
+    DAVRANIŞ eşitliği ayrışma çivisine bağlıdır (v476 A6): aynı ham içerik iki ayrıştırıcıda
+    aynı sonucu vermeli.
+
+    Sözleşme: `strip()` → İLK satır → isteğe bağlı `<AD>=` öneki → boş ise `None`. Öneki tanımak
+    bir kolaylık değil ÖLÇÜLMÜŞ bir kazadır: operatörün `.env` satırını kaynağa kopyalaması
+    öngörülebilir. BOŞ DEĞER `None`'DIR — "ayarlı ama değersiz" bir kaynak yedeğe düşülmesini
+    ENGELLERDİ ve araç boş bir `X-API-KEY` ile 401 alırdı (2026-09-07 sınıfı: 1 baytlık satır
+    sonu bir birimi sessizce yetkisiz bıraktı)."""
+    satirlar = ham.strip().splitlines()
+    deger = satirlar[0].strip() if satirlar else ""
+    onek = f"{ADMIN_ALAN}="
+    if deger.startswith(onek):
+        deger = deger[len(onek):].strip()
+    return deger or None
+
+
+def _kredensiyelden() -> str | None:
+    try:
+        ham = KRED_DOSYASI.read_text(encoding="utf-8")
+    # sessiz-yutma: credential kanalı İSTEĞE BAĞLIDIR (dosya A1'de elle kurulur) — dosya-yok,
+    # izin ya da kodlama hatasının tek doğru cevabı yedek kanala düşmektir; iki kanal da boşsa
+    # hüküm `anahtar()`ta verilir ve izin sınıfı orada ADIYLA anılır.
+    except (OSError, ValueError):
+        return None
+    return _kredensiyel_degeri(ham)
+
+
+def _env_dosyasindan() -> str | None:
+    """`.env-apisix`teki `APISIX_ADMIN_KEY=` satırı — TIRNAK SOYULMAZ.
+
+    ÖLÇÜLMÜŞ BİR KARAR, ihmal değil: bu dosya docker'ın `--env-file`ıdır ve docker tırnağı
+    SOYMAZ. `APISIX_ADMIN_KEY="x"` yazılırsa konteynerin gördüğü değer tırnaklar DAHİL `"x"`tir;
+    araç soysaydı kapıyla AYRI bir değer kullanır, `X-API-KEY` 401 alır ve teşhis "anahtar
+    yanlış" derken hata soyma kodunda olurdu. Mevcut davranış aynen korunur (çivi: v476 A7)."""
+    try:
+        ham = ENV_DOSYASI.read_text(encoding="utf-8")
+    # sessiz-yutma: yedek kanal da isteğe bağlıdır (bu makinede dosya YOKTUR ve olmaması bir
+    # ihlal değil ölçüm sonucudur) — "okunamadı" ile "satır yok" aynı cevaba düşer ve iki kanal
+    # da boşken hükmü `anahtar()` verir
+    except (OSError, ValueError):
+        return None
+    for satir in ham.splitlines():
+        if satir.startswith(f"{ADMIN_ALAN}="):
+            return satir.split("=", 1)[1].strip() or None
+    return None
+
+
+def anahtar_kanali() -> tuple[str | None, str]:
+    """`(değer, KANAL ADI)` — okuma SIRASI bu fonksiyonda TEK yerde yaşar.
+
+    İki okuyucu var (`anahtar` değeri, `kanal_bildir` raporu) ve ikisi de BURADAN geçer: ayrı
+    ayrı yazılsalardı rapor bir kanalı, istek başka bir kanalı söylerdi — tek-kaynak yasasının
+    tam olarak yasakladığı hâl. Dönen ikinci alan bir AD'dır; DEĞER ASLA rapora girmez."""
+    deger = _kredensiyelden()
+    if deger is not None:
+        return deger, f"credential dosyası {KRED_DOSYASI}"
+    deger = _env_dosyasindan()
+    if deger is not None:
+        return deger, f"{ADMIN_ALAN} satırı {ENV_DOSYASI} (YEDEK — kapının kendi kanalı)"
+    return None, "YOK (iki kanal da boş/okunamadı)"
+
+
 def anahtar() -> str:
-    for satir in ENV_DOSYASI.read_text().splitlines():
-        if satir.startswith("APISIX_ADMIN_KEY="):
-            return satir.split("=", 1)[1].strip()
-    raise SystemExit("APISIX_ADMIN_KEY .env-apisix'te yok")
+    deger, kanal = anahtar_kanali()
+    if deger is None:
+        raise SystemExit(
+            f"{ADMIN_ALAN} okunamadı — kanal: {kanal}\n"
+            f"  credential: {KRED_DOSYASI} (0400 root) · yedek: {ENV_DOSYASI}\n"
+            f"  Kaynak 0400 root ise bu aracı `sudo python3 ops/apisix_uygula.py …` ile koş:\n"
+            f"  izin hatası 'anahtar yok' gibi görünür ve teşhis yanlış yerde aranır.")
+    return deger
+
+
+def kanal_bildir() -> None:
+    """Okunan KANALI stderr'e bildirir — DEĞERİ DEĞİL, ve stdout'a DEĞİL.
+
+    STDOUT BİR SÖZLEŞMEDİR: `--denetle` çıktısının TAMAMI JSON'dur (çivisi v364; okuyucusu
+    operatör ve betikler). Rapor oraya basılsaydı sözleşme sessizce kırılırdı. Değer yokken de
+    bir satır basılır: "okunamadı" bir bilgi YOKLUĞU değil, bir ÖLÇÜM SONUCUDUR."""
+    _, kanal = anahtar_kanali()
+    print(f"admin anahtarı kanalı: {kanal} (DEĞER BASILMAZ)", file=sys.stderr)
 
 
 def api(method: str, yol: str, govde: dict | None = None) -> tuple[int, dict]:
@@ -162,6 +265,10 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--denetle", action="store_true",
                     help="etcd ↔ routes.yaml drift kıyası (rota + grup + tüketici)")
     a = ap.parse_args(argv)
+
+    # KANAL RAPORU AĞDAN ÖNCE: koşum bir Admin API arızasında düşse bile operatör hangi kanalın
+    # okunduğunu GÖRMÜŞ olur — Faz-1C'nin kabul ölçütü tam olarak bu satırdır.
+    kanal_bildir()
 
     beyan = {r["id"]: r for r in rotalar()}
     g_beyan = {g["id"]: g for g in tuketici_gruplari()}

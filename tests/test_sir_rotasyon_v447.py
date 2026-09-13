@@ -83,6 +83,9 @@ ESKI = {
     "llm": "SAHTE-ESKI-LLM-0009",
     "or": "SAHTE-ESKI-OR-0001",
     "pg": "SAHTE-ESKI-PAROLA",
+    #: Kapı ADMIN API anahtarı (TSK-064 Faz-1C). Öteki tohumlar gibi "SAHTE-" ile başlar: betiğin
+    #: negatif kontrol işaretçisi küçük harfli `sahte-<hex>`tir ve ikisi karışmamalıdır.
+    "admin": "SAHTE-ESKI-ADMIN-0001",
 }
 DSN = ("postgresql://hindsight:" + ESKI["pg"] +
        "@127.0.0.1:5432/hindsight?sslmode=disable&application_name=hindsight-api")
@@ -101,7 +104,11 @@ UYE_ALANLARI = tuple(f"HINDSIGHT_API_{yuzey}_LLM_{n}_API_KEY"
 #: 2026-09-13: +1 = 24 — GLOBAL `/home/ubuntu/.hermes/.env` (motorun `hermes._agent_call` yolu);
 #: 09-08 rotasyonu bu kopyayı ATLADI, akşam inceleme 4 gün 401 aldı (TSK-181). Sayı elle değil
 #: keşifle büyüdü: eksik kopya sessizce eski anahtarla yaşar — bu pin tam onu ölçer.
-KOPYA_SAYISI = 24
+#: 2026-09-13 (TSK-064 Faz-1C): +2 = 26 — `APISIX_ADMIN_KEY` (kapı ADMIN API yönetim anahtarı)
+#: `--apisix-admin` ile döndürülür ve İKİ kopyası var (`.env-apisix` satırı = kapının kendi
+#: kanalı · `/etc/meridian/apisix_admin_key` = `ops/apisix_uygula.py`nin credential kaynağı).
+#: `KAPI_APIKEY` ile KARIŞTIRILMAZ: o kapının TÜKETİCİ anahtarı, bu YÖNETİM anahtarıdır.
+KOPYA_SAYISI = 26
 
 
 # =================================================================================================
@@ -254,6 +261,32 @@ if len(a) >= 2 and a[0] == "restart":
         fh.write(birim + "\\n")
     with open(os.path.join(KOK, ".sahte", "butce_" + birim), "w") as fh:
         fh.write(os.environ.get("SAHTE_HAZIR_N", "0"))
+    if birim == "apisix.service":
+        # KAPININ `${{APISIX_ADMIN_KEY}}` ÇÖZÜMÜ YALNIZ AÇILIŞTA OLUR (docker `--env-file`;
+        # reload YETMEZ, RESTART gerekir — betiğin `_sir_birimleri` şerhinin ta kendisi).
+        # Modellenmezse "restart atlandı" arızası ÖLÇÜLEMEZ: şim dosyayı canlı okusaydı yeni
+        # anahtar restart'sız da 200 döner ve R4 mutasyonu yeşil kalırdı (tur-3'ün dersi).
+        etkin = ""
+        try:
+            with open(KOK + "/opt/apisix/.env-apisix", encoding="utf-8") as fh:
+                for _s in fh:
+                    if _s.startswith("APISIX_ADMIN_KEY="):
+                        etkin = _s.split("=", 1)[1].strip()
+                        # TIRNAK SINIFI `chr()` İLE KURULUR. Bu gövde bir ÜST literalin
+                        # içinde yaşar ve kaçış katmanları sessizce ERİR: `\"` yazıldığında
+                        # dış literal onu `"` yapar, şim `in ""'":` görür ve SÖZDİZİMİ
+                        # hatasıyla düşer — arıza ise "birim yeniden başlamadı" diye okunur,
+                        # yani teşhis yanlış yerde aranır (ölçüldü 2026-09-13). `chr(34)` +
+                        # `chr(39)` hiçbir katmanda erimez. (`env_alan` kardeşi `\\"` ile
+                        # yazılmış ve DOĞRUdur; iki biçimden okunabilir olanı budur.)
+                        if (len(etkin) >= 2 and etkin[0] == etkin[-1]
+                                and etkin[0] in chr(34) + chr(39)):
+                            etkin = etkin[1:-1]
+                        break
+        except OSError:
+            etkin = ""
+        with open(os.path.join(KOK, ".sahte", "apisix_etkin_admin"), "w") as fh:
+            fh.write(etkin)
     hedef_dizin = os.path.join(KOK, "run", "credentials", birim)
     for kimlik, kaynak in KRED.get(birim, {}).items():
         os.makedirs(hedef_dizin, exist_ok=True)
@@ -430,6 +463,19 @@ elif url.endswith("/chat/completions"):
         else:
             kod = "200"
             govde = json.dumps({"choices": [{"message": {"content": "pong"}}]})
+elif "/apisix/admin/" in url:
+    # KAPININ YÖNETİM YÜZEYİ (9180, loopback). Anahtar İSTEKTE gelir (`X-API-KEY`), yani "eski
+    # değerle 401" DOĞRUDAN ölçülebilir — `--apisix-admin`in negatif kontrole ihtiyaç duymamasının
+    # sebebi budur. Kıyas AÇILIŞTA çözülmüş değere (`apisix_etkin_admin`) yapılır, dosyanın O ANKİ
+    # içeriğine DEĞİL: restart'sız bir rotasyon canlıda 401 alır ve şim onu ölçebilmelidir.
+    try:
+        with open(os.path.join(KOK, ".sahte", "apisix_etkin_admin"), encoding="utf-8") as fh:
+            bek = fh.read().strip()
+    except OSError:
+        bek = ""
+    kod = "200" if KOR or (bek and basliklar.get("x-api-key") == bek) else "401"
+    if kod == "200":
+        govde = json.dumps({"list": []})
 elif url.endswith("/api/secrets/test/nous"):
     if not KOR and basliklar.get("x-meridian-token") != oku("/etc/meridian/dash_token"):
         kod = "401"
@@ -569,6 +615,10 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
     (kok / "etc/meridian/kapi_apikey").write_text(ESKI["kapi"] + "\n")
     (kok / "etc/meridian/nous_api_key").write_text(ESKI["nous"] + "\n")
     (kok / "etc/meridian/dash_token").write_text(ESKI["dash"] + "\n")
+    # TSK-064 Faz-1C kaynağı. Tohumda `.env-apisix` satırıyla EŞİT: A1'de `--faz1-apisix` onu tam
+    # olarak o satırdan yaratır, yani "geçiş uygulanmış" dünyayı modellemek budur. R bölümü
+    # geçişin UYGULANMADIĞI dünyayı da ölçer (dosyayı silerek) — ikisi ayrı gerçektir.
+    (kok / "etc/meridian/apisix_admin_key").write_text(ESKI["admin"] + "\n")
     (kok / "etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY").write_text(ESKI["tenant"] + "\n")
     (kok / "etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY").write_text(ESKI["llm"] + "\n")
     (kok / "etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL").write_text(DSN + "\n")
@@ -587,7 +637,7 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
         + "".join(f"{alan}={ESKI['or']}\n" for alan in UYE_ALANLARI))
     (kok / "opt/hindsight/.env").chmod(0o600)
     (kok / "opt/apisix/.env-apisix").write_text(
-        "APISIX_ADMIN_KEY=sahte-admin\n"
+        f"APISIX_ADMIN_KEY={ESKI['admin']}\n"
         f'OPENROUTER_API_KEY="{ESKI["or"]}"\n'
         f'OPENROUTER_AUTH="Bearer {ESKI["or"]}"\n'
         "PANO_GIRIS_PAROLA=sahte-parola\n"
@@ -616,6 +666,8 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
     (kok / "opt/meridian/state/secrets.json").write_text(json.dumps(
         {"NOUS_API_KEY": ESKI["nous"], "MERIDIAN_DASH_TOKEN": ESKI["dash"],
          "ALPACA_API_KEY": "SAHTE-ALPACA-0001"}, ensure_ascii=False) + "\n")
+    # KAPI ZATEN AYAKTA ve açılışta ESKİ admin anahtarını çözmüş durumda (canlının hâli).
+    (kok / ".sahte/apisix_etkin_admin").write_text(ESKI["admin"])
     (kok / ".sahte/pg_parola").write_text(ESKI["pg"])
     (kok / ".sahte/pg_hedef").write_text("127.0.0.1 5432 hindsight hindsight\n")
     (kok / ".sahte/argv.log").write_text("")
@@ -642,6 +694,10 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
     ortam = dict(os.environ, PATH=f"{binn}:{os.environ['PATH']}", SIR_ROT_KOK=str(kok),
                  SIR_ROT_API="http://motor", SIR_ROT_HINDSIGHT="http://hafiza",
                  SIR_ROT_KAPI="http://kapi/llm/v1", SIR_ROT_KAPI_KOK="http://kapi",
+                 # Yönetim yüzeyi proxy'den AYRI bir porttur; sahte kökte de ayrı bir yol alır ama
+                 # AYNI host'u (`kapi`) taşır — `hazir_butce` eşlemesi HOST üzerindendir ve
+                 # apisix'in hazırlık bütçesi bu uca da uygulanmalıdır (M/N bölümünün dersi).
+                 SIR_ROT_ADMIN="http://kapi/apisix/admin",
                  HAZIR_BEKLE_ARALIK_S="0.01", HAZIR_BEKLE_TAVAN_S="2",
                  HAZIR_TAVAN_S_hindsight_api="2",
                  SAHTE_UID="0", TMPDIR=str(tmp_path))
@@ -706,7 +762,7 @@ def test_A0_kopya_tablosu_BOS_DEGIL_pozitif_kontrol():
     sessiz arızası; A1/A2 o hâlde "her şey uyuşuyor" derdi."""
     k = _betik_kopyalari()
     assert len(k) == KOPYA_SAYISI, k
-    assert {x["alt"] for x in k} == {"kapi", "tenant", "db", "dash", "openrouter"}
+    assert {x["alt"] for x in k} == {"kapi", "tenant", "db", "dash", "openrouter", "apisix-admin"}
     assert {x["tur"] for x in k} == {"dosya", "env", "url", "api", "sql"}
 
 
@@ -848,7 +904,8 @@ def test_C1_kuru_kosum_HICBIR_SEY_yazmaz(tmp_path):
     assert not list((kok / "root").glob("sir-yedek-*")), "kuru koşum yedek dizini açtı"
 
 
-@pytest.mark.parametrize("alt", ["--kapi", "--tenant", "--db", "--dash", "--openrouter"])
+@pytest.mark.parametrize("alt", ["--kapi", "--tenant", "--db", "--dash", "--openrouter",
+                                 "--apisix-admin"])
 def test_C2_her_alt_komutun_kuru_kosumu_BIRIMLERI_soyler(tmp_path, alt):
     """"Hangi birimler yeniden başlayacak" sorusunun cevabı ölçülür, varsayılmaz: worker'ı
     durdurma kararı buna bağlıdır. `--openrouter` listeye TUR 2'de girdi: ilk turda o alt komut
@@ -876,7 +933,8 @@ def test_D1_kapi_iki_kopyayi_da_yazar_tirnak_KORUNUR(tmp_path):
     assert yeni != ESKI["kapi"] and len(yeni) == 48
     satir = _env_alan(kok / "opt/apisix/.env-apisix", "BOT_KEY_MERIDIAN")
     assert satir == f"'{yeni}'", f"tek tırnak korunmadı: {satir!r}"
-    assert _env_alan(kok / "opt/apisix/.env-apisix", "APISIX_ADMIN_KEY") == "sahte-admin"
+    assert _env_alan(kok / "opt/apisix/.env-apisix", "APISIX_ADMIN_KEY") == ESKI["admin"], \
+        "`--kapi` KOMŞU sırra (yönetim anahtarı) dokundu — ayrı sır, ayrı alt komut"
 
 
 def test_D2_kapi_YEDEK_alir(tmp_path):
@@ -2257,7 +2315,8 @@ def test_M4_TAVAN_asilirsa_OLCULEMEDI_ve_HICBIR_KALICI_YAZIM(tmp_path):
 
 
 @pytest.mark.parametrize("alt,bekleyen", [("--kapi", 2), ("--tenant", 2), ("--db", 1),
-                                          ("--dash", 1), ("--openrouter", 3)])
+                                          ("--dash", 1), ("--openrouter", 3),
+                                          ("--apisix-admin", 1)])
 def test_M7_KURU_KOSUM_bekleme_BEDELINI_de_soyler(tmp_path, alt, bekleyen):
     """BEDEL YASASI. Bekleme bakım penceresine SÜRE ekler; kuru koşum operatörün koşacağı İLK
     komuttur ve o süreyi orada görmelidir (C2'nin "hangi birimler" sorusunun ikinci yarısı).
@@ -2510,7 +2569,7 @@ def test_N10_SIR_BIRIM_HARITASI_envanterle_AYRISMAZ(tmp_path):
     (A bölümünün `--kopyalar` gerekçesiyle aynı)."""
     _, ortam = _sahte_ortam(tmp_path)
     betikte: dict[str, set[str]] = {}
-    for alt in ("--kapi", "--tenant", "--db", "--dash", "--openrouter"):
+    for alt in ("--kapi", "--tenant", "--db", "--dash", "--openrouter", "--apisix-admin"):
         r = _kos(BETIK, ortam, alt, "--kuru")
         assert r.returncode == 0, r.stdout + r.stderr
         # YALNIZ sır→birim bölümü okunur: "hazırlık beklemesi" bloğu da "    · " ile başlar ve
@@ -2549,6 +2608,9 @@ def test_N11_RESTART_ISTEMEYEN_tuketiciler_BEYANLI():
         # 2026-09-13 (TSK-181): motorun CLI çağrısı her seferinde dosyayı okur — birim değil,
         # restart yok; atlanınca akşam inceleme 4 gün 401'de kaldı (envantere bu yüzden girdi)
         "hermes CLI GLOBAL env — motorun hermes._agent_call yolu (kind=review/generic; timer'sız, restart gerekmez)",
+        # TSK-064 Faz-1C: kaynağı okuyan şey bir BİRİM değil, operatörün eliyle koştuğu ops
+        # aracıdır — her koşumda dosyayı yeniden okur, yani restart diye bir kavramı yoktur.
+        "ops/apisix_uygula.py (operatör eliyle koşan ops aracı; birim DEĞİL, restart yok)",
     }
     servissiz = {k["tuketici"] for k in _envanter_kopyalari()
                  if not re.search(r"[a-z0-9-]+\.service", k["tuketici"])}
@@ -3093,7 +3155,8 @@ def test_P8_MUT_TAVAN_degisirse_SERH_AYRISIR(tmp_path):
         "şerh sayısı mutasyonla birlikte kaydı — P7 kendini ölçüyor"
 
 
-@pytest.mark.parametrize("alt", ["--kapi", "--tenant", "--db", "--dash", "--openrouter"])
+@pytest.mark.parametrize("alt", ["--kapi", "--tenant", "--db", "--dash", "--openrouter",
+                                 "--apisix-admin"])
 def test_P9_KURU_RAPOR_tick_watchdog_ON_KOSULUNU_soyler(tmp_path, alt):
     """ORTA-8. Kalıcı kayıt (`bakim-penceresi-tick-watchdog`): timer 45 dk bayatlıkta worker'ı
     yeniden başlatır ve `--openrouter` meridian'ı ÜÇ kez yeniden başlatır — her restart
@@ -3388,3 +3451,173 @@ def test_Q9_MUT_esitle_yazimi_atlanirsa_Q1_kirmizi(tmp_path):
     r = _kos(m, ortam, "--openrouter", "--esitle")
     assert r.returncode == 2, r.stdout + r.stderr
     assert _env_alan(yol, "OPENROUTER_API_KEY") == BAYAT_OR
+
+# =================================================================================================
+# R) TUR 9 — `--apisix-admin` (kapı YÖNETİM anahtarı; TSK-064 Faz-1C, 2026-09-13)
+# =================================================================================================
+# NİYE AYRI BİR ALT KOMUT. `KAPI_APIKEY` ile `APISIX_ADMIN_KEY` aynı kapının İKİ AYRI anahtarıdır:
+# birincisi TÜKETİCİ anahtarı (proxy 9080, `key-auth`, tüketici `motor_meridian`), ikincisi
+# Admin API'nin (9180, yalnız loopback) YÖNETİM anahtarıdır. Kanıt yüzeyleri, tüketici birimleri
+# ve kopya kümeleri AYRIDIR; tek alt komuta toplamak hangi sırrın döndüğünü ölçülemez kılardı
+# ("her koşum TEK sır döndürür" — `--kopyalar` şerhi).
+#
+# İKİ KOPYA, İKİ FARKLI CİNS (bkz. `_kopyalar` altındaki referans-sırası şerhi):
+#   · `.env-apisix [APISIX_ADMIN_KEY]` — KAPININ KENDİ kanalı. Faz-1C'den SONRA da KALIR (docker
+#     `--env-file` → `config.yaml ${{APISIX_ADMIN_KEY}}`); silinirse kapı açılmaz. REFERANStır.
+#   · `/etc/meridian/apisix_admin_key` — `ops/apisix_uygula.py`nin Faz-1C credential kaynağı.
+#     Bir `LoadCredential` kaynağı DEĞİLDİR: okuyucusu bir birim değil, operatörün koştuğu araç.
+#
+# NEGATİF KONTROL YOK VE BU BİR EKSİKLİK DEĞİL: yüzey anahtarı İSTEKTE alır (`X-API-KEY`), yani
+# "eski değerle 401" DOĞRUDAN ölçülebilir. `--openrouter`de negatif kontrol vardı çünkü orada
+# fark ancak bilerek bozuk bir değer YAZARAK üretilebiliyordu (kapı Authorization'ı upstream'e
+# geçirmez). Doğrudan ölçülebilen bir yüzeyde bozuk değer yazmak karşılıksız iki restart demektir.
+#
+# ŞİM MODELİ (tur-3/tur-4'ün dersi, bu kez `$env://` ekseninde): `SIM_SYSTEMCTL` apisix'i her
+# yeniden başlattığında `.env-apisix`teki değeri `.sahte/apisix_etkin_admin`e FOTOĞRAFLAR ve
+# yönetim yüzeyi O FOTOĞRAFA bakar. Dosyayı canlı okusaydık "restart atlandı" arızası ölçülemezdi
+# — R5 tam o dalı ısırır.
+
+def test_R1_apisix_admin_IKI_kopyayi_da_yazar(tmp_path):
+    """İki kopya da yeni değeri taşımalı. Biri unutulursa arıza SESSİZDİR ve gecikmelidir: kapı
+    yeni anahtarla açılır, araç eski kaynağı okur ve ilk `--uygula` denemesinde 401 alır — yani
+    bakım penceresi kapandıktan saatler sonra."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    r = _kos(BETIK, ortam, "--apisix-admin")
+    assert r.returncode == 0, r.stdout + r.stderr
+    yeni = (kok / "etc/meridian/apisix_admin_key").read_text().strip()
+    assert yeni != ESKI["admin"] and len(yeni) == 48
+    assert _env_alan(kok / "opt/apisix/.env-apisix", "APISIX_ADMIN_KEY") == yeni
+    # KOMŞU SIRLAR AYNI DOSYADA YAŞIYOR ve DOKUNULMAMALI: `.env-apisix` sekiz sır taşır.
+    assert _env_alan(kok / "opt/apisix/.env-apisix", "BOT_KEY_MERIDIAN") == f"'{ESKI['kapi']}'"
+    assert _env_alan(kok / "opt/apisix/.env-apisix", "OPENROUTER_AUTH") == f'"Bearer {ESKI["or"]}"'
+    assert (kok / "etc/meridian/kapi_apikey").read_text().strip() == ESKI["kapi"]
+
+
+def test_R2_apisix_admin_KANIT_yeni_200_eski_401(tmp_path):
+    """`_farksal` sözleşmesi: İKİ HÜKÜM BİRDEN. Yalnız "yeni 200" ölçülseydi, kilit yürürlükte
+    olmadığında da 200 gelirdi ve rotasyon bir tiyatro olurdu."""
+    _, ortam = _sahte_ortam(tmp_path)
+    r = _kos(BETIK, ortam, "--apisix-admin")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "kapı admin /routes: yeni→200 · eski→401" in r.stdout, r.stdout
+    assert "kanıt anahtara BAĞLI" in r.stdout
+
+
+def test_R3_apisix_admin_KANIT_ANAHTARA_BAGLI_DEGILSE_cikis_2(tmp_path):
+    """Yüzey her anahtara 200 diyorsa (kilit kapalı) hüküm "geçti" OLAMAZ: ölçülemeyen şeye
+    geçti demek uydurmadır. H5'in bu alt komuttaki kardeşi — ama burada yazım ÖNCE olur, o yüzden
+    ölçülen şey "yazım yapılmadı" değil, HÜKMÜN ve GERİ ALMA REÇETESİNİN doğruluğudur."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    ortam["SAHTE_KOR"] = "1"
+    r = _kos(BETIK, ortam, "--apisix-admin")
+    assert r.returncode == 2, (r.returncode, r.stdout + r.stderr)
+    assert "ÖLÇÜLEMEDİ" in r.stderr
+    assert ">> GERİ ALMA" in r.stderr, "arıza yolunda reçete basılmadı (P10 disiplini)"
+    y = _yedek_dizini(kok)
+    assert (y / "etc/meridian/apisix_admin_key").read_text().strip() == ESKI["admin"]
+    assert ESKI["admin"] in (y / "opt/apisix/.env-apisix").read_text()
+
+
+def test_R4_apisix_admin_YALNIZ_apisix_i_yeniden_baslatir(tmp_path):
+    """KAPSAM. Yönetim anahtarını motor OKUMAZ (`ops/apisix_uygula.py` bir birim değildir), yani
+    meridian'ı yeniden başlatmak karşılıksız bir kesinti + karşılıksız bir hazırlık beklemesidir
+    (N7/N9'un dersi)."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    assert _kos(BETIK, ortam, "--apisix-admin").returncode == 0
+    assert _birim_sirasi(kok) == ["apisix.service"], _birim_sirasi(kok)
+
+
+def test_R5_MUT_RESTART_atlanirsa_KANIT_401_verir(tmp_path):
+    """R2'nin ısırdığı dal — ve `_sir_birimleri` haritasının GERÇEKTEN gerekli olduğunun kanıtı.
+    Kapı `${{APISIX_ADMIN_KEY}}` çözümünü YALNIZ açılışta yapar: restart atlanırsa dosyalar yeni
+    değeri taşır ama kapı ESKİSİNİ kullanır ve yeni anahtar 401 alır. Mutasyonsuz bir R2, "şim
+    dosyayı canlı okuyor" diye de yeşil olabilirdi."""
+    m = _mutant(tmp_path, ("  _yeniden_baslat apisix-admin\n", ""))
+    kok, ortam = _sahte_ortam(tmp_path)
+    r = _kos(m, ortam, "--apisix-admin")
+    assert r.returncode == 2, (r.returncode, r.stdout + r.stderr)
+    assert "YENİ değerle HTTP 401" in r.stderr, r.stderr
+
+
+def test_R6_apisix_admin_KURU_kosumu_IKI_kopyayi_ve_BIRIMI_soyler(tmp_path):
+    """Operatörün koşacağı İLK komut. C2/M7/P9 zaten bu alt komutu da kapsıyor; burada kopya
+    YOLLARININ adıyla göründüğü ölçülür — "hangi dosyalar yazılacak" sorusunun cevabı."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    once = _dosya_imzalari(kok)
+    r = _kos(BETIK, ortam, "--apisix-admin", "--kuru")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "KURU KOŞUM: --apisix-admin" in r.stdout
+    for yol in ("/opt/apisix/.env-apisix", "/etc/meridian/apisix_admin_key"):
+        assert yol in r.stdout, f"kuru rapor bu kopyayı saymıyor: {yol}"
+    assert "APISIX_ADMIN_KEY → apisix.service" in r.stdout, r.stdout
+    assert _dosya_imzalari(kok) == once, "kuru koşum DOSYA DEĞİŞTİRDİ"
+    assert not list((kok / "root").glob("sir-yedek-*")), "kuru koşum yedek dizini açtı"
+
+
+def test_R7_FAZ_1C_UYGULANMAMISKEN_de_rotasyon_KOSAR(tmp_path):
+    """GEÇİŞ PENCERESİNİN ÖTEKİ UCU. Credential kaynağı A1'de elle kurulana kadar YOKTUR ve
+    rotasyon o dünyada da koşabilmelidir — aksi halde "önce geçişi uygula" ile "önce anahtarı
+    döndür" birbirinin rehinesi olurdu. ESKİ değer bu yüzden `.env-apisix` yedeğinden okunur
+    (credential kaynağından DEĞİL) ve eksik kaynak rotasyon tarafından YARATILIR."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    (kok / "etc/meridian/apisix_admin_key").unlink()
+    r = _kos(BETIK, ortam, "--apisix-admin")
+    assert r.returncode == 0, r.stdout + r.stderr
+    yeni = (kok / "etc/meridian/apisix_admin_key").read_text().strip()
+    assert len(yeni) == 48 and yeni != ESKI["admin"]
+    assert _env_alan(kok / "opt/apisix/.env-apisix", "APISIX_ADMIN_KEY") == yeni
+
+
+def test_R8_apisix_admin_DEGER_hicbir_ciktiya_ve_ARGV_ye_girmez(tmp_path):
+    """D5'in bu alt komuttaki kardeşi: üretilen değer ne terminale, ne `argv`ye, ne de şimlerin
+    çağrı günlüğüne girer (`ps` argv'yi makinedeki HERKESE gösterir)."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    r = _kos(BETIK, ortam, "--apisix-admin")
+    assert r.returncode == 0, r.stdout + r.stderr
+    yeni = (kok / "etc/meridian/apisix_admin_key").read_text().strip()
+    assert yeni not in (r.stdout + r.stderr), "ÜRETİLEN DEĞER ÇIKTIYA BASILDI"
+    assert yeni not in (kok / ".sahte/argv.log").read_text(encoding="utf-8"), \
+        "değer bir komut satırına girdi"
+    assert ESKI["admin"] not in (r.stdout + r.stderr), "ESKİ DEĞER ÇIKTIYA BASILDI"
+
+
+def test_R9_envanter_apisix_admin_kopyalarini_ESIT_raporlar(tmp_path):
+    """I bölümünün emsali. İki kopya tohumda EŞİTtir (Faz-1C uygulanmış dünya) ve REFERANS
+    `.env-apisix` satırıdır — credential kaynağı ilk sıraya konsaydı, henüz yaratılmamış bir
+    dosya "referans kopya YOK" diye envanteri daha ilk satırda durdururdu."""
+    _, ortam = _sahte_ortam(tmp_path)
+    r = _kos(BETIK, ortam, "--envanter")
+    assert r.returncode == 0, r.stdout + r.stderr
+    satirlar = [s for s in r.stdout.splitlines() if "APISIX_ADMIN_KEY · " in s]
+    assert len(satirlar) == 2, satirlar
+    assert "/opt/apisix/.env-apisix [APISIX_ADMIN_KEY]" in satirlar[0] \
+        and "(referans kopya)" in satirlar[0], satirlar
+    assert "/etc/meridian/apisix_admin_key" in satirlar[1] and "EŞİT" in satirlar[1], satirlar
+    assert ESKI["admin"] not in (r.stdout + r.stderr), "envanter SIR DEĞERİ bastı"
+
+
+def test_R10_envanter_AYRI_dusen_credential_kaynagini_GORUR(tmp_path):
+    """Envanterin GÖREVİ bu: bir kopya bayatlarsa (rotasyon yarım kaldı, ya da `--faz1-apisix`
+    hiç koşmadı) rapor AYRI demeli. "EŞİT" basan bir envanter, ayrışmayı görmeyen bir envanterdir."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    (kok / "etc/meridian/apisix_admin_key").write_text("SAHTE-BAYAT-ADMIN-0003\n")
+    r = _kos(BETIK, ortam, "--envanter")
+    assert r.returncode == 0, r.stdout + r.stderr
+    satir = [s for s in r.stdout.splitlines() if "/etc/meridian/apisix_admin_key" in s]
+    assert satir and "AYRI" in satir[0], satir
+
+
+def test_R11_esitle_KAPININ_degerini_credential_kaynagina_tasir(tmp_path):
+    """`--apisix-admin --esitle` Faz-1C'nin elle adımının BETİKLEŞMİŞ hâlidir: değer üretilmez,
+    sorulmaz, basılmaz — kapının YÜRÜRLÜKTEKİ değeri (referans) bayat kaynağa yazılır. Q
+    bölümünün sözleşmesi bu alt komutta da geçerli olmalı, yoksa TSK-181 sınıfı bir "unutulan
+    kopya" burada elle düzeltilmeye kalınırdı (ve Rol-1 A1'de sır DEĞERİ taşıyan komut koşamaz)."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    (kok / "etc/meridian/apisix_admin_key").write_text("SAHTE-BAYAT-ADMIN-0004\n")
+    r = _kos(BETIK, ortam, "--apisix-admin", "--esitle")
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert (kok / "etc/meridian/apisix_admin_key").read_text().strip() == ESKI["admin"]
+    assert _env_alan(kok / "opt/apisix/.env-apisix", "APISIX_ADMIN_KEY") == ESKI["admin"], \
+        "eşitleme REFERANSA dokundu"
+    assert ESKI["admin"] not in (r.stdout + r.stderr), "eşitleme SIR DEĞERİ bastı"
+    assert "yeniden başlatma YAPILMADI" in r.stdout
