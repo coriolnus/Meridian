@@ -33,7 +33,7 @@ import datetime as dt
 import json
 import threading
 
-from . import store, obs, secrets, streamhealth
+from . import store, obs, secrets, streamhealth, quotecapture
 # ORTAK YASA — ad = AYNI nesne (streamhealth.next_backoff IS mirror_stream.next_backoff). Kopya YOK;
 # test_streamhealth_parity_v84 bunu kimlik (`is`) + AST-yokluk ile kilitler.
 from .streamhealth import (                                     # noqa: F401 (test yüzeyi + re-export)
@@ -180,6 +180,12 @@ class MirrorOrderStateMachine:
             self.orders[coid] = rec
             self.last_event_ts = rec["updated"]
             self._persist()
+        # EDG-2026-085 (icra-anı quote penceresi): KİLİT DIŞINDA ve `_persist`ten SONRA. Yukarıdaki
+        # mükerrer/bayat `return` dalları bu satırın ÜSTÜNDEDİR — yani tekrar olayları kancaya da
+        # geçmez (v68 tekrar yasası tek yerde kalır). Bayrak kapalıyken sıfır maliyet: `aktif()`
+        # tek bir ortam okumasıdır ve `quotecapture.get()` hiç çağrılmaz (tekil kurulmaz).
+        if quotecapture.aktif():
+            quotecapture.get().olay(event, order)
         lvl = {"fill": "fill", "partial_fill": "partial_fill", "rejected": "REJECT",
                "canceled": "canceled"}.get(event, event)
         if event == "rejected":
