@@ -46,6 +46,15 @@ sessizce bozulması ölçülen şeyin sessizce bozulmasıyla aynı kapıya çık
 REFERANS `index.html`dir. Bu dosya "hangi değer doğru" sorusunu CEVAPLAMAZ —
 onun cevabı `docs/kontrast-denetimi.md` ve `index.html`in kendi bloklarındadır.
 Burada ölçülen tek şey AYRIŞMA: dördü aynı mı, değilse hangi jeton.
+
+REFERANS ARTIK ÜRETİLMİŞ BİR BLOKTUR (TSK-132 dilim-3, 2026-09-13). `index.html` REFERANS
+olarak KALIR — ama blokları artık elle yazılmıyor: `ops/jeton_css_uret.py` onları
+`meridian/web/tokens.json`dan üretiyor ve bayt-eşitlik `tests/test_jeton_eski_sayfalar_v437.py`
+ile çivili. Yani bu dosyanın "referansa KOPYALA" çözüm satırı hâlâ doğru adresi gösterir,
+ama zincir bir halka uzadı: referansın kendisi de bir SSoT'tan türer, dolayısıyla buradaki her
+ölçüm TRANSİTİF olarak tokens.json'a bağlıdır. Referansın TASARIM GEREKÇESİ (eskiden blokların
+içindeki 56 yorum) `docs/TASARIM-JETON-ANLATISI-INDEX-2026-09-13.md`ye taşındı — "onun cevabı
+index.html'in kendi bloklarındadır" cümlesinin gerekçe tarafı bugün ORADA durur.
 """
 from __future__ import annotations
 
