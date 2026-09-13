@@ -21,7 +21,17 @@ uydurulmaz, beyan alanıyla dışarı söylenir. Kapanış satırına kaynak dam
 nereye yazıldığını üretici bilemez, damga yazarındır.
 
 Okur/yazar: goal.yaml'dan icra yasasını ve de-risk bandını okur (kelepçeli: bozuk/ters değer
-sessizce geçmez, fail-safe varsayılana düşer); dosyaya kendisi yazmaz, satırları çağırana verir."""
+sessizce geçmez, fail-safe varsayılana düşer); DEFTER dosyalarına kendisi yazmaz, satırları
+çağırana verir. TEK İSTİSNA, BEYANLI (TSK-187): `obs` OLAY kaydı — `qty_taban` göçü ve geçersiz
+R paydası SESSİZ KALAMAZ (Yasa 4). Olay `state/`e `obs`un kendi yolundan düşer; bu modül hiçbir
+defter/durum dosyasını açmaz.
+
+`obs` İTHALİ GEÇTİR (modül başında DEĞİL) — kaprisli üslup değil, ÖLÇÜLMÜŞ bir sözleşme:
+EDG-088 ölçüm betikleri `meridian.broker`ı ithal eder ve iki çivi (`test_edg088_sayim_v461` +
+`test_edg088_pk2_gercek_v472`, ikisi de `…ithal_meridian_obs_u_TETIKLEMEZ_ve_state_ACMAZ`) bir
+`import`un `meridian.obs` zincirini AÇMAMASINI ölçer: açılsaydı ölçüm betiğinin ithali bile canlı
+`state/`e yazabilirdi (ajanın pytest-dışı koşumu vakasının sınıfı, 2026-08-30). İthal bu yüzden
+olayın GERÇEKTEN yazıldığı iki dalın İÇİNDEDİR; sıcak yolda ek maliyeti yoktur (`sys.modules`)."""
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
@@ -400,6 +410,21 @@ def max_positions_at(equity: float, peak: float, base_max: int, cfg: dict | None
     return max(1, int(round(base_max * m)))
 
 
+# =================================================================================================
+# R PAYDASININ DAMGA SÖZLÜĞÜ (TSK-187) — TEK KAYNAK
+# =================================================================================================
+# Kapanan işlem satırının `r_payda` alanı, `r_multiple`ın HANGİ BİRİMDE ölçüldüğünü söyler. Değerler
+# DİZGE SABİTİ olarak burada yaşar ve okuyucular (EDG-088 PK(2) sayacı `sayim.kontrol_olc`) bu
+# sabitleri İTHAL EDER — dizgeyi ikinci kez yazmak, motorda adı değişince okuyucunun sessizce
+# HİÇBİR satırı elememesi demekti (tek-kaynak yasası; damga mantığının iki kopyası vakası).
+#
+# ÜÇÜNCÜ BİR DEĞER VARDIR VE ADSIZDIR: damganın YOKLUĞU. TSK-187 öncesi kapanmış satırlarda alan
+# hiç yoktur ve bu "payda = girişte donan BÜTÇE" demektir; geriye dönük yeniden hesap YAPILMAZ
+# (uydurma yasağı), o satırlar birim-uyumsuz oldukları için R kıyaslarının DIŞINDA kalır.
+R_PAYDA_GIRIS = "giris_riski"      #: payda = `qty_taban × r_per_share` (hisse-başı giriş riski)
+R_PAYDA_OLCULEMEDI = "olculemedi"  #: payda ≤ 0 — `r_multiple` 0.0 yazıldı ama ÖLÇÜM DEĞİLDİR
+
+
 @dataclass
 class Position:
     """Açık bir pozisyonun tam durumu: plan kimliği, giriş/stop/hedef seviyeleri, miktar, risk
@@ -420,6 +445,16 @@ class Position:
     risk_dollars: float
     size_r: float
     ts_open: str
+    # R PAYDASININ ADET TABANI (TSK-187, karar 2026-09-13 — kart EDG-2026-091 `karar_operatore` (b)).
+    # `r_multiple` paydası artık girişte donan BÜTÇE doları (`risk_dollars`) değil, GERÇEKTEN
+    # taşınan hisse-başı giriş riskidir: `qty_taban × r_per_share`. İkisi girişte neredeyse
+    # aynıdır; `loop._adet_benimse` aynanın adedini benimseyince (ölçülen vaka: kitap 17 → ayna 38)
+    # AYRIŞIRLAR — pay adetle büyür, bütçe payda sabit kalır ve R ikiye katlanırdı. Gölge motor
+    # (`golge_icra._kapanis_satiri`) zaten hisse-başı R yazıyordu; bu alan iki motoru AYNI BİRİME
+    # getirir. `scale_out` bu tabana DOKUNMAZ: bankalanan bacak + kalan bacak ORİJİNAL adedin
+    # ölçeğinde tek satır olarak toplanır. 0 = "ölçülemedi" (eski kayıt, göç öncesi) — uydurma
+    # taban üretilmez, payda 0 ise `close_position` R'yi 0.0 yazar ve ADIYLA uyarır.
+    qty_taban: int = 0
     bars_held: int = 0
     regime_at_plan: str = "?"
     skill_chain: list = field(default_factory=list)
@@ -454,6 +489,51 @@ class Position:
     # GERİYE dönük uygulanması engellenir — böylece ratchet hiçbir kaydetme/yükleme arasında kaybolamaz
     # ve pano/ayna/`manage_position` bayat stop görmez. Çiviler: `tests/test_scaleout_bankalama_bari_v390.py`.
     pre_scale_stop: float | None = None
+
+    def r_payda_usd(self) -> float:
+        """R PAYDASI, DOLAR — TEK TANIM (TSK-187). `qty_taban × r_per_share`.
+
+        Payda tanımının ikinci bir kopyası YOKTUR: `close_position` hem bölmeyi hem satır damgasını
+        buradan alır. `mfe_r`/`mae_r` ise HİSSE-BAŞI R'dir (`r_per_share`) ve bu turda DEĞİŞMEDİ —
+        aynı `r_per_share`ın iki farklı ölçeği, ikisi de tek kaynaktan.
+
+        ≤ 0 dönebilir ("ölçülemedi": göç görmemiş eski kayıt ya da bozuk stop) — çağıran bunu
+        SESSİZCE 0'a çevirmez, adıyla uyarır."""
+        return float(self.qty_taban) * float(self.r_per_share)
+
+
+#: Göç olayının SÜREÇ-BAŞINA-BİR-KEZ kaydı (kaynak yükleme yoluna göre anahtarlanır). Desen
+#: `loop._hotstate_off_once` ile aynı: statik bir olgu için her turda satır yazmak olay defterini
+#: bilgi taşımayan satırlarla şişirir; hiç yazmamak ise tabanın NEREDEN geldiğini kaynaksız bırakır.
+_GOC_LOGLANDI: set = set()
+
+
+def qty_taban_goc(p: dict, *, kaynak: str) -> dict:
+    """Diskten okunan pozisyon sözlüğüne `qty_taban` GÖÇÜNÜ uygular (TSK-187) — YENİ sözlük döner.
+
+    Eski kayıtlarda alan YOKTUR; yoksa `qty`ye eşitlenir, çünkü o kayıt yazıldığında adet henüz
+    hiç benimsenmemiş ya da benimseme sonrası `qty` zaten yeni adettir — iki durumda da `qty`
+    bugünkü en iyi ÖLÇÜLMÜŞ tabandır (uydurma değil, kaydın kendi alanı). Alan VARSA dokunulmaz:
+    benimsenmiş bir taban `qty`ye geri çekilemez.
+
+    ÜÇ YÜKLEME YOLU BU YÜKLEMİ PAYLAŞIR (tek-kaynak yasası): `loop._load_broker` (canlı kitap),
+    `intraday_shadow._copy_broker` (salt-okur kopya), `shadow_lifecycle._to_broker` (varyant
+    kitapları). Kuralın üç kopyası sessizce ayrışırdı.
+
+    Çağıranın sözlüğü YERİNDE DEĞİŞTİRİLMEZ: `portfolio.json`dan okunan ham kayıt aynı turda
+    başka bir okuyucuya da gidebilir."""
+    if "qty_taban" in p:
+        return dict(p)
+    yeni = dict(p)
+    yeni["qty_taban"] = p.get("qty", 0)
+    if kaynak not in _GOC_LOGLANDI:
+        _GOC_LOGLANDI.add(kaynak)
+        from . import obs      # GEÇ İTHAL — gerekçe modül başlığında (EDG-088 ithal çivileri)
+        obs.log("r_payda_gocu", kaynak=kaynak, ticker=p.get("ticker"),
+                qty_taban=yeni["qty_taban"],
+                detail="TSK-187: eski kayıtta `qty_taban` yoktu, `qty`ye eşitlendi — R paydası "
+                       "artık hisse-başı giriş riski (süreç başına tek kayıt)")
+    return yeni
 
 
 # =================================================================================================
@@ -716,6 +796,9 @@ class PaperBroker:
         pos = Position(
             plan_id=plan["id"], ticker=plan["ticker"], side="long", entry=fill, stop=stop,
             trail_stop=stop, target=plan["profit_target"], qty=qty,
+            # TSK-187: taban ADV tavanı ve nominal tavanı adedi KISTIKTAN SONRAKİ `qty`dir —
+            # hiç var olmayan hisseleri riskli saymak paydayı şişirir ve R'yi küçültürdü.
+            qty_taban=qty,
             r_per_share=fill - stop, risk_dollars=risk_dollars, size_r=plan["size_r"], ts_open=ts,
             regime_at_plan=plan.get("regime_at_plan", "?"), skill_chain=plan.get("skill_chain", []),
             strategy_version=plan.get("strategy_version", 1),
@@ -889,7 +972,28 @@ class PaperBroker:
         self.cash += round(pnl_remaining, 2)
         self._id += 1
         pnl = pnl_remaining + pos.banked_pnl                  # combine scaled + final into ONE trade
-        r_multiple = pnl / pos.risk_dollars if pos.risk_dollars else 0.0
+        # ── R PAYDASI: HİSSE-BAŞI GİRİŞ RİSKİ (TSK-187, operatör kararı 2026-09-13) ──────────
+        # ESKİDEN `pos.risk_dollars` (girişte DONAN bütçe: size_r · %1 · özsermaye) idi. Ayrışma
+        # ÖLÇÜLDÜ: `loop._adet_benimse` aynanın adedini benimseyince (kitap 17 → ayna 38) PAY
+        # adetle büyüyor, bütçe PAYDA sabit kalıyor ve aynı fiyat yolu kitapta ~2,24× büyük R
+        # yazıyordu; gölge motor (`golge_icra._kapanis_satiri`) ise hisse-başı R yazıyordu — iki
+        # motor AYNI işlemi iki farklı birimde ölçüyordu. Payda tanımı TEK yerdedir:
+        # `Position.r_payda_usd`. `risk_dollars` KALDI ve boyutlama/maruziyet için aynen kullanılır.
+        # GERİYE DÖNÜK YENİDEN HESAP YOK: damgasız eski satır "payda = bütçe" demektir.
+        payda = pos.r_payda_usd()
+        if payda > 0:
+            r_multiple = pnl / payda
+            r_payda_ad, r_payda_usd = R_PAYDA_GIRIS, round(payda, 4)
+        else:
+            # YASA 4 — SESSİZ DEĞİL. Payda ≤ 0 iki şeyden biridir: göç görmemiş eski kayıt
+            # (`qty_taban` 0) ya da bozuk kurulum (stop ≥ giriş). 0.0 bir ÖLÇÜM DEĞİLDİR;
+            # damga `olculemedi` olur ve `r_payda_usd` None kalır ki okuyucu satırı ELESİN.
+            from . import obs  # GEÇ İTHAL — gerekçe modül başlığında (EDG-088 ithal çivileri)
+            obs.warn("r_payda_gecersiz", ticker=pos.ticker, plan_id=pos.plan_id,
+                     qty_taban=pos.qty_taban, r_per_share=round(float(pos.r_per_share), 4),
+                     detail="R paydası (qty_taban × r_per_share) ≤ 0 — r_multiple 0.0 YAZILDI ve "
+                            "satır `olculemedi` damgasıyla R kıyaslarının DIŞINDA kalır")
+            r_multiple, r_payda_ad, r_payda_usd = 0.0, R_PAYDA_OLCULEMEDI, None
         row = {
             "id": f"T{self._id:05d}", "ts_open": pos.ts_open, "ts_close": ts,
             "ticker": pos.ticker, "side": pos.side, "entry": round(pos.entry, 4),
@@ -901,6 +1005,13 @@ class PaperBroker:
             "exploration": pos.exploration,
             "plan_id": pos.plan_id, "skill_chain": pos.skill_chain,
             "bars_held": pos.bars_held, "scaled_out": pos.scaled_out,
+            # PAYDA DAMGASI (TSK-187). Tipli KOLON değildir → `storage` onu `extra_json`a yazar ve
+            # okumada geri verir. OKUYUCUSU (Yasa 6) GERÇEKTİR ve ADI VARDIR: EDG-088 PK(2) sayacı
+            # `research/olcumler/edg088_golge_pilot/sayim.py::kontrol_olc` damgayı okur ve YALNIZ
+            # `R_PAYDA_GIRIS` damgalı gerçek satırları gölge R'siyle kıyaslar; damgasız (eski
+            # bütçe paydalı) satırı `birim_eski_n` altında ayrı sayar. `olculemedi` satırında
+            # payda None'dır — sıfır DEĞİL — ve o satır da kıyasa girmez.
+            "r_payda": r_payda_ad, "r_payda_usd": r_payda_usd,
             # öneri #2: maksimum lehte/aleyhte hareket (R) — çıkış tarafını KANITLA tunlamanın ham maddesi.
             # Watermark yoksa (eski portfolio.json'dan yüklenen pozisyon) uydurma yok: None.
             "mfe_r": round((pos.hi_water - pos.entry) / pos.r_per_share, 3)

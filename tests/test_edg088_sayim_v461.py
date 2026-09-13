@@ -63,10 +63,13 @@ PK1_TOPLAM_R = 0.5 + 0.5 / 6.0
 PK1_N = 4
 
 #: PK (2) SAHNESİNİN EL HESABI PAYI (türetimi `test_A3_friksiyon_payi_...` docstring'inde):
-#: `_gercek_broker_satiri()` sahnesinde broker 16,17 $ sürtünme uygular ve R paydası 1000,169 $'dır
-#: → 0,016167 R. SAYI BURADA BİR KEZ yazılıdır; formülü yeniden yazan bir "ayna" iddia, sayacın
+#: `_gercek_broker_satiri()` sahnesinde broker 16,17 $ sürtünme uygular ve R paydası 998,1845 $'dır
+#: → 0,016199 R. SAYI BURADA BİR KEZ yazılıdır; formülü yeniden yazan bir "ayna" iddia, sayacın
 #: kendi hesabını kendisiyle doğrulardı (inceleme M4-03).
-PAY_R = 0.016167
+#: TSK-187: payda BÜTÇE dolarından (1.000,169 $ → 0,016167 R) hisse-başı GİRİŞ RİSKİNE geçti;
+#: sayaç paydayı satırdan TÜRETTİĞİ için (pnl_dollars / r_multiple) sayı motorla birlikte kaydı.
+#: Sayacın kendi kodu DEĞİŞMEDİ — değişen, motorun yazdığı R'dir.
+PAY_R = 0.016199
 
 
 def _sayim():
@@ -257,8 +260,10 @@ def test_A3_friksiyon_payi_URETIMIN_KENDI_surtunmesinden_turer(tmp_path):
       dolum   = 101 · (1 + 0,0005) = 101,0505 · qty = floor(1000 / 6,0505) = 165
       çıkış   = 95 · (1 − 0,0005)  = 94,9525
       sürtünme = 165·(101,0505 − 101) + 165·(95 − 94,9525) = 8,3325 + 7,8375 = 16,17 $
-      R paydası = pnl_dollars / r_multiple = −1006,17 / −1,006 = 1000,169 $
-      pay      = 16,17 / 1000,169 = 0,016167 R
+      R paydası = qty_taban · R/hisse = 165 · 6,0505 = 998,3325 $   (TSK-187: payda giriş riski)
+                  sayaç onu SATIRDAN türetir: −1006,17 / −1,008 = 998,1845 $ (R 3 haneye yuvarlı)
+      pay      = 16,17 / 998,1845 = 0,016199 R
+      (TSK-187 ÖNCESİ payda BÜTÇE idi: −1006,17 / −1,006 = 1000,169 $ → 0,016167 R)
     ÇIKIŞ BACAĞI ÇIKIŞ FİYATIYLA ölçeklenir (7,8375), giriş fiyatıyla DEĞİL (8,3325) — eski el
     formülü iki bacağı da girişten ölçüp 0,016833 veriyordu.
     """
@@ -321,6 +326,115 @@ def _pk2_kosum(tmp_path, fark, ek_golge=(), ek_gercek=()):
     defter = _defter_yaz(tmp_path / "state" / "golge_icra.jsonl", golge)
     _defter_yaz(tmp_path / "state" / "trades.jsonl", list(gercek) + list(ek_gercek))
     return s, s.calistir(defter=defter, kart=KART_YOLU, goal=GOAL_YOLU)
+
+
+# ---- A5: R BİRİMİ KAPISI (TSK-187) --------------------------------------------------------------
+# NEDEN KAPI VAR. Gölge R'si HER ZAMAN hisse-başı giriş riskine bölünür. Gerçek tarafta TSK-187
+# öncesi satırlar BÜTÇE dolarına bölünmüştür ve damgasızdır. İkisini aynı farka sokmak,
+# EDG-090/091'in ölçtüğü ~2,24× birim ayrışmasını PK (2)'nin İÇİNDE yeniden üretirdi: kill#5 ya
+# haksız yere öter (gerçek bir icra sapması yokken sayı yayılmaz) ya da ters işaretli bir şans
+# eseri tutma "geçti" derdi. Kapı bu iki satır sınıfını AYIRIR ve sayıyı UYDURMAZ.
+def _kusak_ikizi(satir: dict, *, plan_id: str, damga=None, zarfta=False) -> dict:
+    """Gerçek satırın BAŞKA KUŞAK ikizi. `damga=None` → TSK-187 öncesi (alan hiç YOK).
+
+    `zarfta=True` damgayı `extra_json` DİZGESİNE koyar: A1'den alınan ham SQL dökümleri
+    (`edg091_r_paydasi/girdi/*.json` sınıfı) damgayı o zarfla taşır, üst düzeyde değil.
+    """
+    yeni = {k: v for k, v in satir.items() if k != "r_payda"}
+    yeni["plan_id"] = plan_id
+    if damga is not None:
+        if zarfta:
+            yeni["extra_json"] = json.dumps({"r_payda": damga, "skill_chain": ["x"]})
+        else:
+            yeni["r_payda"] = damga
+    return yeni
+
+
+def _birim_kosumu(tmp_path, gercekler: list[dict], fark: float = 0.001):
+    """Her gerçek satıra `plan_id`si ile eşleşen bir KONTROL gölge satırı kurar (fark sabit)."""
+    golge = [_satir(str(t["plan_id"]), r=float(t["r_multiple"]) + fark, kol="kontrol",
+                    giris=101.0, stop=95.0) for t in gercekler]
+    s = _sayim()
+    defter = _defter_yaz(tmp_path / "state" / "golge_icra.jsonl", golge)
+    _defter_yaz(tmp_path / "state" / "trades.jsonl", gercekler)
+    return s, s.calistir(defter=defter, kart=KART_YOLU, goal=GOAL_YOLU)
+
+
+def test_A5_DAMGASIZ_gercek_satir_KIYASA_girmez_ve_ADIYLA_sayilir(tmp_path):
+    """KARIŞIK KÜME: damgalı çift kıyasa girer, damgasız + yabancı damgalı GİRMEZ ama SAYILIR.
+
+    Hangi üretim değişikliğinde kırılır: `sayim.kontrol_olc` birim süzgeci kalkarsa `n_cift` 3
+    olur (üç çift de kıyasa girer) ve `birim_eski_n` 0'a düşer; sayaç kaldırılırsa çiftler doğru
+    elenir ama kaç satırın elendiği GÖRÜNMEZ olur (sessiz körlük — Yasa 6).
+    """
+    from meridian import broker as brk
+    yeni = _gercek_broker_satiri(plan_id="P-k1")
+    assert yeni["r_payda"] == brk.R_PAYDA_GIRIS, yeni          # motorun kendi damgası
+    eski = _kusak_ikizi(yeni, plan_id="P-k2")                  # TSK-187 öncesi: alan YOK
+    yabanci = _kusak_ikizi(yeni, plan_id="P-k3", damga="butce")  # başka birim ADIYLA
+    s, sonuc = _birim_kosumu(tmp_path, [yeni, eski, yabanci])
+    k = sonuc["kontrol"]
+    assert "r_payda" not in eski and yabanci["r_payda"] == "butce", (eski, yabanci)
+    assert k["n_cift"] == 1, k["ciftler"]
+    assert [c["plan_id"] for c in k["ciftler"]] == ["P-k1"], k["ciftler"]
+    assert k["n_hukum_cifti"] == 1, k                          # hüküm kümesi de EŞ BİRİMLİ
+    assert k["birim_eski_n"] == 2, k
+    assert k["birim_eski_idler"] == ["P-k2", "P-k3"], k
+    assert k["birim_damgasi"] == brk.R_PAYDA_GIRIS == s.R_PAYDA_GIRIS, k
+    assert "TSK-187 öncesi" in (k["birim_notu"] or ""), k["birim_notu"]
+    assert any("R BİRİMİ" in x for x in sonuc["olculemeyen"]), sonuc["olculemeyen"]
+    # YASA 6: sayı yalnız JSON'da durmaz, markdown PK (2) satırında da OKUNUR.
+    md = s.markdown_uret(sonuc)
+    assert "R birimi ESKİ" in md and f"{k['birim_eski_n']}" in md, md
+
+
+def test_A5_damga_EXTRA_JSON_zarfindan_da_okunur(tmp_path):
+    """A1 ham SQL dökümünde damga `extra_json` DİZGESİNDEDİR; zarf açılmazsa satır YANLIŞLIKLA
+    eski kuşak sayılır ve geçerli bir çift sessizce kıyastan düşerdi."""
+    from meridian import broker as brk
+    yeni = _gercek_broker_satiri(plan_id="P-k1")
+    zarfli = _kusak_ikizi(yeni, plan_id="P-k2", damga=brk.R_PAYDA_GIRIS, zarfta=True)
+    assert "r_payda" not in zarfli and "r_payda" in zarfli["extra_json"], zarfli
+    _, sonuc = _birim_kosumu(tmp_path, [yeni, zarfli])
+    k = sonuc["kontrol"]
+    assert k["n_cift"] == 2 and k["birim_eski_n"] == 0, k
+    assert sorted(c["plan_id"] for c in k["ciftler"]) == ["P-k1", "P-k2"], k["ciftler"]
+
+
+def test_A5_BOZUK_extra_json_damgasiz_sayilir_UYDURULMAZ(tmp_path):
+    """Ayrıştırılamayan zarf "damga yok" ile AYNI kovaya düşer: bilinmeyen birim, varsayılan
+    olarak YENİ birim sayılamaz (uydurma yasağı)."""
+    yeni = _gercek_broker_satiri(plan_id="P-k1")
+    bozuk = _kusak_ikizi(yeni, plan_id="P-k2")
+    bozuk["extra_json"] = "{bu json degil"
+    _, sonuc = _birim_kosumu(tmp_path, [yeni, bozuk])
+    k = sonuc["kontrol"]
+    assert k["n_cift"] == 1 and k["birim_eski_n"] == 1 and k["birim_eski_idler"] == ["P-k2"], k
+
+
+def test_A5_TUM_ciftler_eski_birimse_PK2_OLCULEMEDI_ve_NEDEN_adiyla(tmp_path):
+    """Tek eş birimli çift kalmazsa `gecti` None'dır — `False` DEĞİL. "Ölçülemedi" ile "ölçüldü
+    ve tutmadı" ayrı hükümlerdir; eski kuşağı düşmüş saymak kill#5'i hak etmeden tetiklerdi."""
+    yeni = _gercek_broker_satiri(plan_id="P-k1")
+    _, sonuc = _birim_kosumu(tmp_path, [_kusak_ikizi(yeni, plan_id="P-k2")])
+    k = sonuc["kontrol"]
+    assert k["gecti"] is None and k["n_cift"] == 0, k
+    assert k["birim_eski_n"] == 1, k
+    assert "r_payda" in (k["neden"] or ""), k["neden"]
+    assert sonuc["yayin_engeli"] == [] or all("kill#5" not in x for x in sonuc["yayin_engeli"])
+
+
+def test_A5_damga_DIZGESI_MOTORDAN_ithal_edilir_ikinci_yazim_YOK():
+    """Tek-kaynak: sayaç damgayı `broker.R_PAYDA_GIRIS`ten ALIR, dizgeyi ikinci kez YAZMAZ.
+
+    Motorda ad değişirse ikinci kopya sessizce HİÇBİR satırı elemez ve kapı KÖR olurdu — bu yüzden
+    çivi bir KİMLİK sınamasıdır, iki dizgenin eşitliği değil."""
+    from meridian import broker as brk
+    s = _sayim()
+    assert s.R_PAYDA_GIRIS is brk.R_PAYDA_GIRIS
+    kaynak = BETIK_YOLU.read_text(encoding="utf-8")
+    # Dizge LİTERALİ yalnız motordan ithal satırında geçebilir; başka bir yerde yazılıysa kopya var.
+    assert kaynak.count(f'"{brk.R_PAYDA_GIRIS}"') == 0, "damga dizgesi sayaçta İKİNCİ kez yazılı"
 
 
 # ---- E: SAYAÇ (M3-05/07/08/09, M4-08/16) --------------------------------------------------------

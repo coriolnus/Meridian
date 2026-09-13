@@ -38,7 +38,7 @@ import re
 
 from . import barclock, config, health, obs, store
 from .backtest import _adv as _adv_causal
-from .broker import PaperBroker, Position, derisk_mult, max_positions_at
+from .broker import PaperBroker, Position, derisk_mult, max_positions_at, qty_taban_goc
 from .score import START_EQUITY
 
 # Varsayılan AÇIK: tek yan etkisi kendi defterine yazmaktır, hiçbir yetki taşımaz. Kapatma anahtarı
@@ -125,7 +125,8 @@ def _copy_broker() -> tuple[PaperBroker, dict]:
         b.realized_pnl = st.get("realized_pnl", 0.0)
         b._id = st.get("last_id", 0)
         for t, p in (st.get("positions") or {}).items():
-            b.positions[t] = Position(**p)
+            # TSK-187 GÖÇÜ (tek kaynak: `broker.qty_taban_goc`) — eski kayıtta taban yoksa `qty`.
+            b.positions[t] = Position(**qty_taban_goc(p, kaynak="intraday_shadow._copy_broker"))
     return b, (st or {"armed": [], "peak_equity": START_EQUITY, "day_start_equity": START_EQUITY})
 
 

@@ -508,6 +508,10 @@ def _pozisyon_nesnesi(poz: dict) -> brk.Position:
         plan_id=poz["plan_id"], ticker=poz["ticker"], side="long",
         entry=float(poz["giris_fiyat"]), stop=float(poz["stop"]),
         trail_stop=float(poz["trail_stop"]), target=float(poz["hedef"]), qty=1,
+        # TSK-187: taban da NOMİNALDİR (1 hisse) — bu nesne `_touch_exit` için kurulur ve
+        # `close_position`a hiç girmez, ama tabanı 0 bırakmak "ölçülemedi" demek olurdu ve
+        # yanlıştır: bu defterin adedi BİLİNİYOR, nominal olarak 1'dir.
+        qty_taban=1,
         r_per_share=float(poz["r_per_share"]), risk_dollars=float(poz["r_per_share"]),
         size_r=1.0, ts_open=str(poz["giris_ts"]), bars_held=int(poz.get("bars_held") or 0),
         hi_water=float(poz.get("hi_water") or 0.0), lo_water=float(poz.get("lo_water") or 0.0),

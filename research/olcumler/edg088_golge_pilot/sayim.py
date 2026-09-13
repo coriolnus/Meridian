@@ -37,6 +37,13 @@ neden sözlüğü. Bu betik üçünü de İTHAL eder — eskiden ikinci kez yaz�
 Ayrışma çivisi artık bir KİMLİK sınamasıdır (`sayim.sayilir is golge_icra.sayilir`), üstüne motorun
 `ozet()`i ile bu betiğin AYNI defterde aynı sayıyı verdiği uçtan uca ölçülmeye devam eder.
 
+PK (2) EŞ BİRİM İSTER (TSK-187). Gölge R'si hisse-başı giriş riskine bölünür. Gerçek tarafta iki
+kuşak vardır: TSK-187 sonrası satır `r_payda == broker.R_PAYDA_GIRIS` damgasını taşır (aynı birim),
+öncesi DAMGASIZDIR ve bütçe dolarına bölünmüştür. `kontrol_olc` damgayı OKUR ve yalnız damgalı
+gerçek satırları kıyasa alır; damgasız eşleşmeler `birim_eski_n`/`birim_eski_idler`/`birim_notu`
+olarak AYRI raporlanır. İki birimi tek farka sokmak, EDG-090/091'in ölçtüğü ~2,24× birim
+ayrışmasını PK'nın İÇİNDE yeniden üretir ve kill#5'i yanlış sebeple öttürürdü.
+
 K DAĞILIMI ≠ GİREN DAĞILIMI. `kurulum_kirilimi`/`hukum_dagilimi`/`cikis_neden_dagilimi` K
 paydasının (uyuyan kol, ölçülmüş) dağılımıdır; kartın tanı maddesinin sorduğu "dormant planların
 TAMAMI gölgeye girer (GO/REVIEW/NO_GO dağılımı)" popülasyonu ise GİREN kümesidir ve `giren_*` +
@@ -257,6 +264,39 @@ PAY_KAYNAGI = ("gerçek işlem satırının kaymalı fiyatları (`entry`/`exit`)
                "`broker.PaperBroker`ın kendi kurucusundan gelir (bps→oran çevrimi ORADA yapılır, "
                "burada yeniden yazılmaz); R paydası satırın kendi `pnl_dollars / r_multiple`ı")
 
+#: R BİRİMİ KAPISI (TSK-187). Gölge motorun R'si HER ZAMAN hisse-başı giriş riskine bölünür
+#: (`golge_icra._kapanis_satiri`). Gerçek tarafta ise İKİ KUŞAK vardır: TSK-187 sonrası satırlar
+#: `r_payda == R_PAYDA_GIRIS` damgasını taşır (aynı birim), TSK-187 öncesi satırlar DAMGASIZDIR ve
+#: paydaları girişte donan BÜTÇE dolarıdır. İki birimi aynı farka sokmak, EDG-090/091'in ölçtüğü
+#: ayrışmayı (aynı fiyat yolu, ~2,24× büyük R) PK (2)'nin İÇİNDE yeniden üretirdi — kill#5 ya
+#: haksız yere öter ya da sahte bir "geçti" verirdi. DAMGA MOTORDAN İTHAL EDİLİR, burada dizge
+#: olarak YAZILMAZ: adı motorda değişirse ikinci kopya sessizce HİÇBİR satırı elemezdi.
+R_PAYDA_GIRIS = brk.R_PAYDA_GIRIS
+BIRIM_NOTU = ("bütçe paydalı satırlar TSK-187 öncesi; kıyas dışı — uydurma değil, ölçülemedi")
+
+
+def r_payda_damgasi(satir: dict):
+    """Gerçek işlem satırının R PAYDA DAMGASI (`r_payda`) — yoksa `None` (eski bütçe paydası).
+
+    İKİ TAŞIYICI BİÇİM VARDIR ve ikisi de okunur, çünkü defter iki yoldan gelir:
+      * JSONL defteri (`store.append_jsonl`) satırı OLDUĞU GİBİ yazar → alan ÜST DÜZEYdedir;
+      * SQLite defteri (`storage`) tipsiz alanları `extra_json`a düşürür — `storage._cols_to_row`
+        okumada geri birleştirir (yine üst düzey), ama A1'den alınan HAM SQL dökümlerinde
+        (`edg091_r_paydasi/girdi/*.json` sınıfı) `extra_json` bir JSON DİZGESİ olarak durur.
+    Üst düzey KAZANIR; yoksa zarf (sözlük ya da dizge) açılır. Ayrıştırılamayan zarf `None`dır —
+    "damga yok" ile aynı kovaya düşer ve satır kıyasa GİRMEZ (uydurma yasağı: bilinmeyen birim,
+    varsayılan olarak yeni birim sayılamaz).
+    """
+    if "r_payda" in satir:
+        return satir.get("r_payda")
+    zarf = satir.get("extra_json")
+    if isinstance(zarf, str):
+        try:
+            zarf = json.loads(zarf)
+        except (TypeError, ValueError):  # sessiz-yutma: SESSİZ DEĞİL — bozuk `extra_json` damgayı OKUNAMAZ yapar ve satır damgasızla AYNI kovaya (`birim_eski_n`) düşer; adı `birim_eski_idler`de görünür
+            return None
+    return zarf.get("r_payda") if isinstance(zarf, dict) else None
+
 
 def _broker_surtunmesi(goal: dict) -> tuple[float, float]:
     """(kayma oranı, hisse başı komisyon) — ÇEVRİMİ BROKER YAPAR, bu betik değil.
@@ -325,12 +365,19 @@ def kontrol_olc(golge: list[dict], gercek_yolu, goal: dict, fark_ust: float) -> 
     yayılmaz) · `None` (ÖLÇÜLEMEDİ: defter yok ya da hiç çift yok). `None`u `False` saymak,
     ölçülmemiş bir PK'yı düşmüş göstererek hükmü hak etmeden engellerdi; `True` saymak ise hiç
     kontrol edilmemiş bir motoru doğrulanmış gösterirdi.
+
+    R BİRİMİ KAPISI (TSK-187). Eşleşen bir çiftin GERÇEK tarafı `r_payda == R_PAYDA_GIRIS`
+    damgasını taşımıyorsa çift kıyasa GİRMEZ: `birim_eski_n` artar, `plan_id` `birim_eski_idler`e
+    yazılır ve `birim_notu` nedeni taşır. Ne `ciftler`, ne `n_cift`, ne `n_hukum_cifti` bu çifti
+    sayar — hepsi EŞ BİRİMLİ kümeden doğar.
     """
     bos = {"n_cift": 0, "n_golge_kontrol": 0, "n_gercek": None, "ort_fark_r": None,
            "ort_mutlak_fark_r": None, "komisyon_kayma_payi": None, "gecti": None,
            "esik": fark_ust, "ciftler": [], "neden": None, "n_payi_olculemeyen": 0,
            "pay_kaynagi": PAY_KAYNAGI, "pay_olculemeyen_nedenleri": [],
            "n_hukum_cifti": 0, "giris_yok_n": 0, "n_gercek_disi": None,
+           "birim_eski_n": 0, "birim_eski_idler": [], "birim_notu": BIRIM_NOTU,
+           "birim_damgasi": R_PAYDA_GIRIS,
            "tum_ciftler": {"n": 0, "ort_fark_r": None, "ort_mutlak_fark_r": None}}
     # PK (2) PAYDASI `olculdu`DUR, `sayilir` DEĞİL: `sayilir` kol süzgecini taşır (K = uyuyan kol)
     # ve burada kullanılsaydı kontrol kümesi DAİMA boş çıkardı.
@@ -367,10 +414,17 @@ def kontrol_olc(golge: list[dict], gercek_yolu, goal: dict, fark_ust: float) -> 
 
     ciftler, farklar, paylar, pay_yok = [], [], [], 0
     pay_nedenleri: list[str] = []
+    birim_eski: list[str] = []
     for r in kontrol:
         pid = str(r.get("plan_id"))
         t = gercek.get(pid)
         if t is None:
+            continue
+        # R BİRİMİ KAPISI (TSK-187) — ÇİFT KURULMADAN ÖNCE. Gölge tarafı hisse-başı giriş riskine
+        # bölünür; gerçek taraf damgasızsa BÜTÇE dolarına bölünmüştür ve fark bir icra ayrışması
+        # değil bir BİRİM ayrışmasıdır. Sayı uydurulmaz, satır sessizce de atılmaz: adıyla sayılır.
+        if r_payda_damgasi(t) != R_PAYDA_GIRIS:
+            birim_eski.append(pid)
             continue
         try:
             fark = float(r["R"]) - float(t["r_multiple"])
@@ -392,9 +446,15 @@ def kontrol_olc(golge: list[dict], gercek_yolu, goal: dict, fark_ust: float) -> 
     bos["n_cift"] = len(ciftler)
     bos["n_payi_olculemeyen"] = pay_yok
     bos["pay_olculemeyen_nedenleri"] = pay_nedenleri
+    bos["birim_eski_n"] = len(birim_eski)
+    bos["birim_eski_idler"] = sorted(birim_eski)
     if not ciftler:
-        bos["neden"] = ("gölge kontrol satırlarının hiçbiri `plan_id` ile bir GERÇEK işleme "
-                        "eşleşmedi — PK (2) ÖLÇÜLEMEDİ")
+        bos["neden"] = (
+            (f"eşleşen {len(birim_eski)} çiftin GERÇEK tarafı `r_payda == \"{R_PAYDA_GIRIS}\"` "
+             f"damgasını taşımıyor — {BIRIM_NOTU}; eş birimli çift KALMADI, PK (2) ÖLÇÜLEMEDİ")
+            if birim_eski else
+            ("gölge kontrol satırlarının hiçbiri `plan_id` ile bir GERÇEK işleme "
+             "eşleşmedi — PK (2) ÖLÇÜLEMEDİ"))
         return bos
 
     # TÜM ÇİFTLER: tanı, kendi `n`si ile (körlük üretmemek için durur, hükme GİRMEZ).
@@ -676,6 +736,10 @@ def calistir(*, defter, cikti=None, markdown=None, kart=None, baslangic=None,
     if kontrol["n_payi_olculemeyen"]:
         olculemeyen.append(f"PK (2): {kontrol['n_payi_olculemeyen']} çiftte komisyon+kayma payı "
                            "ölçülemedi (giriş/stop ya da goal alanı eksik)")
+    if kontrol["birim_eski_n"]:
+        olculemeyen.append(
+            f"PK (2): {kontrol['birim_eski_n']} çift R BİRİMİ uyuşmadığı için kıyas DIŞINDA "
+            f"({', '.join(kontrol['birim_eski_idler'])}) — {kontrol['birim_notu']}")
     if pk3_sonuc["neden"]:
         olculemeyen.append(f"PK (3): {pk3_sonuc['neden']}")
     if ci.get("neden"):
@@ -804,7 +868,8 @@ def markdown_uret(sonuc: dict) -> str:
           f"* **PK (2) kontrol kolu** — ölçüldü mü: {k['gecti']} · çift: {k['n_cift']} "
           f"(hüküm çifti: {k['n_hukum_cifti']}, payı ölçülemeyen: {k['n_payi_olculemeyen']}, "
           f"gölgesi giriş-yok: {k['giris_yok_n']}, damgası canlı-olmayan gerçek satır: "
-          f"{k['n_gercek_disi']}) · ortalama fark: {_sayi(k['ort_fark_r'])}R · ortalama |fark|: "
+          f"{k['n_gercek_disi']}, R birimi ESKİ (`{k['birim_damgasi']}` damgası yok, kıyas dışı): "
+          f"{k['birim_eski_n']}) · ortalama fark: {_sayi(k['ort_fark_r'])}R · ortalama |fark|: "
           f"{_sayi(k['ort_mutlak_fark_r'])}R · komisyon+kayma payı: "
           f"{_sayi(k['komisyon_kayma_payi'])}R · pay kaynağı: {k['pay_kaynagi']}",
           f"* **PK (3) selef (EDG-2026-049)** — referans: n={pk3['n']}, kayıp={pk3['kayip']}, "

@@ -182,7 +182,10 @@ def _to_broker(bk: dict, goal: dict) -> brk.PaperBroker:
     b.cash = b.start_equity + b.realized_pnl
     b._id = int(bk.get("trade_seq") or 0)
     for t, p in (bk.get("positions") or {}).items():
-        b.positions[t] = brk.Position(**{k: p[k] for k in _POS_FIELDS if k in p})
+        # TSK-187 GÖÇÜ: alan süzgecinden SONRA — süzgeç bilinmeyen anahtarları eler, göç
+        # eksik `qty_taban`ı `qty`ye eşitler (tek kaynak: `broker.qty_taban_goc`).
+        b.positions[t] = brk.Position(**brk.qty_taban_goc(
+            {k: p[k] for k in _POS_FIELDS if k in p}, kaynak="shadow_lifecycle._to_broker"))
     return b
 
 
