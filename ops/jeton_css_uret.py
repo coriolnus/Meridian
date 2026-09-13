@@ -229,7 +229,8 @@ SAYFA_BASLIK = """/* Kaynak: meridian/web/tokens.json (SSoT) — bu blok ELLE D�
      python ops/jeton_css_uret.py --sayfa <bu dosya> --uygula
    Tazelik kapısı: aynı komut `--kontrol` ile (çıkış 1 = bayat).
    Gerekçe ve ölçüm TEKRARLANMAZ; TEK yerde durur: tokens.json'ın `$description` alanları +
-   index.html'in kendi jeton blokları + docs/kontrast-denetimi.md.
+   docs/TASARIM-JETON-ANLATISI-INDEX-2026-09-13.md (index.html'in eski jeton anlatısı, TSK-132 dilim-3'te
+   taşındı — index.html de artık bu üretilmiş bloğu taşır) + docs/kontrast-denetimi.md.
    Çiviler: tests/test_jeton_birligi_v208.py (dört yüzey aynı takım) ·
             tests/test_jeton_eski_sayfalar_v437.py (blok == üretici çıktısı).
    GECE bloğu `theme.js`in kurduğu `data-theme` niteliğine bağlıdır; `@media
