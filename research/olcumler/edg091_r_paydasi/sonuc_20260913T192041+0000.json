@@ -1,0 +1,2096 @@
+{
+ "kart": "EDG-2026-091",
+ "olculdu_utc": "2026-09-13T19:20:41.248539+00:00",
+ "motor_yolu": "/Users/erdemozturk/AI-Trading/.claude/worktrees/edg091",
+ "state_dizin_dayatilan": "research/olcumler/edg091_r_paydasi/_sanal_state_koku/state",
+ "r_multiple_alt": 0.02,
+ "r_multiple_alt_kaynagi": "research/olcumler/edg088_golge_pilot/sayim.py::R_MULTIPLE_ALT",
+ "esikler": {
+  "oran_bant": [
+   0.95,
+   1.05
+  ],
+  "siklastirma_eslesme_alt": 0.8,
+  "n_oran_alt": 15,
+  "pk_tolerans": 0.01
+ },
+ "payda_tanimlari": {
+  "canli": {
+   "capa": "meridian/broker.py::PaperBroker.close_position",
+   "dosya": "meridian/broker.py",
+   "semboller": [
+    "PaperBroker.close_position",
+    "PaperBroker.size_position",
+    "PaperBroker.fill_entry"
+   ],
+   "ifade": "r_multiple = pnl / pos.risk_dollars",
+   "payda_birimi": "POZİSYON ($) — hisse başı karşılığı `pos.risk_dollars / pos.qty`",
+   "payda_kaynagi": "`pos.risk_dollars`, `PaperBroker.size_position` içinde `size_r · RISK_PCT_PER_R · equity` ile kurulan DOLAR BÜTÇESİdir; `qty` bu bütçenin hisse başı riske BÖLÜNÜP AŞAĞI YUVARLANMASIYLA doğar (`math.floor`), yani `qty · (dolum − stop) ≤ risk_dollars`. Bütçe yalnız İKİ dalda yeniden türetilir (`fill_entry`: ADV tavanı ve notional tavanı → `risk_dollars = qty · (base_fill − stop)`).",
+   "stop_kaynagi": "plan[\"stop\"] (giriş anında dondurulur)",
+   "siklastirma_etkisi": "YOK. `manage_position` yalnız `pos.trail_stop`u taşır, `_touch_exit` yalnız `eff_stop`u okur; `pos.risk_dollars` giriş anından sonra HİÇBİR dalda yazılmaz (tarama: meridian/ içinde `risk_dollars` atamaları yalnız `fill_entry` gövdesinde).",
+   "qty_kaynagi": "`pos.qty` — giriş anında `size_position`dan doğar, ama `meridian/loop.py::_adet_benimse` dolumdan sonra AYNANIN adedini BENİMSER (`poz.qty = yeni`) ve `pos.risk_dollars`a DOKUNMAZ → hisse başı payda (`risk_dollars / qty`) sessizce kayar."
+  },
+  "golge": {
+   "capa": "meridian/golge_icra.py::_kapanis_satiri",
+   "dosya": "meridian/golge_icra.py",
+   "semboller": [
+    "_kapanis_satiri",
+    "_pozisyon_nesnesi"
+   ],
+   "ifade": "R = (çıkış − giriş) / poz[\"r_per_share\"]",
+   "payda_birimi": "HİSSE BAŞI ($)",
+   "payda_kaynagi": "`r_per_share = dolum − stop` (GİRİŞ riski). `_pozisyon_nesnesi` `qty=1` ve `risk_dollars = r_per_share` NOMİNAL değerlerini kurar: defter plan düzeyindedir, bütçe/yuvarlama yolu hiç koşmaz.",
+   "stop_kaynagi": "kayit[\"stop\"] (plan stopu)",
+   "siklastirma_etkisi": "YOK (payda giriş anında dondurulur, trail yalnız çıkışı belirler).",
+   "qty_kaynagi": "sabit 1 (nominal)"
+  },
+  "replay": {
+   "capa": "meridian/backtest.py::replay",
+   "dosya": "meridian/backtest.py",
+   "semboller": [
+    "replay"
+   ],
+   "ifade": "canlıyla AYNI fabrika: PaperBroker.close_position",
+   "payda_birimi": "POZİSYON ($) — hisse başı karşılığı `risk_dollars / qty`",
+   "payda_kaynagi": "`replay` canlı ile AYNI `PaperBroker`ı kurar ve aynı `fill_entry`/`close_position` çiftini çağırır → payda yine BÜTÇEdir. Canlıdan tek yapısal farkı: replay'de ayna yoktur, yani `_adet_benimse` yolu HİÇ koşmaz ve `qty` bütçeyle tutarlı kalır (sapma yalnız `floor` artığı kadardır: oran ∈ [1, 1 + 1/qty)).",
+   "stop_kaynagi": "plan[\"stop\"]",
+   "siklastirma_etkisi": "YOK (canlıyla aynı gerekçe).",
+   "qty_kaynagi": "`size_position` — benimseme yolu yok"
+  }
+ },
+ "payda_ayrismalari": [
+  {
+   "ad": "birim_ayrismasi",
+   "taraflar": [
+    "canli",
+    "replay",
+    "golge"
+   ],
+   "beyan": "Canlı/replay paydası POZİSYON BÜTÇESİDİR (`risk_dollars`), gölge paydası HİSSE BAŞI GİRİŞ RİSKİDİR (`dolum − stop`). İkisi ancak `qty = risk_dollars / (dolum − stop)` TAM BÖLÜNDÜĞÜNDE eşittir; `math.floor` her zaman ≥ yönünde artık bırakır."
+  },
+  {
+   "ad": "adet_benimseme",
+   "taraflar": [
+    "canli"
+   ],
+   "beyan": "`meridian/loop.py::_adet_benimse` (Ö-53/D) kitabın adedini aynanınkiyle DEĞİŞTİRİR ama `risk_dollars` bütçesini OLDUĞU GİBİ bırakır. Fonksiyonun kendi belgesi iki tarafın FARKLI hisse-başı risk kullandığını söylüyor: ayna `tetik − stop`, kitap `dolum − stop`. Benimseme sonrası canlı R'nin paydası artık İKİ defterin KARIŞIMIdır — ne bütçe/ayna-adedi ne de plan riski."
+  },
+  {
+   "ad": "replay_benimseme_yok",
+   "taraflar": [
+    "replay",
+    "canli"
+   ],
+   "beyan": "Aynı fabrika, farklı sonuç: replay'de benimseme yolu yok, canlıda var. Bu, iki defterin R birimini kod özdeşliğine RAĞMEN ayrıştırır."
+  }
+ ],
+ "hukum": "YOK — kart hükmü Rol-1'indir (bu betik yalnız ölçer)",
+ "pk": {
+  "pk1_sentetik": {
+   "sahneler": [
+    {
+     "ad": "temiz",
+     "r_ham": -2.0,
+     "r_defter": -2.0,
+     "qty": 20,
+     "risk_dollars": 200.0,
+     "plan_riski": 10.0,
+     "payda_ham": 10.0,
+     "payda_defter": 10.0,
+     "payda_defter_neden": null,
+     "oran_ham": 1.0,
+     "beklenen_oran": 1.0,
+     "gecti": true
+    },
+    {
+     "ad": "siklastirilmis_payda",
+     "r_ham": -4.0,
+     "r_defter": -4.0,
+     "qty": 20,
+     "risk_dollars": 100.0,
+     "plan_riski": 10.0,
+     "payda_ham": 5.0,
+     "payda_defter": 5.0,
+     "payda_defter_neden": null,
+     "oran_ham": 0.5,
+     "beklenen_oran": 0.5,
+     "gecti": true
+    },
+    {
+     "ad": "butce_asagi_yuvarlama",
+     "r_ham": -1.932367149758454,
+     "r_defter": -1.932,
+     "qty": 20,
+     "risk_dollars": 207.0,
+     "plan_riski": 10.0,
+     "payda_ham": 10.35,
+     "payda_defter": 10.351966873706004,
+     "payda_defter_neden": null,
+     "oran_ham": 1.035,
+     "beklenen_oran": 1.035,
+     "gecti": true
+    }
+   ],
+   "gecti": true
+  },
+  "pk2_gercek": {
+   "tolerans": 0.01,
+   "satirlar": [
+    {
+     "ticker": "ECL",
+     "payda_olculen": 11.7656,
+     "payda_beklenen": 11.77,
+     "plan_riski_olculen": 11.6222,
+     "plan_riski_beklenen": 11.62,
+     "kat_olculen": 1.0123,
+     "kat_beklenen": 1.01,
+     "oran": 1.012337,
+     "gecti": true
+    },
+    {
+     "ticker": "MU",
+     "payda_olculen": 59.9526,
+     "payda_beklenen": 59.95,
+     "plan_riski_olculen": 59.2951,
+     "plan_riski_beklenen": 59.3,
+     "kat_olculen": 1.0111,
+     "kat_beklenen": 1.01,
+     "oran": 1.011088,
+     "gecti": true
+    },
+    {
+     "ticker": "REGN",
+     "payda_olculen": 43.0652,
+     "payda_beklenen": 43.07,
+     "plan_riski_olculen": 41.1929,
+     "plan_riski_beklenen": 41.19,
+     "kat_olculen": 1.0455,
+     "kat_beklenen": 1.05,
+     "oran": 1.045452,
+     "gecti": true
+    },
+    {
+     "ticker": "VRTX",
+     "payda_olculen": 13.1731,
+     "payda_beklenen": 13.17,
+     "plan_riski_olculen": 26.6835,
+     "plan_riski_beklenen": 26.68,
+     "kat_olculen": 2.0256,
+     "kat_beklenen": 2.03,
+     "oran": 0.493681,
+     "gecti": true
+    }
+   ],
+   "gecti": true
+  },
+  "pk3_capraz": {
+   "golge": [
+    {
+     "plan_id": "P-2023-02-13-V-pullback",
+     "ticker": "V",
+     "oran": 1.0,
+     "gecti": true
+    },
+    {
+     "plan_id": "P-2023-05-10-ZBH-pullback",
+     "ticker": "ZBH",
+     "oran": 1.0,
+     "gecti": true
+    },
+    {
+     "plan_id": "P-2025-01-06-WBD-pullback",
+     "ticker": "WBD",
+     "oran": 1.000001,
+     "gecti": true
+    },
+    {
+     "plan_id": "P-2025-01-30-LNG-pullback",
+     "ticker": "LNG",
+     "oran": 1.0,
+     "gecti": true
+    },
+    {
+     "plan_id": "P-2026-04-28-OXY-pullback",
+     "ticker": "OXY",
+     "oran": 1.0,
+     "gecti": true
+    },
+    {
+     "plan_id": "P-2026-06-11-F-pullback",
+     "ticker": "F",
+     "oran": 1.0,
+     "gecti": true
+    }
+   ],
+   "replay": [
+    {
+     "plan_id": "P-2023-02-13-V",
+     "ticker": "V",
+     "qty": 35,
+     "r_multiple": -0.78,
+     "payda": 10.800366,
+     "plan_riski_golge_stopuyla": 10.5466,
+     "oran": 1.024061,
+     "r_ulp": 0.001,
+     "turetilmis_bant": [
+      0.999359,
+      1.029212
+     ],
+     "gecti": true,
+     "kart_duz_tolerans_saglandi": false
+    },
+    {
+     "plan_id": "P-2023-05-10-ZBH",
+     "ticker": "ZBH",
+     "qty": 86,
+     "r_multiple": -1.013,
+     "payda": 4.979912,
+     "plan_riski_golge_stopuyla": 4.9786,
+     "oran": 1.000264,
+     "r_ulp": 0.001,
+     "turetilmis_bant": [
+      0.999506,
+      1.012121
+     ],
+     "gecti": true,
+     "kart_duz_tolerans_saglandi": true
+    },
+    {
+     "plan_id": "P-2025-01-06-WBD",
+     "ticker": "WBD",
+     "qty": 687,
+     "r_multiple": -0.349,
+     "payda": 0.775558,
+     "plan_riski_golge_stopuyla": 0.7761,
+     "oran": 0.999301,
+     "r_ulp": 0.001,
+     "turetilmis_bant": [
+      0.998567,
+      1.002888
+     ],
+     "gecti": true,
+     "kart_duz_tolerans_saglandi": true
+    },
+    {
+     "plan_id": "P-2025-01-30-LNG",
+     "ticker": "LNG",
+     "qty": 39,
+     "r_multiple": -1.0,
+     "payda": 13.654359,
+     "plan_riski_golge_stopuyla": 13.5455,
+     "oran": 1.008037,
+     "r_ulp": 0.001,
+     "turetilmis_bant": [
+      0.9995,
+      1.026141
+     ],
+     "gecti": true,
+     "kart_duz_tolerans_saglandi": true
+    },
+    {
+     "plan_id": "P-2026-04-28-OXY",
+     "ticker": "OXY",
+     "qty": 131,
+     "r_multiple": -1.112,
+     "payda": 4.938561,
+     "plan_riski_golge_stopuyla": 4.9048,
+     "oran": 1.006883,
+     "r_ulp": 0.001,
+     "turetilmis_bant": [
+      0.99955,
+      1.008083
+     ],
+     "gecti": true,
+     "kart_duz_tolerans_saglandi": true
+    },
+    {
+     "plan_id": "P-2026-06-11-F",
+     "ticker": "F",
+     "qty": 384,
+     "r_multiple": -0.471,
+     "payda": 1.389331,
+     "plan_riski_golge_stopuyla": 1.3877,
+     "oran": 1.001175,
+     "r_ulp": 0.001,
+     "turetilmis_bant": [
+      0.998938,
+      1.003666
+     ],
+     "gecti": true,
+     "kart_duz_tolerans_saglandi": true
+    }
+   ],
+   "gecti": true,
+   "r_ulp_olculen": 0.001,
+   "kart_duz_tolerans_disi": [
+    {
+     "plan_id": "P-2023-02-13-V",
+     "oran": 1.024061,
+     "qty": 35,
+     "neden": "floor artığı 1/qty + 2 ondalıklı `r_multiple` yuvarlaması kartın düz ±0,01'ini AŞIYOR; türetilmiş tavan içinde kalıyor"
+    }
+   ],
+   "kaynak": {
+    "golge": "research/olcumler/edg088_golge_pilot/pk3_selef/sonuc_20260913T145834+0000.json",
+    "replay": "research/olcumler/edg049_dormant_2026-08-23/islemler_tam_dormant_acik.json"
+   }
+  },
+  "hepsi_gecti": true
+ },
+ "islemler": [
+  {
+   "id": "T00886",
+   "ticker": "ALL",
+   "plan_id": "P-2026-08-06-ALL-momentum_burst",
+   "ts_open": "2026-08-07",
+   "ts_close": "2026-08-07",
+   "setup": "momentum_burst",
+   "exit_reason": "stop",
+   "qty": 91,
+   "r_multiple": -1.028,
+   "pnl_dollars": -450.38,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 438.1128,
+   "payda_turetilen": 4.814427,
+   "payda_olculemedi_neden": null,
+   "plan_riski": null,
+   "plan_riski_olculemedi_neden": "plan satırı donmuş çekimde YOK (plan_id='P-2026-08-06-ALL-momentum_burst') — plan riski ÖLÇÜLEMEDİ (defterden türetme yapılmaz)",
+   "giris_riski": null,
+   "giris_riski_neden": "plan stopu ya da defter girişi ölçülemedi — giriş riski YOK",
+   "oran": null,
+   "oran_bantta": null,
+   "oran_giris_riskine": null,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": null,
+    "plan_stop": null,
+    "esit_mi": null,
+    "fark": null,
+    "neden": "aynada SL bacağı ya da plan stopu ölçülemedi"
+   },
+   "ayna": {
+    "bulundu": false,
+    "neden": "aynada `client_order_id`='P-2026-08-06-ALL-momentum_burst' emri YOK",
+    "qty": null,
+    "filled_qty": null,
+    "parent_filled_avg": null,
+    "sl_stop_price": null,
+    "sl_filled_avg": null,
+    "cikis_bacagi": null,
+    "giris_bps_defter_vs_ayna": null,
+    "cikis_bps_defter_vs_ayna": null
+   },
+   "qty_tanisi": {
+    "qty": 91,
+    "adaylar": {},
+    "tutan": [],
+    "sinif": "aciklanamadi",
+    "neden": "adet hiçbir ölçülebilir tabanla üretilemedi — kaynağı donmuş girdiden ÖLÇÜLEMEDİ (uydurulmaz)"
+   }
+  },
+  {
+   "id": "T00887",
+   "ticker": "VLO",
+   "plan_id": "P-2026-08-07-VLO-exhaustion_hammer",
+   "ts_open": "2026-08-10",
+   "ts_close": "2026-08-11",
+   "setup": "exhaustion_hammer",
+   "exit_reason": "target",
+   "qty": 61,
+   "r_multiple": 0.918,
+   "pnl_dollars": 728.37,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 793.4314,
+   "payda_turetilen": 13.007072,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 7.1365,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 12.8791,
+   "giris_riski_neden": null,
+   "oran": 1.822612,
+   "oran_bantta": false,
+   "oran_giris_riskine": 1.009936,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": null,
+    "plan_stop": 291.1635,
+    "esit_mi": null,
+    "fark": null,
+    "neden": "aynada SL bacağı ya da plan stopu ölçülemedi"
+   },
+   "ayna": {
+    "bulundu": false,
+    "neden": "aynada `client_order_id`='P-2026-08-07-VLO-exhaustion_hammer' emri YOK",
+    "qty": null,
+    "filled_qty": null,
+    "parent_filled_avg": null,
+    "sl_stop_price": null,
+    "sl_filled_avg": null,
+    "cikis_bacagi": null,
+    "giris_bps_defter_vs_ayna": null,
+    "cikis_bps_defter_vs_ayna": null
+   },
+   "qty_tanisi": {
+    "qty": 61,
+    "adaylar": {
+     "ic_dolum": 61,
+     "ayna_tetik": 111
+    },
+    "tutan": [
+     "ic_dolum"
+    ],
+    "sinif": "ic_dolum",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00891",
+   "ticker": "HUM",
+   "plan_id": "P-2026-08-14-HUM",
+   "ts_open": "2026-08-17",
+   "ts_close": "2026-08-19",
+   "setup": "exhaustion_hammer",
+   "exit_reason": "stop",
+   "qty": 57,
+   "r_multiple": -1.017,
+   "pnl_dollars": -395.34,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 388.7316,
+   "payda_turetilen": 6.819852,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 8.9607,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 6.7457,
+   "giris_riski_neden": null,
+   "oran": 0.761085,
+   "oran_bantta": false,
+   "oran_giris_riskine": 1.010992,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": 380.29,
+    "plan_stop": 380.2893,
+    "esit_mi": true,
+    "fark": 0.0007,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 43.0,
+    "filled_qty": 43.0,
+    "parent_filled_avg": 385.175116,
+    "sl_stop_price": 380.29,
+    "sl_filled_avg": 380.0,
+    "cikis_bacagi": {
+     "tip": "stop",
+     "filled_avg": 380.0,
+     "stop_price": 380.29
+    },
+    "giris_bps_defter_vs_ayna": 48.29,
+    "cikis_bps_defter_vs_ayna": 2.61
+   },
+   "qty_tanisi": {
+    "qty": 57,
+    "adaylar": {
+     "ic_dolum": 57,
+     "ayna_tetik": 43,
+     "ayna_qty": 43
+    },
+    "tutan": [
+     "ic_dolum"
+    ],
+    "sinif": "ic_dolum",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00889",
+   "ticker": "MRK",
+   "plan_id": "P-2026-08-13-MRK",
+   "ts_open": "2026-08-14",
+   "ts_close": "2026-08-19",
+   "setup": "breakout_vcp",
+   "exit_reason": "target",
+   "qty": 76,
+   "r_multiple": 3.379,
+   "pnl_dollars": 1373.76,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 406.5582,
+   "payda_turetilen": 5.349449,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 6.7097,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 5.3319,
+   "giris_riski_neden": null,
+   "oran": 0.797271,
+   "oran_bantta": false,
+   "oran_giris_riskine": 1.003291,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": 128.88,
+    "plan_stop": 128.8803,
+    "esit_mi": true,
+    "fark": -0.0003,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 60.0,
+    "filled_qty": 60.0,
+    "parent_filled_avg": 134.692834,
+    "sl_stop_price": 128.88,
+    "sl_filled_avg": null,
+    "cikis_bacagi": {
+     "tip": "limit",
+     "filled_avg": 152.36,
+     "stop_price": null
+    },
+    "giris_bps_defter_vs_ayna": -35.68,
+    "cikis_bps_defter_vs_ayna": -4.73
+   },
+   "qty_tanisi": {
+    "qty": 76,
+    "adaylar": {
+     "ic_dolum": 76,
+     "ayna_tetik": 60,
+     "ayna_qty": 60
+    },
+    "tutan": [
+     "ic_dolum"
+    ],
+    "sinif": "ic_dolum",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00890",
+   "ticker": "MRNA",
+   "plan_id": "P-2026-08-14-MRNA",
+   "ts_open": "2026-08-17",
+   "ts_close": "2026-08-19",
+   "setup": "exhaustion_hammer",
+   "exit_reason": "target_gap",
+   "qty": 124,
+   "r_multiple": 14.675,
+   "pnl_dollars": 6436.17,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 438.5806,
+   "payda_turetilen": 3.53694,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 2.5108,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 3.5231,
+   "giris_riski_neden": null,
+   "oran": 1.408691,
+   "oran_bantta": false,
+   "oran_giris_riskine": 1.003928,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": 60.76,
+    "plan_stop": 60.7592,
+    "esit_mi": true,
+    "fark": 0.0008,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 174.0,
+    "filled_qty": 174.0,
+    "parent_filled_avg": 63.41,
+    "sl_stop_price": 60.76,
+    "sl_filled_avg": null,
+    "cikis_bacagi": {
+     "tip": "limit",
+     "filled_avg": 116.01,
+     "stop_price": null
+    },
+    "giris_bps_defter_vs_ayna": 137.57,
+    "cikis_bps_defter_vs_ayna": 15.25
+   },
+   "qty_tanisi": {
+    "qty": 124,
+    "adaylar": {
+     "ic_dolum": 124,
+     "ayna_tetik": 174,
+     "ayna_qty": 174
+    },
+    "tutan": [
+     "ic_dolum"
+    ],
+    "sinif": "ic_dolum",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00888",
+   "ticker": "NUE",
+   "plan_id": "P-2026-08-05-NUE",
+   "ts_open": "2026-08-06",
+   "ts_close": "2026-08-19",
+   "setup": "breakout_vcp",
+   "exit_reason": "stop",
+   "qty": 54,
+   "r_multiple": -0.993,
+   "pnl_dollars": -884.15,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 890.3827,
+   "payda_turetilen": 16.488568,
+   "payda_olculemedi_neden": null,
+   "plan_riski": null,
+   "plan_riski_olculemedi_neden": "plan satırı donmuş çekimde YOK (plan_id='P-2026-08-05-NUE') — plan riski ÖLÇÜLEMEDİ (defterden türetme yapılmaz)",
+   "giris_riski": null,
+   "giris_riski_neden": "plan stopu ya da defter girişi ölçülemedi — giriş riski YOK",
+   "oran": null,
+   "oran_bantta": null,
+   "oran_giris_riskine": null,
+   "siklastirma": {
+    "var": null,
+    "olaylar": [],
+    "olculemedi": [
+     {
+      "ad": "koruma_oco_gonderildi",
+      "ts": "2026-08-07T16:23:42+00:00",
+      "neden": "olayın `stop`u ya da plan stopu ölçülemedi — bu olayın sıkılaştırma olup olmadığı BİLİNMİYOR"
+     },
+     {
+      "ad": "koruma_oco_gonderildi",
+      "ts": "2026-08-09T08:35:44+00:00",
+      "neden": "olayın `stop`u ya da plan stopu ölçülemedi — bu olayın sıkılaştırma olup olmadığı BİLİNMİYOR"
+     }
+    ],
+    "neden": "pencerede yön/eşik ölçülemeyen stop olayı var — hüküm YOK"
+   },
+   "broker_sl": {
+    "stop_price": 257.4,
+    "plan_stop": null,
+    "esit_mi": null,
+    "fark": null,
+    "neden": "aynada SL bacağı ya da plan stopu ölçülemedi"
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 25.0,
+    "filled_qty": 25.0,
+    "parent_filled_avg": 273.9512,
+    "sl_stop_price": 257.4,
+    "sl_filled_avg": null,
+    "cikis_bacagi": null,
+    "giris_bps_defter_vs_ayna": -11.07,
+    "cikis_bps_defter_vs_ayna": null
+   },
+   "qty_tanisi": {
+    "qty": 54,
+    "adaylar": {
+     "ayna_qty": 25
+    },
+    "tutan": [],
+    "sinif": "aciklanamadi",
+    "neden": "adet hiçbir ölçülebilir tabanla üretilemedi — kaynağı donmuş girdiden ÖLÇÜLEMEDİ (uydurulmaz)"
+   }
+  },
+  {
+   "id": "T00893",
+   "ticker": "LLY",
+   "plan_id": "P-2026-08-19-LLY",
+   "ts_open": "2026-08-20",
+   "ts_close": "2026-08-21",
+   "setup": "momentum_burst",
+   "exit_reason": "stop_gap",
+   "qty": 10,
+   "r_multiple": -1.008,
+   "pnl_dollars": -453.93,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 450.3274,
+   "payda_turetilen": 45.032738,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 48.6603,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 43.3781,
+   "giris_riski_neden": null,
+   "oran": 0.925451,
+   "oran_bantta": false,
+   "oran_giris_riskine": 1.038145,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": 1231.9,
+    "plan_stop": 1231.8997,
+    "esit_mi": true,
+    "fark": 0.0003,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 9.0,
+    "filled_qty": 9.0,
+    "parent_filled_avg": 1278.436667,
+    "sl_stop_price": 1231.9,
+    "sl_filled_avg": 1244.743333,
+    "cikis_bacagi": {
+     "tip": "stop",
+     "filled_avg": 1244.743333,
+     "stop_price": 1231.9
+    },
+    "giris_bps_defter_vs_ayna": -24.71,
+    "cikis_bps_defter_vs_ayna": -119.37
+   },
+   "qty_tanisi": {
+    "qty": 10,
+    "adaylar": {
+     "ic_dolum": 10,
+     "ayna_tetik": 9,
+     "ayna_qty": 9
+    },
+    "tutan": [
+     "ic_dolum"
+    ],
+    "sinif": "ic_dolum",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00892",
+   "ticker": "MRVL",
+   "plan_id": "P-2026-08-19-MRVL",
+   "ts_open": "2026-08-20",
+   "ts_close": "2026-08-21",
+   "setup": "momentum_burst",
+   "exit_reason": "stop",
+   "qty": 36,
+   "r_multiple": -0.009,
+   "pnl_dollars": -4.27,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 474.4444,
+   "payda_turetilen": null,
+   "payda_olculemedi_neden": "|r_multiple|=0.009 < R_MULTIPLE_ALT=0.02 — 3 ondalıklı R ile türetilen payda hassasiyetsiz, ÖLÇÜLEMEDİ (sıfır-R tanı kümesi)",
+   "plan_riski": 13.7332,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 13.6918,
+   "giris_riski_neden": null,
+   "oran": null,
+   "oran_bantta": null,
+   "oran_giris_riskine": null,
+   "siklastirma": {
+    "var": true,
+    "olaylar": [
+     {
+      "ad": "mirror_trail_synced",
+      "ts": "2026-08-20T20:34:16+00:00",
+      "from_stop": 223.62,
+      "to_stop": 237.31,
+      "olcut": "to_stop > from_stop"
+     }
+    ],
+    "olculemedi": []
+   },
+   "broker_sl": {
+    "stop_price": 237.31,
+    "plan_stop": 223.6168,
+    "esit_mi": false,
+    "fark": 13.6932,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 37.0,
+    "filled_qty": 37.0,
+    "parent_filled_avg": 244.957027,
+    "sl_stop_price": 237.31,
+    "sl_filled_avg": 237.130811,
+    "cikis_bacagi": {
+     "tip": "stop",
+     "filled_avg": 237.130811,
+     "stop_price": 237.31
+    },
+    "giris_bps_defter_vs_ayna": -312.24,
+    "cikis_bps_defter_vs_ayna": 2.5
+   },
+   "qty_tanisi": {
+    "qty": 36,
+    "adaylar": {
+     "ic_dolum": 34,
+     "ayna_tetik": 34,
+     "ayna_qty": 37
+    },
+    "tutan": [],
+    "sinif": "aciklanamadi",
+    "neden": "adet hiçbir ölçülebilir tabanla üretilemedi — kaynağı donmuş girdiden ÖLÇÜLEMEDİ (uydurulmaz)"
+   }
+  },
+  {
+   "id": "T00894",
+   "ticker": "PANW",
+   "plan_id": "P-2026-08-21-PANW",
+   "ts_open": "2026-08-24",
+   "ts_close": "2026-08-25",
+   "setup": "exhaustion_hammer",
+   "exit_reason": "stop",
+   "qty": 39,
+   "r_multiple": -0.999,
+   "pnl_dollars": -470.81,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 471.2813,
+   "payda_turetilen": 12.084135,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 15.0532,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 11.9007,
+   "giris_riski_neden": null,
+   "oran": 0.802762,
+   "oran_bantta": false,
+   "oran_giris_riskine": 1.015414,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": 342.85,
+    "plan_stop": 342.8468,
+    "esit_mi": true,
+    "fark": 0.0032,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 32.0,
+    "filled_qty": 32.0,
+    "parent_filled_avg": 357.66,
+    "sl_stop_price": 342.85,
+    "sl_filled_avg": 342.7,
+    "cikis_bacagi": {
+     "tip": "stop",
+     "filled_avg": 342.7,
+     "stop_price": 342.85
+    },
+    "giris_bps_defter_vs_ayna": -81.43,
+    "cikis_bps_defter_vs_ayna": -0.72
+   },
+   "qty_tanisi": {
+    "qty": 39,
+    "adaylar": {
+     "ic_dolum": 39,
+     "ayna_tetik": 31,
+     "ayna_qty": 32
+    },
+    "tutan": [
+     "ic_dolum"
+    ],
+    "sinif": "ic_dolum",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00897",
+   "ticker": "AMGN",
+   "plan_id": "P-2026-08-05-AMGN-momentum_burst",
+   "ts_open": "2026-08-06",
+   "ts_close": "2026-08-27",
+   "setup": "momentum_burst",
+   "exit_reason": "time_stop",
+   "qty": 22,
+   "r_multiple": 0.469,
+   "pnl_dollars": 394.04,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 840.1706,
+   "payda_turetilen": 38.189572,
+   "payda_olculemedi_neden": null,
+   "plan_riski": null,
+   "plan_riski_olculemedi_neden": "plan satırı donmuş çekimde YOK (plan_id='P-2026-08-05-AMGN-momentum_burst') — plan riski ÖLÇÜLEMEDİ (defterden türetme yapılmaz)",
+   "giris_riski": null,
+   "giris_riski_neden": "plan stopu ya da defter girişi ölçülemedi — giriş riski YOK",
+   "oran": null,
+   "oran_bantta": null,
+   "oran_giris_riskine": null,
+   "siklastirma": {
+    "var": null,
+    "olaylar": [],
+    "olculemedi": [
+     {
+      "ad": "koruma_oco_gonderildi",
+      "ts": "2026-08-07T16:23:41+00:00",
+      "neden": "olayın `stop`u ya da plan stopu ölçülemedi — bu olayın sıkılaştırma olup olmadığı BİLİNMİYOR"
+     },
+     {
+      "ad": "koruma_oco_gonderildi",
+      "ts": "2026-08-09T08:35:43+00:00",
+      "neden": "olayın `stop`u ya da plan stopu ölçülemedi — bu olayın sıkılaştırma olup olmadığı BİLİNMİYOR"
+     }
+    ],
+    "neden": "pencerede yön/eşik ölçülemeyen stop olayı var — hüküm YOK"
+   },
+   "broker_sl": {
+    "stop_price": 389.42,
+    "plan_stop": null,
+    "esit_mi": null,
+    "fark": null,
+    "neden": "aynada SL bacağı ya da plan stopu ölçülemedi"
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 22.0,
+    "filled_qty": 22.0,
+    "parent_filled_avg": 415.007273,
+    "sl_stop_price": 389.42,
+    "sl_filled_avg": null,
+    "cikis_bacagi": null,
+    "giris_bps_defter_vs_ayna": -9.99,
+    "cikis_bps_defter_vs_ayna": null
+   },
+   "qty_tanisi": {
+    "qty": 22,
+    "adaylar": {
+     "ayna_qty": 22
+    },
+    "tutan": [
+     "ayna_qty"
+    ],
+    "sinif": "ayna_qty",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00896",
+   "ticker": "BKNG",
+   "plan_id": "P-2026-08-05-BKNG",
+   "ts_open": "2026-08-06",
+   "ts_close": "2026-08-27",
+   "setup": "breakout_vcp",
+   "exit_reason": "time_stop",
+   "qty": 22,
+   "r_multiple": -0.003,
+   "pnl_dollars": -2.15,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 716.6667,
+   "payda_turetilen": null,
+   "payda_olculemedi_neden": "|r_multiple|=0.003 < R_MULTIPLE_ALT=0.02 — 3 ondalıklı R ile türetilen payda hassasiyetsiz, ÖLÇÜLEMEDİ (sıfır-R tanı kümesi)",
+   "plan_riski": null,
+   "plan_riski_olculemedi_neden": "plan satırı donmuş çekimde YOK (plan_id='P-2026-08-05-BKNG') — plan riski ÖLÇÜLEMEDİ (defterden türetme yapılmaz)",
+   "giris_riski": null,
+   "giris_riski_neden": "plan stopu ya da defter girişi ölçülemedi — giriş riski YOK",
+   "oran": null,
+   "oran_bantta": null,
+   "oran_giris_riskine": null,
+   "siklastirma": {
+    "var": null,
+    "olaylar": [],
+    "olculemedi": [
+     {
+      "ad": "koruma_oco_gonderildi",
+      "ts": "2026-08-07T16:23:41+00:00",
+      "neden": "olayın `stop`u ya da plan stopu ölçülemedi — bu olayın sıkılaştırma olup olmadığı BİLİNMİYOR"
+     },
+     {
+      "ad": "koruma_oco_gonderildi",
+      "ts": "2026-08-09T08:35:43+00:00",
+      "neden": "olayın `stop`u ya da plan stopu ölçülemedi — bu olayın sıkılaştırma olup olmadığı BİLİNMİYOR"
+     }
+    ],
+    "neden": "pencerede yön/eşik ölçülemeyen stop olayı var — hüküm YOK"
+   },
+   "broker_sl": {
+    "stop_price": 191.54,
+    "plan_stop": null,
+    "esit_mi": null,
+    "fark": null,
+    "neden": "aynada SL bacağı ya da plan stopu ölçülemedi"
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 22.0,
+    "filled_qty": 22.0,
+    "parent_filled_avg": 210.24,
+    "sl_stop_price": 191.54,
+    "sl_filled_avg": null,
+    "cikis_bacagi": null,
+    "giris_bps_defter_vs_ayna": -127.76,
+    "cikis_bps_defter_vs_ayna": null
+   },
+   "qty_tanisi": {
+    "qty": 22,
+    "adaylar": {
+     "ayna_qty": 22
+    },
+    "tutan": [
+     "ayna_qty"
+    ],
+    "sinif": "ayna_qty",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00898",
+   "ticker": "CRM",
+   "plan_id": "P-2026-08-13-CRM",
+   "ts_open": "2026-08-14",
+   "ts_close": "2026-08-27",
+   "setup": "breakout_vcp",
+   "exit_reason": "target",
+   "qty": 19,
+   "r_multiple": 2.322,
+   "pnl_dollars": 734.32,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 316.2446,
+   "payda_turetilen": 16.644454,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 16.1203,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 17.6517,
+   "giris_riski_neden": null,
+   "oran": 1.032515,
+   "oran_bantta": true,
+   "oran_giris_riskine": 0.942938,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": 185.2,
+    "plan_stop": 185.1997,
+    "esit_mi": true,
+    "fark": 0.0003,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 19.0,
+    "filled_qty": 19.0,
+    "parent_filled_avg": 201.087895,
+    "sl_stop_price": 185.2,
+    "sl_filled_avg": null,
+    "cikis_bacagi": {
+     "tip": "limit",
+     "filled_avg": 241.622632,
+     "stop_price": null
+    },
+    "giris_bps_defter_vs_ayna": 87.7,
+    "cikis_bps_defter_vs_ayna": -5.08
+   },
+   "qty_tanisi": {
+    "qty": 19,
+    "adaylar": {
+     "ic_dolum": 17,
+     "ayna_tetik": 19,
+     "ayna_qty": 19
+    },
+    "tutan": [
+     "ayna_qty",
+     "ayna_tetik"
+    ],
+    "sinif": "coklu_tutan",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00895",
+   "ticker": "EMR",
+   "plan_id": "P-2026-08-05-EMR",
+   "ts_open": "2026-08-06",
+   "ts_close": "2026-08-27",
+   "setup": "breakout_vcp",
+   "exit_reason": "time_stop",
+   "qty": 37,
+   "r_multiple": -0.286,
+   "pnl_dollars": -211.51,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 739.5455,
+   "payda_turetilen": 19.987715,
+   "payda_olculemedi_neden": null,
+   "plan_riski": null,
+   "plan_riski_olculemedi_neden": "plan satırı donmuş çekimde YOK (plan_id='P-2026-08-05-EMR') — plan riski ÖLÇÜLEMEDİ (defterden türetme yapılmaz)",
+   "giris_riski": null,
+   "giris_riski_neden": "plan stopu ya da defter girişi ölçülemedi — giriş riski YOK",
+   "oran": null,
+   "oran_bantta": null,
+   "oran_giris_riskine": null,
+   "siklastirma": {
+    "var": null,
+    "olaylar": [],
+    "olculemedi": [
+     {
+      "ad": "koruma_oco_gonderildi",
+      "ts": "2026-08-07T16:23:41+00:00",
+      "neden": "olayın `stop`u ya da plan stopu ölçülemedi — bu olayın sıkılaştırma olup olmadığı BİLİNMİYOR"
+     },
+     {
+      "ad": "koruma_oco_gonderildi",
+      "ts": "2026-08-09T08:35:44+00:00",
+      "neden": "olayın `stop`u ya da plan stopu ölçülemedi — bu olayın sıkılaştırma olup olmadığı BİLİNMİYOR"
+     }
+    ],
+    "neden": "pencerede yön/eşik ölçülemeyen stop olayı var — hüküm YOK"
+   },
+   "broker_sl": {
+    "stop_price": 152.48,
+    "plan_stop": null,
+    "esit_mi": null,
+    "fark": null,
+    "neden": "aynada SL bacağı ya da plan stopu ölçülemedi"
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 37.0,
+    "filled_qty": 37.0,
+    "parent_filled_avg": 164.76,
+    "sl_stop_price": 152.48,
+    "sl_filled_avg": null,
+    "cikis_bacagi": null,
+    "giris_bps_defter_vs_ayna": -49.33,
+    "cikis_bps_defter_vs_ayna": null
+   },
+   "qty_tanisi": {
+    "qty": 37,
+    "adaylar": {
+     "ayna_qty": 37
+    },
+    "tutan": [
+     "ayna_qty"
+    ],
+    "sinif": "ayna_qty",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00899",
+   "ticker": "NOW",
+   "plan_id": "P-2026-08-28-NOW",
+   "ts_open": "2026-08-31",
+   "ts_close": "2026-09-01",
+   "setup": "momentum_burst",
+   "exit_reason": "stop",
+   "qty": 42,
+   "r_multiple": -0.009,
+   "pnl_dollars": -2.99,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 332.2222,
+   "payda_turetilen": null,
+   "payda_olculemedi_neden": "|r_multiple|=0.009 < R_MULTIPLE_ALT=0.02 — 3 ondalıklı R ile türetilen payda hassasiyetsiz, ÖLÇÜLEMEDİ (sıfır-R tanı kümesi)",
+   "plan_riski": 8.2702,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 6.0715,
+   "giris_riski_neden": null,
+   "oran": null,
+   "oran_bantta": null,
+   "oran_giris_riskine": null,
+   "siklastirma": {
+    "var": true,
+    "olaylar": [
+     {
+      "ad": "mirror_trail_synced",
+      "ts": "2026-08-31T20:54:31+00:00",
+      "from_stop": 136.42,
+      "to_stop": 142.5,
+      "olcut": "to_stop > from_stop"
+     }
+    ],
+    "olculemedi": []
+   },
+   "broker_sl": {
+    "stop_price": 142.5,
+    "plan_stop": 136.4248,
+    "esit_mi": false,
+    "fark": 6.0752,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 42.0,
+    "filled_qty": 42.0,
+    "parent_filled_avg": 146.5,
+    "sl_stop_price": 142.5,
+    "sl_filled_avg": 142.478095,
+    "cikis_bacagi": {
+     "tip": "stop",
+     "filled_avg": 142.478095,
+     "stop_price": 142.5
+    },
+    "giris_bps_defter_vs_ayna": -273.29,
+    "cikis_bps_defter_vs_ayna": -3.73
+   },
+   "qty_tanisi": {
+    "qty": 42,
+    "adaylar": {
+     "ic_dolum": 54,
+     "ayna_tetik": 40,
+     "ayna_qty": 42
+    },
+    "tutan": [
+     "ayna_qty"
+    ],
+    "sinif": "ayna_qty",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00900",
+   "ticker": "ECL",
+   "plan_id": "P-2026-08-25-ECL",
+   "ts_open": "2026-08-26",
+   "ts_close": "2026-09-03",
+   "setup": "breakout_vcp",
+   "exit_reason": "stop",
+   "qty": 33,
+   "r_multiple": -1.083,
+   "pnl_dollars": -420.49,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 388.2641,
+   "payda_turetilen": 11.765578,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 11.6222,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 12.603,
+   "giris_riski_neden": null,
+   "oran": 1.012337,
+   "oran_bantta": true,
+   "oran_giris_riskine": 0.933554,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": 277.99,
+    "plan_stop": 277.9878,
+    "esit_mi": true,
+    "fark": 0.0022,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 33.0,
+    "filled_qty": 33.0,
+    "parent_filled_avg": 295.530909,
+    "sl_stop_price": 277.99,
+    "sl_filled_avg": 277.71,
+    "cikis_bacagi": {
+     "tip": "stop",
+     "filled_avg": 277.71,
+     "stop_price": 277.99
+    },
+    "giris_bps_defter_vs_ayna": -167.16,
+    "cikis_bps_defter_vs_ayna": 5.0
+   },
+   "qty_tanisi": {
+    "qty": 33,
+    "adaylar": {
+     "ic_dolum": 30,
+     "ayna_tetik": 33,
+     "ayna_qty": 33
+    },
+    "tutan": [
+     "ayna_qty",
+     "ayna_tetik"
+    ],
+    "sinif": "coklu_tutan",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00901",
+   "ticker": "CF",
+   "plan_id": "P-2026-09-01-CF",
+   "ts_open": "2026-09-02",
+   "ts_close": "2026-09-04",
+   "setup": "momentum_burst",
+   "exit_reason": "stop",
+   "qty": 57,
+   "r_multiple": -0.009,
+   "pnl_dollars": -3.79,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 421.1111,
+   "payda_turetilen": null,
+   "payda_olculemedi_neden": "|r_multiple|=0.009 < R_MULTIPLE_ALT=0.02 — 3 ondalıklı R ile türetilen payda hassasiyetsiz, ÖLÇÜLEMEDİ (sıfır-R tanı kümesi)",
+   "plan_riski": 7.0196,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 4.3765,
+   "giris_riski_neden": null,
+   "oran": null,
+   "oran_bantta": null,
+   "oran_giris_riskine": null,
+   "siklastirma": {
+    "var": true,
+    "olaylar": [
+     {
+      "ad": "mirror_trail_synced",
+      "ts": "2026-09-02T20:35:22+00:00",
+      "from_stop": 128.57,
+      "to_stop": 132.95,
+      "olcut": "to_stop > from_stop"
+     }
+    ],
+    "olculemedi": []
+   },
+   "broker_sl": {
+    "stop_price": 132.95,
+    "plan_stop": 128.5704,
+    "esit_mi": false,
+    "fark": 4.3796,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 57.0,
+    "filled_qty": 57.0,
+    "parent_filled_avg": 132.96,
+    "sl_stop_price": 132.95,
+    "sl_filled_avg": 132.589474,
+    "cikis_bacagi": {
+     "tip": "stop",
+     "filled_avg": 132.589474,
+     "stop_price": 132.95
+    },
+    "giris_bps_defter_vs_ayna": -0.99,
+    "cikis_bps_defter_vs_ayna": 21.94
+   },
+   "qty_tanisi": {
+    "qty": 57,
+    "adaylar": {
+     "ic_dolum": 96,
+     "ayna_tetik": 59,
+     "ayna_qty": 57
+    },
+    "tutan": [
+     "ayna_qty"
+    ],
+    "sinif": "ayna_qty",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00904",
+   "ticker": "BDX",
+   "plan_id": "P-2026-08-19-BDX",
+   "ts_open": "2026-08-20",
+   "ts_close": "2026-09-08",
+   "setup": "breakout_vcp",
+   "exit_reason": "koruma_stop",
+   "qty": 40,
+   "r_multiple": -0.908,
+   "pnl_dollars": -321.36,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 353.9207,
+   "payda_turetilen": 8.848018,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 9.0181,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 8.2119,
+   "giris_riski_neden": null,
+   "oran": 0.98114,
+   "oran_bantta": true,
+   "oran_giris_riskine": 1.077463,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": 178.6,
+    "plan_stop": 178.6019,
+    "esit_mi": true,
+    "fark": -0.0019,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 40.0,
+    "filled_qty": 40.0,
+    "parent_filled_avg": 186.966,
+    "sl_stop_price": 178.6,
+    "sl_filled_avg": 178.86925,
+    "cikis_bacagi": {
+     "tip": "stop",
+     "filled_avg": 178.86925,
+     "stop_price": 178.6
+    },
+    "giris_bps_defter_vs_ayna": -8.14,
+    "cikis_bps_defter_vs_ayna": -5.0
+   },
+   "qty_tanisi": {
+    "qty": 40,
+    "adaylar": {
+     "ic_dolum": 43,
+     "ayna_tetik": 39,
+     "ayna_qty": 40
+    },
+    "tutan": [
+     "ayna_qty"
+    ],
+    "sinif": "ayna_qty",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00903",
+   "ticker": "REGN",
+   "plan_id": "P-2026-09-02-REGN",
+   "ts_open": "2026-09-03",
+   "ts_close": "2026-09-08",
+   "setup": "breakout_vcp",
+   "exit_reason": "stop",
+   "qty": 10,
+   "r_multiple": -1.089,
+   "pnl_dollars": -468.98,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 430.652,
+   "payda_turetilen": 43.065197,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 41.1929,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 46.4926,
+   "giris_riski_neden": null,
+   "oran": 1.045452,
+   "oran_bantta": true,
+   "oran_giris_riskine": 0.926281,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": 811.12,
+    "plan_stop": 811.1171,
+    "esit_mi": true,
+    "fark": 0.0029,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 10.0,
+    "filled_qty": 10.0,
+    "parent_filled_avg": 851.59,
+    "sl_stop_price": 811.12,
+    "sl_filled_avg": 804.378,
+    "cikis_bacagi": {
+     "tip": "stop",
+     "filled_avg": 804.378,
+     "stop_price": 811.12
+    },
+    "giris_bps_defter_vs_ayna": 70.69,
+    "cikis_bps_defter_vs_ayna": 78.74
+   },
+   "qty_tanisi": {
+    "qty": 10,
+    "adaylar": {
+     "ic_dolum": 9,
+     "ayna_tetik": 10,
+     "ayna_qty": 10
+    },
+    "tutan": [
+     "ayna_qty",
+     "ayna_tetik"
+    ],
+    "sinif": "coklu_tutan",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00902",
+   "ticker": "VRTX",
+   "plan_id": "P-2026-09-02-VRTX",
+   "ts_open": "2026-09-03",
+   "ts_close": "2026-09-08",
+   "setup": "breakout_vcp",
+   "exit_reason": "stop_gap",
+   "qty": 38,
+   "r_multiple": -2.277,
+   "pnl_dollars": -1139.82,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 500.5797,
+   "payda_turetilen": 13.17315,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 26.6835,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 29.0339,
+   "giris_riski_neden": null,
+   "oran": 0.493681,
+   "oran_bantta": false,
+   "oran_giris_riskine": 0.453716,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": 530.34,
+    "plan_stop": 530.3365,
+    "esit_mi": true,
+    "fark": 0.0035,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 18.0,
+    "filled_qty": 18.0,
+    "parent_filled_avg": 556.94,
+    "sl_stop_price": 530.34,
+    "sl_filled_avg": 522.718889,
+    "cikis_bacagi": {
+     "tip": "stop",
+     "filled_avg": 522.718889,
+     "stop_price": 530.34
+    },
+    "giris_bps_defter_vs_ayna": 43.64,
+    "cikis_bps_defter_vs_ayna": 127.34
+   },
+   "qty_tanisi": {
+    "qty": 38,
+    "adaylar": {
+     "ic_dolum": 17,
+     "ayna_tetik": 18,
+     "ayna_qty": 18
+    },
+    "tutan": [],
+    "sinif": "aciklanamadi",
+    "neden": "adet hiçbir ölçülebilir tabanla üretilemedi — kaynağı donmuş girdiden ÖLÇÜLEMEDİ (uydurulmaz)"
+   }
+  },
+  {
+   "id": "T00907",
+   "ticker": "DE",
+   "plan_id": "P-2026-08-21-DE",
+   "ts_open": "2026-08-24",
+   "ts_close": "2026-09-11",
+   "setup": "momentum_burst",
+   "exit_reason": "regime_flip",
+   "qty": 10,
+   "r_multiple": 0.801,
+   "pnl_dollars": 351.69,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 439.0637,
+   "payda_turetilen": 43.906367,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 42.847,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 48.464,
+   "giris_riski_neden": null,
+   "oran": 1.024724,
+   "oran_bantta": true,
+   "oran_giris_riskine": 0.905958,
+   "siklastirma": {
+    "var": true,
+    "olaylar": [
+     {
+      "ad": "mirror_trail_synced",
+      "ts": "2026-09-03T20:32:45+00:00",
+      "from_stop": 604.9,
+      "to_stop": 653.37,
+      "olcut": "to_stop > from_stop"
+     }
+    ],
+    "olculemedi": []
+   },
+   "broker_sl": {
+    "stop_price": 653.37,
+    "plan_stop": 604.903,
+    "esit_mi": false,
+    "fark": 48.467,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 10.0,
+    "filled_qty": 10.0,
+    "parent_filled_avg": 658.31,
+    "sl_stop_price": 653.37,
+    "sl_filled_avg": null,
+    "cikis_bacagi": null,
+    "giris_bps_defter_vs_ayna": -75.09,
+    "cikis_bps_defter_vs_ayna": null
+   },
+   "qty_tanisi": {
+    "qty": 10,
+    "adaylar": {
+     "ic_dolum": 9,
+     "ayna_tetik": 10,
+     "ayna_qty": 10
+    },
+    "tutan": [
+     "ayna_qty",
+     "ayna_tetik"
+    ],
+    "sinif": "coklu_tutan",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00908",
+   "ticker": "MPC",
+   "plan_id": "P-2026-09-01-MPC",
+   "ts_open": "2026-09-02",
+   "ts_close": "2026-09-11",
+   "setup": "breakout_vcp",
+   "exit_reason": "regime_flip",
+   "qty": 20,
+   "r_multiple": 0.568,
+   "pnl_dollars": 243.31,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 428.3627,
+   "payda_turetilen": 21.418134,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 20.9019,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 21.3087,
+   "giris_riski_neden": null,
+   "oran": 1.024698,
+   "oran_bantta": true,
+   "oran_giris_riskine": 1.005136,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": 361.84,
+    "plan_stop": 361.8381,
+    "esit_mi": true,
+    "fark": 0.0019,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 20.0,
+    "filled_qty": 20.0,
+    "parent_filled_avg": 383.68,
+    "sl_stop_price": 361.84,
+    "sl_filled_avg": null,
+    "cikis_bacagi": null,
+    "giris_bps_defter_vs_ayna": -13.9,
+    "cikis_bps_defter_vs_ayna": null
+   },
+   "qty_tanisi": {
+    "qty": 20,
+    "adaylar": {
+     "ic_dolum": 20,
+     "ayna_tetik": 20,
+     "ayna_qty": 20
+    },
+    "tutan": [
+     "ayna_qty",
+     "ayna_tetik",
+     "ic_dolum"
+    ],
+    "sinif": "coklu_tutan",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00906",
+   "ticker": "MRK",
+   "plan_id": "P-2026-08-19-MRK",
+   "ts_open": "2026-08-20",
+   "ts_close": "2026-09-11",
+   "setup": "momentum_burst",
+   "exit_reason": "time_stop",
+   "qty": 65,
+   "r_multiple": -0.623,
+   "pnl_dollars": -327.5,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 525.6822,
+   "payda_turetilen": 8.087418,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 8.2579,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 6.8934,
+   "giris_riski_neden": null,
+   "oran": 0.979355,
+   "oran_bantta": true,
+   "oran_giris_riskine": 1.173212,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": 143.93,
+    "plan_stop": 143.9321,
+    "esit_mi": true,
+    "fark": -0.0021,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 65.0,
+    "filled_qty": 65.0,
+    "parent_filled_avg": 150.602924,
+    "sl_stop_price": 143.93,
+    "sl_filled_avg": 143.92,
+    "cikis_bacagi": {
+     "tip": "stop",
+     "filled_avg": 143.92,
+     "stop_price": 143.93
+    },
+    "giris_bps_defter_vs_ayna": 14.78,
+    "cikis_bps_defter_vs_ayna": 129.73
+   },
+   "qty_tanisi": {
+    "qty": 65,
+    "adaylar": {
+     "ic_dolum": 76,
+     "ayna_tetik": 63,
+     "ayna_qty": 65
+    },
+    "tutan": [
+     "ayna_qty"
+    ],
+    "sinif": "ayna_qty",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00905",
+   "ticker": "MRNA",
+   "plan_id": "P-2026-08-19-MRNA",
+   "ts_open": "2026-08-20",
+   "ts_close": "2026-09-11",
+   "setup": "momentum_burst",
+   "exit_reason": "time_stop",
+   "qty": 8,
+   "r_multiple": -0.202,
+   "pnl_dollars": -108.13,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 535.297,
+   "payda_turetilen": 66.912129,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 62.9531,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 38.5907,
+   "giris_riski_neden": null,
+   "oran": 1.062889,
+   "oran_bantta": false,
+   "oran_giris_riskine": 1.733893,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": 111.6,
+    "plan_stop": 111.5969,
+    "esit_mi": true,
+    "fark": 0.0031,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 8.0,
+    "filled_qty": 8.0,
+    "parent_filled_avg": 148.28,
+    "sl_stop_price": 111.6,
+    "sl_filled_avg": null,
+    "cikis_bacagi": null,
+    "giris_bps_defter_vs_ayna": 128.65,
+    "cikis_bps_defter_vs_ayna": null
+   },
+   "qty_tanisi": {
+    "qty": 8,
+    "adaylar": {
+     "ic_dolum": 13,
+     "ayna_tetik": 8,
+     "ayna_qty": 8
+    },
+    "tutan": [
+     "ayna_qty",
+     "ayna_tetik"
+    ],
+    "sinif": "coklu_tutan",
+    "neden": null
+   }
+  },
+  {
+   "id": "T00909",
+   "ticker": "MU",
+   "plan_id": "P-2026-09-04-MU",
+   "ts_open": "2026-09-08",
+   "ts_close": "2026-09-11",
+   "setup": "momentum_burst",
+   "exit_reason": "regime_flip",
+   "qty": 7,
+   "r_multiple": -0.753,
+   "pnl_dollars": -316.01,
+   "scaled_out": 0,
+   "risk_dollars_turetilen": 419.668,
+   "payda_turetilen": 59.952571,
+   "payda_olculemedi_neden": null,
+   "plan_riski": 59.2951,
+   "plan_riski_olculemedi_neden": null,
+   "giris_riski": 81.8136,
+   "giris_riski_neden": null,
+   "oran": 1.011088,
+   "oran_bantta": true,
+   "oran_giris_riskine": 0.732795,
+   "siklastirma": {
+    "var": false,
+    "olaylar": [],
+    "olculemedi": [],
+    "neden": "pencerede stopu YUKARI taşıyan olay YOK (0 olay — 'ölçülemedi' DEĞİL)"
+   },
+   "broker_sl": {
+    "stop_price": 955.7,
+    "plan_stop": 955.7049,
+    "esit_mi": true,
+    "fark": -0.0049,
+    "neden": null
+   },
+   "ayna": {
+    "bulundu": true,
+    "neden": null,
+    "qty": 7.0,
+    "filled_qty": 7.0,
+    "parent_filled_avg": 1012.36,
+    "sl_stop_price": 955.7,
+    "sl_filled_avg": null,
+    "cikis_bacagi": null,
+    "giris_bps_defter_vs_ayna": 248.51,
+    "cikis_bps_defter_vs_ayna": null
+   },
+   "qty_tanisi": {
+    "qty": 7,
+    "adaylar": {
+     "ic_dolum": 5,
+     "ayna_tetik": 7,
+     "ayna_qty": 7
+    },
+    "tutan": [
+     "ayna_qty",
+     "ayna_tetik"
+    ],
+    "sinif": "coklu_tutan",
+    "neden": null
+   }
+  }
+ ],
+ "kapi": {
+  "n_oran": 16,
+  "esik": 15,
+  "gecti": true,
+  "n_islem": 24,
+  "n_plansiz": 5,
+  "n_payda_olculemedi": 4
+ },
+ "birincil": {
+  "medyan": 1.011713,
+  "p10": 0.779178,
+  "p90": 1.23579,
+  "min": 0.493681,
+  "max": 1.822612,
+  "bant": [
+   0.95,
+   1.05
+  ],
+  "n_bantta": 8,
+  "n_bant_disi": 8,
+  "pay_bant_disi": 0.5,
+  "medyan_giris_riskine": 1.004532
+ },
+ "tablo_2x2": {
+  "tanim": "satır: oran ∉ [0,95; 1,05] · sütun: işlem penceresinde stopu YUKARI taşıyan olay. 'sik_yok' = 0 OLAY (ölçüldü), 'sik_olculemedi' = hüküm YOK — ikisi AYRI sütundur.",
+  "hucreler": {
+   "bant_disi_sik": 0,
+   "bant_disi_sik_yok": 8,
+   "bant_disi_sik_olculemedi": 0,
+   "bantta_sik": 1,
+   "bantta_sik_yok": 7,
+   "bantta_sik_olculemedi": 0
+  },
+  "eslesme_orani": 0.0,
+  "eslesme_alt": 0.8,
+  "eslesme_gecti": false,
+  "eslesme_neden": null,
+  "siklastirma_olayi_toplam": 4,
+  "olay_sozlugu": {
+   "stop_tasiyan_adlar": [
+    "mirror_trail_synced",
+    "koruma_oco_gonderildi",
+    "koruma_kur_istegi",
+    "koruma_kur_ozet",
+    "korumasiz_motor_disi_pozisyon"
+   ],
+   "trail_olayi": "mirror_trail_synced",
+   "beyan": "donmuş çekimdeki 242 olayın çoğu ALARM METNİdir (MIRROR_DRIFT/NAKED_POSITION …) ve stop DEĞİŞİKLİĞİ değildir; sıkılaştırma yalnız yukarıdaki adlarla ve olayın KENDİ alanlarıyla ölçülür"
+  }
+ },
+ "tani": {
+  "kurulum_kirilimi": {
+   "exhaustion_hammer": {
+    "n": 4,
+    "medyan": 1.105726
+   },
+   "breakout_vcp": {
+    "n": 7,
+    "medyan": 1.012337
+   },
+   "momentum_burst": {
+    "n": 5,
+    "medyan": 1.011088
+   }
+  },
+  "defter_vs_ayna_bps": {
+   "giris": {
+    "n": 22,
+    "medyan": -10.53,
+    "min": -312.24,
+    "max": 248.51
+   },
+   "cikis": {
+    "n": 14,
+    "medyan": 2.55,
+    "min": -119.37,
+    "max": 129.73
+   },
+   "beyan": "EXE-2026-007 sınıfı TANI — hüküm değil: defter fiyatı iç modeldir, ayna dolumu ayrı bir olgudur"
+  },
+  "sl_bacagi_plan_stopuna_esit": {
+   "esit": 14,
+   "farkli": 4,
+   "olculemedi": 6
+  },
+  "qty_tabani": {
+   "aciklanamadi": 4,
+   "ic_dolum": 6,
+   "ayna_qty": 7,
+   "coklu_tutan": 7
+  },
+  "sifir_r_kumesi": [
+   {
+    "id": "T00892",
+    "ticker": "MRVL",
+    "r_multiple": -0.009,
+    "neden": "|r_multiple|=0.009 < R_MULTIPLE_ALT=0.02 — 3 ondalıklı R ile türetilen payda hassasiyetsiz, ÖLÇÜLEMEDİ (sıfır-R tanı kümesi)"
+   },
+   {
+    "id": "T00896",
+    "ticker": "BKNG",
+    "r_multiple": -0.003,
+    "neden": "|r_multiple|=0.003 < R_MULTIPLE_ALT=0.02 — 3 ondalıklı R ile türetilen payda hassasiyetsiz, ÖLÇÜLEMEDİ (sıfır-R tanı kümesi)"
+   },
+   {
+    "id": "T00899",
+    "ticker": "NOW",
+    "r_multiple": -0.009,
+    "neden": "|r_multiple|=0.009 < R_MULTIPLE_ALT=0.02 — 3 ondalıklı R ile türetilen payda hassasiyetsiz, ÖLÇÜLEMEDİ (sıfır-R tanı kümesi)"
+   },
+   {
+    "id": "T00901",
+    "ticker": "CF",
+    "r_multiple": -0.009,
+    "neden": "|r_multiple|=0.009 < R_MULTIPLE_ALT=0.02 — 3 ondalıklı R ile türetilen payda hassasiyetsiz, ÖLÇÜLEMEDİ (sıfır-R tanı kümesi)"
+   }
+  ]
+ },
+ "girdi": {
+  "yol": "/Users/erdemozturk/AI-Trading/.claude/worktrees/edg091/research/olcumler/edg091_r_paydasi/girdi/a1_cekim_2026-09-13.json",
+  "yol_goreli": "research/olcumler/edg091_r_paydasi/girdi/a1_cekim_2026-09-13.json",
+  "sha256": "e1524a74e9b104e3bff94f4b32de305795bcb402573d1b3865f3c1eb028477cd",
+  "beyan": "e1524a74e9b104e3bff94f4b32de305795bcb402573d1b3865f3c1eb028477cd",
+  "dogrulandi": true
+ },
+ "olculemeyenler": [
+  {
+   "id": "T00886",
+   "ticker": "ALL",
+   "payda": null,
+   "plan_riski": "plan satırı donmuş çekimde YOK (plan_id='P-2026-08-06-ALL-momentum_burst') — plan riski ÖLÇÜLEMEDİ (defterden türetme yapılmaz)"
+  },
+  {
+   "id": "T00888",
+   "ticker": "NUE",
+   "payda": null,
+   "plan_riski": "plan satırı donmuş çekimde YOK (plan_id='P-2026-08-05-NUE') — plan riski ÖLÇÜLEMEDİ (defterden türetme yapılmaz)"
+  },
+  {
+   "id": "T00892",
+   "ticker": "MRVL",
+   "payda": "|r_multiple|=0.009 < R_MULTIPLE_ALT=0.02 — 3 ondalıklı R ile türetilen payda hassasiyetsiz, ÖLÇÜLEMEDİ (sıfır-R tanı kümesi)",
+   "plan_riski": null
+  },
+  {
+   "id": "T00897",
+   "ticker": "AMGN",
+   "payda": null,
+   "plan_riski": "plan satırı donmuş çekimde YOK (plan_id='P-2026-08-05-AMGN-momentum_burst') — plan riski ÖLÇÜLEMEDİ (defterden türetme yapılmaz)"
+  },
+  {
+   "id": "T00896",
+   "ticker": "BKNG",
+   "payda": "|r_multiple|=0.003 < R_MULTIPLE_ALT=0.02 — 3 ondalıklı R ile türetilen payda hassasiyetsiz, ÖLÇÜLEMEDİ (sıfır-R tanı kümesi)",
+   "plan_riski": "plan satırı donmuş çekimde YOK (plan_id='P-2026-08-05-BKNG') — plan riski ÖLÇÜLEMEDİ (defterden türetme yapılmaz)"
+  },
+  {
+   "id": "T00895",
+   "ticker": "EMR",
+   "payda": null,
+   "plan_riski": "plan satırı donmuş çekimde YOK (plan_id='P-2026-08-05-EMR') — plan riski ÖLÇÜLEMEDİ (defterden türetme yapılmaz)"
+  },
+  {
+   "id": "T00899",
+   "ticker": "NOW",
+   "payda": "|r_multiple|=0.009 < R_MULTIPLE_ALT=0.02 — 3 ondalıklı R ile türetilen payda hassasiyetsiz, ÖLÇÜLEMEDİ (sıfır-R tanı kümesi)",
+   "plan_riski": null
+  },
+  {
+   "id": "T00901",
+   "ticker": "CF",
+   "payda": "|r_multiple|=0.009 < R_MULTIPLE_ALT=0.02 — 3 ondalıklı R ile türetilen payda hassasiyetsiz, ÖLÇÜLEMEDİ (sıfır-R tanı kümesi)",
+   "plan_riski": null
+  }
+ ]
+}
