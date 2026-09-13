@@ -8,7 +8,7 @@
 # tool_calls'ı yapısal üreten modellerle kurulur (bugün ling-3.0-flash ailesi); (iii) recall arama katmanı değildir — arama sqlite-vec (TSK-167).
 
 card_id: EDG-2026-089
-status: registered   # 2026-09-13 Rol-1 — ön-kayıt; kurulum (TSK-168 retain betiği + timer + CLAUDE.md §0 okuma kuralı) bu karttan SONRA; pencere ilk başarılı retain'den itibaren
+status: measuring   # 2026-09-13 10:3xZ Rol-1 — kurulum canlı (dağıtım #40, timer 21:30Z etkin), PK(2) GERÇEK yeşil, PENCERE AÇIK 2026-09-13T10:23:08Z → hüküm 2026-09-20
 family: hindsight_hafiza
 on_kayit: 2026-09-13
 selef: EDG-2026-083
@@ -70,3 +70,18 @@ notlar: >
   varsa okuyucusu bu kartın K1 sayımıdır (DECLARED_SINKS gerekçesiyle). EDG-084 (09-14 hükmü) bu kartın penceresinde AYRICA ölçülmez —
   084'ün beş sayfası 11 sayfalık K3 kümesinin içindedir. hafıza: kart_benzer 5 KALDI akrabası selef/ref'te; memory hindsight-aktif-kullanim
   (operatör 09-06 direktifi) + hindsight-islem-bazli-model-ayari (reflect zinciri) okundu.
+kurulum_kaydi_2026_09_13: >
+  (10:32Z Rol-1) KURULUM CANLI: `ops/defter_ozeti_retain.py` + `meridian-defter-ozeti-retain.{service,timer}` + LoadCredential drop-in — A0 rolü
+  (site.yml, timer enabled, sonraki tetik 2026-09-13 21:30:17Z) + dağıtım #40 (main 7eb8476; suite #45 12066/0). Tek Opus implementer (361k) +
+  tek Sonnet inceleme (2 ORTA: tenant anahtarı maskesi `_maskele`, tek olay adı — düzeltildi; a4 çivisi mutasyonla ısırdı) + Rol-1 hükümleri
+  (`SuccessExitStatus=2`, timer operatör (b) kararıyla etkin). v464 32 çivi.
+  PK (2) GERÇEK — TEST-ATEŞLEME 2026-09-13T10:23:08Z (`systemctl start`, kurulum günü, CLAUDE.md §9): birim success (rc 0), olay
+  `defter_ozeti_retain` sonuc=retain 1.516 karakter op 10d5d219…; bankada `documents/meridian-gunluk-ozet-2026-09-13` HTTP 200 (content_hash
+  d5739910…); `retain` op 10:28:37Z completed — İLK deneme `ProviderResponseError` (1/1 chunk) ile düştü, failover üyesi çıkarımı tamamladı
+  (batch_retain unit_ids_count 8), ardından consolidation 10:30:31Z (8/8) → memory_units 17.243 → 17.259 (+16), bankanın son olgusu 09-07'den
+  10:30:31Z'ye ilerledi. YASA 6 zinciri kapandı: 10:30:55Z maintenance 'scheduled 11 model(s)' — 6 gündür 'up-to-date' diyen delta
+  tazeleme bu belgeyle 11 sayfayı birden kuyruğa aldı (OTOMATİK, elle değil → K2 sayımının ilk otomatik tazelemesi; sonuçlar 7. gün okunur).
+  PK (1) SENTETİK: v464 a1/a2/a4 (bilinen 5 sayı + kaynak yolu; sahte OpenRouter ve tenant anahtarı belgeye/gövdeye sızmadı; idempotens d1/d2).
+  PK (3) NEGATİF: 7. gün okunur (NK sayfası 'bankada yok' kalmalı; PK-PIT sayfası bilinen cevabı korumalı).
+  PENCERE AÇILDI 2026-09-13T10:23:08Z → 7 gün → HÜKÜM 2026-09-20 (≥05:30Z; 21:30Z retain'ler 09-13…09-19, cron 05:00Z 09-14…09-20).
+  Bedel (tanı): retain LLM 672 token (total_tokens), süre 5,5 dk (ilk sağlayıcı hatası dahil). Maliyet kolonu 7. gün.
