@@ -96,6 +96,14 @@ MAX_TOKENS = int(os.environ.get("SOHBET_MAX_TOKENS", "4096"))
 #: (duckdb 1.5.5, bu makine): `duckdb.connect()` varsayılanı `memory_limit` sistem RAM'inin
 #: ~%80'i, `threads` = çekirdek sayısı. A1 dört çekirdeklidir ve `serve.sh` TEK uvicorn işçisi
 #: koşar: sınırsız bir çapraz-birleştirme panonun tamamını (halt/ack dahil) düşürebilirdi.
+#:
+#: `ops/olay_sorgu.py`nin KENDİ `SERTLESTIRME`si 2026-09-13'te (TSK-012) AYRI bir
+#: `OLAY_SORGU_BELLEK` (env, varsayılan 1GB) ile aynı sınıf boşluğu kapattı — buradaki
+#: `SORGU_BELLEK_TAVANI`yı İTHAL EDEMEDİ, çünkü o betik `meridian` paketini hiç import etmez
+#: (yukarıdaki OBS SIZINTISI izolasyonu). Varsayılanların FARKLI olması BİLİNÇLİ: burası HER
+#: `POST /api/sohbet` isteğinde açılan dar bir bütçe, o araç OPERATÖRÜN A1'de elle başlattığı TEK
+#: bir CLI koşumudur. İki sabit birbirine REFERANS VERMEZ — bu şerh ile oradaki şerhin SENKRON
+#: kalması beklenir (tek-kaynak istisnası, beyanlı).
 SORGU_BELLEK_TAVANI = os.environ.get("SOHBET_SQL_BELLEK", "512MB")
 SORGU_IPLIK_TAVANI = 1
 #: Kullanıcı/model SQL'inin duvar-saati tavanı. Aşımda `con.interrupt()` → `AracReddi` (ARIZA
