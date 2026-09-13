@@ -1695,7 +1695,7 @@ Otomatik ÇAĞRILMAZ: bakım penceresinde, operatör eliyle. KARDEŞİNDEN FARKI
 bir sırrın KANALINI taşır (ortam → LoadCredential); bu betik kanala DOKUNMAZ, sırrın DEĞERİNİ
 döndürür ve o değerin BÜTÜN KOPYALARINI aynı pencerede eşitler.
 
-NİYE BİR BETİK. 2026-09-07 gecesi dört sır A1'de ELLE döndürüldü: her sırrın 2-12 kopyası var ve
+NİYE BİR BETİK. 2026-09-07 gecesi dört sır A1'de ELLE döndürüldü: her sırrın 2-13 kopyası var ve
 kopyalar AYRI dosyalarda yaşıyor (credential kaynağı · `.env` satırı · docker env-file · bot
 profili · LLM failover zincirinin ÜYE satırları). Elle rotasyonda kaçınılmaz tek hata "bir
 kopyayı unutmak"tır ve o hata SESSİZDİR: yeniden başlatılan birim çalışır, unutulan kopyayı
@@ -1711,7 +1711,8 @@ CONSOLIDATION _1.._3) ve altısı da OPENROUTER_API_KEY değerinin birebir kopya
 olmasalardı `--openrouter` creds dosyasını döndürür, üyeler ESKİ anahtarla kalır ve eski anahtar
 iptal edildiği an üyeler 401 alıp zincir SESSİZCE birincile düşerdi — yani bu betiğin var olma
 gerekçesindeki "unutulan kopya" sınıfının tam kendisi. Altısı da tabloya girdi; OPENROUTER
-artık 12 kopya (NOUS 2).
+artık 13 kopya (NOUS 2). 2026-09-13: +1 GLOBAL `/home/ubuntu/.hermes/.env` — motorun
+`hermes._agent_call` yolu; 09-08 rotasyonu onu atladı, akşam inceleme 4 gün 401 aldı (TSK-181).
 BEYANLI KABUL: birincilin anahtarı (`/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY`) AYRI ve
 LoadCredential kanalındadır; ÜYE satırları değeri `.env` içinde tutar, yani hafızanın bu kanalı
 B SINIFIDIR (yarım kazanım) ve öyle beyan edilir — kanalı taşımak bu betiğin işi DEĞİL
