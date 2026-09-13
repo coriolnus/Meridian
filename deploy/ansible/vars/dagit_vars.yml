@@ -179,6 +179,9 @@ dogrulama_uclari:
 # yazılabildiğinden (idempotens) yarım bir günün özeti bankaya KALICI olarak girerdi. Aynı gerekçe
 # yukarıdaki "timer'lara DOKUNULMAZ" cümlesinin kendisidir; burada ADIYLA yazılı çünkü sessiz bir
 # atlama, bir sonraki listeyi okuyanın "unutulmuş mu?" sorusunu cevapsız bırakırdı.
+# BİLEREK DIŞARIDA — `meridian-bar-arsiv` (TSK-020 UYGULA-3, 2026-09-13): aynı sınıf — `Type=oneshot` +
+# haftalık timer (Pazar 22:00 UTC); bakım penceresinde "başlat" kadans dışı bir arşiv yeniden yazımı
+# ateşlerdi (zararsız ama karşılıksız 12 s DuckDB + fail-notify riski). Timer'a dokunulmaz.
 birim_adaylari:
   - "meridian"
   - "meridian-barsarchive"

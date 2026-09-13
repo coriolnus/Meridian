@@ -147,6 +147,8 @@ etkin_timerlar:
   - meridian-defter-ozeti-retain.timer   # TSK-168 / EDG-2026-089: kadans operatör kararıyla AÇIK (2026-09-13 '(b) melez+retain');
                                          # rol birim+drop-in'i kopyalar ve timer'ı enable eder; kurulum günü elle test-ateşleme Rol-1'de
                                          # (CLAUDE.md §9 "kurulu ≠ çalışır"), pencere ilk başarılı retain damgasıyla açılır.
+  - meridian-bar-arsiv.timer             # TSK-020 UYGULA-3 haftalık tazeleme (Pazar 22:00 UTC; sıra operatör onaylı 2026-09-01);
+                                         # kurulum günü elle test-ateşleme Rol-1'de (2026-09-13).
 
 
 # --- A1'de BİLEREK disabled kalan birimler (A1 ölçümü) — rol bunlara DOKUNMAZ, yalnız raporlar

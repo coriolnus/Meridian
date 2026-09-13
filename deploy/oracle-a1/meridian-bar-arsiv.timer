@@ -1,0 +1,23 @@
+# meridian-bar-arsiv.timer — meridian-bar-arsiv.service'i haftada bir tetikler.
+#
+# SAAT SEÇİMİ: Pazar 22:00 UTC. Hafta içi EOD turu (kapanış + 16 dk; EDT 20:16Z, EST 21:16Z) CSV'lere
+# yazar; Pazar akşamı hiçbir yazıcı yoktur ve `meridian-backup.timer` (23:30 UTC) arşivi TAZE hâliyle
+# yedekler. Günlük değil haftalık: arşiv replay/PIT sorularının aracıdır, canlı karar yolu CSV'yi okur —
+# günlük bir yeniden yazım 260 dosyayı her gün döndürür, kazancı yok (bedel yasası; S4 ölçümü 12 s ama
+# manifest eşleşen sembol zaten atlanır). VM'in TZ'si ÖNEMSİZ — OnCalendar açıkça UTC.
+[Unit]
+Description=Meridian bar parquet arşivi tazeleme tetiği (Pazar 22:00 UTC)
+
+[Timer]
+OnCalendar=Sun *-*-* 22:00:00 UTC
+# Makine kapalıysa açılışta telafi: kaçan hafta sessizce kaybolmaz (arşiv en çok bir hafta bayat kalır).
+Persistent=true
+RandomizedDelaySec=300
+# FixedRandomDelay (TSK-152): dagit'in sistem-geneli daemon-reload'u rastgele payı yeniden çekmesin —
+# gerekçe ve A1 ölçümü meridian-backup.timer başlığında.
+FixedRandomDelay=true
+
+[Install]
+WantedBy=timers.target
+
+# H3 SERTLEŞTİRME — timer'da yapılacak bir şey yok; sertleştirme tetiklenen birimde.

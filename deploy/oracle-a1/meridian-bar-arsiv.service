@@ -1,0 +1,66 @@
+# meridian-bar-arsiv.service — günlük bar önbelleğinin (state/bars/*.csv) BÖLÜMLÜ parquet arşivini
+# haftada bir TAZELER (state/barlar/<SEMBOL>.parquet + manifest). TSK-020 [UYGULA-3] "haftalık
+# tazeleme birimi" dilimi (2026-09-13); tasarım docs/TASARIM-BARS-PARQUET-DUCKDB-2026-09-06.md §3.1,
+# araç ops/bar_arsivle.py (S4 ilk arşiv 2026-09-07: 260 sembol · 1.352.236 satır · 23 MB · 12 s).
+#
+# NE YAPAR: `ops/bar_arsivle.py --kaynak-dizin … --hedef … --uygula` — CSV'ler YALNIZ OKUNUR, hedef
+# AYRI dizindir, her dosya geçici ad + os.replace ile yerine konur (okuyucu yarım dosya görmez);
+# manifest sha eşleşen sembol ATLANIR (yalnız değişen CSV yeniden yazılır). Aracın OKUYUCUSU
+# ops/bar_sorgu.py'dır (Yasa 6). Araç `meridian`ı ithal eder (`sanitize_bars` tek kaynak) — koşum
+# canlı `state/events.jsonl`e hayalet-seans/karantina olayı düşürebilir; bu A1'de DOĞRU davranıştır.
+#
+# ÇIKIŞ KODU ↔ systemd: 0 koştu · 1 girdi yok · 2 kullanım · 4 DuckDB · 5 HEDEFE DOKUNULMADI
+# (doğrulama farkı ya da bölüm uyuşmazlığı). Sıfır dışı HER kod `failed`tır ve fail-notify'a gider —
+# `SuccessExitStatus` YOK: "arşiv tazelenmedi" bir idempotens sonucu değil, bakılması gereken hâldir
+# (5 = manifest başka yerleşim beyan ediyor → `--temizle` kararı Rol-1'in).
+#
+# NEDEN HAFTALIK, NEDEN PAZAR: günlük barlar EOD turuyla (kapanış + 16 dk) hafta içi dolar; arşiv
+# replay/PIT sorularının aracıdır (dikiş/boşluk/kapsam), canlı karar yolu CSV'yi okur ve DEĞİŞMEZ.
+# Pazar 22:00 UTC'de hiçbir yazıcı CSV'ye dokunmaz (seans yok, EOD yok), backup 23:30'dan öncedir.
+#
+# KURULUM: A0 rolünün genel mekanizması (`birim_kaynaklari` glob'u) kopyalar; timer `etkin_timerlar`
+# listesindedir (TSK-020 sırası operatör onaylı 2026-09-01 gece: `2-adım2 → 3 → 1 → 9`). Kurulum
+# günü elle test-ateşlenir ("kurulu" ≠ "çalışır", CLAUDE.md §9).
+[Unit]
+Description=Meridian bar önbelleği → parquet arşivi (haftalık tazeleme, TSK-020 UYGULA-3)
+# Worker'a bağımlı DEĞİL: CSV'ler dosya sisteminde, worker durmuşken de arşivlenir.
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/opt/meridian
+# 12 s ölçüldü (S4, 260 sembol); 600 s = 50× pay. Aşımda `failed` — asılı bir DuckDB koşumu timer'ın
+# sonraki tetiğini sessizce atlatmasın.
+TimeoutStartSec=600
+# `--uygula` ZORUNLU (araç varsayılan KURU). `-` ÖNEKSİZ: düşerse `failed` görünür.
+ExecStart=/opt/meridian/.venv/bin/python /opt/meridian/ops/bar_arsivle.py --kaynak-dizin /opt/meridian/state/bars --hedef /opt/meridian/state/barlar --uygula
+
+# ==================================================================================================
+# H3 SERTLEŞTİRME — filo ortak seti (meridian-defter-ozeti-retain.service ile BİREBİR; gerekçelerin
+# tam metni meridian.service'te). Çivi: tests/test_bar_arsiv_birimi_v468.py bu kümeyi REFERANS
+# BİRİMDEN türetip kıyaslar.
+# ==================================================================================================
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+# ReadWritePaths YALNIZ /opt/meridian: yazdıkları state/barlar/*.parquet + manifest, state/events.jsonl
+# (obs) ve __pycache__ — hepsi bu ağaçta. Ağa ÇIKMAZ ama DuckDB/pandas import'u AF_UNIX ister;
+# liste kardeşlerle aynı tutuldu (ayrışan bir liste ikinci bir bakım yüzeyi olurdu).
+ReadWritePaths=/opt/meridian
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+# [Install] BÖLÜMÜ BİLEREK YOK — tetik YALNIZ meridian-bar-arsiv.timer'dır (emsal: meridian-brifing.service, çivi v327).
