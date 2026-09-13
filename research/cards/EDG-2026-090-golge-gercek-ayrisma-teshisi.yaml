@@ -10,7 +10,7 @@
 # · EDG-069 0,15 · EDG-085 0,13 · EXE-007 0,11 (kaynak damgası broker teyidi değil) — KALDI/NO-GO selef YOK.
 
 card_id: EDG-2026-090
-status: registered   # 2026-09-13 Rol-1 — ön-kayıt; kod kart-önce; ADIM-0 (girdi donmuş: pk2_gercek/girdi + sonuc_…164520) hazır
+status: measured   # 2026-09-13 19:30Z hüküm `hukum_2026_09_13` — HİPOTEZ TUTMADI (A/B/C katkısız, birleşik 0,2466 > 0,05); kalan fark R PAYDASI → ardıl EDG-2026-091; ÖNCEKİ: registered — 2026-09-13 Rol-1 ön-kayıt; kod kart-önce; ADIM-0 (girdi donmuş: pk2_gercek/girdi + sonuc_…164520) hazır
 family: golge_gercek_ayrisma
 on_kayit: 2026-09-13
 selef: null
@@ -85,3 +85,17 @@ aday_d_notu_2026_09_13: >
   (donmuş girdi) ölçülebilir: her işlem için türetilen risk mesafesi vs plan.stop mesafesi oranı — TANI sütunu (K harcamaz);
   ablasyon B (E2 ATR enjeksiyonu) bunu kısmen kapsar, kapsamıyorsa kalan fark sınıfına 'canlı stop ≠ plan.stop (kaynağı loop.py)'
   eklenir. K grid DEĞİŞMEDİ (3); eşikler değişmedi.
+
+hukum_2026_09_13:
+  tarih: "2026-09-13T19:30Z"
+  status_gecisi: "registered → measured; K 3/3 harcandı (A · B · C) + 1 tanı (ABC) — hiçbiri eşiği geçmedi"
+  hukum: "HİPOTEZ TUTMADI — üç aday nedenin hiçbiri 'katkı var' eşiğini (ort |ΔR| düşüşü ≥ 0,05) GEÇMEDİ; birleşik ABC = A ile özdeş, ort |gölge R − gerçek R| 0,295 → 0,2466 (eşik 0,05'in ÜSTÜNDE) → EDG-088 PK(2) bu ablasyonlarla GEÇER HÂLE GELMEZ; gölge motoru güncellenmez (basari_tanimi 'gelmezse' kolu). Basari_tanimi'nin asıl şartı — hangi nedenin ne kadar taşıdığının ÖLÇÜLMÜŞ olması — karşılandı."
+  A_giris_semantigi: "ort |ΔR| 0,295 → 0,2466 (düşüş 0,0487 — eşiğin 0,0013 altı, KATKI YOK); tüm-çift 0,348 → 0,175 (PANW gölgede girdi: n 9 → 10); çıkış nedeni eşleşmesi 8/10 → 10/10 (tanı); doğrulanmış-dolum alt kümesi 0,479 → 0,360"
+  B_e2_atr: "0 — E2 ATR enjeksiyonu ATIL: limit yasası `min()` yüzde tavanını seçiyor (`limit_atr_mult=100` üretim gerçeği, 2026-08-03 operatör kararı; bağlı ama etkisiz)"
+  C_manage_paritesi: "0 — `scale_out` frac=0 → manage_position paritesi bu pencerede etkisiz"
+  pk_uclusu: "YEŞİL — sentetik (A/B/C yapısal etkisiz, R kaymadı), taban bayt-eşit (PK(2) 164520 ile), ters kontrol 0,295 → 0,814 (ablasyon mekanizması ısırıyor)"
+  aday_D_kalan_fark: "Δ TOPLAMSAL AYRIŞTI (özdeşlik 7/7): ort |Δ payda| 0,2416 vs ort |Δ fiyat| 0,0112 → kalan farkın ~%96'sı canlı R PAYDASI (canlı `r_multiple` paydası ≠ plan riski: VRTX oran 2,03 · MU 1,36 · REGN 1,05); bar-kaynağı bacağı: giriş açılışı vs e2 resmi açılış ort |bps| 24,2 (n 10; MPC −67,5 · DE −54,2 · CF +51,9 · PANW +42,0 · MRVL +15,8 · REGN −7,9) — fiyat yolu ile bar kaynağı bu veriyle AYRIŞMAZ, R payı None (ölçülemedi)"
+  kalan_fark_sinifi: "R PAYDASI (ölçülmüş kanıtla) → ardıl kart EDG-2026-091 aynı gün ölçüldü: 'sıkılaştırma' hipotezi TUTMADI; asıl mekanizma `PaperBroker.size_position` dolar bütçesi (`risk_dollars`, girişte donar) + `loop._adet_benimse` adet/bütçe ayrışması — hüküm EDG-091 kartında"
+  sonuc: "research/olcumler/edg090_golge_ayrisma/ablasyon/sonuc_20260913T191607+0000.json (git blob 0bb766aa5135b33a68ed4e4ee6c31a4f3a083d18; tur-1 çifti 184132 sayısal birebir, commit'lenmedi); kod `ablasyon.py`, çivi v473 (45; 17 mutasyon)"
+  edg088_girdisi: "Gölge penceresinden sayı yayılmaz (kill#5 SÜRER). PK(2) eşiğinin 'kalan bedelle' yeniden tanımı YENİ kartta — ama önce EDG-091'in bulduğu neden (canlı R paydası) için düzeltme kararı OPERATÖRE; payda tek kaynağa bağlanırsa PK(2) mevcut eşikle yeniden koşar (yeni kart değil, EDG-088 alt kalemi)"
+  hafiza: "kaynak: EDG-088 `pk2_hukmu_2026_09_13` + EDG-091 ölçümü (aynı gün, kod okuması sembol çapalı); A1 recall koşulmadı — hüküm ölçüm dosyasından mekanik (eşik karşılaştırması), takdir alanı yok"
