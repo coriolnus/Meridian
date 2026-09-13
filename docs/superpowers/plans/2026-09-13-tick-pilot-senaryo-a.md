@@ -4,7 +4,7 @@
 
 **Goal:** Motorun mevcut TEK Alpaca data bağlantısına, bayrakla açılan ve emir penceresiyle sınırlı bir `quotes` aboneliği ekleyerek her canlı kâğıt dolumunun anındaki bid/ask'ı ayrı bir JSONL'e kaydetmek ve bu kayıttan kartın dört eksenini (kayıp oranı · bant-içi tutarlılık · disk · CPU/worker) hesaplayan çevrimdışı rapor aracını yazmak.
 
-**Architecture:** Üç motor parçası + bir araştırma aracı. (1) `meridian/quotecapture.py` (YENİ): halka tamponu (sembol başına son 90 sn quote), emir pencereleri (coid → başlangıç/dolum/kapanış), günlük JSONL yazıcı (kayıt + ham), abone kümesi (pozisyonlar ∪ bekleyen emirler, ≤30, öncelikli) ve sağlık anlık görüntüsü. (2) `meridian/marketstream.py`: oturum içinde bayrak açıksa bir eşlik görevi `quotes` subscribe/unsubscribe mesajlarını AYNI soketten gönderir; gelen `T=="q"` çerçeveleri quotecapture'a yönlendirilir; `b` yolu ve hotstate değişmez. (3) `meridian/mirror_stream.py`: `apply` her trade_updates olayını quotecapture'a iletir (new/accepted → pencere aç; fill → dolum işareti + 30 sn kuyruk; canceled/expired/rejected → kapat). (4) `research/olcumler/edg085_icra_ani_quote/rapor.py`: kayıt + E2 defteri + `meridian.db trades` + `bars_intraday` + `taban.jsonl` → dolum başına satır, K ölçüleri, üç PK, fizibilite deltası. Bayrak VARSAYILAN KAPALI (`MERIDIAN_QUOTE_CAPTURE=0`): kod 09-14 dağıtımıyla canlıya iner, pilot 2026-09-21'de bayrakla açılır (kart `adim_0_kaydi_2026_09_13`).
+**Architecture:** Üç motor parçası + bir araştırma aracı. (1) `meridian/quotecapture.py` (YENİ): halka tamponu (sembol başına son 90 sn quote), emir pencereleri (coid → başlangıç/dolum/kapanış), günlük JSONL yazıcı (kayıt + ham; dosya adları `edg085_` önekli), abone kümesi (pozisyonlar ∪ bekleyen emirler, ≤30, öncelikli) ve sağlık anlık görüntüsü. (2) `meridian/marketstream.py`: oturum içinde bayrak açıksa bir eşlik görevi `quotes` subscribe/unsubscribe mesajlarını AYNI soketten gönderir; gelen `T=="q"` çerçeveleri quotecapture'a yönlendirilir; `b` yolu ve hotstate değişmez. (3) `meridian/mirror_stream.py`: `apply` her trade_updates olayını quotecapture'a iletir (new/accepted → pencere aç; fill → dolum işareti + 30 sn kuyruk; canceled/expired/rejected → kapat). (4) `research/olcumler/edg085_icra_ani_quote/rapor.py`: kayıt + E2 defteri + `meridian.db trades` + `bars_intraday` + `taban.jsonl` → dolum başına satır, K ölçüleri, üç PK, fizibilite deltası. Bayrak VARSAYILAN KAPALI (`MERIDIAN_QUOTE_CAPTURE=0`): kod 09-14 dağıtımıyla canlıya iner, pilot 2026-09-21'de bayrakla açılır (kart `adim_0_kaydi_2026_09_13`).
 
 **Tech Stack:** Python 3.12, asyncio + `websockets` (mevcut `streamhealth.run_stream` sürücüsü), Alpaca data WS (`quotes` kanalı, `T:"q"` mesajı: `S, bp, bs, ap, as, bx, ax, c, t, z`), JSONL, pytest (`sandbox_state`), DuckDB/sqlite3 (rapor aracı okuma), mevcut `store`/`obs`/`codelaw` sözleşmeleri.
 
@@ -67,7 +67,7 @@ class QuoteCapture:
     def snapshot(self) -> dict                  # {"aktif","dizin","abone_n","abone","pencere_acik","satir_bugun","ham_bugun","son_q_at","yazim_hata_n","tavan_asimi_n"}
 ```
 
-Kayıt satırı (`<gün>.jsonl`, gün = `alindi` UTC):
+Kayıt satırı (`edg085_<gün>.jsonl`, gün = `alindi` UTC — `edg085_` öneki tur-2 Rol-1 kararı: codelaw `_joined_glob` literal parçayı korur, anahtar `*/edg085_*.jsonl`a daralır; inceleme K1):
 
 ```json
 {"tur":"quote","alindi":"2026-09-14T13:46:01Z","ts":"2026-09-14T13:46:01.208Z","sembol":"AAPL","coid":"P-2026-09-14-AAPL-1","faz":"pencere","bid":231.12,"ask":231.15,"bid_lot":3,"ask_lot":5,"bx":"V","ax":"V","kosul":["R"]}
@@ -75,7 +75,7 @@ Kayıt satırı (`<gün>.jsonl`, gün = `alindi` UTC):
 {"tur":"pencere","alindi":"...","sembol":"AAPL","coid":"P-...","olay":"ac|kapat","neden":"new|fill+30s|canceled|expired|rejected|pencere_tavani"}
 ```
 
-Ham satırı (`ham_<gün>.jsonl`): gelen `q` mesajı sözlüğü `json.dumps(m, separators=(",",":"))` ile OLDUĞU GİBİ (süzgeç/halka öncesi), yalnız kayıt aktifken (o sembol için açık pencere ya da dolum-sonrası kuyruk varken) — PK-2'nin ikinci kaynağı.
+Ham satırı (`edg085_ham_<gün>.jsonl`): gelen `q` mesajı sözlüğü `json.dumps(m, separators=(",",":"))` ile OLDUĞU GİBİ (süzgeç/halka öncesi), yalnız kayıt aktifken (o sembol için açık pencere ya da dolum-sonrası kuyruk varken) — PK-2'nin ikinci kaynağı.
 
 ---
 
@@ -550,3 +550,10 @@ Tek Sonnet inceleme (task reviewer + dal sonu) → merge → tam suite (`-n 4`, 
 - Kapsam: kartın olcum_plani 7 maddesi → T1 (pencere/satır), T4 (kayıp/tutarlılık/disk/CPU/tanı); kill#2 (T2 tek soket), kill#3 (T1 işaret satırı + T4 R7), kill#4 (T1 dizin sözleşmesi + A13), kill#5 (rapor 'IEX temsiliyeti' satırı: hüküm metnine karttan aynen), kill#7 (T4 çıkış 2), kill#8 (README kapatma reçetesi). ADIM-0 (4) ham defter T1.
 - Yer tutucu taraması: sınıf adı `OrderStateMachine` ve `store.STATE_DIR` ÖLÇ notuyla işaretli — implementer ölçer; başka TBD yok.
 - Tip tutarlılığı: `olay(event, order)`, `q_geldi(m)`, `istenen_abonelik()`, `abonelik_degisti()`, `snapshot()` adları T1→T2→T3'te aynı.
+
+## Tur-2 (2026-09-13, inceleme sonrası Rol-1 kararları)
+- Kayıt dosya adları `edg085_<gün>.jsonl` / `edg085_ham_<gün>.jsonl` (codelaw anahtarı `*/edg085_*.jsonl`; kart dosya adını sabitlemez — plan kararı).
+- `quotecapture._dizin_env`: göreli değer → `quote_capture_dizin_goreli` uyarısı + yazım devre dışı (kill#4 çalışma-anı savunması).
+- `_baglanti_ok` varsayılanı False; `baglanti(bool)` metodu; ilk `mark_alive`e kadar quote'suz dolum `baglanti_yok`.
+- Eşlik görevi iptali `await asyncio.gather(eslik, return_exceptions=True)` ile beklenir.
+- Kabul edilen kalıntılar (DÜŞÜK): `q_soket_abone_n` bayraktan bağımsız sayılır; tırnaklı env değerinde artık tırnak (notify, ayrı kalem); `kapsam.txt` biçimi (scratch).
