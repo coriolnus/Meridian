@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "jetonlar": "python3 ../ops/jeton_css_uret.py",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && python3 ../ops/pano_artefakt_temizle.py --uygula --dizin ../meridian/web/pano-assets --manifest ../meridian/web/pano-assets/manifest.json --html ../meridian/web/pano.html",
     "kontrol": "tsc -b --noEmit"
   },
   "dependencies": {
