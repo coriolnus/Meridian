@@ -72,10 +72,7 @@ ikisi de kapatılır. `TimeZone` varsayılanı MAKİNENİN yerelidir (bu makined
 ölçüldü) — ofsetsiz bir `ts` o dilime göre çözülürdü ve aynı defter iki makinede iki farklı AYA
 düşerdi (ölçüldü: naif `2026-03-01T02:00:00` → Istanbul'da `2026-02`, UTC'de `2026-03`);
 `UTC`ye sabitlenir. Yerel bir defter okuyucusunun ne diske dökmeye, ne ağa çıkmaya, ne de
-makinenin saat diliminden sonuç almaya işi vardır. `memory_limit` varsayılanı da SINIRSIZDI
-(ölçüldü: sistem RAM'inin ~%80'i) — 2026-09-13'te `OLAY_SORGU_BELLEK` ortam değişkeniyle
-ayarlanabilir bir tavana (varsayılan 1GB) bağlandı; gerekçe ve komşu bir betikteki BENZER ama
-AYRI tavanla ilişkisi `SERTLESTIRME` şerhinde.
+makinenin saat diliminden sonuç almaya işi vardır.
 
 SQL YÜZEYİ. `olaylar` görünümü şu sütunları verir — adlar defterin KENDİ sözlüğüdür
 (`ts`/`level`/`event`), uydurulmadı:
@@ -110,7 +107,6 @@ from __future__ import annotations
 import argparse
 import datetime as _dt
 import json as _json
-import os
 import pathlib
 import re
 import sys
@@ -134,37 +130,16 @@ IZINLI_ILK_JETON = {"SELECT", "WITH", "FROM", "TABLE", "VALUES"}
 DETAY_TAVAN = 100  # metin kipinde `detay` kesme sınırı; `--json` kesmez
 
 
-#: BELLEK TAVANI (TSK-012, inceleme K-notu 2026-09-08). `duckdb.connect()` varsayılan
-#: `memory_limit` sistem RAM'inin ~%80'idir (ölçüldü, 1.5.5) — bu araç OPERATÖRÜN A1'de ELLE
-#: koştuğu bir CLI'dır ve aynı makinede canlı `serve.sh` uvicorn'u zaten koşuyor olabilir;
-#: tavansız bir sorgu (büyük events.jsonl + parquet arşivi üzerinde çapraz-birleştirme) o RAM'i
-#: paylaşılan makineden çekebilir. Ortam değişkeniyle ayarlanabilir ki A1'de ölçülen bir ihtiyaç
-#: kodu değiştirmeden karşılanabilsin.
-#:
-#: TEK-KAYNAK İSTİSNASI, BEYANLI (bedel yasası). `meridian/sohbet.py` kendi bağlantısında AYNI
-#: sınıf sorunu `SORGU_BELLEK_TAVANI` (env `SOHBET_SQL_BELLEK`, varsayılan 512MB) ile çözer, ama
-#: bu betik `meridian` paketini İTHAL ETMEZ (başlıktaki OBS SIZINTISI izolasyonu — sohbet'in
-#: sabitini ithal etmek tam bu izolasyonu KIRARDI). İki tavan bu yüzden AYRI sabitlerdir ve
-#: varsayılanları da BİLEREK AYRIDIR: sohbet'in bağlantısı canlı API işçisinin ipliğinde HER
-#: istek için açılır ve dar tutulur (`threads=1` de eklenir); bu aracınki OPERATÖRÜN elle
-#: başlattığı TEK bir koşumdur — `threads` tavanı burada BİLEREK KONMAZ (CLI'da meşru bir
-#: sorgunun paralel taranmasını yavaşlatmanın kazancı yoktur, bedel beyanı). Kopya sessizce
-#: ayrışmasın diye: iki sabit birbirine REFERANS VERMEZ (biri değişince diğeri bozulmaz), yalnız
-#: bu şerhle ve `meridian/sohbet.py`deki eşiyle SENKRON kalması beklenir.
-OLAY_SORGU_BELLEK = os.environ.get("OLAY_SORGU_BELLEK", "1GB")
-
 #: Bağlantı sertleştirme ayarları. DEĞERLER ÖLÇÜLDÜ (duckdb 1.5.5 varsayılanları): temp_directory
 #: '.tmp' (CWD-göreli — operatörün dizinine döker), iki eklenti bayrağı da True (ağdan indirir).
 #: `SET` ifadeleri bağlantı açılır açılmaz, HERHANGİ bir kullanıcı sorgusundan ÖNCE koşar.
 #: `TimeZone` 2026-09-03'te eklendi (adım 2): ay anahtarı UTC olmalı; varsayılan makine yerelidir
-#: ve ofsetsiz bir `ts` makineye göre başka aya düşerdi (başlıktaki ölçüm). `memory_limit`
-#: 2026-09-13'te eklendi (yukarıdaki şerh) — kaynak tavanı YOKTU, `threads` hâlâ BİLEREK yok.
+#: ve ofsetsiz bir `ts` makineye göre başka aya düşerdi (başlıktaki ölçüm).
 SERTLESTIRME = (
     "SET temp_directory=''",
     "SET autoinstall_known_extensions=false",
     "SET autoload_known_extensions=false",
     "SET TimeZone='UTC'",
-    f"SET memory_limit='{OLAY_SORGU_BELLEK}'",
 )
 
 

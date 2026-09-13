@@ -22,7 +22,6 @@ MERIDIAN_WEBHOOK_URL. Okur: `events.jsonl`; yazar: yalnız ağ kanalları (dosya
 `alerts_ack.json`u yazan pano ucudur)."""
 from __future__ import annotations
 import json
-import re
 import urllib.request
 
 from . import secrets
@@ -128,61 +127,12 @@ def inbox(limit: int = 60) -> dict:
             "window_oldest_ts": _oldest or None}
 
 
-# --------------------------------------------------------------------------------------------
-# DESEN SÜZGECİ — bilinen DEĞER maskesinin YAKALAYAMADIĞI biçimler (inceleme K-notu, 2026-09-08;
-# kalıcı kayıt "sir-suzgeci-url-gomulu-parola": KEY/SECRET/PASS kara-listesi DATABASE_URL'i
-# kaçırdı). Değer maskesi yalnız `secrets.ALLOWED`teki BİLİNEN adların BİLİNEN değerini görür —
-# rotasyon-arası ya da hiç ayarlanmamış bir anahtar, bir hata dizgisinin taşıdığı
-# `Authorization: Bearer …`, bir `?apikey=…`/`&token=…` sorgu parametresi ya da URL'e gömülü
-# `kullanici:parola@` biçimi bu modülün TEK çıkış kapısından (`send`) OLDUĞU GİBİ geçerdi. Beş
-# desen BİÇİME bakar, DEĞERE değil — bilinmeyen bir anahtarın ne olduğunu bilmeden bile "bu bir
-# anahtarın kalıbı" diyebilir.
-#
-# DESEN GENİŞLETİLMEZ (bedel yasası): aşırı geniş bir desen görev kimliklerini (`T00901`), plan
-# kimliklerini (`P-2026-…`) ya da sha kısaltmalarını da yutar ve alarm metnini okunmaz kılar —
-# negatif kontrol tam bunu ölçer (tests/test_notify_sir_deseni_v467.py).
-#
-# OBS OLAYI YOK (ÖLÇÜLDÜ): bu modülün üst-düzey importları `obs`u İÇERMEZ — yalnız `send()`
-# teslimat-hatası dalı GECİKMELİ import eder (döngüsel import kaçışı: `obs.alarm` → `_maybe_notify`
-# → `notify.send`). `scrub` her yerden (henüz obs kurulmamış erken bir çağrıdan bile) yan etkisiz
-# çağrılabilsin diye SAF bir metin fonksiyonu olarak KALIR — maskeleme bir olay ÜRETMEZ.
-_SIR_DESENLERI: tuple[tuple[str, re.Pattern], ...] = (
-    ("openrouter", re.compile(r"sk-or-v1-[0-9a-f]{64}")),
-    ("bearer", re.compile(r"(?i)\bbearer\s+[A-Za-z0-9._~+/=-]{16,}")),
-    ("url_sorgu", re.compile(
-        r"(?i)([?&](?:api[_-]?key|apikey|token|secret|password|passwd|pwd|access[_-]?key)=)"
-        r"[^&\s\"']+")),
-    ("url_kimlik", re.compile(r"://[^:/\s]+:[^@/\s]+@")),
-    ("env_satiri", re.compile(
-        r"(?i)\b((?:ALPACA|OPENROUTER|NOUS|TELEGRAM|MERIDIAN|HINDSIGHT)[A-Z_]*"
-        r"(?:KEY|TOKEN|SECRET|PAROLA|PASSWORD))\s*[=:]\s*[\"']?([^\s\"']{8,})")),
-)
-
-#: Desen ADI → değiştirme kalıbı (regex geri-referanslı). AYRI sözlük tutulur çünkü
-#: `_SIR_DESENLERI`nin sözleşmesi (ad, derlenmiş desen) ÇİFTİDİR: bir girişi TABLODAN silmek o
-#: deseni devre dışı bırakır ve burada YETİM kalan karşılığı KeyError üretmez — döngü yalnız
-#: `_SIR_DESENLERI` üzerinde gezer, silinen adın değiştirme kalıbına hiç bakılmaz.
-_SIR_DEGISTIRME: dict[str, str] = {
-    "openrouter": "***",
-    "bearer": "Bearer ***",
-    "url_sorgu": r"\1***",
-    "url_kimlik": "://***:***@",
-    "env_satiri": r"\1=***",
-}
-
-
 def scrub(text: str) -> str:
-    """Giden metinden BİLİNEN sır DEĞERLERİNİ ve bilinmeyen sırların BİÇİMLERİNİ (`_SIR_DESENLERI`)
-    temizle.
+    """Giden metinden BİLİNEN sır değerlerini temizle.
 
     Bu modül dışarıya veri gönderen TEK yol. Bir alarm metni bir gün bir hata dizgisini taşırsa
     (ör. 'HTTPStatusError ... ?apikey=…'), o anahtar Telegram'a/webhook'a gider — yani sır, kendi
-    makinemizden ÇIKAR. 'Asla sır göndermez' iddiası docstring'de vardı, uygulaması yoktu.
-
-    İKİ KATMAN, BU SIRAYLA: önce BİLİNEN değer (`secrets.ALLOWED`), sonra BİÇİM deseni
-    (`_SIR_DESENLERI`) — ikincisi rotasyon-arası/hiç-ayarlanmamış bir anahtarı da yakalar ve
-    birinci katmanın ürettiği `***` yer tutucusunu da (ör. `?apikey=***`) zararsızca yeniden
-    yazar (idempotent — değer zaten maskeliyse sonuç DEĞİŞMEZ)."""
+    makinemizden ÇIKAR. 'Asla sır göndermez' iddiası docstring'de vardı, uygulaması yoktu."""
     out = str(text)
     for name in getattr(secrets, "ALLOWED", ()):
         try:
@@ -191,8 +141,6 @@ def scrub(text: str) -> str:
             v = None
         if v and len(str(v)) >= 8:
             out = out.replace(str(v), "***")
-    for ad, desen in _SIR_DESENLERI:
-        out = desen.sub(_SIR_DEGISTIRME[ad], out)
     return out
 
 
