@@ -427,6 +427,10 @@ export function PortfoyYuzey() {
         >
           <SeansIciEmir
             intraday={teshis.veri?.intraday}
+            /* SEYRELME (AYNA) — E2 özetinin kapı-öncesi dönüşmeme kovası
+               (`icra.slipaj.seyrelme`). AYNI istekten geliyor: ikinci bir `useApi` açmak aynı
+               yanıtın iki farklı anını yan yana koyardı. */
+            seyrelme={teshis.veri?.icra?.slipaj?.seyrelme}
             emirler={hesap?.open_orders ?? null}
             emirNedeni={brokerNedeni ?? "/api/alpaca `account.open_orders` alanı gövdede yok"}
             /* KORUMA HÜKMÜ HESAP BLOĞUNDAN GELİR (v315): pozisyon başına `koruma` alanı
