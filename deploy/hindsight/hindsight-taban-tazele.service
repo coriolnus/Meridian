@@ -21,7 +21,9 @@
 # ARGÜMANLAR konumsaldır: argv[1] = ÇIKTI DİZİNİ, argv[2] = REPO KÖKÜ (verilmezse `git rev-parse
 # --show-toplevel` ile cwd'den türetilir — burada AÇIKÇA verilir, çünkü bir birimin cwd'sine
 # güvenmek sessiz bir bağımlılıktır).
-# NE PAKETLER (dördü de git HEAD BLOB'undan, çalışma ağacından DEĞİL):
+# NE PAKETLER (git varsa dördü de git HEAD BLOB'undan; A1'de `.git` YOK — Ansible rsync — o zaman
+# DİSK KİPİ: damga `state/dagitim.json` deployed_sha, içerik çalışma ağacından, blob sha
+# `git hash-object` özdeşi; iki kipin (yol, blob) kümesi çivili eşit — TSK-186, 2026-09-13):
 #   1. MERIDIAN_ENGINEERING_LOG.md
 #   2. ROADMAP.md'nin §7 kesiti — `ROADMAP.md%237` document_id'siyle (`%23` = `#`)
 #   3. research/cards/*.yaml  (README.md glob dışı)
@@ -105,7 +107,7 @@ ProtectSystem=strict
 ProtectHome=read-only
 # --- AYRIŞMA — ReadWritePaths: SADECE iki dizin. Filodaki kardeşler /opt/meridian'ı açar; bu
 #     birim AÇMAZ ve bu bilinçli bir DARALTMADIR: üç adımın hiçbiri depoya yazmıyor.
-#       · manifest_uret.py — `git show HEAD:<yol>` ile OKUR (git salt-okunur), çıktısını
+#       · manifest_uret.py — git kipinde `git show HEAD:<yol>`, A1'de (`.git` yok) DİSKTEN okur; çıktısını
 #         /opt/hindsight/ingest067/tazele'ye yazar.
 #       · taban_indeks.py / taban_terfi.py — /opt/hindsight/edg067'ye yazar.
 #       · Üçü de `__main__` olarak koşar, yani içe aktarılan bir modül gibi `__pycache__`

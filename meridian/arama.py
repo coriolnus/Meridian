@@ -15,9 +15,9 @@ bilgisi bile `neden` alanıyla ÇAĞIRANA taşınır ve olay künyesini uç yaza
 İkinci bir yazan yüzey açmamak bilinçlidir: bu modülün Yasa 6 sözleşmesi "yazmaz"dır ve o cümle
 çivilidir; burada bir `obs.warn` bile o cümleyi "çoğunlukla yazmaz"a çevirirdi.
 
-SIR DIŞLAMA İKİ KATMANLIDIR. (a) YAPISAL: korpus `manifest_uret.py`nin git-HEAD beyaz listesidir
-(günlük · ROADMAP §7 kesiti · kartlar · docs), `state/secrets.json` ve `.env` versiyonlanmadığı
-için indekse GİREMEZ. (b) SAVUNMA DERİNLİĞİ: dönen her satırın yolu `KORPUS_ONEKLERI` ile süzülür
+SIR DIŞLAMA İKİ KATMANLIDIR. (a) YAPISAL: korpus `manifest_uret.py`nin beyaz listesidir — git kipinde
+git-HEAD blob'ları, A1'de (`.git` yok, TSK-186) DİSK kipinde aynı yol DESENLERİ (günlük · ROADMAP §7
+kesiti · kartlar · docs); `state/secrets.json` ve `.env` bu desenlerin dışındadır, indekse GİREMEZ. (b) SAVUNMA DERİNLİĞİ: dönen her satırın yolu `KORPUS_ONEKLERI` ile süzülür
 — küme dışı satır DÜŞÜRÜLÜR ve sayısı `korpus_disi_n` ile BEYAN EDİLİR (sessizce yutulmaz);
 ayrıca giden her dizge `notify.scrub`tan geçer.
 
@@ -42,7 +42,7 @@ from . import config, notify
 #: çivisi (v440) bu adı monkeypatch'liyor — adı değiştirmek o çiviyi sessizce körleştirirdi.
 BETIK_ENV = "SOHBET_HAFIZA_ARA"
 
-#: İNDEKSE GİREN KORPUSUN ÖNEKLERİ — `manifest_uret.py`nin git-HEAD beyaz listesinin bu yüzeydeki
+#: İNDEKSE GİREN KORPUSUN ÖNEKLERİ — `manifest_uret.py`nin beyaz listesinin (git-HEAD / disk deseni) bu yüzeydeki
 #: karşılığı. `ROADMAP.md%237` bir KESİT kimliğidir (ROADMAP §7 bölümü), dosya adı değil; ham
 #: `ROADMAP.md` indekste YOKTUR ve önek olarak da kabul edilmez. Çivi: manifest kaynağıyla
 #: ayrışma ölçülür.
