@@ -101,3 +101,15 @@ adim_0_2026_09_13: >
   geçmişinden (filled_at, broker olgusu; as-of damgalı, retro-hesap değil) geri doldurulması — (a)+(b) 13 işlem dolarsa
   n_uygun 24'e çıkar, eksik oranı 0'a iner; yine de 30 için ~3 hafta canlı birikim gerekir. ADIM-0 tekrarı kart AÇMAZ;
   yeniden ölçüm 2026-10-15 ya da TSK-182 sonrası (hangisi önce). Manifest sha'ları o ölçümde kurulum kaydına yazılır.
+
+duzeltme_2026_09_13_alan_semantigi: >
+  (Rol-1, 18:5xZ; kaynak: TSK-182 implementer ölçümü — `loop._exit_fill_yamasi`, `alpaca.exit_fill_price/exit_fill_ts`)
+  `trades.extra_json.dolum_ts` ve `alpaca_fill_price` ÇIKIŞ dolumunun zaman/fiyatıdır (E-kod [5] görünürlük alanı çıkış
+  yaması için doğdu); bu kartın hipotezi GİRİŞ dolum anını (tetik kırılması → dolum gecikmesi) ister. ADIM-0'ın 11 "dolum_ts'li"
+  işlemi çıkış zamanı taşıyordu → kapı ölçümü YANLIŞ ALANLA yapıldı; hüküm (askiya_veri_kapisi) DEĞİŞMEZ ama neden düzelir:
+  giriş dolum anı `trades` satırında bugün YOK (motor onu E2 `entry_execution.jsonl`de `fill` fiyatı ve satır `ts`i ile tutar —
+  `ts` gönderim/karar damgasıdır, dolum saniyesi değil). Doğru kaynak: TSK-182 aracının Alpaca `filled_at`tan yazacağı
+  `extra_json.giris_dolum_ts` / `giris_dolum_fiyat` (as-of damgalı, broker olgusu). ADIM-0 yeniden ölçümü (kart açmaz) bu
+  alan ailesiyle: n_uygun = `giris_dolum_ts` taşıyan ∧ arşiv günü; eksik oranı = giriş alanı eksik / live_paper n. Tahmin
+  YOK: TSK-182 `--uygula` sonrası sayılır. `olcum_plani` maddelerindeki "dolum_ts" atıfları o zaman `giris_dolum_ts` okunur
+  (eşik/kill değişmedi; alan adı düzeltmesi ölçüm sözleşmesini değiştirmez, kaynağını doğrular).
