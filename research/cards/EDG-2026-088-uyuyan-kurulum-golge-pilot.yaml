@@ -79,3 +79,17 @@ notlar: >
   damga (motor ACIK'e `pencere_baslangic` ilk seansta yazar; çelişirse --baslangic kazanır). Ölçülen hız (10 plan / 40 gün) ile n=30 beklentisi
   ~18 hafta; 120 günde dolmazsa 'bilgisiz' arşiv. İlk gölge satırı ilk uyuyan plan doğduğunda (Pazartesi 2026-09-14 seansından itibaren);
   /api/golge-icra dağıtım anında n=0 (beklenen). PK (2) gerçek ayağı ilk 10 gerçek işlemde; PK (3) şasi koşumu TSK-179 alt kalemi.
+
+pk3_hukmu_2026_09_13: >
+  (Rol-1, 15:3xZ) PK (3) SELEF — EŞLEŞTİ (`esles=True`). EDG-049'un 6 dormant pullback planı (V·ZBH·WBD·LNG·OXY·F)
+  donmuş edg032c parametreleriyle (git-izli kopya research/olcumler/edg088_golge_pilot/pk3_selef/params_donmus/,
+  SHA256SUMS; goal 099590de… · strategy 9f3e4732… · bounds 3e810b54…) `strategy.scan_all` zincirinden (tam evren +
+  `cf_backfill._plans_for_session` rs_map) 6/6 yeniden doğdu (stop TÜRETİLMEDİ — Rol-1 hükmü (c)), `golge_icra.adim`
+  ile seans seans gölgeden geçti: 6/6 kayıp; toplam R 049 −4,725 · gölge −4,763771 (fark −0,039, betimleyici);
+  altı planda skor (80/90/96/93/97/84), giriş seansı, çıkış seansı ve çıkış nedeni 049 ile BİREBİR. Sonuç:
+  research/olcumler/edg088_golge_pilot/pk3_selef/sonuc_20260913T145834+0000.json (tur-1 143809 tarihçe; yalnız
+  duvar-saati damgaları ayrışır). Bar kaynağı: `state/bars` CSV (hüküm 2'nin yedeği — yerelde parquet arşivi yok; beyanlı,
+  `kaynak_bar_hash` satırlarda). `regime_ok` motor ifadesinin 4. kopyası (beyanlı → TSK-184). Çiviler v469 (11).
+  `notlar` bloğundaki "PK (3) esles=None = KOŞULMADI" cümlesi bu kayıtla BAYAT: üç PK'dan (3) YEŞİL; (1) B1 çivili,
+  (2) gerçek ayağı ilk 10 gerçek işlemde. K harcanmadı (PK). Kod bfce287 (Opus tur-1+2, Sonnet inceleme + dar yeniden
+  inceleme), tam suite #47 12224/1 (v334 yükleyici → c658865 delta yeşil).
