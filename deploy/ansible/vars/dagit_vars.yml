@@ -173,6 +173,12 @@ dogrulama_uclari:
 # operatörün `disable --now` bıraktığı birimi İKİ gece üst üste geri açmıştı (2026-08-31 + 09-01).
 # Aday KÜMESİ sabittir (2026-08-24 `meridian-learn` UNUTMA vakası); sabitlenemeyen şey stop/start
 # SATIRIdır.
+# BİLEREK DIŞARIDA — `meridian-defter-ozeti-retain` (TSK-168, kart EDG-2026-089): `Type=oneshot` +
+# timer-tetikli bir birim bakım penceresinde ZATEN koşmuyordur; "durdur" hiçbir şey yapmaz,
+# "başlat" ise pencerenin ortasında kadans dışı bir retain ATEŞLER — o gün için belge bir kez
+# yazılabildiğinden (idempotens) yarım bir günün özeti bankaya KALICI olarak girerdi. Aynı gerekçe
+# yukarıdaki "timer'lara DOKUNULMAZ" cümlesinin kendisidir; burada ADIYLA yazılı çünkü sessiz bir
+# atlama, bir sonraki listeyi okuyanın "unutulmuş mu?" sorusunu cevapsız bırakırdı.
 birim_adaylari:
   - "meridian"
   - "meridian-barsarchive"

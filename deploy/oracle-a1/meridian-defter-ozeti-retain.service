@@ -1,0 +1,95 @@
+# meridian-defter-ozeti-retain.service — günlük defter özetini Hindsight bankasına RETAIN eder.
+#
+# KART: EDG-2026-089 (`research/cards/EDG-2026-089-hindsight-retain-akisi-yeni-pencere.yaml`),
+# kurulum kalemi TSK-168. Kartın ölçtüğü şey bu birimin KADANSIdır: K1 "7/7 gün retain başarılı ∧
+# memory_units her gün artar". Öncül kartlar (EDG-083, EDG-080-K2) bir GİRDİSİZ banka ölçmüştü —
+# bankaya son olgu 2026-09-07'de girmiş, delta tazeleme haklı olarak "up-to-date" demişti. Bu
+# birim o boşluğun üretici ucudur.
+#
+# NE YAPAR: `ops/defter_ozeti_retain.py --uygula` — defterlerden (dağıtım beyanı · işlem defteri ·
+# portföy · olaylar · giriş icra defteri · kartlar) ≤4.000 karakterlik bir Markdown belge üretir,
+# sır süzgecinden geçirir, bankada o günün belgesi YOKSA retain eder. BELGEYİ BİR MODEL ÜRETMEZ:
+# betik hiçbir model/ajan istemcisi ithal etmez (kartın kill#2'si; çivi v464 bölüm (f)).
+#
+# ÇIKIŞ KODU ↔ systemd: betik 0 (retain) · 2 (o günün belgesi bankada zaten var) · 1 (hata) döner.
+# `SuccessExitStatus=2` (Rol-1 hükmü 2026-09-13, implementer kaygı 2): aynı gün ikinci tetik (kurulum
+# günü elle test-ateşleme + 21:30 timer) bir ARIZA DEĞİL idempotens sonucudur; onu `failed` bırakmak
+# fail-notify'ı ve bekçiyi gerçek arıza dışı bir sebeple öttürürdü (Yasa 4 gürültüsü). "Bugün retain
+# edildi" ile "bugün zaten vardı" ayrımı `obs` olayının `sonuc` alanındadır (retain|zaten_var|hata) —
+# okuyucusu EDG-2026-089 K1 sayımı + bekçi brifingi `durum:` yolu (Yasa 6). Kadans ARIZASI (retain
+# hiç olmuyor) K1'de 'gün boş' olarak görünür; 1 (hata) yine `failed`tır ve fail-notify'a gider.
+#
+# KURULUM: drop-in ve birim dosyası A0 rolünün GENEL mekanizmasıyla kopyalanır
+# (`deploy/ansible/roles/meridian_a1/defaults/main.yml`: `birim_kaynaklari` glob'u `.service`/
+# `.timer`ı, `dropin_dizinleri` + `dropin_kaynaklari` ise `.service.d/*.conf`u kapsar). TIMER
+# ENABLE EDİLMESİ AYRI BİR KARARDIR: `etkin_timerlar` listesine BİLEREK eklenmedi — günlük bir
+# kadansı operatör kararı olmadan açmak, kadans kapısının (`brifing_devri`) var olma sebebinin
+# tersidir. Rol-1 dağıtımdan sonra elle `enable --now` eder ve AYNI GÜN elle test-ateşler
+# ("kurulu" ≠ "çalışır" — fail-notify vakası, CLAUDE.md §9).
+[Unit]
+Description=Meridian günlük defter özeti — Hindsight retain (EDG-2026-089)
+# Yerel bir uca (127.0.0.1:8888) gider ama yine de ağ hedefini bekler: hindsight-api'nin kendi
+# birimi de `network-online.target` sonrası başlar ve tetik onun ÖNÜNE düşerse ilk koşum boşa
+# gider (retain edilmeyen gün, K1'de KALDI sayılır — sessiz kayıp değil ama gereksiz kayıp).
+After=network-online.target hindsight-api.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+SuccessExitStatus=2
+User=ubuntu
+# Betik depo kökünden koşmalı (`sys.path` bootstrap + `state/` yolları). Bu birim bir AJAN
+# ÇAĞIRMAZ, o yüzden `meridian-brifing.service`teki `cwd` tuzağı (çocuğun proje talimatlarını
+# toplaması) burada YOKTUR — alt süreç de yoktur.
+WorkingDirectory=/opt/meridian
+# TimeoutStartSec — brief sözleşmesi. EN KÖTÜ YOL: iki HTTP çağrısı (idempotens GET + retain POST),
+# her biri betiğin kendi `ZAMAN_ASIMI_S` duvarına (30 s) çarpar; kalan pay defter okumaları
+# (`state/` + `research/cards/`) ve süreç açılışıdır. 300 s bu yolun KAT KAT üstündedir ve asılı
+# bir upstream birimi SONSUZA dek `activating` bırakmaz — etkin bir oneshot'ken timer BİR SONRAKİ
+# tetiği ATLAR (TSK-123'ün ölçtüğü sessiz teslimat düşüşü).
+TimeoutStartSec=300
+# `--uygula` ZORUNLU: betik kip bayrağı olmadan çıkış 1 verir (çelişen/eksik kip sessizce
+# varsayılana düşmez). `-` ÖNEKSİZ: retain düşerse birim `failed` olur ve arıza görünür kalır.
+ExecStart=/opt/meridian/.venv/bin/python /opt/meridian/ops/defter_ozeti_retain.py --uygula
+
+# ==================================================================================================
+# H3 SERTLEŞTİRME — filo ortak seti (meridian.service · meridian-brifing.service ·
+# meridian-karne.service … ile BİREBİR). Gerekçelerin TAM METNİ meridian.service'tedir; burada
+# YALNIZ ayrışan kalem yazılıdır. Dışarıda bırakılanlar (MemoryDenyWriteExecute · PrivateDevices ·
+# PrivateUsers · ProtectProc/ProcSubset · IPAddressDeny · SystemCallErrorNumber=EPERM) ve
+# gerekçeleri: meridian.service. Çivi: tests/test_defter_ozeti_retain_v464.py bu kümeyi REFERANS
+# BİRİMDEN türetip kıyaslar — elle yazılmış bir kopya listesi sessizce ayrışırdı.
+# ==================================================================================================
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+# --- AYRIŞMA — ReadWritePaths: YALNIZ `/opt/meridian`; `~/.hermes` YOK ve bu ÖLÇÜLMÜŞ bir
+#     sonuçtur, kopyalanmış bir satır değil: bu birim bir ajan çağırmaz (çivi (f): yasak ithal
+#     kümesi), yani kardeşinin profil dizinini açma gerekçesi burada YOKTUR. Yazdığı tek şey
+#     `state/events.jsonl` (obs.log) ve import anında `__pycache__` — ikisi de /opt/meridian
+#     altındadır. `~/.cache` YOK: ExecStart `uv` DEĞİL, doğrudan `.venv/bin/python`.
+ReadWritePaths=/opt/meridian
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+# Bu birim AĞA ÇIKAR (127.0.0.1:8888 → hindsight-api) — liste kardeşlerle BİREBİR aynı;
+# AF_NETLINK'in bilerek dışarıda oluşunun gerekçesi meridian.service'tedir.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+# [Install] BÖLÜMÜ BİLEREK YOK — tetik YALNIZ meridian-defter-ozeti-retain.timer'dır. Burada bir
+# `WantedBy=multi-user.target` dururken `systemctl enable <birim>.service` SESSİZCE başarılı olur
+# ve birime kimsenin istemediği bir AÇILIŞ KOŞUMU ekler: timer kadansının dışında, `Persistent=true`
+# telafisiyle karışan ikinci bir tetik — ve bu birimde o ikinci tetik AYNI GÜNÜN belgesini ikinci
+# kez sorar (çıkış 2, `failed`). Bölüm yokken aynı komut "no installation config" diye DÜŞER.
+# Emsal ve gerekçenin tamamı: meridian-brifing.service (çivi v327).

@@ -242,7 +242,13 @@ rotasyon_kopyalari:
       alan: null
       mod: "400"
       sahip: "root"
-      tuketici: "hindsight-api.service (50-creds) · meridian.service (54 drop-in) — AYNI dosya"
+      # ÜÇÜNCÜ TÜKETİCİ (TSK-168, kart EDG-2026-089): günlük defter özeti retain birimi. Adı
+      # `.service` UZANTISIZ yazılıdır ve bu bir üslup tercihi DEĞİL: N10 çivisi bu alandaki
+      # `<ad>.service` eşleşmelerini rotasyonun YENİDEN BAŞLATTIĞI birim listesiyle eşitler, oysa
+      # bu birim `Type=oneshot` + timer-tetiklidir ve rotasyon penceresinde restart EDİLMEZ —
+      # taze anahtarı bir sonraki tetikte kaynaktan okur (tablosu: `_oneshot_kredensiyeller`).
+      tuketici: "hindsight-api.service (50-creds) · meridian.service (54 drop-in) ·
+        meridian-defter-ozeti-retain (timer'lı oneshot, 54 drop-in — restart YOK) — AYNI dosya"
     - alt_komut: tenant
       sir: HINDSIGHT_API_TENANT_API_KEY
       tur: dosya

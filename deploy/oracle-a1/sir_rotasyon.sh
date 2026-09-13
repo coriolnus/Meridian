@@ -346,6 +346,7 @@ _oneshot_kredensiyeller() {
 kapi meridian-brifing.service KAPI_APIKEY /etc/meridian/kapi_apikey
 kapi meridian-bekci.service KAPI_APIKEY /etc/meridian/kapi_apikey
 kapi meridian-karne.service KAPI_APIKEY /etc/meridian/kapi_apikey
+tenant meridian-defter-ozeti-retain.service HINDSIGHT_API_TENANT_API_KEY /etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY
 ONESHOT_KRED_SON
 }
 
