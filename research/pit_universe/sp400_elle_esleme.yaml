@@ -1,0 +1,221 @@
+# EDG-2026-093 ADIM-0 EKSEN A — S&P 400 değişiklik tablosundaki TEK YANLI satırların eşleme kararları.
+#
+# BU DOSYA ROL-1'İN GÖZDEN GEÇİRECEĞİ KARARLARI TAŞIR. Üretici (`research/olcumler/
+# edg093_midcap_pit/kohort.py`) dosyayı BİR KEZ mekanik ÖNERİ olarak yazar; VARSA bir daha
+# ÜZERİNE YAZMAZ, OKUR. Kararları elle düzenlemek serbesttir, şema kapısı korur.
+#
+# `karar` SÖZLÜĞÜ (dışındaki değer REDDEDİLİR):
+#   esle:<eski>-><yeni>  iki yarım satır AYNI endeks değişiminin iki kitaplamasıdır
+#                        (ANOTASYON — değişiklik listesindeki tarihler DEĞİŞMEZ).
+#   dusur                satır tabloda hatalı kitaplanmış; değişiklik listesinden ÇIKARILIR.
+#   belirsiz             karar YOK — sembol o tarihten ÖNCEKİ günlerde 'belirsiz' sayılır.
+#
+# `gerekce` tablonun KENDİ Reason/<ref> hücresinden alınır; ağa ÇIKILMAZ, metin UYDURULMAZ.
+# `kaynak.wikitext_satir_no` ayrıştırılmış tablo satır indeksidir (ham wikitext sha'sı sonuç
+# JSON'unun `girdi_kimligi` alanında).
+- satir:
+    tarih: '2020-12-01'
+    tarih_ham: December 1, 2020
+    eklenen: CNXC
+    eklenen_ad: Concentrix
+    cikan: null
+    cikan_ad: null
+    satir_no: 262
+  karar: esle:AMCX->CNXC
+  gerekce: Market capitalization change. || S&P MidCap 400 constituent SYNNEX Corp. spun off Concentrix.
+  kaynak:
+    wikitext_satir_no:
+    - 261
+    - 262
+    urller:
+    - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20201201-1266188/1266188_spinconcentricaaron46.pdf
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+- satir:
+    tarih: '2020-12-02'
+    tarih_ham: December 2, 2020
+    eklenen: null
+    eklenen_ad: null
+    cikan: AMCX
+    cikan_ad: AMC Networks
+    satir_no: 261
+  karar: esle:AMCX->CNXC
+  gerekce: Market capitalization change. || S&P MidCap 400 constituent SYNNEX Corp. spun off Concentrix.
+  kaynak:
+    wikitext_satir_no:
+    - 261
+    - 262
+    urller:
+    - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20201201-1266188/1266188_spinconcentricaaron46.pdf
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+- satir:
+    tarih: '2021-08-02'
+    tarih_ham: August 2, 2021
+    eklenen: GXO
+    eklenen_ad: GXO Logistics
+    cikan: null
+    cikan_ad: null
+    satir_no: 232
+  karar: esle:STRA->GXO
+  gerekce: Market capitalization change. || Spun off from XPO, Inc.
+  kaynak:
+    wikitext_satir_no:
+    - 231
+    - 232
+    urller: []
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+- satir:
+    tarih: '2021-08-03'
+    tarih_ham: August 3, 2021
+    eklenen: null
+    eklenen_ad: null
+    cikan: STRA
+    cikan_ad: Strategic Education, Inc.
+    satir_no: 231
+  karar: esle:STRA->GXO
+  gerekce: Market capitalization change. || Spun off from XPO, Inc.
+  kaynak:
+    wikitext_satir_no:
+    - 231
+    - 232
+    urller: []
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+- satir:
+    tarih: '2022-04-05'
+    tarih_ham: April 5, 2022
+    eklenen: ESAB
+    eklenen_ad: ESAB
+    cikan: null
+    cikan_ad: null
+    satir_no: 196
+  karar: esle:PRG->ESAB
+  gerekce: Market capitalization change. || S&P MidCap 400 constituent Colfax Corp. spun off ESAB.
+  kaynak:
+    wikitext_satir_no:
+    - 195
+    - 196
+    urller:
+    - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20220330-1451140/1451140_6cfx46.pdf
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+- satir:
+    tarih: '2022-04-06'
+    tarih_ham: April 6, 2022
+    eklenen: null
+    eklenen_ad: null
+    cikan: PRG
+    cikan_ad: PROG Holdings
+    satir_no: 195
+  karar: esle:PRG->ESAB
+  gerekce: Market capitalization change. || S&P MidCap 400 constituent Colfax Corp. spun off ESAB.
+  kaynak:
+    wikitext_satir_no:
+    - 195
+    - 196
+    urller:
+    - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20220330-1451140/1451140_6cfx46.pdf
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+- satir:
+    tarih: '2022-11-01'
+    tarih_ham: November 1, 2022
+    eklenen: RXO
+    eklenen_ad: RXO
+    cikan: null
+    cikan_ad: null
+    satir_no: 169
+  karar: esle:BFH->RXO
+  gerekce: Market capitalization change. || S&P MidCap 400 constituent XPO, Inc. spun off RXO.
+  kaynak:
+    wikitext_satir_no:
+    - 168
+    - 169
+    urller:
+    - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20221027-1457121/1457121_5twtr-4xpo.pdf
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+- satir:
+    tarih: '2022-11-02'
+    tarih_ham: November 2, 2022
+    eklenen: null
+    eklenen_ad: null
+    cikan: BFH
+    cikan_ad: Bread Financial
+    satir_no: 168
+  karar: esle:BFH->RXO
+  gerekce: Market capitalization change. || S&P MidCap 400 constituent XPO, Inc. spun off RXO.
+  kaynak:
+    wikitext_satir_no:
+    - 168
+    - 169
+    urller:
+    - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20221027-1457121/1457121_5twtr-4xpo.pdf
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+- satir:
+    tarih: '2023-04-04'
+    tarih_ham: April 4, 2023
+    eklenen: CR
+    eklenen_ad: Crane (new)
+    cikan: null
+    cikan_ad: null
+    satir_no: 145
+  karar: esle:PACW->CR
+  gerekce: Market capitalization change. || S&P MidCap 400 constituent Crane Holdings Co. (NYSE:CR) spun
+    off new Crane. Following the spin-off, the parent Crane Holdings Co. will have a name change to Crane
+    NXT Co., a symbol change to CXT, and will remain in the S&P MidCap 400.
+  kaynak:
+    wikitext_satir_no:
+    - 144
+    - 145
+    urller:
+    - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20230329-1463391/1463391_4cr.pdf
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+- satir:
+    tarih: '2023-04-05'
+    tarih_ham: April 5, 2023
+    eklenen: null
+    eklenen_ad: null
+    cikan: PACW
+    cikan_ad: PacWest Bancorp
+    satir_no: 144
+  karar: esle:PACW->CR
+  gerekce: Market capitalization change. || S&P MidCap 400 constituent Crane Holdings Co. (NYSE:CR) spun
+    off new Crane. Following the spin-off, the parent Crane Holdings Co. will have a name change to Crane
+    NXT Co., a symbol change to CXT, and will remain in the S&P MidCap 400.
+  kaynak:
+    wikitext_satir_no:
+    - 144
+    - 145
+    urller:
+    - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20230329-1463391/1463391_4cr.pdf
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+- satir:
+    tarih: '2023-10-02'
+    tarih_ham: October 2, 2023
+    eklenen: VSTS
+    eklenen_ad: Vestis
+    cikan: null
+    cikan_ad: null
+    satir_no: 114
+  karar: esle:KSS->VSTS
+  gerekce: Market capitalization change. || S&P MidCap 400 constituent Aramark spun off Vestis.
+  kaynak:
+    wikitext_satir_no:
+    - 113
+    - 114
+    urller:
+    - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20230928-1466640/1466640_554-k-dhr-armk.pdf
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+- satir:
+    tarih: '2023-10-03'
+    tarih_ham: October 3, 2023
+    eklenen: null
+    eklenen_ad: null
+    cikan: KSS
+    cikan_ad: Kohl's
+    satir_no: 113
+  karar: esle:KSS->VSTS
+  gerekce: Market capitalization change. || S&P MidCap 400 constituent Aramark spun off Vestis.
+  kaynak:
+    wikitext_satir_no:
+    - 113
+    - 114
+    urller:
+    - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20230928-1466640/1466640_554-k-dhr-armk.pdf
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
