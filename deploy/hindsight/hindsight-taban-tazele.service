@@ -79,7 +79,12 @@ Environment=OMP_NUM_THREADS=2
 # işi şudur: asılı bir koşum birimi SONSUZA dek `activating` bırakır; etkin bir oneshot'ken timer
 # BİR SONRAKİ tetiği ATLAR (TSK-014 Ö-5) — haftalık bir kadansta bu, kaçan bir HAFTA demektir.
 # İlk canlı koşumun `kurulum_suresi_s` künyesi bu sayıyı ölçülmüş bir değerle değiştirmelidir.
-TimeoutStartSec=10800
+# TimeoutStartSec ÖLÇÜLDÜ (TSK-186, 2026-09-14): 3 saat (10800) YETMEDİ — ilk gerçek koşum (2026-09-13 gecesi)
+#   4.427 chunk'ı gömerken üç saatin sonunda 'start operation timed out' ile öldürüldü (9 saat 25 dk CPU boşa);
+#   2026-09-06 elle kurulum künyesi 3.582 chunk = 16.364 s (OMP 2). 4.427 chunk ≈ 5,6 saat → 8 saat (28800) = ×1,4 pay.
+#   OMP_NUM_THREADS=2 KORUNDU (işçiye yarım CPU); Pazar sabahı tetiği öğleden sonra biter, seans dışı.
+#   (K7: bu şerhte saat DEĞERİ yazılmaz — OnCalendar tek kaynak.)
+TimeoutStartSec=28800
 # Bayat bir `.yeni` kalmışsa (geçen haftanın bırakılmış indeksi) adım [2] `HEDEF VAR` diyerek
 # DÜŞER — taban_indeks var olan bir db'nin üstüne bilerek yazmaz. Silme bu yüzden ÖN ADIMDIR,
 # adım [2]'nin içinde bir "üstüne yaz" bayrağı DEĞİL: o bayrak yarım bir indeksi sessizce
