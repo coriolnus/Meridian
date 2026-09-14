@@ -306,5 +306,5 @@ _Güncelleme 22:09Z: A-2 korpus gömmesi sürüyor (1 s+); A-3/A-4 şef brifingi
 | Vault tur-4 (15:20Z) | Yönetici jetonu PERİYODİK + haftalık yenileme birimi canlı (test-ateşleme geçti; 'yenileme 2026-10-14 öncesi' kalemi kapandı) | dağıtım #47 f9 çiftlerini taşır |
 | A1 triyaj | 14:35Z sessiz; tek warn sondanın 400'ü | saatlik |
 
-**Operatör masası (yeni):** (1) EDG-093 ana ölçümü için sıra/onay (Opus ~1M token, Alpaca ~661 isim × 6 yıl günlük bar); (2) Vault dalga-2 üç soru (belge: docs/degerlendirme/VAULT-DALGA2-ONERI-2026-09-14.md); (3) A1 `/opt/meridian/.dash.env` ölü kopyasının silinmesi (hijyen).
+**Operatör masası — CEVAPLANDI 17:47Z:** (1) EDG-093 ana ölçümü DEVAM; (2) Vault dalga-2 HEPSİ (parola dahil; Agent yazma yüzeyi + docker restart kabul) → plan Rol-1, Opus repo tarafı, A1 bakım penceresi; (3) `.dash.env` SİLİNDİ; (4) geçmiş R yeniden hesabı AYRI KARTLA (yeni).
 **Bugün kalan sıra:** 20:05Z dağıtım #47 (TSK-187b) → `r_payda_gocu` kanıtı · 20:3xZ akşam döngüsü (TSK-180/181) · 22:00Z şef brifingi (TSK-138/014) · saatlik Vault/failed triyajı.
