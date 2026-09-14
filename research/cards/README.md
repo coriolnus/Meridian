@@ -13,7 +13,7 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **108** kart.
 
-### Kayıtlı — ölçüm bekliyor (14)
+### Kayıtlı — ölçüm bekliyor (13)
 
 - **EDG-2026-053** (`registered`) — 15d-A2 (taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md K2'den AYNEN): İLK-İFŞA filtreli çeyrek gelir (Revenues) YoY büyümesi ve İVMESİ…
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt (ölçüm 050/051'den biri inince sırada)
@@ -41,9 +41,6 @@ Toplam **108** kart.
 - **EDG-2026-086** (`registered`) — 
   · HÜKÜM: 2026-09-07 Rol-1 — ön-kayıt; B1 backend + B2 UI bu karttan sonra; ölçüm penceresi B2 dağıtımından itibaren
   · kart: `EDG-2026-086-pano-sohbet-kalite.yaml`
-- **EDG-2026-093** (`registered`) — 
-  · HÜKÜM: ön-kayıt; ölçüm TSK-065 sırasında (operatör: düşük öncelik).
-  · kart: `EDG-2026-093-midcap-pit-kohort-sagkalan-ust-sinir.yaml`
 - **EDG-2026-094** (`registered`) — 
   · HÜKÜM: ön-kayıt; ADIM-1 ölçüm (salt-okur) Opus, ADIM-2 yazım (ops betiği, A1 bakım penceresi) Rol-1
   · kart: `EDG-2026-094-gecmis-r-giris-riski-paydasi-yeniden-hesap.yaml`
@@ -81,7 +78,7 @@ Toplam **108** kart.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`
 
-### Ölçüldü (61)
+### Ölçüldü (62)
 
 - **BASE-2026-001** (`measured`) — Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net −5.542 USD).
   · HÜKÜM: 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1): CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146 seans, bugünkü motor+canlı v3…
@@ -236,6 +233,9 @@ Toplam **108** kart.
 - **EDG-2026-092** (`measured`) — 
   · HÜKÜM: 2026-09-14 06:10Z hüküm `hukum_2026_09_14` — GEÇTİ (K1 54/54, PK 4/4); ücretsiz kaynak PIT-doğru → mid-cap PIT kohortu kurulabilir; halef kart TSK-065 sırasında; ÖNCEKİ:…
   · kart: `EDG-2026-092-sp400-uyelik-tarihcesi-ucretsiz-kaynak-fizibilite.yaml`
+- **EDG-2026-093** (`measured`) — 
+  · HÜKÜM: 2026-09-14 19:4xZ hüküm `hukum_2026_09_14` — KALDI (bilgisiz: üst-dilim fazlası CI-0-içi; large-cap PK-1 katman i birebir, katman ii kısmi); K 2/2 harcandı + tanı
+  · kart: `EDG-2026-093-midcap-pit-kohort-sagkalan-ust-sinir.yaml`
 - **EXE-2026-001** (`measured`) — İç defter (koşulsuz ertesi-açılış dolumu) ile canlı ayna (buy-stop GTC bracket) FARKLI icra modelleri koşuyor ve ayna gap durumunda reddediliyor…
   · HÜKÜM: 2026-08-03 ~15:0x UTC — E1 GRİD KOŞULDU (kanıt: research/olcumler/e1_grid_2026-08-03/; determinizm çift-kapılı)
   · kart: `EXE-2026-001-entry-execution.yaml`

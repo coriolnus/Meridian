@@ -301,7 +301,7 @@ _Güncelleme 22:09Z: A-2 korpus gömmesi sürüyor (1 s+); A-3/A-4 şef brifingi
 |---|---|---|
 | TSK-138 dilim-3 | CANLI: tur-1 + tur-2 (K3 `deneme`) main, dağıtım #45/#46 (deployed_sha f78cb79) | kanıt 22:00Z şef (`sef_brifingi_denetci_cagri`), yarın 10:03Z bekçi |
 | TSK-187 13:40Z kapısı | Ayna dolumu GEÇTİ (MPC 20 · DE 10 · MRNA 8 · MU 7); R-payda göçü henüz ATEŞLENMEDİ — DÜZELTME 15:2xZ: dokümanda `qty_taban` anahtarı yok ('None' yanlış okumaydı), göç noktası `_load_broker` günlük döngüde → ilk döngü bu akşam 20:3xZ | TSK-187b HOTFIX main 46cd4c0, SUITE #53 12770/0, push; DAĞITIM #47 20:05Z sonrası (CRM 255, stop 230,9); kanıt: restart sonrası `r_payda_gocu` (CRM, eski None → 12) |
-| EDG-093 (TSK-065 halefi) | ADIM-0 A+B GEÇTİ: sp400 PIT kohortu (400–407, belirsiz ≤8, PIT-PK 10/10) + Alpaca kapsaması 661/661, barsız-çıkış %0,38 | ana ölçüm (EDG-016 tasarımı) OPERATÖR sırası — düşük öncelik kararı geçerli |
+| EDG-093 (TSK-065 halefi) | HÜKÜM KALDI (19:4xZ): mid-cap PIT kohortunda turnover sinyali bilgisiz (@20 +0,18% CI-0-içi); large-cap PK katman i birebir, katman ii sağkalan şüphesi (yeni kart adayı); altyapı (PIT kohort + bar/EDGAR + k093) hazır | TSK-065 kararı operatörde (başka sinyalle sürsün mü) |
 | Vault dalga-2 | Öneri belgesi hazır (5 seçenek, 3 soru) + 2d `.dash.env` ölü kopya ölçümü | OPERATÖR MASASI |
 | Vault tur-4 (15:20Z) | Yönetici jetonu PERİYODİK + haftalık yenileme birimi canlı (test-ateşleme geçti; 'yenileme 2026-10-14 öncesi' kalemi kapandı) | dağıtım #47 f9 çiftlerini taşır |
 | A1 triyaj | 14:35Z sessiz; tek warn sondanın 400'ü | saatlik |
