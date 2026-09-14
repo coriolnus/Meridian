@@ -27,9 +27,11 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 import subprocess
 import sys
 import pathlib
+import zipfile
 
 import pytest
 import yaml
@@ -281,6 +283,146 @@ def test_C5_MUTASYON_stdin_isareti_kalkinca_KIRMIZI():
     assert not re.search(r"operator\s+unseal\s+-(?![-\w])", bozuk), "mutasyon uygulanamadı"
     assert re.search(r"operator\s+unseal\s+[\"']?\$", bozuk), "mutasyon C2'nin ikinci kolunu kurmadı"
 
+
+# -------------------------------------------------------------------------------------------------
+# C6-C9 — BOOTSTRAP SÖZLEŞMESİ (TUR 2, A1 ilk kurulumunda ÖLÇÜLEN arıza 2026-09-14 09:0xZ)
+# -------------------------------------------------------------------------------------------------
+# ÖLÇÜLEN ARIZA. `vault.service` betiği `ExecStartPost=+…` ile çağırır ve ExecStartPost servis
+# AYAĞA KALKAR KALKMAZ koşar — yani `vault_kur.sh` adım 5'teki `operator init`ten ÖNCE. Betik o
+# anda "anahtar dosyası yok/boş → exit 2" diyordu; ExecStartPost'un sıfır olmayan çıkışı BİRİMİ
+# düşürür, birim `Restart=` ile yeniden dener ve kurulum yeniden-başlama döngüsüne girer
+# (journal: `Control process exited, code=exited, status=2`). Kasa hiç init edilemez.
+#
+# YENİ SÖZLEŞME — "anahtar yok" İKİ AYRI OLGUDUR ve tek çıkış kodu ikisini karıştırıyordu:
+#   · kasa HENÜZ INIT EDİLMEMİŞ + anahtar yok → BEKLENEN bootstrap hâli   → çıkış 0 (sessiz değil:
+#     olgu ADIYLA basılır; `vault_kur.sh` adım 5 init eder, adım 6 bu betiği KENDİSİ çağırır)
+#   · kasa INIT EDİLMİŞ + anahtar yok        → GERÇEK arıza (anahtar kayıp) → çıkış 2
+# Ayrımı yapan tek ölçüm `vault status -format=json` içindeki `initialized` alanıdır; uydurulmuş
+# bir varsayım (ör. "anahtar yoksa herhâlde init de yoktur") ikinci olguyu SESSİZCE yutardı.
+
+def _sahte_vault_kur(tmp_path, *, initialized: bool, sealed: bool = True):
+    """PATH stub'ı DEĞİL, `VAULT_BIN` ile verilen sahte `vault`. Üç alt komutu tanır:
+
+      · `status`                → çıkış kodu (0 = açık, 2 = mühürlü/init-siz) — gerçek CLI böyle
+      · `status -format=json`   → `initialized`/`sealed` alanları + AYNI çıkış kodu
+      · `operator unseal -`     → STDIN'i dosyaya yazar (değer argv'ye GİRMEMELİ)
+
+    Sahte kasa hiçbir şeyi mutasyona uğratmaz; ölçtüğü tek şey betiğin HANGİ DALA girdiğidir."""
+    binler = tmp_path / "sahte-bin"
+    binler.mkdir(exist_ok=True)
+    argv_log = tmp_path / "argv.log"
+    stdin_dosya = tmp_path / "unseal.stdin"
+    ikili = binler / "vault"
+    ikili.write_text(
+        "#!/usr/bin/env bash\n"
+        f'echo "$*" >> "{argv_log}"\n'
+        'if [ "$1" = "status" ]; then\n'
+        '  if [ "$2" = "-format=json" ]; then\n'
+        f'    printf \'{{"initialized":%s,"sealed":%s}}\\n\' "{str(initialized).lower()}" "{str(sealed).lower()}"\n'
+        "  fi\n"
+        f'  [ "{str(sealed).lower()}" = "true" ] && exit 2\n'
+        "  exit 0\n"
+        "fi\n"
+        'if [ "$1" = "operator" ] && [ "$2" = "unseal" ]; then\n'
+        f'  cat > "{stdin_dosya}"\n'
+        "  exit 0\n"
+        "fi\n"
+        "exit 0\n",
+        encoding="utf-8")
+    ikili.chmod(0o755)
+    return ikili, argv_log, stdin_dosya
+
+
+def _unseal_kos(tmp_path, betik, *, initialized, sealed=True, anahtar=None):
+    """Betiği sahte kasayla koşar. `anahtar=None` → anahtar dosyası HİÇ yaratılmaz."""
+    ikili, argv_log, stdin_dosya = _sahte_vault_kur(
+        tmp_path, initialized=initialized, sealed=sealed)
+    anahtar_yolu = tmp_path / "unseal.key"
+    if anahtar is not None:
+        anahtar_yolu.write_text(anahtar + "\n", encoding="utf-8")
+    ortam = dict(os.environ, VAULT_BIN=str(ikili),
+                 VAULT_UNSEAL_KEY_FILE=str(anahtar_yolu),
+                 VAULT_ADDR="http://127.0.0.1:8200")
+    r = subprocess.run(["bash", str(betik)], capture_output=True, text=True, env=ortam)
+    return r, argv_log, stdin_dosya
+
+
+def test_C6_INIT_EDILMEMIS_kasa_unseal_BEKLEMEZ_cikis_0(tmp_path):
+    """(i) init YOK + anahtar YOK → çıkış 0 ve olgu ADIYLA basılır.
+
+    Bu testin ölçtüğü şey bir KURULUM DÖNGÜSÜDÜR, bir konfor değil: sıfır olmayan her çıkış
+    `vault.service`in ExecStartPost'unu düşürür ve kasa hiç init edilemez."""
+    r, _, _ = _unseal_kos(tmp_path, UNSEAL_SH, initialized=False, anahtar=None)
+    assert r.returncode == 0, (
+        f"init edilmemiş kasada çıkış {r.returncode} — ExecStartPost birimi düşürür ve "
+        f"kurulum yeniden-başlama döngüsüne girer:\n{r.stdout}\n{r.stderr}")
+    assert "init edilmedi" in r.stdout, (
+        f"bootstrap hâli SESSİZCE geçildi — olgu ADIYLA basılmalı:\n{r.stdout}")
+
+
+def test_C7_INIT_EDILMIS_kasada_ANAHTAR_YOKSA_cikis_2(tmp_path):
+    """(ii) init VAR + anahtar YOK → çıkış 2. Bu GERÇEK arızadır: kasa init edilmiş ama mührü
+    açacak anahtar kayıp. Bootstrap muafiyeti buraya UZANMAZ — uzasaydı anahtar kaybı, kurulum
+    yarımlığıyla aynı sessizliğe gömülürdü."""
+    r, _, _ = _unseal_kos(tmp_path, UNSEAL_SH, initialized=True, anahtar=None)
+    assert r.returncode == 2, (
+        f"init edilmiş kasada anahtar kaybı çıkış {r.returncode} (2 bekleniyordu):"
+        f"\n{r.stdout}\n{r.stderr}")
+
+
+def test_C8_INIT_VAR_ANAHTAR_VAR_MUHURLU_ise_unseal_STDINden_CAGRILIR(tmp_path):
+    """(iii) DAVRANIŞSAL kanıt: C2 kaynak metnini okur ("yazılmış mı"), bu test koşar
+    ("oluyor mu"). İki şey birden ölçülür — (a) `operator unseal` GERÇEKTEN çağrıldı ve değer
+    stdin'den GELDİ, (b) değer argv log'unda HİÇ geçmiyor. Yalnız (a) ölçülseydi argv'ye yazan
+    bir betik de geçerdi; yalnız (b) ölçülseydi hiç unseal etmeyen bir betik de geçerdi."""
+    r, argv_log, stdin_dosya = _unseal_kos(
+        tmp_path, UNSEAL_SH, initialized=True, anahtar=SAHTE_DEGER)
+    assert r.returncode == 0, f"unseal yolu düştü:\n{r.stdout}\n{r.stderr}"
+    assert stdin_dosya.exists(), "`operator unseal` hiç çağrılmadı (mühür açılmazdı)"
+    assert stdin_dosya.read_text(encoding="utf-8").strip() == SAHTE_DEGER, (
+        "anahtar stdin'den GELMEDİ ya da içerik bozuldu")
+    assert SAHTE_DEGER not in argv_log.read_text(encoding="utf-8"), "DEĞER ARGV'YE SIZDI"
+    assert SAHTE_DEGER not in r.stdout and SAHTE_DEGER not in r.stderr, "DEĞER TERMİNALE BASILDI"
+
+
+def test_C9_TANINMAYAN_durum_cevabi_SESSIZCE_GECILMEZ(tmp_path):
+    """`initialized` okunamazsa hüküm YOKTUR ve yokluğu çıkış 0'la örtmek uydurma yasağının
+    ihlalidir ("ölçülemeyen değer `None` + neden"). Tanınmayan cevap GÖRÜNÜR bir arızadır."""
+    binler = tmp_path / "sahte-bin"
+    binler.mkdir(exist_ok=True)
+    ikili = binler / "vault"
+    ikili.write_text(
+        "#!/usr/bin/env bash\n"
+        'if [ "$1" = "status" ]; then echo "anlamsiz cikti"; exit 2; fi\n'
+        "exit 0\n", encoding="utf-8")
+    ikili.chmod(0o755)
+    ortam = dict(os.environ, VAULT_BIN=str(ikili),
+                 VAULT_UNSEAL_KEY_FILE=str(tmp_path / "yok.key"))
+    r = subprocess.run(["bash", str(UNSEAL_SH)], capture_output=True, text=True, env=ortam)
+    assert r.returncode == 1, (
+        f"tanınmayan durum cevabında çıkış {r.returncode} (1 bekleniyordu) — "
+        f"ölçülemeyen hüküm sessizce geçildi:\n{r.stdout}\n{r.stderr}")
+
+
+@pytest.mark.parametrize("eski,yeni,ad", [
+    ("exit 0   # bootstrap", "exit 2   # bootstrap", "bootstrap çıkışı 2'ye çevrildi"),
+    ('"$INIT_DURUMU" in', '"true" in', "init ölçümü sabitlendi (kapı köreltildi)"),
+])
+def test_C10_MUTASYON_bootstrap_kapisi_bozulunca_KIRMIZI(tmp_path, eski, yeni, ad):
+    """Çivi yeşili kanıt değildir (CLAUDE.md §6): iki mutasyon, iki ayrı dal.
+
+    (1) Bootstrap çıkışı 2'ye dönerse C6 kırmızı olmalı — yani ölçtüğü şey gerçekten ÇIKIŞ KODU.
+    (2) `initialized` ölçümü sabit `true`ya çevrilirse init-siz kasa da "init edilmiş" sayılır
+        ve C6 yine kırmızı olmalı — yani kapı GERÇEKTEN kasanın durumunu okuyor."""
+    ham = UNSEAL_SH.read_text(encoding="utf-8")
+    assert eski in ham, f"mutasyon çapası kaynakta yok: {eski!r} ({ad})"
+    bozuk = tmp_path / "vault_unseal_bozuk.sh"
+    bozuk.write_text(ham.replace(eski, yeni), encoding="utf-8")
+    bozuk.chmod(0o755)
+    r, _, _ = _unseal_kos(tmp_path, bozuk, initialized=False, anahtar=None)
+    assert not (r.returncode == 0 and "init edilmedi" in r.stdout), (
+        f"MUTASYON ISIRMADI ({ad}): bozuk betik hâlâ C6'nın beklediği hükmü veriyor — "
+        f"çivi yanlış sebeple yeşil:\n{r.stdout}\n{r.stderr}")
 
 # =================================================================================================
 # D) vault-unseal.service · vault-agent.service · vault-sagligi.{service,timer}
@@ -694,6 +836,109 @@ def test_I8_koy_betigi_LISTESINI_ENVANTERDEN_turetir():
         assert g["ad"] not in metin, f"{g['ad']} betiğe ELLE yazılmış (ikinci kaynak)"
 
 
+# -------------------------------------------------------------------------------------------------
+# I9-I11 — ZIP AÇICI: İKİ YOL (TUR 2, A1 ilk kurulumunda ÖLÇÜLEN eksik 2026-09-14)
+# -------------------------------------------------------------------------------------------------
+# ÖLÇÜLEN EKSİK: A1'de `unzip` KURULU DEĞİLDİ ve adım 1 tam da sha256'sı doğrulanmış zip'i
+# açacağı yerde düştü (Rol-1 apt ile kurdu, kurulum elle ilerledi). Düzeltme ÇİFTTİR ve iki
+# parçası AYRI sorunu çözer:
+#   (a) A0 rolü paket listesine `unzip` girdi → bir dahaki TEMİZ kurulumda eksik DOĞMAZ;
+#   (b) betik stdlib'e düşer (python3 zipfile) → kasa kurulumu bir BAKIM PENCERESİNDE koşar ve
+#       orada "önce apt-get install" demek pencereyi uzatır.
+# Yalnız (a) yapılsaydı rolü koşmamış bir makinede aynı arıza tekrarlardı; yalnız (b) yapılsaydı
+# A1 kalıcı olarak fallback yolunda kalır ve eksik hiç görünmezdi.
+
+#: `bash`in MUTLAK yolu — kısıtlı PATH'te `bash` aranamaz (çözüm yolu, test-only kolaylık değil:
+#: kısıtlama ölçülen şeyin kendisidir, koşturucunun bulunabilirliği değil).
+_BASH = shutil.which("bash") or "/bin/bash"
+
+
+def _min_path(tmp_path, *, unzip: bool, python3: bool) -> str:
+    """`--kuru` koşumunun ihtiyaç duyduğu komutlardan KÜRATE edilmiş bir PATH.
+
+    Amaç `unzip`in VAR/YOK olduğu iki dünyayı ölçmek. Gerçek PATH'i kullanıp `unzip`i "yok
+    saymak" mümkün değil: `command -v` PATH'i tarar ve gerçek ikiliyi bulurdu."""
+    binler = tmp_path / "min-bin"
+    binler.mkdir(exist_ok=True)
+    gerekli = ["bash", "id", "install", "useradd", "systemctl", "sha256sum", "shasum", "tr",
+               "grep", "sed", "cat", "rm", "mkdir", "chmod", "chown", "date", "sleep", "uname",
+               "env", "dirname", "basename", "pwd", "ls", "cp", "mv", "printf", "echo", "test"]
+    if unzip:
+        gerekli.append("unzip")
+    if python3:
+        gerekli.append("python3")
+    for ad in gerekli:
+        kaynak = shutil.which(ad)
+        if kaynak and not (binler / ad).exists():
+            (binler / ad).symlink_to(kaynak)
+    return str(binler)
+
+
+@pytest.mark.parametrize("unzip,python3,beklenen,ad", [
+    (True, True, "aç (unzip)", "unzip varsa BİRİNCİ yol"),
+    (False, True, "aç (python3-zipfile)", "unzip yoksa stdlib"),
+])
+def test_I9_KURU_kosum_ACICIYI_ADIYLA_secer(tmp_path, unzip, python3, beklenen, ad):
+    """Operatör bakım penceresinde HANGİ yolun koşacağını kuru koşumdan okumalı. "Açılır"
+    demek yetmez: iki yolun arıza yüzeyi farklıdır ve hangisinin seçildiği görünmezse, düşen
+    kurulumda yanlış araç aranır."""
+    ortam = dict(os.environ, PATH=_min_path(tmp_path, unzip=unzip, python3=python3),
+                 VAULT_BIN=str(tmp_path / "yok" / "vault"))
+    r = subprocess.run([_BASH, str(KUR_SH), "--kuru"], capture_output=True, text=True, env=ortam)
+    assert r.returncode == 0, f"kuru koşum düştü ({ad}):\n{r.stdout}\n{r.stderr}"
+    assert beklenen in r.stdout, f"kuru koşum açıcıyı ADIYLA söylemiyor ({ad}):\n{r.stdout}"
+
+
+def test_I10_IKISI_DE_YOKSA_kuru_kosum_EKSIGI_ve_RECETEYI_basar(tmp_path):
+    """ÜÇÜNCÜ, SESSİZ BİR YOL YOKTUR. Kuru koşumun işi eksikleri GÖSTERMEKTİR (betiğin kendi
+    başlığındaki kural) — ve bu eksik, `--uygula` kipinde betiği DURDURAN sınıftandır."""
+    ortam = dict(os.environ, PATH=_min_path(tmp_path, unzip=False, python3=False),
+                 VAULT_BIN=str(tmp_path / "yok" / "vault"))
+    r = subprocess.run([_BASH, str(KUR_SH), "--kuru"], capture_output=True, text=True, env=ortam)
+    assert "EKSİK" in r.stdout, f"açıcı eksikliği kuru koşumda GÖRÜNMÜYOR:\n{r.stdout}"
+    assert "apt-get install -y unzip" in r.stdout, "reçete basılmıyor (operatör ne yapacak?)"
+    metin = _yorumsuz(KUR_SH.read_text(encoding="utf-8"))
+    assert re.search(r"\*\)\s*die[^\n]*(?:AÇILAMIYOR|acilamiyor)", metin), (
+        "`--uygula` kipinde açıcısız dal DURDURMUYOR — yarım kurulum sessizce ilerlerdi")
+
+
+def test_I11_PYTHON_KOLU_GERCEK_bir_zipi_ACAR(tmp_path):
+    """Aracı OPERATÖRÜN KOŞACAĞI BİÇİMDE bir kez koş (CLAUDE.md §6, `--uygula` vakası).
+
+    Fallback kolu bir tek satırdır ve tırnaklaması bozuksa arıza ANCAK bakım penceresinde,
+    doğrulanmış zip elde dururken görünür. Bu yüzden çivi satırı KAYNAKTAN SÖKER ve gerçek bir
+    zip'le koşar — "yazılmış mı" değil, "açıyor mu"."""
+    metin = KUR_SH.read_text(encoding="utf-8")
+    m = re.search(r"python3\s+-c\s+'([^']+)'", metin)
+    assert m, "fallback tek satırı kaynakta bulunamadı (çivi hedefini kaybetmiş)"
+    zip_yolu = tmp_path / "ornek.zip"
+    with zipfile.ZipFile(zip_yolu, "w") as z:
+        z.writestr("vault", "#!/bin/sh\necho sahte-vault\n")
+    hedef = tmp_path / "acilan"
+    r = subprocess.run([sys.executable, "-c", m.group(1), str(zip_yolu), str(hedef)],
+                       capture_output=True, text=True)
+    assert r.returncode == 0, f"fallback tek satırı düştü:\n{r.stdout}\n{r.stderr}"
+    assert (hedef / "vault").is_file(), "fallback zip'i açmadı — `vault` çıkmadı"
+
+
+def test_I12_MUTASYON_fallback_kolu_silinince_KIRMIZI(tmp_path):
+    """Çivi yeşili kanıt değildir: fallback dalı kaldırılırsa I9(b) kırmızı olmalı — yani o
+    test gerçekten ikinci yolu ölçüyor, yalnız metin eşleştirmiyor."""
+    ham = KUR_SH.read_text(encoding="utf-8")
+    capa = 'elif command -v python3'
+    assert capa in ham, f"mutasyon çapası kaynakta yok: {capa!r}"
+    bozuk = tmp_path / "vault_kur_bozuk.sh"
+    bozuk.write_text(ham.replace(capa, 'elif command -v python3-YOK-EDILDI'), encoding="utf-8")
+    ortam = dict(os.environ, PATH=_min_path(tmp_path, unzip=False, python3=True),
+                 VAULT_BIN=str(tmp_path / "yok" / "vault"))
+    r = subprocess.run([_BASH, str(bozuk), "--kuru"], capture_output=True, text=True, env=ortam)
+    assert "aç (python3-zipfile)" not in r.stdout, (
+        f"MUTASYON ISIRMADI: fallback kolu silinmiş betik hâlâ python3 yolunu SEÇİYOR — "
+        f"çivi yanlış sebeple yeşil:\n{r.stdout}")
+    assert "EKSİK" in r.stdout, (
+        f"mutasyon sonrası betik ne fallback'e ne de EKSİK dalına düştü — ölçüm belirsiz:"
+        f"\n{r.stdout}")
+
 # =================================================================================================
 # J) DAVRANIŞ ÇİVİLERİ — `--kuru` yolları, sahte `vault` ile (Task 3)
 # =================================================================================================
@@ -724,7 +969,7 @@ def test_J1_kur_KURU_kosumu_HICBIR_mutasyon_komutu_CAGIRMAZ(tmp_path):
     binler, log = _stub_kur(tmp_path, "systemctl", "useradd", "install", "unzip", "sha256sum")
     ortam = dict(os.environ, PATH=f"{binler}:{os.environ['PATH']}",
                  VAULT_BIN=str(tmp_path / "yok" / "vault"))
-    r = subprocess.run(["bash", str(KUR_SH), "--kuru"], capture_output=True, text=True, env=ortam)
+    r = subprocess.run([_BASH, str(KUR_SH), "--kuru"], capture_output=True, text=True, env=ortam)
     assert r.returncode == 0, f"kuru koşum düştü (rc={r.returncode}):\n{r.stdout}\n{r.stderr}"
     assert not log.exists(), f"kuru koşum mutasyon komutu çağırdı:\n{log.read_text()}"
     assert "(kuru)" in r.stdout, "kuru koşum ne yapacağını basmıyor"
@@ -1016,6 +1261,19 @@ def test_N4_VAULT_BIRIMLERI_F9_iceriginde_de_izleniyor():
                "vault-sagligi.service", "vault-sagligi.timer"):
         repo_yolu = f"deploy/vault/{ad}"
         assert ciftler.get(repo_yolu) == f"/etc/systemd/system/{ad}", repo_yolu
+
+
+def test_N5_A0_ROLU_unzip_paketini_kuruyor():
+    """Fallback bir ÖZÜR DEĞİLDİR (TUR 2, A1 ilk kurulumu 2026-09-14).
+
+    `vault_kur.sh` artık `unzip` yoksa python3 stdlib'ine düşüyor — ama YALNIZ o yapılsaydı A1
+    kalıcı olarak fallback yolunda kalır ve eksik HİÇ görünmezdi. Bu çivi düzeltmenin ÖTEKİ
+    yarısını tutar: temiz bir makinede paket ROL tarafından kurulur, eksik DOĞMAZ. İki çivi
+    birlikte iki ayrı arızayı kapatır ve biri ötekinin yerine geçemez (bkz. §I9-I12)."""
+    paketler = _defaults()["apt_paketleri"]
+    assert "unzip" in paketler, (
+        "A0 rolü `unzip` kurmuyor — temiz bir A1'de vault_kur.sh adım 1 yine fallback yoluna "
+        "düşer ve eksik görünmez hâle gelir (ölçülen arıza 2026-09-14)")
 
 
 def test_M3_jetonlar_PANODA_bir_OLAY_YUZEYINE_bagli():

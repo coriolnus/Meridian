@@ -75,7 +75,6 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import hashlib
-import importlib.util
 import json
 import pathlib
 import re
@@ -94,15 +93,34 @@ WIKI_TITLE = "List_of_S%26P_400_companies"
 WIKI_RAW = f"https://en.wikipedia.org/w/index.php?title={WIKI_TITLE}&action=raw"
 
 
+# `sys.path` eki ZORUNLU ve BİLİNÇLİ (eski şerh "sys.path KİRLETİLMEZ" diyordu; o kural burada
+# ARTIK GEÇERLİ DEĞİL ve sessizce bırakılması bir sürüklenme olurdu). Bu betik DOĞRUDAN koşulur,
+# o zaman `sys.path[0]` BU dizindir ve `ops.` ön eki editable-install `.pth`i üzerinden BAŞKA BİR
+# CHECKOUT'a düşer (worktree'den `ModuleNotFoundError`, ana checkout'ta sessizce ORANIN kopyası).
+# Emsal: research/olcumler/edg042_kosum_*/pencere_altbant.py.
+if str(KOK) not in sys.path:
+    sys.path.insert(0, str(KOK))
+from ops.sasi_yukleyici import kaynaktan_yukle                                    # noqa: E402
+
+
 def _ortak_yukle():
     """EDG-075/076 ölçüm betiğini DOSYA YOLUNDAN yükler. `research/` bir paket değildir; yolu
-    `KOK`tan türetiriz, `sys.path` KİRLETİLMEZ. Tek-kaynak yasası: K1/as_of/tarih/sembol
-    yardımcıları BURADA YENİDEN YAZILMAZ, ORADAN gelir."""
-    spec = importlib.util.spec_from_file_location("edg075_olcum", EDG075_YOLU)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules.setdefault("edg075_olcum", mod)
-    spec.loader.exec_module(mod)
-    return mod
+    `KOK`tan türetiriz. Tek-kaynak yasası: K1/as_of/tarih/sembol yardımcıları BURADA YENİDEN
+    YAZILMAZ, ORADAN gelir.
+
+    KAYNAKTAN DERLENİR (v334 §C, düzeltme 2026-09-14). Ham `spec.loader.exec_module` yolu
+    `__pycache__`e bakar ve zaman damgalı pyc'nin geçerlilik kontrolü YALNIZ (tam-saniye mtime,
+    bayt boyutu) çiftidir — EDG-075 betiğinde boyutu değiştirmeyen bir düzenleme aynı saniyede
+    kalırsa BAYAT bytecode koşar. Bedeli burada özellikle ağırdır: yukarıdaki satırın gerekçesi
+    "tek kopya" iken, ithal edilen yardımcılar sessizce ESKİ bir sürümden gelirdi ve ayrışma tam
+    da engellemek istenen yerde doğardı. Gerekçe + ölçüm: `ops/sasi_yukleyici.py` başlığı ·
+    kapı: tests/test_bayat_bytecode_v334.py §C.
+
+    `sys_modules_kaydet=True` eski `sys.modules.setdefault(...)`ın YERİNİ tutar: kayıt exec'ten
+    ÖNCE yapılır (betiğin kendi adını çözebilmesi için). TEK FARK, anahtar zaten doluysa
+    `setdefault` eskiyi korurdu, bu yol yenisini yazar — ve yenisi, döndürülen modülün TA
+    KENDİSİDİR, yani kayıt ile dönen nesne artık AYRIŞAMAZ."""
+    return kaynaktan_yukle(EDG075_YOLU, "edg075_olcum", sys_modules_kaydet=True)
 
 
 ORTAK = _ortak_yukle()

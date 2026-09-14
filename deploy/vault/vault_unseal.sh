@@ -6,6 +6,8 @@
 # dosyayı koşar (tek kaynak):
 #   · vault.service  → ExecStartPost=+…   (her açılışta, crash/reboot dahil)
 #   · vault-unseal.service (oneshot)      → elle/tekrar
+# ÜÇÜNCÜ çağıran kurulumun kendisidir: `vault_kur.sh` adım 5'te init eder, adım 6'da BU betiği
+# çağırır. Üç çağıranın ÜÇÜ de aynı dosyayı koşar; ikinci bir kopya yazılmaz.
 #
 # SIR DİSİPLİNİ — BU DOSYANIN VAR OLMA SEBEBİ:
 #   (1) Anahtar DEĞERİ argv'ye GİRMEZ. `vault operator unseal "$(cat /etc/vault/unseal.key)"`
@@ -16,6 +18,22 @@
 #   (3) Hiçbir `echo`/`printf` bir sır değişkeni basmaz — betik zaten hiçbir sırrı DEĞİŞKENE
 #       almaz; dosyadan doğrudan stdin'e akar.
 #
+# BOOTSTRAP SÖZLEŞMESİ — A1 İLK KURULUMUNDA ÖLÇÜLEN ARIZA (2026-09-14 09:0xZ, Rol-1):
+#   `vault.service` bu betiği `ExecStartPost=+…` ile çağırır ve ExecStartPost servis AYAĞA
+#   KALKAR KALKMAZ koşar — yani `vault_kur.sh` adım 5'teki `operator init`ten ÖNCE. Betik o
+#   anda koşulsuz "anahtar dosyası yok/boş → exit 2" diyordu; ExecStartPost'un sıfır olmayan
+#   çıkışı BİRİMİ düşürür ve kurulum yeniden-başlama döngüsüne girer (journal:
+#   `Control process exited, code=exited, status=2`). Kasa hiç init EDİLEMEZ.
+#
+#   Kusur çıkış kodunda değil, TEŞHİSTE idi: "anahtar yok" İKİ AYRI OLGUDUR ve tek bir kod
+#   ikisini karıştırıyordu —
+#     · kasa HENÜZ INIT EDİLMEMİŞ + anahtar yok → BEKLENEN bootstrap hâli. Açılacak bir mühür
+#       yoktur; beklenecek bir şey de yoktur. Çıkış 0, ama SESSİZ DEĞİL: olgu adıyla basılır.
+#     · kasa INIT EDİLMİŞ + anahtar yok        → GERÇEK arıza (anahtar kayıp). Çıkış 2.
+#   Ayrımı yapan tek ölçüm `vault status -format=json` içindeki `initialized` alanıdır. "Anahtar
+#   yoksa herhâlde init de yoktur" bir UYDURMA olurdu ve ikinci olguyu sessizce yutardı.
+#   Kapı: tests/test_vault_faz2_v485.py §C6-C10 (davranış + iki mutasyon).
+#
 # BU BİR BEKLEYİCİ DÖNGÜSÜ DEĞİLDİR (CLAUDE.md §7). §7'nin yasakladığı şey, bir işin bitmesini
 # yoklayan SÜRESİZ bekleyicidir. Buradaki döngü bir SERVİS AÇILIŞ YOKLAMASIDIR: sınırı sabittir
 # (AYAKTA_DENEME), adımı 1 sn'dir ve tavana vurunca BAŞARISIZ döner — yani en kötü hâlde
@@ -23,9 +41,9 @@
 # `_servis_ayakta`. Type=notify zaten hazır olmadan buraya gelmez; bu döngü güvenlik ağıdır.
 #
 # ÇIKIŞ KODLARI (HÜKÜM):
-#   0  mühür AÇIK (zaten açıktı ya da bu koşumda açıldı)
-#   1  API ayağa kalkmadı / unseal başarısız  → birim `failed`, OnFailure haber verir
-#   2  anahtar dosyası YOK/BOŞ               → kurulum yarım; ADIYLA söylenir, sessizce geçilmez
+#   0  mühür AÇIK (zaten açıktı ya da bu koşumda açıldı) — YA DA kasa henüz INIT EDİLMEMİŞ
+#   1  API ayağa kalkmadı · durum cevabı TANINMADI · unseal başarısız → birim `failed`
+#   2  kasa INIT EDİLMİŞ ama anahtar dosyası YOK/BOŞ → anahtar kayıp; ADIYLA söylenir
 set -euo pipefail
 
 ANAHTAR_YOLU=${VAULT_UNSEAL_KEY_FILE:-/etc/vault/unseal.key}
@@ -41,7 +59,8 @@ _bas() { echo "[vault-unseal] $*"; }
 # --- API cevap veriyor mu? -----------------------------------------------------------------------
 # `vault status` çıkış kodu ÜÇ HÂLİ ayırır (belgelenmiş): 0 = açık, 2 = MÜHÜRLÜ, başka = ulaşılamıyor.
 # Yani "kasa mühürlü" ile "kasa yok" karışmaz — ve bu ayrım olmadan mühürlü bir kasa "ayakta
-# değil" diye raporlanır, arıza yanlış yerde aranırdı.
+# değil" diye raporlanır, arıza yanlış yerde aranırdı. İNİT EDİLMEMİŞ kasa da 2 döner (mühürlü
+# sayılır): "cevap veriyor" ile "sır verebiliyor" AYRI sorulardır, ikincisi `initialized`dır.
 _durum_kodu() {
   # `|| kod=$?` ZORUNLU: `set -e` altında çıplak bir başarısız komut betiği ÖLDÜRÜR ve mühürlü
   # kasa (kod 2) tam olarak "başarısız komut"tur — yani en sık karşılaşılacak hâl betiği
@@ -49,6 +68,23 @@ _durum_kodu() {
   local kod=0
   "$VAULT_IKILI" status >/dev/null 2>&1 || kod=$?
   echo "$kod"
+}
+
+# --- kasa init edilmiş mi? -----------------------------------------------------------------------
+# `jq` BİLEREK KULLANILMIYOR: bu betik bootstrap yolunda, paket kurulumundan ÖNCE de koşabilir ve
+# eksik bir bağımlılık tam da açılış anında görünmez bir arıza olurdu. Boşluk/satır sonu silinip
+# alan ADIYLA aranır. ÜÇÜNCÜ HÂL ("tanınmadı") bilinçlidir: `initialized` okunamazsa HÜKÜM YOKTUR
+# ve yokluğu çıkış 0'la örtmek uydurma yasağının ihlali olurdu.
+_init_durumu() {
+  # `|| true` ZORUNLU ve `pipefail` yüzünden borunun İÇİNDE değil SONUNDA: mühürlü/init-siz kasa
+  # 2 döner ve pipefail onu boruya taşır; `set -e` betiği tam da beklenen hâlde öldürürdü.
+  local ham
+  ham="$("$VAULT_IKILI" status -format=json 2>/dev/null | tr -d ' \n' || true)"
+  case "$ham" in
+    *'"initialized":true'*)  echo "evet" ;;
+    *'"initialized":false'*) echo "hayir" ;;
+    *)                       echo "taninmadi" ;;
+  esac
 }
 
 _api_ayakta() {
@@ -63,12 +99,27 @@ _api_ayakta() {
 }
 
 # =================================================================================================
-[ -s "$ANAHTAR_YOLU" ] || { _bas "anahtar dosyası yok/boş: $ANAHTAR_YOLU — kurulum yarım"; exit 2; }
-
+# SIRA ÖNEMLİDİR: önce API, sonra `initialized`, EN SON anahtar dosyası. Ters sıra (eski hâl)
+# init'ten önce koşan ExecStartPost'u düşürüyordu — ölçülen arıza, başlıktaki BOOTSTRAP bloğu.
 if ! _api_ayakta; then
   _bas "API ${AYAKTA_DENEME} sn içinde cevap vermedi ($VAULT_ADDR)"
   exit 1
 fi
+
+INIT_DURUMU="$(_init_durumu)"
+case "$INIT_DURUMU" in
+  hayir)
+    _bas "kasa henüz init edilmedi — unseal beklemiyor (kurulum yarım, exit 0)"
+    exit 0   # bootstrap: açılacak mühür YOK; vault_kur.sh adım 5 init eder, adım 6 geri çağırır
+    ;;
+  evet) ;;
+  *)
+    _bas "durum cevabı TANINMADI (vault status -format=json) — mühür durumu ÖLÇÜLEMEDİ"
+    exit 1
+    ;;
+esac
+
+[ -s "$ANAHTAR_YOLU" ] || { _bas "anahtar dosyası yok/boş: $ANAHTAR_YOLU — kasa init EDİLMİŞ, anahtar KAYIP"; exit 2; }
 
 if [ "$(_durum_kodu)" = "0" ]; then
   _bas "mühür zaten açık — yapılacak bir şey yok (idempotent)"

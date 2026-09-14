@@ -108,7 +108,19 @@ def test_notify_tokens_are_derived_from_the_alarm_constants():
     `watchdog.check_veri_disk_and_alarm` bu jetonu basar. Kendi sınıfıdır: DATA_QUALITY "veri
     bozuk", MECHANISM_STALE "mekanizma üretmiyor" der; ikisi de "disk operatör tavanına
     yaklaşıyor" demez — bu bir KAPASİTE uyarısıdır. Kapsam BÜYÜDÜ, daralmadı; bu literal
-    güncellemesi o kararın kaydıdır."""
+    güncellemesi o kararın kaydıdır.
+
+    VAULT_SEALED + VAULT_DOWN 2026-09-14 kasıtlı kapsam kararı (16 → 18, TSK-064 Faz-2): sır
+    kasası canlıya girince YENİ bir körlük sınıfı doğar ve iki jeton onu ikiye ayırır, çünkü iki
+    hâl AYRI operatör eylemi ister (emsal: HEARTBEAT_STALE ↔ MECHANISM_STALE, "canlılık ≠
+    ilerleme"). VAULT_SEALED, kasanın CEVAP VERDİĞİ ama SIR VEREMEDİĞİ hâldir ve sessizliği
+    YAPISALDIR: Vault Agent render'ı durur, ama ÜRETTİĞİ dosyalar yerinde kalır — tüketiciler
+    eski değeri okumaya devam eder ve her şey ÇALIŞIR GÖRÜNÜR; arıza ancak bir sonraki
+    rotasyondan sonra, canlıda, yanlış yerde aranarak bulunurdu. VAULT_DOWN ise kasaya hiç
+    ULAŞILAMADIĞI hâldir; eylemi "servisi ve dinleme adresini ölç"tür, "mührü aç" değil. Kapsam
+    BÜYÜDÜ, daralmadı; teslim zinciri değişmedi — türetme jetonları `obs.py`ye eklendiği an
+    kendiliğinden kapsadı, bu literal güncellemesi o KARARIN kaydıdır. Üretici:
+    `ops/vault_sagligi.py` (vault-sagligi.timer)."""
     assert obs.NOTIFY_TOKENS == {
         "ARMING_READY", "TRAIL_DESYNC", "DATA_QUALITY", "CIRCUIT_BREAKER", "MIRROR_DRIFT",
         "BROKER_REJECT", "MECHANISM_STALE", "HALT_ACTIVE", "ROLLBACK", "HEARTBEAT_STALE",
@@ -135,7 +147,11 @@ def test_notify_tokens_are_derived_from_the_alarm_constants():
         "ARAMA_HAVUZU_OLU",
         # KAPASİTE SINIFI (2026-09-05, TSK-131 alt-iş): `DISK_ESIK` kasıtlı kapsam kararıdır
         # (15 → 16) — gerekçe yukarıda, üretici `watchdog.check_veri_disk_and_alarm`.
-        "DISK_ESIK"}
+        "DISK_ESIK",
+        # SIR KASASI SINIFI (2026-09-14, TSK-064 Faz-2): kasıtlı kapsam kararı (16 → 18) —
+        # gerekçe yukarıda, üretici `ops/vault_sagligi.py`. İKİ jeton çünkü iki hâl AYRI
+        # operatör eylemi ister; tek jeton "mührü aç" ile "servisi ölç"ü karıştırırdı.
+        "VAULT_SEALED", "VAULT_DOWN"}
 
 
 def test_every_alarm_constant_reaches_the_operator_by_construction():

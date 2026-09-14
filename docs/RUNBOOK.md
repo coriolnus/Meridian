@@ -379,8 +379,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `VAULT_SEALED` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- `deploy/oracle-a1/deploy.sh` — başlığında `VAULT_SEALED` geçiyor.
 
 ## VAULT_DOWN {#vault_down}
 
@@ -395,8 +394,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Çözüm / betik
 
-- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `VAULT_DOWN` adı literal olarak geçmiyor.
-- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+- `deploy/oracle-a1/deploy.sh` — başlığında `VAULT_DOWN` geçiyor.
 
 ---
 
@@ -1509,6 +1507,26 @@ başlatmadı. Hüküm A: güvenlik yamaları KALIR, reboot KAPALI, kara-liste RE
 Allowed-Origins'e DOKUNULMAZ — SSoT 50unattended-upgrades'te kalır. KURULUM BU BETİKTE
 DEĞİL: `sudo install -m 0644 deploy/oracle-a1/52meridian-unattended-upgrades
 /etc/apt/apt.conf.d/52meridian-unattended-upgrades`, restart istemez)
+* SIR KASASI (TSK-064 Faz-2, 2026-09-14) — SEKİZ dosya. KURULUM BU BETİKTE DEĞİL, BİLEREK:
+kasa `deploy/vault/vault_kur.sh --kuru` → `--uygula` ile bir BAKIM PENCERESİNDE kurulur
+(init + unseal + AppRole + kök jetonu iptali operatör kararlarıdır ve geri alınamaz
+adımlar taşır — aylık-bucket ve litestream ile aynı sınıf). Birim dosyalarını A0 rolü
+TAŞIR; yapılandırma/betik üçlüsü rol DIŞIDIR (`f9_rol_disi`) ve kurulum betiği koyar.
+[F9] içerik kapısı sekizinin de repo↔canlı sürüklenmesini RAPORLAR — `/etc/vault/vault.hcl`
+sessizce ayrışırsa dinleme adresi ya da depo yolu canlıda başka bir şey olur:
+- deploy/vault/vault.hcl              → /etc/vault/vault.hcl  (0640 root:vault; listener
+YALNIZ 127.0.0.1:8200, storage file /opt/vault/data)
+- deploy/vault/agent.hcl              → /etc/vault/agent.hcl  (ÜRETİLMİŞ —
+ops/vault_politika_uret.py; elle düzenlenmez)
+- deploy/vault/vault_unseal.sh        → /opt/vault/bin/vault_unseal.sh  (0750 root:root;
+vault.service ExecStartPost'u ve vault-unseal.service AYNI dosyayı koşar)
+- deploy/vault/vault.service          → /etc/systemd/system/  (kasa; enable EDİLMEZ,
+kurulum betiği açar)
+- deploy/vault/vault-unseal.service   → /etc/systemd/system/  (oneshot elle/tekrar yolu)
+- deploy/vault/vault-agent.service    → /etc/systemd/system/  (sırları dosyaya render eder)
+- deploy/vault/vault-sagligi.service  → /etc/systemd/system/  (bekçi — VAULT_SEALED /
+VAULT_DOWN alarmları; üretici ops/vault_sagligi.py)
+- deploy/vault/vault-sagligi.timer    → /etc/systemd/system/  (o bekçinin tek tetiği)
 KISALTMA YASAK: "X.service + .timer" biçimi `.timer` dosyasının ADINI hiç yazmaz ve o ad
 listeden düşse başlık aynı kalırdı — yukarıdaki çivi tam olarak bunu reddediyor.
 ```
