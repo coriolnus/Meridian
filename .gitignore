@@ -44,6 +44,7 @@ research/olcumler/*/state/
 # `research/olcumler/*/state/` gibi yalnız BU ölçümün dizini dışlanır (emsal:
 # `research/olcumler/yazi_tipi_2026-08-24/satoshi/fonts/` — tek ölçüme özgü, glob DEĞİL).
 research/olcumler/edg075_sp500_tarihsel/ham/
+research/olcumler/edg092_sp400_uyelik/ham/
 
 # os
 .DS_Store

@@ -42,7 +42,7 @@ Toplam **106** kart.
   · HÜKÜM: 2026-09-07 Rol-1 — ön-kayıt; B1 backend + B2 UI bu karttan sonra; ölçüm penceresi B2 dağıtımından itibaren
   · kart: `EDG-2026-086-pano-sohbet-kalite.yaml`
 - **EDG-2026-092** (`registered`) — 
-  · HÜKÜM: 2026-09-13 21:3xZ ön-kayıt AŞAMA 1/2 — bilinen_olaylar (≥20, S&P DJI yürürlük tarihli) eklenmeden ÖLÇÜM BAŞLAMAZ (kill madde 1)
+  · HÜKÜM: 2026-09-14 05:26Z AŞAMA 2/2 TAMAM — bilinen_olaylar 27 çift (54 olgu, 14 yürürlük tarihi, hepsi PR Newswire/S&P DJI bülteni URL'li) + gelecek_olaylar 4 çift (09-21) +…
   · kart: `EDG-2026-092-sp400-uyelik-tarihcesi-ucretsiz-kaynak-fizibilite.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
