@@ -31,7 +31,7 @@ BEDEL: 2a ile aynı yazma yüzeyi; `PANO_GIRIS_PAROLA` insan parolası — Vault
 **2c — hindsight-cp (2 sır):** küçük; docker restart bedeli; 2a ile birlikte anlamlı.
 
 **2d — `.dash.env` eski kanalın KALDIRILMASI (kapsam daraltma, kazanç: kopya azalır):** `meridian/api.py::_read_dash_token`
-credential'ı ÖNCE okuyor (2026-09-07); dosya kaldırılınca davranış değişmez mi → ölçüm (grep + canary) sonra sil. Vault işi değil, hijyen.
+credential'ı ÖNCE okuyor (2026-09-07). **ÖLÇÜLDÜ 2026-09-14 13:06Z (A1):** `meridian.service` drop-in `50-dash-credential.conf` `EnvironmentFile=` sıfırlaması ile `.dash.env` hiç yüklenmiyor (`systemctl cat`), `/proc/<pid>/environ` MERIDIAN_DASH_TOKEN 0, credential dizininde `dash_token` var → `/opt/meridian/.dash.env` (69 B, 2026-09-07) ÖLÜ KOPYA. Silinmesi davranışı değiştirmez; yerel `.dash.env` (`ops/belge_esitle.sh` /api/roadmap ölçümü) AYRI ve kalır. Vault işi değil, hijyen — operatör onayıyla A1'de silinir.
 
 **2e — `state/secrets.json` (Telegram/Alpaca/FMP):** en hassas sınıf; Agent → dosya render deseni burada da işler ama motor bu dosyayı
 JSON olarak okur (şablon JSON üretir). Ayrı dalga (3) — operatör kararı olmadan önerilmez.
