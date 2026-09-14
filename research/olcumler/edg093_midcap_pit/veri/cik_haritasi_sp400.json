@@ -1,0 +1,5611 @@
+{
+ "eslesen": [
+  {
+   "symbol": "AA",
+   "cik": 1675149,
+   "title": "Alcoa Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AAL",
+   "cik": 6201,
+   "title": "American Airlines Group Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AAON",
+   "cik": 824142,
+   "title": "AAON, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ACHC",
+   "cik": 1520697,
+   "title": "Acadia Healthcare Company, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ACI",
+   "cik": 1646972,
+   "title": "Albertsons Companies, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ACIW",
+   "cik": 935036,
+   "title": "ACI WORLDWIDE, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ACM",
+   "cik": 868857,
+   "title": "AECOM",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ADC",
+   "cik": 917251,
+   "title": "AGREE REALTY CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ADNT",
+   "cik": 1670541,
+   "title": "Adient plc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AEIS",
+   "cik": 927003,
+   "title": "ADVANCED ENERGY INDUSTRIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AEO",
+   "cik": 919012,
+   "title": "AMERICAN EAGLE OUTFITTERS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AFG",
+   "cik": 1042046,
+   "title": "AMERICAN FINANCIAL GROUP INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AGCO",
+   "cik": 880266,
+   "title": "AGCO CORP /DE",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AHR",
+   "cik": 1632970,
+   "title": "American Healthcare REIT, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AIT",
+   "cik": 109563,
+   "title": "APPLIED INDUSTRIAL TECHNOLOGIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ALGM",
+   "cik": 866291,
+   "title": "ALLEGRO MICROSYSTEMS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ALK",
+   "cik": 766421,
+   "title": "ALASKA AIR GROUP, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ALLY",
+   "cik": 40729,
+   "title": "Ally Financial Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ALSN",
+   "cik": 1411207,
+   "title": "Allison Transmission Holdings Inc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ALV",
+   "cik": 1034670,
+   "title": "AUTOLIV INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AM",
+   "cik": 1623925,
+   "title": "Antero Midstream Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AMCX",
+   "cik": 1514991,
+   "title": "AMC Global Media Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AMG",
+   "cik": 1004434,
+   "title": "AFFILIATED MANAGERS GROUP, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AMH",
+   "cik": 1562401,
+   "title": "American Homes 4 Rent",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AMKR",
+   "cik": 1047127,
+   "title": "AMKOR TECHNOLOGY, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AN",
+   "cik": 350698,
+   "title": "AUTONATION, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ANF",
+   "cik": 1018840,
+   "title": "ABERCROMBIE & FITCH CO /DE/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "APG",
+   "cik": 1796209,
+   "title": "APi Group Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "APPF",
+   "cik": 1433195,
+   "title": "APPFOLIO INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "APPS",
+   "cik": 317788,
+   "title": "Digital Turbine, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AR",
+   "cik": 1433270,
+   "title": "ANTERO RESOURCES Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ARMK",
+   "cik": 1584509,
+   "title": "Aramark",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ARW",
+   "cik": 7536,
+   "title": "ARROW ELECTRONICS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ARWR",
+   "cik": 879407,
+   "title": "ARROWHEAD PHARMACEUTICALS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ASB",
+   "cik": 7789,
+   "title": "ASSOCIATED BANC-CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ASH",
+   "cik": 1674862,
+   "title": "ASHLAND INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ATI",
+   "cik": 1018963,
+   "title": "ATI INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ATR",
+   "cik": 896622,
+   "title": "APTARGROUP, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AVAV",
+   "cik": 1368622,
+   "title": "AeroVironment Inc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AVNT",
+   "cik": 1122976,
+   "title": "AVIENT CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AVT",
+   "cik": 8858,
+   "title": "AVNET INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AVTR",
+   "cik": 1722482,
+   "title": "Avantor, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AXON",
+   "cik": 1069183,
+   "title": "AXON ENTERPRISE, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AXTA",
+   "cik": 1616862,
+   "title": "Axalta Coating Systems Ltd.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AYI",
+   "cik": 1144215,
+   "title": "ACUITY INC. (DE)",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "AZTA",
+   "cik": 933974,
+   "title": "Azenta, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BAH",
+   "cik": 1443646,
+   "title": "Booz Allen Hamilton Holding Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BBWI",
+   "cik": 701985,
+   "title": "Bath & Body Works, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BC",
+   "cik": 14930,
+   "title": "BRUNSWICK CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BCO",
+   "cik": 78890,
+   "title": "BRINKS CO",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BDC",
+   "cik": 913142,
+   "title": "BELDEN INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BFH",
+   "cik": 1101215,
+   "title": "BREAD FINANCIAL HOLDINGS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BHF",
+   "cik": 1685040,
+   "title": "Brighthouse Financial, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BILL",
+   "cik": 1786352,
+   "title": "BILL Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BIO",
+   "cik": 12208,
+   "title": "BIO-RAD LABORATORIES, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BJ",
+   "cik": 1531152,
+   "title": "BJ's Wholesale Club Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BKH",
+   "cik": 1130464,
+   "title": "BLACK HILLS CORP /SD/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BLDR",
+   "cik": 1316835,
+   "title": "Builders FirstSource, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BLKB",
+   "cik": 1280058,
+   "title": "BLACKBAUD INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BMRN",
+   "cik": 1048477,
+   "title": "BIOMARIN PHARMACEUTICAL INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BOH",
+   "cik": 46195,
+   "title": "BANK OF HAWAII CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BRBR",
+   "cik": 1772016,
+   "title": "BELLRING BRANDS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BRKR",
+   "cik": 1109354,
+   "title": "BRUKER CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BRO",
+   "cik": 79282,
+   "title": "BROWN & BROWN, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BROS",
+   "cik": 1866581,
+   "title": "Dutch Bros Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BRX",
+   "cik": 1581068,
+   "title": "Brixmor Property Group Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BSY",
+   "cik": 1031308,
+   "title": "BENTLEY SYSTEMS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BTSG",
+   "cik": 1865782,
+   "title": "BrightSpring Health Services, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BURL",
+   "cik": 1579298,
+   "title": "Burlington Stores, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "edgar_facts_cik_haritasi",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BWA",
+   "cik": 908255,
+   "title": "BORGWARNER INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BWXT",
+   "cik": 1486957,
+   "title": "BWX Technologies, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "BYD",
+   "cik": 906553,
+   "title": "BOYD GAMING CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CABO",
+   "cik": 1632127,
+   "title": "Cable One, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CACI",
+   "cik": 16058,
+   "title": "CACI INTERNATIONAL INC /DE/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CALX",
+   "cik": 1406666,
+   "title": "CALIX, INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CAR",
+   "cik": 723612,
+   "title": "AVIS BUDGET GROUP, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CART",
+   "cik": 1579091,
+   "title": "Maplebear Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CASY",
+   "cik": 726958,
+   "title": "CASEYS GENERAL STORES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CATY",
+   "cik": 861842,
+   "title": "CATHAY GENERAL BANCORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CAVA",
+   "cik": 1639438,
+   "title": "CAVA GROUP, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CBRL",
+   "cik": 1067294,
+   "title": "CRACKER BARREL OLD COUNTRY STORE, INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CBSH",
+   "cik": 22356,
+   "title": "COMMERCE BANCSHARES INC /MO/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CBT",
+   "cik": 16040,
+   "title": "CABOT CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CC",
+   "cik": 1627223,
+   "title": "Chemours Co",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CCK",
+   "cik": 1219601,
+   "title": "CROWN HOLDINGS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CDE",
+   "cik": 215466,
+   "title": "Coeur Mining, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CDP",
+   "cik": 860546,
+   "title": "COPT DEFENSE PROPERTIES",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CELH",
+   "cik": 1341766,
+   "title": "Celsius Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CFR",
+   "cik": 39263,
+   "title": "CULLEN/FROST BANKERS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CG",
+   "cik": 1527166,
+   "title": "Carlyle Group Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CGNX",
+   "cik": 851205,
+   "title": "COGNEX CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CHDN",
+   "cik": 20212,
+   "title": "Churchill Downs Inc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CHE",
+   "cik": 19584,
+   "title": "CHEMED CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CHH",
+   "cik": 1046311,
+   "title": "CHOICE HOTELS INTERNATIONAL INC /DE",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CHRD",
+   "cik": 1486159,
+   "title": "Chord Energy Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CHWY",
+   "cik": 1766502,
+   "title": "Chewy, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CIEN",
+   "cik": 936395,
+   "title": "CIENA CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CLF",
+   "cik": 764065,
+   "title": "CLEVELAND-CLIFFS INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CLH",
+   "cik": 822818,
+   "title": "CLEAN HARBORS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CMC",
+   "cik": 22444,
+   "title": "COMMERCIAL METALS Co",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CMP",
+   "cik": 1227654,
+   "title": "COMPASS MINERALS INTERNATIONAL INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CNH",
+   "cik": 1567094,
+   "title": "CNH Industrial N.V.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CNK",
+   "cik": 1385280,
+   "title": "Cinemark Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CNM",
+   "cik": 1856525,
+   "title": "Core & Main, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CNO",
+   "cik": 1224608,
+   "title": "CNO Financial Group, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CNX",
+   "cik": 1070412,
+   "title": "CNX Resources Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CNXC",
+   "cik": 1803599,
+   "title": "Concentrix Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "COHR",
+   "cik": 820318,
+   "title": "COHERENT CORP.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "COKE",
+   "cik": 317540,
+   "title": "Coca-Cola Consolidated, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "COLB",
+   "cik": 887343,
+   "title": "COLUMBIA BANKING SYSTEM, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "COLM",
+   "cik": 1050797,
+   "title": "COLUMBIA SPORTSWEAR CO",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CONE",
+   "cik": 2103884,
+   "title": "Compass Sub North, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "COR",
+   "cik": 1140859,
+   "title": "Cencora, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "COTY",
+   "cik": 1024305,
+   "title": "COTY INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CPRI",
+   "cik": 1530721,
+   "title": "Capri Holdings Ltd",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CPT",
+   "cik": 906345,
+   "title": "CAMDEN PROPERTY TRUST",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CR",
+   "cik": 1944013,
+   "title": "Crane Co",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CRBG",
+   "cik": 1889539,
+   "title": "Corebridge Financial, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CRI",
+   "cik": 1060822,
+   "title": "CARTERS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CRL",
+   "cik": 1100682,
+   "title": "CHARLES RIVER LABORATORIES INTERNATIONAL, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CRNC",
+   "cik": 1768267,
+   "title": "Cerence Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CROX",
+   "cik": 1334036,
+   "title": "Crocs, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CRS",
+   "cik": 17843,
+   "title": "CARPENTER TECHNOLOGY CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CRUS",
+   "cik": 772406,
+   "title": "CIRRUS LOGIC, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CSL",
+   "cik": 790051,
+   "title": "CARLISLE COMPANIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CTRE",
+   "cik": 1590717,
+   "title": "CareTrust REIT, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CUBE",
+   "cik": 1298675,
+   "title": "CubeSmart",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CUZ",
+   "cik": 25232,
+   "title": "COUSINS PROPERTIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CVLT",
+   "cik": 1169561,
+   "title": "COMMVAULT SYSTEMS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CW",
+   "cik": 26324,
+   "title": "CURTISS WRIGHT CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CXT",
+   "cik": 25445,
+   "title": "Crane NXT, Co.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CXW",
+   "cik": 1070985,
+   "title": "CoreCivic, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CYTK",
+   "cik": 1061983,
+   "title": "CYTOKINETICS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "CZR",
+   "cik": 1590895,
+   "title": "Caesars Entertainment, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DAN",
+   "cik": 26780,
+   "title": "DANA Inc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DAR",
+   "cik": 916540,
+   "title": "DARLING INGREDIENTS INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DBX",
+   "cik": 1467623,
+   "title": "DROPBOX, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DCI",
+   "cik": 29644,
+   "title": "DONALDSON Co INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DECK",
+   "cik": 910521,
+   "title": "DECKERS OUTDOOR CORP",
+   "rol": "sp400",
+   "cik_kaynak": "edgar_facts_cik_haritasi",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DEI",
+   "cik": 1364250,
+   "title": "Douglas Emmett Inc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DINO",
+   "cik": 1915657,
+   "title": "HF Sinclair Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DKS",
+   "cik": 1089063,
+   "title": "DICK'S SPORTING GOODS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DLB",
+   "cik": 1308547,
+   "title": "Dolby Laboratories, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DLX",
+   "cik": 27996,
+   "title": "DELUXE CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DOC",
+   "cik": 765880,
+   "title": "HEALTHPEAK PROPERTIES, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DOCN",
+   "cik": 1582961,
+   "title": "DigitalOcean Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DOCS",
+   "cik": 1516513,
+   "title": "Doximity, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DOCU",
+   "cik": 1261333,
+   "title": "DOCUSIGN, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DT",
+   "cik": 1773383,
+   "title": "Dynatrace, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DTM",
+   "cik": 1842022,
+   "title": "DT Midstream, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DUOL",
+   "cik": 1562088,
+   "title": "Duolingo, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "DY",
+   "cik": 67215,
+   "title": "DYCOM INDUSTRIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EBS",
+   "cik": 1367644,
+   "title": "Emergent BioSolutions Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EEFT",
+   "cik": 1029199,
+   "title": "EURONET WORLDWIDE, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EGP",
+   "cik": 49600,
+   "title": "EASTGROUP PROPERTIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EHC",
+   "cik": 785161,
+   "title": "Encompass Health Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ELAN",
+   "cik": 1739104,
+   "title": "Elanco Animal Health Inc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ELF",
+   "cik": 1600033,
+   "title": "e.l.f. Beauty, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ELS",
+   "cik": 895417,
+   "title": "EQUITY LIFESTYLE PROPERTIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EME",
+   "cik": 105634,
+   "title": "EMCOR Group, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ENOV",
+   "cik": 1420800,
+   "title": "Enovis CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ENPH",
+   "cik": 1463101,
+   "title": "Enphase Energy, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "edgar_facts_cik_haritasi",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ENR",
+   "cik": 1632790,
+   "title": "ENERGIZER HOLDINGS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ENS",
+   "cik": 1289308,
+   "title": "EnerSys",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ENSG",
+   "cik": 1125376,
+   "title": "ENSIGN GROUP, INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ENTG",
+   "cik": 1101302,
+   "title": "ENTEGRIS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EPC",
+   "cik": 1096752,
+   "title": "EDGEWELL PERSONAL CARE Co",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EPR",
+   "cik": 1045450,
+   "title": "EPR PROPERTIES",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EQH",
+   "cik": 1333986,
+   "title": "Equitable Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EQT",
+   "cik": 33213,
+   "title": "EQT Corp",
+   "rol": "sp400",
+   "cik_kaynak": "edgar_facts_cik_haritasi",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ERIE",
+   "cik": 922621,
+   "title": "ERIE INDEMNITY CO",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ESAB",
+   "cik": 1877322,
+   "title": "ESAB Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ESNT",
+   "cik": 1448893,
+   "title": "Essent Group Ltd.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ETSY",
+   "cik": 1370637,
+   "title": "ETSY INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EVR",
+   "cik": 1360901,
+   "title": "Evercore Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EWBC",
+   "cik": 1069157,
+   "title": "EAST WEST BANCORP INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EXE",
+   "cik": 895126,
+   "title": "EXPAND ENERGY Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EXEL",
+   "cik": 939767,
+   "title": "EXELIXIS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EXLS",
+   "cik": 1297989,
+   "title": "ExlService Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EXP",
+   "cik": 918646,
+   "title": "EAGLE MATERIALS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "EXPO",
+   "cik": 851520,
+   "title": "EXPONENT INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FAF",
+   "cik": 1472787,
+   "title": "First American Financial Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FBIN",
+   "cik": 1519751,
+   "title": "Fortune Brands Innovations, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FCFS",
+   "cik": 840489,
+   "title": "FirstCash Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FCN",
+   "cik": 887936,
+   "title": "FTI CONSULTING, INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FDS",
+   "cik": 1013237,
+   "title": "FACTSET RESEARCH SYSTEMS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FFIN",
+   "cik": 36029,
+   "title": "FIRST FINANCIAL BANKSHARES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FHI",
+   "cik": 1056288,
+   "title": "FEDERATED HERMES, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FHN",
+   "cik": 36966,
+   "title": "FIRST HORIZON CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FICO",
+   "cik": 814547,
+   "title": "FAIR ISAAC CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FIVE",
+   "cik": 1177609,
+   "title": "FIVE BELOW, INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FIX",
+   "cik": 1035983,
+   "title": "COMFORT SYSTEMS USA INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FLEX",
+   "cik": 866374,
+   "title": "FLEX LTD.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FLG",
+   "cik": 910073,
+   "title": "FLAGSTAR BANK, NATIONAL ASSOCIATION",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FLO",
+   "cik": 1128928,
+   "title": "FLOWERS FOODS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FLR",
+   "cik": 1124198,
+   "title": "FLUOR CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FLS",
+   "cik": 30625,
+   "title": "FLOWSERVE CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FN",
+   "cik": 1408710,
+   "title": "Fabrinet",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FNB",
+   "cik": 37808,
+   "title": "FNB CORP/PA/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FND",
+   "cik": 1507079,
+   "title": "Floor & Decor Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FNF",
+   "cik": 1331875,
+   "title": "Fidelity National Financial, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FOUR",
+   "cik": 1794669,
+   "title": "Shift4 Payments, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FOXF",
+   "cik": 1424929,
+   "title": "FOX FACTORY HOLDING CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FR",
+   "cik": 921825,
+   "title": "FIRST INDUSTRIAL REALTY TRUST INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FSLR",
+   "cik": 1274494,
+   "title": "FIRST SOLAR, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FTI",
+   "cik": 1681459,
+   "title": "TechnipFMC plc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "FULT",
+   "cik": 700564,
+   "title": "FULTON FINANCIAL CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "G",
+   "cik": 1398659,
+   "title": "Genpact LTD",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GAP",
+   "cik": 39911,
+   "title": "GAP INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GATX",
+   "cik": 40211,
+   "title": "GATX CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GBCI",
+   "cik": 868671,
+   "title": "GLACIER BANCORP, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GDDY",
+   "cik": 1609711,
+   "title": "GoDaddy Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GEF",
+   "cik": 43920,
+   "title": "GREIF, INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GEO",
+   "cik": 923796,
+   "title": "GEO GROUP INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GGG",
+   "cik": 42888,
+   "title": "GRACO INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GHC",
+   "cik": 104889,
+   "title": "Graham Holdings Co",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GLPI",
+   "cik": 1575965,
+   "title": "Gaming & Leisure Properties, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GME",
+   "cik": 1326380,
+   "title": "GameStop Corp.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GMED",
+   "cik": 1237831,
+   "title": "GLOBUS MEDICAL INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GNRC",
+   "cik": 1474735,
+   "title": "GENERAC HOLDINGS INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GNTX",
+   "cik": 355811,
+   "title": "GENTEX CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GNW",
+   "cik": 1276520,
+   "title": "GENWORTH FINANCIAL INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GO",
+   "cik": 1771515,
+   "title": "Grocery Outlet Holding Corp.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GPK",
+   "cik": 1408075,
+   "title": "GRAPHIC PACKAGING HOLDING CO",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GT",
+   "cik": 42582,
+   "title": "GOODYEAR TIRE & RUBBER CO /OH/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GTM",
+   "cik": 1794515,
+   "title": "ZoomInfo Technologies Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GWRE",
+   "cik": 1528396,
+   "title": "Guidewire Software, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "GXO",
+   "cik": 1852244,
+   "title": "GXO Logistics, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "H",
+   "cik": 1468174,
+   "title": "Hyatt Hotels Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HAE",
+   "cik": 313143,
+   "title": "HAEMONETICS CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HAIN",
+   "cik": 910406,
+   "title": "HAIN CELESTIAL GROUP INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HALO",
+   "cik": 1159036,
+   "title": "HALOZYME THERAPEUTICS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HCSG",
+   "cik": 731012,
+   "title": "HEALTHCARE SERVICES GROUP INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HE",
+   "cik": 354707,
+   "title": "HAWAIIAN ELECTRIC INDUSTRIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HELE",
+   "cik": 916789,
+   "title": "HELEN OF TROY LTD",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HGV",
+   "cik": 1674168,
+   "title": "Hilton Grand Vacations Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HIMS",
+   "cik": 1773751,
+   "title": "Hims & Hers Health, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HIW",
+   "cik": 921082,
+   "title": "HIGHWOODS PROPERTIES, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HL",
+   "cik": 719413,
+   "title": "HECLA MINING CO/DE/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HLI",
+   "cik": 1302215,
+   "title": "HOULIHAN LOKEY, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HLNE",
+   "cik": 1433642,
+   "title": "Hamilton Lane INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HNI",
+   "cik": 48287,
+   "title": "HNI CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HOG",
+   "cik": 793952,
+   "title": "HARLEY-DAVIDSON, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HOMB",
+   "cik": 1331520,
+   "title": "HOME BANCSHARES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HPP",
+   "cik": 1482512,
+   "title": "Hudson Pacific Properties, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HQY",
+   "cik": 1428336,
+   "title": "HEALTHEQUITY, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HR",
+   "cik": 1360604,
+   "title": "Healthcare Realty Trust Inc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HRB",
+   "cik": 12659,
+   "title": "H&R BLOCK INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HTZ",
+   "cik": 1657853,
+   "title": "HERTZ GLOBAL HOLDINGS, INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HUBB",
+   "cik": 48898,
+   "title": "HUBBELL INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HWC",
+   "cik": 750577,
+   "title": "HANCOCK WHITNEY CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "HXL",
+   "cik": 717605,
+   "title": "HEXCEL CORP /DE/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "IART",
+   "cik": 917520,
+   "title": "INTEGRA LIFESCIENCES HOLDINGS CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "IBKR",
+   "cik": 1381197,
+   "title": "Interactive Brokers Group, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "IBOC",
+   "cik": 315709,
+   "title": "INTERNATIONAL BANCSHARES CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ICUI",
+   "cik": 883984,
+   "title": "ICU MEDICAL INC/DE",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "IDA",
+   "cik": 1057877,
+   "title": "IDACORP INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "IDCC",
+   "cik": 1405495,
+   "title": "InterDigital, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "IESC",
+   "cik": 1048268,
+   "title": "IES Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ILMN",
+   "cik": 1110803,
+   "title": "ILLUMINA, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "INGR",
+   "cik": 1046257,
+   "title": "Ingredion Inc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "IPGP",
+   "cik": 1111928,
+   "title": "IPG PHOTONICS CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "IRDM",
+   "cik": 1418819,
+   "title": "Iridium Communications Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "IRT",
+   "cik": 1466085,
+   "title": "INDEPENDENCE REALTY TRUST, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ITT",
+   "cik": 216228,
+   "title": "ITT INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "JACK",
+   "cik": 807882,
+   "title": "JACK IN THE BOX INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "JAZZ",
+   "cik": 1232524,
+   "title": "Jazz Pharmaceuticals plc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "JBGS",
+   "cik": 1689796,
+   "title": "JBG SMITH Properties",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "JBL",
+   "cik": 898293,
+   "title": "JABIL INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "JBLU",
+   "cik": 1158463,
+   "title": "JETBLUE AIRWAYS CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "JEF",
+   "cik": 96223,
+   "title": "Jefferies Financial Group Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "JLL",
+   "cik": 1037976,
+   "title": "JONES LANG LASALLE INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "KBH",
+   "cik": 795266,
+   "title": "KB HOME",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "KBR",
+   "cik": 1357615,
+   "title": "KBR, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "KD",
+   "cik": 1867072,
+   "title": "Kyndryl Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "KEX",
+   "cik": 56047,
+   "title": "KIRBY CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "KMPR",
+   "cik": 860748,
+   "title": "KEMPER Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "KMT",
+   "cik": 55242,
+   "title": "KENNAMETAL INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "KNF",
+   "cik": 1955520,
+   "title": "Knife River Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "KNSL",
+   "cik": 1669162,
+   "title": "Kinsale Capital Group, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "KNX",
+   "cik": 1492691,
+   "title": "Knight-Swift Transportation Holdings Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "KRC",
+   "cik": 1025996,
+   "title": "KILROY REALTY CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "KRG",
+   "cik": 1286043,
+   "title": "KITE REALTY GROUP TRUST",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "KRYS",
+   "cik": 1711279,
+   "title": "Krystal Biotech, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "KSS",
+   "cik": 885639,
+   "title": "KOHLS Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "KTOS",
+   "cik": 1069258,
+   "title": "KRATOS DEFENSE & SECURITY SOLUTIONS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "LAD",
+   "cik": 1023128,
+   "title": "LITHIA MOTORS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "LAMR",
+   "cik": 1090425,
+   "title": "LAMAR ADVERTISING CO/NEW",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "LEA",
+   "cik": 842162,
+   "title": "LEAR CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "LECO",
+   "cik": 59527,
+   "title": "LINCOLN ELECTRIC HOLDINGS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "LFUS",
+   "cik": 889331,
+   "title": "LITTELFUSE INC /DE",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "LGND",
+   "cik": 886163,
+   "title": "LIGAND PHARMACEUTICALS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "LII",
+   "cik": 1069202,
+   "title": "LENNOX INTERNATIONAL INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "LITE",
+   "cik": 1633978,
+   "title": "Lumentum Holdings Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "LIVN",
+   "cik": 1639691,
+   "title": "LivaNova PLC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "LNTH",
+   "cik": 1521036,
+   "title": "Lantheus Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "LOPE",
+   "cik": 1434588,
+   "title": "Grand Canyon Education, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "LPX",
+   "cik": 60519,
+   "title": "LOUISIANA-PACIFIC CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "LSCC",
+   "cik": 855658,
+   "title": "LATTICE SEMICONDUCTOR CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "LSTR",
+   "cik": 853816,
+   "title": "LANDSTAR SYSTEM INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "M",
+   "cik": 794367,
+   "title": "Macy's, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MAC",
+   "cik": 912242,
+   "title": "MACERICH CO",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MAN",
+   "cik": 871763,
+   "title": "ManpowerGroup Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MANH",
+   "cik": 1056696,
+   "title": "MANHATTAN ASSOCIATES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MAT",
+   "cik": 63276,
+   "title": "MATTEL INC /DE/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MCY",
+   "cik": 64996,
+   "title": "MERCURY GENERAL CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MD",
+   "cik": 893949,
+   "title": "Pediatrix Medical Group, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MDU",
+   "cik": 67716,
+   "title": "MDU RESOURCES GROUP INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MEDP",
+   "cik": 1668397,
+   "title": "Medpace Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MIDD",
+   "cik": 769520,
+   "title": "MIDDLEBY Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MKSI",
+   "cik": 1049502,
+   "title": "MKS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MLI",
+   "cik": 89439,
+   "title": "MUELLER INDUSTRIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MLKN",
+   "cik": 66382,
+   "title": "MILLERKNOLL, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MMS",
+   "cik": 1032220,
+   "title": "MAXIMUS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MOG-A",
+   "cik": 67887,
+   "title": "MOOG INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MOH",
+   "cik": 1179929,
+   "title": "MOLINA HEALTHCARE, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MORN",
+   "cik": 1289419,
+   "title": "Morningstar, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MP",
+   "cik": 1801368,
+   "title": "MP Materials Corp. / DE",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MPWR",
+   "cik": 1280452,
+   "title": "MONOLITHIC POWER SYSTEMS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "edgar_facts_cik_haritasi",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MRCY",
+   "cik": 1049521,
+   "title": "MERCURY SYSTEMS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MSA",
+   "cik": 66570,
+   "title": "MSA Safety Inc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MSM",
+   "cik": 1003078,
+   "title": "MSC INDUSTRIAL DIRECT CO INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MTDR",
+   "cik": 1520006,
+   "title": "Matador Resources Co",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MTG",
+   "cik": 876437,
+   "title": "MGIC INVESTMENT CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MTN",
+   "cik": 812011,
+   "title": "VAIL RESORTS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MTSI",
+   "cik": 1493594,
+   "title": "MACOM Technology Solutions Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MTX",
+   "cik": 891014,
+   "title": "MINERALS TECHNOLOGIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MTZ",
+   "cik": 15615,
+   "title": "MASTEC INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MUR",
+   "cik": 717423,
+   "title": "MURPHY OIL CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MUSA",
+   "cik": 1573516,
+   "title": "Murphy USA Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "MZTI",
+   "cik": 57515,
+   "title": "MARZETTI CO",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NAVI",
+   "cik": 1593538,
+   "title": "NAVIENT CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NBIX",
+   "cik": 914475,
+   "title": "NEUROCRINE BIOSCIENCES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NDSN",
+   "cik": 72331,
+   "title": "NORDSON CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NEOG",
+   "cik": 711377,
+   "title": "NEOGEN CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NEU",
+   "cik": 1282637,
+   "title": "NEWMARKET CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NFG",
+   "cik": 70145,
+   "title": "NATIONAL FUEL GAS CO",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NGVT",
+   "cik": 1653477,
+   "title": "Ingevity Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NJR",
+   "cik": 356309,
+   "title": "NEW JERSEY RESOURCES CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NKTR",
+   "cik": 906709,
+   "title": "NEKTAR THERAPEUTICS",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NLY",
+   "cik": 1043219,
+   "title": "ANNALY CAPITAL MANAGEMENT INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NNN",
+   "cik": 751364,
+   "title": "NNN REIT, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NOV",
+   "cik": 1021860,
+   "title": "NOV Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NOVT",
+   "cik": 1076930,
+   "title": "NOVANTA INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NSP",
+   "cik": 1000753,
+   "title": "INSPERITY, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NTCT",
+   "cik": 1078075,
+   "title": "NETSCOUT SYSTEMS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NTNX",
+   "cik": 1618732,
+   "title": "Nutanix, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NUS",
+   "cik": 1021561,
+   "title": "NU SKIN ENTERPRISES, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NVST",
+   "cik": 1757073,
+   "title": "Envista Holdings Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NVT",
+   "cik": 1720635,
+   "title": "nVent Electric plc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NWE",
+   "cik": 1993004,
+   "title": "NorthWestern Energy Group, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NXST",
+   "cik": 1142417,
+   "title": "NEXSTAR MEDIA GROUP, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NXT",
+   "cik": 1852131,
+   "title": "Nextpower Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "NYT",
+   "cik": 71691,
+   "title": "NEW YORK TIMES CO",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "OC",
+   "cik": 1370946,
+   "title": "Owens Corning",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "OGE",
+   "cik": 1021635,
+   "title": "OGE ENERGY CORP.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "OGS",
+   "cik": 1587732,
+   "title": "ONE Gas, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "OHI",
+   "cik": 888491,
+   "title": "OMEGA HEALTHCARE INVESTORS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "OI",
+   "cik": 812074,
+   "title": "O-I Glass, Inc. /DE/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "OKTA",
+   "cik": 1660134,
+   "title": "Okta, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "OLED",
+   "cik": 1005284,
+   "title": "UNIVERSAL DISPLAY CORP \\PA\\",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "OLLI",
+   "cik": 1639300,
+   "title": "Ollie's Bargain Outlet Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "OLN",
+   "cik": 74303,
+   "title": "OLIN Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "OMCL",
+   "cik": 926326,
+   "title": "OMNICELL, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ONB",
+   "cik": 707179,
+   "title": "OLD NATIONAL BANCORP /IN/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ONTO",
+   "cik": 704532,
+   "title": "ONTO INNOVATION INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "OPCH",
+   "cik": 1014739,
+   "title": "Option Care Health, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ORA",
+   "cik": 1296445,
+   "title": "ORMAT TECHNOLOGIES, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ORI",
+   "cik": 74260,
+   "title": "OLD REPUBLIC INTERNATIONAL CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "OSK",
+   "cik": 775158,
+   "title": "OSHKOSH CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "OVV",
+   "cik": 1792580,
+   "title": "Ovintiv Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "OZK",
+   "cik": 1569650,
+   "title": "Bank OZK",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "P",
+   "cik": 1474432,
+   "title": "Everpure, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PAG",
+   "cik": 1019849,
+   "title": "PENSKE AUTOMOTIVE GROUP, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PATH",
+   "cik": 1734722,
+   "title": "UiPath, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PB",
+   "cik": 1068851,
+   "title": "PROSPERITY BANCSHARES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PBF",
+   "cik": 1534504,
+   "title": "PBF Energy Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PBH",
+   "cik": 1295947,
+   "title": "Prestige Consumer Healthcare Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PCTY",
+   "cik": 1591698,
+   "title": "Paylocity Holding Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PEB",
+   "cik": 1474098,
+   "title": "Pebblebrook Hotel Trust",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PEGA",
+   "cik": 1013857,
+   "title": "PEGASYSTEMS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PEN",
+   "cik": 1321732,
+   "title": "Penumbra Inc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PENN",
+   "cik": 921738,
+   "title": "PENN Entertainment, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PFGC",
+   "cik": 1618673,
+   "title": "Performance Food Group Co",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PGNY",
+   "cik": 1551306,
+   "title": "Progyny, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PII",
+   "cik": 931015,
+   "title": "Polaris Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PINS",
+   "cik": 1506293,
+   "title": "PINTEREST, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "edgar_facts_cik_haritasi",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PK",
+   "cik": 1617406,
+   "title": "Park Hotels & Resorts Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PLNT",
+   "cik": 1637207,
+   "title": "Planet Fitness, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PNFP",
+   "cik": 2082866,
+   "title": "Pinnacle Financial Partners, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "POOL",
+   "cik": 945841,
+   "title": "POOL CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "POR",
+   "cik": 784977,
+   "title": "PORTLAND GENERAL ELECTRIC CO /OR/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "POST",
+   "cik": 1530950,
+   "title": "Post Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "POWI",
+   "cik": 833640,
+   "title": "POWER INTEGRATIONS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PPC",
+   "cik": 802481,
+   "title": "PILGRIMS PRIDE CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PR",
+   "cik": 1658566,
+   "title": "Permian Resources Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PRG",
+   "cik": 1808834,
+   "title": "PROG Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PRGO",
+   "cik": 1585364,
+   "title": "PERRIGO Co plc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PRI",
+   "cik": 1475922,
+   "title": "Primerica, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PSN",
+   "cik": 275880,
+   "title": "PARSONS CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PTC",
+   "cik": 857005,
+   "title": "PTC INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PVH",
+   "cik": 78239,
+   "title": "PVH CORP. /DE/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "PZZA",
+   "cik": 901491,
+   "title": "PAPA JOHNS INTERNATIONAL INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "QDEL",
+   "cik": 1906324,
+   "title": "QuidelOrtho Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "QLYS",
+   "cik": 1107843,
+   "title": "QUALYS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "R",
+   "cik": 85961,
+   "title": "RYDER SYSTEM INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RAMP",
+   "cik": 733269,
+   "title": "LiveRamp Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RBA",
+   "cik": 1046102,
+   "title": "RB GLOBAL INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RBC",
+   "cik": 1324948,
+   "title": "RBC Bearings INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "REXR",
+   "cik": 1571283,
+   "title": "Rexford Industrial Realty, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RGA",
+   "cik": 898174,
+   "title": "REINSURANCE GROUP OF AMERICA INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RGEN",
+   "cik": 730272,
+   "title": "REPLIGEN CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RGLD",
+   "cik": 85535,
+   "title": "ROYAL GOLD INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RH",
+   "cik": 1528849,
+   "title": "RH",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RIG",
+   "cik": 1451505,
+   "title": "Transocean Ltd.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RLI",
+   "cik": 84246,
+   "title": "RLI CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RMBS",
+   "cik": 917273,
+   "title": "RAMBUS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RNR",
+   "cik": 913144,
+   "title": "RENAISSANCERE HOLDINGS LTD",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ROIV",
+   "cik": 1635088,
+   "title": "Roivant Sciences Ltd.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ROKU",
+   "cik": 1428439,
+   "title": "ROKU, INC",
+   "rol": "sp400",
+   "cik_kaynak": "edgar_facts_cik_haritasi",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RPM",
+   "cik": 110621,
+   "title": "RPM INTERNATIONAL INC/DE/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RRC",
+   "cik": 315852,
+   "title": "RANGE RESOURCES CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RRX",
+   "cik": 82811,
+   "title": "REGAL REXNORD CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RS",
+   "cik": 861884,
+   "title": "RELIANCE, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RUN",
+   "cik": 1469367,
+   "title": "Sunrun Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RXO",
+   "cik": 1929561,
+   "title": "RXO, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RYAN",
+   "cik": 1849253,
+   "title": "RYAN SPECIALTY HOLDINGS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "RYN",
+   "cik": 52827,
+   "title": "RAYONIER INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SABR",
+   "cik": 1597033,
+   "title": "Sabre Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SAIA",
+   "cik": 1177702,
+   "title": "SAIA INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SAIC",
+   "cik": 1571123,
+   "title": "Science Applications International Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SAIL",
+   "cik": 2030781,
+   "title": "SailPoint, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SAM",
+   "cik": 949870,
+   "title": "BOSTON BEER CO INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SANM",
+   "cik": 897723,
+   "title": "SANMINA CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SARO",
+   "cik": 2025410,
+   "title": "StandardAero, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SBH",
+   "cik": 1368458,
+   "title": "Sally Beauty Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SBRA",
+   "cik": 1492298,
+   "title": "Sabra Health Care REIT, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SCI",
+   "cik": 89089,
+   "title": "SERVICE CORP INTERNATIONAL",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SEDG",
+   "cik": 1419612,
+   "title": "SOLAREDGE TECHNOLOGIES, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SEIC",
+   "cik": 350894,
+   "title": "SEI INVESTMENTS CO",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SF",
+   "cik": 720672,
+   "title": "STIFEL FINANCIAL CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SFM",
+   "cik": 1575515,
+   "title": "Sprouts Farmers Market, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SGI",
+   "cik": 1206264,
+   "title": "SOMNIGROUP INTERNATIONAL INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SHC",
+   "cik": 1822479,
+   "title": "Sotera Health Co",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SIGI",
+   "cik": 230557,
+   "title": "SELECTIVE INSURANCE GROUP INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SIRI",
+   "cik": 908937,
+   "title": "SIRIUS XM HOLDINGS INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SITM",
+   "cik": 1451809,
+   "title": "SITIME Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SLAB",
+   "cik": 1038074,
+   "title": "SILICON LABORATORIES INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SLG",
+   "cik": 1040971,
+   "title": "SL GREEN REALTY CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SLGN",
+   "cik": 849869,
+   "title": "SILGAN HOLDINGS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SLM",
+   "cik": 1032033,
+   "title": "SLM Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SMCI",
+   "cik": 1375365,
+   "title": "Super Micro Computer, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SMG",
+   "cik": 825542,
+   "title": "SCOTTS MIRACLE-GRO CO",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SMTC",
+   "cik": 88941,
+   "title": "SEMTECH CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SN",
+   "cik": 1957132,
+   "title": "SharkNinja, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SNX",
+   "cik": 1177394,
+   "title": "TD SYNNEX CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SOLS",
+   "cik": 2064953,
+   "title": "Solstice Advanced Materials Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SON",
+   "cik": 91767,
+   "title": "SONOCO PRODUCTS CO",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SPWR",
+   "cik": 1838987,
+   "title": "SunPower Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SPXC",
+   "cik": 88205,
+   "title": "SPX Technologies, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SR",
+   "cik": 1126956,
+   "title": "SPIRE INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SRPT",
+   "cik": 873303,
+   "title": "Sarepta Therapeutics, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SSB",
+   "cik": 764038,
+   "title": "SouthState Bank Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SSD",
+   "cik": 920371,
+   "title": "Simpson Manufacturing Co., Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ST",
+   "cik": 1477294,
+   "title": "Sensata Technologies Holding plc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "STAA",
+   "cik": 718937,
+   "title": "STAAR SURGICAL CO",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "STAG",
+   "cik": 1479094,
+   "title": "STAG Industrial, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "STLD",
+   "cik": 1022671,
+   "title": "STEEL DYNAMICS INC",
+   "rol": "sp400",
+   "cik_kaynak": "edgar_facts_cik_haritasi",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "STRA",
+   "cik": 1013934,
+   "title": "Strategic Education, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "STRL",
+   "cik": 874238,
+   "title": "STERLING INFRASTRUCTURE, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "STWD",
+   "cik": 1465128,
+   "title": "STARWOOD PROPERTY TRUST, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SUI",
+   "cik": 912593,
+   "title": "SUN COMMUNITIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SVC",
+   "cik": 945394,
+   "title": "Service Properties Trust",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SWX",
+   "cik": 1692115,
+   "title": "Southwest Gas Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SXT",
+   "cik": 310142,
+   "title": "SENSIENT TECHNOLOGIES CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "SYNA",
+   "cik": 817720,
+   "title": "SYNAPTICS Inc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TCBI",
+   "cik": 1077428,
+   "title": "TEXAS CAPITAL BANCSHARES INC/TX",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TDC",
+   "cik": 816761,
+   "title": "TERADATA CORP /DE/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TDS",
+   "cik": 1051512,
+   "title": "TELEPHONE & DATA SYSTEMS INC /DE/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TECH",
+   "cik": 842023,
+   "title": "BIO-TECHNE Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TER",
+   "cik": 97210,
+   "title": "TERADYNE, INC",
+   "rol": "sp400",
+   "cik_kaynak": "edgar_facts_cik_haritasi",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TEX",
+   "cik": 97216,
+   "title": "TEREX CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "THC",
+   "cik": 70318,
+   "title": "TENET HEALTHCARE CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "THG",
+   "cik": 944695,
+   "title": "HANOVER INSURANCE GROUP, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "THO",
+   "cik": 730263,
+   "title": "THOR INDUSTRIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TKO",
+   "cik": 1973266,
+   "title": "TKO Group Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TKR",
+   "cik": 98362,
+   "title": "TIMKEN CO",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TLN",
+   "cik": 1622536,
+   "title": "Talen Energy Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TNDM",
+   "cik": 1438133,
+   "title": "TANDEM DIABETES CARE INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TNL",
+   "cik": 1361658,
+   "title": "Travel & Leisure Co.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TOL",
+   "cik": 794170,
+   "title": "Toll Brothers, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TOST",
+   "cik": 1650164,
+   "title": "Toast, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TPL",
+   "cik": 1811074,
+   "title": "Texas Pacific Land Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TR",
+   "cik": 98677,
+   "title": "TOOTSIE ROLL INDUSTRIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TREE",
+   "cik": 1434621,
+   "title": "LendingTree, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TREX",
+   "cik": 1069878,
+   "title": "TREX CO INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TRGP",
+   "cik": 1389170,
+   "title": "Targa Resources Corp.",
+   "rol": "sp400",
+   "cik_kaynak": "edgar_facts_cik_haritasi",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TRIP",
+   "cik": 1526520,
+   "title": "TripAdvisor, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TRMB",
+   "cik": 864749,
+   "title": "TRIMBLE INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TRMK",
+   "cik": 36146,
+   "title": "TRUSTMARK CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TRN",
+   "cik": 99780,
+   "title": "TRINITY INDUSTRIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TRU",
+   "cik": 1552033,
+   "title": "TransUnion",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TTC",
+   "cik": 737758,
+   "title": "TORO CO",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TTEK",
+   "cik": 831641,
+   "title": "TETRA TECH INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TTMI",
+   "cik": 1116942,
+   "title": "TTM TECHNOLOGIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TWLO",
+   "cik": 1447669,
+   "title": "TWILIO INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TXNM",
+   "cik": 1108426,
+   "title": "TXNM ENERGY INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "TXRH",
+   "cik": 1289460,
+   "title": "Texas Roadhouse, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "UA",
+   "cik": 1336917,
+   "title": "Under Armour, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "UAA",
+   "cik": 1336917,
+   "title": "Under Armour, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "UBSI",
+   "cik": 729986,
+   "title": "UNITED BANKSHARES INC/WV",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "UE",
+   "cik": 1611547,
+   "title": "Urban Edge Properties",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "UFPI",
+   "cik": 912767,
+   "title": "UFP INDUSTRIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "UGI",
+   "cik": 884614,
+   "title": "UGI CORP /PA/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ULS",
+   "cik": 1901440,
+   "title": "UL Solutions Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "UMBF",
+   "cik": 101382,
+   "title": "UMB FINANCIAL CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "UNM",
+   "cik": 5513,
+   "title": "Unum Group",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "URBN",
+   "cik": 912615,
+   "title": "URBAN OUTFITTERS INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "USFD",
+   "cik": 1665918,
+   "title": "US Foods Holding Corp.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "UTHR",
+   "cik": 1082554,
+   "title": "UNITED THERAPEUTICS Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VAC",
+   "cik": 1524358,
+   "title": "MARRIOTT VACATIONS WORLDWIDE Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VAL",
+   "cik": 314808,
+   "title": "Valaris Ltd",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VC",
+   "cik": 1111335,
+   "title": "VISTEON CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VFC",
+   "cik": 103379,
+   "title": "V F CORP",
+   "rol": "sp400",
+   "cik_kaynak": "edgar_facts_cik_haritasi",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VIAV",
+   "cik": 912093,
+   "title": "VIAVI SOLUTIONS INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VICR",
+   "cik": 751978,
+   "title": "VICOR CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VLY",
+   "cik": 714310,
+   "title": "VALLEY NATIONAL BANCORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VMI",
+   "cik": 102729,
+   "title": "VALMONT INDUSTRIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VNO",
+   "cik": 899689,
+   "title": "VORNADO REALTY TRUST",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VNOM",
+   "cik": 2074176,
+   "title": "Viper Energy, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VNT",
+   "cik": 1786842,
+   "title": "Vontier Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VOYA",
+   "cik": 1535929,
+   "title": "Voya Financial, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VSAT",
+   "cik": 797721,
+   "title": "VIASAT INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VSH",
+   "cik": 103730,
+   "title": "VISHAY INTERTECHNOLOGY INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VST",
+   "cik": 1692819,
+   "title": "Vistra Corp.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VSTS",
+   "cik": 1967649,
+   "title": "Vestis Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VVV",
+   "cik": 1674910,
+   "title": "VALVOLINE INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "VYX",
+   "cik": 70866,
+   "title": "NCR Voyix Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WAFD",
+   "cik": 936528,
+   "title": "WAFD INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WAL",
+   "cik": 1212545,
+   "title": "WESTERN ALLIANCE BANCORPORATION",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WCC",
+   "cik": 929008,
+   "title": "WESCO INTERNATIONAL INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WEN",
+   "cik": 30697,
+   "title": "Wendy's Co",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WERN",
+   "cik": 793074,
+   "title": "WERNER ENTERPRISES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WEX",
+   "cik": 1309108,
+   "title": "WEX Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WFRD",
+   "cik": 1603923,
+   "title": "Weatherford International plc",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WH",
+   "cik": 1722684,
+   "title": "WYNDHAM HOTELS & RESORTS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WHR",
+   "cik": 106640,
+   "title": "WHIRLPOOL CORP /DE/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WING",
+   "cik": 1636222,
+   "title": "Wingstop Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WLK",
+   "cik": 1262823,
+   "title": "WESTLAKE CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WLY",
+   "cik": 107140,
+   "title": "JOHN WILEY & SONS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WMG",
+   "cik": 1319161,
+   "title": "Warner Music Group Corp.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WMS",
+   "cik": 1604028,
+   "title": "ADVANCED DRAINAGE SYSTEMS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WOLF",
+   "cik": 895419,
+   "title": "WOLFSPEED, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WOR",
+   "cik": 108516,
+   "title": "WORTHINGTON ENTERPRISES, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WPC",
+   "cik": 1025378,
+   "title": "W. P. Carey Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WSM",
+   "cik": 719955,
+   "title": "WILLIAMS SONOMA INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WSO",
+   "cik": 105016,
+   "title": "WATSCO INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WTFC",
+   "cik": 1015328,
+   "title": "WINTRUST FINANCIAL CORP",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WTRG",
+   "cik": 78128,
+   "title": "Essential Utilities, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WTS",
+   "cik": 795403,
+   "title": "WATTS WATER TECHNOLOGIES INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WU",
+   "cik": 1365135,
+   "title": "Western Union CO",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WW",
+   "cik": 105319,
+   "title": "WW INTERNATIONAL, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "WWD",
+   "cik": 108312,
+   "title": "Woodward, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "XPO",
+   "cik": 1166003,
+   "title": "XPO, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "XRAY",
+   "cik": 818479,
+   "title": "DENTSPLY SIRONA Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "XRX",
+   "cik": 1770450,
+   "title": "Xerox Holdings Corp",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "YELP",
+   "cik": 1345016,
+   "title": "YELP INC",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "YETI",
+   "cik": 1670592,
+   "title": "YETI Holdings, Inc.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ZD",
+   "cik": 1084048,
+   "title": "ZIFF DAVIS, INC.",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  },
+  {
+   "symbol": "ZION",
+   "cik": 109380,
+   "title": "ZIONS BANCORPORATION, NATIONAL ASSOCIATION /UT/",
+   "rol": "sp400",
+   "cik_kaynak": "sec_company_tickers",
+   "kimlik_kaniti": "dogrudan_ticker",
+   "uyari": null
+  }
+ ],
+ "eslesmeyen": [
+  {
+   "symbol": "ACC",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "AIRC",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "ALE",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "ALTM",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "ALTR",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "AMED",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "ASGN",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "ATGE",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "AVNS",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "AZPN",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "BERY",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "BLD",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "CADE",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "CCMP",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "CDAY",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "CDK",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "CHX",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "CIT",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "CIVI",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "CLGX",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "CLI",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "CMA",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "CMD",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "CTLT",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "DLPH",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "DNKN",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "ENV",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "ETRN",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "EV",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "FL",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "FYBR",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "GRUB",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "GTLS",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "HBI",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "HRC",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "IAA",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "INT",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "JHG",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "JWN",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "KAR",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "LEG",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "LHCG",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "LM",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "LNW",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "LOGM",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "LSI",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "MASI",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "MIME",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "MODG",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "MPW",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "NARI",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "NATI",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "NSA",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "NUVA",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "PCH",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "PDCE",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "PDCO",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "PRAH",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "PRSP",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "PSB",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "RCM",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "SAFM",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "SATS",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "SBNY",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "SIX",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "SKX",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "SNV",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "SRC",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "SRCL",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "STL",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "STOR",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "SWAV",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "SWN",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "SYNH",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "TCF",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "TCO",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "TGNA",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "THS",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "TMHC",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "TPH",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "UFS",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "UMPQ",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "UNVR",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "VSCO",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "WBS",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "WPX",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "WRI",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "X",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "XEC",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "Y",
+   "rol": "sp400",
+   "neden": "hiçbir kaynakta çözülemedi (sıra: edgar_facts_cik_haritasi → sec_company_tickers → elle_esleme_cifti)"
+  },
+  {
+   "symbol": "PACW",
+   "rol": "sp400",
+   "neden": "cift_anotasyon — `cift:<çıkan>-><giren>` bir ANOTASYONDUR (iki yarım satır, aynı endeks olayı); iki adın AYNI İHRAÇÇI olduğu KANITLANMADI, bu yüzden diğer adın CIK'i bu sembole VERİLMEZ (Rol-1 hükmü 2026-09-14). Tanı izi `esleme.cift_turetilen` listesinde KALIR.",
+   "reddedilen_cik": 1944013,
+   "reddedilen_kaynak": "elle_esleme_cifti:cift:PACW->CR"
+  }
+ ],
+ "paylasilan_cik": {
+  "1336917": [
+   "UA",
+   "UAA"
+  ]
+ },
+ "esleme_sirasi": [
+  "edgar_facts_cik_haritasi",
+  "sec_company_tickers",
+  "elle_esleme_cifti"
+ ],
+ "kaynak_nedenleri": {
+  "edgar_facts_cik_haritasi": null,
+  "sec_company_tickers": null,
+  "elle_esleme_cifti": null,
+  "karar_grameri": "kaynak okunamadı/ayrıştırılamadı (FileNotFoundError: [Errno 2] No such file or directory: '/opt/meridian/research/olcumler/edg093_midcap_pit/kohort.py'): /opt/meridian/research/olcumler/edg093_midcap_pit/kohort.py"
+ },
+ "okuyan": "bu betiğin (b) çekim ve (c) çıkarım adımları + Rol-1 (eşleşmeyen sınıfının hükmü); ayrıca kaynak_sp400.json bu dosyayı adıyla anar."
+}
