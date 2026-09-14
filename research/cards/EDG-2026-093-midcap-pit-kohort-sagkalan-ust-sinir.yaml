@@ -42,7 +42,7 @@ adim_0_fizibilite: >
   ZORUNLU, ölçümden ÖNCE, İKİ EKSEN — ikisi de düşerse status → askiya_veri_kapisi (kill değil; kapsama haritası teslim):
   EKSEN A — KOHORT ÜRETİCİSİ: `research/pit_universe/sp400_uyelik_tarihi.csv` (kolonlar: date, tickers; sp500_uyelik_tarihi.csv
   ile AYNI biçim; as-of günlük, 2020-07-27 → ölçüm günü) EDG-092'nin girdi blob'larından üretilir: güncel liste (SSGA MDY
-  holdings xlsx, EDG-092 girdi/) + değişiklik tablosu (Wikipedia oldid 1370891103 ham wikitext, EDG-092 girdi/pk/) geriye
+  holdings xlsx, EDG-092 girdi/) + değişiklik tablosu (Wikipedia S&P 400 oldid 1373849406 ham wikitext, sha256 7d94c2ee…, EDG-092 ham/ — DÜZELTME 2026-09-14 13:2xZ: ilk ön-kayıt yanlışlıkla S&P 500 PK girdisinin oldid'ini [1370891103] anıyordu; üretici doğru dosyayı kullandı, girdi kimliği EDG-092 kartıyla aynı) geriye
   doğru yürütülür (EDG-075/092 as_of algoritması). EDG-092 tanısı: as_of(2020-07-27)=407 ≠ 400 — 12 eşleşmemiş satır
   (spin-off çiftleri, ardışık kitaplama). Bu satırlar ELLE EŞLENİR ve eşleme tablosu (`research/pit_universe/sp400_elle_esleme.yaml`:
   satır → karar → kaynak URL/olay) kartla birlikte teslim edilir; eşlenemeyen satır "belirsiz" olarak KALIR ve gün
