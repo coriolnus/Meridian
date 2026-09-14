@@ -29,25 +29,29 @@ from __future__ import annotations
 
 import datetime as dt
 import hashlib
-import importlib.util
 import json
 import pathlib
-import sys
 import zipfile
 
 import pytest
+
+from tests.conftest import betikten_modul_yukle
 
 KOK = pathlib.Path(__file__).resolve().parents[1]
 OLC_YOLU = KOK / "research" / "olcumler" / "edg092_sp400_uyelik" / "olc.py"
 
 
 def _modul():
-    """Ölçüm aracını DOSYA YOLUNDAN yükler (research/ altı paket değil — edg075 betiği de öyle)."""
-    spec = importlib.util.spec_from_file_location("edg092_olc_test", OLC_YOLU)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules["edg092_olc_test"] = mod
-    spec.loader.exec_module(mod)
-    return mod
+    """Ölçüm aracını DOSYA YOLUNDAN yükler (research/ altı paket değil — edg075 betiği de öyle).
+
+    KAYNAKTAN DERLENİR (v334 §B, düzeltme 2026-09-14). Ham `spec.loader.exec_module` yolu
+    `__pycache__`e bakar ve zaman damgalı pyc'nin geçerlilik kontrolü YALNIZ (tam-saniye mtime,
+    bayt boyutu) çiftidir: `olc.py`de boyutu değiştirmeyen bir düzenleme (`5`→`2`, `<`→`>`) aynı
+    saniyede kalırsa BAYAT bytecode koşar ve bu dosyadaki çiviler YANLIŞ KODU yeşil yapar.
+    `betikten_modul_yukle` (= `ops.sasi_yukleyici.kaynaktan_yukle`) pyc'ye HİÇ dokunmaz.
+    `sys_modules_kaydet=True` eski davranışı birebir korur: modül exec'ten ÖNCE kaydedilir —
+    `olc.py` kendi adını çözebilmeli."""
+    return betikten_modul_yukle(OLC_YOLU, "edg092_olc_test", sys_modules_kaydet=True)
 
 
 olc = _modul()

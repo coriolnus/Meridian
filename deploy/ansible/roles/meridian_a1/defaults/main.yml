@@ -89,6 +89,11 @@ apt_paketleri:
   - jq
   - git
   - unattended-upgrades
+  # ÖLÇÜLEN EKSİK (TSK-064 Faz-2, A1 ilk kurulumu 2026-09-14 09:0xZ): `unzip` A1'de KURULU
+  # DEĞİLDİ ve `deploy/vault/vault_kur.sh` adım 1 tam da doğrulanmış zip'i açacağı yerde düştü.
+  # Betik artık stdlib'e (python3 zipfile) düşebiliyor, ama fallback bir ÖZÜR değildir: temiz
+  # bir makinede eksik hiç DOĞMAMALI. Çivi: tests/test_vault_faz2_v485.py §N5.
+  - unzip
 
 # --- uv (venv.yml) ---
 # SÜRÜM PİNİ: resmi installer sürümsüz URL'den çekilirse her koşum farklı uv kurabilir (tedarik

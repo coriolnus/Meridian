@@ -110,7 +110,33 @@ done
 # KURU KOŞUM EKSİKLERİ ÖLDÜRMEZ, RAPORLAR. Bir kuru koşumun işi "neyin eksik olduğunu
 # göstermek"tir; ilk eksikte ölen bir kuru koşum operatöre yalnız BİR eksiği söyler ve geri
 # kalanını gizler (ölçüm boşluğu, kapı değil). `--uygula` kipinde AYNI koşullar DURDURUR.
+#
+# ZIP AÇICI — İKİ YOL, İKİSİ DE ADIYLA (A1 ilk kurulumunda ÖLÇÜLEN eksik, 2026-09-14 09:0xZ).
+# `unzip` A1'de KURULU DEĞİLDİ ve bu adım tam da sha256'sı doğrulanmış zip'i açacağı yerde
+# düştü; Rol-1 apt ile kurup elle ilerledi. Düzeltme ÇİFTTİR ve iki parçası AYRI sorunu çözer:
+#   (a) A0 rolü paket listesine `unzip` girdi (roles/meridian_a1/defaults/main.yml::apt_paketleri)
+#       → bir dahaki TEMİZ kurulumda eksik DOĞMAZ;
+#   (b) bu betik stdlib'e düşer (python3 zipfile) → kasa kurulumu bir BAKIM PENCERESİNDE koşar
+#       ve orada "önce apt-get install" demek pencereyi uzatır. python3 A1'de zaten var
+#       (meridian venv'i onunla kuruluyor).
+# Yalnız (a) yapılsaydı rolü koşmamış bir makinede aynı arıza tekrarlardı; yalnız (b) yapılsaydı
+# A1 kalıcı olarak fallback yolunda kalır ve eksik HİÇ görünmezdi.
+# ÜÇÜNCÜ, SESSİZ BİR YOL YOKTUR: ikisi de yoksa `--uygula` DURUR, `--kuru` eksiği RAPORLAR.
+# Kapı: tests/test_vault_faz2_v485.py §I9-I12 (kuru çıktısı · gerçek zip · mutasyon).
+_acici() {
+  if command -v unzip >/dev/null 2>&1; then echo "unzip"
+  elif command -v python3 >/dev/null 2>&1; then echo "python3-zipfile"
+  else echo "YOK"; fi
+}
+
+# Fallback tek satırı. TIRNAKLAMASI ÇİVİLİ: I11 bu satırı kaynaktan SÖKÜP gerçek bir zip'le
+# koşar — bozuk bir tırnaklama aksi hâlde ancak bakım penceresinde, zip elde dururken görünürdü.
+_ac_zip() {
+  python3 -c 'import sys, zipfile; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])' "$1" "$2"
+}
+
 adim "1) vault ikilisi (sürüm $VAULT_SURUM)"
+ACICI="$(_acici)"
 if [ "$VAULT_ZIP_SHA256" = "OLCULMEDI" ]; then
   RECETE="curl -fsSL https://releases.hashicorp.com/vault/${VAULT_SURUM}/vault_${VAULT_SURUM}_SHA256SUMS | grep linux_arm64"
   if [ "$KIP" = "kuru" ]; then
@@ -125,7 +151,11 @@ fi
 if [ -x "$VAULT_BIN" ] && "$VAULT_BIN" version 2>/dev/null | grep -q "$VAULT_SURUM"; then
   oldu "ikili zaten kurulu ve sürüm eşleşiyor (idempotent)"
 elif [ "$KIP" = "kuru" ]; then
-  kuru "sha256 doğrula + unzip + install → $VAULT_BIN   (zip: $VAULT_ZIP$([ -f "$VAULT_ZIP" ] || echo ' — YOK'))"
+  kuru "sha256 doğrula + aç ($ACICI) + install → $VAULT_BIN   (zip: $VAULT_ZIP$([ -f "$VAULT_ZIP" ] || echo ' — YOK'))"
+  if [ "$ACICI" = "YOK" ]; then
+    kuru "EKSİK: ne unzip ne python3 var — zip AÇILAMAZ, --uygula burada DURUR"
+    kuru "reçete: sudo apt-get install -y unzip"
+  fi
 else
   [ -f "$VAULT_ZIP" ] || die "zip bulunamadı: $VAULT_ZIP (önce indir, sonra bu betiği koş)"
   echo "${VAULT_ZIP_SHA256}  ${VAULT_ZIP}" | sha256sum -c - >/dev/null \
@@ -133,7 +163,12 @@ else
   oldu "sha256 pini doğrulandı"
   rm -rf /tmp/vault_unzip
   mkdir -p /tmp/vault_unzip
-  unzip -o -q "$VAULT_ZIP" -d /tmp/vault_unzip
+  case "$ACICI" in
+    unzip)           unzip -o -q "$VAULT_ZIP" -d /tmp/vault_unzip ;;
+    python3-zipfile) _ac_zip "$VAULT_ZIP" /tmp/vault_unzip ;;
+    *) die "zip AÇILAMIYOR: ne unzip ne python3 var. Reçete: sudo apt-get install -y unzip" ;;
+  esac
+  oldu "zip açıldı ($ACICI)"
   install -o root -g root -m 0755 /tmp/vault_unzip/vault "$VAULT_BIN"
   oldu "ikili kuruldu: $VAULT_BIN"
 fi
