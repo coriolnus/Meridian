@@ -280,6 +280,27 @@ def test_B5_BEKLEME_TEK_ATIM_VE_SABITTEN(rota, monkeypatch, zaman):
     assert len(kapi.cagrilar) == 2, kapi.urller
 
 
+def test_B7_OLAY_KACINCI_DENEMEDE_YAZILDIGINI_TASIR(rota, monkeypatch, zaman):
+    """TEK ARIZA İKİ OLAY YAZAR — hangisinin hangisi olduğu ALANDA durur, düzyazıda değil.
+
+    TUR-1 KAYGISI, TUR-2'DE KAPANDI (2026-09-14, K3): iki üst-akım düşüşü de AYNI adla
+    yazılıyordu ve ayrım yalnızca `detail` düzyazısındaydı. A1 defterinde bu olay adını sayarak
+    "kaç üst-akım arızası oldu" sorusunu soran bir grep TEK arızayı İKİ sayardı — ve yanlış olan
+    sayı, tam da bu turun ölçmek istediği sayıdır (yeniden denemenin işe yarayıp yaramadığı).
+    `deneme` alanıyla sayım artık `deneme == 1` satırlarından yapılır; `deneme == 2` satırları
+    "yeniden deneme de düştü" kümesidir ve ikisinin ORANI yeniden denemenin kazancıdır.
+
+    SIRA DA ÖLÇÜLÜR (alan listesi tek başına yeterli değil): birinci olayın `kod`u birinci
+    gövdeden, ikincisininki İKİNCİ gövdeden gelmeli — alanlar doğru ama ters bağlanmış olsaydı
+    yalnız `[1, 2]` bakan bir çivi bunu göremezdi."""
+    _kapiyi_bagla(monkeypatch, _ustakim_govdesi(), _ustakim_govdesi(kod=503))
+    with pytest.raises(RuntimeError):
+        rota.cagir("soru")
+    olaylar = _olaylar(f"{ONEK}_denetci_ustakim_hatasi")
+    assert [o.get("deneme") for o in olaylar] == [1, 2], olaylar
+    assert [(o.get("deneme"), o.get("kod")) for o in olaylar] == [(1, 502), (2, 503)], olaylar
+
+
 # ================================================================================================
 # C) ÇAĞRI ÖLÇÜMÜ — KAZANÇ VE BEDEL AYNI OLAYDAN OKUNUR
 # ================================================================================================
