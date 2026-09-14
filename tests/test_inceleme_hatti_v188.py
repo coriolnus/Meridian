@@ -49,7 +49,10 @@ DUN_2000 = float(calendar.timegm((2026, 8, 3, 20, 0, 0, 0, 0, 0)))
 # beklentiyi göçe göre eğmek değil fikstürü CANLI ada taşımaktır (göç katmanının kendi çivileri
 # `test_agent_olu_model_cagri_ani_v239.py` + `test_gemini_olu_model_gocu_v235.py`de).
 BIRINCI = "gemini-pro-latest"
-YEDEK = "tencent/hy3:free"
+# YEDEK TAZELENDİ (TSK-189, 2026-09-14): aşağıdaki bekçi tam da bunun için yazılmıştı ve ÖTTÜ —
+# `tencent/hy3:free` ölü-ad haritasına girdi (katalogda hiç yoktu; canlı yedek 404 vakası). Fikstür
+# canlı yedeğin TEK KAYNAĞINA bağlanır, böylece bir sonraki taşımada burası kendiliğinden taşınır.
+YEDEK = hermes.NOUS_FALLBACK_DEFAULT
 
 
 def test_fikstur_modeli_CANLI_kalmali():

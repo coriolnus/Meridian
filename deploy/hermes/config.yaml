@@ -25,9 +25,15 @@ credential_pool_strategies:
   gemini: round_robin
   anthropic: least_used
   openrouter: round_robin
+# YEDEK BEYİN (TSK-189, 2026-09-14): eski ad `openai/gpt-oss-20b:free` OpenRouter'da ÜCRETSİZ
+# ayağını kaybetti (HTTP 404 "unavailable for free") — canlı defterde 2026-09-02'den beri günde
+# 12-26 boş inceleme/dolgu çağrısı. Yeni ad A1 sondasıyla ölçüldü ve BİRİNCİLDEN (nvidia/nemotron)
+# FARKLI üst-akımdan seçildi. TEK KAYNAK: `meridian.hermes` içindeki NOUS_FALLBACK_DEFAULT sabiti —
+# canlı `~/.hermes/config.yaml`ı her standby turunda `config_ensure_integrations` yazar, bu dosya
+# ise dağıtımla gider; ikisinin ayrışmadığını `tests/test_yedek_beyin_olu_ad_v493.py` çiviler.
 fallback_providers:
 - provider: nous
-  model: openai/gpt-oss-20b:free
+  model: nex-agi/nex-n2.5-mini:free
 
 # --- GÜVENLİK DURUŞU (spec §9.2, operatör kararı 2026-08-27) --------------------------------
 # Terminal arka ucu BİLEREK `local`: A1 dört çekirdek ve 8 sa 55 dk CPU yakan sprint koşuyor;

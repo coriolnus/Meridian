@@ -562,15 +562,36 @@ NOUS_DEFAULT_MODEL = "Hermes-4-405B"
 # gösteriyor ve Google modeli yeniledikçe alias'la birlikte taşınır. Pano metni K1 gereği bu
 # sabitten türetilir (api.api_secrets → model_defaults), elle senkron gerekmez.
 GEMINI_DEFAULT_MODEL = "gemini-pro-latest"
+# YEDEK BEYİN VARSAYILANI (TSK-189, 2026-09-14): hermes CLI'ın `fallback_providers` ayağı sır
+# yoksa BU ada düşer. Eski gömülü varsayılan (`tencent/hy3:free`) OpenRouter katalogunda HİÇ
+# yoktu (ROADMAP §7, 2026-08-14) — yani "yedek var" görüntüsü UYDURMAYDI. Seçim A1 sondasıyla
+# ölçüldü (2026-09-14 22:15Z, tek çağrı): bayraksız HTTP 200 · finish=stop · 48 token · 0,6 s
+# DOLU cevap. `nvidia/nemotron-3.5-lightning:free` yalnız `reasoning.enabled=false` ile dolu
+# döndü ve hermes CLI yolu o bayrağı taşımıyor → SEÇİLMEDİ.
+# ÜST-AKIM AYRIMI ŞARTTIR: birincil `nvidia/nemotron-*` ailesinden; aynı gece 22:03Z Nvidia
+# "temporarily overloaded" 502 ×2 verdi — aynı havuzdan alınan yedek yedeklilik DEĞİLDİR
+# (`brain_chain_facts` docstring'inin ölçtüğü yanılsama). Çivi: `tests/test_yedek_beyin_olu_ad_v493.py`.
+# TEK OKUYUCU: `config_ensure_integrations` (+ göç haritasının hedefi) — ikinci bir kopya
+# doğarsa tek-kaynak yasası kırılır, bu yüzden değer AD OLARAK burada bir kez yazılır.
+NOUS_FALLBACK_DEFAULT = "nex-agi/nex-n2.5-mini:free"
 # BİLİNEN-ÖLÜ AD GÖÇÜ HARİTASI: yerel hermes-agent config'inde (model.default) DURAN
 # ölü bir ad kendi kendine iyileşmez — `config_ensure_integrations` bu haritayla sabit alias'a
 # çevirir ve OLAYLAR (`gemini_dead_model_migrated`; sessiz değiştirme YASAK). Harita YALNIZ
 # bilinen-ölü adları taşır; TANINMAYAN adlar SERBEST GEÇER (elimizdeki model listesi kesitti ve
 # gelecekteki geçerli adlar — ör. gemini-3.6-flash — kırılmamalı). Rol eşleşmesi korunur:
 # hızlı-görev (flash) → flash alias'ı, pro → pro alias'ı.
+# AD GEMİNİ'YE ÖZGÜ DEĞİLDİR (2026-09-14): harita BİLİNEN-ÖLÜ TÜM adları taşır — sağlayıcı
+# bağımsız. Ad korunuyor çünkü kimliktir (çapa/atıf yüzeyi: v235/v239/v188 çivileri onu adıyla
+# okur); yeniden adlandırmak bu turun işi değil, sessiz bir çapa kırığı olurdu.
 GEMINI_DEAD_MODEL_MAP = {
     "gemini-3.5-flash": "gemini-flash-latest",   # canlı config'teki ölü ad (üretim 404)
     "gemini-3.1-pro": "gemini-pro-latest",       # eski repo varsayılanı — listede yalnız -preview var
+    # OpenRouter 404 sınıfı (canlı `agent_call_empty` / `review_fallback_empty`, günde 12-26 kez,
+    # 2026-09-02'den 2026-09-14'e): "This model is unavailable for free. The paid version is
+    # available now" — ücretsiz ayak KALKTI, yani yedek beyin ölüydü.
+    "openai/gpt-oss-20b:free": NOUS_FALLBACK_DEFAULT,
+    # Katalogda HİÇ var olmadı (ROADMAP §7, 2026-08-14) — eski gömülü varsayılan, aynı 404 sınıfı.
+    "tencent/hy3:free": NOUS_FALLBACK_DEFAULT,
 }
 
 # ==================================================================================================
@@ -633,7 +654,7 @@ def canonical_model(ad: str | None, *, kaynak: str = "?", olay: bool = False) ->
         _OLU_MODEL_OLAYLI.add(anahtar)
         obs.warn("agent_model_olu_ad_gocuruldu", kaynak=kaynak, eski=str(ad).strip(), yeni=yeni,
                  detail="çağrı anında BİLİNEN-ÖLÜ model adı görüldü (üretim 404 sınıfı) ve sabit "
-                        "alias'a çevrildi; rol korundu (flash→flash-latest, pro→pro-latest). "
+                        "alias'a çevrildi; rol korundu (hızlı→hızlı, yedek→yedek). "
                         "KALICI ONARIM OPERATÖRDE: sır dosyasındaki adı güncelle — bu katman "
                         "her çağrıda yeniden çevirir ama sırra YAZMAZ (sır-yazma yasağı).")
     return yeni
@@ -2819,8 +2840,12 @@ def _nous_portal_model() -> str:
     kendisiydi. Varsayılan burada UYDURMA DEĞİLDİR ve ayrım `_model_id` docstring'inde yazılı:
     portal modunda gövdeyi BİZ kuruyoruz, yani `NOUS_DEFAULT_MODEL` gerçekten GİDEN addır (yerel
     ajan modunda değildi — orada adı CLI'nın kendi config'i seçer, bu yüzden orası None döner).
-    ÖLÜ-AD GÖÇÜ UYGULANMAZ, bilerek: `GEMINI_DEAD_MODEL_MAP` Google adlarını taşır, portal ucu
-    Nous/OpenRouter kimliği ister — çeviri burada adı ONARMAZ, BOZARDI."""
+    ÖLÜ-AD GÖÇÜ BU YÜZEYDE HÂLÂ UYGULANMIYOR — ama GEREKÇESİ 2026-09-14'te (TSK-189) DEĞİŞTİ ve
+    dürüstçe yazılması gerekiyor: harita artık yalnız Google adlarını taşımıyor, OpenRouter
+    404'lerini de taşıyor, yani "çeviri burada adı BOZARDI" savı ARTIK GEÇERLİ DEĞİL. Bugünkü
+    gerekçe daha dar: bu ayağın adı künye sözleşmesine giriyor (`chain_text` → `model_istenen`)
+    ve göçü buraya taşımak o sözleşmenin ÖLÇÜLMESİNİ ister; TSK-189 kapsamı yedek/config
+    yüzeyleriydi. AÇIK KALEM: portal birincili ölü bir ada ayarlanırsa burası 404 yer."""
     return secrets.get("NOUS_MODEL") or NOUS_DEFAULT_MODEL
 
 
@@ -3344,9 +3369,15 @@ def config_ensure_integrations() -> dict:
     # Tier 1+2 (dolgu/inceleme/MCP/kalibrasyon) uykuya geçiyordu. hermes fallback_providers 429'da OTOMATİK
     # devreye girer → Nous Portal'ın ÜCRETSİZ modeline düşer (operatörün kredisi yok, ücretsiz model şart).
     # Model secret'tan yapılandırılabilir; birincil sağlayıcı zaten nous ise fallback eklenmez (döngü olmaz).
+    # ÖLÜ-AD GÖÇÜ BU YÜZEYDE DE KOŞAR (TSK-189, 2026-09-14): eskiden sır HAM yazılıyordu ve gömülü
+    # varsayılan da ölüydü (`tencent/hy3:free`, katalogda hiç yok) — yani canlı `~/.hermes/config.yaml`
+    # her standby turunda ÖLÜ bir yedeği geri yazıyordu. `olay=False` BİLİNÇLİ: burası YAPILANDIRMA
+    # yazımıdır, modele gidilmez; göç olayı gerçek çağrı yolunda (`_nous_model_zinciri`) basılır —
+    # bir standby turu defterde "göç oldu" satırı üretmez (olay yayını notu, v239).
     prim = (cfg.get("model") or {}).get("provider")
     if prim and prim != "nous":
-        nous_model = secrets.get("NOUS_FALLBACK_MODEL") or "tencent/hy3:free"
+        nous_model = canonical_model(secrets.get("NOUS_FALLBACK_MODEL") or NOUS_FALLBACK_DEFAULT,
+                                     kaynak="NOUS_FALLBACK_MODEL")
         desired_fb = [{"provider": "nous", "model": nous_model}]
         if cfg.get("fallback_providers") != desired_fb:
             cfg["fallback_providers"] = desired_fb
