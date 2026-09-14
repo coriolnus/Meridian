@@ -1,0 +1,52 @@
+# vault-sagligi.service — Vault sağlık bekçisi (TSK-064 Faz-2, Task 4)
+#
+# NE ÖLÇER: `http://127.0.0.1:8200/v1/sys/health` → mühürlü mü, ayakta mı. Mühürlenmiş bir kasa
+# SESSİZ bir arızadır: Agent render'ı durur, dosyalar ESKİ değerlerinde kalır ve her şey
+# çalışıyor GÖRÜNÜR — ta ki bir sır döndürülene kadar. Bu birim o sessizliği alarma çevirir
+# (VAULT_SEALED / VAULT_DOWN; meridian/obs.py ALARM_ sabitleri, teslim zinciri NOTIFY_TOKENS).
+#
+# KADANS BU DOSYADA DEĞİL: tetik yalnız vault-sagligi.timer'dır ve değer ORADA tek satırdır.
+# Buraya bir dakika değeri yazmak ikinci bir kaynak doğururdu (tek-kaynak yasası).
+[Unit]
+Description=Vault sağlık bekçisi (mühür/erişilebilirlik)
+# KURULUM SIRASI KAPISI. Timer A0 rolüyle kurulduğu gün Vault henüz kurulmamış olabilir
+# (kurulum Rol-1'in bakım penceresinin işidir). Koşulsuz bir bekçi o pencerede HER tetikte
+# VAULT_DOWN üretirdi — gerçek bir arıza değil, sıralamanın gürültüsü; ve gürültü, bekçiyi
+# susturmanın en bilinen yoludur. Koşul birimi SESSİZCE atlamaz: journal "Condition check
+# failed" yazar, yani "bakmadım" da okunabilir bir çıktıdır (Yasa 6).
+ConditionPathExists=/etc/vault/vault.hcl
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=/opt/meridian
+# Bekçi yalnız bir HTTP GET yapar ve olay yazar; ağ zaman aşımı betiğin kendi içindedir.
+TimeoutStartSec=60
+ExecStart=/opt/meridian/.venv/bin/python /opt/meridian/ops/vault_sagligi.py
+
+# H3 SERTLEŞTİRME — filo ortak seti (gerekçelerin tam metni deploy/oracle-a1/meridian.service'te).
+# BEYANLI AYRIŞMA: `RestrictAddressFamilies=AF_INET AF_UNIX` — bu birim DIŞA çıkmaz, yalnız
+# 127.0.0.1:8200'e bağlanır; AF_INET6 kardeşlerde var, burada yok (en-az-yetki).
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+# `/opt/meridian`: `state/events.jsonl` (obs.log) + import anındaki `__pycache__`. Başka yazım yok.
+ReadWritePaths=/opt/meridian
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+# [Install] BÖLÜMÜ BİLEREK YOK — tetik YALNIZ vault-sagligi.timer (filo konvansiyonu; gerekçe
+# deploy/oracle-a1/meridian-bekci.service başlığında).

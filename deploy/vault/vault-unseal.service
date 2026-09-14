@@ -1,0 +1,30 @@
+# vault-unseal.service — Vault mührünü ELLE/TEKRAR açan oneshot birim (TSK-064 Faz-2)
+#
+# NEDEN VAR, `vault.service`in ExecStartPost'u ZATEN varken: ikisi AYRI tetiklerdir.
+# ExecStartPost yalnız kasa AÇILIRKEN koşar. Kasa çalışırken bir sebeple yeniden mühürlenirse
+# (`vault operator seal`, bir yükseltme, bir operatör hatası) o yol BİR DAHA koşmaz — ve mührü
+# açmak için kasayı yeniden başlatmak gerekirdi. Bu birim o pencereyi kapatır:
+#   sudo systemctl start vault-unseal
+#
+# TEK KAYNAK: ExecStart'ı `vault.service`in ExecStartPost'uyla BİREBİR AYNI betiktir. İki ayrı
+# kopya olsaydı biri düzeltilir öteki bayatlar ve "hangi yol koştu" sorusu ölçülemez olurdu
+# (çivi: tests/test_vault_faz2_v485.py D1 iki değeri karşılaştırır).
+#
+# KULLANICI ROOT (User= satırı YOK): anahtar 0400 root:root'tur. `vault.service`teki `+` öneki
+# aynı gerekçenin ikizidir.
+[Unit]
+Description=Vault mührünü aç (elle/tekrar)
+After=vault.service
+Wants=vault.service
+# Anahtar yoksa birim koşmaz ve journal'a yazar — kurulum yarımken sessizce "başarılı" olmaz.
+ConditionFileNotEmpty=/etc/vault/unseal.key
+
+[Service]
+Type=oneshot
+ExecStart=/opt/vault/bin/vault_unseal.sh
+# Betiğin kendi yoklama penceresi en çok 60 sn; tavan onun iki katı + süreç başlatma payı.
+TimeoutStartSec=150
+
+# [Install] BÖLÜMÜ BİLEREK YOK — bu birim ENABLE EDİLMEZ. Açılış yolu `vault.service`in
+# ExecStartPost'udur; burada bir `WantedBy=` dursaydı aynı iş için İKİ açılış tetiği olurdu ve
+# hangisinin koştuğu (ve hangisinin başarısız olduğu) journal'da karışırdı.

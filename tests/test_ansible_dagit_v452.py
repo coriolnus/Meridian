@@ -415,7 +415,8 @@ def test_A2c_f9_canli_yollari_MUTLAK():
     assert not goreli, f"`f9_ciftleri` canlı yolu mutlak değil: {goreli}"
 
 
-#: `f9_ciftleri`nin DONMUŞ SÖZLEŞMESİ — 39 (repo yolu, canlı yol) çifti (ölçüldü 2026-09-08).
+#: `f9_ciftleri`nin DONMUŞ SÖZLEŞMESİ — 47 (repo yolu, canlı yol) çifti (39 ölçüldü
+#: 2026-09-08; +8 TSK-064 Faz-2 Vault, 2026-09-14).
 #: Gerekçe A1c ile aynı sınıf (tek-kaynak yasası, CLAUDE.md §4: kopya kaçınılmazsa türetme +
 #: ayrışma çivisi): kıyasın öteki ucu dagit.sh'ın `F9_LISTE` dizgesiydi, silindi. ÖLÇÜLDÜ
 #: (inceleme bulgusu B2, 2026-09-08): `deploy/apisix/apisix-etcd.service` çifti listeden
@@ -467,6 +468,17 @@ F9_CIFTLERI_SOZLESMESI = (
     ('deploy/apisix/apisix.service', '/etc/systemd/system/apisix.service'),
     ('deploy/apisix/apisix-etcd.service', '/etc/systemd/system/apisix-etcd.service'),
     ('deploy/oracle-a1/52meridian-unattended-upgrades', '/etc/apt/apt.conf.d/52meridian-unattended-upgrades'),
+    # TSK-064 Faz-2 (2026-09-14) — Vault. Üçü A0 rolünün DIŞINDA (kurulum betiği koyar, izinleri
+    # de o verir; `defaults/main.yml::f9_rol_disi`de beyanlı), beşi rolün kopyaladığı birimler.
+    # Kurulum gününe kadar "canlıda YOK" raporlanır; [F9] raporlar, engellemez.
+    ('deploy/vault/vault.hcl', '/etc/vault/vault.hcl'),
+    ('deploy/vault/agent.hcl', '/etc/vault/agent.hcl'),
+    ('deploy/vault/vault_unseal.sh', '/opt/vault/bin/vault_unseal.sh'),
+    ('deploy/vault/vault.service', '/etc/systemd/system/vault.service'),
+    ('deploy/vault/vault-unseal.service', '/etc/systemd/system/vault-unseal.service'),
+    ('deploy/vault/vault-agent.service', '/etc/systemd/system/vault-agent.service'),
+    ('deploy/vault/vault-sagligi.service', '/etc/systemd/system/vault-sagligi.service'),
+    ('deploy/vault/vault-sagligi.timer', '/etc/systemd/system/vault-sagligi.timer'),
 )
 
 

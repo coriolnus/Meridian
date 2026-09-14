@@ -37,7 +37,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 
 ## Envanter özeti {#envanter}
 
-- **16 alarm jetonu** (`meridian/obs.py`) — hepsi bildirim beyaz-listesinde
+- **18 alarm jetonu** (`meridian/obs.py`) — hepsi bildirim beyaz-listesinde
   (`NOTIFY_TOKENS` ALARM_ sabitlerinden TÜRETİLİR, elle liste değil)
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
@@ -363,6 +363,39 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Çözüm / betik
 
 - **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `DISK_ESIK` adı literal olarak geçmiyor.
+- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+
+## VAULT_SEALED {#vault_sealed}
+
+### Belirti
+
+- kasa cevap veriyor ama sır veremiyor — render DURMUŞ *(kaynak: `meridian/obs.py` — `ALARM_VAULT_SEALED`)*
+- Neden ayrı bir sınıf: TSK-064 FAZ-2 (2026-09-14): sır kasası (Vault) Faz-2'nin YENİ körlük sınıfını getirir ve iki jeton onu ikiye ayırır — çünkü iki hâl AYRI operatör eylemi ister ve tek jeton onları karıştırırdı (emsal: HEARTBEAT_STALE ile MECHANISM_STALE ayrımı; "canlılık ≠ ilerleme"). VAULT_SEALED : kasa CEVAP VERİYOR ama sır VEREMİYOR (mühürlü ya da hiç init edilmemiş). Bu SESSİZ bir arızadır ve sessizliği yapısaldır: Vault Agent render'ı durur, ama ÜRETTİĞİ dosyalar yerinde kalır — tüketiciler eski değeri okumaya devam eder ve her şey çalışır GÖRÜNÜR. Arıza ancak bir rotasyondan sonra, canlıda, yanlış yerde aranarak bulunurdu. Eylem: mührü aç (deploy/vault/vault_unseal.sh ya da vault-unseal.service). VAULT_DOWN   : kasaya ULAŞILAMIYOR (TCP/timeout) ya da sağlık ucu tanınmayan bir cevap veriyor. Eylem: servisi ve dinleme adresini ölç. Üretici: `ops/vault_sagligi.py` (vault-sagligi.timer). Jetonlar `NOTIFY_TOKENS` türetmesine kendiliğinden girer — aşağıdaki kural gereği, elle liste YOK. *(kaynak: `meridian/obs.py`)*
+
+### Teşhis adımları
+
+- Kodda `obs.alarm` ateşleme yeri BULUNAMADI — jeton tanımlı ama hiçbir yol onu üretmiyor. Bu bir bulgudur: ya mekanizma kablolanmamış, ya jeton emekli.
+- Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
+
+### Çözüm / betik
+
+- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `VAULT_SEALED` adı literal olarak geçmiyor.
+- Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
+
+## VAULT_DOWN {#vault_down}
+
+### Belirti
+
+- kasaya ulaşılamıyor / tanınmayan sağlık cevabı *(kaynak: `meridian/obs.py` — `ALARM_VAULT_DOWN`)*
+
+### Teşhis adımları
+
+- Kodda `obs.alarm` ateşleme yeri BULUNAMADI — jeton tanımlı ama hiçbir yol onu üretmiyor. Bu bir bulgudur: ya mekanizma kablolanmamış, ya jeton emekli.
+- Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
+
+### Çözüm / betik
+
+- **runbook girdisi henüz yazılmadı** — onaylı kaynaklarda (betik başlıkları · mühendislik günlüğü) `VAULT_DOWN` adı literal olarak geçmiyor.
 - Eşleşme iddiası olmadan yön: onaylı betik kümesinin tamamı [Betik dizini](#betikler) bölümünde; hüküm operatöründür.
 
 ---
