@@ -36,17 +36,36 @@ YASALAR VE SINIRLAR
     feed iex, adjustment split ve sort asc çağrının KENDİ içindedir (fonksiyon gövdesinde ölçüldü),
     çağıran bunları GEÇMEZ; EDG-070 eksen E de aynen böyle çağırır. Dönen yapı {TICKER: [bar,…]},
     bar anahtarı "date" (ham API alanı "t" şemaya girmez — `alpaca._to_bar`).
-  * SEMBOL NORMALİZASYONU: EDG-070 emsali sembole HİÇBİR dönüşüm uygulamaz (ölçüldü: o dosyada
-    replace/translate/re.sub yok); tek normalizasyon `daily_bars`ın kendi `upper().strip()`idir.
-    Aynısı uygulanır. `BRK.B`↔`BRK-B` sınıfı nokta/tire dönüşümü ÖLÇÜLMEDİ → UYGULANMAZ ve kayda
-    None + neden olarak yazılır; nokta taşıyan semboller ayrıca listelenir ki eşleşmeyen isim
-    "kapsanmıyor" diye okunmadan önce bu sınıf görülebilsin.
+  * SEMBOL NORMALİZASYONU — TUR-2'DE ÖLÇÜLDÜ VE DEĞİŞTİ (2026-09-14). Tur-1 bu dönüşümü
+    "ölçülmedi" diye UYGULAMAMIŞTI; ölçülen bedeli 298 isim oldu (aşağı bkz.). Bugün ölçülen:
+    `alpaca.daily_bars` sembole YALNIZ `upper().strip()` uygular (nokta/tire dönüşümü YOK) →
+    çağıranın yazdığı biçim sağlayıcıya AYNEN gider; motorun kanonik sembolü NOKTA taşır
+    (`data._cache_path` şerhi: `BRK.B` diske `brk-b.csv` yazılır) ve sp500 üyelik defteri de
+    NOKTA yazar (BRK.B, BF.B) — sp400 kohort defteri ise TİRE (MOG-A). İki defter, iki yazım.
+    KURAL (dar): yalnız TEK harflik sınıf son eki (`^[A-Z]+-[A-Z]$`) Alpaca anahtarında noktaya
+    çevrilir; `AA`, `MP`, iki harflik son ek DOKUNULMAZ. Kaynak listesi kayda da yazılır
+    (`sozlesmeler.sembol_normalizasyonu.sembol_bicimi_kaynagi`).
+  * ADAPTER SOĞUMASI ÖLÇÜLÜR VE SIFIRLANIR (tur-2). ÖLÇÜLEN ARIZA: `MOG-A` isteği uçtan HTTP 400
+    aldı (A1 olayı 2026-09-14 14:27:02Z `alpaca_data_failed status=400`); `alpaca._data_fail`
+    SÜREÇ-İÇİ soğuma penceresi açtı (`_DATA_FAIL_AT`/`_DATA_COOLDOWN`, `DATA_FAIL_COOLDOWN_S`
+    300 sn) ve `daily_bars` sonraki HER çağrıda İSTEK ATMADAN None döndü → 298 isim ölçülemedi.
+    Bu sonda artık her çağrıdan ÖNCE soğuma durumunu ADAPTERDEN ÖLÇER (`_data_cooled`) ve
+    `bars:<feed>` kaydını siler; ölçüm harita kaydına `soguma_aktif`/`soguma_yazildi` olarak
+    yazılır — "veri yok" ile "uç soğuk" böylece KARIŞMAZ. Sıfırlama sınırsız DEĞİL: üst üste
+    `ARDISIK_OLCULEMEYEN_UST_SINIRI` kadar ölçülemeyen gelirse DURUR (gerçekten düşmüş bir ucu
+    661 kez dövmek `alpaca._data_fail`ın kendi gerekçesine aykırıdır — bedel yasası).
+  * YENİDEN SONDA VE BİRLEŞTİRME (`--yalniz-olculemeyen`, tur-2): önceki haritadaki `bar_n is
+    None` isimleri YALNIZ onları sondalar ve sonucu önceki haritayla birleştirir. ÖNCEKİ ÖLÇÜLMÜŞ
+    KAYITLAR AYNEN KORUNUR (yeniden sorulmazlar); özet ve yanlılık tabanı BİRLEŞİK harita
+    üzerinden yeniden hesaplanır. KAPI: önceki kaydın `girdi.kohort_csv_sha256`si bu koşumun
+    csv'siyle eşit değilse koşum DURUR (iki farklı evren tek haritada karıştırılmaz).
 
 KOMUT SATIRI (sözleşme burasıdır, `main()` değil — CLAUDE.md §1):
     python research/olcumler/edg093_midcap_pit/adim0b_kapsama.py --cikti <dizin> [--kohort <csv>]
     ssh a1 '/opt/meridian/.venv/bin/python - --repo /opt/meridian --cikti <dizin> \\
             --kohort <csv> --alpaca-sonda -1' < adim0b_kapsama.py     # STDIN KİPİ (deploy YOK)
-Çıkış kodu: 0 = harita yazıldı · 2 = kullanım hatası (eksik/bozuk girdi).
+    … --alpaca-sonda -1 --yalniz-olculemeyen <onceki_kapsama_haritasi.json>   # YENİDEN SONDA
+Çıkış kodu: 0 = harita yazıldı · 2 = kullanım hatası (eksik/bozuk girdi, kohort sha uyuşmazlığı).
 """
 from __future__ import annotations
 
@@ -83,6 +102,11 @@ _ARGS.add_argument("--kohort", type=pathlib.Path, default=None,
 _ARGS.add_argument("--alpaca-sonda", type=int, default=0, dest="alpaca_sonda",
                    help="kaç isim için Alpaca IEX bar sorulacak: 0 = ÇAĞRI YOK (harita 'ölçülmedi'), "
                         "N>0 = ilk N isim (alfabetik), -1 = TAMAMI")
+_ARGS.add_argument("--yalniz-olculemeyen", type=pathlib.Path, default=None,
+                   dest="yalniz_olculemeyen",
+                   help="önceki kapsama_haritasi_<damga>.json: YALNIZ bar_n'i None olan semboller "
+                        "yeniden sondalanır, sonuç önceki haritayla BİRLEŞTİRİLİR. Önceki kaydın "
+                        "kohort csv sha256'sı bu koşumunkiyle eşit değilse koşum DURUR")
 _ARGS.add_argument("--bekleme-sn", type=float, default=0.35, dest="bekleme_sn",
                    help="isimler ARASI hız-sınırı aralığı, saniye (varsayılan 0.35; yoklama değil)")
 _ARGS.add_argument("--baslangic", default="2020-07-27",
@@ -108,6 +132,34 @@ ISLEM_GUNU_YIL = 252.0        # bar sayısı → yıl dönüşümü (EDG-070 eks
 BARSIZ_TOLERANS_GUN = 7       # "çıkış gününe kadar barı yok" toleransı, TAKVİM günü
 ALPACA_BASLANGIC = "2020-07-01"   # sondanın bar penceresi başı (kart penceresinden ~4 hafta önce)
 KOHORT_BASLIK = ("date", "tickers")
+#: Ardışık kaç ÖLÇÜLEMEYEN sonucundan sonra soğuma sıfırlaması DURUR. Sıfırlamanın bedeli budur:
+#: gerçekten düşmüş bir uç sınırsız sıfırlamayla 661 kez dövülürdü ve bu, soğumanın VAROLUŞ
+#: gerekçesine (adapterin kendi şerhi) aykırı olurdu. Sınır aşılınca kayıtlar "uç SOĞUMADA" der.
+ARDISIK_OLCULEMEYEN_UST_SINIRI = 25
+
+#: Sınıf-hisse sembolü deseni — BİLEREK DAR: yalnız TEK harflik sınıf son eki (`MOG-A`, `BRK-B`).
+#: `TST-AB` (iki harf) ve `AA`/`MP` (tire yok) bu desene GİRMEZ ve dönüştürülmez.
+SINIF_HISSE_DESENI = re.compile(r"^[A-Z]+-[A-Z]$")
+
+#: Dönüşümün KAYNAĞI — uydurma yasağı: kayıt kuralı değil, kuralın NEREDEN ölçüldüğünü de taşır.
+SEMBOL_BICIMI_KAYNAGI = [
+    "meridian/adapters/alpaca.py::daily_bars — sembole YALNIZ upper().strip() uygular; nokta/tire "
+    "dönüşümü YOKTUR, yani çağıranın yazdığı biçim sağlayıcıya AYNEN gider (ölçüldü 2026-09-14).",
+    "meridian/adapters/data.py::_cache_path — motorun kanonik sembolü NOKTA taşır (`BRK.B` diske "
+    "`brk-b.csv` yazılır) ve aynı kanonik sembol daily_bars'a dönüşümsüz gider (data.py sonda "
+    "kolu `alpaca.daily_bars(syms, ...)` çağırır).",
+    "research/pit_universe/sp500_uyelik_tarihi.csv NOKTA yazar (BRK.B, BF.B); bu kartın kohort "
+    "defteri sp400_uyelik_tarihi.csv ise TİRE yazar (MOG-A) — dönüşüm tam bu ayrımı kapatır.",
+    "research/olcumler/edg066_tick_arsiv/kapsam_uret.py başlık şerhi: 'Sembol biçimi feed ile "
+    "birebir: sınıf hisseleri nokta taşır (BRK.B, BF.B)' (doğrulandı 2026-08-25).",
+    "A1 koşum olayı 2026-09-14 14:27:02Z — `MOG-A` isteği alpaca_data_failed status=400 aldı, "
+    "yani TİRE biçimi uçta REDDEDİLDİ (bu koşumun kendi ölçümü; Rol-1 brief'inden devralındı).",
+]
+
+#: Birleştirmede ÖNCEKİ kayıttan devralınan alanlar. Liste TEK KAYNAK: hem okuma hem devralma
+#: bunu kullanır — ikinci bir kopya, şema büyüdüğünde sessizce eksik devralırdı.
+OLCUM_ALANLARI = ("bar_n", "ilk_bar", "son_bar", "bar_gecmisi_yil", "hata", "neden")
+SOGUMA_ALANLARI = ("soguma_aktif", "soguma_yazildi", "soguma_olculemedi_neden")
 
 
 def _kullanim_hatasi(mesaj: str) -> None:
@@ -222,30 +274,96 @@ def _bar_tarihi(bar: dict):
     return str(d)[:10] if d else None
 
 
-def alpaca_sondasi(semboller: list[str], sonda_n: int, bekleme_sn: float, bugun: str) -> dict:
-    """Sembol → ölçüm kaydı. İsim BAŞINA tek çağrı: hem hız-sınırı aralığı hem de sembol BAŞINA
-    hata ayrımı ancak böyle mümkün (toplu çağrıda bir patlama tüm kümeyi None yapardı)."""
-    if sonda_n == 0:
-        return {}
+def alpaca_anahtari(sembol: str) -> str:
+    """Kohort sembolü → Alpaca veri ucu anahtarı. Dönüşüm YALNIZ tek harflik sınıf son ekinde:
+    `MOG-A` → `MOG.A`, `BRK-B` → `BRK.B`. `AA`/`MP`/`TST-AB` DOKUNULMAZ. Kural TEK yerde yaşar —
+    hem çağrı hem kayıt alanı (`alpaca_anahtar`) bunu çağırır (tek-kaynak yasası)."""
+    s = str(sembol).upper().strip()
+    return s.replace("-", ".") if SINIF_HISSE_DESENI.match(s) else s
+
+
+def _soguma_yuzeyi(alp) -> dict:
+    """Adapterin soğuma yüzeyini ÖLÇER (varsayılmaz): `DATA_FEED` · `_data_cooled` ·
+    `_DATA_FAIL_AT` · `_DATA_COOLDOWN`. Biri yoksa yüzey ölçülemedi sayılır ve bu, kayda
+    `soguma_olculemedi_neden` olarak ADIYLA düşer — sonda düşmez, körlük BEYAN edilir."""
+    parcalar = {"DATA_FEED": getattr(alp, "DATA_FEED", None),
+                "_data_cooled": getattr(alp, "_data_cooled", None),
+                "_DATA_FAIL_AT": getattr(alp, "_DATA_FAIL_AT", None),
+                "_DATA_COOLDOWN": getattr(alp, "_DATA_COOLDOWN", None)}
+    eksik = sorted(ad for ad, v in parcalar.items() if v is None)
+    if eksik:
+        return {"olculdu": False, "anahtar": None, "oku": None, "fail_at": None, "cooldown": None,
+                "neden": "adapterde soğuma yüzeyi ölçülemedi, eksik: " + ", ".join(eksik)}
+    return {"olculdu": True, "anahtar": "bars:%s" % parcalar["DATA_FEED"],
+            "oku": parcalar["_data_cooled"], "fail_at": parcalar["_DATA_FAIL_AT"],
+            "cooldown": parcalar["_DATA_COOLDOWN"], "neden": None}
+
+
+def _soguma_sifirla(yuzey: dict) -> bool:
+    """`bars:<feed>` soğuma kaydını BU SÜREÇTE siler; gerçekten bir kayıt sildiyse True.
+
+    GEREKÇE (şerh zorunlu, CLAUDE.md §2): soğuma modül-düzeyi sözlüklerde yaşar, yani SÜREÇ
+    İÇİdir — bu araştırma sondası ayrı bir süreçtir ve canlı worker'ın soğumasına DOKUNMAZ.
+    Tek bir sembolün 400'ü 298 ismi ölçülemez yapmıştı (ölçülen arıza 2026-09-14); sonda için
+    doğru davranış "bu sembol düştü" ile "uç düştü"yü AYIRMAKTIR. Sınırsız sıfırlama da yanlış
+    olurdu — `ARDISIK_OLCULEMEYEN_UST_SINIRI` bedeli kapatır."""
+    silindi = yuzey["fail_at"].pop(yuzey["anahtar"], None) is not None
+    yuzey["cooldown"].pop(yuzey["anahtar"], None)
+    return silindi
+
+
+def alpaca_sondasi(semboller: list[str], sonda_n: int, bekleme_sn: float,
+                   bugun: str) -> tuple[dict, dict]:
+    """(sembol → ölçüm kaydı, soğuma özeti). İsim BAŞINA tek çağrı: hem hız-sınırı aralığı hem de
+    sembol BAŞINA hata ayrımı ancak böyle mümkün (toplu çağrıda bir patlama tüm kümeyi None
+    yapardı). Her çağrıdan ÖNCE soğuma ölçülür ve (sınıra kadar) sıfırlanır."""
+    if sonda_n == 0 or not semboller:
+        return {}, {"yuzey_olculdu": None, "anahtar": None, "sifirlama_n": 0,
+                    "ust_sinir": ARDISIK_OLCULEMEYEN_UST_SINIRI, "sifirlama_durdu": False,
+                    "neden": "sonda çağrılmadı (--alpaca-sonda 0 ya da hedef sembol kalmadı) — "
+                             "meridian.adapters.alpaca İTHAL BİLE EDİLMEDİ"}
     from meridian.adapters import alpaca as _alp      # TEMBEL: kuru koşumda hiç ithal edilmez
+    yuzey = _soguma_yuzeyi(_alp)
     hedef = semboller if sonda_n < 0 else semboller[:sonda_n]
     out: dict = {}
+    sifirlama_n, ardisik_olculemeyen, sifirlama_durdu = 0, 0, False
     for i, s in enumerate(hedef):
         if i and bekleme_sn > 0:
             time.sleep(bekleme_sn)      # hız-sınırı ARALIĞI; tur sayısı isim sayısıyla sınırlı
-        anahtar = s.upper().strip()
+        anahtar = alpaca_anahtari(s)
+        if yuzey["olculdu"]:
+            if ardisik_olculemeyen < ARDISIK_OLCULEMEYEN_UST_SINIRI:
+                sifirlama_n += 1 if _soguma_sifirla(yuzey) else 0
+            else:
+                sifirlama_durdu = True
+            soguk_once = bool(yuzey["oku"](yuzey["anahtar"]))
+        else:
+            soguk_once = None
+        hata, cevap = None, None
         try:
-            cevap = _alp.daily_bars([s], start=ALPACA_BASLANGIC, end=bugun)
+            cevap = _alp.daily_bars([anahtar], start=ALPACA_BASLANGIC, end=bugun)
         except Exception as e:  # sessiz-yutma DEĞİL: hata sınıfı+metni kayda düşer, sayı UYDURULMAZ
-            out[s] = {"bar_n": None, "ilk_bar": None, "son_bar": None, "bar_gecmisi_yil": None,
-                      "hata": f"{type(e).__name__}: {e}"[:200],
-                      "neden": "Alpaca çağrısı hata verdi — kapsama ÖLÇÜLEMEDİ (yokluk KANITI değil)"}
+            hata = f"{type(e).__name__}: {e}"[:200]
+        soguk_sonra = bool(yuzey["oku"](yuzey["anahtar"])) if yuzey["olculdu"] else None
+        soguma = {"soguma_aktif": soguk_once,
+                  "soguma_yazildi": (bool(soguk_sonra) and not soguk_once)
+                                    if yuzey["olculdu"] else None,
+                  "soguma_olculemedi_neden": yuzey["neden"]}
+        bos = {"bar_n": None, "ilk_bar": None, "son_bar": None, "bar_gecmisi_yil": None}
+        if hata is not None:
+            out[s] = {**bos, "hata": hata,
+                      "neden": "Alpaca çağrısı hata verdi — kapsama ÖLÇÜLEMEDİ (yokluk KANITI "
+                               "değil)", **soguma}
+            ardisik_olculemeyen += 1
             continue
         if cevap is None:
-            out[s] = {"bar_n": None, "ilk_bar": None, "son_bar": None, "bar_gecmisi_yil": None,
-                      "hata": None,
-                      "neden": "daily_bars None döndü (istek atılamadı/patladı ya da veri ucu "
-                               "soğumada) — ÖLÇÜLEMEDİ; 'soruldu, satır yok' ile aynı şey DEĞİL"}
+            out[s] = {**bos, "hata": None,
+                      "neden": ("veri ucu SOĞUMADA — istek ATILMADI (süreç-içi soğuma penceresi "
+                                "açık, sıfırlama üst sınırda durdu); ÖLÇÜLEMEDİ, 'veri yok' DEĞİL")
+                      if soguk_once else
+                      ("daily_bars None döndü (istek atılamadı/patladı) — ÖLÇÜLEMEDİ; "
+                       "'soruldu, satır yok' ile aynı şey DEĞİL"), **soguma}
+            ardisik_olculemeyen += 1
             continue
         barlar = [b for b in (cevap.get(anahtar) or []) if _bar_tarihi(b)]
         tarihler = sorted(_bar_tarihi(b) for b in barlar)
@@ -255,8 +373,43 @@ def alpaca_sondasi(semboller: list[str], sonda_n: int, bekleme_sn: float, bugun:
                   "bar_gecmisi_yil": len(barlar) / ISLEM_GUNU_YIL,
                   "hata": None,
                   "neden": None if barlar else "Alpaca cevabı bu sembol için satır taşımıyor "
-                                               "(SORULDU — ölçülmüş sıfır, bilinmiyor değil)"}
-    return out
+                                               "(SORULDU — ölçülmüş sıfır, bilinmiyor değil)",
+                  **soguma}
+        ardisik_olculemeyen = 0
+    return out, {"yuzey_olculdu": yuzey["olculdu"], "anahtar": yuzey["anahtar"],
+                 "sifirlama_n": sifirlama_n, "ust_sinir": ARDISIK_OLCULEMEYEN_UST_SINIRI,
+                 "sifirlama_durdu": sifirlama_durdu, "neden": yuzey["neden"],
+                 "gerekce": "soğuma SÜREÇ-İÇİdir (canlı worker AYRI süreç, etkilenmez); sonda "
+                            "her çağrıdan önce ölçer ve sıfırlar ki tek sembolün arızası tüm "
+                            "kümeyi ölçülemez yapmasın. Sıfırlama üst sınırda DURUR."}
+
+
+def onceki_harita_oku(yol: pathlib.Path, kohort_sha: str) -> dict:
+    """Önceki kapsama haritası + KOHORT KAPISI. Sha eşit değilse koşum DURUR: iki farklı evren
+    tek haritada birleştirilirse "aynı kohortun kapsaması" iddiası sessizce yalan olurdu."""
+    try:
+        ham = json.loads(yol.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as e:  # sessiz-yutma DEĞİL: neden ADIYLA çıkar, koşum durur
+        _kullanim_hatasi(f"--yalniz-olculemeyen dosyası okunamadı ({type(e).__name__}): {yol}")
+    onceki_sha = (ham.get("girdi") or {}).get("kohort_csv_sha256")
+    if onceki_sha != kohort_sha:
+        _kullanim_hatasi(
+            "önceki haritanın kohort_csv_sha256'sı bu koşumunkiyle EŞİT DEĞİL — birleştirme iki "
+            f"farklı evreni tek haritada karıştırırdı. önceki={onceki_sha} şimdi={kohort_sha} "
+            f"dosya={yol}")
+    harita = ham.get("harita")
+    if not isinstance(harita, list) or not harita:
+        _kullanim_hatasi(f"--yalniz-olculemeyen dosyasında 'harita' listesi yok ya da boş: {yol}")
+    kayitlar: dict = {}
+    for r in harita:
+        if not isinstance(r, dict):
+            continue
+        s = str(r.get("sembol") or "").strip()
+        if s:
+            kayitlar[s] = {a: r.get(a) for a in OLCUM_ALANLARI + SOGUMA_ALANLARI}
+    if not kayitlar:
+        _kullanim_hatasi(f"--yalniz-olculemeyen dosyasında sembol taşıyan kayıt yok: {yol}")
+    return {"yol": str(yol), "damga": ham.get("damga_utc"), "kayitlar": kayitlar}
 
 
 # =========================================================================================
@@ -313,18 +466,47 @@ def main() -> int:
     cikis = isim_kumesi_ve_cikislar(etkin)
     isimler = sorted(cikis)
 
+    kohort_sha = sha256(KOHORT)
     sonda_n = int(ARGV.alpaca_sonda or 0)
-    kayitlar = alpaca_sondasi(isimler, sonda_n, float(ARGV.bekleme_sn), bugun.isoformat())
+    onceki = None
+    if ARGV.yalniz_olculemeyen is not None:
+        if sonda_n == 0:
+            _kullanim_hatasi("--yalniz-olculemeyen ile --alpaca-sonda 0 birlikte anlamsız: "
+                             "yeniden sonda ÇAĞRISIZ yapılamaz, harita yalnız yeniden yazılırdı "
+                             "(örn. --alpaca-sonda -1 verin)")
+        onceki = onceki_harita_oku(ARGV.yalniz_olculemeyen, kohort_sha)
+        hedef_isimler = [s for s in isimler
+                         if (onceki["kayitlar"].get(s) or {}).get("bar_n") is None
+                         and s in onceki["kayitlar"]]
+    else:
+        hedef_isimler = isimler
+
+    kayitlar, soguma_ozeti = alpaca_sondasi(hedef_isimler, sonda_n, float(ARGV.bekleme_sn),
+                                            bugun.isoformat())
     sorulan = len(kayitlar)
 
+    damga = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    onceki_kayitlar = onceki["kayitlar"] if onceki else {}
+    devralinan = 0
     harita = []
     for s in isimler:
-        k = kayitlar.get(s) or {
-            "bar_n": None, "ilk_bar": None, "son_bar": None, "bar_gecmisi_yil": None, "hata": None,
-            "neden": "ölçülmedi — Alpaca sondası bu isim için çağrılmadı (--alpaca-sonda)"}
-        harita.append({"sembol": s, "alpaca_anahtar": s.upper().strip(),
-                       "cikis_gunu": cikis[s], **k})
+        k = kayitlar.get(s)
+        olcum_damgasi = damga
+        if k is None and s in onceki_kayitlar:
+            k = dict(onceki_kayitlar[s])          # ÖNCEKİ ÖLÇÜM AYNEN KORUNUR (ezilmez)
+            olcum_damgasi = onceki["damga"]
+            devralinan += 1
+        elif k is None:
+            k = {"bar_n": None, "ilk_bar": None, "son_bar": None, "bar_gecmisi_yil": None,
+                 "hata": None,
+                 "neden": "ölçülmedi — Alpaca sondası bu isim için çağrılmadı (--alpaca-sonda)"}
+            olcum_damgasi = None
+        for alan in SOGUMA_ALANLARI:
+            k.setdefault(alan, None)              # şema koşumlar arası SABİT kalır
+        harita.append({"sembol": s, "alpaca_anahtar": alpaca_anahtari(s),
+                       "cikis_gunu": cikis[s], "olcum_damgasi": olcum_damgasi, **k})
 
+    harita_kayitlari = {r["sembol"]: r for r in harita}
     kapsanan = [r for r in harita if (r["bar_n"] or 0) > 0]
     yillar = [r["bar_gecmisi_yil"] for r in kapsanan]
     esik = kart_esikleri(KART)
@@ -351,10 +533,35 @@ def main() -> int:
                 None if (ort_yil is None or esik["ortalama_bar_gecmisi_yil_alt"] is None)
                 else ort_yil >= esik["ortalama_bar_gecmisi_yil_alt"]),
         },
-        "yanlilik_gostergesi_tabani": barsiz_cikis_payi(kayitlar, cikis),
+        "soguma": soguma_ozeti,
+        # BİRLEŞİK harita üzerinden: devralınan kayıtlar da paya/paydaya girer, yoksa yeniden
+        # sonda turu tabanı sessizce yalnız yeni ölçümlerle hesaplardı (tek-kaynak yasası).
+        "yanlilik_gostergesi_tabani": barsiz_cikis_payi(harita_kayitlari, cikis),
     }
 
-    damga = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    if onceki is not None:
+        onceki_semboller = set(onceki["kayitlar"])
+        birlesim = {
+            "onceki_json": onceki["yol"],
+            "onceki_damga": onceki["damga"],
+            "onceki_harita_n": len(onceki_semboller),
+            "yeniden_sondalanan_n": len(hedef_isimler),
+            "yeniden_sondalanan_semboller": hedef_isimler,
+            "oncekinden_devralinan_n": devralinan,
+            "oncekinde_olup_bu_pencerede_olmayan": sorted(onceki_semboller - set(isimler)),
+            "bu_pencerede_olup_oncekinde_olmayan": sorted(set(isimler) - onceki_semboller),
+            "kohort_csv_sha256_kapisi": "EŞİT — kapı geçildi (eşit olmasaydı koşum dururdu)",
+            "kural": "önceki ÖLÇÜLMÜŞ kayıtlar (bar_n not None) AYNEN korunur ve YENİDEN "
+                     "SORULMAZ; yalnız bar_n None olanlar sondalanır; özet ve yanlılık tabanı "
+                     "BİRLEŞİK harita üzerinden yeniden hesaplanır.",
+        }
+        birlesim_kaynagi = [onceki["damga"], damga]
+        birlesim_neden = None
+    else:
+        birlesim, birlesim_kaynagi = None, [damga]
+        birlesim_neden = ("--yalniz-olculemeyen verilmedi: harita TEK koşumdan doğdu, "
+                          "devralınan kayıt YOK")
+
     rapor = {
         "kart": "EDG-2026-093",
         "eksen": "adim_0_fizibilite EKSEN B — bar kapsaması (EDG-070 eksen E halefi)",
@@ -365,10 +572,13 @@ def main() -> int:
                         "SALT-OKUNUR açıldı; meridian.obs İTHAL EDİLMEDİ.",
         "damga_utc": damga,
         "uretici": "research/olcumler/edg093_midcap_pit/adim0b_kapsama.py",
+        "birlesim_kaynagi": birlesim_kaynagi,
+        "birlesim": birlesim,
+        "birlesim_neden": birlesim_neden,
         "girdi": {
             "repo": str(REPO),
             "kohort_csv": str(KOHORT),
-            "kohort_csv_sha256": sha256(KOHORT),
+            "kohort_csv_sha256": kohort_sha,
             "kohort_satir_n": len(satirlar),
             "kart_yaml": str(KART),
             "kart_sha256": sha256(KART) if KART.exists() else None,
@@ -394,15 +604,32 @@ def main() -> int:
                                    "geçmez. Dönen yapı {TICKER: [bar,…]}; bar tarih alanı 'date'."
                                    % ALPACA_BASLANGIC,
             "sembol_normalizasyonu": {
-                "uygulanan": "upper().strip()",
-                "kaynak": "EDG-070 adim0_kapsama.py sembole HİÇBİR dönüşüm uygulamıyor (ölçüldü); "
-                          "tek normalizasyon alpaca.daily_bars içindeki upper/strip — aynısı.",
-                "nokta_tire_donusumu": None,
-                "nokta_tire_donusumu_neden": "BRK.B↔BRK-B sınıfı dönüşümün Alpaca ucundaki doğru "
-                                             "yönü bu turda ÖLÇÜLMEDİ; uydurulmadı. Nokta taşıyan "
-                                             "isimler aşağıda listelidir — bar dönmezse önce bu "
-                                             "sınıf sorgulanır, 'kapsanmıyor' diye okunmaz.",
+                "uygulanan": "upper().strip() + sınıf-hisse tire→nokta dönüşümü",
+                "kaynak": "alpaca.daily_bars içindeki upper/strip DIŞINDA dönüşüm yok; sınıf-hisse "
+                          "kuralı bu betikte, tek yerde (`alpaca_anahtari`) yaşar.",
+                "nokta_tire_donusumu": "kohort defterindeki TEK harflik sınıf son eki (desen "
+                                       "^[A-Z]+-[A-Z]$, örn. MOG-A / BRK-B) Alpaca anahtarında "
+                                       "NOKTAYA çevrilir (MOG.A / BRK.B). Başka HİÇBİR sembole "
+                                       "dokunulmaz: AA, MP ve iki harflik son ek (TST-AB) aynen "
+                                       "kalır.",
+                "nokta_tire_donusumu_neden": None,
+                "sembol_bicimi_kaynagi": SEMBOL_BICIMI_KAYNAGI,
+                "sinif_hisse_donusumu": {s: alpaca_anahtari(s) for s in isimler
+                                         if alpaca_anahtari(s) != s},
                 "nokta_tasiyan_semboller": [s for s in isimler if "." in s or "-" in s],
+            },
+            "soguma_yonetimi": {
+                "olcum": "her sembol çağrısından ÖNCE `alpaca._data_cooled('bars:<feed>')` "
+                         "okunur; sonuç kayda `soguma_aktif` olarak yazılır. Çağrıdan SONRA "
+                         "yeniden okunur: soğuma bu çağrıyla AÇILDIYSA `soguma_yazildi` true — "
+                         "yani ucu soğutan sembol ADIYLA görünür.",
+                "sifirlama": "ölçümden hemen önce `bars:<feed>` soğuma kaydı bu SÜREÇTE silinir "
+                             "(soğuma modül-düzeyi sözlüktedir, canlı worker AYRI süreçtir ve "
+                             "etkilenmez). Tur-1'de tek bir 400, 298 ismi ölçülemez yapmıştı.",
+                "ust_sinir": ARDISIK_OLCULEMEYEN_UST_SINIRI,
+                "bedel": "sınırsız sıfırlama gerçekten düşmüş bir ucu isim sayısı kadar döverdi "
+                         "(adapterin soğuma gerekçesine aykırı); üst üste ust_sinir kadar "
+                         "ölçülemeyen gelirse sıfırlama DURUR ve kayıtlar 'uç SOĞUMADA' der.",
             },
             "barsiz_cikis_tanimi": BARSIZ_TANIMI,
             "bar_gecmisi_yil_donusumu": f"bar_n / {ISLEM_GUNU_YIL} (EDG-070 eksen E ile AYNI sabit)",

@@ -21,7 +21,14 @@ MUTASYON KANITI (bu dosyada KOŞMAZ, Rol-1'e raporla teslim edilir — CLAUDE.md
   (a) barsız-çıkış tanımındaki 7 takvim günü sabiti 0'a çevrilince
       `test_barsiz_cikis_payi_YEDI_GUN_TOLERANSIYLA_YARIM` kırmızı (0,5 → 1,0),
   (b) çıkış günü hesabı bir gün kaydırılınca (`etkin[i+1]` → tarih+1)
-      `test_isim_kumesi_BES_ve_CIKIS_GUNLERI_dogru` kırmızı.
+      `test_isim_kumesi_BES_ve_CIKIS_GUNLERI_dogru` kırmızı,
+  (c) TUR-2: sınıf-hisse dönüşümü kaldırılınca (`alpaca_anahtari` gövdesi ham sembolü döndürünce)
+      `test_sinif_hisse_TIRE_sembolu_ALPACA_NOKTASINA_cevrilir` kırmızı,
+  (d) TUR-2: soğuma sıfırlaması kaldırılınca `test_soguma_SIFIRLANIR_sonraki_semboller_CAGRILIR`
+      kırmızı,
+  (e) TUR-2: yeniden-sonda hedefi `bar_n is None` ile SÜZÜLMEYİNCE (tüm isimler yeniden
+      sondalanınca) önceki ÖLÇÜLMÜŞ kayıt bu koşumunkiyle EZİLİR →
+      `test_yalniz_olculemeyen_BIRLESIM_onceki_BASARILILARI_EZMEZ` kırmızı.
 """
 from __future__ import annotations
 
@@ -60,12 +67,35 @@ SENTETIK_KART = (
 #: Dönen bar sözlüğünün anahtarı ÖLÇÜLDÜ: gerçek `alpaca._to_bar` "date" üretir ("t" ham API
 #: alanıdır ve bizim şemamıza girmez) — ikame de "date" yazar ki çivi gerçeğin biçimini ölçsün.
 SAHTE_ALPACA = '''
-"""SENTETİK Alpaca ikamesi (v488) — ağ YOK, disk defteri VAR."""
+"""SENTETİK Alpaca ikamesi (v488) — ağ YOK, disk defteri VAR.
+
+SOĞUMA YÜZEYİ GERÇEĞİN İKİZİDİR (ölçüldü 2026-09-14, meridian/adapters/alpaca.py):
+`daily_bars` önce `_data_cooled("bars:" + feed)` kapısına bakar ve soğumadaysa İSTEK ATMADAN
+None döner; istek arızasında `_DATA_FAIL_AT`/`_DATA_COOLDOWN` (süreç-içi, 300 sn) yazılır.
+Bu ikizde arıza sınıfı SEMBOL ADINDAN türer: TİRE taşıyan sınıf-hisse sembolü (`MOG-A`) ve
+adında "400" geçen fikstür sembolü, gerçek uçtan ölçülen HTTP 400 gibi davranır (A1 olayı
+2026-09-14 14:27:02Z `alpaca_data_failed status=400`); NOKTA biçimi (`MOG.A`) servis edilir.
+"""
 import datetime as _dt
 import json as _json
 import os as _os
+import time as _time
 
 DEFTER = _os.environ["SAHTE_ALPACA_DEFTER"]
+
+DATA_FEED = "iex"
+DATA_FAIL_COOLDOWN_S = 300.0
+_DATA_FAIL_AT = {}
+_DATA_COOLDOWN = {}
+
+
+def _mono():
+    return _time.monotonic()
+
+
+def _data_cooled(key):
+    at = _DATA_FAIL_AT.get(key)
+    return at is not None and (_mono() - at) < _DATA_COOLDOWN.get(key, DATA_FAIL_COOLDOWN_S)
 
 
 def _seri(n, son):
@@ -81,16 +111,34 @@ _CEVAP = {
     "BBB": _seri(756, "2026-09-01"),
     "EEE": _seri(252, "2020-07-30"),
     "DDD": [],
+    "AA": _seri(1000, "2026-09-01"),
+    "MP": _seri(300, "2026-09-01"),
+    "BRK.B": _seri(400, "2026-09-01"),
+    "MOG.A": _seri(252, "2026-09-01"),
 }
 
 
+def _dort_yuz(sym):
+    """Gerçek uçta HTTP 400 alan sınıf: TİRE taşıyan sembol (ÖLÇÜLEN arıza) + adında 400 geçen
+    fikstür sembolü. NOKTA taşıyan sınıf-hisse biçimi bu kapıdan GEÇMEZ — servis edilir."""
+    return "-" in sym or "400" in sym
+
+
 def daily_bars(symbols, start, end, **kw):
+    key = "bars:" + DATA_FEED
+    soguk = _data_cooled(key)
     with open(DEFTER, "a", encoding="utf-8") as f:
         f.write(_json.dumps({"symbols": list(symbols), "start": start, "end": end,
-                             "kw": sorted(kw)}) + "\\n")
+                             "kw": sorted(kw), "soguk": soguk}) + "\\n")
+    if soguk:
+        return None                      # gerçeğin soğuma kapısı: İSTEK ATILMAZ, None döner
     sym = list(symbols)[0]
     if sym == "CCC":
         raise RuntimeError("sentetik veri ucu hatasi")
+    if _dort_yuz(sym):
+        _DATA_FAIL_AT[key] = _mono()
+        _DATA_COOLDOWN[key] = DATA_FAIL_COOLDOWN_S
+        return None                      # gerçek: `_data_fail(...)` sonrası `return out or None`
     v = _CEVAP.get(sym)
     return {sym: v} if v else {}
 '''
@@ -313,10 +361,210 @@ def test_baslik_YANLISSA_kullanim_hatasi(tmp_path):
 
 
 def test_sembol_normalizasyonu_OLCULEN_bicimiyle_KAYDA_yazilir(duzen):
-    """EDG-070 emsalinde `.`/`-` dönüşümü YOKTUR (ölçüldü); tek normalizasyon
-    `alpaca.daily_bars` içindeki upper/strip'tir. Kayıt bunu BEYAN eder, uydurmaz."""
+    """TUR-2: tur-1'de `nokta_tire_donusumu` None + neden ("ölçülmedi") idi; bu tur ÖLÇÜLDÜ ve
+    kural yazıldı — kayıt artık kuralı VE kaynağını taşır, kaynak listesi BOŞ OLAMAZ."""
     _, rapor, _ = _kos_ve_oku(duzen)
     n = rapor["sozlesmeler"]["sembol_normalizasyonu"]
-    assert n["uygulanan"] == "upper().strip()"
-    assert n["nokta_tire_donusumu"] is None and n["nokta_tire_donusumu_neden"]
+    assert n["uygulanan"] == "upper().strip() + sınıf-hisse tire→nokta dönüşümü"
+    assert n["nokta_tire_donusumu"] and "MOG-A" in n["nokta_tire_donusumu"]
+    assert n["nokta_tire_donusumu_neden"] is None
+    assert isinstance(n["sembol_bicimi_kaynagi"], list) and n["sembol_bicimi_kaynagi"]
     assert {s["sembol"]: s["alpaca_anahtar"] for s in rapor["harita"]}["AAA"] == "AAA"
+
+
+# =========================================================== H. SINIF-HİSSE SEMBOLÜ (TUR-2)
+#: Tur-1'in ölçülen arızası: kohort defteri sınıf hissesini TİRE ile yazar (`MOG-A`), Alpaca
+#: veri ucu NOKTA ister — tire biçimi HTTP 400 alır ve süreç-içi soğuma 298 ismi ölçülemez yapar
+#: (A1 koşumu 2026-09-14 14:20–14:31Z). `TST-AB` deseni SINAR: kural yalnız TEK harflik sınıf
+#: son ekine (`^[A-Z]+-[A-Z]$`) uygulanır, iki harfli son ek DÖNÜŞTÜRÜLMEZ.
+KOHORT_SINIF_CSV = (
+    "date,tickers\n"
+    '2020-07-27,"AA,BRK-B,MOG-A,MP,TST-AB"\n'
+)
+
+#: Soğuma zehirlenmesi fikstürü: alfabetik olarak İLK gelen `A400` sentetik uçtan 400 alır ve
+#: uç soğumaya girer; sonraki iki isim SIFIRLAMA olmadan HİÇ ölçülemezdi (tur-1 arızası).
+KOHORT_SOGUMA_CSV = (
+    "date,tickers\n"
+    '2020-07-27,"A400,AAA,BBB"\n'
+)
+
+#: Ardışık-ölçülemeyen üst sınırı çivisi: 30 sembolün HEPSİ 400 alır. Sınır (25) aşılınca
+#: sıfırlama DURUR — sağlayıcıyı dövmemek gerçeğin kendi kuralıdır (`alpaca._data_fail` şerhi).
+_CAP_SEMBOLLER = [f"Z{i:02d}400" for i in range(30)]
+KOHORT_CAP_CSV = "date,tickers\n" + '2020-07-27,"%s"\n' % ",".join(_CAP_SEMBOLLER)
+_BEKLENEN_CAP_SINIRI = 25
+
+
+def _duzen_ozel(tmp_path: pathlib.Path, kohort_metni: str):
+    """`duzen` fikstürünün kohort metnini DIŞARIDAN alan ikizi (aynı tmp ağacı sözleşmesi)."""
+    kohort = tmp_path / "sp400_uyelik_tarihi.csv"
+    kohort.write_text(kohort_metni, encoding="utf-8")
+    return (_sahte_repo(tmp_path), kohort, tmp_path / "cikti",
+            tmp_path / "alpaca_cagrilari.jsonl")
+
+
+def _cagrilar(defter: pathlib.Path) -> list[dict]:
+    return [json.loads(x) for x in defter.read_text(encoding="utf-8").splitlines() if x.strip()]
+
+
+def test_sinif_hisse_TIRE_sembolu_ALPACA_NOKTASINA_cevrilir(tmp_path):
+    """MUTASYON HEDEFİ (c): dönüşüm kaldırılırsa `BRK-B`/`MOG-A` sentetik uca TİRE ile gider,
+    400 alır ve bar_n None olur — bu çivi kırmızıya döner.
+
+    ELLE HESAPLANMIŞ BEKLENEN: AA→AA (desen dışı) · BRK-B→BRK.B · MOG-A→MOG.A · MP→MP (desen
+    dışı, tek harf ama tire YOK) · TST-AB→TST-AB (iki harflik son ek DESEN DIŞI → tire kalır →
+    sentetik uçta 400 → bar_n None). Bar sayıları sentetik cevaptan: 1000/400/252/300/None."""
+    duzen = _duzen_ozel(tmp_path, KOHORT_SINIF_CSV)
+    _, rapor, defter = _kos_ve_oku(duzen, "--alpaca-sonda", "-1")
+    anahtar = {s["sembol"]: s["alpaca_anahtar"] for s in rapor["harita"]}
+    assert anahtar == {"AA": "AA", "BRK-B": "BRK.B", "MOG-A": "MOG.A", "MP": "MP",
+                       "TST-AB": "TST-AB"}
+    assert [c["symbols"][0] for c in _cagrilar(defter)] == ["AA", "BRK.B", "MOG.A", "MP", "TST-AB"]
+    assert {s["sembol"]: s["bar_n"] for s in rapor["harita"]} == {
+        "AA": 1000, "BRK-B": 400, "MOG-A": 252, "MP": 300, "TST-AB": None}
+    d = rapor["sozlesmeler"]["sembol_normalizasyonu"]["sinif_hisse_donusumu"]
+    assert d == {"BRK-B": "BRK.B", "MOG-A": "MOG.A"}      # desen DIŞI olanlar listede YOK
+
+
+# ================================================= I. SOĞUMA ZEHİRLENMESİ / SIFIRLAMA (TUR-2)
+def test_soguma_SIFIRLANIR_sonraki_semboller_CAGRILIR(tmp_path):
+    """MUTASYON HEDEFİ (d): sıfırlama kaldırılırsa `A400`ün açtığı soğuma penceresi AAA ve
+    BBB'yi de None yapar (tur-1'in 298 ismi) — bu çivi kırmızıya döner."""
+    duzen = _duzen_ozel(tmp_path, KOHORT_SOGUMA_CSV)
+    _, rapor, defter = _kos_ve_oku(duzen, "--alpaca-sonda", "-1")
+    cagrilar = _cagrilar(defter)
+    assert [c["symbols"][0] for c in cagrilar] == ["A400", "AAA", "BBB"]
+    assert [c["soguk"] for c in cagrilar] == [False, False, False]   # her çağrı SICAK uca gitti
+    assert {s["sembol"]: s["bar_n"] for s in rapor["harita"]} == {
+        "A400": None, "AAA": 504, "BBB": 756}
+    assert {s["sembol"]: s["soguma_aktif"] for s in rapor["harita"]} == {
+        "A400": False, "AAA": False, "BBB": False}
+    assert {s["sembol"]: s["soguma_yazildi"] for s in rapor["harita"]} == {
+        "A400": True, "AAA": False, "BBB": False}       # soğumayı YAZAN sembol adıyla görünür
+    s = rapor["ozet"]["soguma"]
+    assert s["yuzey_olculdu"] is True and s["anahtar"] == "bars:iex"
+    assert s["sifirlama_n"] == 1 and s["sifirlama_durdu"] is False
+
+
+def test_soguma_ARDISIK_OLCULEMEYEN_UST_SINIRINDA_sifirlama_DURUR(tmp_path):
+    """BEDEL YASASI: sıfırlama sınırsız olsaydı gerçekten düşmüş bir uç 661 kez dövülürdü
+    (`alpaca._data_fail` şerhinin reddettiği şey). 30 sembolün hepsi 400 alır: ilk 25'i SICAK
+    uca gider (sıfırlama), 26.'dan itibaren soğuma DURUR ve kayıt bunu ADIYLA söyler."""
+    duzen = _duzen_ozel(tmp_path, KOHORT_CAP_CSV)
+    _, rapor, defter = _kos_ve_oku(duzen, "--alpaca-sonda", "-1")
+    aktif = [s["soguma_aktif"] for s in rapor["harita"]]
+    assert aktif.count(False) == _BEKLENEN_CAP_SINIRI
+    assert aktif.count(True) == len(_CAP_SEMBOLLER) - _BEKLENEN_CAP_SINIRI
+    assert all(s["bar_n"] is None for s in rapor["harita"])
+    soguk_kayit = [s for s in rapor["harita"] if s["soguma_aktif"]][0]
+    assert "SOĞUMADA" in soguk_kayit["neden"]           # "veri yok" ile KARIŞMAZ
+    s = rapor["ozet"]["soguma"]
+    assert s["ust_sinir"] == _BEKLENEN_CAP_SINIRI
+    assert s["sifirlama_n"] == _BEKLENEN_CAP_SINIRI - 1   # ilk sembolde silinecek kayıt YOKTU
+    assert s["sifirlama_durdu"] is True
+    assert [c["soguk"] for c in _cagrilar(defter)].count(True) == 5
+
+
+# ======================================== K. --yalniz-olculemeyen: YENİDEN SONDA + BİRLEŞTİRME
+# ELLE HESAPLANMIŞ BEKLENEN (aşağıdaki sahte önceki harita ile):
+#   önceki: AAA 999 bar (ÖLÇÜLMÜŞ) · BBB None · CCC None · DDD 0 (ÖLÇÜLMÜŞ SIFIR) · EEE None
+#   yeniden sondalanan = yalnız bar_n None olanlar → BBB, CCC, EEE  (AAA ve DDD ÇAĞRILMAZ)
+#   bu koşum: BBB 756 · CCC RuntimeError → None · EEE 252
+#   BİRLEŞİK bar_n: AAA 999 (KORUNDU) · BBB 756 · CCC None · DDD 0 · EEE 252
+#   kapsanan_n = 3 (999, 756, 252) ; ort yıl = (999 + 756 + 252) / 252 / 3 = 2007/756
+#   ölçülemeyen_n = 1 (CCC) ; barsız pay: DDD barsız, EEE barlı → 1/2 = 0,5
+_ONCEKI_DAMGA = "20260101T000000Z"
+_BEKLENEN_BIRLESIK_ORT_YIL = (999 + 756 + 252) / 252 / 3
+
+
+def _onceki_json(tmp_path: pathlib.Path, kohort: pathlib.Path, sha: str | None = None):
+    """Sahte ÖNCEKİ harita (tmp'de). Gerçek A1 çıktısının şemasından yalnız birleştirmenin
+    okuduğu alanları taşır — çivi şemanın TAMAMINI değil, SÖZLEŞMEyi ölçer."""
+    import hashlib
+    kayit = {"AAA": {"bar_n": 999, "ilk_bar": "2019-01-02", "son_bar": "2026-09-01",
+                     "bar_gecmisi_yil": 999 / 252, "hata": None, "neden": None},
+             "BBB": {"bar_n": None, "ilk_bar": None, "son_bar": None, "bar_gecmisi_yil": None,
+                     "hata": None, "neden": "daily_bars None döndü"},
+             "CCC": {"bar_n": None, "ilk_bar": None, "son_bar": None, "bar_gecmisi_yil": None,
+                     "hata": None, "neden": "daily_bars None döndü"},
+             "DDD": {"bar_n": 0, "ilk_bar": None, "son_bar": None, "bar_gecmisi_yil": 0.0,
+                     "hata": None, "neden": "satır taşımıyor"},
+             "EEE": {"bar_n": None, "ilk_bar": None, "son_bar": None, "bar_gecmisi_yil": None,
+                     "hata": None, "neden": "daily_bars None döndü"}}
+    rapor = {"damga_utc": _ONCEKI_DAMGA,
+             "girdi": {"kohort_csv": str(kohort),
+                       "kohort_csv_sha256": sha or hashlib.sha256(kohort.read_bytes()).hexdigest()},
+             "harita": [{"sembol": s, "alpaca_anahtar": s, "cikis_gunu": None, **k}
+                        for s, k in kayit.items()]}
+    yol = tmp_path / "onceki_kapsama_haritasi.json"
+    yol.write_text(json.dumps(rapor, ensure_ascii=False), encoding="utf-8")
+    return yol
+
+
+def test_yalniz_olculemeyen_BIRLESIM_onceki_BASARILILARI_EZMEZ(duzen, tmp_path):
+    """MUTASYON HEDEFİ (e): hedef süzgeci (`bar_n is None`) kalkarsa AAA yeniden sondalanır ve
+    999 → 504 olur; DDD de yeniden sorulur. Bu çivi ikisini de kırmızıya çevirir."""
+    _, kohort, _, defter = duzen
+    onceki = _onceki_json(tmp_path, kohort)
+    _, rapor, _ = _kos_ve_oku(duzen, "--alpaca-sonda", "-1", "--yalniz-olculemeyen", str(onceki))
+    assert [c["symbols"][0] for c in _cagrilar(defter)] == ["BBB", "CCC", "EEE"]
+    assert {s["sembol"]: s["bar_n"] for s in rapor["harita"]} == {
+        "AAA": 999, "BBB": 756, "CCC": None, "DDD": 0, "EEE": 252}
+    aaa = next(s for s in rapor["harita"] if s["sembol"] == "AAA")
+    assert aaa["ilk_bar"] == "2019-01-02"               # önceki koşumun ölçümü AYNEN durdu
+    assert rapor["birlesim_kaynagi"] == [_ONCEKI_DAMGA, rapor["damga_utc"]]
+    b = rapor["birlesim"]
+    assert b["yeniden_sondalanan_semboller"] == ["BBB", "CCC", "EEE"]
+    assert b["oncekinden_devralinan_n"] == 2 and b["onceki_damga"] == _ONCEKI_DAMGA
+
+
+def test_yalniz_olculemeyen_OZET_ve_YANLILIK_TABANI_BIRLESIK_harita_uzerinden(duzen, tmp_path):
+    _, kohort, _, _ = duzen
+    onceki = _onceki_json(tmp_path, kohort)
+    _, rapor, _ = _kos_ve_oku(duzen, "--alpaca-sonda", "-1", "--yalniz-olculemeyen", str(onceki))
+    o = rapor["ozet"]
+    assert o["sonda_n"] == 3 and o["isim_n"] == _BEKLENEN_ISIM_N
+    assert o["kapsanan_n"] == 3 and o["olculemeyen_n"] == 1
+    assert o["ortalama_bar_gecmisi_yil"] == pytest.approx(_BEKLENEN_BIRLESIK_ORT_YIL)
+    y = o["yanlilik_gostergesi_tabani"]
+    assert sorted(y["barsiz_semboller"]) == ["DDD"] and y["olculemeyen_n"] == 0
+    assert y["barsiz_cikis_payi"] == pytest.approx(_BEKLENEN_BARSIZ_PAY)
+
+
+def test_yalniz_olculemeyen_CSV_SHA_UYUSMAZSA_kullanim_hatasi_cikis_2(duzen, tmp_path):
+    """Kohort değiştiyse birleştirme İKİ FARKLI evreni tek haritada karıştırırdı — durur."""
+    repo, kohort, cikti, defter = duzen
+    onceki = _onceki_json(tmp_path, kohort, sha="0" * 64)
+    r = _stdin_kos("--repo", str(repo), "--cikti", str(cikti), "--kohort", str(kohort),
+                   "--bugun", _BUGUN, "--bekleme-sn", "0", "--alpaca-sonda", "-1",
+                   "--yalniz-olculemeyen", str(onceki), defter=defter)
+    assert r.returncode == 2, (r.returncode, r.stdout.decode()[-400:])
+    assert b"sha256" in r.stderr and onceki.name.encode() in r.stderr, r.stderr.decode()[-400:]
+    assert not defter.exists()                      # sha kapısı ÇAĞRIDAN ÖNCE kapanır
+
+
+def test_yalniz_olculemeyen_SONDA_SIFIR_ile_kullanim_hatasi_cikis_2(duzen, tmp_path):
+    """Çağrısız yeniden-sonda sessiz bir NO-OP olurdu (harita yeniden yazılır, ölçüm yok)."""
+    repo, kohort, cikti, _ = duzen
+    onceki = _onceki_json(tmp_path, kohort)
+    r = _stdin_kos("--repo", str(repo), "--cikti", str(cikti), "--kohort", str(kohort),
+                   "--bugun", _BUGUN, "--bekleme-sn", "0", "--yalniz-olculemeyen", str(onceki))
+    assert r.returncode == 2, (r.returncode, r.stderr.decode()[-400:])
+    assert b"yeniden sonda" in r.stderr, r.stderr.decode()[-400:]
+
+
+def test_yalniz_olculemeyen_DOSYA_YOKSA_kullanim_hatasi_cikis_2(duzen, tmp_path):
+    repo, kohort, cikti, _ = duzen
+    r = _stdin_kos("--repo", str(repo), "--cikti", str(cikti), "--kohort", str(kohort),
+                   "--bugun", _BUGUN, "--bekleme-sn", "0", "--alpaca-sonda", "-1",
+                   "--yalniz-olculemeyen", str(tmp_path / "yok.json"))
+    assert r.returncode == 2, (r.returncode, r.stderr.decode()[-400:])
+    assert b"okunamad" in r.stderr and b"yok.json" in r.stderr, r.stderr.decode()[-400:]
+
+
+def test_BIRLESIM_YOKKEN_birlesim_kaynagi_TEK_damga(duzen):
+    """Şema birleştirme olmadan da AYNI: alan var, listede tek damga (kopya sözleşme yok)."""
+    _, rapor, _ = _kos_ve_oku(duzen, "--alpaca-sonda", "-1")
+    assert rapor["birlesim_kaynagi"] == [rapor["damga_utc"]]
+    assert rapor["birlesim"] is None and rapor["birlesim_neden"]
