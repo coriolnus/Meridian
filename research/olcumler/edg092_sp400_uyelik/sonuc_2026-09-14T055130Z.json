@@ -1,0 +1,1298 @@
+{
+  "adim0": {
+    "askiya_veri_kapisi": false,
+    "bugun": "2026-09-14",
+    "gecerli": true,
+    "girdi_kimligi": {
+      "oldid": 1373849406,
+      "sha256": "7d94c2eef467df334306660f558d0ce45c1f21c54b87312b3e408a14a59f22f0",
+      "yol": "research/olcumler/edg092_sp400_uyelik/ham/sp400_oldid_1373849406.wiki"
+    },
+    "kart_ic_ihlaller": [],
+    "kart_ic_tutarli": true,
+    "kaynaksiz_satir_n": 156,
+    "neden": null,
+    "pencere_baslangici": "2020-07-27",
+    "pencere_satir_alt": 60.0,
+    "pencere_satir_n": 280,
+    "pencere_satir_yeterli": true,
+    "satir_n_gecerli": 619,
+    "sha_beklenen": "7d94c2eef467df334306660f558d0ce45c1f21c54b87312b3e408a14a59f22f0",
+    "sha_esit_mi": true,
+    "sha_hesaplanan": "7d94c2eef467df334306660f558d0ce45c1f21c54b87312b3e408a14a59f22f0",
+    "tablo_bulundu": true,
+    "tablo_meta": {
+      "eslenen": {
+        "cikan_ad": "Removed_Security",
+        "cikan_ticker": "Removed_Ticker",
+        "eklenen_ad": "Added_Security",
+        "eklenen_ticker": "Added_Ticker",
+        "neden": "Reason",
+        "tarih": "Date"
+      },
+      "hayalet_atlanan_n": 0,
+      "kaynaksiz_satir_n": 156,
+      "kolonlar": [
+        "Date",
+        "Added_Ticker",
+        "Added_Security",
+        "Removed_Ticker",
+        "Removed_Security",
+        "Reason"
+      ],
+      "n_tablo": 2,
+      "satir_n_gecerli": 619,
+      "satir_n_ham": 619,
+      "tablo_index": 1,
+      "tarih_cozulemeyen_n": 0
+    },
+    "tarih_cozulemeyen_n": 0,
+    "tarih_cozulemeyen_satirlar": []
+  },
+  "beyan": "Bu betik yalnız ÖLÇER. Hüküm Rol-1'de, AYNI turda karta + K defterine işlenir (CLAUDE.md §3/§5). meridian/*.py bu turda DEĞİŞTİRİLMEDİ; ağa çıkılmadı (`cek()` hiç çağrılmadı), canlı state'e yazılmadı.",
+  "bugun": "2026-09-14",
+  "damga": "2026-09-14T055130Z",
+  "esikler": {
+    "bilinen_olay_kapsama_alt": 0.9,
+    "bilinen_olay_n_alt": 20.0,
+    "guncel_liste_kesisim_alt": 0.98,
+    "kart_id": "EDG-2026-092",
+    "pencere_satir_alt": 60.0
+  },
+  "girdi_kimligi": {
+    "oldid": 1373849406,
+    "sha256": "7d94c2eef467df334306660f558d0ce45c1f21c54b87312b3e408a14a59f22f0",
+    "yol": "research/olcumler/edg092_sp400_uyelik/ham/sp400_oldid_1373849406.wiki"
+  },
+  "guncel_liste_meta": {
+    "as_of": "As of 10-Sep-2026",
+    "baslik_satiri": 5,
+    "ham_satir_n": 401,
+    "haric_gerekcesi": "ticker biçimine uymayan satırlar hisse değildir (nakit/ETF artığı) — desen ^[A-Z][A-Z0-9]{0,4}([.-][A-Z])?$; beyanla dışarıda, kart PK-3 notu",
+    "haric_tutulan": [
+      "CASH_USD"
+    ],
+    "okuyucu": "stdlib zipfile+xml.etree (openpyxl venv'de YOK, ölçüldü 2026-09-14)",
+    "ticker_kolonu": "B",
+    "tutulan_n": 400,
+    "yol": "research/olcumler/edg092_sp400_uyelik/girdi/mdy_holdings_2026-09-10.xlsx"
+  },
+  "hukum": "YOK — Rol-1",
+  "k1": {
+    "beyan_ayrismasi": false,
+    "detay": [
+      {
+        "beklenen_tarih": "2026-08-20",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-08-20",
+        "satir_var": true,
+        "sembol": "SUI",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/reddit-set-to-join-sp-500-and-sun-communities-to-join-sp-midcap-400-302851432.html"
+      },
+      {
+        "beklenen_tarih": "2026-08-20",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-08-20",
+        "satir_var": true,
+        "sembol": "WBS",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/reddit-set-to-join-sp-500-and-sun-communities-to-join-sp-midcap-400-302851432.html"
+      },
+      {
+        "beklenen_tarih": "2026-07-24",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-07-24",
+        "satir_var": true,
+        "sembol": "KRYS",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/krystal-biotech-set-to-join-sp-midcap-400-tutor-perini-and-v2x-to-join-sp-smallcap-600-302830022.html"
+      },
+      {
+        "beklenen_tarih": "2026-07-24",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-07-24",
+        "satir_var": true,
+        "sembol": "TMHC",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/krystal-biotech-set-to-join-sp-midcap-400-tutor-perini-and-v2x-to-join-sp-smallcap-600-302830022.html"
+      },
+      {
+        "beklenen_tarih": "2026-07-22",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-07-22",
+        "satir_var": true,
+        "sembol": "MOH",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/molina-healthcare-set-to-join-sp-midcap-400-and-construction-partners-to-join-sp-smallcap-600-302828046.html"
+      },
+      {
+        "beklenen_tarih": "2026-07-22",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-07-22",
+        "satir_var": true,
+        "sembol": "NSA",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/molina-healthcare-set-to-join-sp-midcap-400-and-construction-partners-to-join-sp-smallcap-600-302828046.html"
+      },
+      {
+        "beklenen_tarih": "2026-07-17",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-07-17",
+        "satir_var": true,
+        "sembol": "BTSG",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/brightspring-health-services-set-to-join-sp-midcap-400-and-karman-holdings-to-join-sp-smallcap-600-302825665.html"
+      },
+      {
+        "beklenen_tarih": "2026-07-17",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-07-17",
+        "satir_var": true,
+        "sembol": "GTLS",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/brightspring-health-services-set-to-join-sp-midcap-400-and-karman-holdings-to-join-sp-smallcap-600-302825665.html"
+      },
+      {
+        "beklenen_tarih": "2026-07-06",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-07-06",
+        "satir_var": true,
+        "sembol": "ALSN",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/allison-transmission-holdings-set-to-join-sp-midcap-400-and-goodyear-tire--rubber-to-join-sp-smallcap-600-302815143.html"
+      },
+      {
+        "beklenen_tarih": "2026-07-06",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-07-06",
+        "satir_var": true,
+        "sembol": "GT",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/allison-transmission-holdings-set-to-join-sp-midcap-400-and-goodyear-tire--rubber-to-join-sp-smallcap-600-302815143.html"
+      },
+      {
+        "beklenen_tarih": "2026-07-01",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-07-01",
+        "satir_var": true,
+        "sembol": "TOST",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://press.spglobal.com/2026-06-23-Honeywell-Aerospace-Set-to-Join-S-P-500-S-P-100-Others-to-Join-S-P-MidCap-400-and-S-P-SmallCap-600"
+      },
+      {
+        "beklenen_tarih": "2026-07-01",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-07-01",
+        "satir_var": true,
+        "sembol": "BLD",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://press.spglobal.com/2026-06-23-Honeywell-Aerospace-Set-to-Join-S-P-500-S-P-100-Others-to-Join-S-P-MidCap-400-and-S-P-SmallCap-600"
+      },
+      {
+        "beklenen_tarih": "2026-07-01",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-07-01",
+        "satir_var": true,
+        "sembol": "IESC",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://press.spglobal.com/2026-06-23-Honeywell-Aerospace-Set-to-Join-S-P-500-S-P-100-Others-to-Join-S-P-MidCap-400-and-S-P-SmallCap-600"
+      },
+      {
+        "beklenen_tarih": "2026-07-01",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-07-01",
+        "satir_var": true,
+        "sembol": "JHG",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://press.spglobal.com/2026-06-23-Honeywell-Aerospace-Set-to-Join-S-P-500-S-P-100-Others-to-Join-S-P-MidCap-400-and-S-P-SmallCap-600"
+      },
+      {
+        "beklenen_tarih": "2026-06-22",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-06-22",
+        "satir_var": true,
+        "sembol": "ROKU",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/marvell-technology-and-flex-set-to-join-sp-500-others-to-join-sp-midcap-400-and-sp-smallcap-600-302793159.html"
+      },
+      {
+        "beklenen_tarih": "2026-06-22",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-06-22",
+        "satir_var": true,
+        "sembol": "FLEX",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/marvell-technology-and-flex-set-to-join-sp-500-others-to-join-sp-midcap-400-and-sp-smallcap-600-302793159.html"
+      },
+      {
+        "beklenen_tarih": "2026-06-22",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-06-22",
+        "satir_var": true,
+        "sembol": "CDE",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/marvell-technology-and-flex-set-to-join-sp-500-others-to-join-sp-midcap-400-and-sp-smallcap-600-302793159.html"
+      },
+      {
+        "beklenen_tarih": "2026-06-22",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-06-22",
+        "satir_var": true,
+        "sembol": "BRBR",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/marvell-technology-and-flex-set-to-join-sp-500-others-to-join-sp-midcap-400-and-sp-smallcap-600-302793159.html"
+      },
+      {
+        "beklenen_tarih": "2026-06-22",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-06-22",
+        "satir_var": true,
+        "sembol": "SMTC",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/marvell-technology-and-flex-set-to-join-sp-500-others-to-join-sp-midcap-400-and-sp-smallcap-600-302793159.html"
+      },
+      {
+        "beklenen_tarih": "2026-06-22",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-06-22",
+        "satir_var": true,
+        "sembol": "COTY",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/marvell-technology-and-flex-set-to-join-sp-500-others-to-join-sp-midcap-400-and-sp-smallcap-600-302793159.html"
+      },
+      {
+        "beklenen_tarih": "2026-06-22",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-06-22",
+        "satir_var": true,
+        "sembol": "SANM",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/marvell-technology-and-flex-set-to-join-sp-500-others-to-join-sp-midcap-400-and-sp-smallcap-600-302793159.html"
+      },
+      {
+        "beklenen_tarih": "2026-06-22",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-06-22",
+        "satir_var": true,
+        "sembol": "CNXC",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/marvell-technology-and-flex-set-to-join-sp-500-others-to-join-sp-midcap-400-and-sp-smallcap-600-302793159.html"
+      },
+      {
+        "beklenen_tarih": "2026-06-22",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-06-22",
+        "satir_var": true,
+        "sembol": "VIAV",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/marvell-technology-and-flex-set-to-join-sp-500-others-to-join-sp-midcap-400-and-sp-smallcap-600-302793159.html"
+      },
+      {
+        "beklenen_tarih": "2026-06-22",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-06-22",
+        "satir_var": true,
+        "sembol": "BLKB",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/marvell-technology-and-flex-set-to-join-sp-500-others-to-join-sp-midcap-400-and-sp-smallcap-600-302793159.html"
+      },
+      {
+        "beklenen_tarih": "2026-06-11",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-06-11",
+        "satir_var": true,
+        "sembol": "SIRI",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/sirius-xm-holdings-set-to-join-sp-midcap-400-302794483.html"
+      },
+      {
+        "beklenen_tarih": "2026-06-11",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-06-11",
+        "satir_var": true,
+        "sembol": "MASI",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/sirius-xm-holdings-set-to-join-sp-midcap-400-302794483.html"
+      },
+      {
+        "beklenen_tarih": "2026-04-09",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-04-09",
+        "satir_var": true,
+        "sembol": "DOCN",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/caseys-general-stores-set-to-join-sp-500-digitalocean-holdings-to-join-sp-midcap-400-broadstone-net-lease-to-join-sp-smallcap-600-302735034.html"
+      },
+      {
+        "beklenen_tarih": "2026-04-09",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-04-09",
+        "satir_var": true,
+        "sembol": "CASY",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/caseys-general-stores-set-to-join-sp-500-digitalocean-holdings-to-join-sp-midcap-400-broadstone-net-lease-to-join-sp-smallcap-600-302735034.html"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "SOLS",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/vertiv-holdings-lumentum-holdings-coherent-and-echostar-set-to-join-sp-500-others-to-join-sp-100-sp-midcap-400-and-sp-smallcap-600-302707297.html"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "LITE",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/vertiv-holdings-lumentum-holdings-coherent-and-echostar-set-to-join-sp-500-others-to-join-sp-100-sp-midcap-400-and-sp-smallcap-600-302707297.html"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "SITM",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/vertiv-holdings-lumentum-holdings-coherent-and-echostar-set-to-join-sp-500-others-to-join-sp-100-sp-midcap-400-and-sp-smallcap-600-302707297.html"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "COHR",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/vertiv-holdings-lumentum-holdings-coherent-and-echostar-set-to-join-sp-500-others-to-join-sp-100-sp-midcap-400-and-sp-smallcap-600-302707297.html"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "MOG-A",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/vertiv-holdings-lumentum-holdings-coherent-and-echostar-set-to-join-sp-500-others-to-join-sp-100-sp-midcap-400-and-sp-smallcap-600-302707297.html"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "SATS",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/vertiv-holdings-lumentum-holdings-coherent-and-echostar-set-to-join-sp-500-others-to-join-sp-100-sp-midcap-400-and-sp-smallcap-600-302707297.html"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "IDCC",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/vertiv-holdings-lumentum-holdings-coherent-and-echostar-set-to-join-sp-500-others-to-join-sp-100-sp-midcap-400-and-sp-smallcap-600-302707297.html"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "GTM",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/vertiv-holdings-lumentum-holdings-coherent-and-echostar-set-to-join-sp-500-others-to-join-sp-100-sp-midcap-400-and-sp-smallcap-600-302707297.html"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "VICR",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/vertiv-holdings-lumentum-holdings-coherent-and-echostar-set-to-join-sp-500-others-to-join-sp-100-sp-midcap-400-and-sp-smallcap-600-302707297.html"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "ASGN",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/vertiv-holdings-lumentum-holdings-coherent-and-echostar-set-to-join-sp-500-others-to-join-sp-100-sp-midcap-400-and-sp-smallcap-600-302707297.html"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "CTRE",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/vertiv-holdings-lumentum-holdings-coherent-and-echostar-set-to-join-sp-500-others-to-join-sp-100-sp-midcap-400-and-sp-smallcap-600-302707297.html"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "KMPR",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/vertiv-holdings-lumentum-holdings-coherent-and-echostar-set-to-join-sp-500-others-to-join-sp-100-sp-midcap-400-and-sp-smallcap-600-302707297.html"
+      },
+      {
+        "beklenen_tarih": "2026-02-02",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-02-02",
+        "satir_var": true,
+        "sembol": "BROS",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/ttm-technologies-dutch-bros-advanced-energy-industries-and-american-healthcare-reit-set-to-join-sp-midcap-400-others-to-join-sp-smallcap-600-302671845.html"
+      },
+      {
+        "beklenen_tarih": "2026-02-02",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-02-02",
+        "satir_var": true,
+        "sembol": "PCH",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/ttm-technologies-dutch-bros-advanced-energy-industries-and-american-healthcare-reit-set-to-join-sp-midcap-400-others-to-join-sp-smallcap-600-302671845.html"
+      },
+      {
+        "beklenen_tarih": "2026-02-02",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-02-02",
+        "satir_var": true,
+        "sembol": "AEIS",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/ttm-technologies-dutch-bros-advanced-energy-industries-and-american-healthcare-reit-set-to-join-sp-midcap-400-others-to-join-sp-smallcap-600-302671845.html"
+      },
+      {
+        "beklenen_tarih": "2026-02-02",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-02-02",
+        "satir_var": true,
+        "sembol": "CMA",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/ttm-technologies-dutch-bros-advanced-energy-industries-and-american-healthcare-reit-set-to-join-sp-midcap-400-others-to-join-sp-smallcap-600-302671845.html"
+      },
+      {
+        "beklenen_tarih": "2026-02-02",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-02-02",
+        "satir_var": true,
+        "sembol": "AHR",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/ttm-technologies-dutch-bros-advanced-energy-industries-and-american-healthcare-reit-set-to-join-sp-midcap-400-others-to-join-sp-smallcap-600-302671845.html"
+      },
+      {
+        "beklenen_tarih": "2026-02-02",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-02-02",
+        "satir_var": true,
+        "sembol": "CADE",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/ttm-technologies-dutch-bros-advanced-energy-industries-and-american-healthcare-reit-set-to-join-sp-midcap-400-others-to-join-sp-smallcap-600-302671845.html"
+      },
+      {
+        "beklenen_tarih": "2026-01-30",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-01-30",
+        "satir_var": true,
+        "sembol": "TTMI",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/ttm-technologies-dutch-bros-advanced-energy-industries-and-american-healthcare-reit-set-to-join-sp-midcap-400-others-to-join-sp-smallcap-600-302671845.html"
+      },
+      {
+        "beklenen_tarih": "2026-01-30",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-01-30",
+        "satir_var": true,
+        "sembol": "CIVI",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/ttm-technologies-dutch-bros-advanced-energy-industries-and-american-healthcare-reit-set-to-join-sp-midcap-400-others-to-join-sp-smallcap-600-302671845.html"
+      },
+      {
+        "beklenen_tarih": "2026-01-02",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-01-02",
+        "satir_var": true,
+        "sembol": "PATH",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/uipath-set-to-join-sp-midcap-400-and-versant-media-group-to-join-sp-smallcap-600-302649007.html"
+      },
+      {
+        "beklenen_tarih": "2026-01-02",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-01-02",
+        "satir_var": true,
+        "sembol": "SNV",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/uipath-set-to-join-sp-midcap-400-and-versant-media-group-to-join-sp-smallcap-600-302649007.html"
+      },
+      {
+        "beklenen_tarih": "2025-10-06",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2025-10-06",
+        "satir_var": true,
+        "sembol": "BSY",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/bentley-systems-set-to-join-sp-midcap-400-and-western-union-to-join-sp-smallcap-600-302573123.html"
+      },
+      {
+        "beklenen_tarih": "2025-10-06",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2025-10-06",
+        "satir_var": true,
+        "sembol": "WU",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://www.prnewswire.com/news-releases/bentley-systems-set-to-join-sp-midcap-400-and-western-union-to-join-sp-smallcap-600-302573123.html"
+      },
+      {
+        "beklenen_tarih": "2024-11-25",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2024-11-25",
+        "satir_var": true,
+        "sembol": "FLEX",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://press.spglobal.com/2024-11-19-Flex-Set-to-Join-S-P-MidCap-400-Azenta-and-Concentra-Group-Holdings-to-Join-S-P-SmallCap-600"
+      },
+      {
+        "beklenen_tarih": "2024-11-25",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2024-11-25",
+        "satir_var": true,
+        "sembol": "AZTA",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "https://press.spglobal.com/2024-11-19-Flex-Set-to-Join-S-P-MidCap-400-Azenta-and-Concentra-Group-Holdings-to-Join-S-P-SmallCap-600"
+      }
+    ],
+    "esik_ustunde_mi": true,
+    "farkli_yururluk_tarihi_n": 15,
+    "kapsama_alt": 0.9,
+    "kapsama_orani": 1.0,
+    "kapsama_orani_neden": null,
+    "kart_beyan_n": 54,
+    "n_tam_gecti": 54,
+    "olay_n_alt": 20.0,
+    "olay_n_yeterli": true,
+    "olculen_n": 54,
+    "sayim_notu": "kart 'kart_beyan_n' 54 olay der; bu betik 54 ayrık (sembol,yön,tarih) olgusu ÖLÇTÜ (`k1_olaylari_ve_beyan`: kart 'bilinen_olaylar' varsa ORADAN, yoksa modül başlığı K1 türetme beyanından) — SAYI UYUŞMAZLIĞI varsa Rol-1'e açık kalem, betik ZORLAMADI",
+    "sembol_normalizasyonu": [
+      {
+        "kart_literali": "MOG.A",
+        "kural": "ORTAK._tick — tablo tarafıyla AYNI fonksiyon",
+        "normal": "MOG-A"
+      }
+    ],
+    "tolerans_gun": 1
+  },
+  "k1_kapsama_yayinlanabilir": 1.0,
+  "kart": "EDG-2026-092",
+  "kosmayan_pkler": [],
+  "olcum_zamani": "2026-09-14T05:51:30+00:00",
+  "pk1": {
+    "calisti": true,
+    "detay": [
+      {
+        "as_of_beklenen_gibi": true,
+        "gecti": true,
+        "sembol": "HUBS",
+        "tarih": "2026-09-21",
+        "yon": "giris",
+        "yururluk_satiri_var": false
+      },
+      {
+        "as_of_beklenen_gibi": true,
+        "gecti": true,
+        "sembol": "SAM",
+        "tarih": "2026-09-21",
+        "yon": "cikis",
+        "yururluk_satiri_var": false
+      },
+      {
+        "as_of_beklenen_gibi": true,
+        "gecti": true,
+        "sembol": "AGNC",
+        "tarih": "2026-09-21",
+        "yon": "giris",
+        "yururluk_satiri_var": false
+      },
+      {
+        "as_of_beklenen_gibi": true,
+        "gecti": true,
+        "sembol": "CPRI",
+        "tarih": "2026-09-21",
+        "yon": "cikis",
+        "yururluk_satiri_var": false
+      },
+      {
+        "as_of_beklenen_gibi": true,
+        "gecti": true,
+        "sembol": "CORT",
+        "tarih": "2026-09-21",
+        "yon": "giris",
+        "yururluk_satiri_var": false
+      },
+      {
+        "as_of_beklenen_gibi": true,
+        "gecti": true,
+        "sembol": "P",
+        "tarih": "2026-09-21",
+        "yon": "cikis",
+        "yururluk_satiri_var": false
+      },
+      {
+        "as_of_beklenen_gibi": true,
+        "gecti": true,
+        "sembol": "EAT",
+        "tarih": "2026-09-21",
+        "yon": "giris",
+        "yururluk_satiri_var": false
+      },
+      {
+        "as_of_beklenen_gibi": true,
+        "gecti": true,
+        "sembol": "ILMN",
+        "tarih": "2026-09-21",
+        "yon": "cikis",
+        "yururluk_satiri_var": false
+      }
+    ],
+    "n": 8,
+    "n_gecti": 8,
+    "tuttu": true
+  },
+  "pk2": {
+    "calisti": true,
+    "detay": [
+      {
+        "beklenen_satir": {
+          "cikan": "SWN",
+          "eklenen": "ENSG"
+        },
+        "beklenen_satir_var": true,
+        "eski_yeni_ayrimi": null,
+        "eski_yeni_ayrimi_neden": "kartta `eski`/`yeni` alanı yok; `→` işareti varsa çift `rename_cifti`de yönüyle raporlanır, yoksa None",
+        "gecti": true,
+        "kart_notu": "Chesapeake Energy (MidCap 400 üyesi) Southwestern Energy'yi aldı, birleşik şirket Expand Energy (EXE) adını aldı — tablo satırı ENSG↑ SWN↓; CHK→EXE bir ÜYELİK değişikliği DEĞİL",
+        "not_sembolleri": [
+          {
+            "as_of_bugun_uye_mi": false,
+            "as_of_tarih_uye_mi": true,
+            "satirda_var_mi": false,
+            "sembol": "EXE"
+          },
+          {
+            "as_of_bugun_uye_mi": true,
+            "as_of_tarih_uye_mi": true,
+            "satirda_var_mi": true,
+            "sembol": "ENSG"
+          },
+          {
+            "as_of_bugun_uye_mi": false,
+            "as_of_tarih_uye_mi": false,
+            "satirda_var_mi": true,
+            "sembol": "SWN"
+          },
+          {
+            "as_of_bugun_uye_mi": false,
+            "as_of_tarih_uye_mi": false,
+            "satirda_var_mi": false,
+            "sembol": "CHK"
+          }
+        ],
+        "rename_cifti": {
+          "eski": "CHK",
+          "yeni": "EXE"
+        },
+        "rename_cifti_as_of": {
+          "eski_as_of_bugun_uye_mi": false,
+          "eski_as_of_tarih_uye_mi": false,
+          "yeni_as_of_bugun_uye_mi": false,
+          "yeni_as_of_tarih_uye_mi": true
+        },
+        "rename_degisiklik_olarak_kitaplandi": false,
+        "sembol_kaynagi": "kartın KENDİ işaretleri okundu: `X↑ Y↓` beklenen satır, `X→Y` yeniden-adlandırma çifti; serbest semboller regexle — kartta eski/yeni ALANI YOK, Rol-1 doğrular (uydurma yasağı)",
+        "tablodaki_satirlar": [
+          {
+            "cikan": "SWN",
+            "eklenen": "ENSG",
+            "neden": "S&P MidCap 400 constituent Chesapeake Energy Corp. acquired Southwestern Energy. The combined company renamed to Expand Energy Corporation.",
+            "tarih": "2024-10-01"
+          }
+        ],
+        "tarih": "2024-10-01"
+      },
+      {
+        "beklenen_satir": {
+          "cikan": "HR",
+          "eklenen": "HTA"
+        },
+        "beklenen_satir_var": true,
+        "eski_yeni_ayrimi": null,
+        "eski_yeni_ayrimi_neden": "kartta `eski`/`yeni` alanı yok; `→` işareti varsa çift `rename_cifti`de yönüyle raporlanır, yoksa None",
+        "gecti": true,
+        "kart_notu": "Healthcare Trust of America Healthcare Realty'yi aldı, adını Healthcare Realty Trust (HR) yaptı — tablo satırı HTA↑ HR↓; ad/ticker değişimi üyelik değişikliği değil",
+        "not_sembolleri": [
+          {
+            "as_of_bugun_uye_mi": true,
+            "as_of_tarih_uye_mi": true,
+            "satirda_var_mi": true,
+            "sembol": "HR"
+          },
+          {
+            "as_of_bugun_uye_mi": false,
+            "as_of_tarih_uye_mi": false,
+            "satirda_var_mi": true,
+            "sembol": "HTA"
+          }
+        ],
+        "rename_cifti": null,
+        "rename_cifti_as_of": null,
+        "rename_degisiklik_olarak_kitaplandi": null,
+        "sembol_kaynagi": "kartın KENDİ işaretleri okundu: `X↑ Y↓` beklenen satır, `X→Y` yeniden-adlandırma çifti; serbest semboller regexle — kartta eski/yeni ALANI YOK, Rol-1 doğrular (uydurma yasağı)",
+        "tablodaki_satirlar": [
+          {
+            "cikan": "HR",
+            "eklenen": "HTA",
+            "neden": "Healthcare Trust of America acquired Healthcare Realty Trust. Post-merger, Healthcare Trust of America changed its name and symbol to Healthcare Realty Trust Inc. (NYSE: HR).",
+            "tarih": "2022-07-21"
+          },
+          {
+            "cikan": "PSB",
+            "eklenen": "COKE",
+            "neden": "Blackstone Inc. acquired PS Business Parks.",
+            "tarih": "2022-07-20"
+          }
+        ],
+        "tarih": "2022-07-21"
+      }
+    ],
+    "dusen_olcut_n": 0,
+    "gerekce_taramasi_kapi_mi": false,
+    "gerekce_taramasi_notu": "gerekçe metni KAPI DEĞİL — 2024-10-01 satırı (ENSG↑/SWN↓) gerçek değişiklik olduğu hâlde gerekçesinde rename anlatılıyor; bu tarama kaynak sınıfı RAPORUdur",
+    "neden": null,
+    "olculen_olcut_n": 3,
+    "tuttu": true,
+    "yeniden_adlandirma_gerekceli_n": 6,
+    "yeniden_adlandirma_gerekceli_satirlar": [
+      {
+        "cikan": "SWN",
+        "eklenen": "ENSG",
+        "neden": "S&P MidCap 400 constituent Chesapeake Energy Corp. acquired Southwestern Energy. The combined company renamed to Expand Energy Corporation.",
+        "tarih": "2024-10-01"
+      },
+      {
+        "cikan": null,
+        "eklenen": "CR",
+        "neden": "S&P MidCap 400 constituent Crane Holdings Co. (NYSE:CR) spun off new Crane. Following the spin-off, the parent Crane Holdings Co. will have a name change to Crane NXT Co., a symbol change to CXT, and will remain in the S&P MidCap 400.",
+        "tarih": "2023-04-04"
+      },
+      {
+        "cikan": "HR",
+        "eklenen": "HTA",
+        "neden": "Healthcare Trust of America acquired Healthcare Realty Trust. Post-merger, Healthcare Trust of America changed its name and symbol to Healthcare Realty Trust Inc. (NYSE: HR).",
+        "tarih": "2022-07-21"
+      },
+      {
+        "cikan": "CHFC",
+        "eklenen": "TTEK",
+        "neden": "Chemical Financial Corp. (NASD: CHFC) acquired TCF Financial Corporation and was renamed TCF Financial Corporation",
+        "tarih": "2019-08-01"
+      },
+      {
+        "cikan": "HLS",
+        "eklenen": "EHC",
+        "neden": "S&P 400 constituent HealthSouth (NYSE: HLS) renamed Encompass Health and changed to new symbol.",
+        "tarih": "2018-01-02"
+      },
+      {
+        "cikan": "FTR",
+        "eklenen": "DLPH",
+        "neden": "S&P 500 constituent Delphi Automotive plc (NYSE: DLPH), to be renamed Aptiv plc and trade under new symbol APTV, spun off Delphi Technologies.",
+        "tarih": "2017-12-06"
+      }
+    ]
+  },
+  "pk3": {
+    "as_of_bugun_n": 400,
+    "bugun": "2026-09-14",
+    "calisti": true,
+    "esik": 0.98,
+    "guncel_liste_n": 400,
+    "kesisim_n": 400,
+    "kesisim_orani": 1.0,
+    "sapan_as_ofta_var_listede_yok": [],
+    "sapan_listede_var_as_ofta_yok": [],
+    "tani": {
+      "as_of_pencere_basi_n": 407,
+      "as_of_pencere_basi_tarih": "2020-07-27",
+      "not": "S&P 400 daima 400 üyelidir: as_of(pencere başı) 400'den sapıyorsa tabloda eşleşmemiş satır vardır. EŞİK YOK — kart tanımlamadı, bu TANIdır (hüküm Rol-1)",
+      "pencere_ici_eslesmemis_satirlar": [
+        {
+          "cikan": "KSS",
+          "eklenen": null,
+          "neden": "Market capitalization change.",
+          "tarih": "2023-10-03"
+        },
+        {
+          "cikan": null,
+          "eklenen": "VSTS",
+          "neden": "S&P MidCap 400 constituent Aramark spun off Vestis.",
+          "tarih": "2023-10-02"
+        },
+        {
+          "cikan": "PACW",
+          "eklenen": null,
+          "neden": "Market capitalization change.",
+          "tarih": "2023-04-05"
+        },
+        {
+          "cikan": null,
+          "eklenen": "CR",
+          "neden": "S&P MidCap 400 constituent Crane Holdings Co. (NYSE:CR) spun off new Crane. Following the spin-off, the parent Crane Holdings Co. will have a name change to Crane NXT Co., a symbol change to CXT, and will remain in the S&P MidCap 400.",
+          "tarih": "2023-04-04"
+        },
+        {
+          "cikan": "BFH",
+          "eklenen": null,
+          "neden": "Market capitalization change.",
+          "tarih": "2022-11-02"
+        },
+        {
+          "cikan": null,
+          "eklenen": "RXO",
+          "neden": "S&P MidCap 400 constituent XPO, Inc. spun off RXO.",
+          "tarih": "2022-11-01"
+        },
+        {
+          "cikan": "PRG",
+          "eklenen": null,
+          "neden": "Market capitalization change.",
+          "tarih": "2022-04-06"
+        },
+        {
+          "cikan": null,
+          "eklenen": "ESAB",
+          "neden": "S&P MidCap 400 constituent Colfax Corp. spun off ESAB.",
+          "tarih": "2022-04-05"
+        },
+        {
+          "cikan": "STRA",
+          "eklenen": null,
+          "neden": "Market capitalization change.",
+          "tarih": "2021-08-03"
+        },
+        {
+          "cikan": null,
+          "eklenen": "GXO",
+          "neden": "Spun off from XPO, Inc.",
+          "tarih": "2021-08-02"
+        },
+        {
+          "cikan": "AMCX",
+          "eklenen": null,
+          "neden": "Market capitalization change.",
+          "tarih": "2020-12-02"
+        },
+        {
+          "cikan": null,
+          "eklenen": "CNXC",
+          "neden": "S&P MidCap 400 constituent SYNNEX Corp. spun off Concentrix.",
+          "tarih": "2020-12-01"
+        }
+      ],
+      "yalniz_cikan_satir_n": 7,
+      "yalniz_giren_satir_n": 7
+    },
+    "tautoloji": {
+      "beyan": "as_of TOHUM olarak güncel listeyi alıp geriye sarar; `liste_sonrasi_degisiklik_n` 0 ise kesişim 1,0 İNŞAAT GEREĞİ çıkar ve bağımsız bilgi TAŞIMAZ — hüküm bu sayıya değil, yanındaki tanıya bakmalı",
+      "liste_sonrasi_degisiklik_n": 0
+    },
+    "tuttu": true
+  },
+  "pk4": {
+    "calisti": true,
+    "detay": [
+      {
+        "beklenen_tarih": "2024-04-01",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2024-04-01",
+        "satir_var": true,
+        "sembol": "SOLV",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-03-27 prnewswire 302101773 (3M spin-off; SOLV in Apr 1)"
+      },
+      {
+        "beklenen_tarih": "2024-04-03",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2024-04-03",
+        "satir_var": true,
+        "sembol": "VFC",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-03-27 prnewswire 302101773 (VFC → SmallCap 600 Apr 3)"
+      },
+      {
+        "beklenen_tarih": "2024-06-24",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2024-06-24",
+        "satir_var": true,
+        "sembol": "KKR",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-06-07 press.spglobal.com (replaces RHI)"
+      },
+      {
+        "beklenen_tarih": "2024-06-24",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2024-06-24",
+        "satir_var": true,
+        "sembol": "RHI",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-06-07 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2024-06-24",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2024-06-24",
+        "satir_var": true,
+        "sembol": "CRWD",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-06-07 press.spglobal.com (replaces CMA)"
+      },
+      {
+        "beklenen_tarih": "2024-06-24",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2024-06-24",
+        "satir_var": true,
+        "sembol": "CMA",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-06-07 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2024-06-24",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2024-06-24",
+        "satir_var": true,
+        "sembol": "GDDY",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-06-07 press.spglobal.com (replaces ILMN)"
+      },
+      {
+        "beklenen_tarih": "2024-06-24",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2024-06-24",
+        "satir_var": true,
+        "sembol": "ILMN",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2024-06-07 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2025-09-22",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2025-09-22",
+        "satir_var": true,
+        "sembol": "APP",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2025-09-05 press.spglobal.com (replaces MKTX)"
+      },
+      {
+        "beklenen_tarih": "2025-09-22",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2025-09-22",
+        "satir_var": true,
+        "sembol": "MKTX",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2025-09-05 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2025-09-22",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2025-09-22",
+        "satir_var": true,
+        "sembol": "HOOD",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2025-09-05 press.spglobal.com (replaces CZR)"
+      },
+      {
+        "beklenen_tarih": "2025-09-22",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2025-09-22",
+        "satir_var": true,
+        "sembol": "CZR",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2025-09-05 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2025-09-22",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2025-09-22",
+        "satir_var": true,
+        "sembol": "EME",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2025-09-05 press.spglobal.com (replaces ENPH)"
+      },
+      {
+        "beklenen_tarih": "2025-09-22",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2025-09-22",
+        "satir_var": true,
+        "sembol": "ENPH",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2025-09-05 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "VRT",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com (replaces MTCH)"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "MTCH",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "LITE",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com (replaces MOH)"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "MOH",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "COHR",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com (replaces LW)"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "LW",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "SATS",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com (replaces PAYC)"
+      },
+      {
+        "beklenen_tarih": "2026-03-23",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-03-23",
+        "satir_var": true,
+        "sembol": "PAYC",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-03-06 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2026-06-29",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-06-29",
+        "satir_var": true,
+        "sembol": "HONA",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-06-23 press.spglobal.com (HONA added Mon Jun 29)"
+      },
+      {
+        "beklenen_tarih": "2026-06-30",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-06-30",
+        "satir_var": true,
+        "sembol": "CAG",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-06-23 press.spglobal.com (CAG → SmallCap 600 Tue Jun 30)"
+      },
+      {
+        "beklenen_tarih": "2026-08-05",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-08-05",
+        "satir_var": true,
+        "sembol": "FERG",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-07-31 press.spglobal.com (replaces EA)"
+      },
+      {
+        "beklenen_tarih": "2026-08-05",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-08-05",
+        "satir_var": true,
+        "sembol": "EA",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-07-31 press.spglobal.com"
+      },
+      {
+        "beklenen_tarih": "2026-08-18",
+        "beklenen_yon": "giris",
+        "bulunan_tarih": "2026-08-18",
+        "satir_var": true,
+        "sembol": "RDDT",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-08-13 press.spglobal.com (replaces AVB)"
+      },
+      {
+        "beklenen_tarih": "2026-08-18",
+        "beklenen_yon": "cikis",
+        "bulunan_tarih": "2026-08-18",
+        "satir_var": true,
+        "sembol": "AVB",
+        "tarih_tolerans_icinde": true,
+        "yon_dogru": true,
+        "yon_kaynak": "S&P DJI 2026-08-13 press.spglobal.com"
+      }
+    ],
+    "kapsama_orani": 1.0,
+    "n": 28,
+    "n_tam_gecti": 28,
+    "pencere_satir_n": 136,
+    "sembol_normalizasyonu": [],
+    "tablo_meta": {
+      "eslenen": {
+        "cikan_ad": "Removed_Security",
+        "cikan_ticker": "Removed_Ticker",
+        "eklenen_ad": "Added_Security",
+        "eklenen_ticker": "Added_Ticker",
+        "neden": "Reason",
+        "tarih": "Effective_Date"
+      },
+      "hayalet_atlanan_n": 0,
+      "kaynaksiz_satir_n": 407,
+      "kolonlar": [
+        "Effective_Date",
+        "Added_Ticker",
+        "Added_Security",
+        "Removed_Ticker",
+        "Removed_Security",
+        "Reason",
+        "Refs"
+      ],
+      "n_tablo": 1,
+      "satir_n_gecerli": 407,
+      "satir_n_ham": 407,
+      "tablo_index": 0,
+      "tarih_cozulemeyen_n": 0
+    },
+    "tuttu": true
+  },
+  "pk_girdi_kimligi": {
+    "kart": "EDG-2026-076",
+    "oldid": 1370891103,
+    "sha256": "13ee583c61edac69c74d7c40dba49409852a20a5e81e6301f266c68454c7dac0",
+    "yol": "research/olcumler/edg092_sp400_uyelik/girdi/pk/sp500_hist_oldid_1370891103.wiki"
+  },
+  "yayin_engeli": {
+    "engel": false,
+    "kural": "kart kill_list #5 — PK'lerden biri düşerse hiçbir kapsama sayısı YAYILMAZ",
+    "neden": []
+  }
+}
