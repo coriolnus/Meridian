@@ -115,3 +115,12 @@ adim_0a_hukmu_2026_09_14:
   pitlaw: "kayıt GEREKMİYOR — defterler (meridian modülü, fonksiyon) anahtarlı; sp500_uyelik_tarihi.csv de kayıtlı değil; csv okuyan bir meridian/ fonksiyonu doğduğu gün (TSK-065) kayıt zorunlu"
   kaygilar: "(1) bant marjı 1 (max 407 / 408) — as_of(2020-07-27)=407: 8 belirsiz satır + tablonun eksik yarımları kohortu 2020-07→~2024 arasında 400 üstünde taşıyor; ANA ÖLÇÜMDE belirsiz 8 isim ayrıca damgalanır ve duyarlılık (dahil/hariç) raporlanır — eşik değişmez; (2) ±1 gün toleransı gün kaymasına kör (PIT-PK gerçek girdide tam günde geçti, ölçüm); (3) esle uygulanınca sembol anakronizmi (HR adı HTA döneminde) — bar eşlemesinde (EKSEN B) eski/yeni adın ikisi de sondalanmalı"
   kalan: "EKSEN B (Alpaca kapsama sondası) A1 üzerinde koşuyor — hüküm ayrı kayıtla"
+
+adim_0b_hukmu_2026_09_14:
+  tarih: "2026-09-14T15:1xZ"
+  hukum: "EKSEN B GEÇTİ (Rol-1; sonda betiği main c52ff2c — Opus tur-1 12ec6e8 + tur-2 8ac6fd2, Sonnet iki inceleme MERGE HAZIR 0 bloklayıcı). ADIM-0 A+B TAMAM → fizibilite kapısı AÇIK; ana ölçüm TSK-065 sırasında (operatör: düşük öncelik)."
+  kosum: "A1, stdin kipi, Alpaca IEX 1Day (adapters.alpaca.daily_bars, 2020-07-01→2026-09-14), bekleme 0,6 s; ilk koşum 14:20–14:30Z YARIM (661 isimden 298 ölçülemedi: MOG-A HTTP 400 → adapter süreç-içi soğutma 300 s; blob 475cd00e14c8), tur-2 sonrası yalnız-ölçülemeyen yeniden sonda 14:59–15:04Z ile BİRLEŞİK harita (blob 2c3461c85ccb, birlesim_kaynagi [143000Z, 150444Z], soğuma sıfırlaması 0)"
+  sonuc: "isim 661 (pencerede en az bir gün üye; 400 kalan + 261 çıkan); kapsanan 661 (eşik ≥40 GEÇTİ); ortalama bar geçmişi 5,64 yıl (eşik ≥3 GEÇTİ); ölçülemeyen 0; sınıf hissesi MOG-A → Alpaca MOG.A 1537 bar"
+  yanlilik_gostergesi_tabani: "çıkan 261 isimden barsız (bar yok ya da son_bar < çıkış−7 gün) 1: HRC → barsız-çıkış payı 0,0038 (%0,38); tanım JSON'da. Damga: (b)>0 → 'ÜST-SINIR' (kartın kuralı) — ama pay %0,38 olduğundan sağkalan yanlılığı bu pencerede pratikte kapalı; ana ölçüm raporunda 'PIT-tam'a yakın üst-sınır' diye beyan edilir, eşik/kural değişmez"
+  bedel: "Alpaca çağrısı 661 + 298 = 959 istek (ücretsiz IEX), ~16 dk; worker etkilenmedi (soğutma süreç-içi); tek warn olayı canlı deftere düştü (alpaca_data_failed 14:27:02Z, sonda süreci)"
+  kalan: "ana ölçüm (EDG-016 tasarımı, K=2 + tanı; belirsiz 8 isim damgalı duyarlılık) — sıra gelince Opus ölçüm ajanı; ADIM-0 A kaygı (3) gereği HTA/HR gibi rename çiftlerinde iki ad da sondalandı (harita 661 isimde ikisi de var)"
