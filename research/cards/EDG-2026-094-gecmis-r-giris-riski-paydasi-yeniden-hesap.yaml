@@ -75,3 +75,15 @@ notlar: >
   Kod: `research/olcumler/edg094_r_yeniden/olc.py` (salt-okur, `sandbox_state`li çivi; DB kopyası ya da ro bağlantı)
   + `ops/r_giris_yeniden_yaz.py` (ADIM-2; ops sözleşmesi komut satırı, --kuru/--uygula, yedek zorunlu). Ölçüm ajanı
   karta dokunmaz. A1 koşumu Rol-1 (worker durmuşken, 20:05Z sonrası pencere). Öncelik: EDG-093 ana ölçümünden sonra.
+
+rol1_hukumleri_2026_09_14: >
+  ADIM-1 sevk öncesi ölçülen defter (A1 ro yedeği 20:28Z, sha256 c87ce32a…): trades 867 = live_paper 24 + replay_seed 843;
+  extra_json'da r_payda/qty_taban YOK (damgalı satır n=0 → PK-1 gerçek veride BİLGİSİZ, hesap yolu sentetik damgalı satırla);
+  plan_id eşleşmeyen 5 (ALL, NUE, EMR, BKNG, AMGN → plan stop'u yok); benimseme kaydı trade extra_json'unda DEĞİL,
+  events.jsonl `adet_benimsendi` olaylarında (14 olay, 08-25..09-08) — adim_1_olcum'daki "extra_json'daki benimseme kaydı"
+  kaynağı bugün boştur, olay akışı onun yerine geçer (kaynak SIRASI ve eşikler değişmez). Hükümler (brief brief_edg094_adim1.md):
+  R1 canlı = `kaynak == "live_paper"`; R2 qty_giris = pencere içi SON `adet_benimsendi.yeni` (yeni≠qty ise ölçülemedi), yoksa
+  trades.qty (scaled_out hepsinde 0); R3 r_per_share = entry − stop, stop kaynağı plan → trail from_stop → koruma_oco (düşük güven)
+  → ölçülemedi; R4 payda_oran = (pnl/r_eski) / (qty_giris×rps) TEŞHİS sütunu (eşik değil; fill≠base_fill kayması); R5 eşikler
+  karttan aynen; R6 PK-1 n=0 bilgisiz. Hafıza kontrolü: Hindsight recall 20:2xZ (R'nin position_size_r'den yapısal bağımsızlığı;
+  ADV/notional tavanları risk_dollars'ı qty×(base_fill−stop) ile yeniden türetir) — kaynak: recall; kart_benzer ön-kayıtta.
