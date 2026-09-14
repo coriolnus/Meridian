@@ -11,7 +11,7 @@
 # duyuruları), çürütemezse kalem kapanır (operatör: ücretli yol ÖNERİLMİYOR).
 
 card_id: EDG-2026-092
-status: registered   # 2026-09-14 05:26Z AŞAMA 2/2 TAMAM — bilinen_olaylar 27 çift (54 olgu, 14 yürürlük tarihi, hepsi PR Newswire/S&P DJI bülteni URL'li) + gelecek_olaylar 4 çift (09-21) + rename 2 vaka; ham wikitext oldid 1373849406 sha 7d94c2ee… → ölçüm kodu AÇILABİLİR (ADIM-0 (1)(2) ön ölçümü: tablo var, pencere 280 satır ≥ 60)
+status: measured   # 2026-09-14 06:10Z hüküm `hukum_2026_09_14` — GEÇTİ (K1 54/54, PK 4/4); ücretsiz kaynak PIT-doğru → mid-cap PIT kohortu kurulabilir; halef kart TSK-065 sırasında; ÖNCEKİ: registered   # 2026-09-14 05:26Z AŞAMA 2/2 TAMAM — bilinen_olaylar 27 çift (54 olgu, 14 yürürlük tarihi, hepsi PR Newswire/S&P DJI bülteni URL'li) + gelecek_olaylar 4 çift (09-21) + rename 2 vaka; ham wikitext oldid 1373849406 sha 7d94c2ee… → ölçüm kodu AÇILABİLİR (ADIM-0 (1)(2) ön ölçümü: tablo var, pencere 280 satır ≥ 60)
 family: evren_pit
 on_kayit: 2026-09-13
 selef: EDG-2026-070
@@ -157,3 +157,28 @@ adim_0_on_olcum_2026_09_14: >
   2024: 41 · 2025: 33 · 2026: 28) ≥ 60 → ADIM-0 (2) GEÇTİ; 153 satır spglobal.com duyuru URL'li, 126 kaynaksız. (3) Güncel liste
   kaynağı (PK-3) ölçüm turunda: iShares IJH / SPDR MDY holdings dosyası (girdi/ altına, sha). Ölçüm kodu ARTIK AÇILABİLİR:
   research/olcumler/edg092_sp400_uyelik/olc.py (EDG-076 betiğinin wikitext-girdili parametrik kopyası; olay kümesi KARTTAN okunur).
+
+hukum_2026_09_14: >
+  GEÇTİ (Rol-1, 06:10Z; main 3a00b83, Opus + Sonnet inceleme 0 bloklayıcı). GİRDİ donmuş: Wikipedia S&P 400 ham wikitext oldid 1373849406
+  (sha 7d94c2ee…, `--beklenen-sha` eşit), olay kümesi KARTTAN (kart_beyan_n = ölçülen 54, iç tutarlılık ihlali 0), MDY listesi 2026-09-10
+  (400), S&P 500 tarihçe wikitext oldid 1370891103 (EDG-076 ile aynı). Sonuç research/olcumler/edg092_sp400_uyelik/sonuc_2026-09-14T055130Z.json
+  (git blob 89665d65…), rapor md; kod olc.py, çivi v484 (27; 12/12 mutasyon).
+  ADIM-0 GEÇERLİ: tablo başlık sütunlarından bulundu, 619 geçerli satır, pencere 2020-07-27+ 280 ≥ 60, tarih çözülemeyen 0 (rowspan devralma),
+  kaynaksız satır 156 (tabloda ref yok — kapsama ölçümünü etkilemez).
+  K1 GEÇTİ — 54/54 = 1,000 (eşik ≥0,90; n 54 ≥ 20; 15 yürürlük tarihi — kart düzyazısındaki '14' sayım hatasıydı, 27 çift/54 olgu doğru):
+  her olgu tabloda, yön doğru, tarih ±1 iş günü (fiilen tam gün). Normalizasyon beyanlı: kart `MOG.A` ↔ tablo `MOG-A` (aynı `_tick`).
+  PK-1 TUTTU 8/8 (09-21 çeyreklik girişleri tabloda yürürlük satırı YOK, as_of(bugün) girişleri içermiyor/çıkışları içeriyor — duyuru≠yürürlük).
+  PK-2 TUTTU 2/2 (ENSG↑SWN↓ 2024-10-01, HTA↑HR↓ 2022-07-21 — rename üyelik değişikliği sayılmadı; RUL: ilk kaba kapı 'renamed' anahtar
+  sözcüğüne bakıp yanlış pozitif verdi, kartın X↑Y↓ işaretlerini okuyan kapı KARTIN TARİFİNİN doğru uygulamasıdır, ölçüt/eşik değişmedi;
+  as_of'un yeni adı taşıma şartı RAPORLANIR, mekanik zorlanmaz — beyan). PK-3 TUTTU 400/400 = 1,000 (≥0,98) — TOTOLOJİ BEYANI: as_of tohumu
+  MDY listesinin kendisi, listeden sonra değişiklik yok → bağımsız bilgi taşımaz. PK-4 TUTTU 28/28 — aynı ayrıştırıcı + aynı K1, EDG-076'nın
+  S&P 500 hükmünü yeniden üretti (yol-tutarlılık). yayin_engeli false.
+  TANI (hüküm değil, halef kartın girdisi): as_of(2020-07-27) = 407 ≠ 400 — pencerede 12 eşleşmemiş satır (çoğu spin-off çiftleri ardışık
+  güne kitaplanmış: KSS↓ 2023-10-03 tek başına, VSTS↑ ayrı satır…); 2020-2023 kohortunda ~%1,75 üyelik sapması → kohort kurulumunda bu satırlar
+  ELLE eşlenmeli (as_of algoritması 075 ile aynı — sorun algoritma değil tablo kitaplaması).
+  SONUÇ: Hindsight kaydı 'ücretsiz S&P 400 üyelik kümesi yok' (2026-09-02) ÇÜRÜDÜ — Wikipedia tablosu + S&P DJI bültenleri 2020-07-27+
+  penceresinde PIT-doğru. basari_tanimi GEÇTİ kolu: mid-cap PIT kohortu (as-of günlük, 2020-07+) üretilir ve EDG-070 halefi (sağkalan
+  üst-sınır, Alpaca IEX delist barlarıyla 2020-07+) YENİ kartla açılır — TSK-065 sırasında, operatör 'düşük öncelik' kararı geçerli;
+  kohort üreticisi motor dışı (`research/pit_universe/sp400_uyelik_tarihi.csv` benzeri, EDG-062 EDGAR-çapa deseniyle kaynak URL'li).
+  K defteri: EDG-092-sp400-bilinen-olay-kapsama = GEÇTİ (K=1). hafıza: kart_benzer (EDG-075 KALDI / EDG-076 GEÇTİ emsali) + recall
+  ('ücretsiz küme yok' iddiası — ölçümle çürütüldü); A1 recall hüküm anında koşulmadı (mekanik).

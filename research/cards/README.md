@@ -13,7 +13,7 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **106** kart.
 
-### Kayıtlı — ölçüm bekliyor (13)
+### Kayıtlı — ölçüm bekliyor (12)
 
 - **EDG-2026-053** (`registered`) — 15d-A2 (taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md K2'den AYNEN): İLK-İFŞA filtreli çeyrek gelir (Revenues) YoY büyümesi ve İVMESİ…
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt (ölçüm 050/051'den biri inince sırada)
@@ -41,9 +41,6 @@ Toplam **106** kart.
 - **EDG-2026-086** (`registered`) — 
   · HÜKÜM: 2026-09-07 Rol-1 — ön-kayıt; B1 backend + B2 UI bu karttan sonra; ölçüm penceresi B2 dağıtımından itibaren
   · kart: `EDG-2026-086-pano-sohbet-kalite.yaml`
-- **EDG-2026-092** (`registered`) — 
-  · HÜKÜM: 2026-09-14 05:26Z AŞAMA 2/2 TAMAM — bilinen_olaylar 27 çift (54 olgu, 14 yürürlük tarihi, hepsi PR Newswire/S&P DJI bülteni URL'li) + gelecek_olaylar 4 çift (09-21) +…
-  · kart: `EDG-2026-092-sp400-uyelik-tarihcesi-ucretsiz-kaynak-fizibilite.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
   · kart: `EXE-2026-009-pencere-kaydirma.yaml`
@@ -78,7 +75,7 @@ Toplam **106** kart.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`
 
-### Ölçüldü (60)
+### Ölçüldü (61)
 
 - **BASE-2026-001** (`measured`) — Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net −5.542 USD).
   · HÜKÜM: 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1): CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146 seans, bugünkü motor+canlı v3…
@@ -230,6 +227,9 @@ Toplam **106** kart.
 - **EDG-2026-091** (`measured`) — 
   · HÜKÜM: 2026-09-13 19:34Z hüküm `hukum_2026_09_13` — HİPOTEZ (sıkılaştırma) KALDI; KAYNAK ÖLÇÜLDÜ: dolar-bütçe paydası + adet benimseme (kartın 'kaynak başka: qty' kolu) →…
   · kart: `EDG-2026-091-canli-r-paydasi-kaynagi.yaml`
+- **EDG-2026-092** (`measured`) — 
+  · HÜKÜM: 2026-09-14 06:10Z hüküm `hukum_2026_09_14` — GEÇTİ (K1 54/54, PK 4/4); ücretsiz kaynak PIT-doğru → mid-cap PIT kohortu kurulabilir; halef kart TSK-065 sırasında; ÖNCEKİ:…
+  · kart: `EDG-2026-092-sp400-uyelik-tarihcesi-ucretsiz-kaynak-fizibilite.yaml`
 - **EXE-2026-001** (`measured`) — İç defter (koşulsuz ertesi-açılış dolumu) ile canlı ayna (buy-stop GTC bracket) FARKLI icra modelleri koşuyor ve ayna gap durumunda reddediliyor…
   · HÜKÜM: 2026-08-03 ~15:0x UTC — E1 GRİD KOŞULDU (kanıt: research/olcumler/e1_grid_2026-08-03/; determinizm çift-kapılı)
   · kart: `EXE-2026-001-entry-execution.yaml`
