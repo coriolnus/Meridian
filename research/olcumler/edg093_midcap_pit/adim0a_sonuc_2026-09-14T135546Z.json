@@ -1,0 +1,353 @@
+{
+ "kart_id": "EDG-2026-093",
+ "adim": "ADIM-0 EKSEN A",
+ "damga": "2026-09-14T135546Z",
+ "bugun": "2026-09-14",
+ "pencere": {
+  "bas": "2020-07-27",
+  "son": "2026-09-14",
+  "gun_n": 2241
+ },
+ "girdi_kimligi": {
+  "ham_wikitext": {
+   "yol": "/Users/erdemozturk/AI-Trading/.claude/worktrees/agent-a1ac1cdfe404f8eb9/research/olcumler/edg092_sp400_uyelik/ham/sp400_oldid_1373849406.wiki",
+   "sha256": "7d94c2eef467df334306660f558d0ce45c1f21c54b87312b3e408a14a59f22f0"
+  },
+  "mdy_xlsx": {
+   "yol": "/Users/erdemozturk/AI-Trading/.claude/worktrees/agent-a1ac1cdfe404f8eb9/research/olcumler/edg092_sp400_uyelik/girdi/mdy_holdings_2026-09-10.xlsx",
+   "sha256": "4488a8192d77dd1af82de210ca0c60016c250caadaa28042a1b807fa582e93ec",
+   "as_of": "As of 10-Sep-2026",
+   "tutulan_n": 400,
+   "haric_tutulan": [
+    "CASH_USD"
+   ]
+  },
+  "kart093": "/Users/erdemozturk/AI-Trading/.claude/worktrees/agent-a1ac1cdfe404f8eb9/research/cards/EDG-2026-093-midcap-pit-kohort-sagkalan-ust-sinir.yaml",
+  "kart092": "/Users/erdemozturk/AI-Trading/.claude/worktrees/agent-a1ac1cdfe404f8eb9/research/cards/EDG-2026-092-sp400-uyelik-tarihcesi-ucretsiz-kaynak-fizibilite.yaml"
+ },
+ "tablo_meta": {
+  "satir_n_ham": 619,
+  "satir_n_gecerli": 619,
+  "hayalet_atlanan_n": 0,
+  "tarih_cozulemeyen_n": 0,
+  "kaynaksiz_satir_n": 156
+ },
+ "esikler": {
+  "kohort_boyut_bant": [
+   392,
+   408
+  ],
+  "belirsiz_isim_gun_ust": 12,
+  "kart_id": "EDG-2026-093"
+ },
+ "kohort": {
+  "gun_n": 2241,
+  "boyut_min": 400,
+  "boyut_max": 407,
+  "boyut_ort": 402.3949,
+  "boyut_bas": 406,
+  "boyut_son": 400,
+  "bant_disi_gun_n": 0,
+  "bant_disi": [],
+  "boyut_dagilimi": {
+   "400": 267,
+   "401": 717,
+   "402": 273,
+   "403": 311,
+   "404": 359,
+   "405": 150,
+   "406": 163,
+   "407": 1
+  },
+  "max_gunler": [
+   "2020-12-01"
+  ],
+  "fazlalik_tanisi": {
+   "ekle_etkili": 274,
+   "ekle_etkisiz": 1,
+   "discard_etkili": 268,
+   "discard_etkisiz": 7,
+   "guncel_n": 400,
+   "as_of_n": 406,
+   "sapma": 6,
+   "etkisiz_n": 8,
+   "etkisiz_ornek": [
+    {
+     "tarih": "2021-01-07",
+     "adim": "discard",
+     "sembol": "BRKS",
+     "satir_no": 258,
+     "alt_no": 0,
+     "neden": "S&P 500 constituent Devon Energy acquired WPX Energy."
+    },
+    {
+     "tarih": "2021-06-04",
+     "adim": "discard",
+     "sembol": "HFC",
+     "satir_no": 238,
+     "alt_no": 0,
+     "neden": "Market capitalization change."
+    },
+    {
+     "tarih": "2021-06-15",
+     "adim": "discard",
+     "sembol": "ELY",
+     "satir_no": 235,
+     "alt_no": 0,
+     "neden": "Just Eat Takeaway.com NV acquired GrubHub."
+    },
+    {
+     "tarih": "2022-02-03",
+     "adim": "discard",
+     "sembol": "GPS",
+     "satir_no": 203,
+     "alt_no": 0,
+     "neden": "Market capitalization change."
+    },
+    {
+     "tarih": "2022-07-05",
+     "adim": "ekle",
+     "sembol": "COHR",
+     "satir_no": 187,
+     "alt_no": 0,
+     "neden": "S&P MidCap 400 constituent II-VI Inc. acquired Coherent."
+    },
+    {
+     "tarih": "2023-06-19",
+     "adim": "discard",
+     "sembol": "ZI",
+     "satir_no": 133,
+     "alt_no": 0,
+     "neden": "Market capitalization change."
+    },
+    {
+     "tarih": "2023-08-21",
+     "adim": "discard",
+     "sembol": "CHK",
+     "satir_no": 128,
+     "alt_no": 0,
+     "neden": "Market capitalization change."
+    },
+    {
+     "tarih": "2024-01-05",
+     "adim": "discard",
+     "sembol": "PSTG",
+     "satir_no": 100,
+     "alt_no": 0,
+     "neden": "Market capitalization change."
+    }
+   ]
+  },
+  "csv_satir_n": 163
+ },
+ "belirsiz": {
+  "aday_satir_n": 21,
+  "tek_yanli_satir_n": 12,
+  "etkisiz_adim_satir_n": 9,
+  "belirsiz_satir_n": 8,
+  "belirsiz_semboller": [
+   "BRKS",
+   "CHK",
+   "COHR",
+   "ELY",
+   "GPS",
+   "HFC",
+   "PSTG",
+   "ZI"
+  ],
+  "gun_max": 8,
+  "gun_ort": 2.4529,
+  "tavan_asan_gun_n": 0,
+  "tavan_asan": []
+ },
+ "esleme": {
+  "karar_sayimi": {
+   "cift": 12,
+   "belirsiz": 8,
+   "esle": 1
+  },
+  "kayit_n": 21,
+  "kaynak": "mekanik öneri (yeniden üretildi)",
+  "gun_penceresi": 3,
+  "uygulanan_esleme_n": 1,
+  "uygulanmayan_esleme": [],
+  "dusurulen_satir_n": 0,
+  "esle_kararlari": [
+   "esle:HTA->HR"
+  ],
+  "jeton_sozlugu": {
+   "esle:<eski>-><yeni>": "YENİDEN ADLANDIRMA KİMLİĞİ — kararın bağlı olduğu satırda sembol yeniden yazılır (UYGULANIR)",
+   "cift:<cikan>-><giren>": "İKİ YARIM SATIR aynı endeks olayı — ANOTASYON, değişiklik listesi DEĞİŞMEZ",
+   "dusur": "satır değişiklik listesinden ÇIKARILIR",
+   "belirsiz": "karar YOK — sembol o tarihten önceki günlerde belirsiz sayılır"
+  }
+ },
+ "cok_sembollu_hucre": {
+  "bolunen_n": 2,
+  "bolunen": [
+   {
+    "satir_no": 29,
+    "tarih": "2025-12-22",
+    "alan": "cikan",
+    "hucre": "UAA/UA",
+    "semboller": [
+     "UAA",
+     "UA"
+    ]
+   },
+   {
+    "satir_no": 189,
+    "tarih": "2022-06-21",
+    "alan": "eklenen",
+    "hucre": "UA/UAA",
+    "semboller": [
+     "UA",
+     "UAA"
+    ]
+   }
+  ],
+  "bolunemeyen_n": 0,
+  "bolunemeyen": [],
+  "ayirac_deseni": "[/,;]",
+  "ham_satir_n": 619,
+  "bolunmus_satir_n": 621,
+  "csv_ayirac_tasiyan_satir_n": 0,
+  "csv_ayirac_tasiyan_semboller": [],
+  "kural": "`X/Y` (ve `X, Y`) hücresi AYRI sembollere bölünür — S&P endeksleri bir şirketin iki hisse sınıfını AYRI bileşen sayar; kaynak tablonun KENDİ hücresi. Parçalardan biri ticker biçiminde değilse hücre BÖLÜNMEZ ve `bolunemeyen`de ADIYLA durur"
+ },
+ "pit_pk": {
+  "tohum_adi": "EDG-2026-093",
+  "tohum": 1561449679,
+  "olay_havuzu_n": 54,
+  "ornek_n": 10,
+  "tolerans_gun": 1,
+  "gecti_n": 10,
+  "olculemedi_n": 0,
+  "hepsi_gecti": true,
+  "detay": [
+   {
+    "sembol": "FLEX",
+    "yon": "giris",
+    "tarih": "2024-11-25",
+    "t_1_uye": false,
+    "t_uye": true,
+    "gecis_gunu": "2024-11-25",
+    "gecti": true
+   },
+   {
+    "sembol": "BSY",
+    "yon": "giris",
+    "tarih": "2025-10-06",
+    "t_1_uye": false,
+    "t_uye": true,
+    "gecis_gunu": "2025-10-06",
+    "gecti": true
+   },
+   {
+    "sembol": "CADE",
+    "yon": "cikis",
+    "tarih": "2026-02-02",
+    "t_1_uye": true,
+    "t_uye": false,
+    "gecis_gunu": "2026-02-02",
+    "gecti": true
+   },
+   {
+    "sembol": "SITM",
+    "yon": "giris",
+    "tarih": "2026-03-23",
+    "t_1_uye": false,
+    "t_uye": true,
+    "gecis_gunu": "2026-03-23",
+    "gecti": true
+   },
+   {
+    "sembol": "CASY",
+    "yon": "cikis",
+    "tarih": "2026-04-09",
+    "t_1_uye": true,
+    "t_uye": false,
+    "gecis_gunu": "2026-04-09",
+    "gecti": true
+   },
+   {
+    "sembol": "SIRI",
+    "yon": "giris",
+    "tarih": "2026-06-11",
+    "t_1_uye": false,
+    "t_uye": true,
+    "gecis_gunu": "2026-06-11",
+    "gecti": true
+   },
+   {
+    "sembol": "COTY",
+    "yon": "cikis",
+    "tarih": "2026-06-22",
+    "t_1_uye": true,
+    "t_uye": false,
+    "gecis_gunu": "2026-06-22",
+    "gecti": true
+   },
+   {
+    "sembol": "SMTC",
+    "yon": "giris",
+    "tarih": "2026-06-22",
+    "t_1_uye": false,
+    "t_uye": true,
+    "gecis_gunu": "2026-06-22",
+    "gecti": true
+   },
+   {
+    "sembol": "BLD",
+    "yon": "cikis",
+    "tarih": "2026-07-01",
+    "t_1_uye": true,
+    "t_uye": false,
+    "gecis_gunu": "2026-07-01",
+    "gecti": true
+   },
+   {
+    "sembol": "IESC",
+    "yon": "giris",
+    "tarih": "2026-07-01",
+    "t_1_uye": false,
+    "t_uye": true,
+    "gecis_gunu": "2026-07-01",
+    "gecti": true
+   }
+  ]
+ },
+ "guncel_liste": {
+  "n": 400,
+  "kart_beyan_olay_n": 54,
+  "olay_normalizasyonu": [
+   {
+    "kart_literali": "MOG.A",
+    "normal": "MOG-A",
+    "kural": "ORTAK._tick — tablo tarafıyla AYNI fonksiyon"
+   }
+  ]
+ },
+ "kapi": {
+  "gecti": true,
+  "boyut_bandi_gecti": true,
+  "belirsiz_tavani_gecti": true
+ },
+ "csv_sha256": "65ff6c5a8bf5e6145d511d4674cd65b55ebb736bb1422922a7061703211a5203",
+ "hukum": "YOK — Rol-1",
+ "beyan": "ağa ÇIKILMADI (bütün girdiler yereldeki donmuş blob'lar; olc.cek() çağrılmadı) · `meridian` İTHAL EDİLMEDİ · canlı state/'e YAZILMADI · karta DOKUNULMADI (CLAUDE.md §3/§5)",
+ "cikti": {
+  "csv": {
+   "yol": "/Users/erdemozturk/AI-Trading/.claude/worktrees/agent-a1ac1cdfe404f8eb9/research/pit_universe/sp400_uyelik_tarihi.csv",
+   "sha256": "65ff6c5a8bf5e6145d511d4674cd65b55ebb736bb1422922a7061703211a5203"
+  },
+  "elle_esleme": {
+   "yol": "/Users/erdemozturk/AI-Trading/.claude/worktrees/agent-a1ac1cdfe404f8eb9/research/pit_universe/sp400_elle_esleme.yaml",
+   "sha256": "81e67ef88865c11b57f002fc6292706a81c4fb3f402c644900ac8b669f552f0f",
+   "durum": "yeniden üretildi (mekanik öneri)"
+  },
+  "sonuc_json": {
+   "yol": "/Users/erdemozturk/AI-Trading/.claude/worktrees/agent-a1ac1cdfe404f8eb9/research/olcumler/edg093_midcap_pit/adim0a_sonuc_2026-09-14T135546Z.json"
+  }
+ }
+}
