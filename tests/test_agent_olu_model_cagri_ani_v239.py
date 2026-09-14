@@ -18,6 +18,12 @@ BU DOSYA ÇİVİLER:
   (3) rapor edilen model kimliği ile ÇAĞRILAN model kimliği ayrışmaz (yeni bir çift-kaynak
       doğmasın: bu turun kapattığı sınıfın ta kendisi);
   (4) v235'in config göçü BOZULMADAN durur.
+
+ÖRNEK ADI TAZELENDİ (TSK-189, 2026-09-14): bu dosyanın "canlı yedek" ÖRNEĞİ `tencent/hy3:free`di;
+o ad artık BİLİNEN-ÖLÜ listesinde (katalogda hiç yoktu — ROADMAP §7). Ölü bir adı "serbest geçer"
+örneği olarak kullanmak testin kendi hükmünü tersine çevirirdi. HÜKÜMLER DEĞİŞMEDİ; yalnız örnek
+gerçekten TANINMAYAN bir ada (`ornek/taninmayan-model:free`) taşındı — yeni yedeğin kendi çivileri
+`tests/test_yedek_beyin_olu_ad_v493.py` dosyasında.
 """
 from __future__ import annotations
 
@@ -43,9 +49,10 @@ def _olaylar(sandbox_state, ad: str) -> list:
 # ---------------------------------- (1) ÇAĞRI ANI GÖÇÜ ----------------------------------
 
 def test_1a_cagri_zinciri_olu_adi_aliasa_cevirir(sandbox_state, monkeypatch):
-    """CANLI GEOMETRİ: birincil sır ölü ad, yedek sır canlı (tencent). Zincir alias'la kurulmalı."""
-    _sirlar(monkeypatch, NOUS_MODEL="gemini-3.5-flash", NOUS_FALLBACK_MODEL="tencent/hy3:free")
-    assert hermes._nous_model_zinciri() == ["gemini-flash-latest", "tencent/hy3:free"]
+    """CANLI GEOMETRİ: birincil sır ölü ad, yedek sır TANINMAYAN. Zincir alias'la kurulmalı."""
+    _sirlar(monkeypatch, NOUS_MODEL="gemini-3.5-flash",
+            NOUS_FALLBACK_MODEL="ornek/taninmayan-model:free")
+    assert hermes._nous_model_zinciri() == ["gemini-flash-latest", "ornek/taninmayan-model:free"]
 
 
 def test_1b_gocu_OLAYLAR_sessiz_degistirme_yasak(sandbox_state, monkeypatch):
@@ -81,8 +88,9 @@ def test_1e_hic_sir_yoksa_CLI_varsayilani(sandbox_state, monkeypatch):
 def test_2a_taninmayan_ad_ceviRILMEZ(sandbox_state, monkeypatch):
     """Elimizdeki model listesi bir KESİTTİR. `gemini-3.6-flash` gelecekte geçerli olabilir;
     onu "ölü" damgalamak, onarım kılığında bir arıza olurdu."""
-    _sirlar(monkeypatch, NOUS_MODEL="gemini-3.6-flash", NOUS_FALLBACK_MODEL="tencent/hy3:free")
-    assert hermes._nous_model_zinciri() == ["gemini-3.6-flash", "tencent/hy3:free"]
+    _sirlar(monkeypatch, NOUS_MODEL="gemini-3.6-flash",
+            NOUS_FALLBACK_MODEL="ornek/taninmayan-model:free")
+    assert hermes._nous_model_zinciri() == ["gemini-3.6-flash", "ornek/taninmayan-model:free"]
     assert not _olaylar(sandbox_state, "agent_model_olu_ad_gocuruldu"), (
         "tanınmayan ad göç olayı ürettti — harita kapsamını aşmış")
 

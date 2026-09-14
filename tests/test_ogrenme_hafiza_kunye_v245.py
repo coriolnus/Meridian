@@ -22,6 +22,11 @@ künye İKİNCİ (bu gecenin vakası) · (c) hiçbiri dolu değil → None + ned
 dönüş türü ve mevcut çağıranları KIRILMADI.
 
 Ağ/gerçek alt süreç YOK: `subprocess.run` saplı, `_hermes_bin` sahte, state sandbox'ta.
+
+ÖRNEK ADI TAZELENDİ (TSK-189, 2026-09-14): KALEM 2 fikstürlerinin birincil ayak örneği
+`tencent/hy3:free`di ve o ad BİLİNEN-ÖLÜ listesine girdi — çağrı-anı göçü onu kanonik yedeğe
+çevirince "çağrılan ad" beklentisi model adı yüzünden düşerdi. HÜKÜM DEĞİŞMEDİ (künye cevap vereni
+yazar); örnek gerçekten TANINMAYAN bir ada taşındı. Yukarıdaki canlı ölçüm dökümü TARİHÇEDİR.
 """
 import subprocess
 
@@ -255,12 +260,12 @@ def test_b1_ILK_DENEME_DOLU_kunye_birincil_modeli_tasir(ajan, monkeypatch):
 
 
 def test_b2_ILK_BOS_IKINCI_DOLU_kunye_IKINCI_modeli_tasir(ajan, monkeypatch):
-    """BU GECENİN VAKASI: tencent boş → gemini dolu; künye gemini demeli."""
-    _zincir(monkeypatch, "tencent/hy3:free", "gemini-flash-latest")
+    """BU GECENİN VAKASI: birinci ayak boş → gemini dolu; künye gemini demeli."""
+    _zincir(monkeypatch, "ornek/taninmayan-model:free", "gemini-flash-latest")
     cagrilar = _surec(monkeypatch,
                       lambda m: _Sonuc(0, DOLU) if m == "gemini-flash-latest" else BOS)
     assert hermes._agent_call("soru", kind="review") == DOLU
-    assert cagrilar == ["tencent/hy3:free", "gemini-flash-latest"]
+    assert cagrilar == ["ornek/taninmayan-model:free", "gemini-flash-latest"]
     model, neden = hermes.cevap_veren_model()
     assert model == "gemini-flash-latest" and neden is None
 
@@ -325,7 +330,7 @@ def inceleme(ajan, monkeypatch):
 def test_b7_candidate_review_kunyesi_CEVAP_VERENI_tasir(inceleme, monkeypatch):
     """CANLI VAKANIN AYNISI: birincil boş, yedek dolu → dosyadaki `model` YEDEĞİ yazar,
     "istenen" ad kendi ADIYLA ayrı alanda durur (iki anlam, iki ad) ve ayrışma olay basar."""
-    _zincir(monkeypatch, "tencent/hy3:free", "gemini-flash-latest")
+    _zincir(monkeypatch, "ornek/taninmayan-model:free", "gemini-flash-latest")
     _surec(monkeypatch, lambda m: _Sonuc(0, GORUS) if m == "gemini-flash-latest" else BOS)
     res = hermes.review_candidates(GUN)
     assert res and res["model"] == "gemini-flash-latest"

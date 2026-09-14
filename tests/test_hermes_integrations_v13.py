@@ -170,7 +170,9 @@ def test_fallback_provider_wired_when_primary_not_nous(tmp_path, monkeypatch):
     monkeypatch.setattr(secrets, "get", lambda k: None)          # NOUS_FALLBACK_MODEL yok → varsayılan
     hermes.config_ensure_integrations()
     fb = yaml.safe_load(cfg.read_text())["fallback_providers"]
-    assert fb == [{"provider": "nous", "model": "tencent/hy3:free"}]   # gemini 429 → ücretsiz Nous
+    # gemini 429 → ücretsiz Nous. Gömülü varsayılan TSK-189'da (2026-09-14) sabite bağlandı: eski
+    # düz metin ad (`tencent/hy3:free`) katalogda hiç yoktu, yani bu satır ÖLÜ bir adı çiviliyordu.
+    assert fb == [{"provider": "nous", "model": hermes.NOUS_FALLBACK_DEFAULT}]
 
 
 def test_fallback_not_wired_when_primary_is_nous(tmp_path, monkeypatch):

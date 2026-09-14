@@ -20,6 +20,12 @@ KALEM 3 — ÖLÇÜM ÇİVİSİ: kalibrasyonun girdisi `trade_plans.jsonl`ın `l
 HANGİ MODELİN konuştuğunu taşımaz; `candidate_review.json`ın `model` alanı kalibrasyona HİÇ girmez.
 
 Ağ/gerçek alt süreç YOK: `subprocess.run` saplı, `_hermes_bin` sahte, sırlar test tarafından kurulu.
+
+ÖRNEK ADI TAZELENDİ (TSK-189, 2026-09-14): fikstürlerdeki "istenen model" örneği `tencent/hy3:free`di
+ve o ad BİLİNEN-ÖLÜ listesine girdi — çağrı-anı göçü onu kanonik yedeğe çevirince "istenen ad" ile
+"çağrılan ad" beklentileri model adı yüzünden düşerdi. HÜKÜMLER DEĞİŞMEDİ (künye cevap vereni yazar);
+örnek gerçekten TANINMAYAN bir ada taşındı, böylece bu dosya göç haritasından bağımsız kalır.
+Yukarıdaki KALEM 1 paragrafının `tencent/hy3:free` atfı TARİHÇEDİR (ölçülen canlı vaka), dokunulmadı.
 """
 import subprocess
 
@@ -94,19 +100,19 @@ def test_k1_BIRINCI_AYAK_DOLU_kunye_birincili_tasir(zincir, monkeypatch):
 def test_k2_BIRINCI_BOS_IKINCI_DOLU_kunye_IKINCIYI_tasir(zincir, monkeypatch):
     """CANLI VAKANIN ZİNCİR EŞLENİĞİ: yerel ajan birincil modelde boş, yedekte dolu → künye YEDEK.
     Eski kod burada `active_model()` (= istenen = birincil) yazıyordu; ölçülen bedel o satırdı."""
-    _sir(monkeypatch, NOUS_MODEL="tencent/hy3:free", NOUS_FALLBACK_MODEL="gemini-flash-latest")
+    _sir(monkeypatch, NOUS_MODEL="ornek/taninmayan-model:free", NOUS_FALLBACK_MODEL="gemini-flash-latest")
     _ayaklar(monkeypatch)
     cagrilar = _surec(monkeypatch,
                       lambda m: _Sonuc(0, DOLU) if m == "gemini-flash-latest" else _Sonuc(BOS_RC))
     out = hermes.chain_text("soru", kind="system_eval")
-    assert cagrilar == ["tencent/hy3:free", "gemini-flash-latest"]
+    assert cagrilar == ["ornek/taninmayan-model:free", "gemini-flash-latest"]
     assert out["beyin"] == "nous" and out["text"] == DOLU
     assert out["model"] == "gemini-flash-latest", "künye hâlâ İSTENENİ yazıyor"
-    assert out["model_istenen"] == "tencent/hy3:free", "iki anlam aynı ada binmiş"
+    assert out["model_istenen"] == "ornek/taninmayan-model:free", "iki anlam aynı ada binmiş"
     assert out["model_olculemedi"] is None
     ev = _olaylar("nous_chain_model_ayrismasi")
     assert len(ev) == 1 and ev[0]["cevap_veren"] == "gemini-flash-latest"
-    assert ev[0]["istenen"] == "tencent/hy3:free" and ev[0]["beyin"] == "nous"
+    assert ev[0]["istenen"] == "ornek/taninmayan-model:free" and ev[0]["beyin"] == "nous"
     assert len(ev[0]["detail"]) >= 20
 
 
@@ -114,7 +120,7 @@ def test_k3_TERS_YON_TUZAGI_ajan_bos_gemini_dolu_kunye_GEMINIYI_tasir(zincir, mo
     """TÜKETEN-OKUMANIN YANLIŞ YERDE OKUNMASI kusuru TERS YÖNDE üretirdi: kutuyu ayak ayrımı
     yapmadan okumak, gemini'nin cevabına BOŞ kutuyu (None künye) yapıştırırdı. Ajan ayağı boş
     dönüp gemini konuştuğunda künye gemini'nin GERÇEKTEN çağrılan adını taşımalı."""
-    _sir(monkeypatch, NOUS_MODEL="tencent/hy3:free", GEMINI_API_KEY="g",
+    _sir(monkeypatch, NOUS_MODEL="ornek/taninmayan-model:free", GEMINI_API_KEY="g",
          GEMINI_MODEL="gemini-flash-latest")
     _ayaklar(monkeypatch, gemini=DOLU)
     cagrilar = _surec(monkeypatch, lambda m: _Sonuc(BOS_RC))
@@ -326,7 +332,7 @@ def _chain_sapla(monkeypatch, **ek):
     import json as _json
     cevap = {"text": _json.dumps({"oneriler": [_oneri_kunye()]}, ensure_ascii=False),
              "beyin": "nous", "model": None, "model_kaynagi": "cevap_veren",
-             "model_olculemedi": _KUNYE_NEDEN, "model_istenen": "tencent/hy3:free", "neden": {}}
+             "model_olculemedi": _KUNYE_NEDEN, "model_istenen": "ornek/taninmayan-model:free", "neden": {}}
     cevap.update(ek)
     monkeypatch.setattr(hermes, "chain_text", lambda *a, **k: cevap)
     return cevap
@@ -342,7 +348,7 @@ def test_w1_UC_BEYAN_KOSU_DEFTERINE_dusuyor(sandbox_state, monkeypatch):
     assert kosu["model"] is None, "ölçülemeyen künye deftere uydurularak yazıldı"
     assert kosu["model_olculemedi"] == _KUNYE_NEDEN, "ölçülemedi nedeni koşu defterine düşmedi"
     assert kosu["model_kaynagi"] == "cevap_veren", "kaynak beyanı koşu defterine düşmedi"
-    assert kosu["model_istenen"] == "tencent/hy3:free", "istenen ad koşu defterine düşmedi"
+    assert kosu["model_istenen"] == "ornek/taninmayan-model:free", "istenen ad koşu defterine düşmedi"
     assert "tencent" not in str(kosu["model"] or ""), "istenen ad künye alanına sızmış"
 
 
@@ -358,7 +364,7 @@ def test_w2_UC_BEYAN_ONERI_DEFTERINE_dusuyor(sandbox_state, monkeypatch):
     assert s["beyin"] == "nous" and s["model"] is None
     assert s["model_olculemedi"] == _KUNYE_NEDEN
     assert s["model_kaynagi"] == "cevap_veren"
-    assert s["model_istenen"] == "tencent/hy3:free"
+    assert s["model_istenen"] == "ornek/taninmayan-model:free"
     # EK ALAN SÖZLEŞMEYİ KIRMAZ: `required` kümesi değişmedi, satır hâlâ uyumlu.
     assert ledgers.validate_row("improvement_proposals.jsonl", s) == []
 
@@ -370,7 +376,7 @@ def test_w3_OLCULEN_KUNYE_neden_YOK_ad_YAZILIR(sandbox_state, monkeypatch):
     nous_eval.haftalik_degerlendirme(telemetri=_tel_kunye(), hafta="2026-W31")
     kosu = (store.read_json("nous_eval_runs.json", {}) or {})["haftalar"]["2026-W31"]
     assert kosu["model"] == "gemini-flash-latest" and kosu["model_olculemedi"] is None
-    assert kosu["model_istenen"] == "tencent/hy3:free"
+    assert kosu["model_istenen"] == "ornek/taninmayan-model:free"
     s = store.read_jsonl("improvement_proposals.jsonl")[0]
     assert s["model"] == "gemini-flash-latest" and s["model_olculemedi"] is None
 
@@ -383,7 +389,7 @@ def test_w4_KOSULAMADI_DALI_da_beyanlari_tasir(sandbox_state, monkeypatch):
     kosu = (store.read_json("nous_eval_runs.json", {}) or {})["haftalar"]["2026-W31"]
     assert kosu["durum"] == "kosulamadi"
     assert kosu["model"] is None and kosu["model_olculemedi"] == _KUNYE_NEDEN
-    assert kosu["model_istenen"] == "tencent/hy3:free"
+    assert kosu["model_istenen"] == "ornek/taninmayan-model:free"
 
 
 def test_w5_METIN_ENJEKTE_zincir_CAGRILMADI_neden_yazilir(sandbox_state, monkeypatch):
@@ -448,7 +454,7 @@ def test_w7_TUKETICI_CIVISI_uc_beyan_iki_deftere_de_bagli():
 # (uyuyan-yol dersi / YASA 6: okuyucusuz defter açılmaz).
 # ==================================================================================================
 _ATIF_KUNYE = {"model": "gemini-flash-latest", "model_olculemedi": None,
-               "model_kaynagi": "cevap_veren", "model_istenen": "tencent/hy3:free",
+               "model_kaynagi": "cevap_veren", "model_istenen": "ornek/taninmayan-model:free",
                "iz_id": "20260814T210334-review-1-0", "kind": "review", "backfill": False}
 
 
@@ -474,7 +480,7 @@ def test_o1_DAMGALANAN_HER_PLAN_ICIN_SOZLESMELI_atif_satiri(sandbox_state):
     for s in satirlar:
         assert ledgers.validate_row(hermes.PLAN_ATIF_DEFTERI, s) == [], f"sözleşme ihlali: {s}"
         assert s["model"] == "gemini-flash-latest" and s["model_kaynagi"] == "cevap_veren"
-        assert s["model_istenen"] == "tencent/hy3:free" and s["model_olculemedi"] is None
+        assert s["model_istenen"] == "ornek/taninmayan-model:free" and s["model_olculemedi"] is None
         assert s["iz_id"] == "20260814T210334-review-1-0" and s["kind"] == "review"
         assert s["plan_date"] == "2026-08-14" and s["backfill"] is False
     assert {s["plan_id"] for s in satirlar} == {"P-2026-08-14-AAA", "P-2026-08-14-BBB"}
@@ -492,7 +498,7 @@ def test_o2_OLCULEMEYEN_KUNYE_None_plus_NEDEN_ISTENEN_sizmaz(sandbox_state):
     assert s["model"] is None
     assert s["model_olculemedi"] == hermes.AGENT_MODEL_YOK_ZINCIR
     assert len(s["model_olculemedi"]) >= 20
-    assert s["model_istenen"] == "tencent/hy3:free"
+    assert s["model_istenen"] == "ornek/taninmayan-model:free"
     assert "tencent" not in str(s["model"] or ""), "istenen ad künye alanına sızmış"
 
 
@@ -599,7 +605,7 @@ def test_o10_REVIEW_YOLU_UCTAN_UCA_kunyeyi_indirir(zincir, monkeypatch):
     YEDEĞİ yazar. `candidate_review.json` TEK-BELGE deposudur (yalnız son günü tutar), yani bu
     soru ancak append-only defterde kalıcı olarak cevaplanabilir."""
     monkeypatch.setattr(hermes, "_skill_preload", lambda *a, **k: ())
-    _sir(monkeypatch, NOUS_MODEL="tencent/hy3:free", NOUS_FALLBACK_MODEL="gemini-flash-latest")
+    _sir(monkeypatch, NOUS_MODEL="ornek/taninmayan-model:free", NOUS_FALLBACK_MODEL="gemini-flash-latest")
     _ayaklar(monkeypatch)
     gorus = ('{"reviews": [{"ticker": "VLO", "opinion": "destekle", "note": "taban sıkı"}]}\n'
              'Messages: 2 (1 user, 0 tool calls)')
@@ -611,7 +617,7 @@ def test_o10_REVIEW_YOLU_UCTAN_UCA_kunyeyi_indirir(zincir, monkeypatch):
     assert len(s) == 1, f"inceleme yolu atıf yazmadı: {s}"
     s = s[0]
     assert s["plan_id"] == "P-2026-08-13-VLO" and s["ticker"] == "VLO"
-    assert s["model"] == "gemini-flash-latest" and s["model_istenen"] == "tencent/hy3:free"
+    assert s["model"] == "gemini-flash-latest" and s["model_istenen"] == "ornek/taninmayan-model:free"
     assert s["model_kaynagi"] == "cevap_veren" and s["model_olculemedi"] is None
     assert s["kind"] == "review" and s["backfill"] is False
     assert s["iz_id"], "iz_id yazılmadı — `agent_calls.jsonl` join'i kurulamaz"

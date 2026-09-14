@@ -96,15 +96,27 @@ def test_varsayilan_ve_harita_ad_deseni_civisi():
     """Varsayılan bir ALIAS olmalı — çıplak sürüm adı, Google'ın yeniden-adlandırma döngüsünde
     (3.5→3.6 dönmüş durumda) aynı 404 sınıfını yeniden doğurur. Çivi SABİT LİSTEYLE DEĞİL
     AD-DESENİYLE: '-latest' alias'ları yeniden-adlandırmaya dayanıklı tek ad sınıfı. Harita da
-    aynı deseni taşır: anahtarlar çıplak ölü adlar, hedefler alias; rol (flash/pro) eşleşir."""
+    aynı deseni taşır: anahtarlar çıplak ölü adlar, hedefler alias; rol (flash/pro) eşleşir.
+
+    İKİ AD SINIFI (TSK-189, 2026-09-14): harita artık YALNIZ Google adlarını taşımıyor — OpenRouter
+    404'leri de buradan göçüyor (`openai/gpt-oss-20b:free`, `tencent/hy3:free`). O katmanda
+    '-latest' diye bir ad sınıfı YOKTUR (OpenRouter kimlikleri `satıcı/model[:free]` biçiminde
+    sabittir), yani desen sınıfa göre ayrılır. ÇİVİ GEVŞEMEZ, ikiye bölünür: Google adları alias'a,
+    sağlayıcı-önekli adlar ÖLÇÜLMÜŞ TEK kanonik yedeğe (`hermes.NOUS_FALLBACK_DEFAULT`) gider —
+    yani hedef yine keyfi bir ad olamaz."""
     assert hermes.GEMINI_DEFAULT_MODEL.endswith("-latest"), \
         "varsayılan çıplak sürüm adına dönmüş — 404 sınıfı geri gelir (2026-08-12 vakası)"
     assert hermes.GEMINI_DEFAULT_MODEL not in hermes.GEMINI_DEAD_MODEL_MAP, \
         "varsayılan bilinen-ölü listede olamaz"
     for eski, yeni in hermes.GEMINI_DEAD_MODEL_MAP.items():
+        assert eski != yeni
+        if "/" in eski:                       # sağlayıcı-önekli sınıf (OpenRouter/Nous portalı)
+            assert yeni == hermes.NOUS_FALLBACK_DEFAULT, \
+                f"göç hedefi ölçülmüş kanonik yedek değil: {eski}→{yeni}"
+            assert yeni.endswith(":free"), f"ücretli hedefe göç: {eski}→{yeni}"
+            continue
         assert yeni.endswith("-latest"), f"göç hedefi alias değil: {eski}→{yeni}"
         assert not eski.endswith("-latest"), f"alias ölü-ad listesine giremez: {eski}"
-        assert eski != yeni
         # rol korunumu: flash sınıfı flash alias'ına, pro sınıfı pro alias'ına gider
         if "flash" in eski:
             assert "flash" in yeni, f"hızlı-görev rolü kayboldu: {eski}→{yeni}"
@@ -114,8 +126,9 @@ def test_varsayilan_ve_harita_ad_deseni_civisi():
 
 def test_nous_override_ve_fallback_zinciri_degismez(sandbox_state, monkeypatch):
     """Operatör seti ÖNCELİKLİ: göç YALNIZ ajan config'indeki model.default'a dokunur —
-    NOUS_MODEL/GEMINI_MODEL override çözümlemesi ve ücretsiz fallback zinciri
-    (tencent/hy3:free) mevcut sözleşmeyle aynen kalır."""
+    NOUS_MODEL/GEMINI_MODEL override çözümlemesi ve ücretsiz fallback zinciri mevcut sözleşmeyle
+    aynen kalır. ADIN KENDİSİ TSK-189'da (2026-09-14) sabite bağlandı — eskiden bu satır düz metin
+    `tencent/hy3:free` yazıyordu, yani hiç var olmamış bir adı sözleşme diye çiviliyordu."""
     from meridian import secrets
     vals = {"NOUS_MODEL": "operator/ozel-model", "GEMINI_MODEL": "gemini-2.5-flash",
             "NOUS_ENDPOINT": "https://ornek.uc/v1"}
@@ -127,7 +140,8 @@ def test_nous_override_ve_fallback_zinciri_degismez(sandbox_state, monkeypatch):
     assert hermes._model_id("nous") == "operator/ozel-model"
     assert hermes._model_id("gemini") == "gemini-2.5-flash"
     # fallback zinciri DEĞİŞMEDİ: birincil nous değilken ücretsiz Nous modeli (mevcut #1 sözleşmesi)
-    assert _yazilan()["fallback_providers"] == [{"provider": "nous", "model": "tencent/hy3:free"}]
+    assert _yazilan()["fallback_providers"] == [{"provider": "nous",
+                                                 "model": hermes.NOUS_FALLBACK_DEFAULT}]
 
 
 def test_bos_override_varsayilan_aliasa_duser(sandbox_state, monkeypatch):
