@@ -300,7 +300,7 @@ _Güncelleme 22:09Z: A-2 korpus gömmesi sürüyor (1 s+); A-3/A-4 şef brifingi
 | Kalem | Durum | Kapı / sıradaki |
 |---|---|---|
 | TSK-138 dilim-3 | CANLI: tur-1 + tur-2 (K3 `deneme`) main, dağıtım #45/#46 (deployed_sha f78cb79) | kanıt 22:00Z şef (`sef_brifingi_denetci_cagri`), yarın 10:03Z bekçi |
-| TSK-187 13:40Z kapısı | Ayna dolumu GEÇTİ (MPC 20 · DE 10 · MRNA 8 · MU 7); R-payda göçü DÜŞTÜ: CRM `qty_taban: None`, `r_payda_gocu` 0, `float(None)` kapanış çökmesi riski | TSK-187b HOTFIX main 46cd4c0, SUITE #53 12770/0, push; DAĞITIM #47 20:05Z sonrası (CRM 255, stop 230,9); kanıt: restart sonrası `r_payda_gocu` (CRM, eski None → 12) |
+| TSK-187 13:40Z kapısı | Ayna dolumu GEÇTİ (MPC 20 · DE 10 · MRNA 8 · MU 7); R-payda göçü henüz ATEŞLENMEDİ — DÜZELTME 15:2xZ: dokümanda `qty_taban` anahtarı yok ('None' yanlış okumaydı), göç noktası `_load_broker` günlük döngüde → ilk döngü bu akşam 20:3xZ | TSK-187b HOTFIX main 46cd4c0, SUITE #53 12770/0, push; DAĞITIM #47 20:05Z sonrası (CRM 255, stop 230,9); kanıt: restart sonrası `r_payda_gocu` (CRM, eski None → 12) |
 | EDG-093 (TSK-065 halefi) | ADIM-0 A+B GEÇTİ: sp400 PIT kohortu (400–407, belirsiz ≤8, PIT-PK 10/10) + Alpaca kapsaması 661/661, barsız-çıkış %0,38 | ana ölçüm (EDG-016 tasarımı) OPERATÖR sırası — düşük öncelik kararı geçerli |
 | Vault dalga-2 | Öneri belgesi hazır (5 seçenek, 3 soru) + 2d `.dash.env` ölü kopya ölçümü | OPERATÖR MASASI |
 | A1 triyaj | 14:35Z sessiz; tek warn sondanın 400'ü | saatlik |
