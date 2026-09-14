@@ -479,6 +479,12 @@ F9_CIFTLERI_SOZLESMESI = (
     ('deploy/vault/vault-agent.service', '/etc/systemd/system/vault-agent.service'),
     ('deploy/vault/vault-sagligi.service', '/etc/systemd/system/vault-sagligi.service'),
     ('deploy/vault/vault-sagligi.timer', '/etc/systemd/system/vault-sagligi.timer'),
+    # TSK-064 Faz-2 tur-4 (2026-09-14, 1ab38a0) — yönetici jetonu haftalık yenileme üçlüsü. Tur-4
+    # kapsam koşumu v452'yi içermiyordu; suite #54 (dd9d0e7) A2d ile yakaladı — sözleşme burada
+    # kapanıyor (Rol-1, 2026-09-14 23:5xZ). Betik A0 rolü dışı (`f9_rol_disi`), ikisi birim.
+    ('deploy/vault/vault_admin_yenile.sh', '/opt/vault/bin/vault_admin_yenile.sh'),
+    ('deploy/vault/vault-admin-yenile.service', '/etc/systemd/system/vault-admin-yenile.service'),
+    ('deploy/vault/vault-admin-yenile.timer', '/etc/systemd/system/vault-admin-yenile.timer'),
 )
 
 
