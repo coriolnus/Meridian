@@ -144,6 +144,28 @@ f9_ciftleri:
     canli: "/etc/systemd/system/apisix-etcd.service"
   - repo: "deploy/oracle-a1/52meridian-unattended-upgrades"
     canli: "/etc/apt/apt.conf.d/52meridian-unattended-upgrades"
+  # ---- TSK-064 Faz-2 · Vault (2026-09-14) ----------------------------------------------------
+  # Bu sekiz çift KURULUM GÜNÜNE KADAR "canlıda YOK" diye raporlanır ve bu doğru davranıştır:
+  # [F9] bir KAPI değil bir İÇERİK AYNASIDIR (kurulum bakım penceresinin işi, hüküm operatörün).
+  # Kasa kurulduktan sonra aynı satırlar "depo ↔ canlı ayrıştı mı" sorusunu yanıtlar — ve bu
+  # soru burada normalden ağırdır: `/etc/vault/vault.hcl`in sessizce ayrışması, dinleme
+  # adresinin depoda 127.0.0.1 canlıda başka bir şey olması demektir.
+  - repo: "deploy/vault/vault.hcl"
+    canli: "/etc/vault/vault.hcl"
+  - repo: "deploy/vault/agent.hcl"
+    canli: "/etc/vault/agent.hcl"
+  - repo: "deploy/vault/vault_unseal.sh"
+    canli: "/opt/vault/bin/vault_unseal.sh"
+  - repo: "deploy/vault/vault.service"
+    canli: "/etc/systemd/system/vault.service"
+  - repo: "deploy/vault/vault-unseal.service"
+    canli: "/etc/systemd/system/vault-unseal.service"
+  - repo: "deploy/vault/vault-agent.service"
+    canli: "/etc/systemd/system/vault-agent.service"
+  - repo: "deploy/vault/vault-sagligi.service"
+    canli: "/etc/systemd/system/vault-sagligi.service"
+  - repo: "deploy/vault/vault-sagligi.timer"
+    canli: "/etc/systemd/system/vault-sagligi.timer"
 
 # =================================================================================================
 # [5a] doğrulama-token anahtar kontrolü uçları (TSK-148 — dağıtım #13 vakası, 2026-09-04 20:04Z)

@@ -1,0 +1,98 @@
+# vault.service — HashiCorp Vault sır kasası (TSK-064 Faz-2, A1 Oracle Ampere aarch64)
+#
+# NE YAPAR: 127.0.0.1:8200'de tek düğümlü, dosya depolu bir kasa koşturur ve AÇILIŞTA MÜHRÜ
+# KENDİLİĞİNDEN AÇAR. Otomatik unseal operatörün kararıdır (K6b, 2026-09-07: "Otomatik: anahtar
+# dosyası A1'de"); OCI KMS ve elle unseal seçilmedi.
+#
+# NEDEN ExecStartPost, NEDEN After= DEĞİL: `After=` yalnız SIRALAMA verir, TETİKLEME vermez —
+# ayrı bir unseal birimi `vault.service` her yeniden başladığında kendiliğinden koşmazdı ve
+# crash/reboot sonrası kasa MÜHÜRLÜ kalırdı (arıza ilk sır render'ında görünür, yani saatler
+# sonra). ExecStartPost her açılışa BAĞLIDIR. Elle/tekrar yolu için ayrıca vault-unseal.service
+# vardır ve AYNI betiği koşar (tek kaynak).
+#
+# `+` ÖNEKİ (ExecStartPost=+…) ZORUNLUDUR ve ölçülmüş bir çelişkiyi çözer: bu birim User=vault
+# koşar, ama unseal anahtarı 0400 root:root'tur (tasarım §6.2 — en dar izin). Öneksiz bir
+# ExecStartPost `vault` kullanıcısı olarak koşar ve anahtarı OKUYAMAZ. `+` komutu tam yetkiyle
+# ve sandbox DIŞINDA çalıştırır (systemd.service(5)); yetki genişlemesi TEK bir komutla ve o
+# komut bu depoda versiyonlu, sır basmayan bir betikle sınırlıdır.
+#
+# KURULDUĞU GÜN ELLE TEST-ATEŞLENİR (CLAUDE.md §9, "kurulu ≠ çalışır"):
+#   sudo systemctl restart vault && vault status     # Sealed=false BEKLENİR
+[Unit]
+Description=HashiCorp Vault (yerel sır kasası, loopback)
+After=network-online.target
+Wants=network-online.target
+# Yapılandırma yoksa birim HİÇ AÇILMAZ ve bunu journal'a YAZAR. Kurulum yarım kalmışken
+# "çalışıyor gibi görünen" bir kasa, kasasızlıktan kötüdür.
+ConditionFileNotEmpty=/etc/vault/vault.hcl
+OnFailure=meridian-fail-notify.service
+
+[Service]
+# Type=notify: Vault systemd'ye hazır olduğunu KENDİSİ bildirir; ExecStartPost ancak ondan sonra
+# koşar. Bu, unseal betiğinin kendi yoklama penceresini (aşağıdaki betikte sınırlı ve gerekçeli)
+# bir GÜVENLİK AĞI hâline getirir, tek dayanak hâline değil.
+# A1 KAPISI: `vault --version` ile sürüm ölçülür; Type=notify Vault 1.9'dan beri desteklenir ve
+# desteklenmeyen bir ikilide birim TimeoutStartSec'te düşer (sessiz değil, görünür arıza).
+Type=notify
+User=vault
+Group=vault
+ExecStart=/usr/local/bin/vault server -config=/etc/vault/vault.hcl
+ExecReload=/bin/kill --signal HUP $MAINPID
+# OTO-UNSEAL — bkz. başlıktaki `+` gerekçesi.
+ExecStartPost=+/opt/vault/bin/vault_unseal.sh
+# SIGINT Vault'un belgelenmiş temiz kapanış sinyalidir; SIGTERM alt süreçlere de yayılırdı.
+KillSignal=SIGINT
+KillMode=process
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+# Mühürlü bir kasa `sys/health` 503 döndürür; açılış + unseal penceresi buna göre cömert.
+TimeoutStartSec=120
+LimitNOFILE=65536
+# mlock için: sayfa kilitleme sınırsız olmalı, yoksa Vault büyük belleklerde kilitleyemez ve
+# açılışta düşer.
+LimitMEMLOCK=infinity
+
+# ==================================================================================================
+# H3 SERTLEŞTİRME — filo ortak seti (gerekçelerin TAM METNİ deploy/oracle-a1/meridian.service'te).
+# BU BİRİMDE İKİ BEYANLI AYRIŞMA VAR ve ikisi de ölçülmüş bir gerekliliktir:
+#
+#  (1) CapabilityBoundingSet BOŞ DEĞİL. Filo kuralı boş kümedir ("hiçbir yetenek"); Vault mlock
+#      için CAP_IPC_LOCK ister ve boş sınırlayıcı küme AmbientCapabilities'i de düşürürdü.
+#      Sınır TEK kaleme daraltıldı: ambient ile bounding AYNI tek yeteneği taşır, yani süreç
+#      CAP_IPC_LOCK dışında hiçbir yeteneği ne taşır ne de kazanabilir.
+#      SecureBits=keep-caps: NoNewPrivileges + ambient yeteneğin User= düşüşünde korunması için.
+#  (2) RestrictAddressFamilies'te AF_INET6 YOK. Kardeş birimler dışa çıkar (Alpaca/OpenRouter);
+#      bu birim YALNIZ 127.0.0.1 dinler ve hiçbir yere çıkmaz. En-az-yetki, filo-birebirlikten
+#      önce gelir (emsal: meridian-skill-gorus.service, AF_UNIX'e daralttı).
+#
+# Bilerek DIŞARIDA bırakılanlar (MemoryDenyWriteExecute · PrivateDevices · PrivateUsers ·
+# ProtectProc/ProcSubset · IPAddressDeny · SystemCallErrorNumber=EPERM) ve gerekçeleri:
+# deploy/oracle-a1/meridian.service.
+# ==================================================================================================
+NoNewPrivileges=true
+SecureBits=keep-caps
+AmbientCapabilities=CAP_IPC_LOCK
+CapabilityBoundingSet=CAP_IPC_LOCK
+ProtectSystem=strict
+ProtectHome=read-only
+# TEK YAZILABİLİR YOL. `/etc/vault` BİLEREK YOK: kasa süreci kendi yapılandırmasını ve unseal
+# anahtarını DEĞİŞTİREMEZ — o dizine yalnız kurulum betiği (root, bakım penceresi) yazar.
+ReadWritePaths=/opt/vault/data
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target

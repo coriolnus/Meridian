@@ -1,0 +1,75 @@
+# vault-agent.service — Vault Agent: kasadaki sırları DÜZ DOSYALARA render eder (TSK-064 Faz-2)
+#
+# NE YAPAR (tasarım §6.3, "Seçenek 2"): AppRole ile kasaya login olur ve her sır için bir
+# `template` bloğu koşturarak hedef dosyayı (0400 root:root) yazar. TÜKETİCİ KODU DEĞİŞMEZ:
+# `LoadCredential=` kaynakları ve `.env` okuyucuları eskisi gibi DOSYA okur — kaynağın nereden
+# doldurulduğunu bilmezler. Faz-1A/1B yatırımı (sır ortama hiç girmesin) böylece KORUNUR.
+#
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+# SAPMA — BU BİRİM ROOT KOŞAR (Rol-1 kararı, plan Global Constraints; tasarım §6.3'teki
+# `User=vault-agent` bu gerekçeyle DÜŞTÜ).
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+# Hedef dosyalar TASARIM GEREĞİ 0400 root:root'tur (`/etc/meridian/*`, `/etc/hindsight/creds/*`)
+# ve onları systemd PID 1 olarak, sandbox'tan ÖNCE okur. Agent'ı ayrı bir kullanıcıya vermek,
+# o kullanıcının yazabilmesi için HEDEF DİZİNLERİ gevşetmeyi (grup yazma ya da sahiplik devri)
+# gerektirirdi — yani sırların iznini, sırları koruyan mekanizmanın kendisi için zayıflatmayı.
+# Kazanç yerine takas: root koşum + DAR yazma yüzeyi. Sandbox aşağıda; `ReadWritePaths` yalnız
+# İKİ hedef dizindir, `/etc`nin tamamı değil. Ayrıca ikinci bir kök-dosya (agent secret-id)
+# zaten operatörün "anahtar dosyası A1'de" kararıyla aynı güven sınıfındadır (tasarım §6.3).
+#
+# GERİ ALIM (tasarım §6.4): `systemctl stop vault-agent` → hedef dosyalar OLDUĞU GİBİ KALIR
+# (Agent onları silmez) → tüketiciler hiçbir şey fark etmez. Vault kanalı EKLENİR, dosya kanalı
+# ZATEN hedef biçimdir; iki-kanal ilkesinin Faz-2 hâli budur.
+#
+# KURULDUĞU GÜN ELLE TEST-ATEŞLENİR (CLAUDE.md §9): canary reçetesi deploy/vault/vault_kur.sh
+# başlığındadır (Vault'ta gerçek değer, eski dosyada sahte → tüketici 200 mü).
+[Unit]
+Description=Vault Agent (sır şablonlarını dosyaya render eder)
+After=vault.service
+Wants=vault.service
+# Üç dosyanın üçü de kurulum betiğinin ürünüdür; biri yoksa Agent login olamaz ve sonsuz
+# yeniden deneme döngüsüne girerdi. Koşul birimi journal'a yazarak atlar.
+ConditionFileNotEmpty=/etc/vault/agent.secret-id
+ConditionPathExists=/etc/vault/agent.hcl
+OnFailure=meridian-fail-notify.service
+
+[Service]
+Type=simple
+# User= YOK — root. Gerekçe başlıktaki SAPMA bloğunda.
+ExecStart=/usr/local/bin/vault agent -config=/etc/vault/agent.hcl
+Restart=on-failure
+RestartSec=10
+
+# ==================================================================================================
+# H3 SERTLEŞTİRME — filo ortak seti (gerekçelerin tam metni deploy/oracle-a1/meridian.service'te).
+# BU BİRİMDE SERTLEŞTİRME DAHA KRİTİKTİR, daha az değil: süreç root koşuyor, yani sandbox onun
+# TEK freni. `CapabilityBoundingSet=` BOŞ: Agent yalnız dosya yazar, hiçbir yeteneğe ihtiyacı yok
+# (root olması yetenek gerektirmez — dosya sahipliği zaten root'tur).
+# ==================================================================================================
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+# YAZMA YÜZEYİ — SAPMANIN BEDELİNİ ÖDEYEN SATIR. Root bir süreç `/etc`nin tamamına yazabilirdi;
+# `ProtectSystem=strict` onu salt-okunur yapar ve buradaki İKİ yol deliğin tamamıdır. Liste
+# `deploy/sir_envanteri.yaml::vault_kv` hedeflerinin DİZİNLERİNDEN türer ve çivi ikisini
+# karşılaştırır — yeni bir sır başka bir dizine hedeflenirse çivi öter (tek-kaynak yasası).
+ReadWritePaths=/etc/meridian /etc/hindsight/creds
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+# Yalnız loopback (kasa) — dışa çıkış YOK.
+RestrictAddressFamilies=AF_INET AF_UNIX
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+[Install]
+WantedBy=multi-user.target

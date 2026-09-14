@@ -73,8 +73,13 @@ ESKI_DERIN_ADRESLER = ["kosu#adaylar", "kosu#kapilar", "portfoy#brifing", "portf
 # kendi kuralını çiğnedi) uymuyor, `besleme`ye de uymuyor (mekanizma ölmedi, disk doluyor). Bu
 # sözleşme ihlalinden ÖNCE gelen bir KAPASİTE erken uyarısıdır; evsiz kalırsa alarm üretilir ama
 # panoda kartı olmaz. Son sırada: app.js'te `kota`dan SONRA eklendi.
+# 2026-09-14 (TSK-064 Faz-2): SEKİZ sınıf DOKUZ oldu — `sir_kasasi` eklendi (VAULT_SEALED,
+# VAULT_DOWN). GEREKÇE yine AYNI KALIP (`teslimat` ve `kapasite` ile): yeni jetonlar `besleme`ye
+# (mekanizma susmadı), `butunluk`e (sözleşme ihlali yok) ve `kill`e (kol çekilmedi) uymuyor —
+# sır KANALI kesildi ve bu sınıfın imzası SESSİZLİKtir (Agent render'ı durur, dosyalar kalır).
+# Son sırada: app.js'te `kapasite`den SONRA eklendi.
 OLAY_SINIFLARI = ["besleme", "teslimat", "mutabakat", "kill", "butunluk", "yetki", "kota",
-                  "kapasite"]
+                  "kapasite", "sir_kasasi"]
 
 
 def _sozluk(ad: str) -> dict[str, str]:

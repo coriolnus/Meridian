@@ -104,6 +104,20 @@ ALARM_ARAMA_HAVUZU_OLU = "ARAMA_HAVUZU_OLU"  # işçi havuzu tavan boyunca TEK �
 # hak ediyor (DATA_QUALITY/MECHANISM_STALE'ın anlattığı olgu bu DEĞİL — "disk operatör tavanına
 # yaklaşıyor" bir KAPASİTE uyarısıdır). Üretici: `watchdog.check_veri_disk_and_alarm`.
 ALARM_DISK_ESIK = "DISK_ESIK"  # /opt/veri kullanımı operatör tavanına yaklaşıyor (erken uyarı)
+# TSK-064 FAZ-2 (2026-09-14): sır kasası (Vault) Faz-2'nin YENİ körlük sınıfını getirir ve iki
+# jeton onu ikiye ayırır — çünkü iki hâl AYRI operatör eylemi ister ve tek jeton onları
+# karıştırırdı (emsal: HEARTBEAT_STALE ile MECHANISM_STALE ayrımı; "canlılık ≠ ilerleme").
+#   VAULT_SEALED : kasa CEVAP VERİYOR ama sır VEREMİYOR (mühürlü ya da hiç init edilmemiş).
+#     Bu SESSİZ bir arızadır ve sessizliği yapısaldır: Vault Agent render'ı durur, ama ÜRETTİĞİ
+#     dosyalar yerinde kalır — tüketiciler eski değeri okumaya devam eder ve her şey çalışır
+#     GÖRÜNÜR. Arıza ancak bir rotasyondan sonra, canlıda, yanlış yerde aranarak bulunurdu.
+#     Eylem: mührü aç (deploy/vault/vault_unseal.sh ya da vault-unseal.service).
+#   VAULT_DOWN   : kasaya ULAŞILAMIYOR (TCP/timeout) ya da sağlık ucu tanınmayan bir cevap
+#     veriyor. Eylem: servisi ve dinleme adresini ölç.
+# Üretici: `ops/vault_sagligi.py` (vault-sagligi.timer). Jetonlar `NOTIFY_TOKENS` türetmesine
+# kendiliğinden girer — aşağıdaki kural gereği, elle liste YOK.
+ALARM_VAULT_SEALED = "VAULT_SEALED"  # kasa cevap veriyor ama sır veremiyor — render DURMUŞ
+ALARM_VAULT_DOWN = "VAULT_DOWN"      # kasaya ulaşılamıyor / tanınmayan sağlık cevabı
 
 # also mirror events to state/events.jsonl so the dashboard/tests can read them without a log scraper
 _EVENTS = "events.jsonl"

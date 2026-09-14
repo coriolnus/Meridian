@@ -28,6 +28,13 @@ birim_kaynaklari:
   - "{{ playbook_dir }}/../hindsight/*.service"
   - "{{ playbook_dir }}/../hindsight/*.timer"
   - "{{ playbook_dir }}/../apisix/*.service"
+  # TSK-064 Faz-2 (2026-09-14): Vault birimleri. ROL YALNIZ KOPYALAR — `vault.service` ve
+  # `vault-agent.service` `etkin_birimler`de DEĞİLDİR, çünkü ikisi de kasa KURULMADAN (init +
+  # unseal + AppRole) anlamlı değildir ve enable edilmiş ama açılamayan bir birim, kurulum
+  # gününü "neden failed" sorusuyla açardı. Kurulum sırası: rol kopyalar → Rol-1
+  # `deploy/vault/vault_kur.sh --uygula` koşar (o betik enable eder) → canary.
+  - "{{ playbook_dir }}/../vault/*.service"
+  - "{{ playbook_dir }}/../vault/*.timer"
 
 # --- drop-in dizinleri (basename; Task 2'de her biri için with_fileglob `*.conf`) ---
 dropin_dizinleri:
@@ -149,6 +156,12 @@ etkin_timerlar:
                                          # (CLAUDE.md §9 "kurulu ≠ çalışır"), pencere ilk başarılı retain damgasıyla açılır.
   - meridian-bar-arsiv.timer             # TSK-020 UYGULA-3 haftalık tazeleme (Pazar 22:00 UTC; sıra operatör onaylı 2026-09-01);
                                          # kurulum günü elle test-ateşleme Rol-1'de (2026-09-13).
+  - vault-sagligi.timer                  # TSK-064 Faz-2 (2026-09-14): kasa mühür/erişilebilirlik bekçisi.
+                                         # BİRİM KENDİ KAPISINI TAŞIR: `vault-sagligi.service`
+                                         # `ConditionPathExists=/etc/vault/vault.hcl` ile, Vault HENÜZ
+                                         # KURULMAMIŞKEN sessizce (journal'a yazarak) atlanır — yani
+                                         # timer'ı kasadan ÖNCE enable etmek yanlış alarm üretmez.
+                                         # Kurulum günü elle test-ateşleme Rol-1'de (CLAUDE.md §9).
 
 
 # --- A1'de BİLEREK disabled kalan birimler (A1 ölçümü) — rol bunlara DOKUNMAZ, yalnız raporlar
@@ -227,3 +240,11 @@ f9_rol_disi:
   - deploy/hermes/profiles/karne/distribution.yaml
   - deploy/hermes/profiles/karne/config.yaml
   - deploy/hermes/profiles/karne/SOUL.md
+  # TSK-064 Faz-2 (2026-09-14): Vault'un BİRİM OLMAYAN üç dosyası. Rol onları TAŞIMAZ ve bu
+  # bilinçlidir — üçü de kasanın kendi kurulumuna aittir ve `deploy/vault/vault_kur.sh` onları
+  # (doğru sahiplik/izinle: 0640 root:vault, 0750 root:root) yerine koyar. Rol taşısaydı iki
+  # yazar olurdu ve izinler her playbook koşumunda salınırdı — `meridian-backup.service`
+  # chmod salınımıyla AYNI sınıf (K9). `agent.hcl` ayrıca ÜRETİLMİŞ bir dosyadır.
+  - deploy/vault/vault.hcl
+  - deploy/vault/agent.hcl
+  - deploy/vault/vault_unseal.sh

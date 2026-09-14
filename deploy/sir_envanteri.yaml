@@ -479,3 +479,88 @@ rotasyon_kopyalari:
       sahip: "root"
       tuketici: "ops/apisix_uygula.py (operatör eliyle koşan ops aracı; birim DEĞİL, restart yok)"
       not: "TSK-064 Faz-1C kaynağı — A1'de HENÜZ YOK (sir_credential_gecis.sh --faz1-apisix yaratır); LoadCredential kaynağı DEĞİL"
+
+# =================================================================================================
+# VAULT KV DALGA-1 — TSK-064 Faz-2 (2026-09-14, repo tarafı; A1 kurulumu Rol-1'de)
+# =================================================================================================
+# NİYE ÜÇÜNCÜ BİR BLOK. Yukarıdaki iki blok iki AYRI gerçeği taşır: `dosyalar:` spec §1
+# tablosundan türer ("bugün hangi sır nerede yaşıyor"), `rotasyon_kopyalari:` rotasyon betiğinden
+# ("bir değer döndüğünde hangi kopyalar aynı pencerede yazılmalı"). Bu blok ÜÇÜNCÜ bir soruyu
+# yanıtlar: "hangi sır Vault'ta hangi yolda durur ve Agent onu hangi dosyaya render eder".
+# Üçünü tek bloğa sıkıştırmak üç farklı kaynağı tek yerde ayrıştırırdı (tek-kaynak yasası iki
+# yönlüdür: aynı gerçeğin iki kopyası da, farklı gerçeklerin tek kopyası da ayrışma üretir).
+#
+# BU BLOK ÜRETİCİNİN GİRDİSİDİR. `ops/vault_politika_uret.py` buradan ÜÇ dosya üretir:
+#   deploy/vault/policies/meridian-agent.hcl   — yalnız bu yedi yolu `read`
+#   deploy/vault/policies/meridian-admin.hcl   — yönetim (CRUD + sağlık + secret-id yenileme)
+#   deploy/vault/agent.hcl                     — auto_auth + yedi `template` bloğu
+# Üçü de ÜRETİLMİŞ dosyadır ve ELLE DÜZENLENMEZ; tazelik kapısı `--kontrol` (çıkış 1 = bayat).
+#
+# DALGA-1 KAPSAMI: YALNIZ tek-değer dosyaları. Çok-değişkenli dosyalar (`/opt/apisix/.env-apisix`,
+# hermes profil `.env`leri, `/opt/hindsight/.env` failover üyeleri) DALGA-2'dir ve bu planın
+# DIŞINDADIR — onları `deploy/oracle-a1/sir_rotasyon.sh` yönetmeye DEVAM EDER. Sebep tekniktir:
+# bir `template` bloğu dosyanın TAMAMINI yazar; çok-değişkenli bir dosyayı Vault'tan render etmek
+# o dosyadaki AYAR satırlarının da kasaya girmesini ya da şablonda kopyalanmasını gerektirirdi.
+#
+# DEĞER YOK: bu blok da yalnız AD ve YOL taşır (v439 E4 ile aynı kural; çivi
+# tests/test_vault_faz2_v485.py E3).
+#
+# `tuketici` ALANI BİR BEYANDIR, süs değil: çivi (v485 F2) alanı `LoadCredential` kelimesi için
+# okur ve drop-in'lerden ÖLÇÜLEN kaynak kümesiyle İKİ YÖNLÜ karşılaştırır. Yani "bu dosyayı kim
+# okuyor" sorusu envanterde yazılı DURUR ve yazıldığı gibi ölçülür.
+
+vault_kv:
+  # ---- MOTOR (meridian.service · LoadCredential) ------------------------------------------------
+  - ad: dash_token
+    vault_yolu: "secret/meridian/dash_token"
+    hedef: "/etc/meridian/dash_token"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "meridian.service (LoadCredential=dash_token)"
+  - ad: nous_api_key
+    vault_yolu: "secret/meridian/nous_api_key"
+    hedef: "/etc/meridian/nous_api_key"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "meridian.service (LoadCredential=NOUS_API_KEY)"
+  - ad: kapi_apikey
+    vault_yolu: "secret/meridian/kapi_apikey"
+    hedef: "/etc/meridian/kapi_apikey"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "meridian.service (LoadCredential=KAPI_APIKEY)"
+
+  # ---- KAPI YÖNETİM ANAHTARI — TEK LoadCredential-DIŞI HEDEF, BEYANLI --------------------------
+  # Bu dosyayı hiçbir birim açılışta ARAMAZ: okuyucusu operatörün eliyle koştuğu bir ops aracıdır
+  # (Faz-1C, `rotasyon_kopyalari` bloğundaki `apisix-admin` satırlarının şerhi). Beyan olmasaydı
+  # çivi onu "kapsanmayan LoadCredential kaynağı" ya da "bayat beyan" diye kırmızıya çevirirdi —
+  # ve doğrusu budur: bir istisna ancak ADIYLA yazıldığında istisnadır.
+  - ad: apisix_admin_key
+    vault_yolu: "secret/meridian/apisix_admin_key"
+    hedef: "/etc/meridian/apisix_admin_key"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "ops/apisix_uygula.py (operatör eliyle koşan ops aracı; birim DEĞİL, restart yok)"
+
+  # ---- HAFIZA (hindsight-api.service + meridian.service pano vekili · LoadCredential) -----------
+  # Dosyanın ADI değişkenin ADIDIR (`LoadCredential=<kimlik>:<kaynak>` sözleşmesi, v439 I6/I9).
+  # Bu yüzden `ad` alanı burada BÜYÜK HARFLİDİR ve motor tarafındaki küçük-harfli adlardan
+  # ayrılır: ad bir üslup tercihi değil, systemd'nin okuduğu dosya adıdır.
+  - ad: HINDSIGHT_API_DATABASE_URL
+    vault_yolu: "secret/meridian/HINDSIGHT_API_DATABASE_URL"
+    hedef: "/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "hindsight-api.service (LoadCredential=HINDSIGHT_API_DATABASE_URL)"
+  - ad: HINDSIGHT_API_LLM_API_KEY
+    vault_yolu: "secret/meridian/HINDSIGHT_API_LLM_API_KEY"
+    hedef: "/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "hindsight-api.service (LoadCredential=HINDSIGHT_API_LLM_API_KEY)"
+  - ad: HINDSIGHT_API_TENANT_API_KEY
+    vault_yolu: "secret/meridian/HINDSIGHT_API_TENANT_API_KEY"
+    hedef: "/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "hindsight-api.service · meridian.service · meridian-defter-ozeti-retain (LoadCredential=HINDSIGHT_API_TENANT_API_KEY — AYNI dosya)"

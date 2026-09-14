@@ -4819,6 +4819,41 @@ const OLAY_YUZEYLERI = {
     cozum: null,
     eylemler: [["Alarm gelen kutusu →", "saglik#operasyon"]],
   },
+  sir_kasasi: {
+    // TSK-064 FAZ-2 (2026-09-14): VAULT_SEALED/VAULT_DOWN hiçbir mevcut sınıfa uymuyor ve
+    // gerekçe `kapasite`nin (DISK_ESIK) ikizidir — olgu mevcut sınıflardan HİÇBİRİ değil.
+    // `besleme` bir mekanizmanın SUSMASINI anlatır, `butunluk` bir sözleşme İHLALİNİ (veri
+    // kendi kuralını çiğnedi), `kill` bir KOLUN çekilmesini. Burada olan bunların hiçbiri
+    // değil: SIR KANALI kesildi. Ve bu sınıfın imzası SESSİZLİKTİR — Vault Agent render'ı
+    // durur ama ÜRETTİĞİ dosyalar yerinde kalır, yani hiçbir tüketici hata vermez. Evsiz
+    // kalsaydı alarm üretilir ama panoda kartı olmazdı (v154 paritesi tam bunu ölçer).
+    ad: "Sır kasası (Vault)",
+    ozet: "Kasa sır veremiyor — render DURDU, ama dosyalar yerinde: hiçbir tüketici hata vermez.",
+    jetonlar: ["VAULT_SEALED", "VAULT_DOWN"],
+    neOldu: "A1'deki sır kasası (loopback Vault) sağlık ucunda sır veremez hâlde. İKİ JETON İKİ " +
+            "AYRI EYLEM ister: <code>VAULT_SEALED</code> kasa CEVAP VERİYOR ama mühürlü ya da hiç " +
+            "kurulmamış (mührü aç); <code>VAULT_DOWN</code> kasaya ULAŞILAMIYOR ya da tanınmayan " +
+            "bir cevap veriyor (servisi ve dinleme adresini ölç). Bu bir VERİ arızası DEĞİLDİR: " +
+            "ne defter bozuldu ne mekanizma sustu — sırların tazelenmesi durdu ve eski değerler " +
+            "canlıda kaldığı için sistem ÇALIŞIYOR görünür.",
+    kaynak: "meridian/obs.py::ALARM_VAULT_SEALED · ops/vault_sagligi.py::hukum",
+    degerler: () => [
+      // Kasa durumu panonun teşhis ucuna BAĞLANMADI (Faz-2 kapsamı sensör + alarm zinciriydi):
+      // alan gelmediği için UYDURMA YASAĞI gereği null basılır ("—"), sahte bir durum YAZILMAZ.
+      // Değer zaten alarm gövdesindedir (aşağıdaki adım).
+      ["Kasa sağlığı", null],
+    ],
+    adimlar: [
+      "Alarm gövdesi kendi kanıtını taşır: <code>http_kod</code> (503 mühürlü · 501 kurulmamış) " +
+      "ve <code>adres</code> — teşhis için journal'a dönmek gerekmez.",
+      "Bekçi beş dakikada bir koşar (<code>vault-sagligi.timer</code>); kasa kurulmadan önce " +
+      "birim kendi koşuluyla ATLANIR, yani kurulum penceresi yanlış alarm üretmez.",
+      "Sır DOSYALARI silinmez: geri alım <code>systemctl stop vault-agent</code>tır ve " +
+      "tüketiciler eski dosyayı okumaya devam eder (iki-kanal ilkesi).",
+    ],
+    cozum: null,
+    eylemler: [["Alarm gelen kutusu →", "saglik#operasyon"]],
+  },
 };
 // JETON → SINIF: TÜRETİLİR, elle yazılmaz. İkinci bir liste ilk düzenlemede ayrışırdı ve bir
 // alarm jetonu iki yüzeye birden düşerdi (ya da hiçbirine — sessiz kayıp).
