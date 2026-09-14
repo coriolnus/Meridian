@@ -498,8 +498,19 @@ class Position:
         aynı `r_per_share`ın iki farklı ölçeği, ikisi de tek kaynaktan.
 
         ≤ 0 dönebilir ("ölçülemedi": göç görmemiş eski kayıt ya da bozuk stop) — çağıran bunu
-        SESSİZCE 0'a çevirmez, adıyla uyarır."""
-        return float(self.qty_taban) * float(self.r_per_share)
+        SESSİZCE 0'a çevirmez, adıyla uyarır.
+
+        TABAN SAYI OLMAYABİLİR (canlı ölçüm 2026-09-14, CRM): defterde `qty_taban: None` duruyordu
+        ve `float(None)` BURADA TypeError atıyordu. Çağıranın payda bloğu bu istisnayı yakalamaz ve
+        canlı çıkış yolları (`loop::_koruma_dolumu_isle` sarmalsız çağırır) stop/hedef dolumunda
+        ÇÖKERDİ — kitap kapanmaz, ayna kapanır, ikisi ayrışırdı. `None` = "göç görmemiş kayıt" ve
+        bunun payda karşılığı 0.0'dır. BU SESSİZ BİR 0 DEĞİLDİR: ≤ 0 dalı çağıranda
+        (`close_position`) `r_payda_gecersiz` uyarısıyla ADIYLA basılır ve satır `olculemedi`
+        damgasıyla R kıyaslarının DIŞINDA kalır."""
+        taban = self.qty_taban
+        if isinstance(taban, bool) or not isinstance(taban, (int, float)):
+            return 0.0
+        return float(taban) * float(self.r_per_share)
 
 
 #: Göç olayının SÜREÇ-BAŞINA-BİR-KEZ kaydı (kaynak yükleme yoluna göre anahtarlanır). Desen
@@ -508,13 +519,38 @@ class Position:
 _GOC_LOGLANDI: set = set()
 
 
+def _pozitif_adet(v) -> int | None:
+    """Değerin POZİTİF TAM ADET karşılığı; ölçülemiyorsa `None` ("bilmiyorum", sıfır DEĞİL).
+
+    ADET TANIMININ TEK KAYNAĞI: `qty_taban_goc` hem tabanın göç görüp görmediğini hem de yerine
+    geçecek `qty`yi BU ölçüyle sınar — iki ayrı kabul kuralı sessizce ayrışırdı (tek-kaynak
+    yasası). `bool` ayrı elenir: `True` bir `int` alt sınıfıdır ve "1 hisse" demek DEĞİLDİR.
+    Sonlu olmayan float (`nan`/`inf`) da ölçülemez — `store::sanitize` böyle bir değeri diske
+    yazarken zaten `None`a çevirir, yani buraya gelen `nan` diskteki `None`ın bellekteki eşidir."""
+    if isinstance(v, bool) or not isinstance(v, (int, float)):
+        return None
+    if isinstance(v, float) and not math.isfinite(v):
+        return None
+    n = int(v)
+    return n if n > 0 else None
+
+
 def qty_taban_goc(p: dict, *, kaynak: str) -> dict:
     """Diskten okunan pozisyon sözlüğüne `qty_taban` GÖÇÜNÜ uygular (TSK-187) — YENİ sözlük döner.
 
-    Eski kayıtlarda alan YOKTUR; yoksa `qty`ye eşitlenir, çünkü o kayıt yazıldığında adet henüz
-    hiç benimsenmemiş ya da benimseme sonrası `qty` zaten yeni adettir — iki durumda da `qty`
-    bugünkü en iyi ÖLÇÜLMÜŞ tabandır (uydurma değil, kaydın kendi alanı). Alan VARSA dokunulmaz:
-    benimsenmiş bir taban `qty`ye geri çekilemez.
+    "GÖÇ GÖRMEMİŞ" DÖRT HÂLİN ORTAK ADIDIR (hotfix 2026-09-14) ve dördü de AYNI sonucu doğurur —
+    payda ≤ 0 ya da `float(None)` çöküşü: anahtar YOK · değer `None` · değer SAYI DEĞİL ·
+    değer ≤ 0. Hepsinde taban `qty`ye eşitlenir, çünkü o kayıt yazıldığında adet henüz hiç
+    benimsenmemiş ya da benimseme sonrası `qty` zaten yeni adettir — iki durumda da `qty`
+    bugünkü en iyi ÖLÇÜLMÜŞ tabandır (uydurma değil, kaydın kendi alanı). `qty` de ölçülemiyorsa
+    sonuç 0'dır: uydurma bir adet TÜRETİLMEZ, satır `close_position`da `olculemedi` damgasını yer.
+    POZİTİF TAM SAYI tek "göçmüş" hâldir ve DOKUNULMAZ: benimsenmiş taban `qty`ye geri çekilemez.
+
+    KAPI NEDEN ANAHTARDAN DEĞERE TAŞINDI (ölçülmüş vaka, canlı defter 2026-09-14): eski kapı
+    `"qty_taban" in p` idi. A1'de CRM `qty: 12` ile birlikte `qty_taban: None` taşıyordu — anahtar
+    VARDI, değeri YOKTU. Göç bu kaydı "göçmüş" sayıp geçiriyor, `r_payda_gocu` olayı hiç düşmüyor
+    ve pozisyon tabansız kalıyordu; stop/hedef dolumunda kapanış `float(None)` ile çökecekti.
+    Anahtarın VARLIĞI bir göç kanıtı değildir, DEĞERİN KULLANILABİLİRLİĞİ kanıttır.
 
     ÜÇ YÜKLEME YOLU BU YÜKLEMİ PAYLAŞIR (tek-kaynak yasası): `loop._load_broker` (canlı kitap),
     `intraday_shadow._copy_broker` (salt-okur kopya), `shadow_lifecycle._to_broker` (varyant
@@ -522,17 +558,31 @@ def qty_taban_goc(p: dict, *, kaynak: str) -> dict:
 
     Çağıranın sözlüğü YERİNDE DEĞİŞTİRİLMEZ: `portfolio.json`dan okunan ham kayıt aynı turda
     başka bir okuyucuya da gidebilir."""
-    if "qty_taban" in p:
-        return dict(p)
+    if "qty_taban" not in p:
+        eski = "yok"
+    else:
+        mevcut = p["qty_taban"]
+        if _pozitif_adet(mevcut) is not None:
+            return dict(p)                       # göçmüş taban — dokunulmaz
+        # `eski` OLAYIN TEŞHİS ALANIDIR: "yok" / "None" / sayısal değerin kendisi ("0", "-5") /
+        # "sayi_degil". Hepsini tek etikete indirmek, olay defterini okuyan operatöre hangi
+        # arızayı gördüğünü UYDURTURDU — dört hâl aynı düzeltmeyi alır ama aynı şey değildir.
+        if mevcut is None:
+            eski = "None"
+        elif isinstance(mevcut, (int, float)) and not isinstance(mevcut, bool):
+            eski = str(mevcut)
+        else:
+            eski = "sayi_degil"
     yeni = dict(p)
-    yeni["qty_taban"] = p.get("qty", 0)
+    yeni["qty_taban"] = _pozitif_adet(p.get("qty")) or 0
     if kaynak not in _GOC_LOGLANDI:
         _GOC_LOGLANDI.add(kaynak)
         from . import obs      # GEÇ İTHAL — gerekçe modül başlığında (EDG-088 ithal çivileri)
         obs.log("r_payda_gocu", kaynak=kaynak, ticker=p.get("ticker"),
-                qty_taban=yeni["qty_taban"],
-                detail="TSK-187: eski kayıtta `qty_taban` yoktu, `qty`ye eşitlendi — R paydası "
-                       "artık hisse-başı giriş riski (süreç başına tek kayıt)")
+                qty_taban=yeni["qty_taban"], eski=eski,
+                detail="TSK-187: kayıtta kullanılabilir `qty_taban` yoktu (eski hâl alanda), "
+                       "`qty`ye eşitlendi — R paydası artık hisse-başı giriş riski "
+                       "(süreç başına tek kayıt)")
     return yeni
 
 
