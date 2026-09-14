@@ -23,7 +23,9 @@ SÖZLEŞME (sef'teki asıl gövdeyle birebir, 2026-09-12'de taşındı; gerekçe
   * Muhakeme kipi `SOUL_DENETIM_REASONING`dan okunur; boş → `kapali`; tanınmayan → ADIYLA olaya
     (dilim-3, aşağıdaki ÖLÇÜM bloğu). `model_timeout_s` 120 sn DEĞİŞMEDİ (v455 D1).
   * HTTP 200 gövdesi içindeki üst-akım hatası ADIYLA olaya + TEK yeniden deneme; ikincisi de
-    düşerse `RuntimeError` → çağıranın mevcut `llm_dustu` dalı (teslimat DÜŞMEZ).
+    düşerse `RuntimeError` → çağıranın mevcut `llm_dustu` dalı (teslimat DÜŞMEZ). Olay `deneme`
+    alanı taşır (ilk çağrı 1, yeniden deneme 2): TEK arıza bu olayı İKİ kez yazar, arıza SAYIMI
+    `deneme == 1` satırlarından yapılır (tur-2 K3; gerekçe `_ustakim_olayi` şerhinde).
   * Her başarılı kapı çağrısı süre/jeton olarak ölçülür (`<önek>_denetci_cagri` + `son_olcum`).
 
 OLAY ADLARI bot önekiyle üretilir (`olay_oneki`): `sef_brifingi_denetci_rota_dustu` gibi — v455
@@ -265,19 +267,28 @@ class DenetciRota:
     def _ev(self):
         return self._profil_evi() if callable(self._profil_evi) else self._profil_evi
 
-    def _ustakim_olayi(self, hata: dict, rota: str, *, ilk: bool) -> None:
+    def _ustakim_olayi(self, hata: dict, rota: str, *, deneme: int) -> None:
         """Üst-akım hatasını ADIYLA deftere yazar — mesaj SÜZÜLÜR ve KIRPILIR.
 
         Süzgeç isteğe bağlı değil: sağlayıcı hata metnine kendi isteğinin URL'ini gömebilir ve o
         URL sorgu parametresinde bir anahtar taşıyabilir. Süzgeç olmasaydı sır, kendi defterimize
         kendi elimizle yazılırdı (`notify.scrub`un var oluş gerekçesi). Okuyucu: Rol-1'in TSK-138
         ölçüm satırı ve `llm_dustu` kök-neden ayrımı — "denetçinin cevabı bozuk" ile "üst-akım
-        hiç cevap vermedi" ancak bu olayla ayrılır."""
+        hiç cevap vermedi" ancak bu olayla ayrılır.
+
+        `deneme` ÇAĞRI SIRASIDIR: ilk çağrı 1, yeniden deneme 2 (üçüncüsü YOKTUR). Alan bir
+        süs değil, SAYIMIN DOĞRULUĞUDUR (tur-2, K3): TEK bir arıza bu olayı İKİ kez yazar ve
+        olay adını sayan bir grep o tek arızayı iki sayardı — üstelik yanlış çıkan sayı tam da
+        bu turun ölçmek istediği sayıdır. Arıza sayımı `deneme == 1` satırlarından yapılır;
+        `deneme == 2` satırları "yeniden deneme de düştü" kümesidir ve ikisinin ORANI yeniden
+        denemenin KAZANCIDIR. Sayaç `_denetci_cagri` olayının `yeniden_deneme` alanıyla AYNI
+        yerel sayaçtan türer (tek-kaynak yasası: iki ayrı sayaç iki ayrı hızda çürürdü) ve
+        `detail` düzyazısı da bu alandan üretilir — alan ile cümle ayrışamaz."""
         obs.log(f"{self.olay_oneki}_denetci_ustakim_hatasi", kod=hata.get("code"),
                 mesaj=notify.scrub(str(hata.get("message") or ""))[:USTAKIM_MESAJ_TAVANI],
-                rota=rota,
+                rota=rota, deneme=deneme,
                 detail=("kapı HTTP 200 döndürdü ama gövde üst-akım hatası taşıyor (choices YOK) — "
-                        + ("TEK yeniden deneme yapılıyor" if ilk else
+                        + ("TEK yeniden deneme yapılıyor" if deneme == 1 else
                            "yeniden deneme de düştü, hüküm `llm_dustu` olur (teslimat DÜŞMEZ)")))
 
     def cevaplayan_oku(self) -> str | None:
@@ -330,13 +341,16 @@ class DenetciRota:
         yeniden = 0
         hata = ustakim_hatasi(d)
         if hata is not None:
-            self._ustakim_olayi(hata, rota, ilk=True)
+            # `yeniden + 1` = KAÇINCI ÇAĞRI olduğu. İki çağrı yerinde de AYNI ifade durur ve farkı
+            # sayacın kendisi taşır: sabit bir 1/2 yazmak, sayacı olayla ayrıştırabilecek ikinci
+            # bir gerçek kaynağı olurdu (tek-kaynak yasası; okuyucu `_ustakim_olayi` şerhinde).
+            self._ustakim_olayi(hata, rota, deneme=yeniden + 1)
             time.sleep(USTAKIM_YENIDEN_DENEME_SN)   # TEK ATIM, döngü DEĞİL (sabitin gerekçesine bak)
             yeniden = 1
             d, sure_sn = _tek_cagri()
             hata = ustakim_hatasi(d)
             if hata is not None:
-                self._ustakim_olayi(hata, rota, ilk=False)
+                self._ustakim_olayi(hata, rota, deneme=yeniden + 1)
                 raise RuntimeError(f"kapı üst-akım hatası (kod {hata.get('code')}, rota {rota}) "
                                    "— yeniden deneme de düştü")
         cevaplayan = str((d or {}).get("model") or "").strip()
