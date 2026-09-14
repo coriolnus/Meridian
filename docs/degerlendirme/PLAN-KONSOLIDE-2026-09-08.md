@@ -294,3 +294,16 @@ _Güncelleme 22:09Z: A-2 korpus gömmesi sürüyor (1 s+); A-3/A-4 şef brifingi
 | A1 failed birimler | 6 tarihî (05–07 Eylül oneshot'ları: gece-kanary080, kanary080-gunduz, ingest067-r2..r5); yeni yok; warn/error 11:00Z sonrası yok; vault bekçisi 5 dk'da bir TAMAM | — |
 
 **Bugün kalan sıra (12:00Z):** TSK-138 dilim-3 zinciri (inceleme → tur-2 `deneme` alanı → merge → kapsam → dağıtım #45) · 13:40Z DE/MPC/MRNA/MU ayna dolumu + CRM `r_payda_gocu` (qty_taban 12) → TSK-187 notu · 20:3xZ akşam döngüsü (TSK-180/181) · 22:00Z şef brifingi (TSK-138 dilim-3 kanıtı: `sef_brifingi_denetci_cagri` sure_sn/reasoning_tok, cevaplayan_model dolu) · saatlik Vault/failed triyajı.
+
+## 3g. Durum güncellemesi — 2026-09-14 15:15Z (Rol-1; §3f'nin 3 saat sonrası)
+
+| Kalem | Durum | Kapı / sıradaki |
+|---|---|---|
+| TSK-138 dilim-3 | CANLI: tur-1 + tur-2 (K3 `deneme`) main, dağıtım #45/#46 (deployed_sha f78cb79) | kanıt 22:00Z şef (`sef_brifingi_denetci_cagri`), yarın 10:03Z bekçi |
+| TSK-187 13:40Z kapısı | Ayna dolumu GEÇTİ (MPC 20 · DE 10 · MRNA 8 · MU 7); R-payda göçü DÜŞTÜ: CRM `qty_taban: None`, `r_payda_gocu` 0, `float(None)` kapanış çökmesi riski | TSK-187b HOTFIX main 46cd4c0, SUITE #53 12770/0, push; DAĞITIM #47 20:05Z sonrası (CRM 255, stop 230,9); kanıt: restart sonrası `r_payda_gocu` (CRM, eski None → 12) |
+| EDG-093 (TSK-065 halefi) | ADIM-0 A+B GEÇTİ: sp400 PIT kohortu (400–407, belirsiz ≤8, PIT-PK 10/10) + Alpaca kapsaması 661/661, barsız-çıkış %0,38 | ana ölçüm (EDG-016 tasarımı) OPERATÖR sırası — düşük öncelik kararı geçerli |
+| Vault dalga-2 | Öneri belgesi hazır (5 seçenek, 3 soru) + 2d `.dash.env` ölü kopya ölçümü | OPERATÖR MASASI |
+| A1 triyaj | 14:35Z sessiz; tek warn sondanın 400'ü | saatlik |
+
+**Operatör masası (yeni):** (1) EDG-093 ana ölçümü için sıra/onay (Opus ~1M token, Alpaca ~661 isim × 6 yıl günlük bar); (2) Vault dalga-2 üç soru (belge: docs/degerlendirme/VAULT-DALGA2-ONERI-2026-09-14.md); (3) A1 `/opt/meridian/.dash.env` ölü kopyasının silinmesi (hijyen).
+**Bugün kalan sıra:** 20:05Z dağıtım #47 (TSK-187b) → `r_payda_gocu` kanıtı · 20:3xZ akşam döngüsü (TSK-180/181) · 22:00Z şef brifingi (TSK-138/014) · saatlik Vault/failed triyajı.
