@@ -348,3 +348,135 @@ def test_t4_motorun_yazdigi_damga_SABITIN_KENDISIDIR(sandbox_state):
     b.positions["VRTX"] = _poz(VRTX_QTY)
     row = b.close_position("VRTX", raw_exit=VRTX_CIKIS, reason="stop", ts="2026-09-10")
     assert row["r_payda"] is broker.R_PAYDA_GIRIS
+
+
+# ==================================================================================================
+# TASK 5 — HOTFIX (canlı ölçüm 2026-09-14): anahtar VARDI, değeri YOKTU
+# ==================================================================================================
+# ÖLÇÜLEN ARIZA. A1 canlı defterinde (`meridian.db` `portfolio` dokümanı, rev 55) tek açık pozisyon
+# CRM `qty: 12` ile birlikte `qty_taban: None` taşıyordu ve `r_payda_gocu` olayı olay defterinde
+# TÜM tarihlerde SIFIRDI. İki kusur birden:
+#   (1) göç kapısı anahtarın VARLIĞINA bakıyordu (`"qty_taban" in p`) — None'ı "göçmüş" sayıp
+#       GEÇİRİYORDU, yani göç hiç ateşlenmeden pozisyon tabansız kalıyordu;
+#   (2) `Position.r_payda_usd` `float(None)` ile TypeError atıyordu ve `close_position`ın payda
+#       bloğu bunu YAKALAMIYOR. Canlı çıkış yolları (`loop` seans-içi çıkış ve
+#       `loop::_koruma_dolumu_isle`) çağrıyı sarmalamadığı için CRM'in stop/hedef dolumunda
+#       KAPANIŞ ÇÖKER ve kitap ile ayna ayrışırdı.
+# DAMGA ≠ ÇÖKÜŞ: `olculemedi` dalı (payda ≤ 0 → `r_payda_gecersiz` uyarısı) AYNEN DURUYOR; bu tur
+# yalnız TypeError'ı kaldırır, yeni bir "sessiz 0" doğurmaz.
+
+def test_t5_goc_NONE_DEGERINI_goc_gormemis_sayar(sandbox_state, monkeypatch):
+    """CANLI VAKANIN KENDİSİ: anahtar VAR, değer `None` → göç ateşler ve taban `qty` olur.
+
+    Eski kapı `"qty_taban" in p` ile ANAHTARA bakıyordu; bu çivi DEĞERE bakıldığını ölçer."""
+    monkeypatch.setattr(broker, "_GOC_LOGLANDI", set())
+    doc = {"ticker": "CRM", "qty": 12, "qty_taban": None}
+    gocmus = broker.qty_taban_goc(doc, kaynak="civi")
+    assert gocmus["qty_taban"] == 12
+    assert doc["qty_taban"] is None, "göç çağıranın sözlüğünü YERİNDE değiştirmemeli"
+    ev = _olaylar("r_payda_gocu")
+    assert len(ev) == 1 and ev[0]["ticker"] == "CRM" and ev[0]["eski"] == "None"
+
+
+def test_t5_goc_SIFIR_ve_NEGATIF_tabani_da_gocurur(sandbox_state, monkeypatch):
+    """`qty_taban: 0` (ve negatifi) payda ≤ 0 demektir — R'yi ölçülemez bırakır, göç ETMELİ.
+
+    `eski` alanı DEĞERİ TAŞIR (`"0"` / `"-5"`): "sıfır" ile "eksi beş" aynı arıza değildir ve
+    olay defterini okuyan operatör hangisini gördüğünü uydurmak zorunda kalmaz."""
+    monkeypatch.setattr(broker, "_GOC_LOGLANDI", set())
+    assert broker.qty_taban_goc({"ticker": "A", "qty": 12, "qty_taban": 0},
+                                kaynak="k0")["qty_taban"] == 12
+    assert _olaylar("r_payda_gocu")[-1]["eski"] == "0"
+    assert broker.qty_taban_goc({"ticker": "B", "qty": 7, "qty_taban": -5},
+                                kaynak="k1")["qty_taban"] == 7
+    assert _olaylar("r_payda_gocu")[-1]["eski"] == "-5"
+
+
+def test_t5_goc_SAYI_OLMAYAN_tabani_gocurur(sandbox_state, monkeypatch):
+    """Dizge/liste gibi sayı OLMAYAN taban da göç görmemiştir — `float()` çağıranda çökerdi."""
+    monkeypatch.setattr(broker, "_GOC_LOGLANDI", set())
+    assert broker.qty_taban_goc({"ticker": "A", "qty": 12, "qty_taban": "12"},
+                                kaynak="ks")["qty_taban"] == 12
+    assert _olaylar("r_payda_gocu")[-1]["eski"] == "sayi_degil"
+
+
+def test_t5_goc_QTY_de_gecersizse_UYDURMAZ(sandbox_state, monkeypatch):
+    """Taban da `qty` de ölçülemiyorsa sonuç 0'dır — uydurma bir adet TÜRETİLMEZ.
+
+    0, `close_position`ın `olculemedi` damgasına düşer (payda ≤ 0) ve satır R kıyaslarının
+    DIŞINDA kalır; yani "bilmiyorum" sessizce bir sayıya çevrilmez."""
+    monkeypatch.setattr(broker, "_GOC_LOGLANDI", set())
+    assert broker.qty_taban_goc({"ticker": "A", "qty": None, "qty_taban": None},
+                                kaynak="kq")["qty_taban"] == 0
+    assert broker.qty_taban_goc({"ticker": "B", "qty": 0}, kaynak="kq2")["qty_taban"] == 0
+
+
+def test_t5_goc_POZITIF_TABANA_DOKUNMAZ_olay_da_yazmaz(sandbox_state, monkeypatch):
+    """Pozitif tam sayı TEK "göçmüş" hâldir: benimsenmiş taban `qty`ye GERİ ÇEKİLMEZ, olay yok."""
+    monkeypatch.setattr(broker, "_GOC_LOGLANDI", set())
+    assert broker.qty_taban_goc({"ticker": "CRM", "qty": 38, "qty_taban": 12},
+                                kaynak="civi")["qty_taban"] == 12
+    assert _olaylar("r_payda_gocu") == []
+
+
+def test_t5_r_payda_usd_NONE_TABANDA_COKMEZ():
+    """`float(None)` TypeError'ı bir daha ATILMAZ — payda 0.0 döner (çağıran ADIYLA uyarır)."""
+    pos = _poz(12, ticker="CRM")
+    pos.qty_taban = None                                   # canlı defterin ölçülen hâli
+    assert pos.r_payda_usd() == 0.0
+    pos.qty_taban = "12"                                   # sayı değil — aynı dal
+    assert pos.r_payda_usd() == 0.0
+
+
+def test_t5_NONE_TABANLI_kapanis_OLCULEMEDI_damgalar_SESSIZ_DEGIL(sandbox_state):
+    """`close_position` None tabanda ÇÖKMEZ; mevcut `r_payda_gecersiz` dalını AYNEN kullanır.
+
+    Yeni bir "sessiz 0" doğmadığının ölçüsü: satır `olculemedi` damgalı, `r_payda_usd` None ve
+    olay defterinde uyarı VAR — yani okuyucu bu satırı R kıyasından ELER."""
+    b = broker.PaperBroker(equity=100_000, slippage_bps=0, commission_per_share=0.0)
+    pos = _poz(12, ticker="CRM")
+    pos.qty_taban = None
+    b.positions["CRM"] = pos
+    row = b.close_position("CRM", raw_exit=VRTX_CIKIS, reason="stop", ts="2026-09-14")
+    assert row["r_multiple"] == 0.0
+    assert row["r_payda"] == "olculemedi" and row["r_payda_usd"] is None
+    ev = _olaylar("r_payda_gecersiz")
+    assert len(ev) == 1 and ev[0]["ticker"] == "CRM" and ev[0]["qty_taban"] is None
+
+
+def test_t5_UCTAN_UCA_none_tabanli_defter_yuklenir_ve_R_OLCULUR(sandbox_state, monkeypatch):
+    """CANLI YOLUN TAMAMI: `qty_taban: None` taşıyan defter → `loop._load_broker` → kapanış.
+
+    EL HESABI (CRM'in canlı sayıları): giriş 250,77 · stop 230,90 → 19,87 $/hisse · adet 12
+      payda = 12 × 19,87 = 238,44 $   ·   pay = 12 × (230,90 − 250,77) = −238,44 $  →  R = −1,000
+    Hotfix ÖNCESİ bu yol `float(None)` ile TypeError atıyordu; yani çivinin ölçtüğü şey yalnız
+    sayı değil, kapanışın GERÇEKLEŞMESİdir.
+
+    R NEDEN TAM −1,000 DEĞİL (ölçüldü: −1,006): kitabı `loop::_load_broker` kurar ve sürtünmeyi
+    (slipaj bps + hisse-başı komisyon) `goal`dan ALIR — kardeş çiviler sürtünmeyi sıfırlayan kendi
+    brokerlarını kurar, bu çivi ise BİLEREK canlı yolu koşar. Sürtünme PAYI etkiler, PAYDAYI
+    etkilemez: bu yüzden payda literali (238,44 $) tam çivilenir, R ise satırın KENDİ pay/payda
+    oranıyla kıyaslanır. Böylece `goal` sürtünmesi değiştiğinde çivi yanlış yere ötmez ama payda
+    bir daha bozulursa (göç geri alınırsa payda 0 → R 0,0) ÖTER."""
+    from meridian import loop
+    monkeypatch.setattr(broker, "_GOC_LOGLANDI", set())
+    giris, stop, qty = 250.77, 230.90, 12
+    rps = giris - stop
+    store.write_json("portfolio.json", {
+        "cash": 100_000.0, "realized_pnl": 0.0, "last_id": 0,
+        "positions": {"CRM": {"plan_id": "P1", "ticker": "CRM", "side": "long", "entry": giris,
+                              "stop": stop, "trail_stop": stop, "target": 310.0, "qty": qty,
+                              "qty_taban": None, "r_per_share": rps, "risk_dollars": 238.44,
+                              "size_r": 1.0, "ts_open": "2026-09-01"}}})
+    b, _meta = loop._load_broker()
+    assert b.positions["CRM"].qty_taban == qty
+    assert len(_olaylar("r_payda_gocu")) == 1
+    row = b.close_position("CRM", raw_exit=stop, reason="stop", ts="2026-09-14")
+    assert row["r_payda"] == "giris_riski"
+    assert row["r_payda_usd"] == pytest.approx(qty * rps, abs=0.01)
+    assert row["r_payda_usd"] == pytest.approx(238.44, abs=0.01)
+    # R satırın KENDİ pay/payda oranıdır (payda 0'a düşerse bu kimlik 0,0 ile kırılır)…
+    assert row["r_multiple"] == pytest.approx(row["pnl_dollars"] / row["r_payda_usd"], abs=1e-3)
+    # …ve tam stop sürtünme kadarıyla −1 R'nin ötesindedir: −1,000 ile −1,02 arasında kalmalı.
+    assert -1.02 < row["r_multiple"] <= -1.0, row["r_multiple"]
+    assert _olaylar("r_payda_gecersiz") == [], "göç koştuysa geçersiz-payda uyarısı DOĞMAMALI"
