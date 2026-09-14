@@ -3,8 +3,17 @@
 Kart: research/cards/EDG-2026-093-midcap-pit-kohort-sagkalan-ust-sinir.yaml
 Emsal/desen: research/olcumler/edg070_pit_midcap/adim0_kapsama.py (eksen E; stdin kipi çivisi
 tests/test_edg070_adim0_stdin_kipi_v480.py). O dosya İTHAL EDİLMEZ — argparse'ı modül seviyesinde
-koşar ve ithal etmek çağıranın argv'siyle bir koşum tetiklerdi; ortak mantık burada küçük saf
-fonksiyonlar olarak YENİDEN yazılmıştır (kopya değil, aynı sözleşmenin ikinci uygulaması).
+koşar ve ithal etmek çağıranın argv'siyle bir koşum tetiklerdi.
+
+ORTAK GÖVDE ARTIK BU DOSYADA DEĞİL (2026-09-14, ANA ÖLÇÜM Parti-1). Kohort okuma, pencere/çıkış
+hesabı, sembol anahtarı, sha256 ve soğuma yüzeyi `ortak.py`ye taşındı ve buradan İTHAL edilir;
+kopyaları SİLİNDİ. Gerekçe: ana ölçümün veri betikleri (veri_bar.py, veri_edgar.py) AYNI
+sözleşmeleri okuyor — üç kopya zamanla ayrışırdı (CLAUDE.md §4 tek-kaynak yasası). `ortak.py`
+argparse KURMAZ ve modül düzeyinde G/Ç yapmaz, bu yüzden ithal edilebilir.
+
+ORTAK NEREDEN BULUNUR (sıra): `--ortak <yol>` · dosya kipinde bu betiğin YANI · `<repo>/research/
+olcumler/edg093_midcap_pit/ortak.py`. Hiçbiri yoksa KULLANIM HATASI (çıkış 2) — sessiz bir yerel
+kopyaya düşmek tam olarak yasaklanan şeydir. A1 stdin kipinde `--ortak` ile açık yol verilir.
 
 BU BETİK NE YAPAR: kohort csv'sinden (as-of üyelik defteri) pencere içindeki İSİM KÜMESİNİ ve
 ÇIKIŞ GÜNLERİNİ çıkarır, istenirse (`--alpaca-sonda`) her isim için Alpaca IEX günlük barlarını
@@ -63,16 +72,15 @@ YASALAR VE SINIRLAR
 KOMUT SATIRI (sözleşme burasıdır, `main()` değil — CLAUDE.md §1):
     python research/olcumler/edg093_midcap_pit/adim0b_kapsama.py --cikti <dizin> [--kohort <csv>]
     ssh a1 '/opt/meridian/.venv/bin/python - --repo /opt/meridian --cikti <dizin> \\
-            --kohort <csv> --alpaca-sonda -1' < adim0b_kapsama.py     # STDIN KİPİ (deploy YOK)
+            --ortak <ortak.py yolu> --kohort <csv> --alpaca-sonda -1' < adim0b_kapsama.py
     … --alpaca-sonda -1 --yalniz-olculemeyen <onceki_kapsama_haritasi.json>   # YENİDEN SONDA
-Çıkış kodu: 0 = harita yazıldı · 2 = kullanım hatası (eksik/bozuk girdi, kohort sha uyuşmazlığı).
+Çıkış kodu: 0 = harita yazıldı · 2 = kullanım hatası (eksik/bozuk girdi, kohort sha uyuşmazlığı,
+ortak.py bulunamadı).
 """
 from __future__ import annotations
 
 import argparse
-import csv
 import datetime as dt
-import hashlib
 import json
 import pathlib
 import re
@@ -86,7 +94,11 @@ import time
 # `parents[2]` argparse KURULURKEN IndexError verirdi (aynı vaka) — `--repo`/`--cikti` ZORUNLU.
 STDIN_KIPI = globals().get("__file__") in (None, "<stdin>")
 SANDBOX = pathlib.Path.cwd() if STDIN_KIPI else pathlib.Path(__file__).resolve().parent
-_REPO_VARSAYILAN = None if STDIN_KIPI else SANDBOX.parents[2]
+# `parents[2]` SIĞ BİR DİZİNDE PATLAR ve patlama argparse KURULURKEN olur — `--help` bile
+# IndexError verir (v480'in ölçtüğü arıza sınıfının DOSYA-KİPİ eşi, 2026-09-14). Derinlik
+# yetmiyorsa varsayılan YOKTUR ve `--repo` zorunlu olur.
+_REPO_VARSAYILAN = (None if (STDIN_KIPI or len(SANDBOX.parents) < 3)
+                    else SANDBOX.parents[2])
 
 _ARGS = argparse.ArgumentParser(
     description="EDG-2026-093 ADIM-0 EKSEN B — Alpaca IEX bar kapsama sondası (salt-okur; hüküm YOK)")
@@ -99,6 +111,10 @@ _ARGS.add_argument("--cikti", type=pathlib.Path, default=None,
 _ARGS.add_argument("--kohort", type=pathlib.Path, default=None,
                    help="as-of üyelik csv'si (date,tickers). Varsayılan: "
                         "<repo>/research/pit_universe/sp400_uyelik_tarihi.csv")
+_ARGS.add_argument("--ortak", type=pathlib.Path, default=None,
+                   help="ortak.py'nin AÇIK yolu (stdin kipinde betiğin yanı bilinmez). Verilmezse "
+                        "dosya kipinde bu betiğin yanına, sonra <repo>/research/olcumler/"
+                        "edg093_midcap_pit/ortak.py yoluna bakılır; bulunmazsa çıkış 2")
 _ARGS.add_argument("--alpaca-sonda", type=int, default=0, dest="alpaca_sonda",
                    help="kaç isim için Alpaca IEX bar sorulacak: 0 = ÇAĞRI YOK (harita 'ölçülmedi'), "
                         "N>0 = ilk N isim (alfabetik), -1 = TAMAMI")
@@ -125,55 +141,64 @@ KOHORT = (ARGV.kohort if ARGV.kohort is not None
 KART = REPO / "research" / "cards" / "EDG-2026-093-midcap-pit-kohort-sagkalan-ust-sinir.yaml"
 
 sys.path.insert(0, str(REPO))          # `meridian` YALNIZ sonda dalında, --repo kökünden çözülür
-csv.field_size_limit(10 ** 9)
 
-# ---- BEYANLI SABİTLER (kart DIŞI; kayıtta da yazılırlar) --------------------------------
+
+def _ortak_yukle():
+    """`ortak.py`yi ÜÇ ADAYDAN ilk bulunanla yükler ve kimliğini DOĞRULAR.
+
+    Neden kimlik doğrulaması: `ortak` çok genel bir modül adıdır ve bu depoda BAŞKA bir
+    `research/olcumler/wp2_olcum/ortak.py` de vardır. Yanlış `ortak` sessizce yüklenirse bu betik
+    başka bir ölçümün sözleşmesiyle koşardı — ölçüm bağlamı tuzağının ta kendisi. Bu yüzden dizin
+    `sys.path`in BAŞINA konur ve yüklenen modülün `__file__`i beklenen yolla KIYASLANIR."""
+    adaylar = []
+    if ARGV.ortak is not None:
+        adaylar.append(pathlib.Path(ARGV.ortak))
+    if not STDIN_KIPI:
+        adaylar.append(SANDBOX / "ortak.py")
+    adaylar.append(REPO / "research" / "olcumler" / "edg093_midcap_pit" / "ortak.py")
+    for aday in adaylar:
+        aday = aday.resolve()
+        if not aday.is_file():
+            continue
+        sys.path.insert(0, str(aday.parent))
+        import ortak as _o
+        yuklenen = pathlib.Path(getattr(_o, "__file__", "") or "").resolve()
+        if yuklenen != aday:
+            print(f"KULLANIM HATASI: yüklenen `ortak` beklenen dosya DEĞİL "
+                  f"(beklenen={aday} yüklenen={yuklenen}) — başka bir ölçümün ortak modülü "
+                  f"gölgeledi", file=sys.stderr)
+            raise SystemExit(2)
+        return _o
+    print("KULLANIM HATASI: ortak.py bulunamadı — bakılan yollar: "
+          + ", ".join(str(a) for a in adaylar)
+          + " (stdin kipinde `--ortak <yol>` verin)", file=sys.stderr)
+    raise SystemExit(2)
+
+
+ortak = _ortak_yukle()
+
+# ---- ORTAK GÖVDEDEN İTHAL (kopya YOK — CLAUDE.md §4 tek-kaynak yasası) ------------------
+_kullanim_hatasi = ortak.kullanim_hatasi
+sha256 = ortak.sha256
+kohort_oku = ortak.kohort_oku
+pencere_satirlari = ortak.pencere_satirlari
+isim_kumesi_ve_cikislar = ortak.isim_kumesi_ve_cikislar
+alpaca_anahtari = ortak.alpaca_anahtari
+_bar_tarihi = ortak.bar_tarihi
+_soguma_yuzeyi = ortak.soguma_yuzeyi
+_soguma_sifirla = ortak.soguma_sifirla
+ARDISIK_OLCULEMEYEN_UST_SINIRI = ortak.ARDISIK_OLCULEMEYEN_UST_SINIRI
+SEMBOL_BICIMI_KAYNAGI = ortak.SEMBOL_BICIMI_KAYNAGI
+SOGUMA_ALANLARI = ortak.SOGUMA_ALANLARI
+
+# ---- BEYANLI SABİTLER (kart DIŞI; bu sondaya ÖZGÜ; kayıtta da yazılırlar) ---------------
 ISLEM_GUNU_YIL = 252.0        # bar sayısı → yıl dönüşümü (EDG-070 eksen E ile AYNI sabit)
 BARSIZ_TOLERANS_GUN = 7       # "çıkış gününe kadar barı yok" toleransı, TAKVİM günü
 ALPACA_BASLANGIC = "2020-07-01"   # sondanın bar penceresi başı (kart penceresinden ~4 hafta önce)
-KOHORT_BASLIK = ("date", "tickers")
-#: Ardışık kaç ÖLÇÜLEMEYEN sonucundan sonra soğuma sıfırlaması DURUR. Sıfırlamanın bedeli budur:
-#: gerçekten düşmüş bir uç sınırsız sıfırlamayla 661 kez dövülürdü ve bu, soğumanın VAROLUŞ
-#: gerekçesine (adapterin kendi şerhi) aykırı olurdu. Sınır aşılınca kayıtlar "uç SOĞUMADA" der.
-ARDISIK_OLCULEMEYEN_UST_SINIRI = 25
-
-#: Sınıf-hisse sembolü deseni — BİLEREK DAR: yalnız TEK harflik sınıf son eki (`MOG-A`, `BRK-B`).
-#: `TST-AB` (iki harf) ve `AA`/`MP` (tire yok) bu desene GİRMEZ ve dönüştürülmez.
-SINIF_HISSE_DESENI = re.compile(r"^[A-Z]+-[A-Z]$")
-
-#: Dönüşümün KAYNAĞI — uydurma yasağı: kayıt kuralı değil, kuralın NEREDEN ölçüldüğünü de taşır.
-SEMBOL_BICIMI_KAYNAGI = [
-    "meridian/adapters/alpaca.py::daily_bars — sembole YALNIZ upper().strip() uygular; nokta/tire "
-    "dönüşümü YOKTUR, yani çağıranın yazdığı biçim sağlayıcıya AYNEN gider (ölçüldü 2026-09-14).",
-    "meridian/adapters/data.py::_cache_path — motorun kanonik sembolü NOKTA taşır (`BRK.B` diske "
-    "`brk-b.csv` yazılır) ve aynı kanonik sembol daily_bars'a dönüşümsüz gider (data.py sonda "
-    "kolu `alpaca.daily_bars(syms, ...)` çağırır).",
-    "research/pit_universe/sp500_uyelik_tarihi.csv NOKTA yazar (BRK.B, BF.B); bu kartın kohort "
-    "defteri sp400_uyelik_tarihi.csv ise TİRE yazar (MOG-A) — dönüşüm tam bu ayrımı kapatır.",
-    "research/olcumler/edg066_tick_arsiv/kapsam_uret.py başlık şerhi: 'Sembol biçimi feed ile "
-    "birebir: sınıf hisseleri nokta taşır (BRK.B, BF.B)' (doğrulandı 2026-08-25).",
-    "A1 koşum olayı 2026-09-14 14:27:02Z — `MOG-A` isteği alpaca_data_failed status=400 aldı, "
-    "yani TİRE biçimi uçta REDDEDİLDİ (bu koşumun kendi ölçümü; Rol-1 brief'inden devralındı).",
-]
 
 #: Birleştirmede ÖNCEKİ kayıttan devralınan alanlar. Liste TEK KAYNAK: hem okuma hem devralma
 #: bunu kullanır — ikinci bir kopya, şema büyüdüğünde sessizce eksik devralırdı.
 OLCUM_ALANLARI = ("bar_n", "ilk_bar", "son_bar", "bar_gecmisi_yil", "hata", "neden")
-SOGUMA_ALANLARI = ("soguma_aktif", "soguma_yazildi", "soguma_olculemedi_neden")
-
-
-def _kullanim_hatasi(mesaj: str) -> None:
-    """Kullanım hatası = çıkış 2 (argparse ile AYNI kod). Sessiz düşme yok: neden stderr'e yazılır."""
-    print(f"KULLANIM HATASI: {mesaj}", file=sys.stderr)
-    raise SystemExit(2)
-
-
-def sha256(p: pathlib.Path) -> str:
-    h = hashlib.sha256()
-    with open(p, "rb") as f:
-        for blok in iter(lambda: f.read(1 << 20), b""):
-            h.update(blok)
-    return h.hexdigest()
 
 
 # =========================================================================================
@@ -212,116 +237,18 @@ def kart_esikleri(kart: pathlib.Path) -> dict:
 
 
 # =========================================================================================
-# 2. Kohort defteri — as-of okuma (satır anlamı yukarıda ÖLÇÜLDÜ)
-# =========================================================================================
-def kohort_oku(yol: pathlib.Path) -> list[tuple[dt.date, frozenset]]:
-    """(tarih, sembol kümesi) satırları, artan tarihte. Başlık ve sıra SÖZLEŞMEDİR: bozuksa
-    kullanım hatası — sessizce yanlış kohort ölçmektense koşum durur."""
-    try:
-        with open(yol, newline="", encoding="utf-8") as f:
-            r = csv.reader(f)
-            baslik = next(r, None)
-            if baslik is None or tuple(x.strip() for x in baslik[:2]) != KOHORT_BASLIK:
-                _kullanim_hatasi(f"kohort csv başlığı 'date,tickers' olmalı, görülen: {baslik!r} ({yol})")
-            satirlar = [(dt.date.fromisoformat(a[0].strip()),
-                         frozenset(t.strip() for t in a[1].split(",") if t.strip()))
-                        for a in r if a and a[0].strip()]
-    except OSError as e:  # sessiz-yutma DEĞİL: dosya yoksa/okunamıyorsa kullanım hatası olarak ADIYLA çıkar
-        _kullanim_hatasi(f"kohort csv okunamadı ({type(e).__name__}): {yol}")
-    except ValueError as e:  # sessiz-yutma DEĞİL: bozuk tarih alanı sessizce atlanmaz, koşum durur
-        _kullanim_hatasi(f"kohort csv tarih alanı bozuk ({type(e).__name__}: {e}): {yol}")
-    if not satirlar:
-        _kullanim_hatasi(f"kohort csv boş: {yol}")
-    for i in range(len(satirlar) - 1):
-        if satirlar[i][0] >= satirlar[i + 1][0]:
-            _kullanim_hatasi(f"kohort csv tarihleri artan değil: {satirlar[i][0]} → {satirlar[i+1][0]}")
-    return satirlar
-
-
-def pencere_satirlari(satirlar, baslangic: dt.date, bugun: dt.date):
-    """Pencerede ETKİN as-of satırları. Pencere başından ÖNCEKİ son satır bir ÇAPAdır: as-of
-    okumasında o satır pencere başında hâlâ yürürlüktedir, tarihi pencereye KIRPILIR."""
-    capa = [x for x in satirlar if x[0] <= baslangic]
-    etkin = [(baslangic, capa[-1][1])] if capa else []
-    etkin.extend((d, k) for d, k in satirlar if baslangic < d <= bugun)
-    return etkin, bool(capa)
-
-
-def isim_kumesi_ve_cikislar(etkin):
-    """Pencerede en az bir gün listede olan HER sembol (birleşim) + çıkış günleri.
-
-    ÇIKIŞ GÜNÜ = sembolün listede SON göründüğü satırın ERTESİ as-of değişimi (yani ilk kez
-    üye OLMADIĞI as-of tarihi). Pencere sonunda hâlâ listedeyse çıkış YOKTUR (None) — dosya
-    sonrası TAŞINMAZ (uydurma yasağı)."""
-    son_gorulme: dict[str, int] = {}
-    for i, (_, k) in enumerate(etkin):
-        for s in k:
-            son_gorulme[s] = i
-    son_i = len(etkin) - 1
-    return ({s: (etkin[i + 1][0].isoformat() if i < son_i else None)
-             for s, i in son_gorulme.items()})
-
-
-# =========================================================================================
+# 2. Kohort defteri — as-of okuma: GÖVDE `ortak.py`DE (yukarıda ithal edildi)
 # 3. Alpaca IEX sondası — YALNIZ --alpaca-sonda != 0 ile (ağ çağrısı)
 # =========================================================================================
-def _bar_tarihi(bar: dict):
-    """Bizim bar şemamızın tarih alanı "date"tir (ölçüldü: `alpaca._to_bar` onu üretir). "t" ham
-    API alanıdır ve şemaya girmez; ikinci okuma yalnız ham satırın sızdığı hâller için durur."""
-    if not isinstance(bar, dict):
-        return None
-    d = bar.get("date") or bar.get("t")
-    return str(d)[:10] if d else None
-
-
-def alpaca_anahtari(sembol: str) -> str:
-    """Kohort sembolü → Alpaca veri ucu anahtarı. Dönüşüm YALNIZ tek harflik sınıf son ekinde:
-    `MOG-A` → `MOG.A`, `BRK-B` → `BRK.B`. `AA`/`MP`/`TST-AB` DOKUNULMAZ. Kural TEK yerde yaşar —
-    hem çağrı hem kayıt alanı (`alpaca_anahtar`) bunu çağırır (tek-kaynak yasası)."""
-    s = str(sembol).upper().strip()
-    return s.replace("-", ".") if SINIF_HISSE_DESENI.match(s) else s
-
-
-def _soguma_yuzeyi(alp) -> dict:
-    """Adapterin soğuma yüzeyini ÖLÇER (varsayılmaz): `DATA_FEED` · `_data_cooled` ·
-    `_DATA_FAIL_AT` · `_DATA_COOLDOWN`. Biri yoksa yüzey ölçülemedi sayılır ve bu, kayda
-    `soguma_olculemedi_neden` olarak ADIYLA düşer — sonda düşmez, körlük BEYAN edilir."""
-    parcalar = {"DATA_FEED": getattr(alp, "DATA_FEED", None),
-                "_data_cooled": getattr(alp, "_data_cooled", None),
-                "_DATA_FAIL_AT": getattr(alp, "_DATA_FAIL_AT", None),
-                "_DATA_COOLDOWN": getattr(alp, "_DATA_COOLDOWN", None)}
-    eksik = sorted(ad for ad, v in parcalar.items() if v is None)
-    if eksik:
-        return {"olculdu": False, "anahtar": None, "oku": None, "fail_at": None, "cooldown": None,
-                "neden": "adapterde soğuma yüzeyi ölçülemedi, eksik: " + ", ".join(eksik)}
-    return {"olculdu": True, "anahtar": "bars:%s" % parcalar["DATA_FEED"],
-            "oku": parcalar["_data_cooled"], "fail_at": parcalar["_DATA_FAIL_AT"],
-            "cooldown": parcalar["_DATA_COOLDOWN"], "neden": None}
-
-
-def _soguma_sifirla(yuzey: dict) -> bool:
-    """`bars:<feed>` soğuma kaydını BU SÜREÇTE siler; gerçekten bir kayıt sildiyse True.
-
-    GEREKÇE (şerh zorunlu, CLAUDE.md §2): soğuma modül-düzeyi sözlüklerde yaşar, yani SÜREÇ
-    İÇİdir — bu araştırma sondası ayrı bir süreçtir ve canlı worker'ın soğumasına DOKUNMAZ.
-    Tek bir sembolün 400'ü 298 ismi ölçülemez yapmıştı (ölçülen arıza 2026-09-14); sonda için
-    doğru davranış "bu sembol düştü" ile "uç düştü"yü AYIRMAKTIR. Sınırsız sıfırlama da yanlış
-    olurdu — `ARDISIK_OLCULEMEYEN_UST_SINIRI` bedeli kapatır."""
-    silindi = yuzey["fail_at"].pop(yuzey["anahtar"], None) is not None
-    yuzey["cooldown"].pop(yuzey["anahtar"], None)
-    return silindi
-
-
 def alpaca_sondasi(semboller: list[str], sonda_n: int, bekleme_sn: float,
                    bugun: str) -> tuple[dict, dict]:
     """(sembol → ölçüm kaydı, soğuma özeti). İsim BAŞINA tek çağrı: hem hız-sınırı aralığı hem de
     sembol BAŞINA hata ayrımı ancak böyle mümkün (toplu çağrıda bir patlama tüm kümeyi None
     yapardı). Her çağrıdan ÖNCE soğuma ölçülür ve (sınıra kadar) sıfırlanır."""
     if sonda_n == 0 or not semboller:
-        return {}, {"yuzey_olculdu": None, "anahtar": None, "sifirlama_n": 0,
-                    "ust_sinir": ARDISIK_OLCULEMEYEN_UST_SINIRI, "sifirlama_durdu": False,
-                    "neden": "sonda çağrılmadı (--alpaca-sonda 0 ya da hedef sembol kalmadı) — "
-                             "meridian.adapters.alpaca İTHAL BİLE EDİLMEDİ"}
+        return {}, ortak.soguma_bos_ozet(
+            "sonda çağrılmadı (--alpaca-sonda 0 ya da hedef sembol kalmadı) — "
+            "meridian.adapters.alpaca İTHAL BİLE EDİLMEDİ")
     from meridian.adapters import alpaca as _alp      # TEMBEL: kuru koşumda hiç ithal edilmez
     yuzey = _soguma_yuzeyi(_alp)
     hedef = semboller if sonda_n < 0 else semboller[:sonda_n]
@@ -583,6 +510,10 @@ def main() -> int:
             "kart_yaml": str(KART),
             "kart_sha256": sha256(KART) if KART.exists() else None,
             "kart_sha256_neden": None if KART.exists() else f"kart bu ağaçta yok: {KART}",
+            # ORTAK GÖVDE PROVENANSI: hangi `ortak.py` yüklendi ve içeriği neydi. Kopya silindiği
+            # için sözleşme artık BU dosyada değil; kaydın onu adıyla taşıması gerekir.
+            "ortak_py": str(pathlib.Path(ortak.__file__).resolve()),
+            "ortak_py_sha256": sha256(pathlib.Path(ortak.__file__).resolve()),
         },
         "pencere": {
             "baslangic": baslangic.isoformat(), "bugun": bugun.isoformat(),
@@ -606,7 +537,8 @@ def main() -> int:
             "sembol_normalizasyonu": {
                 "uygulanan": "upper().strip() + sınıf-hisse tire→nokta dönüşümü",
                 "kaynak": "alpaca.daily_bars içindeki upper/strip DIŞINDA dönüşüm yok; sınıf-hisse "
-                          "kuralı bu betikte, tek yerde (`alpaca_anahtari`) yaşar.",
+                          "kuralı ortak.py'de, tek yerde (`alpaca_anahtari`) yaşar ve bu betik "
+                          "onu İTHAL eder (kopya YOK).",
                 "nokta_tire_donusumu": "kohort defterindeki TEK harflik sınıf son eki (desen "
                                        "^[A-Z]+-[A-Z]$, örn. MOG-A / BRK-B) Alpaca anahtarında "
                                        "NOKTAYA çevrilir (MOG.A / BRK.B). Başka HİÇBİR sembole "

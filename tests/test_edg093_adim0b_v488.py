@@ -17,6 +17,12 @@ ortamından PYTHONPATH SİLİNİR: gerçek depo kökü sızarsa sentetik paket s
 
 BEKLENEN SAYILAR ELLE HESAPLANDI (aşağıdaki `_BEKLENEN` şerhinde adım adım).
 
+FİKSTÜR DEĞİŞİKLİĞİ (2026-09-14, ANA ÖLÇÜM Parti-1): betiğin saf fonksiyonları `ortak.py`ye
+taşındı ve betik onu `<repo>/research/olcumler/edg093_midcap_pit/ortak.py` yolundan ithal ediyor.
+Sahte repolara bu yüzden GERÇEK ortak.py konur (`_ortak_kur`) — sentetik bir ikinci kopya, çivinin
+ölçtüğü sözleşmeyi gerçeğinden ayırır ve tek-kaynak yasasının kaçındığı sürüklenmeyi çivinin
+KENDİSİNE taşırdı. Hiçbir BEKLENEN sayı değişmedi; iddiaların hepsi aynen durur.
+
 MUTASYON KANITI (bu dosyada KOŞMAZ, Rol-1'e raporla teslim edilir — CLAUDE.md §6):
   (a) barsız-çıkış tanımındaki 7 takvim günü sabiti 0'a çevrilince
       `test_barsiz_cikis_payi_YEDI_GUN_TOLERANSIYLA_YARIM` kırmızı (0,5 → 1,0),
@@ -174,6 +180,21 @@ def _stdin_kos(*args: str, cwd: str = "/", defter: pathlib.Path | None = None):
                           capture_output=True, timeout=180, env=env)
 
 
+#: ORTAK GÖVDE (2026-09-14, ANA ÖLÇÜM Parti-1). Betiğin saf fonksiyonları artık `ortak.py`de
+#: yaşıyor ve betik onu `<repo>/research/olcumler/edg093_midcap_pit/ortak.py` yolundan ithal ediyor
+#: (kopyalar SİLİNDİ — tek-kaynak yasası). Fikstür bu yüzden sahte repoya GERÇEK dosyayı koyar:
+#: ikinci bir sentetik kopya yazmak, çivinin ölçtüğü sözleşmeyi gerçeğinden ayırırdı.
+ORTAK_YOLU = REPO / "research" / "olcumler" / "edg093_midcap_pit" / "ortak.py"
+
+
+def _ortak_kur(repo: pathlib.Path) -> pathlib.Path:
+    """Sahte repoya gerçek ortak.py'yi yerleştirir (betik onu buradan ithal eder)."""
+    hedef = repo / "research" / "olcumler" / "edg093_midcap_pit" / "ortak.py"
+    hedef.parent.mkdir(parents=True, exist_ok=True)
+    hedef.write_bytes(ORTAK_YOLU.read_bytes())
+    return hedef
+
+
 def _sahte_repo(tmp_path: pathlib.Path, kart_metni: str = SENTETIK_KART) -> pathlib.Path:
     repo = tmp_path / "sahte_repo"
     (repo / "meridian" / "adapters").mkdir(parents=True)
@@ -182,6 +203,7 @@ def _sahte_repo(tmp_path: pathlib.Path, kart_metni: str = SENTETIK_KART) -> path
     (repo / "meridian" / "adapters" / "alpaca.py").write_text(SAHTE_ALPACA, encoding="utf-8")
     (repo / "research" / "cards").mkdir(parents=True)
     (repo / "research" / "cards" / KART_ADI).write_text(kart_metni, encoding="utf-8")
+    _ortak_kur(repo)
     return repo
 
 
@@ -342,6 +364,7 @@ def test_kart_YOKSA_esik_NONE_ve_NEDEN_kosum_dusmez(tmp_path):
     kohort.write_text(KOHORT_CSV, encoding="utf-8")
     repo = tmp_path / "kartsiz_repo"
     repo.mkdir()
+    _ortak_kur(repo)          # kart YOK ama ortak gövde VAR — ölçülen şey kart eksikliği
     cikti = tmp_path / "c"
     r = _stdin_kos("--repo", str(repo), "--cikti", str(cikti), "--kohort", str(kohort),
                    "--bugun", _BUGUN, "--bekleme-sn", "0")
@@ -355,6 +378,7 @@ def test_kart_YOKSA_esik_NONE_ve_NEDEN_kosum_dusmez(tmp_path):
 def test_baslik_YANLISSA_kullanim_hatasi(tmp_path):
     kohort = tmp_path / "k.csv"
     kohort.write_text("gun,semboller\n2020-07-27,AAA\n", encoding="utf-8")
+    _ortak_kur(tmp_path)      # ortak gövde VAR — düşen şey kohort başlığı, ithal değil
     r = _stdin_kos("--repo", str(tmp_path), "--cikti", str(tmp_path / "c"),
                    "--kohort", str(kohort), "--bugun", _BUGUN)
     assert r.returncode == 2 and b"date,tickers" in r.stderr, r.stderr.decode()[-400:]

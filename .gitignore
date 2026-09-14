@@ -46,6 +46,13 @@ research/olcumler/*/state/
 research/olcumler/edg075_sp500_tarihsel/ham/
 research/olcumler/edg092_sp400_uyelik/ham/
 
+# EDG-2026-093 (TSK-179, 2026-09-14) — Parti-1 veri kurulumunun HAM artefaktları: Alpaca bar
+# csv'leri (~50 MB TAHMİN) ve SEC companyfacts gzip'leri (~2,6 GB TAHMİN). Gerçek koşum A1'de ve
+# depo DIŞI bir `--cikti` ile yapılır; bu satırlar YEREL PROVA içindir (`--cikti` repo içine
+# gösterildiğinde ham veri commit adayı olmasın). Emsal: yukarıdaki edg075/edg092 satırları.
+research/olcumler/edg093_midcap_pit/ham/
+research/olcumler/edg093_midcap_pit/*/ham/
+
 # os
 .DS_Store
 
