@@ -235,13 +235,24 @@ def test_C1b_betik_CALISTIRILABILIR():
 
 def test_C2_unseal_degeri_STDIN_den_gecer_argv_den_DEGIL():
     """`vault operator unseal $(cat …)` argv'ye sır koyar ve argv `/proc/<pid>/cmdline`de
-    makinedeki HER kullanıcıya açıktır. Tek doğru biçim `-` (stdin) ve yönlendirmedir."""
+    makinedeki HER kullanıcıya açıktır. Tek doğru biçim STDIN ve yönlendirmedir — ve stdin'i
+    KABUL EDEN komutla: `write sys/unseal key=-`.
+
+    TUR-3 (ölçülen arıza, A1 2026-09-14 09:5xZ): tur-1/2 `operator unseal -` yazıyordu ve bu
+    çivi onu yeşil sayıyordu; A1'de komut "file descriptor 0 is not a terminal" ile düştü —
+    `operator unseal` için `-` bir stdin işareti DEĞİL, anahtar sanılan bir argümandır ve TTY
+    dışında (ExecStartPost, oneshot) stdin okumayı reddeder. Çivi kaynak metnini okuyordu,
+    CLI'nin davranışını değil. Bu yüzden eski biçim artık AÇIKÇA YASAK: geri gelirse burada
+    kırmızı olur (üçüncü assert), C5b mutasyonu bunu ısırır."""
     metin = _yorumsuz(UNSEAL_SH.read_text(encoding="utf-8"))
-    assert re.search(r"operator\s+unseal\s+-(?![-\w])", metin), (
-        "`operator unseal -` (stdin) biçimi yok — değer argv'ye giriyor olabilir"
+    assert re.search(r"write\s+sys/unseal\s+key=-(?![-\w])", metin), (
+        "`write sys/unseal key=-` (stdin) biçimi yok — değer argv'ye giriyor olabilir"
     )
-    assert not re.search(r"operator\s+unseal\s+[\"']?\$", metin), (
+    assert not re.search(r"sys/unseal\s+key=[\"']?\$", metin), (
         "unseal değeri argv'ye konuyor (değişken genişletmesi)"
+    )
+    assert not re.search(r"operator\s+unseal", metin), (
+        "`operator unseal` geri gelmiş — TTY dışında stdin'i reddeder (ölçülen arıza 2026-09-14)"
     )
     assert "$(cat" not in metin, "komut ikamesiyle anahtar okunuyor — argv sızıntısı"
 
@@ -277,11 +288,21 @@ def test_C4_bekleme_SINIRLI_ve_sinir_KAYNAKTA_yazili():
 
 
 def test_C5_MUTASYON_stdin_isareti_kalkinca_KIRMIZI():
-    """Mutasyon: `operator unseal -` → `operator unseal "$ANAHTAR"`. C2 bunu ısırmalı."""
+    """Mutasyon: `sys/unseal key=-` → `sys/unseal key="$ANAHTAR"`. C2 bunu ısırmalı."""
     bozuk = _yorumsuz(UNSEAL_SH.read_text(encoding="utf-8")).replace(
-        "operator unseal -", 'operator unseal "$ANAHTAR"')
-    assert not re.search(r"operator\s+unseal\s+-(?![-\w])", bozuk), "mutasyon uygulanamadı"
-    assert re.search(r"operator\s+unseal\s+[\"']?\$", bozuk), "mutasyon C2'nin ikinci kolunu kurmadı"
+        "sys/unseal key=-", 'sys/unseal key="$ANAHTAR"')
+    assert not re.search(r"write\s+sys/unseal\s+key=-(?![-\w])", bozuk), "mutasyon uygulanamadı"
+    assert re.search(r"sys/unseal\s+key=[\"']?\$", bozuk), "mutasyon C2'nin ikinci kolunu kurmadı"
+
+
+def test_C5b_MUTASYON_eski_operator_unseal_bicimi_geri_gelince_KIRMIZI():
+    """Mutasyon: `write sys/unseal key=-` → `operator unseal -` (tur-1'in A1'de düşen biçimi).
+    C2'nin üçüncü kolu bunu ısırmalı — yoksa aynı arıza bir gün "temiz" bir yeniden yazımla geri
+    gelir ve çivi yine yeşil kalır."""
+    bozuk = _yorumsuz(UNSEAL_SH.read_text(encoding="utf-8")).replace(
+        "write sys/unseal key=-", "operator unseal -")
+    assert re.search(r"operator\s+unseal", bozuk), "mutasyon uygulanamadı"
+    assert not re.search(r"write\s+sys/unseal\s+key=-(?![-\w])", bozuk), "mutasyon eksik kaldı"
 
 
 # -------------------------------------------------------------------------------------------------
@@ -300,13 +321,16 @@ def test_C5_MUTASYON_stdin_isareti_kalkinca_KIRMIZI():
 # Ayrımı yapan tek ölçüm `vault status -format=json` içindeki `initialized` alanıdır; uydurulmuş
 # bir varsayım (ör. "anahtar yoksa herhâlde init de yoktur") ikinci olguyu SESSİZCE yutardı.
 
-def _sahte_vault_kur(tmp_path, *, initialized: bool, sealed: bool = True):
+def _sahte_vault_kur(tmp_path, *, initialized: bool, sealed: bool = True,
+                     unseal_acar: bool = True):
     """PATH stub'ı DEĞİL, `VAULT_BIN` ile verilen sahte `vault`. Üç alt komutu tanır:
 
-      · `status`                → çıkış kodu (0 = açık, 2 = mühürlü/init-siz) — gerçek CLI böyle
-      · `status -format=json`   → `initialized`/`sealed` alanları + AYNI çıkış kodu
-      · `operator unseal -`     → STDIN'i dosyaya yazar (değer argv'ye GİRMEMELİ)
+      · `status`                   → çıkış kodu (0 = açık, 2 = mühürlü/init-siz) — gerçek CLI böyle
+      · `status -format=json`      → `initialized`/`sealed` alanları + AYNI çıkış kodu
+      · `write sys/unseal key=-`   → STDIN'i dosyaya yazar (değer argv'ye GİRMEMELİ)
 
+    `unseal_acar`: sahte kasa unseal isteğinden SONRA açık mı görünür (True — gerçek 1/1 kasa)
+    yoksa mühürlü mü kalır (False — eşik >1 ya da yanlış-sınıf anahtar; C11/C12 bunu ölçer).
     Sahte kasa hiçbir şeyi mutasyona uğratmaz; ölçtüğü tek şey betiğin HANGİ DALA girdiğidir."""
     binler = tmp_path / "sahte-bin"
     binler.mkdir(exist_ok=True)
@@ -317,13 +341,15 @@ def _sahte_vault_kur(tmp_path, *, initialized: bool, sealed: bool = True):
         "#!/usr/bin/env bash\n"
         f'echo "$*" >> "{argv_log}"\n'
         'if [ "$1" = "status" ]; then\n'
+        f'  MUHURLU="{str(sealed).lower()}"\n'
+        f'  if [ -e "{stdin_dosya}" ] && [ "{str(unseal_acar).lower()}" = "true" ]; then MUHURLU=false; fi\n'
         '  if [ "$2" = "-format=json" ]; then\n'
-        f'    printf \'{{"initialized":%s,"sealed":%s}}\\n\' "{str(initialized).lower()}" "{str(sealed).lower()}"\n'
+        f'    printf \'{{"initialized":%s,"sealed":%s}}\\n\' "{str(initialized).lower()}" "$MUHURLU"\n'
         "  fi\n"
-        f'  [ "{str(sealed).lower()}" = "true" ] && exit 2\n'
+        '  [ "$MUHURLU" = "true" ] && exit 2\n'
         "  exit 0\n"
         "fi\n"
-        'if [ "$1" = "operator" ] && [ "$2" = "unseal" ]; then\n'
+        'if [ "$1" = "write" ] && [ "$2" = "sys/unseal" ] && [ "$3" = "key=-" ]; then\n'
         f'  cat > "{stdin_dosya}"\n'
         "  exit 0\n"
         "fi\n"
@@ -333,10 +359,10 @@ def _sahte_vault_kur(tmp_path, *, initialized: bool, sealed: bool = True):
     return ikili, argv_log, stdin_dosya
 
 
-def _unseal_kos(tmp_path, betik, *, initialized, sealed=True, anahtar=None):
+def _unseal_kos(tmp_path, betik, *, initialized, sealed=True, anahtar=None, unseal_acar=True):
     """Betiği sahte kasayla koşar. `anahtar=None` → anahtar dosyası HİÇ yaratılmaz."""
     ikili, argv_log, stdin_dosya = _sahte_vault_kur(
-        tmp_path, initialized=initialized, sealed=sealed)
+        tmp_path, initialized=initialized, sealed=sealed, unseal_acar=unseal_acar)
     anahtar_yolu = tmp_path / "unseal.key"
     if anahtar is not None:
         anahtar_yolu.write_text(anahtar + "\n", encoding="utf-8")
@@ -372,13 +398,14 @@ def test_C7_INIT_EDILMIS_kasada_ANAHTAR_YOKSA_cikis_2(tmp_path):
 
 def test_C8_INIT_VAR_ANAHTAR_VAR_MUHURLU_ise_unseal_STDINden_CAGRILIR(tmp_path):
     """(iii) DAVRANIŞSAL kanıt: C2 kaynak metnini okur ("yazılmış mı"), bu test koşar
-    ("oluyor mu"). İki şey birden ölçülür — (a) `operator unseal` GERÇEKTEN çağrıldı ve değer
-    stdin'den GELDİ, (b) değer argv log'unda HİÇ geçmiyor. Yalnız (a) ölçülseydi argv'ye yazan
+    ("oluyor mu"). İki şey birden ölçülür — (a) `write sys/unseal key=-` GERÇEKTEN çağrıldı ve
+    değer stdin'den GELDİ, (b) değer argv log'unda HİÇ geçmiyor. Yalnız (a) ölçülseydi argv'ye yazan
     bir betik de geçerdi; yalnız (b) ölçülseydi hiç unseal etmeyen bir betik de geçerdi."""
     r, argv_log, stdin_dosya = _unseal_kos(
         tmp_path, UNSEAL_SH, initialized=True, anahtar=SAHTE_DEGER)
     assert r.returncode == 0, f"unseal yolu düştü:\n{r.stdout}\n{r.stderr}"
-    assert stdin_dosya.exists(), "`operator unseal` hiç çağrılmadı (mühür açılmazdı)"
+    assert stdin_dosya.exists(), "`write sys/unseal key=-` hiç çağrılmadı (mühür açılmazdı)"
+    assert "mühür açıldı" in r.stdout, "açılan mühür operatöre ADIYLA söylenmiyor"
     assert stdin_dosya.read_text(encoding="utf-8").strip() == SAHTE_DEGER, (
         "anahtar stdin'den GELMEDİ ya da içerik bozuldu")
     assert SAHTE_DEGER not in argv_log.read_text(encoding="utf-8"), "DEĞER ARGV'YE SIZDI"
@@ -423,6 +450,37 @@ def test_C10_MUTASYON_bootstrap_kapisi_bozulunca_KIRMIZI(tmp_path, eski, yeni, a
     assert not (r.returncode == 0 and "init edilmedi" in r.stdout), (
         f"MUTASYON ISIRMADI ({ad}): bozuk betik hâlâ C6'nın beklediği hükmü veriyor — "
         f"çivi yanlış sebeple yeşil:\n{r.stdout}\n{r.stderr}")
+
+def test_C11_HUKUM_API_CEVABINDAN_DEGIL_DURUMDAN_verilir(tmp_path):
+    """`write sys/unseal` çıkışı "istek kabul edildi" der, "mühür AÇILDI" demez: eşik >1 olan bir
+    kasada ilk pay kabul edilir ama kasa mühürlü kalır; yanlış-sınıf bir anahtar da aynı
+    görünebilir. Betik "açıldı"yı ancak `status` 0 dönünce söylemeli — aksi hâlde ExecStartPost
+    başarı bildirir, birim `active` olur ve sırlar mühürlü bir kasadan İSTENİR (Agent düşer,
+    alarm VAULT_SEALED'dan gelir, teşhis yanlış yerde başlar)."""
+    r, argv_log, stdin_dosya = _unseal_kos(
+        tmp_path, UNSEAL_SH, initialized=True, anahtar=SAHTE_DEGER, unseal_acar=False)
+    assert stdin_dosya.exists(), "unseal isteği hiç gönderilmedi"
+    assert r.returncode == 1, (
+        f"kasa mühürlü kaldı ama çıkış {r.returncode} (1 bekleniyordu):\n{r.stdout}\n{r.stderr}")
+    assert "BAŞARISIZ" in r.stdout, "mühürlü kalan kasa operatöre ADIYLA söylenmiyor"
+    assert "mühür açıldı" not in r.stdout, "açılmamış mühür 'açıldı' diye raporlandı"
+    assert SAHTE_DEGER not in argv_log.read_text(encoding="utf-8"), "DEĞER ARGV'YE SIZDI"
+
+
+def test_C12_MUTASYON_durum_kontrolu_silinince_C11_KIRMIZI(tmp_path):
+    """Çivi yeşili kanıt değildir: `&& [ "$(_durum_kodu)" = "0" ]` koşulu silinirse betik API
+    cevabına güvenir ve mühürlü kasada "açıldı" der — C11 tam da bunu ısırmalı."""
+    ham = UNSEAL_SH.read_text(encoding="utf-8")
+    capa = ' && [ "$(_durum_kodu)" = "0" ]'
+    assert capa in ham, "mutasyon çapası kaynakta yok"
+    bozuk = tmp_path / "vault_unseal_bozuk.sh"
+    bozuk.write_text(ham.replace(capa, ""), encoding="utf-8")
+    bozuk.chmod(0o755)
+    r, _, _ = _unseal_kos(tmp_path, bozuk, initialized=True, anahtar=SAHTE_DEGER, unseal_acar=False)
+    assert r.returncode == 0 and "mühür açıldı" in r.stdout, (
+        "MUTASYON ISIRMADI: durum kontrolü silinmiş betik hâlâ mühürlü kasayı yakalıyor — "
+        f"C11 yanlış sebeple yeşil olurdu:\n{r.stdout}\n{r.stderr}")
+
 
 # =================================================================================================
 # D) vault-unseal.service · vault-agent.service · vault-sagligi.{service,timer}
@@ -743,6 +801,15 @@ KOY_SH = VAULT_DIZIN / "vault_sir_koy.sh"
 #: Sahte sır — GERÇEK bir değer DEĞİL ve öyle görünmemeli. `SAHTE-` öneki bir konvansiyondur:
 #: bir gün bu dize bir log'da görünürse, kimse onu döndürmeye koşmaz.
 SAHTE_DEGER = "SAHTE-vault-faz2-degeri-0123456789"
+#: Sahte yönetici jetonu — aynı konvansiyon; J4/J5/J6 bunu bir dosyaya yazar, betik stdin'den okur.
+SAHTE_JETON = "SAHTE-vault-faz2-jetonu-9876543210"
+
+
+def _sahte_jeton_dosyasi(tmp_path) -> pathlib.Path:
+    """`VAULT_TOKEN_FILE` için tmp'de sahte yönetici jetonu (gerçek /etc/vault'a dokunulmaz)."""
+    p = tmp_path / "admin.token"
+    p.write_text(SAHTE_JETON + "\n", encoding="utf-8")
+    return p
 
 
 @pytest.mark.parametrize("betik", [KUR_SH, KOY_SH], ids=["vault_kur", "vault_sir_koy"])
@@ -824,6 +891,19 @@ def test_I7_koy_betigi_DEGERI_BORUDAN_gecirir():
     metin = _yorumsuz(KOY_SH.read_text(encoding="utf-8"))
     assert re.search(r"kv\s+put\s+\"\$yol\"\s+value=-", metin), "değer stdin'den geçmiyor"
     assert not re.search(r"value=[\"']?\$(?!\{?yol)", metin), "değer argv'ye konuyor"
+
+
+def test_I13_koy_betigi_KIMLIGI_STDIN_den_kurar_ve_ORTAMA_KOYMAZ():
+    """TUR-3 (ölçülen arıza, A1 2026-09-14 09:55Z): betik ortamdaki oturuma güveniyordu; kur betiği
+    o oturumu sonunda sildiği için jetonsuz koştu ve `kv put` 403 aldı — I7/J4 yeşilken. Kimlik
+    AÇIKÇA ve I4 ile aynı disiplinle kurulur: `login -no-print -` (stdin), `VAULT_TOKEN=` YOK,
+    `$(cat` YOK; oturum çıkışta silinir (trap)."""
+    metin = _yorumsuz(KOY_SH.read_text(encoding="utf-8"))
+    assert re.search(r"login\s+-no-print\s+-\s*<", metin), "yönetici jetonu stdin'den okunmuyor"
+    assert "VAULT_TOKEN=" not in metin, "jeton ortam değişkenine konuyor"
+    assert "$(cat" not in metin and "$(<" not in metin, "jeton komut ikamesiyle okunuyor"
+    assert re.search(r"trap\s+'rm -f \"\$\{HOME:-/root\}/\.vault-token\"'\s+EXIT", metin), (
+        "oturum çıkışta silinmiyor (kalıcı yönetici oturumu)")
 
 
 def test_I8_koy_betigi_LISTESINI_ENVANTERDEN_turetir():
@@ -1036,11 +1116,16 @@ exit 0
     env_yaml, kaynak = _gecici_envanter(tmp_path)
     ortam = dict(os.environ, PATH=f"{binler}:{os.environ['PATH']}",
                  VAULT_BIN=str(binler / "vault"), ENVANTER=str(env_yaml),
-                 PYTHON_BIN=sys.executable)
+                 PYTHON_BIN=sys.executable, HOME=str(tmp_path),
+                 VAULT_TOKEN_FILE=str(_sahte_jeton_dosyasi(tmp_path)))
     r = subprocess.run(["bash", str(KOY_SH), "--uygula"], capture_output=True, text=True, env=ortam)
     assert r.returncode == 0, f"uygula düştü:\n{r.stdout}\n{r.stderr}"
-    # (a) SIZINTI YOK
-    assert SAHTE_DEGER not in argv_log.read_text(encoding="utf-8"), "DEĞER ARGV'YE SIZDI"
+    # (a) SIZINTI YOK — ne değer ne jeton argv'de; oturum İLK çağrı ve stdin'den (tur-3, I13'ün davranışı)
+    argv = argv_log.read_text(encoding="utf-8")
+    assert SAHTE_DEGER not in argv, "DEĞER ARGV'YE SIZDI"
+    assert SAHTE_JETON not in argv, "JETON ARGV'YE SIZDI"
+    assert argv.splitlines()[0] == "login -no-print -", (
+        f"kasaya ilk çağrı oturum açma değil (jetonsuz kv put = ölçülen 403):\n{argv}")
     assert SAHTE_DEGER not in r.stdout and SAHTE_DEGER not in r.stderr, "DEĞER TERMİNALE BASILDI"
     # (b) AMA GERÇEKTEN GİTTİ — ve son satır sonu kırpılmış (kanonik biçim)
     assert kasa.read_text(encoding="utf-8") == SAHTE_DEGER, (
@@ -1064,10 +1149,26 @@ exit 0
     env_yaml, _ = _gecici_envanter(tmp_path)
     ortam = dict(os.environ, PATH=f"{binler}:{os.environ['PATH']}",
                  VAULT_BIN=str(binler / "vault"), ENVANTER=str(env_yaml),
-                 PYTHON_BIN=sys.executable)
+                 PYTHON_BIN=sys.executable, HOME=str(tmp_path),
+                 VAULT_TOKEN_FILE=str(_sahte_jeton_dosyasi(tmp_path)))
     r = subprocess.run(["bash", str(KOY_SH), "--uygula"], capture_output=True, text=True, env=ortam)
     assert r.returncode != 0, "sha256 uyuşmazlığı BETİĞİ DURDURMADI"
     assert "UYUŞMADI" in r.stdout, "uyuşmazlık operatöre ADIYLA söylenmiyor"
+
+
+def test_J6_koy_UYGULA_JETON_DOSYASI_YOKSA_kasaya_DOKUNMADAN_durur(tmp_path):
+    """Jetonsuz `--uygula`, tur-2'de tam olarak ölçülen arızadır (403). Şimdi betik kasaya tek çağrı
+    yapmadan, ADIYLA durmalı — "permission denied" değil, "yönetici jetonu yok" demeli."""
+    binler, log = _stub_kur(tmp_path, "vault")
+    env_yaml, _ = _gecici_envanter(tmp_path)
+    ortam = dict(os.environ, PATH=f"{binler}:{os.environ['PATH']}",
+                 VAULT_BIN=str(binler / "vault"), ENVANTER=str(env_yaml),
+                 PYTHON_BIN=sys.executable, HOME=str(tmp_path),
+                 VAULT_TOKEN_FILE=str(tmp_path / "yok.token"))
+    r = subprocess.run(["bash", str(KOY_SH), "--uygula"], capture_output=True, text=True, env=ortam)
+    assert r.returncode != 0, "jetonsuz uygula DURMADI"
+    assert "yönetici jetonu yok" in r.stderr, f"arıza ADIYLA söylenmiyor:\n{r.stderr}"
+    assert not log.exists(), f"jetonsuz betik kasaya çağrı yaptı:\n{log.read_text()}"
 
 
 # =================================================================================================

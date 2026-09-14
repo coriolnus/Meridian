@@ -9,6 +9,7 @@
 #   sudo ./vault_sir_koy.sh --kuru     → hiçbir şey yazmaz; hangi sırrın hangi yola gideceğini
 #                                        ve kaynak dosyanın VAR olup olmadığını listeler
 #   sudo ./vault_sir_koy.sh --uygula   → değerleri kasaya koyar ve HER BİRİNİ sha256 ile doğrular
+#                                        (kimlik: /etc/vault/admin.token, stdin'den — aşağıda KİMLİK bloğu)
 #
 # ─────────────────────────────────────────────────────────────────────────────────────────────
 # DEĞER NASIL AKAR — ÜÇ KURAL
@@ -37,6 +38,18 @@ VAULT_BIN="${VAULT_BIN:-/usr/local/bin/vault}"
 # Kuru koşumun envanteri okuması için; A1'de sistem python3'ü yeterlidir (PyYAML kurulu).
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 export VAULT_ADDR="${VAULT_ADDR:-http://127.0.0.1:8200}"
+
+# KİMLİK — ÖLÇÜLEN ARIZA (A1 ilk taşıma 2026-09-14 09:55Z, Rol-1): tur-1/2 bu betik ortamdaki
+# oturuma GÜVENİYORDU; `vault_kur.sh` adım 7'de açtığı kök oturumunu betiğin SONUNDA SİLER
+# (doğru davranış) — yani bu betik jetonsuz koştu ve ilk `kv put` ön-uçuşu 403 verdi. Kimlik
+# burada AÇIKÇA kurulur, yalnız `--uygula` yolunda (kuru koşum kasaya HİÇ dokunmaz — J3):
+#   · yönetici jetonu (`/etc/vault/admin.token`, 0400 root; vault_kur.sh adım 10 yazar)
+#     `login -no-print -` ile STDIN'den okunur — argv'ye ve ORTAMA girmez (`VAULT_TOKEN=$(cat …)`
+#     değeri `/proc/<pid>/environ`a koyardı).
+#   · oturum jeton yardımcısına (`$HOME/.vault-token`, 0600) yazılır ve ÇIKIŞTA SİLİNİR (trap):
+#     kalıcı bir yönetici oturumu, sonraki her root kabuğunu yönetici yapardı.
+# Çivi: v485 I13 (kaynak metin), J4 (login stdin'den, jeton argv'de yok), J6 (jeton yoksa durur).
+JETON_DOSYASI="${VAULT_TOKEN_FILE:-/etc/vault/admin.token}"
 
 # sha256 ARACI İKİ ADLA GELİR: Linux'ta `sha256sum`, macOS'ta `shasum -a 256`. Bu betik A1'de
 # koşar, ama TESLİMDEN ÖNCE operatörün koşacağı BİÇİMDE bir kez koşulması gerekir (CLAUDE.md §6:
@@ -69,6 +82,13 @@ for g in yaml.safe_load(open(sys.argv[1], encoding="utf-8"))["vault_kv"]:
 }
 
 [ -f "$ENVANTER" ] || die "envanter bulunamadı: $ENVANTER"
+
+if [ "$KIP" = "uygula" ]; then
+  [ -s "$JETON_DOSYASI" ] || die "yönetici jetonu yok/boş: $JETON_DOSYASI (vault_kur.sh adım 10 yazar)"
+  trap 'rm -f "${HOME:-/root}/.vault-token"' EXIT
+  "$VAULT_BIN" login -no-print - < "$JETON_DOSYASI" >/dev/null \
+    || die "yönetici jetonuyla oturum açılamadı ($JETON_DOSYASI)"
+fi
 
 echo "== dalga-1 sır taşıması ($KIP) — kaynak: $ENVANTER"
 HATA=0

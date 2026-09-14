@@ -127,7 +127,7 @@ elle unseal seçilmedi. BEKLEMEDE-7 kapandı. Faz-0/1A/1B/1C AYNEN ve ÖNCE (tek
   emsal `/etc/meridian/dash_token`). Kök jeton `/etc/vault/root.token` 0400 — yalnız bootstrap; politika/AppRole kurulunca İPTAL edilir,
   yerine dar bir yönetici jetonu (`vault token create -policy=meridian-admin`, TTL'li) — iptal ve yeni jeton ROADMAP notuna (değer değil).
 - **Otomatik unseal:** `vault.service` içinde `ExecStartPost=/opt/vault/vault_unseal.sh` (API ayağa kalkana kadar bekler — `_servis_ayakta`
-  deseni, `dash_token_credential.sh` şablonu — sonra `vault operator unseal $(cat /etc/vault/unseal.key)`; değer argv'ye DEĞİL stdin'e).
+  deseni, `dash_token_credential.sh` şablonu — sonra `vault write sys/unseal key=- < /etc/vault/unseal.key`; değer argv'ye DEĞİL stdin'e — **ölçüm 2026-09-14 tur-3:** `operator unseal` TTY dışında stdin'i REDDEDER ("file descriptor 0 is not a terminal"), jenerik `write` aynı API ucunu stdin'den besler, jeton istemez).
   Böylece crash/reboot sonrası her açılışta unseal kendiliğinden olur (`After=` tek başına sıralama verir, tetikleme vermez — ajan bulgusu).
   Ek: `vault-unseal.service` (oneshot) elle/timer tekrarı için; **bekçi**: `/v1/sys/health` 503 (sealed) → `VAULT_SEALED` alarm sınıfı
   (RUNBOOK üretici + korpus yeniden üretilir — üretilmiş-belge zinciri), ölçüm önce (kod Faz-2b).

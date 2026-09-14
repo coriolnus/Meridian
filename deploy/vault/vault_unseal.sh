@@ -12,8 +12,9 @@
 # SIR DİSİPLİNİ — BU DOSYANIN VAR OLMA SEBEBİ:
 #   (1) Anahtar DEĞERİ argv'ye GİRMEZ. `vault operator unseal "$(cat /etc/vault/unseal.key)"`
 #       biçimi anahtarı `/proc/<pid>/cmdline`e koyar ve o dosya makinedeki HER kullanıcıya
-#       OKUNABİLİRDİR. Doğru biçim `-` (stdin) ve dosya yönlendirmesidir: değer çekirdeğin
-#       argüman vektörüne hiç uğramaz.
+#       OKUNABİLİRDİR. Doğru biçim STDIN ve dosya yönlendirmesidir: değer çekirdeğin argüman
+#       vektörüne hiç uğramaz. HANGİ komutla: `write sys/unseal key=-` — `operator unseal -`
+#       DEĞİL; o komut TTY dışında stdin'i REDDEDER (aşağıda "STDIN İŞARETİ" bloğu, ölçüm 2026-09-14).
 #   (2) `set -x` YOK. Açık olsaydı her komut (yönlendirme hedefleri dahil) journal'a düşerdi.
 #   (3) Hiçbir `echo`/`printf` bir sır değişkeni basmaz — betik zaten hiçbir sırrı DEĞİŞKENE
 #       almaz; dosyadan doğrudan stdin'e akar.
@@ -126,11 +127,21 @@ if [ "$(_durum_kodu)" = "0" ]; then
   exit 0
 fi
 
-# ANAHTAR STDIN'DEN: `-` Vault CLI'nin belgelenmiş "değeri stdin'den oku" işaretidir. Değer
-# hiçbir değişkene alınmaz, hiçbir argümana yazılmaz; dosyadan borulanır ve süreçle birlikte
-# ölür. Çıktı /dev/null'a gider: `operator unseal` başarıda mühür durumunu basar ve o çıktı
-# anahtar taşımasa da journal'ı gereksiz doldurur; HÜKÜM çıkış kodundadır.
-if "$VAULT_IKILI" operator unseal - < "$ANAHTAR_YOLU" >/dev/null 2>&1; then
+# STDIN İŞARETİ — ÖLÇÜLEN ARIZA (A1 ilk kurulum 2026-09-14 09:5xZ, Rol-1). Tur-1/2 burada
+# `operator unseal -` yazıyordu ve A1'de DÜŞTÜ: Vault CLI'de `-` "değeri stdin'den oku" işareti
+# `login`, `write` ve `kv put` için VARDIR, `operator unseal` için YOKTUR — o komut anahtarı ya
+# argv'den alır ya da TTY'den sorar; TTY dışında (ExecStartPost, oneshot birim) "file descriptor
+# 0 is not a terminal" ile çıkış 1 verir ve `-` argümanı ANAHTAR sanılır. Aynı API ucunu
+# (`PUT sys/unseal`) jenerik `write` komutu stdin'den besler; uç nokta kimlik doğrulaması
+# İSTEMEZ (jetonsuz ölçüldü) ve sondaki satır sonunu tolere eder (newline'lı kopyayla ölçüldü).
+# Değer hiçbir değişkene alınmaz, hiçbir argümana yazılmaz; dosyadan borulanır ve süreçle
+# birlikte ölür. Çıktı /dev/null'a gider: cevap gövdesi anahtar taşımaz ama journal'ı gereksiz
+# doldurur. Çivi: v485 C2 (eski biçim YASAK), C5b (mutasyon), C8 (davranış).
+#
+# HÜKÜM API CEVABINDAN DEĞİL, DURUMDAN: `write` çıkışı "istek kabul edildi" der, "mühür açıldı"
+# demez (eşik >1 olsaydı ilk pay kabul edilir ama kasa mühürlü kalırdı). "Açıldı" ancak `status`
+# 0 dönünce söylenir — çivi C11/C12.
+if "$VAULT_IKILI" write sys/unseal key=- < "$ANAHTAR_YOLU" >/dev/null 2>&1 && [ "$(_durum_kodu)" = "0" ]; then
   _bas "mühür açıldı"
   exit 0
 fi
