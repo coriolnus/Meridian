@@ -128,7 +128,7 @@ ALLOWED: frozenset[str] = frozenset({
     # ama izin listesinde YOKTU — yani `secrets.set` onu reddediyor, operatör hiçbir zaman
     # ayarlayamıyordu. Sonuç: "düşüş zinciri" ömrü boyunca tek elemanlı kaldı ve olay kaydı
     # "tüm model zinciri cevapsız (tried=1)" diyordu; yedeğin YOKLUĞU, BAŞARISIZLIĞI gibi okunuyordu.
-    "NOUS_FALLBACK_MODEL",      # 429'da düşülecek BAĞIMSIZ kotalı model (ör. tencent/hy3:free)
+    "NOUS_FALLBACK_MODEL",      # 429'da düşülecek BAĞIMSIZ kotalı model — ölü ad göçü hermes.canonical_model, varsayılan hermes.NOUS_FALLBACK_DEFAULT (TSK-189)
     # APISIX KAPI TÜKETİCİ ANAHTARI (F4-B istemci tarafı). Kapının key-auth eklentisi tüketiciyi
     # `apikey` BAŞLIĞINDAN tanır; `hermes._nous_headers` bu sır DOLUYSA o başlığı Nous'a giden
     # HTTP çağrılarına ekler (POST /chat/completions + GET /models sondası, tek kaynak).
