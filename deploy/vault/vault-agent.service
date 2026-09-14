@@ -21,8 +21,30 @@
 # (Agent onları silmez) → tüketiciler hiçbir şey fark etmez. Vault kanalı EKLENİR, dosya kanalı
 # ZATEN hedef biçimdir; iki-kanal ilkesinin Faz-2 hâli budur.
 #
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+# DALGA-2 (2026-09-14) — İKİ SAPMA DAHA, ikisi de BEDELDİR ve ikisi de ADIYLA yazılıdır
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+# (1) YAZMA YÜZEYİ GENİŞLER. Sır-yalnız yan dosyalar (`<dosya>.vault`) tüketicinin YANINDA doğar:
+#     `/opt/apisix`, `/opt/hindsight` ve hermes ağacı. Liste envanterin İKİ bloğundan (`vault_kv`
+#     hedefleri + `vault_dosyalar` yolları) TÜRER ve çivi eşitliği ölçer — elle genişletilemez.
+# (2) `CapabilityBoundingSet=CAP_CHOWN`. Dalga-1'de bu küme BOŞTU ve doğruydu. Dalga-2'de Agent
+#     `ubuntu` sahipli dosyalar için render sonrası `chown ubuntu:ubuntu` koşar (`template`
+#     bloğunda SAHİP parametresi YOKTUR — yalnız `perms`; Agent root koşar, dolayısıyla dosya
+#     root:root doğar ve hermes CLI onu OKUYAMAZ). Root bile olsa `chown` CAP_CHOWN İSTER: boş
+#     kümede çağrı EPERM ile düşer, dosya root:root kalır ve arıza "bot sessizce eski anahtarla
+#     koşuyor" diye görünür. Yetenek TEK ve DARdır; `chown` bir RESTART DEĞİLDİR (tasarım §6.4
+#     "Agent tüketiciyi yeniden başlatmaz" ilkesi KORUNUR).
+#
+# ProtectHome=read-only DURUYOR ama `ReadWritePaths` onun içine BİR DELİK açar (hermes ağacı):
+# systemd yazma yollarını ProtectSystem/ProtectHome salt-okunur bağlarından SONRA uygular, yani
+# listedeki hermes dizinleri yazılabilir kalır. Bu davranış BURADA ÖLÇÜLMEDİ (ajan A1'e ssh
+# yapmaz) ve A1'de kurulduğu gün doğrulanır (aşağıdaki test-ateşleme satırı): hermes yan
+# dosyalarının render edilip edilmediği "kurulu ≠ çalışır" kapısının konusudur.
+#
 # KURULDUĞU GÜN ELLE TEST-ATEŞLENİR (CLAUDE.md §9): canary reçetesi deploy/vault/vault_kur.sh
-# başlığındadır (Vault'ta gerçek değer, eski dosyada sahte → tüketici 200 mü).
+# başlığındadır (Vault'ta gerçek değer, eski dosyada sahte → tüketici 200 mü). DALGA-2 EKİ:
+# `systemctl start vault-agent` sonrası her yan dosya için `stat -c '%a %U:%G'` okunur — hermes
+# dosyaları `0600 ubuntu:ubuntu` DEĞİLSE ya CAP_CHOWN ya da ProtectHome deliği tutmamıştır.
 [Unit]
 Description=Vault Agent (sır şablonlarını dosyaya render eder)
 After=vault.service
@@ -43,18 +65,21 @@ RestartSec=10
 # ==================================================================================================
 # H3 SERTLEŞTİRME — filo ortak seti (gerekçelerin tam metni deploy/oracle-a1/meridian.service'te).
 # BU BİRİMDE SERTLEŞTİRME DAHA KRİTİKTİR, daha az değil: süreç root koşuyor, yani sandbox onun
-# TEK freni. `CapabilityBoundingSet=` BOŞ: Agent yalnız dosya yazar, hiçbir yeteneğe ihtiyacı yok
-# (root olması yetenek gerektirmez — dosya sahipliği zaten root'tur).
+# TEK freni. `CapabilityBoundingSet=` dalga-1'de BOŞTU; dalga-2 ona TEK bir yetenek ekledi
+# (CAP_CHOWN) ve gerekçesi başlıktaki DALGA-2 bloğunda ADIYLA yazılıdır. İkinci bir yetenek
+# eklemek, o gerekçeyi sessizce genişletmek olurdu.
 # ==================================================================================================
 NoNewPrivileges=true
-CapabilityBoundingSet=
+CapabilityBoundingSet=CAP_CHOWN
 ProtectSystem=strict
 ProtectHome=read-only
 # YAZMA YÜZEYİ — SAPMANIN BEDELİNİ ÖDEYEN SATIR. Root bir süreç `/etc`nin tamamına yazabilirdi;
-# `ProtectSystem=strict` onu salt-okunur yapar ve buradaki İKİ yol deliğin tamamıdır. Liste
-# `deploy/sir_envanteri.yaml::vault_kv` hedeflerinin DİZİNLERİNDEN türer ve çivi ikisini
-# karşılaştırır — yeni bir sır başka bir dizine hedeflenirse çivi öter (tek-kaynak yasası).
-ReadWritePaths=/etc/meridian /etc/hindsight/creds
+# `ProtectSystem=strict` onu salt-okunur yapar ve buradaki yollar deliğin TAMAMIDIR. Liste
+# envanterin İKİ bloğundan TÜRER — `vault_kv` hedeflerinin DİZİNLERİ ∪ `vault_dosyalar` yan
+# dosyalarının DİZİNLERİ — ve çivi ikisini karşılaştırır: yeni bir sır ya da yan dosya başka bir
+# dizine hedeflenirse çivi öter (tek-kaynak yasası). Hermes ağacı `ProtectHome=read-only` içinde
+# açılmış BİR DELİKTİR ve başlıkta beyanlıdır.
+ReadWritePaths=/etc/meridian /etc/hindsight/creds /opt/apisix /opt/hindsight /home/ubuntu/.hermes /home/ubuntu/.hermes/profiles/bekci /home/ubuntu/.hermes/profiles/karne /home/ubuntu/.hermes/profiles/sef
 PrivateTmp=true
 ProtectKernelTunables=true
 ProtectKernelModules=true

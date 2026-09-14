@@ -1,5 +1,5 @@
 # ÜRETİLDİ — ELLE DÜZENLEME YAPMA.
-# Kaynak : deploy/sir_envanteri.yaml (vault_kv bloğu)
+# Kaynak : deploy/sir_envanteri.yaml (vault_kv + vault_dosyalar blokları)
 # Üreten : ops/vault_politika_uret.py — deterministik, damgasız (her koşu aynı bayt)
 # Tazelik: python ops/vault_politika_uret.py --kontrol   (çıkış 1 = bayat)
 #

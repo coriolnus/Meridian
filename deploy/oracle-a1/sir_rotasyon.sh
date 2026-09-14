@@ -46,6 +46,19 @@
 #                                           kümesi. TSK-064 Faz-1C, spec §3 madde 4.)
 #   ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 #                                           başlayacağını listeler, HİÇBİR ŞEY yazmaz
+#   sudo ./sir_rotasyon.sh --<alt> --vault  → KASADAN ROTASYON (TSK-064 Faz-2 DALGA-2, 2026-09-14):
+#                                           yeni değer operatörden alınır ve ÖNCE KASAYA konur;
+#                                           Agent yan dosyaları render eder, betik render'ı ÖLÇER
+#                                           (kanonik tek-değer kopyasının kasadaki değere eşitlenmesi,
+#                                           bekleme SINIRLI), eski kanal kopyalarını AYNI pencerede
+#                                           KASADAN gelen değerle yazar (iki-kanal dönemi), tüketicileri
+#                                           yeniden başlatır ve kanıtı ölçer. `--kuru` ile birleşir.
+#                                           KAPSAM: yalnız envanterde `rotasyon_siri` ile kasaya BAĞLI
+#                                           sırlar; bağlı olmayanlar ADIYLA beyan edilir ve eski yolla döner.
+#                                           TAKMA AD (`ayni_deger`, Rol-1 hükmü 2026-09-14): aynı değerin
+#                                           TEK kasa yolu vardır; rotasyon BİRİNCİL yola yapılır ve takma
+#                                           adlar onu otomatik izler. Restart listesi kasa YOLUNDAN toplanır
+#                                           (addan değil) — yani takma adın tüketicileri de kapsanır.
 #   sudo ./sir_rotasyon.sh --<alt> --esitle → EŞİTLEME (TSK-181, 2026-09-13): değer ÜRETİLMEZ, SORULMAZ,
 #                                           BASILMAZ; sırrın tablodaki İLK satırı (REFERANS) okunur, AYRI
 #                                           düşen dosya/env/url kopyalarına yazılır (api/sql kanalları
@@ -193,6 +206,27 @@ ADMIN_KOK="${SIR_ROT_ADMIN:-http://127.0.0.1:9180/apisix/admin}"
 HAZIR_BEKLE_ARALIK_S="${HAZIR_BEKLE_ARALIK_S:-2}"
 HAZIR_BEKLE_TAVAN_S="${HAZIR_BEKLE_TAVAN_S:-60}"
 HAZIR_TAVAN_S_hindsight_api="${HAZIR_TAVAN_S_hindsight_api:-300}"
+
+#: KASA (TSK-064 Faz-2 DALGA-2). Üçü de ortamdan geçilebilir ve bu kanca DEĞİL sözleşmedir:
+#: A1'de yollar sabittir, çivi başka bir kökte koşar.
+VAULT_BIN="${VAULT_BIN:-/usr/local/bin/vault}"
+VAULT_JETON_DOSYASI="${VAULT_TOKEN_FILE:-/etc/vault/admin.token}"
+export VAULT_ADDR="${VAULT_ADDR:-http://127.0.0.1:8200}"
+#: Envanter — `vault_kv` ve `vault_dosyalar` bloklarının TEK kaynağı. Betik `deploy/oracle-a1/`
+#: altında yaşar, envanter bir üst dizinde (`deploy/`).
+VAULT_ENVANTER="${VAULT_ENVANTER:-$(cd "$(dirname "$0")" && pwd)/../sir_envanteri.yaml}"
+#: YAML okuyan python — `py()` yardımcısı stdlib'le yetinir (sudo python3), bu ise PyYAML ister.
+#: A1'de sistem python3'ü yeterlidir; ayrı bir kanca olması çivinin kendi yorumlayıcısını
+#: verebilmesi içindir (sanal ortam dışındaki python3'te PyYAML olmayabilir).
+PYTHON_BIN="${PYTHON_BIN:-python3}"
+#: RENDER BEKLEME — SINIRLI. Agent STATİK (KV-v2) sırları `static_secret_render_interval` ile
+#: yeniden render eder ve o aralık `ops/vault_politika_uret.py::RENDER_ARALIGI`de TEK yerde
+#: yaşar (bugün 1 dk). Tavan o aralığın ~1,5 katıdır: DAR tavan sağlıklı ama yavaş bir render'ı
+#: "ölçülemedi" sayar, GENİŞ tavan bakım penceresini uzatır. İki sayı AYRI gerçeklerdir ("ne
+#: sıklıkla yenilenir" ile "ne kadar beklerim") ve bu yüzden kopya değil komşudurlar — biri
+#: ötekinden TÜRETİLMEZ, ama biri değişince öteki GÖZDEN GEÇİRİLİR.
+VAULT_RENDER_TAVAN_S="${VAULT_RENDER_TAVAN_S:-90}"
+VAULT_RENDER_ARALIK_S="${VAULT_RENDER_ARALIK_S:-3}"
 
 ISLIK=""          # 0700 çalışma dizini (değer taşıyan geçici dosyalar YALNIZ burada yaşar)
 YEDEK=""          # bu koşumun yedek dizini
@@ -1772,6 +1806,206 @@ openrouter() {
 }
 
 # =================================================================================================
+# KASA ROTASYONU — `--<alt> --vault` (TSK-064 Faz-2 DALGA-2)
+# =================================================================================================
+# NİYE SIRA TERSİNE DÖNÜYOR. Bugünkü rotasyon kopyaları TEK TEK yazar ve "unutulan kopya" sınıfı
+# tam olarak buradan doğar (TSK-181: tabloya girmemiş bir kopya dört gün eski anahtarla yaşadı).
+# Kasa kanalında yazan TEKtir: değer kasaya konur, Agent onu bütün yan dosyalara render eder ve
+# bu betik yalnız RENDER'I ÖLÇER. Eski kanal kopyaları iki-kanal dönemi boyunca AYNI pencerede,
+# KASADAN gelen değerle yazılır — yani kasa ile eski kanal ayrışamaz.
+#
+# KANITLARIN SIRASI BİR TERCİH DEĞİL: render ölçülmeden eski kanal YAZILMAZ. Yazılsaydı, Agent
+# render etmiyorken (kasa mühürlü · politika eksik · birim düşmüş) betik kasayı kaynak sanar ve
+# ESKİ değeri bütün kopyalara dağıtırdı — rotasyonun tam tersi.
+#
+# JETON: `vault_sir_koy.sh` ile AYNI disiplin — `login -no-print -` ile STDIN'den, `VAULT_TOKEN=`
+# YOK, `$(cat` YOK. Oturum yardımcısı `$ISLIK` (0700, çıkışta silinir) içine düşer: ayrı bir trap
+# gerekmez ve kalıcı bir yönetici oturumu diskte kalmaz.
+_vault() { HOME="$ISLIK" "$VAULT_BIN" "$@"; }
+
+#: Bir alt komutun döndürdüğü sır KİMLİKLERİ — kopya tablosundan TÜRER.
+_alt_sirlari() {
+  _kopyalar | awk -v a="$1" '$1==a {print $2}' | sort -u
+}
+
+#: `<kv ad>\t<KASA YOLU>\t<render kanıtı hedefi>\t<rotasyon_siri>\t<birincil ad | ->` — verilen
+#: sır kimliklerinden KASAYA BAĞLI olanlar. Bağ envanterde `rotasyon_siri` alanıyla kurulur ve o
+#: alan `rotasyon_kopyalari` tablosuna çivilidir (v491 A5): burada üçüncü bir liste tutulmaz.
+#:
+#: TAKMA AD (`ayni_deger`) BURADA ÇÖZÜLÜR: rotasyon BİRİNCİL yola yapılır ve render kanıtı
+#: birincilin `hedef`idir — yani takma adlar yeni değeri OTOMATİK izler. Çözülmeseydi rotasyon
+#: takma adın kendi yoluna yazar, birincil eski değerde kalır ve "aynı" sanılan iki değer tam da
+#: rotasyondan sonra ayrışırdı (hükmün engellediği hâl). Aynı yola çözülen iki satır TEK kez
+#: basılır: operatörden aynı değeri iki kez istemek, ikinci girişte yazım hatası riskidir.
+_vault_kv_satirlari() {
+  "$PYTHON_BIN" -c '
+import sys, yaml
+istenen = set(sys.argv[2:])
+kv = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))["vault_kv"]
+indeks = {g["ad"]: g for g in kv}
+gorulen = set()
+for g in kv:
+    if g.get("rotasyon_siri") not in istenen:
+        continue
+    birincil = g.get("ayni_deger")
+    if birincil is not None and birincil not in indeks:
+        sys.exit("%s: ayni_deger %s vault_kv de YOK (dangling takma ad)" % (g["ad"], birincil))
+    kaynak = indeks[birincil] if birincil else g
+    if kaynak["vault_yolu"] in gorulen:
+        continue
+    gorulen.add(kaynak["vault_yolu"])
+    print(g["ad"], kaynak["vault_yolu"], kaynak["hedef"], g["rotasyon_siri"],
+          birincil or "-", sep="\t")
+' "$VAULT_ENVANTER" "$@"
+}
+
+#: `<yan dosya yolu>\t<yeniden başlatılacak birim ya da `-`>` — verilen KASA YOLUNU taşıyan yan
+#: dosyalar. Restart listesi ELLE yazılmaz: hangi dosyanın hangi birimi ilgilendirdiği envanterin
+#: `vault_dosyalar.yeniden_baslat` alanında yaşar.
+#:
+#: SORGU ADA DEĞİL YOLA GÖREDİR ve fark hükümdür: `secret/meridian/kapi_apikey` yolunu hem
+#: `kapi_apikey` hem takma adı `bot_key_meridian` taşır, ve kapının yan dosyası satırını TAKMA
+#: ADLA yazar. Ada göre sorsaydık `--kapi --vault` rotasyonu kapıyı yeniden başlatmazdı: yan
+#: dosya yeni değere döner, konteyner eski değeri ortamında tutar ve bot 401 alır.
+_vault_yan_dosyalari() {
+  "$PYTHON_BIN" -c '
+import sys, yaml
+hedef_yol = sys.argv[2]
+veri = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
+indeks = {g["ad"]: g for g in veri["vault_kv"]}
+def coz(ad):
+    g = indeks[ad]
+    b = g.get("ayni_deger")
+    return indeks[b]["vault_yolu"] if b else g["vault_yolu"]
+for d in veri["vault_dosyalar"]:
+    if any(coz(x["sir"]) == hedef_yol for x in d["satirlar"]):
+        print(d["yol"], d.get("yeniden_baslat") or "-", sep="\t")
+' "$VAULT_ENVANTER" "$1"
+}
+
+#: KAPSAM BEYANI — alt komutun kasaya BAĞLI OLMAYAN sırları ADIYLA basılır. Bedel yasası: kazanç
+#: (kasadan tek kaynak) sayıldı, kayıp (bu tur dönMEYEN anahtar) da sayılmalı. Sessiz kalsaydı
+#: operatör "rotasyon bitti" sanır ve öteki anahtar sessizce eski değerde kalırdı.
+_vault_kapsam_beyani() {
+  local alt="$1" bagli="$2" sir
+  for sir in $(_alt_sirlari "$alt"); do
+    printf '%s\n' "$bagli" | awk -v k="$sir" '$4==k{b=1} END{exit !b}' && continue
+    echo "  · KAPSAM DIŞI (kasaya bağlı DEĞİL): $sir — eski yolla döner: sudo $0 --$alt"
+  done
+}
+
+_vault_kuru_rapor() {
+  local alt="$1" bagli="$2" ad yol hedef sir birincil yd yb
+  echo "=== KURU KOŞUM: --$alt --vault (HİÇBİR ŞEY YAZILMADI, KASAYA DOKUNULMADI) ==="
+  _vault_kapsam_beyani "$alt" "$bagli"
+  printf '%s\n' "$bagli" | while IFS=$'\t' read -r ad yol hedef sir birincil; do
+    [ -n "$ad" ] || continue
+    echo "  kasaya yazılacak : $yol   ($sir → $ad)"
+    [ "$birincil" = "-" ] \
+      || echo "  TAKMA AD         : $ad → $birincil   (yol ve render kanıtı BİRİNCİLİNDİR; takma adın tüketicileri onu izler)"
+    echo "  render kanıtı    : $hedef   (kanonik tek-değer kopyası — sha DEĞİL, BİREBİR kıyas)"
+    while IFS=$'\t' read -r yd yb; do
+      echo "    · yan dosya: $yd   (yeniden başlat: $yb)"
+    done < <(_vault_yan_dosyalari "$yol")
+    echo "  eski kanal (iki-kanal dönemi) AYNI pencerede kasadan gelen değerle yazılır:"
+    _kopyalar | awk -v a="$alt" -v k="$sir" '$1==a && $2==k {printf "    · %s %s\n", $4, ($5=="-"?"":"["$5"]")}'
+  done
+  echo "  render bekleme tavanı: $VAULT_RENDER_TAVAN_S s (yoklama aralığı $VAULT_RENDER_ARALIK_S s; aşımda ÖLÇÜLEMEDİ, eski kanal YAZILMAZ)"
+  echo "  ÖN KOŞUL: sudo systemctl stop meridian-tick-watchdog.timer (sonda geri aç)"
+  echo "  ÖN KOŞUL: kasa AÇIK (mühürsüz) ve vault-agent AYAKTA olmalı — yoksa render gelmez"
+  echo "  yedek dizini: $KOK/root/sir-yedek-<UTC ts>-$alt"
+}
+
+vault_rotasyon() {
+  local alt="$1" bagli ad yol hedef sir birincil bas gecen poz="" yd yb
+  echo "=== ROTASYON (KASADAN): --$alt --vault ==="
+  bagli="$(_vault_kv_satirlari $(_alt_sirlari "$alt"))"
+  [ -n "$bagli" ] || die "--vault: --$alt alt komutunun kasaya BAĞLI sırrı YOK
+     (envanterde hiçbir vault_kv girdisi bu alt komutun sırlarını rotasyon_siri ile göstermiyor).
+     Eski yolla döndür: sudo $0 --$alt"
+  [ "$KURU" = 0 ] || { _vault_kuru_rapor "$alt" "$bagli"; return 0; }
+  _vault_kapsam_beyani "$alt" "$bagli"
+
+  [ -s "$VAULT_JETON_DOSYASI" ] || die "yönetici jetonu yok/boş: $VAULT_JETON_DOSYASI
+     (vault_kur.sh adım 10 yazar) — kasaya HİÇBİR ŞEY yazılmadı"
+  _vault login -no-print - < "$VAULT_JETON_DOSYASI" >/dev/null \
+    || die "yönetici jetonuyla oturum açılamadı ($VAULT_JETON_DOSYASI)"
+
+  # SATIRLAR DOSYADAN, fd 3 ÜZERİNDEN okunur: `_oku_gizli` STDIN'den `read -rs` yapar ve döngüyü
+  # bir süreç ikamesine bağlasaydık operatörün yapıştırdığı değer değil TABLO okunurdu.
+  _vault_kv_satirlari $(_alt_sirlari "$alt") > "$ISLIK/vault_kv.tsv"
+  while IFS=$'\t' read -r ad yol hedef sir birincil <&3; do
+    [ -n "$ad" ] || continue
+    adim "kasa sırrı: $sir → $yol"
+    [ "$birincil" = "-" ] \
+      || echo "  TAKMA AD: $ad → $birincil — rotasyon BİRİNCİL yola yapılır, takma adın yan dosya alanları onu otomatik izler"
+    _oku_gizli "$sir (KASAYA konacak)" "$ISLIK/vault_yeni" \
+      || die "değer boş — yapacak iş yok (kasaya HİÇBİR ŞEY yazılmadı)"
+    [ -n "$YEDEK" ] || _yedek_al "$alt"
+    # KANONİK BİÇİM: sondaki yeni satır kırpılır. Agent şablonu da onu yazmaz, yani kırpılmış
+    # biçim kanaldaki KANONİK biçimdir (vault_sir_koy.sh kural 2 ile AYNI sözleşme).
+    py cikar dosya "$ISLIK/vault_yeni" - - "$ISLIK/vault_yeni_kanon"
+
+    tr -d '\r\n' < "$ISLIK/vault_yeni" | _vault kv put "$yol" value=- >/dev/null \
+      || die "kasaya yazılamadı: $yol"
+    oldu "kasaya yazıldı: $yol (DEĞER BASILMAZ)"
+
+    adim "render bekle: $hedef (tavan $VAULT_RENDER_TAVAN_S s)"
+    bas="$(date +%s)"
+    while :; do
+      if sudo test -s "$KOK$hedef"; then
+        py cikar dosya "$KOK$hedef" - - "$ISLIK/vault_render_kanon"
+        if sudo cmp -s "$ISLIK/vault_yeni_kanon" "$ISLIK/vault_render_kanon"; then break; fi
+      fi
+      gecen=$(( $(date +%s) - bas ))
+      if [ "$gecen" -ge "$VAULT_RENDER_TAVAN_S" ]; then
+        olcum_yok "render bekleme aşıldı: $hedef ($VAULT_RENDER_TAVAN_S s içinde kasadaki yeni
+     değere eşitlenmedi). Agent render ETMİYOR olabilir: kasa mühürlü · politika eksik · birim
+     düşmüş. ESKİ KANAL YAZILMADI — kasadan gelmeyen bir değeri yaymak, kasayı kaynak sanıp ESKİ
+     değeri bütün tüketicilere dağıtmak olurdu.
+     Bak: systemctl status vault-agent · journalctl -u vault-agent -n 50 --no-pager"
+      fi
+      sleep "$VAULT_RENDER_ARALIK_S"
+    done
+    gecen=$(( $(date +%s) - bas ))
+    oldu "render ÖLÇÜLDÜ: $hedef ($gecen s) — kanonik kopya kasadaki değerle BİREBİR"
+
+    adim "eski kanal (iki-kanal dönemi): kopyalar KASADAN gelen değerle yazılır"
+    _yaz "$alt" "$sir" "$ISLIK/vault_render_kanon"
+
+    # RESTART LİSTESİ KASA YOLUNDAN TOPLANIR, ADDAN DEĞİL: aynı yola çözülen her ad (birincil +
+    # takma adları) o yolun tüketicilerini getirir. Ada göre sorsaydık takma adın yan dosyasını
+    # taşıyan birim listeye HİÇ girmezdi.
+    while IFS=$'\t' read -r yd yb; do
+      [ "$yb" = "-" ] || poz="$poz $yb"
+    done < <(_vault_yan_dosyalari "$yol")
+    poz="$poz $(_sir_birimleri "$sir")"
+  done 3< "$ISLIK/vault_kv.tsv"
+
+  # shellcheck disable=SC2086
+  poz="$(_sirala $poz)"
+  # shellcheck disable=SC2086
+  _yeniden_baslat "$alt" $poz
+
+  case "$alt" in
+    openrouter)
+      _model_gerekli
+      local hal; hal="$(_kapi_chat_hali)"
+      [ "$hal" = "OK" ] || olcum_yok "kapı chat/completions → $hal (OK bekleniyordu: 200 + gövdede choices)"
+      oldu "kapı kanıtı: chat/completions 200 · gövdede choices (DEĞER-DOĞRULUĞU kanıtı)"
+      local kod; kod="$(_kod "-" "$HINDSIGHT/health" "-" "-")"
+      [ "$kod" = "200" ] || olcum_yok "hindsight /health → $kod (servis ayakta DEĞİL)"
+      oldu "hafıza yüzeyi: /health 200 — servis ayakta; LLM anahtarı için kanıt DEĞİL (uç anahtar istemez)" ;;
+    *) echo "  değer-doğruluğu bu alt komutta ÖLÇÜLMEDİ (None) — kanıt yüzeyi rotasyon yolundadır." ;;
+  esac
+
+  adim "kanıt: envanter eşitlik ölçümü (--$alt)"
+  _envanter_esitlik "$alt"
+  echo ">> İKİ KANAL AÇIK: asıl dosyalardaki sır satırları DOKUNULMADAN duruyor. Kapatma AYRI bir"
+  echo "   adımdır (≥2 gece sonra, yedekli) — geri alım: systemctl stop vault-agent + drop-in kaldır."
+}
+
+# =================================================================================================
 # ENVANTER — DEĞER BASMADAN VARLIK + EŞİTLİK
 # =================================================================================================
 _envanter_esitlik() {
@@ -2002,15 +2236,17 @@ esitle() {
 # =================================================================================================
 KURU=0
 ESITLE=0
+VAULT_KIP=0
 ALT=""
 for _a in "$@"; do
   case "$_a" in
     --kuru) KURU=1 ;;
     --esitle) ESITLE=1 ;;
+    --vault) VAULT_KIP=1 ;;
     --kapi|--tenant|--db|--dash|--openrouter|--apisix-admin|--envanter|--kopyalar)
       [ -z "$ALT" ] || die "iki alt komut verildi: --$ALT ve $_a — her koşum TEK sır döndürür"
       ALT="${_a#--}" ;;
-    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --envanter | --kopyalar [| --kuru | --esitle])" ;;
+    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --envanter | --kopyalar [| --kuru | --esitle | --vault])" ;;
   esac
 done
 [ -n "$ALT" ] || die "alt komut ZORUNLU: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --envanter | --kopyalar (+ --kuru)"
@@ -2028,6 +2264,14 @@ esac
 # alt komut sütunundan gelir; `--envanter --esitle` ne ölçer ne yazar — sessiz kabul yerine dur.
 [ "$ESITLE" = 0 ] || [ "$KURU_ONERILIR" = 1 ] \
   || die "--esitle yalnız rotasyon alt komutlarıyla: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin (+ --esitle [--kuru]); --$ALT ile anlamsız"
+# `--vault` de YALNIZ rotasyon alt komutlarıyla anlamlıdır ve `--esitle` ile BİRLİKTE VERİLEMEZ:
+# ikisi zıt yönlerdir. `--esitle` mevcut REFERANS kopyayı ötekilere taşır (değer üretilmez),
+# `--vault` YENİ bir değeri kasaya koyup oradan yayar. Sessizce biri ötekini yutarsa operatör
+# "eşitledim" sanarken taze bir anahtar yazılmış olurdu.
+[ "$VAULT_KIP" = 0 ] || [ "$KURU_ONERILIR" = 1 ] \
+  || die "--vault yalnız rotasyon alt komutlarıyla: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin (+ --vault [--kuru]); --$ALT ile anlamsız"
+[ "$VAULT_KIP" = 0 ] || [ "$ESITLE" = 0 ] \
+  || die "--vault ile --esitle birlikte verilemez: biri KASADAN yeni değer yayar, öteki mevcut referansı kopyalara taşır"
 
 # `--kopyalar` gömülü tabloyu basar: hiçbir dosya açmaz, hiçbir uca konuşmaz, hiçbir şey yazmaz —
 # ve çivinin sözleşme yüzeyidir. Root kapısının ÜSTÜNDE durması bilinçlidir: kapıyı buraya da
@@ -2054,6 +2298,7 @@ _KURU_ONERI=""
      kimlikle okutmak HER kanıtı 000 yapar ve rotasyon doğrulanamaz."
 
 _islik_kur
+if [ "$VAULT_KIP" = 1 ]; then vault_rotasyon "$ALT"; exit 0; fi
 if [ "$ESITLE" = 1 ]; then esitle "$ALT"; exit 0; fi
 case "$ALT" in
   kapi)       kapi ;;

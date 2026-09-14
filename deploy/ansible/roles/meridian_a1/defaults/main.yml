@@ -48,6 +48,12 @@ dropin_dizinleri:
   - meridian-karne.service.d
   # TSK-168 (EDG-2026-089): günlük defter özeti retain birimi — tenant anahtarı LoadCredential'dan.
   - meridian-defter-ozeti-retain.service.d
+  # TSK-064 Faz-2 DALGA-2 (2026-09-14): Vault yan dosyalarını (`<dosya>.vault`) okuyan tüketici
+  # drop-in'leri. İKİ YENİ DİZİN: kapı (apisix) ve CP. `hindsight-api.service.d` ZATEN listedeydi
+  # (50-creds.conf) ve dalga-2'nin 51-vault-yan-dosya.conf'u aynı glob'la gelir — yani yeni bir
+  # satır GEREKMEZ ve eklenmemelidir (v451 iki yönlü eşitlik ölçer: fazladan bir dizin de kırmızı).
+  - apisix.service.d
+  - hindsight-cp.service.d
 
 # --- zorunlu sır dosyaları (Task 2 denetim.yml: yalnız stat+assert, DEĞER üretmez/okumaz) ---
 zorunlu_sir_dosyalari:
@@ -196,6 +202,11 @@ dropin_kaynaklari:
   - "{{ playbook_dir }}/../oracle-a1/meridian-bekci.service.d/*.conf"
   - "{{ playbook_dir }}/../oracle-a1/meridian-karne.service.d/*.conf"
   - "{{ playbook_dir }}/../oracle-a1/meridian-defter-ozeti-retain.service.d/*.conf"
+  # TSK-064 Faz-2 DALGA-2: drop-in KAYNAĞI birimin YANINDA durur — apisix `deploy/apisix/`,
+  # CP `deploy/hindsight/` altında. Glob'un ana dizin adı `dropin_dizinleri`ndeki HEDEF dizin
+  # adıyla BİREBİR aynı olmak zorundadır (v451 o eşitliği ölçer).
+  - "{{ playbook_dir }}/../apisix/apisix.service.d/*.conf"
+  - "{{ playbook_dir }}/../hindsight/hindsight-cp.service.d/*.conf"
 
 # --- polkit kuralları (deploy.sh 6g + A1 ölçümü: /etc/polkit-1/rules.d'de 50 ve 51) ---
 polkit_kaynaklari:
@@ -249,11 +260,16 @@ f9_rol_disi:
   - deploy/hermes/profiles/karne/distribution.yaml
   - deploy/hermes/profiles/karne/config.yaml
   - deploy/hermes/profiles/karne/SOUL.md
-  # TSK-064 Faz-2 (2026-09-14): Vault'un BİRİM OLMAYAN üç dosyası. Rol onları TAŞIMAZ ve bu
-  # bilinçlidir — üçü de kasanın kendi kurulumuna aittir ve `deploy/vault/vault_kur.sh` onları
-  # (doğru sahiplik/izinle: 0640 root:vault, 0750 root:root) yerine koyar. Rol taşısaydı iki
-  # yazar olurdu ve izinler her playbook koşumunda salınırdı — `meridian-backup.service`
-  # chmod salınımıyla AYNI sınıf (K9). `agent.hcl` ayrıca ÜRETİLMİŞ bir dosyadır.
+  # TSK-064 Faz-2 (2026-09-14): Vault'un BİRİM OLMAYAN dosyaları (sayı düzyazıya GÖMÜLMEZ —
+  # liste F9 ile birlikte büyür). Rol onları TAŞIMAZ ve bu bilinçlidir: hepsi kasanın kendi
+  # kurulumuna aittir ve `deploy/vault/vault_kur.sh` onları doğru sahiplik/izinle (0640 root:vault
+  # yapılandırma, 0750 root:root betik) yerine koyar. Rol taşısaydı iki yazar olurdu ve izinler her
+  # playbook koşumunda salınırdı — `meridian-backup.service` chmod salınımıyla AYNI sınıf (K9).
+  # `agent.hcl` ayrıca ÜRETİLMİŞ bir dosyadır.
+  # `vault_admin_yenile.sh` BEYAN BOŞLUĞUYDU (tur-4, 2026-09-14): F9 çiftlerine girdi ama bu
+  # listeye girmedi ve v451 eşitliği kırmızıydı. Kardeşi `vault_unseal.sh` ile AYNI sınıf: kur
+  # betiği 0750 root:root kurar, rol dokunmaz.
   - deploy/vault/vault.hcl
   - deploy/vault/agent.hcl
   - deploy/vault/vault_unseal.sh
+  - deploy/vault/vault_admin_yenile.sh

@@ -491,16 +491,20 @@ rotasyon_kopyalari:
 # yönlüdür: aynı gerçeğin iki kopyası da, farklı gerçeklerin tek kopyası da ayrışma üretir).
 #
 # BU BLOK ÜRETİCİNİN GİRDİSİDİR. `ops/vault_politika_uret.py` buradan ÜÇ dosya üretir:
-#   deploy/vault/policies/meridian-agent.hcl   — yalnız bu yedi yolu `read`
+#   deploy/vault/policies/meridian-agent.hcl   — YALNIZ buradaki yolları `read` (sayı DÜZYAZIYA
+#                                                GÖMÜLMEZ: liste blokla birlikte büyür)
 #   deploy/vault/policies/meridian-admin.hcl   — yönetim (CRUD + sağlık + secret-id yenileme)
-#   deploy/vault/agent.hcl                     — auto_auth + yedi `template` bloğu
+#   deploy/vault/agent.hcl                     — auto_auth + her hedef için bir `template` bloğu
+#                                                (+ dalga-2: `vault_dosyalar` yan dosyaları)
 # Üçü de ÜRETİLMİŞ dosyadır ve ELLE DÜZENLENMEZ; tazelik kapısı `--kontrol` (çıkış 1 = bayat).
 #
-# DALGA-1 KAPSAMI: YALNIZ tek-değer dosyaları. Çok-değişkenli dosyalar (`/opt/apisix/.env-apisix`,
-# hermes profil `.env`leri, `/opt/hindsight/.env` failover üyeleri) DALGA-2'dir ve bu planın
-# DIŞINDADIR — onları `deploy/oracle-a1/sir_rotasyon.sh` yönetmeye DEVAM EDER. Sebep tekniktir:
-# bir `template` bloğu dosyanın TAMAMINI yazar; çok-değişkenli bir dosyayı Vault'tan render etmek
-# o dosyadaki AYAR satırlarının da kasaya girmesini ya da şablonda kopyalanmasını gerektirirdi.
+# DALGA-1 KAPSAMI (2026-09-14 sabahı): YALNIZ tek-değer dosyaları. Sebep teknikti — bir `template`
+# bloğu dosyanın TAMAMINI yazar; çok-değişkenli bir dosyayı Vault'tan render etmek o dosyadaki
+# AYAR satırlarının da kasaya girmesini gerektirirdi.
+# DALGA-2 (aynı günün akşamı, operatör kararı "HEPSİ") KISITI KALDIRMADAN AŞTI: `vault_dosyalar`
+# bloğunun SIR-YALNIZ yan dosyaları (`<dosya>.vault`) yalnız sır satırlarını taşır, ayar satırları
+# asıl dosyada KALIR ve tüketici iki kaynağı birlikte okur. Bu bloğun dalga-2 girdileri aşağıda,
+# yan dosyaların kendisi `vault_dosyalar` bloğundadır.
 #
 # DEĞER YOK: bu blok da yalnız AD ve YOL taşır (v439 E4 ile aynı kural; çivi
 # tests/test_vault_faz2_v485.py E3).
@@ -528,7 +532,7 @@ vault_kv:
     hedef: "/etc/meridian/kapi_apikey"
     mod: "0400"
     sahip: "root"
-    tuketici: "meridian.service (LoadCredential=KAPI_APIKEY)"
+    tuketici: "meridian.service (LoadCredential=KAPI_APIKEY) · BİRİNCİL yol: takma ad bot_key_meridian buraya çözülür · sir_rotasyon.sh --vault render kanıtı"
 
   # ---- KAPI YÖNETİM ANAHTARI — TEK LoadCredential-DIŞI HEDEF, BEYANLI --------------------------
   # Bu dosyayı hiçbir birim açılışta ARAMAZ: okuyucusu operatörün eliyle koştuğu bir ops aracıdır
@@ -557,10 +561,303 @@ vault_kv:
     hedef: "/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY"
     mod: "0400"
     sahip: "root"
-    tuketici: "hindsight-api.service (LoadCredential=HINDSIGHT_API_LLM_API_KEY)"
+    tuketici: "hindsight-api.service (LoadCredential=HINDSIGHT_API_LLM_API_KEY) · BİRİNCİL yol: takma ad openrouter_api_key buraya çözülür · sir_rotasyon.sh --vault render kanıtı"
   - ad: HINDSIGHT_API_TENANT_API_KEY
     vault_yolu: "secret/meridian/HINDSIGHT_API_TENANT_API_KEY"
     hedef: "/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY"
     mod: "0400"
     sahip: "root"
-    tuketici: "hindsight-api.service · meridian.service · meridian-defter-ozeti-retain (LoadCredential=HINDSIGHT_API_TENANT_API_KEY — AYNI dosya)"
+    tuketici: "hindsight-api.service · meridian.service · meridian-defter-ozeti-retain (LoadCredential=HINDSIGHT_API_TENANT_API_KEY — AYNI dosya) · BİRİNCİL yol: takma ad hindsight_cp_dataplane_api_key buraya çözülür · sir_rotasyon.sh --vault render kanıtı"
+
+  # ===============================================================================================
+  # DALGA-2 — KALAN BÜTÜN SIRLAR (operatör kararı 2026-09-14 17:47Z "HEPSİ"; spec §2)
+  # ===============================================================================================
+  # DALGA-1'DEN FARKI TEK CÜMLEDİR: bu sekizinin tüketicisi bir `LoadCredential` kaynağı DEĞİL,
+  # aşağıdaki `vault_dosyalar` bloğunun SIR-YALNIZ YAN DOSYALARIDIR. Sebep teknikti ve dalga-1'in
+  # kapsam şerhinde yazılıydı: bir `template` bloğu dosyanın TAMAMINI yazar, yani çok-değişkenli
+  # bir `.env`i kasadan render etmek o dosyadaki AYAR satırlarının da kasaya girmesini
+  # gerektirirdi — ve envanterin TEK kuralı "burada DEĞER yoktur"dur. Yan dosya deseni kısıtı
+  # kaldırmadan aşar: Agent yalnız SIR satırlarını `<dosya>.vault`a yazar, tüketici iki kaynağı
+  # birlikte okur, asıl dosyadaki sır satırları iki-kanal döneminden SONRA ayrı bir adımda düşer.
+  #
+  # `hedef` ALANI (`/etc/meridian/<ad>`) BİR SÜS DEĞİL, OKUNAN BİR DOSYADIR (Yasa 6). İki okuyucu
+  # ADIYLA yazılıdır: (1) `sir_rotasyon.sh --vault` RENDER KANITI — kasaya konan yeni değerin
+  # Agent tarafından gerçekten render edildiğini bu KANONİK tek-değer kopyasının sha'sından ölçer
+  # (yan dosyanın sha'sı değişti demek, HANGİ alanın değiştiğini söylemez); (2) aynı betiğin
+  # iki-kanal yazımı, eski kanal kopyalarını bu dosyadan okuyarak eşitler. Okuyucusu olmayan bir
+  # render yapılmaz — "kanonik kopya" gerekçesi tek başına Yasa 6'yı karşılamazdı.
+  # TAKMA ADLAR (`ayni_deger`) BU ALANI TAŞIMAZ: onların render kanıtı BİRİNCİLİN `hedef`idir.
+  #
+  # `kaynak` / `kopya_kaynaklari` (spec §4): `vault_sir_koy.sh` değeri NEREDEN alacağını buradan
+  # okur. `kaynak` REFERANSTIR (ilk kopya), `kopya_kaynaklari` AYNI değerin öteki yerleridir ve
+  # taşımadan önce sha EŞİTLİĞİ ölçülür — ayrışma DURDURUR. Bu kapı bir konfor değil: TSK-181'de
+  # rotasyonun ATLADIĞI bir kopya (GLOBAL `/home/ubuntu/.hermes/.env`) dört gün eski anahtarla
+  # yaşadı ve arıza ancak akşam incelemesinin 401'inde göründü. Kasaya yanlış kopyadan taşımak
+  # aynı sınıfın daha pahalı hâlidir: kasa artık TEK KAYNAK olduğu için hata bütün tüketicilere
+  # yayılır.
+  #
+  # `rotasyon_siri`: bu sır `rotasyon_kopyalari` tablosunda da yaşıyorsa onun KİMLİĞİ. Kaynak +
+  # kopya kümesi o tablodan TÜRETİLİR ve çivi ikisinin BİREBİR eşit olduğunu ölçer — ikinci bir
+  # kopya listesi tutmak, tek-kaynak yasasının bu depoda en pahalıya mal olmuş ihlalidir. `null`
+  # ise sır rotasyon tablosunda YOKTUR (bot anahtarları, pano parolası, CP erişim anahtarı için
+  # bugün böyledir) ve kopya listesi ADIYLA beyanlıdır.
+  #
+  # ===============================================================================================
+  # `ayni_deger` — TAKMA AD (Rol-1 HÜKMÜ 2026-09-14, tur-2; tur-1'in AÇIK KALEMİ kapandı)
+  # ===============================================================================================
+  # SORU ŞUYDU: `openrouter_api_key` ile `HINDSIGHT_API_LLM_API_KEY`, `bot_key_meridian` ile
+  # `kapi_apikey`, `hindsight_cp_dataplane_api_key` ile `HINDSIGHT_API_TENANT_API_KEY` BUGÜN aynı
+  # değeri taşıyor. Tur-1 onları kasada AYRI yollar olarak yazmıştı; ayrışma TAŞIMA anında
+  # `kopya_kaynaklari` kapısıyla ölçülüyordu ama kasadaki iki yol ROTASYONDAN SONRA ayrışabilirdi
+  # (biri döner, öteki dönmez) — yani bu depoda en pahalıya mal olmuş sınıfın (aynı gerçeğin iki
+  # kopyası) kasa içindeki hâli.
+  #
+  # HÜKÜM: AYNI DEĞERİN TEK KASA YOLU VARDIR. Envanter girdisi `ayni_deger: <birincil ad>` taşır
+  # ve o girdi bir TAKMA ADdır: kendi `vault_yolu`su, `hedef`i, `mod`u, `sahip`i YOKTUR — dördü de
+  # birincilin girdisinden okunur. BİRİNCİL, kasada ZATEN duran dalga-1 girdisidir
+  # (`HINDSIGHT_API_LLM_API_KEY` · `kapi_apikey` · `HINDSIGHT_API_TENANT_API_KEY`); yani bu hüküm
+  # kasada YENİ BİR YOL AÇMAZ ve A1'de bir göç GEREKTİRMEZ.
+  #
+  # DÖRT YER BİRLİKTE DEĞİŞİR (yoksa hüküm yarım kalır ve yarım kalışı sessizdir):
+  #   1. BU DOSYA — `ayni_deger` alanı; takma ad yol/hedef taşımaz (çivi: taşırsa PATLAR).
+  #   2. `ops/vault_politika_uret.py` — takma adın şablon/policy yolu BİRİNCİLİN `vault_yolu`sundan
+  #      türer; takma ad KENDİ `path` bloğunu ve KENDİ tek-değer şablonunu ÜRETMEZ (politikada yol
+  #      tekrarı HCL'de bir hatadır, ve ikinci bir kanonik kopya sırrın diskteki yüzeyini büyütürdü).
+  #   3. `deploy/vault/vault_sir_koy.sh` — takma ad için `kv put` YAPILMAZ; kaynağının değeri ile
+  #      BİRİNCİLİN KASADAKİ değeri sha256 ile KIYASLANIR (ayrışma → durur, ADIYLA).
+  #   4. `deploy/oracle-a1/sir_rotasyon.sh --vault` — rotasyon BİRİNCİL yola yapılır, takma adlar
+  #      onu otomatik izler; restart listesi takma adın tüketicilerini de KAPSAR (yan dosya
+  #      referansları kasa YOLUNA çözülerek toplanır, ada göre değil).
+  #
+  # `rotasyon_siri` TAKMA ADDA KALIR ve bu bilinçlidir: dalga-1 girdileri şemalarını GENİŞLETEMEZ
+  # (v485 E1 onların alan kümesini BİREBİR dondurur) ve rotasyon tablosundaki kimlik zaten takma
+  # adın kopya kümesiyle çivilidir (A5). Rotasyon satırı takma addan doğar, YOLU birincilden alır.
+  - ad: openrouter_api_key
+    ayni_deger: HINDSIGHT_API_LLM_API_KEY
+    tuketici: "vault_dosyalar şablonları (apisix · hindsight · hermes ×4) — TAKMA AD: kasa yolu ve render kanıtı BİRİNCİLİNDİR (HINDSIGHT_API_LLM_API_KEY); kendi kasa yolu YOK, birim DEĞİL, systemd kaynağı DEĞİL"
+    rotasyon_siri: OPENROUTER_API_KEY
+    kaynak: {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: OPENROUTER_API_KEY, onek: null}
+    kopya_kaynaklari:
+      - {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: OPENROUTER_AUTH, onek: "Bearer"}
+      - {tur: dosya, dosya: "/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY", alan: null, onek: null}
+      - {tur: env_satiri, dosya: "/opt/hindsight/.env", alan: HINDSIGHT_API_REFLECT_LLM_1_API_KEY, onek: null}
+      - {tur: env_satiri, dosya: "/opt/hindsight/.env", alan: HINDSIGHT_API_REFLECT_LLM_2_API_KEY, onek: null}
+      - {tur: env_satiri, dosya: "/opt/hindsight/.env", alan: HINDSIGHT_API_REFLECT_LLM_3_API_KEY, onek: null}
+      - {tur: env_satiri, dosya: "/opt/hindsight/.env", alan: HINDSIGHT_API_CONSOLIDATION_LLM_1_API_KEY, onek: null}
+      - {tur: env_satiri, dosya: "/opt/hindsight/.env", alan: HINDSIGHT_API_CONSOLIDATION_LLM_2_API_KEY, onek: null}
+      - {tur: env_satiri, dosya: "/opt/hindsight/.env", alan: HINDSIGHT_API_CONSOLIDATION_LLM_3_API_KEY, onek: null}
+      - {tur: env_satiri, dosya: "/home/ubuntu/.hermes/profiles/bekci/.env", alan: OPENROUTER_API_KEY, onek: null}
+      - {tur: env_satiri, dosya: "/home/ubuntu/.hermes/profiles/karne/.env", alan: OPENROUTER_API_KEY, onek: null}
+      - {tur: env_satiri, dosya: "/home/ubuntu/.hermes/profiles/sef/.env", alan: OPENROUTER_API_KEY, onek: null}
+      - {tur: env_satiri, dosya: "/home/ubuntu/.hermes/.env", alan: OPENROUTER_API_KEY, onek: null}
+
+  # BOT ANAHTARLARI — `rotasyon_siri: null` VE BU BİR BEYAN: bugün hiçbir alt komut bu üçünü
+  # döndürmüyor (rotasyon tablosunda satırları YOK). Kopya listesi o yüzden ADIYLA yazılıdır ve
+  # iki uçludur: kapının key-auth tüketici tanımı (`.env-apisix`) ile botun kendi profili. İkisi
+  # ayrışırsa bot kapıdan 401 alır — ve bu, taşımadan ÖNCE ölçülmesi gereken tam olarak o hâldir.
+  - ad: bot_key_bekci
+    vault_yolu: "secret/meridian/bot_key_bekci"
+    hedef: "/etc/meridian/bot_key_bekci"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "vault_dosyalar şablonları (apisix · hermes bekci profili) · sir_rotasyon.sh --vault render kanıtı"
+    rotasyon_siri: null
+    kaynak: {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: BOT_KEY_BEKCI, onek: null}
+    kopya_kaynaklari:
+      - {tur: env_satiri, dosya: "/home/ubuntu/.hermes/profiles/bekci/.env", alan: BOT_KEY_BEKCI, onek: null}
+  - ad: bot_key_karne
+    vault_yolu: "secret/meridian/bot_key_karne"
+    hedef: "/etc/meridian/bot_key_karne"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "vault_dosyalar şablonları (apisix · hermes karne profili) · sir_rotasyon.sh --vault render kanıtı"
+    rotasyon_siri: null
+    kaynak: {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: BOT_KEY_KARNE, onek: null}
+    kopya_kaynaklari:
+      - {tur: env_satiri, dosya: "/home/ubuntu/.hermes/profiles/karne/.env", alan: BOT_KEY_KARNE, onek: null}
+  - ad: bot_key_sef
+    vault_yolu: "secret/meridian/bot_key_sef"
+    hedef: "/etc/meridian/bot_key_sef"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "vault_dosyalar şablonları (apisix · hermes sef profili) · sir_rotasyon.sh --vault render kanıtı"
+    rotasyon_siri: null
+    kaynak: {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: BOT_KEY_SEF, onek: null}
+    kopya_kaynaklari:
+      - {tur: env_satiri, dosya: "/home/ubuntu/.hermes/profiles/sef/.env", alan: BOT_KEY_SEF, onek: null}
+
+  # `BOT_KEY_MERIDIAN` MOTORUN kapı anahtarıdır ve `KAPI_APIKEY` ile AYNI değerdir — kopya kümesi
+  # rotasyon tablosundan TÜRER (`--kapi` iki kopya yazar). Ad `bot_key_meridian`dir çünkü yan
+  # dosyada o ALANI doldurur; kasadaki YOL ise birincilin (`kapi_apikey`) yoludur: TAKMA AD.
+  # `kaynak` alanı burada birincilin RENDER EDİLMİŞ dosyasıdır — yani taşıma öncesi eşitlik kapısı
+  # "takma adın kaynağı ile kasadaki birincil değer aynı mı" sorusunu doğrudan ölçer.
+  - ad: bot_key_meridian
+    ayni_deger: kapi_apikey
+    tuketici: "vault_dosyalar şablonları (apisix key-auth tüketicisi motor_meridian) — TAKMA AD: kasa yolu ve render kanıtı BİRİNCİLİNDİR (kapi_apikey)"
+    rotasyon_siri: KAPI_APIKEY
+    kaynak: {tur: dosya, dosya: "/etc/meridian/kapi_apikey", alan: null, onek: null}
+    kopya_kaynaklari:
+      - {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: BOT_KEY_MERIDIAN, onek: null}
+
+  # PANO GİRİŞ PAROLASI — kapının kendi yüzeyinde çözülür; tek kopya, tek dosya.
+  - ad: pano_giris_parola
+    vault_yolu: "secret/meridian/pano_giris_parola"
+    hedef: "/etc/meridian/pano_giris_parola"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --vault render kanıtı"
+    rotasyon_siri: null
+    kaynak: {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: PANO_GIRIS_PAROLA, onek: null}
+
+  # HİNDSİGHT KONTROL PANELİ — İKİ AYRI SIR, tek dosya. `ACCESS_KEY` CP'nin kendi giriş anahtarı
+  # (rotasyon tablosunda YOK), `DATAPLANE_API_KEY` ise TENANT anahtarının kopyasıdır ve o tabloda
+  # YAŞAR — kopya kümesi oradan türer (üç satır: credential kaynağı · hafıza okuyucusunun düz
+  # dosyası · CP env satırı).
+  - ad: hindsight_cp_access_key
+    vault_yolu: "secret/meridian/hindsight_cp_access_key"
+    hedef: "/etc/meridian/hindsight_cp_access_key"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "vault_dosyalar şablonu (/opt/hindsight/.env-cp.vault) · sir_rotasyon.sh --vault render kanıtı"
+    rotasyon_siri: null
+    kaynak: {tur: env_satiri, dosya: "/opt/hindsight/.env-cp", alan: HINDSIGHT_CP_ACCESS_KEY, onek: null}
+  # `DATAPLANE_API_KEY` TENANT anahtarının kopyasıdır → TAKMA AD (birincil
+  # `HINDSIGHT_API_TENANT_API_KEY`, kasada dalga-1'den beri duruyor).
+  - ad: hindsight_cp_dataplane_api_key
+    ayni_deger: HINDSIGHT_API_TENANT_API_KEY
+    tuketici: "vault_dosyalar şablonu (/opt/hindsight/.env-cp.vault) — TAKMA AD: kasa yolu ve render kanıtı BİRİNCİLİNDİR (HINDSIGHT_API_TENANT_API_KEY)"
+    rotasyon_siri: HINDSIGHT_API_TENANT_API_KEY
+    kaynak: {tur: dosya, dosya: "/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY", alan: null, onek: null}
+    kopya_kaynaklari:
+      - {tur: dosya, dosya: "/opt/hindsight/.key", alan: null, onek: null}
+      - {tur: env_satiri, dosya: "/opt/hindsight/.env-cp", alan: HINDSIGHT_CP_DATAPLANE_API_KEY, onek: null}
+
+# =================================================================================================
+# VAULT YAN DOSYALARI — sır-yalnız `<dosya>.vault` (TSK-064 Faz-2 DALGA-2, 2026-09-14)
+# =================================================================================================
+# NİYE DÖRDÜNCÜ BİR BLOK. `vault_kv` "hangi sır kasada hangi yolda durur"u söyler; bu blok BAŞKA
+# bir soruyu yanıtlar: "Agent hangi DOSYAYI, hangi SATIRLARLA, kimin için yazar". İkisini tek
+# bloğa sıkıştırmak, bir sırrın birden çok dosyada birden çok ALAN adıyla yaşadığı gerçeğini
+# (OpenRouter anahtarı on üç yerde, altısı farklı ad altında) temsil edemezdi.
+#
+# SÖZLEŞME:
+#   yol             `<asıl dosya>.vault` — asıl dosyanın YANINDA, aynı dizinde (çivi: asıl dosya
+#                   envanterde TANINIYOR olmalı)
+#   mod             render izni (`template { perms = … }`)
+#   sahip           `root` | `ubuntu`. Agent ROOT koşar ve `template` bloğunda SAHİP parametresi
+#                   YOKTUR (resmî belge, ölçüldü 2026-09-14) → `ubuntu` olan dosya için üretici
+#                   bir `exec { command = ["chown", "ubuntu:ubuntu", <yol>] }` yazar. Bu, Agent'ın
+#                   TEK ek yetkisidir ve `chown` bir RESTART DEĞİLDİR: tasarım §6.4'ün "Agent
+#                   tüketiciyi yeniden başlatmaz" ilkesi KORUNUR.
+#   tuketici        dosyayı KİMİN, HANGİ kanalla okuduğu (Yasa 6 beyanı). Biçim ÖLÇÜLDÜ, seçilmedi
+#                   — aşağıdaki her satırın kanalı canlı birim dosyasından okundu.
+#   yeniden_baslat  rotasyonun (`--vault`) koşacağı birim; `null` = restart GEREKMEZ ve gerekçesi
+#                   `tuketici` alanında yazılıdır (timer'lı oneshot / her çağrıda dosyayı okuyan CLI)
+#   satirlar        `{alan, sir, onek}` — `sir` bir `vault_kv.ad`ıdır (çivi: dangling referans yok),
+#                   `onek` `null` ya da `Bearer` (donuk sözlük; rotasyon betiğinin ONEKLER tablosu
+#                   ile AYNI iki jeton). `sir` bir TAKMA AD (`ayni_deger`) olabilir: şablon o zaman
+#                   BİRİNCİLİN kasa yolunu okur — yani aynı değeri taşıyan iki ALAN adı tek kasa
+#                   yolunda buluşur ve rotasyondan sonra ayrışamazlar.
+#
+# İKİ KANAL, İKİ ADIM (Faz-1 deseni): bu blok yalnız yan dosyayı tanımlar. Asıl dosyalardaki sır
+# satırları iki-kanal dönemi boyunca (≥2 gece) OLDUĞU GİBİ KALIR ve AYRI bir adımda kaldırılır —
+# geri alım `systemctl stop vault-agent` + drop-in'lerin kaldırılmasıdır, tüketiciler eski kanalla
+# devam eder (tasarım §6.4).
+vault_dosyalar:
+  # KAPI — tüketici docker konteyneridir ve sırları `--env-file` ile alır (ÖLÇÜLDÜ 2026-09-14,
+  # `deploy/apisix/apisix.service` ExecStart satırı). İkinci `--env-file` drop-in ile eklenir;
+  # docker aynı anahtarı taşıyan iki dosyada SONRAKİNİ geçerli sayar, yani yan dosya kazanır.
+  # `$env://` ve `${{…}}` çözümlerini APISIX YALNIZ AÇILIŞTA yapar: reload YETMEZ, RESTART gerekir.
+  - yol: "/opt/apisix/.env-apisix.vault"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "apisix.service (docker --env-file, ikinci dosya — drop-in 50-vault-yan-dosya.conf; root okur)"
+    yeniden_baslat: "apisix.service"
+    satirlar:
+      - {alan: APISIX_ADMIN_KEY, sir: apisix_admin_key, onek: null}
+      - {alan: OPENROUTER_API_KEY, sir: openrouter_api_key, onek: null}
+      # TÜRETİLMİŞ DEĞER: kapının upstream Authorization başlığı `Bearer <anahtar>`dır. Önek
+      # şablonda SABİT, değer kasadan gelir — iki ayrı kasa yolu tutmak (anahtar + önekli kopya)
+      # aynı gerçeğin iki kopyası olurdu ve rotasyonda ayrışırdı.
+      - {alan: OPENROUTER_AUTH, sir: openrouter_api_key, onek: "Bearer"}
+      - {alan: PANO_GIRIS_PAROLA, sir: pano_giris_parola, onek: null}
+      - {alan: BOT_KEY_BEKCI, sir: bot_key_bekci, onek: null}
+      - {alan: BOT_KEY_KARNE, sir: bot_key_karne, onek: null}
+      - {alan: BOT_KEY_SEF, sir: bot_key_sef, onek: null}
+      - {alan: BOT_KEY_MERIDIAN, sir: bot_key_meridian, onek: null}
+
+  # HAFIZA API — tüketici systemd birimidir (`EnvironmentFile=`, ÖLÇÜLDÜ 2026-09-14
+  # `deploy/hindsight/hindsight-api.service`). İkinci `EnvironmentFile=` drop-in ile eklenir ve
+  # systemd SONRAKİ dosyayı geçerli sayar. Altı satırın altısı da AYNI kasa yolundan gelir:
+  # failover zinciri üyesi ana anahtarı DEVRALMAZ (EDG-2026-080/081), her üye kendi satırını okur.
+  - yol: "/opt/hindsight/.env.vault"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "hindsight-api.service (EnvironmentFile, ikinci dosya — drop-in 51-vault-yan-dosya.conf; systemd PID 1 olarak root okur)"
+    yeniden_baslat: "hindsight-api.service"
+    satirlar:
+      - {alan: HINDSIGHT_API_REFLECT_LLM_1_API_KEY, sir: openrouter_api_key, onek: null}
+      - {alan: HINDSIGHT_API_REFLECT_LLM_2_API_KEY, sir: openrouter_api_key, onek: null}
+      - {alan: HINDSIGHT_API_REFLECT_LLM_3_API_KEY, sir: openrouter_api_key, onek: null}
+      - {alan: HINDSIGHT_API_CONSOLIDATION_LLM_1_API_KEY, sir: openrouter_api_key, onek: null}
+      - {alan: HINDSIGHT_API_CONSOLIDATION_LLM_2_API_KEY, sir: openrouter_api_key, onek: null}
+      - {alan: HINDSIGHT_API_CONSOLIDATION_LLM_3_API_KEY, sir: openrouter_api_key, onek: null}
+
+  # KONTROL PANELİ — birim docker koşar ama sırları `--env-file` ile DEĞİL, systemd ortamından
+  # `-e VAR` ikamesiyle alır (ÖLÇÜLDÜ 2026-09-14, `deploy/hindsight/hindsight-cp.service`). Yani
+  # bu tüketicinin ikinci kaynağı bir `EnvironmentFile=`dır, ikinci bir `--env-file` DEĞİL:
+  # spec §1'in "docker → ikinci --env-file" cümlesi APISIX'in ölçülen biçimidir ve buraya
+  # kopyalanamaz. Ölçmeden genellemek, sırrın konteynere HİÇ ulaşmadığı bir geçiş üretirdi.
+  - yol: "/opt/hindsight/.env-cp.vault"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "hindsight-cp.service (EnvironmentFile → docker -e ikamesi, ikinci dosya — drop-in 50-vault-yan-dosya.conf; systemd PID 1 olarak root okur)"
+    yeniden_baslat: "hindsight-cp.service"
+    satirlar:
+      - {alan: HINDSIGHT_CP_ACCESS_KEY, sir: hindsight_cp_access_key, onek: null}
+      - {alan: HINDSIGHT_CP_DATAPLANE_API_KEY, sir: hindsight_cp_dataplane_api_key, onek: null}
+
+  # HERMES PROFİLLERİ — SAHİP `ubuntu` VE BU BLOĞUN TEK `exec` GEREKÇESİDİR. Profil `.env`ini
+  # hermes CLI `ubuntu` olarak okur; Agent root render eder ve `template` sahip parametresi
+  # taşımaz → render sonrası `chown ubuntu:ubuntu`.
+  # A1'DE ÖLÇÜLECEK (yerelde ÖLÇÜLEMEZ, uydurma yasağı): hermes `env_loader`ın İKİNCİ bir dosyayı
+  # okuyup okumadığı. Okuyorsa yan dosya doğrudan tüketilir; OKUMUYORSA yol bot birimlerine
+  # `EnvironmentFile=` eklemektir (spec §1) ve o karar ölçümden SONRA verilir. `yeniden_baslat`
+  # her hâlde `null`dur: bot birimleri timer'lı ONESHOT'tur ve yeni değeri bir sonraki tetikte
+  # okur (rotasyon betiğinin kapsam beyanıyla AYNI hüküm).
+  - yol: "/home/ubuntu/.hermes/profiles/bekci/.env.vault"
+    mod: "0600"
+    sahip: "ubuntu"
+    tuketici: "hermes bekci profili (env_loader ikinci dosya — A1'DE ÖLÇÜLECEK; timer'lı oneshot, restart YOK)"
+    yeniden_baslat: null
+    satirlar:
+      - {alan: BOT_KEY_BEKCI, sir: bot_key_bekci, onek: null}
+      - {alan: OPENROUTER_API_KEY, sir: openrouter_api_key, onek: null}
+  - yol: "/home/ubuntu/.hermes/profiles/karne/.env.vault"
+    mod: "0600"
+    sahip: "ubuntu"
+    tuketici: "hermes karne profili (env_loader ikinci dosya — A1'DE ÖLÇÜLECEK; timer'lı oneshot, restart YOK)"
+    yeniden_baslat: null
+    satirlar:
+      - {alan: BOT_KEY_KARNE, sir: bot_key_karne, onek: null}
+      - {alan: OPENROUTER_API_KEY, sir: openrouter_api_key, onek: null}
+  - yol: "/home/ubuntu/.hermes/profiles/sef/.env.vault"
+    mod: "0600"
+    sahip: "ubuntu"
+    tuketici: "hermes sef profili (env_loader ikinci dosya — A1'DE ÖLÇÜLECEK; timer'lı oneshot, restart YOK)"
+    yeniden_baslat: null
+    satirlar:
+      - {alan: BOT_KEY_SEF, sir: bot_key_sef, onek: null}
+      - {alan: OPENROUTER_API_KEY, sir: openrouter_api_key, onek: null}
+
+  # GLOBAL HERMES ENV — profil DEĞİL: motorun `hermes._agent_call` yolu (kind=review/generic) bu
+  # dosyayı okur ve 2026-09-08 rotasyonu tam bu kopyayı ATLADI (TSK-181: akşam inceleme çağrısı
+  # dört gün 401 aldı). Kasaya bağlanan ilk dalga-2 dosyası olması tesadüf değil: "unutulan kopya"
+  # sınıfının tek kalıcı çözümü, kopyanın kaynağının TEK olmasıdır.
+  - yol: "/home/ubuntu/.hermes/.env.vault"
+    mod: "0600"
+    sahip: "ubuntu"
+    tuketici: "hermes CLI GLOBAL env — motorun hermes._agent_call yolu (env_loader ikinci dosya — A1'DE ÖLÇÜLECEK; timer'sız, her çağrıda okunur, restart YOK)"
+    yeniden_baslat: null
+    satirlar:
+      - {alan: OPENROUTER_API_KEY, sir: openrouter_api_key, onek: null}
