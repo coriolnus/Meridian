@@ -1,0 +1,77 @@
+# EDG-2026-094 — Geçmiş işlemlerin R çarpanı GİRİŞ-RİSKİ paydasıyla yeniden hesaplanır (AYRI alan; eski değer KALIR)
+# ÖN-KAYIT 2026-09-14 17:5xZ (Rol-1). OPERATÖR KARARI aynı saat ("Evet, ayrı kartla yeniden hesapla"): TSK-187 ile
+# 2026-09-14'ten itibaren yeni işlemler `r_payda="giris_riski"` (qty_taban × r_per_share) ile ölçülüyor; eski satırlar
+# damgasız ("payda = bütçe", risk_dollars). İki payda tek deftere karışmasın diye kıyaslar damgayla ayrılıyor (EDG-088
+# PK(2)). Bu kart, geçmişi YENİ paydayla yeniden hesaplayıp AYRI alana yazmanın ölçümü ve yazım reçetesidir.
+# HAFIZA KONTROLÜ (17:5xZ): `ops/kart_benzer.py` → EDG-091 (KALDI, selef: payda kaynağı ölçümü), KYS-2026-001 (KALDI,
+# kıyas kirlenmesi — bu kartın PK-2'si o sınıfa karşı), EDG-088 (gölge/gerçek ayrışma; PK(2) damga kuralı). Hindsight
+# recall bu kart için ölçüm sırası gelince koşulur.
+
+card_id: EDG-2026-094
+status: registered   # ön-kayıt; ADIM-1 ölçüm (salt-okur) Opus, ADIM-2 yazım (ops betiği, A1 bakım penceresi) Rol-1
+family: canli_r_paydasi
+on_kayit: 2026-09-14
+selef:
+  - "EDG-2026-091 (KALDI 2026-09-13: canlı R paydası kaynağı = risk_dollars bütçesi + _adet_benimse; karar (b) hisse-başı giriş riski → TSK-187)"
+ref:
+  - "TSK-187 / TSK-187b (broker.Position.qty_taban, r_payda_usd, R_PAYDA_GIRIS damgası, göç kapısı)"
+  - "EDG-2026-088 PK(2) (yalnız `giris_riski` damgalı çiftler kıyaslanır — bu kart o kuralı DEĞİŞTİRMEZ, yeni alanı ekler)"
+  - "KYS-2026-001 (kıyas kirlenmesi sınıfı)"
+
+hipotez: >
+  Geçmiş kapanmış işlemler (trades defteri, `kaynak` canlı; replay tohumları HARİÇ) için R'nin giriş-riski
+  paydasıyla yeniden hesaplanan değeri (`r_multiple_giris` = pnl_dollars / (qty_giris × r_per_share)) eski
+  bütçe-paydalı `r_multiple`dan ADET BENİMSENMİŞ işlemlerde anlamlı ayrışır (medyan |ΔR| / |R_eski| ≥ 0,10),
+  benimseme görmemiş işlemlerde ise özdeştir (|ΔR| ≤ 0,01). Ayrışma yalnız benimseme kaynaklıysa, geçmiş
+  kıyasların (EDG-088 sınıfı) yeni alanla yeniden okunması meşrudur; ayrışma benimsemesiz işlemlerde de
+  görünüyorsa payda tanımı ya da veri (qty_giris) bozuktur → yazım YAPILMAZ.
+
+k_registry: {registered_at: "2026-09-14", trial_ids: [EDG-094-benimsenmis-ayrisma, EDG-094-benimsemesiz-ozdeslik]}
+# K=2: birincil ayrışma ölçüsü + özdeşlik (negatif) kontrolü. Yazım adımı K'ye girmez (veri işlemi).
+
+adim_1_olcum: >
+  SALT-OKUR (A1 defterinin kopyası ya da `meridian.db` ro): her kapanmış canlı işlem için qty_giris ölçülür —
+  kaynak sırası: satırın `extra_json.qty_taban` (varsa) → `extra_json`daki benimseme kaydı (eski adet) → plan
+  adedi (`trade_plans` `qty`) → ölçülemedi (None + neden; uydurma YOK). `r_multiple_giris` hesaplanır; damgalı
+  yeni satırlar (r_payda="giris_riski") KONTROL kümesidir: hesaplanan değer defterdeki `r_multiple` ile
+  eşit olmalı (PK-1). Çıktı: işlem başına tablo (id, ticker, ts_close, qty, qty_giris, kaynak, r_eski, r_yeni,
+  ΔR, benimsenmis_mi) + özet (n, benimsenmiş n, medyan |ΔR|/|R|, özdeşlik oranı, ölçülemeyen n) + git blob sha.
+
+adim_2_yazim: >
+  ÖLÇÜM GEÇTİYSE ve HÜKÜM Rol-1'de YAZILDIYSA: `ops/r_giris_yeniden_yaz.py --kuru/--uygula` (A1, bakım penceresi,
+  worker DURMUŞKEN — CLAUDE.md §9: state yazımı worker koşarken YOK; DB yedeği önce, sha'lı) trades satırlarına
+  `extra_json.r_multiple_giris`, `extra_json.r_giris_kaynak` (qty_giris kaynağı) ve `extra_json.r_giris_damga`
+  (kart id + tarih) ekler; `r_multiple` alanına DOKUNMAZ (eski değer kalır — operatör kararı). Yazılan satır
+  sayısı = ölçüm tablosundaki 'ölçülebildi' sayısı olmalı (ayrışma → durur).
+
+esikler:
+  benimsenmis_ayrisma_medyan_alt: 0.10     # medyan |ΔR| / |R_eski| (benimsenmiş işlemler)
+  benimsemesiz_ozdeslik_tol: 0.01          # |ΔR| ≤ 0,01 (benimseme görmemiş işlemler, tamamında)
+  kontrol_esitlik_tol: 0.001               # PK-1: damgalı yeni satırlarda hesaplanan = defterdeki r_multiple
+  olculemeyen_ust_oran: 0.10               # qty_giris ölçülemeyen işlem payı ≤ %10, aksi hâlde yazım YOK
+
+kill_list:
+  - "PK-1 (damgalı satır eşitliği) tutmazsa → hesap yolu bozuk, hiçbir sayı yayılmaz, yazım YOK"
+  - "benimsemesiz işlemlerde özdeşlik bozulursa → payda/veri kusuru, yazım YOK, kalem TSK-187'ye döner"
+  - "ölçülemeyen payı > %10 → yazım YOK (yarım alan, kıyas kirletir — KYS-2026-001)"
+  - "replay/tohum satırları (kaynak != canlı) KAPSAM DIŞI; karışırsa ölçüm geçersiz"
+  - "r_multiple ESKİ alanı asla üzerine yazılmaz (operatör kararı); yazım yalnız extra_json alanlarına"
+
+pozitif_kontrol: >
+  (1) damgalı yeni satırlar (r_payda=giris_riski, 2026-09-14+) için hesaplanan r_multiple_giris = defterdeki
+  r_multiple (tolerans 0,001) — hesap yolu doğrulaması; (2) sentetik: benimsemesiz bir işlemde qty_giris=qty →
+  ΔR=0; benimsenmiş sentetik işlemde (17→38) ΔR beklenen oran (38/17) ile; (3) yazım kuru koşumu: `--kuru`
+  hiçbir satırı değiştirmez (DB sha aynı), `--uygula` yalnız hedef satır sayısı kadar extra_json günceller ve
+  `r_multiple` sütununun sha'sı DEĞİŞMEZ.
+
+veri_penceresi: "canlı trades defteri: ilk canlı işlem → 2026-09-14 (damgalı satırlar kontrol kümesi); replay tohumları hariç"
+
+basari_tanimi: >
+  ADIM-1 tablosu + özet blob sha ile karta; K defterine 2 kayıt; PK üçü yeşil; hüküm (GEÇTİ/KALDI) Rol-1 aynı
+  turda. GEÇTİ ise ADIM-2 yazım reçetesi bakım penceresinde koşulur ve yazılan satır sayısı karta işlenir;
+  KALDI ise yazım YOK ve neden (payda/veri) TSK-187 notuna gider.
+
+notlar: >
+  Kod: `research/olcumler/edg094_r_yeniden/olc.py` (salt-okur, `sandbox_state`li çivi; DB kopyası ya da ro bağlantı)
+  + `ops/r_giris_yeniden_yaz.py` (ADIM-2; ops sözleşmesi komut satırı, --kuru/--uygula, yedek zorunlu). Ölçüm ajanı
+  karta dokunmaz. A1 koşumu Rol-1 (worker durmuşken, 20:05Z sonrası pencere). Öncelik: EDG-093 ana ölçümünden sonra.
