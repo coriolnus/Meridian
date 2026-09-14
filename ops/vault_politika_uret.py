@@ -9,8 +9,10 @@ kalan bir yol, Agent'ın o sırrı OKUYAMAMASI; şablonda eksik kalan bir hedef 
 ESKİ değerinde donması demektir. İkisi de sessizdir; ikisi de ancak bir rotasyondan sonra
 görülür.
 
-TEK KAYNAK: `deploy/sir_envanteri.yaml` içindeki `vault_kv` bloğu. Bu betik ondan ÜÇ dosya
-üretir ve üçü de ÜRETİLMİŞ dosyadır (başlıkları bunu söyler, elle düzenlenmez).
+TEK KAYNAK: `deploy/sir_envanteri.yaml` içindeki `vault_kv` (hangi sır kasada hangi yolda,
+hangi dosyaya render edilir) ve dalga-2 ile gelen `vault_dosyalar` (Agent hangi SIR-YALNIZ yan
+dosyayı hangi SATIRLARLA, kimin için yazar) blokları. Bu betik ikisinden ÜÇ dosya üretir ve üçü
+de ÜRETİLMİŞ dosyadır (başlıkları bunu söyler, elle düzenlenmez).
 
 KOMUT SATIRI SÖZLEŞMESİ (ops aracı sözleşmesi KOMUT SATIRIdır, `main()` değil):
 
@@ -70,8 +72,20 @@ SECRET_ID_DOSYASI = "/etc/vault/agent.secret-id"
 #: AppRole'ün adı — politika (`secret-id` yenileme yolu) ve kurulum betiği AYNI adı kullanır.
 APPROLE_ADI = "agent"
 
+#: KV-v2 STATİK sırların yeniden render aralığı (dalga-2). Varsayılan 5 dk'dır; rotasyon
+#: penceresinde beklenen süre budur. TEK yerde yaşar: `deploy/oracle-a1/sir_rotasyon.sh --vault`
+#: kendi bekleme TAVANINI bu aralıktan DEĞİL kendi sabitinden alır ve ikisi AYRI gerçeklerdir
+#: (biri "ne sıklıkla yenilenir", öteki "ne kadar beklerim") — bu yüzden kopya değil, komşudurlar.
+RENDER_ARALIGI = "1m"
+
+#: ÖNEK SÖZLÜĞÜ — DONUK ve iki jetonlu. `deploy/oracle-a1/sir_rotasyon.sh` içindeki `ONEKLER`
+#: tablosuyla AYNI vokabülerdir: envanter önek LİTERALİNİ değil JETONUNU taşır. Literal yazılsaydı
+#: iki yazım (boşluklu/boşluksuz) sessizce ayrışır ve kapının Authorization başlığı
+#: `Bearer<anahtar>` olurdu — upstream 401 verir, arıza kasada aranır.
+ONEKLER = {None: "", "Bearer": "Bearer "}
+
 _BASLIK_SABLONU = """{yorum} ÜRETİLDİ — ELLE DÜZENLEME YAPMA.
-{yorum} Kaynak : deploy/sir_envanteri.yaml (vault_kv bloğu)
+{yorum} Kaynak : deploy/sir_envanteri.yaml (vault_kv + vault_dosyalar blokları)
 {yorum} Üreten : ops/vault_politika_uret.py — deterministik, damgasız (her koşu aynı bayt)
 {yorum} Tazelik: python ops/vault_politika_uret.py --kontrol   (çıkış 1 = bayat)
 {yorum}
@@ -106,14 +120,78 @@ def _veri_yolu(girdi: dict) -> str:
     return f"{MONTAJ}/data/{yol[len(onek):]}"
 
 
+def vault_dosyalar() -> list[dict]:
+    """Envanterin `vault_dosyalar` bloğu — dalga-2'nin SIR-YALNIZ yan dosyaları.
+
+    Blok YOKSA PATLAR, boş listeye DÜŞMEZ (`vault_kv` ile aynı gerekçe): sessizce boş dönseydi
+    üretici yan dosya şablonlarını HİÇ yazmaz, Agent onları render etmez ve tüketiciler eski
+    kanalda kalırdı — geçiş "yapıldı" sanılırken hiçbir şey olmamış olurdu (fail-closed)."""
+    veri = yaml.safe_load(ENVANTER.read_text(encoding="utf-8"))
+    if "vault_dosyalar" not in veri:
+        raise SystemExit("deploy/sir_envanteri.yaml: `vault_dosyalar` bloğu YOK (dalga-2)")
+    dosyalar = veri["vault_dosyalar"]
+    if not dosyalar:
+        raise SystemExit("deploy/sir_envanteri.yaml: `vault_dosyalar` BOŞ — üretilecek yan dosya yok")
+    return dosyalar
+
+
+def _ad_veri_yolu(ad: str, indeks: dict[str, dict]) -> str:
+    """Bir `satirlar[].sir` referansını KV-v2 okuma yoluna çevirir — dangling referans PATLAR.
+
+    Sessizce atlamak, o ALANIN yan dosyada HİÇ doğmaması demektir: tüketici değişkeni eski
+    kanaldan okumaya devam eder ve geçişin yarım kaldığı ancak eski kanal kapatıldığında,
+    yani en pahalı anda görünür."""
+    if ad not in indeks:
+        raise SystemExit(f"`vault_dosyalar` {ad!r} sırrına referans veriyor ama `vault_kv`de YOK")
+    return _veri_yolu(indeks[ad])
+
+
+def _yan_dosya_sablonlari() -> list[str]:
+    """Her yan dosya için BİR `template` bloğu: satır satır `ALAN=<kasa değeri>`.
+
+    İçerik HEREDOC ile yazılır (`<<EOT`), tek satırlık kaçışlı bir dizgeyle değil: sekiz alanlı
+    bir dosyanın tek satıra sıkıştırılmış hâli okunamaz olurdu ve bu dosyayı bakım penceresinde
+    okuyan operatör, hangi alanın hangi kasa yolundan geldiğini göremezdi (üretilmiş dosya da
+    okunmak içindir). Heredoc gövdesi sondaki yeni satırı TAŞIR — `.env` sözleşmesi budur.
+
+    `exec` YALNIZ `sahip: ubuntu` olan dosyada doğar ve komut KABUKSUZ + SABİT argüman
+    listesidir: tek iş sahipliği düzeltmektir, restart DEĞİL (tasarım §6.4)."""
+    indeks = {g["ad"]: g for g in vault_kv()}
+    satirlar: list[str] = []
+    for d in vault_dosyalar():
+        satirlar.append("")
+        satirlar.append(f'# {d["yol"]} — tüketici: {d["tuketici"]}')
+        satirlar.append("template {")
+        satirlar.append("  contents    = <<EOT")
+        for s in d["satirlar"]:
+            onek = ONEKLER[s.get("onek")]
+            satirlar.append(
+                '%s=%s{{ with secret "%s" }}{{ .Data.data.value }}{{ end }}'
+                % (s["alan"], onek, _ad_veri_yolu(s["sir"], indeks)))
+        satirlar.append("EOT")
+        satirlar.append(f'  destination = "{d["yol"]}"')
+        satirlar.append(f'  perms       = {d["mod"]}')
+        satirlar.append("  error_on_missing_key = true")
+        if d["sahip"] != "root":
+            sahip = d["sahip"]
+            satirlar.append("  exec {")
+            satirlar.append(
+                f'    command = ["chown", "{sahip}:{sahip}", "{d["yol"]}"]')
+            satirlar.append('    timeout = "10s"')
+            satirlar.append("  }")
+        satirlar.append("}")
+    return satirlar
+
+
 def politika_agent() -> str:
-    """Agent'ın politikası: YALNIZ dalga-1 yollarını, YALNIZ `read`.
+    """Agent'ın politikası: YALNIZ envanterdeki yolları, YALNIZ `read`.
 
     Joker YOK (`secret/data/meridian/*` yazılmadı) ve bu bilinçlidir: joker bir politika, kasaya
     yarın konacak HER sırrı da Agent'a açardı — oysa Agent'ın okuduğu küme envanterde YAZILIDIR
     ve o kümeyi genişletmek bir KARAR olmalıdır, bir yan etki değil."""
     satirlar = [_baslik(), ""]
-    satirlar.append("# Dalga-1: yedi tek-değer sırrı, yalnız okuma. Liste envanterin SIRASINI korur.")
+    satirlar.append("# Yalnız okuma. Liste `vault_kv`den TÜRER ve envanterin SIRASINI korur —")
+    satirlar.append("# düzyazıya gömülü bir sayım (kaç sır) dalga-2'de sessizce yalan olurdu.")
     for g in vault_kv():
         satirlar.append("")
         satirlar.append(f'# {g["ad"]} → {g["hedef"]}')
@@ -157,7 +235,7 @@ def politika_admin() -> str:
 
 
 def agent_yapilandirmasi() -> str:
-    """Vault Agent yapılandırması: AppRole ile login + her sır için bir `template` bloğu.
+    """Vault Agent yapılandırması: AppRole ile login + her hedef için bir `template` bloğu.
 
     `error_on_missing_key = true` ZORUNLUDUR ve ölçülmemiş bir iyimserliğe karşıdır: anahtar
     yoksa şablon BOŞ render ederdi ve boş bir credential dosyası, systemd'nin "başarıyla
@@ -167,14 +245,29 @@ def agent_yapilandirmasi() -> str:
     `remove_secret_id_file_after_reading = false`: dosya silinirse Agent yeniden başladığında
     login EDEMEZ (secret_id_ttl=0, dönmez). Tasarım §6.3'ün bilinçli kararı.
 
-    BİLEREK YOK — `exec`/`command` bloğu: Agent render sonrası tüketiciyi YENİDEN BAŞLATMAZ.
-    Bir render'ın bakım penceresi dışında worker'ı düşürmesi, bu depoda hiçbir yerde verilmemiş
-    bir yetkidir; restart operatörün reçetesindedir (tasarım §6.4 "Agent'a bağlama adımı
-    meridian/hindsight restart'ı ister, worker o an durur")."""
+    DALGA-2 (2026-09-14) İKİ ŞEY EKLEDİ, BİRİ BİR YETKİ GENİŞLEMESİDİR ve adıyla yazılıdır:
+      · `template_config { static_secret_render_interval }` — KV-v2 STATİK sırlar varsayılan
+        5 dk'da yeniden render edilir; rotasyon penceresindeki bekleme o süreyle SINIRLIDIR.
+      · `exec { command = ["chown", ...] }` — YALNIZ `sahip: ubuntu` olan yan dosyalarda.
+        `template` bloğunda dosya SAHİBİ parametresi YOKTUR (yalnız `perms`; resmî belge,
+        ölçüldü 2026-09-14) ve Agent root koşar → render edilen dosya root:root olur. Tüketicisi
+        `ubuntu` olan hermes profil dosyaları o hâlde OKUNAMAZ. Komut KABUKSUZ ve SABİT argüman
+        listesiyle verilir: kabuk olsaydı şablon içeriği komut satırına sızabilirdi.
+
+    HÂLÂ BİLEREK YOK — RESTART: Agent render sonrası tüketiciyi YENİDEN BAŞLATMAZ. `chown` bir
+    restart DEĞİLDİR; bir render'ın bakım penceresi dışında worker'ı düşürmesi bu depoda hiçbir
+    yerde verilmemiş bir yetkidir ve restart operatörün/rotasyonun reçetesindedir (tasarım §6.4)."""
     satirlar = [_baslik(), ""]
     satirlar.append("# Kasa adresi — deploy/vault/vault.hcl listener'ı ile TEK KAYNAK.")
     satirlar.append("vault {")
     satirlar.append(f'  address = "{VAULT_ADRESI}"')
+    satirlar.append("}")
+    satirlar.append("")
+    satirlar.append("# STATİK (KV-v2) sırların yeniden render aralığı. Varsayılan 5 dk'dır ve")
+    satirlar.append("# rotasyon penceresinde beklenen süre TAM OLARAK budur — değer TEK yerde")
+    satirlar.append("# yaşar, şerhte tekrarlanmaz (tekrarlanan bir süre kadans değişince yalan olur).")
+    satirlar.append("template_config {")
+    satirlar.append(f'  static_secret_render_interval = "{RENDER_ARALIGI}"')
     satirlar.append("}")
     satirlar.append("")
     satirlar.append("# Sıfırıncı sır (tasarım §6.3): role_id sır DEĞİL, secret_id 0400 root:root.")
@@ -199,6 +292,7 @@ def agent_yapilandirmasi() -> str:
         satirlar.append(f'  perms       = {g["mod"]}')
         satirlar.append("  error_on_missing_key = true")
         satirlar.append("}")
+    satirlar.extend(_yan_dosya_sablonlari())
     return "\n".join(satirlar) + "\n"
 
 

@@ -1527,6 +1527,10 @@ kurulum betiği açar)
 - deploy/vault/vault-sagligi.service  → /etc/systemd/system/  (bekçi — VAULT_SEALED /
 VAULT_DOWN alarmları; üretici ops/vault_sagligi.py)
 - deploy/vault/vault-sagligi.timer    → /etc/systemd/system/  (o bekçinin tek tetiği)
+- deploy/vault/vault_admin_yenile.sh  → /opt/vault/bin/vault_admin_yenile.sh  (0750 root:root;
+PERİYODİK yönetici jetonunu yeniler — tur-4)
+- deploy/vault/vault-admin-yenile.service → /etc/systemd/system/  (oneshot, root; jeton yokken atlanır)
+- deploy/vault/vault-admin-yenile.timer   → /etc/systemd/system/  (haftalık tetik, Persistent)
 KISALTMA YASAK: "X.service + .timer" biçimi `.timer` dosyasının ADINI hiç yazmaz ve o ad
 listeden düşse başlık aynı kalırdı — yukarıdaki çivi tam olarak bunu reddediyor.
 ```
@@ -1805,6 +1809,15 @@ YÖNETİM anahtarıdır — ayrı sır, ayrı yüzey, ayrı kopya
 kümesi. TSK-064 Faz-1C, spec §3 madde 4.)
 ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 başlayacağını listeler, HİÇBİR ŞEY yazmaz
+sudo ./sir_rotasyon.sh --<alt> --vault  → KASADAN ROTASYON (TSK-064 Faz-2 DALGA-2, 2026-09-14):
+yeni değer operatörden alınır ve ÖNCE KASAYA konur;
+Agent yan dosyaları render eder, betik render'ı ÖLÇER
+(kanonik tek-değer kopyasının kasadaki değere eşitlenmesi,
+bekleme SINIRLI), eski kanal kopyalarını AYNI pencerede
+KASADAN gelen değerle yazar (iki-kanal dönemi), tüketicileri
+yeniden başlatır ve kanıtı ölçer. `--kuru` ile birleşir.
+KAPSAM: yalnız envanterde `rotasyon_siri` ile kasaya BAĞLI
+sırlar; bağlı olmayanlar ADIYLA beyan edilir ve eski yolla döner.
 sudo ./sir_rotasyon.sh --<alt> --esitle → EŞİTLEME (TSK-181, 2026-09-13): değer ÜRETİLMEZ, SORULMAZ,
 BASILMAZ; sırrın tablodaki İLK satırı (REFERANS) okunur, AYRI
 düşen dosya/env/url kopyalarına yazılır (api/sql kanalları
