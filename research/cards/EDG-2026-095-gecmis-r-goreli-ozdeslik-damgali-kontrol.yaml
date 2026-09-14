@@ -80,3 +80,14 @@ ardil_dilim_gereksinimleri: >
   koşumdan ÖNCE zorunlu; güven süzgeci (guven == dusuk satırları yazma); B3 qty_taban VARKEN benimseme çapraz-kontrolünün sırası
   netleşir (qty_taban birinci kaynak, çapraz-kontrol yalnız olay yolunda); B4 "seq defterde yok" ve "sayım uyuşmazlığı → rollback"
   dalları çiviyle ısırılır; B2 kapsam komutuna EDG094_CIKTI eklenir (T9 skip olmasın). olc.py --kart parametresi (eşikler bu karttan).
+
+rol1_notlari_2026_09_14_dilim: >
+  Ardıl dilim 2026-09-14 23:xxZ (Opus 9d1be0d; Sonnet inceleme): olc.py --kart (eşikler bu karttan), ops sha bağlaması + güven
+  süzgeci + B3/B4 çivileri, v494. Rol-1 hükümleri: (1) ADIM-1 ve ADIM-2 AYNI dosya üzerinde koşar (worker DURMUŞKEN; ölçüm
+  mode=ro, yazım aynı dosyaya) — sqlite backup kopyası bayt-eşit olmadığından kopyada ölçüp canlıya yazmak sha bağlamasıyla
+  tanım gereği DURUR (v494 T12 çivisi); reçete: bakım penceresi → worker stop → olc.py --kart EDG-2026-095 --db state/meridian.db
+  → hüküm → r_giris_yeniden_yaz.py --kuru → --uygula → worker start. (2) Yazım damgası bugün "EDG-2026-094 <tarih>" (KART_ID
+  sabiti, v492 T8b pinli); bu kartın ADIM-2'si koşulmadan ÖNCE ops betiğine --kart parametresi eklenip damga yetkilendiren kartın
+  kimliğini taşır (küçük dilim; ölçüm tetiğiyle birlikte). (3) olc.py PyYAML ister (meridian ithali yok); A1 motor venv'inde
+  mevcut, koşumdan önce bir kez doğrulanır. (4) yazim_kumesi bilgilendiricidir; ops kendi süzgecini satirlar üzerinde koşar,
+  ayrışma v494 T13 ile çivili.
