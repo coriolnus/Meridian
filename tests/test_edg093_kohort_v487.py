@@ -18,6 +18,13 @@ NE ÇİVİLER (brief EDG-2026-093 ADIM-0 A, madde 3):
   (7) `--kuru` HİÇBİR dosya yazmaz (verilen çıktı dizini BOŞ kalır).
   (8) TEK-KAYNAK: `as_of` EDG-075 betiğinden İTHAL edilir — kopya değil (aynı fonksiyon nesnesi).
   (9) GERÇEK GİRDİ tam koşumu — ham wikitext `.gitignore`'lu, CI'da YOK → `skipif`.
+ (10) TUR-2 ÇOK-SEMBOLLÜ HÜCRE: `X/Y` biçimindeki ticker hücresi AYRI sembollere bölünür
+      (S&P endeksleri iki hisse sınıfını ayrı bileşen sayar); bölünmezse kohorta hayalet bir
+      "ticker" girer. Üretilen csv'de ayıraç taşıyan sembol KALMAZ.
+ (11) TUR-2 YENİDEN ADLANDIRMA: gerekçe hücresi yeniden adlandırmayı AÇIKÇA söylüyorsa (sözlük
+      eşleşmesi + borsa parantezinde sembol) karar `esle:<eski>-><yeni>` olur ve as-of
+      yürütmesinde UYGULANIR; söylemiyorsa `belirsiz` KALIR (uydurma yok). İki yarım satırın
+      eşlemesi ayrı bir jetondur (`cift:`) ve hiçbir sembolü yeniden yazmaz.
 
 DİSİPLİN: çiviler SENTETİK fikstürlerle koşar (ağ yok); gerçek koşumun sayıları Rol-1'in
 okuyacağı `adim0a_sonuc_<damga>.json`da. Mutasyon kanıtı devir raporunda.
@@ -102,6 +109,56 @@ WIKI_TEK_YANLI = """{| class="wikitable sortable"
 |-
 |}
 """
+
+# TUR-2 (1) ÇOK-SEMBOLLÜ HÜCRE: kaynak tablo bir şirketin iki hisse sınıfını TEK hücrede
+# `AAX/AAY` biçiminde yazar. İki sembol de AYRI bileşendir; hücre BÖLÜNMEZSE `AAX/AAY` diye bir
+# hayalet "ticker" kohorta girer (ölçüldü: gerçek tabloda 2 hücre, 163 csv satırının 146'sı).
+WIKI_COK_SEMBOL = """{| class="wikitable sortable"
+|-
+! rowspan="2" | Date
+! colspan="2" | Added
+! colspan="2" | Removed
+! rowspan="2" | Reason
+|-
+! Ticker || Security ||  Ticker ||  Security
+|-
+|March 2, 2021 || AAX/AAY || [[Alpha]] || DDD || [[Delta]] || Market capitalization change.
+|-
+|}
+"""
+
+# Aynı hücre ÇIKAN sütununda: geri sarma onu kümeye EKLER, yani bölünmezse hayalet ticker
+# doğrudan csv'ye SIZAR (gerçek tablodaki `UAA/UA` çıkışının sentetik eşi).
+WIKI_COK_SEMBOL_CIKAN = WIKI_COK_SEMBOL.replace(
+    "|March 2, 2021 || AAX/AAY || [[Alpha]] || DDD || [[Delta]] ||",
+    "|March 2, 2021 || EEE || [[Epsilon]] || AAX/AAY || [[Alpha]] ||")
+
+# TUR-2 (2) YENİDEN ADLANDIRMA: gerekçe hücresi AÇIKÇA "changed its name and symbol to … (NYSE: NNN)"
+# der. Geri sarmada `OOO` discard'ı ETKİSİZDİR (güncel küme `NNN` taşır) → `esle:OOO->NNN`.
+WIKI_RENAME = """{| class="wikitable sortable"
+|-
+! rowspan="2" | Date
+! colspan="2" | Added
+! colspan="2" | Removed
+! rowspan="2" | Reason
+|-
+! Ticker || Security ||  Ticker ||  Security
+|-
+|June 1, 2022 || PPP || [[Pi]] || NNN || [[Nu]] || Market capitalization change.
+|-
+|June 1, 2021 || OOO || [[Omicron]] || QQQ || [[Qoppa]] || Omicron Corp acquired Qoppa Corp. Post-merger, Omicron Corp changed its name and symbol to Nu Inc. (NYSE: NNN).
+|-
+|}
+"""
+
+_RENAME_GEREKCE = ("Omicron Corp acquired Qoppa Corp. Post-merger, Omicron Corp changed its name "
+                   "and symbol to Nu Inc. (NYSE: NNN).")
+# Aynı yapı, gerekçesinde yeniden adlandırma YOK → karar `belirsiz` KALIR (uydurma yok).
+WIKI_RENAME_GEREKCESIZ = WIKI_RENAME.replace(_RENAME_GEREKCE, "Market capitalization change.")
+# Gerekçede BORSA PARANTEZİ var ama yeniden adlandırma ANLATILMIYOR — sembolün varlığı tek başına
+# eşleme gerekçesi DEĞİLDİR (EDG-092'nin ölçtüğü yanlış-pozitif sınıfının kardeşi).
+WIKI_RENAME_PARANTEZ = WIKI_RENAME.replace(
+    _RENAME_GEREKCE, "Omicron Corp acquired Nu Inc. (NYSE: NNN) in an all-cash transaction.")
 
 # Yalnız giren, gerekçesi tanınmayan → öneri kuralı karar VEREMEZ, `belirsiz` kalır.
 WIKI_BELIRSIZ = """{| class="wikitable sortable"
@@ -374,12 +431,13 @@ def _kayit(karar: str) -> dict:
             "karar": karar, "gerekce": "Parent Corp spun off Epsilon.", "kaynak": {}}
 
 
-@pytest.mark.parametrize("karar", ["esle:DDD->EEE", "dusur", "belirsiz"])
+@pytest.mark.parametrize("karar", ["esle:DDD->EEE", "cift:DDD->EEE", "dusur", "belirsiz"])
 def test_E1_sozlukteki_kararlar_KABUL_edilir(karar):
     kohort.esleme_dogrula([_kayit(karar)])
 
 
-@pytest.mark.parametrize("karar", ["esle", "ESLE:DDD->EEE", "esle:DDD>EEE", "kaldir", "", "yok"])
+@pytest.mark.parametrize("karar", ["esle", "ESLE:DDD->EEE", "esle:DDD>EEE", "kaldir", "", "yok",
+                                   "cift", "cift:DDD>EEE"])
 def test_E2_sozluk_disi_karar_REDDEDILIR(karar):
     with pytest.raises(kohort.GirdiHatasi):
         kohort.esleme_dogrula([_kayit(karar)])
@@ -392,7 +450,7 @@ def test_E3_eksik_alan_REDDEDILIR():
         kohort.esleme_dogrula([kayit])
 
 
-def test_E4_ardisik_kitaplama_cifti_ESLE_onerilir_gerekce_TABLODAN(tmp_path):
+def test_E4_ardisik_kitaplama_cifti_CIFT_onerilir_gerekce_TABLODAN(tmp_path):
     d = _duzenek(tmp_path, wikitext=WIKI_TEK_YANLI, uyeler=["AAA", "EEE"], kart093=KART093_GENIS)
     assert kohort.main(_argv(d, "--uygula", "--cikti", str(d["cikti"]),
                              "--bugun", "2022-04-01")) == 0
@@ -402,28 +460,27 @@ def test_E4_ardisik_kitaplama_cifti_ESLE_onerilir_gerekce_TABLODAN(tmp_path):
     assert "&id" not in metin and "*id" not in metin
     tablo = yaml.safe_load(metin)
     assert len(tablo) == 2
-    assert {k["karar"] for k in tablo} == {"esle:DDD->EEE"}
+    # TUR-2: iki YARIM SATIR eşlemesi ARTIK `cift:` — `esle:` yeniden adlandırma kimliğine
+    # ayrıldı ve as-of yürütmede UYGULANIR; aynı jetonu iki farklı davranışa vermek tuzaktı.
+    assert {k["karar"] for k in tablo} == {"cift:DDD->EEE"}
     for k in tablo:
         assert "spun off" in k["gerekce"] and "Market capitalization" in k["gerekce"]
         assert k["kaynak"]["urller"]
 
 
-def test_E5_var_olan_esleme_dosyasi_EZILMEZ_ve_okunur(tmp_path):
-    d = _duzenek(tmp_path, wikitext=WIKI_TEK_YANLI, uyeler=["AAA", "EEE"], kart093=KART093_GENIS)
-    yol = d["cikti"] / "research" / "pit_universe" / "sp400_elle_esleme.yaml"
-    yol.parent.mkdir(parents=True, exist_ok=True)
-    elle = [{"satir": {"tarih": "2021-12-01", "eklenen": "EEE", "cikan": None, "satir_no": 1},
-             "karar": "belirsiz", "gerekce": "Rol-1 kararı", "kaynak": {}},
-            {"satir": {"tarih": "2021-12-02", "eklenen": None, "cikan": "DDD", "satir_no": 0},
-             "karar": "belirsiz", "gerekce": "Rol-1 kararı", "kaynak": {}}]
-    yol.write_text(yaml.safe_dump(elle, allow_unicode=True), encoding="utf-8")
-    onceki = yol.read_bytes()
-
-    kohort.main(_argv(d, "--uygula", "--cikti", str(d["cikti"]), "--bugun", "2022-04-01"))
-    assert yol.read_bytes() == onceki, "Rol-1'in elle düzenlemesi EZİLDİ"
-    sonuc = _sonuc_json(d["cikti"])
-    assert sonuc["esleme"]["kaynak"] == "dosyadan okundu"
-    assert sonuc["esleme"]["karar_sayimi"] == {"belirsiz": 2}
+def test_E5_cift_karari_degisiklik_listesini_DEGISTIRMEZ(tmp_path):
+    """`cift:` bir ANOTASYONDUR: iki yarım satırın aynı olaya ait olduğunu kaydeder, sembolleri
+    YENİDEN YAZMAZ. Yazsaydı `cift:AMCX->CNXC` AMCX'i kohorttan tamamen silerdi (ölçüldü)."""
+    degisiklikler = [{"tarih": "2021-12-02", "eklenen": None, "cikan": "DDD", "satir_no": 0,
+                      "alt_no": 0},
+                     {"tarih": "2021-12-01", "eklenen": "EEE", "cikan": None, "satir_no": 1,
+                      "alt_no": 0}]
+    tablo = [{"satir": {"satir_no": 0, "alt_no": 0, "tarih": "2021-12-02", "eklenen": None,
+                        "cikan": "DDD"},
+              "karar": "cift:DDD->EEE", "gerekce": "x", "kaynak": {}}]
+    kalan, belirsiz, rapor = kohort.esleme_uygula(degisiklikler, tablo)
+    assert [(r.get("eklenen"), r.get("cikan")) for r in kalan] == [(None, "DDD"), ("EEE", None)]
+    assert belirsiz == [] and rapor["uygulanan_esleme_n"] == 0
 
 
 def test_E6_dusur_karari_degisikligi_LISTEDEN_CIKARIR():
@@ -431,8 +488,41 @@ def test_E6_dusur_karari_degisikligi_LISTEDEN_CIKARIR():
                      {"tarih": "2021-11-01", "eklenen": "AAA", "cikan": "BBB", "satir_no": 8}]
     tablo = [{"satir": {"satir_no": 7, "tarih": "2021-12-01", "eklenen": "EEE", "cikan": None},
               "karar": "dusur", "gerekce": "x", "kaynak": {}}]
-    kalan, belirsiz = kohort.esleme_uygula(degisiklikler, tablo)
+    kalan, belirsiz, _ = kohort.esleme_uygula(degisiklikler, tablo)
     assert [r["satir_no"] for r in kalan] == [8] and belirsiz == []
+
+
+def test_E7_esleme_dosyasi_URETICI_CIKTISIDIR_yeniden_uretilir(tmp_path):
+    """TUR-2: yaml ÜRETİLMİŞ dosyadır — her `--uygula` onu YENİDEN ÜRETİR. Elle düzenlenmiş bir
+    karar tablosu `--esleme` ile AÇIK yoldan verilir (üretilmiş dosyayı elle düzenleme yasağı)."""
+    d = _duzenek(tmp_path, wikitext=WIKI_TEK_YANLI, uyeler=["AAA", "EEE"], kart093=KART093_GENIS)
+    yol = d["cikti"] / "research" / "pit_universe" / "sp400_elle_esleme.yaml"
+    yol.parent.mkdir(parents=True, exist_ok=True)
+    yol.write_text("- bozuk: kayit\n", encoding="utf-8")
+
+    assert kohort.main(_argv(d, "--uygula", "--cikti", str(d["cikti"]),
+                             "--bugun", "2022-04-01")) == 0
+    tablo = yaml.safe_load(yol.read_text(encoding="utf-8"))
+    assert {k["karar"] for k in tablo} == {"cift:DDD->EEE"}
+    assert _sonuc_json(d["cikti"])["esleme"]["kaynak"] == "mekanik öneri (yeniden üretildi)"
+
+
+def test_E8_esleme_ACIK_yoldan_verilince_OKUNUR(tmp_path):
+    d = _duzenek(tmp_path, wikitext=WIKI_TEK_YANLI, uyeler=["AAA", "EEE"], kart093=KART093_GENIS)
+    elle = tmp_path / "elle.yaml"
+    elle.write_text(yaml.safe_dump(
+        [{"satir": {"tarih": "2021-12-01", "eklenen": "EEE", "cikan": None, "satir_no": 1,
+                    "alt_no": 0},
+          "karar": "belirsiz", "gerekce": "Rol-1 kararı", "kaynak": {}},
+         {"satir": {"tarih": "2021-12-02", "eklenen": None, "cikan": "DDD", "satir_no": 0,
+                    "alt_no": 0},
+          "karar": "belirsiz", "gerekce": "Rol-1 kararı", "kaynak": {}}],
+        allow_unicode=True), encoding="utf-8")
+    kohort.main(_argv(d, "--uygula", "--cikti", str(d["cikti"]), "--esleme", str(elle),
+                      "--bugun", "2022-04-01"))
+    sonuc = _sonuc_json(d["cikti"])
+    assert sonuc["esleme"]["kaynak"] == "dosyadan okundu"
+    assert sonuc["esleme"]["karar_sayimi"] == {"belirsiz": 2}
 
 
 # ======================================================================================
@@ -482,6 +572,148 @@ def test_G2_uretici_meridiani_ITHAL_ETMEZ():
 
 
 # ======================================================================================
+# (10) TUR-2 — ÇOK SEMBOLLÜ HÜCRE BÖLÜNÜR
+# ======================================================================================
+
+@pytest.mark.parametrize("hucre, beklenen, bolundu", [
+    ("UA/UAA", ["UA", "UAA"], True),
+    ("UAA/UA", ["UAA", "UA"], True),
+    ("AAX, AAY", ["AAX", "AAY"], True),
+    ("BRK-B", ["BRK-B"], False),
+    ("AAA", ["AAA"], False),
+    (None, [], False),
+    # Ticker biçimine UYMAYAN parça varsa hücre BÖLÜNMEZ ve durum raporlanır (uydurma yok).
+    ("ALPHA CORP/BETA CORP", ["ALPHA CORP/BETA CORP"], False),
+])
+def test_I1_sembolleri_bol_ayiracla_boler_ticker_disini_BOLMEZ(hucre, beklenen, bolundu):
+    assert kohort.sembolleri_bol(hucre) == (beklenen, bolundu)
+
+
+def test_I2_cok_sembollu_hucre_IKI_AYRI_SEMBOL_uretir(tmp_path):
+    """`AAX/AAY` hücresi iki satır üretir; bölünmezse kohortta `AAX/AAY` hayalet sembolü kalırdı."""
+    d = _duzenek(tmp_path, wikitext=WIKI_COK_SEMBOL, uyeler=["AAA", "AAX", "AAY"],
+                 kart093=KART093_GENIS)
+    assert kohort.main(_argv(d, "--uygula", "--cikti", str(d["cikti"]))) == 0
+    metin = (d["cikti"] / "research" / "pit_universe" / "sp400_uyelik_tarihi.csv").read_text()
+    semboller = {s for satir in list(csv.reader(io.StringIO(metin)))[1:] for s in satir[1].split(",")}
+    assert "AAX/AAY" not in semboller, "çok-sembollü hücre BÖLÜNMEDİ — hayalet ticker kohorta girdi"
+    assert {"AAX", "AAY", "DDD"} <= semboller
+    sonuc = _sonuc_json(d["cikti"])
+    assert sonuc["cok_sembollu_hucre"]["bolunen_n"] == 1
+    assert sonuc["cok_sembollu_hucre"]["bolunen"][0]["semboller"] == ["AAX", "AAY"]
+    # Bölünme ÖNCESİ gün: iki sınıf da üye DEĞİL; SONRASI: ikisi de üye.
+    satirlar = {r[0]: set(r[1].split(",")) for r in list(csv.reader(io.StringIO(metin)))[1:]}
+    ilk = satirlar[min(satirlar)]
+    assert "AAX" not in ilk and "AAY" not in ilk and "DDD" in ilk
+
+
+def test_I3_cikan_sutunundaki_cok_sembollu_hucre_csvye_SIZMAZ(tmp_path):
+    """Hücre ÇIKAN sütunundaysa geri sarma onu kümeye EKLER — bölünmezse hayalet ticker doğrudan
+    csv'ye girer (gerçek tabloda tam olarak bu oldu: `UAA/UA` çıkışı 146 satıra sızmıştı)."""
+    d = _duzenek(tmp_path, wikitext=WIKI_COK_SEMBOL_CIKAN, uyeler=["AAA", "EEE"],
+                 kart093=KART093_GENIS)
+    assert kohort.main(_argv(d, "--uygula", "--cikti", str(d["cikti"]))) == 0
+    metin = (d["cikti"] / "research" / "pit_universe" / "sp400_uyelik_tarihi.csv").read_text()
+    semboller = {s for r in list(csv.reader(io.StringIO(metin)))[1:] for s in r[1].split(",")}
+    assert "AAX/AAY" not in semboller and {"AAX", "AAY"} <= semboller
+    sonuc = _sonuc_json(d["cikti"])
+    assert sonuc["cok_sembollu_hucre"]["csv_ayirac_tasiyan_satir_n"] == 0
+    assert sonuc["cok_sembollu_hucre"]["csv_ayirac_tasiyan_semboller"] == []
+
+
+# ======================================================================================
+# (11) TUR-2 — YENİDEN ADLANDIRMA (`esle:`) TABLONUN KENDİ GEREKÇESİNDEN, UYGULANIR
+# ======================================================================================
+
+def test_J1_acik_yeniden_adlandirma_ESLE_onerilir_gerekce_TABLODAN(tmp_path):
+    d = _duzenek(tmp_path, wikitext=WIKI_RENAME, uyeler=["AAA", "PPP"], kart093=KART093_GENIS)
+    assert kohort.main(_argv(d, "--uygula", "--cikti", str(d["cikti"]),
+                             "--bugun", "2023-01-01")) == 0
+    tablo = yaml.safe_load(
+        (d["cikti"] / "research" / "pit_universe" / "sp400_elle_esleme.yaml").read_text())
+    kayit = [k for k in tablo if k["karar"].startswith("esle:")]
+    assert len(kayit) == 1 and kayit[0]["karar"] == "esle:OOO->NNN"
+    assert "changed its name and symbol" in kayit[0]["gerekce"]
+    assert kayit[0]["satir"]["etkisiz_semboller"] == ["OOO"]
+
+
+def test_J2_gerekce_ACIK_degilse_karar_BELIRSIZ_kalir(tmp_path):
+    """MDY'de `NNN` var / `OOO` yok bilgisi TANIdır, KARAR GEREKÇESİ OLAMAZ (tek kaynak tablo)."""
+    d = _duzenek(tmp_path, wikitext=WIKI_RENAME_GEREKCESIZ, uyeler=["AAA", "PPP"],
+                 kart093=KART093_GENIS)
+    assert kohort.main(_argv(d, "--uygula", "--cikti", str(d["cikti"]),
+                             "--bugun", "2023-01-01")) == 0
+    tablo = yaml.safe_load(
+        (d["cikti"] / "research" / "pit_universe" / "sp400_elle_esleme.yaml").read_text())
+    assert [k["karar"] for k in tablo] == ["belirsiz"]
+    sonuc = _sonuc_json(d["cikti"])
+    assert sonuc["esleme"]["karar_sayimi"] == {"belirsiz": 1}
+    assert sonuc["belirsiz"]["gun_max"] == 1
+
+
+def test_J2b_borsa_parantezi_TEK_BASINA_eslemeye_yetmez(tmp_path):
+    """Gerekçede sembol GEÇİYOR ama yeniden adlandırma ANLATILMIYOR → `belirsiz`. Metinde sembol
+    görmek eşleme gerekçesi olsaydı, satın alma/spin-off satırları da yanlışlıkla eşlenirdi."""
+    d = _duzenek(tmp_path, wikitext=WIKI_RENAME_PARANTEZ, uyeler=["AAA", "PPP"],
+                 kart093=KART093_GENIS)
+    assert kohort.main(_argv(d, "--uygula", "--cikti", str(d["cikti"]),
+                             "--bugun", "2023-01-01")) == 0
+    tablo = yaml.safe_load(
+        (d["cikti"] / "research" / "pit_universe" / "sp400_elle_esleme.yaml").read_text())
+    assert [k["karar"] for k in tablo] == ["belirsiz"]
+
+
+def test_J3_esle_karari_AS_OF_YURUTMESINDE_uygulanir(tmp_path):
+    """`esle:OOO->NNN` uygulanmazsa `NNN` pencere başında HAYALET üye kalır (etkisiz discard)."""
+    d = _duzenek(tmp_path, wikitext=WIKI_RENAME, uyeler=["AAA", "PPP"], kart093=KART093_GENIS)
+    assert kohort.main(_argv(d, "--uygula", "--cikti", str(d["cikti"]),
+                             "--bugun", "2023-01-01")) == 0
+    metin = (d["cikti"] / "research" / "pit_universe" / "sp400_uyelik_tarihi.csv").read_text()
+    satirlar = {r[0]: set(r[1].split(",")) for r in list(csv.reader(io.StringIO(metin)))[1:]}
+    ilk = satirlar[min(satirlar)]
+    assert ilk == {"AAA", "QQQ"}, f"eşleme UYGULANMADI — pencere başı {sorted(ilk)}"
+    sonuc = _sonuc_json(d["cikti"])
+    assert sonuc["esleme"]["uygulanan_esleme_n"] == 1
+    assert sonuc["esleme"]["karar_sayimi"].get("esle") == 1
+
+
+def test_J4_esle_YALNIZ_kendi_satirina_uygulanir():
+    """Sembol ikamesi TABLO GENELİNDE değil, kararın BAĞLI OLDUĞU satırda yapılır — küresel ikame
+    aynı sembolü taşıyan alakasız satırları (ör. bir spin-off'un yeni hissesini) bozardı."""
+    degisiklikler = [{"tarih": "2022-06-01", "eklenen": "OOO", "cikan": "QQQ", "satir_no": 3,
+                      "alt_no": 0},
+                     {"tarih": "2021-06-01", "eklenen": "OOO", "cikan": "RRR", "satir_no": 9,
+                      "alt_no": 0}]
+    tablo = [{"satir": {"satir_no": 3, "alt_no": 0, "tarih": "2022-06-01", "eklenen": "OOO",
+                        "cikan": "QQQ"},
+              "karar": "esle:OOO->NNN", "gerekce": "x", "kaynak": {}}]
+    kalan, _, rapor = kohort.esleme_uygula(degisiklikler, tablo)
+    assert [r["eklenen"] for r in kalan] == ["NNN", "OOO"]
+    assert rapor["uygulanan_esleme_n"] == 1 and rapor["uygulanmayan_esleme"] == []
+
+
+def test_J5_esle_satirda_karsiligi_YOKSA_sessizce_gecmez():
+    """Uygulanamayan bir eşleme SESSİZCE yutulmaz — raporda ADIYLA durur (Yasa 4 ruhu)."""
+    degisiklikler = [{"tarih": "2022-06-01", "eklenen": "XXX", "cikan": "YYY", "satir_no": 3,
+                      "alt_no": 0}]
+    tablo = [{"satir": {"satir_no": 3, "alt_no": 0, "tarih": "2022-06-01", "eklenen": "XXX",
+                        "cikan": "YYY"},
+              "karar": "esle:OOO->NNN", "gerekce": "x", "kaynak": {}}]
+    _, _, rapor = kohort.esleme_uygula(degisiklikler, tablo)
+    assert rapor["uygulanan_esleme_n"] == 0
+    assert rapor["uygulanmayan_esleme"] == [{"satir_no": 3, "alt_no": 0, "karar": "esle:OOO->NNN"}]
+
+
+def test_J6_belirsiz_ETKISIZ_SEMBOLU_sayar_satirin_ilk_hucresini_degil():
+    """Etkisiz adım satırında belirsiz olan sembol, satırın `eklenen`i değil ETKİSİZ olandır
+    (ör. `OMCL↑/COHR↓` satırında belirsiz olan `COHR`)."""
+    belirsiz = [{"satir": {"tarih": "2022-07-05", "eklenen": "OMCL", "cikan": "COHR",
+                           "etkisiz_semboller": ["COHR"]}}]
+    seri = kohort.belirsiz_gun_serisi(belirsiz, ["2022-07-04", "2022-07-05"])
+    assert seri["2022-07-04"] == ["COHR"] and seri["2022-07-05"] == []
+
+
+# ======================================================================================
 # (9) GERÇEK GİRDİ — ham `.gitignore`'lu, CI'da YOK
 # ======================================================================================
 
@@ -501,8 +733,57 @@ def test_H1_gercek_girdilerle_TAM_kosum_kapilari_gecer(tmp_path):
     assert sonuc["pit_pk"]["ornek_n"] == kohort.PK_OLAY_N
     assert sonuc["pit_pk"]["hepsi_gecti"] is True
     assert sonuc["hukum"] == "YOK — Rol-1"
-    o = _sozlesme_olc((cikti / "research" / "pit_universe" / "sp400_uyelik_tarihi.csv").read_text())
+    metin = (cikti / "research" / "pit_universe" / "sp400_uyelik_tarihi.csv").read_text()
+    o = _sozlesme_olc(metin)
     assert o["baslik"] == ["date", "tickers"]
     assert o["artan"] and o["tekrarsiz"] and o["sirali"] and not o["ic_tekrar"]
     assert not o["ardisik_ayni"]
     assert dt.date.fromisoformat(o["tarihler"][0]) == dt.date(2020, 7, 27)
+    # TUR-2 KANITI: gerçek tabloda `UA/UAA` ve `UAA/UA` hücreleri vardı ve bölünmeden 163 csv
+    # satırının 146'sında hayalet ticker olarak duruyordu (inceleme ölçümü, 2026-09-14).
+    semboller = {s for r in list(csv.reader(io.StringIO(metin)))[1:] for s in r[1].split(",")}
+    assert not [s for s in semboller if "/" in s], "çok-sembollü hücre csv'ye SIZDI"
+    assert {"UA", "UAA"} <= semboller, "iki hisse sınıfı da AYRI üye olmalı"
+    assert sonuc["cok_sembollu_hucre"]["csv_ayirac_tasiyan_satir_n"] == 0
+    assert sonuc["cok_sembollu_hucre"]["bolunen_n"] == 2
+
+
+@pytest.mark.skipif(not (GERCEK_HAM.exists() and GERCEK_XLSX.exists()),
+                    reason="ham wikitext / MDY xlsx yerelde yok (.gitignore — CI'da bulunmaz)")
+def test_H2_gercek_tabloda_ACIK_yeniden_adlandirma_ESLENIR_kalani_BELIRSIZ(tmp_path):
+    """Gerçek tabloda AÇIKÇA yazan tek yeniden adlandırma `HTA→HR`dir (gerekçe: "changed its name
+    and symbol to … (NYSE: HR)"). `CHK`/`BRKS` sınıfı gerekçe hücresinde SEMBOL vermez → belirsiz
+    KALIR; MDY'deki varlık/yokluk karar gerekçesi OLAMAZ."""
+    cikti = tmp_path / "cikti"
+    assert kohort.main(["--uygula", "--cikti", str(cikti), "--ham", str(GERCEK_HAM),
+                        "--xlsx", str(GERCEK_XLSX), "--bugun", "2026-09-14"]) == 0
+    tablo = yaml.safe_load(
+        (cikti / "research" / "pit_universe" / "sp400_elle_esleme.yaml").read_text())
+    esle = [k["karar"] for k in tablo if k["karar"].startswith("esle:")]
+    assert esle == ["esle:HTA->HR"]
+    belirsiz = {s for k in tablo if k["karar"] == "belirsiz"
+                for s in (k["satir"].get("etkisiz_semboller") or [])}
+    assert {"CHK", "BRKS", "PSTG"} <= belirsiz, "açık olmayan vakalar UYDURULMUŞ"
+
+
+@pytest.mark.skipif(not (GERCEK_HAM.exists() and GERCEK_XLSX.exists()),
+                    reason="ham wikitext / MDY xlsx yerelde yok (.gitignore — CI'da bulunmaz)")
+def test_H3_cift_kararli_CIKAN_isimler_kohortta_DURUYOR(tmp_path):
+    """`cift:` ANOTASYON kalmalı: uygulansaydı çıkan isim (ör. `AMCX`) çıkış tarihinden ÖNCEKİ
+    günlerde de kohorttan silinirdi. Boyut bandı bu bozulmayı YUTAR (birkaç isimlik kayma) —
+    o yüzden bant değil, İSİM düzeyinde ölçülür."""
+    cikti = tmp_path / "cikti"
+    assert kohort.main(["--uygula", "--cikti", str(cikti), "--ham", str(GERCEK_HAM),
+                        "--xlsx", str(GERCEK_XLSX), "--bugun", "2026-09-14"]) == 0
+    metin = (cikti / "research" / "pit_universe" / "sp400_uyelik_tarihi.csv").read_text()
+    satirlar = [(r[0], set(r[1].split(","))) for r in list(csv.reader(io.StringIO(metin)))[1:]]
+
+    def _uye(sembol: str, gun: str) -> bool:
+        return sembol in [k for t, k in satirlar if t <= gun][-1]
+
+    # Tablonun KENDİ çıkış tarihleri (`cift:` kararlarının çıkan ucu) — bir gün ÖNCESİNDE üye.
+    for sembol, cikis in (("AMCX", "2020-12-02"), ("STRA", "2021-08-03"), ("PRG", "2022-04-06"),
+                          ("BFH", "2022-11-02"), ("PACW", "2023-04-05"), ("KSS", "2023-10-03")):
+        onceki = (dt.date.fromisoformat(cikis) - dt.timedelta(days=1)).isoformat()
+        assert _uye(sembol, onceki), f"{sembol} çıkışından önce kohortta YOK — `cift:` uygulanmış"
+        assert not _uye(sembol, cikis), f"{sembol} çıkış gününde hâlâ kohortta"

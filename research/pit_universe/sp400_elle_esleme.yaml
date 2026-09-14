@@ -1,18 +1,27 @@
-# EDG-2026-093 ADIM-0 EKSEN A — S&P 400 değişiklik tablosundaki TEK YANLI satırların eşleme kararları.
+# EDG-2026-093 ADIM-0 EKSEN A — S&P 400 değişiklik tablosunun ADAY satırlarının kararları.
 #
-# BU DOSYA ROL-1'İN GÖZDEN GEÇİRECEĞİ KARARLARI TAŞIR. Üretici (`research/olcumler/
-# edg093_midcap_pit/kohort.py`) dosyayı BİR KEZ mekanik ÖNERİ olarak yazar; VARSA bir daha
-# ÜZERİNE YAZMAZ, OKUR. Kararları elle düzenlemek serbesttir, şema kapısı korur.
+# ÜRETİLMİŞ DOSYA — ELLE DÜZENLENMEZ. Üretici (`research/olcumler/edg093_midcap_pit/
+# kohort.py`) her `--uygula` koşumunda bu dosyayı YENİDEN ÜRETİR; kararlar tablonun KENDİ
+# gerekçe hücresinden MEKANİK olarak türetilir (tek-kaynak). Elle düzenlenmiş bir karar
+# tablosu koşuma `--esleme <yol>` ile AÇIK yoldan verilir; şema kapısı onu da korur.
+#
+# ADAY SATIR İKİ KAYNAKTAN gelir: (a) pencere içindeki TEK YANLI tablo satırları,
+# (b) geri sarmada ETKİSİZ adım üreten satırlar (`satir.etkisiz_adimlar`).
 #
 # `karar` SÖZLÜĞÜ (dışındaki değer REDDEDİLİR):
-#   esle:<eski>-><yeni>  iki yarım satır AYNI endeks değişiminin iki kitaplamasıdır
-#                        (ANOTASYON — değişiklik listesindeki tarihler DEĞİŞMEZ).
+#   esle:<eski>-><yeni>  YENİDEN ADLANDIRMA KİMLİĞİ — bu satırdaki <eski> sembolü bugünkü
+#                        <yeni> ile AYNI ihraçtır; as-of yürütmesinde UYGULANIR (satır
+#                        <yeni> ile yazılır). Yalnız gerekçe hücresi yeniden adlandırmayı
+#                        AÇIKÇA söylediğinde (sözlük + borsa parantezinde sembol) önerilir.
+#   cift:<cikan>-><giren>  İKİ YARIM SATIR aynı endeks değişiminin iki kitaplamasıdır
+#                        (ANOTASYON — değişiklik listesi ve tarihler DEĞİŞMEZ).
 #   dusur                satır tabloda hatalı kitaplanmış; değişiklik listesinden ÇIKARILIR.
 #   belirsiz             karar YOK — sembol o tarihten ÖNCEKİ günlerde 'belirsiz' sayılır.
 #
 # `gerekce` tablonun KENDİ Reason/<ref> hücresinden alınır; ağa ÇIKILMAZ, metin UYDURULMAZ.
+# MDY güncel listesindeki varlık/yokluk TANIdır, karar gerekçesi OLAMAZ (tek kaynak tablo).
 # `kaynak.wikitext_satir_no` ayrıştırılmış tablo satır indeksidir (ham wikitext sha'sı sonuç
-# JSON'unun `girdi_kimligi` alanında).
+# JSON'unun `girdi_kimligi` alanında); `satir.alt_no` çok-sembollü hücrenin alt indeksidir.
 - satir:
     tarih: '2020-12-01'
     tarih_ham: December 1, 2020
@@ -21,7 +30,8 @@
     cikan: null
     cikan_ad: null
     satir_no: 262
-  karar: esle:AMCX->CNXC
+    alt_no: 0
+  karar: cift:AMCX->CNXC
   gerekce: Market capitalization change. || S&P MidCap 400 constituent SYNNEX Corp. spun off Concentrix.
   kaynak:
     wikitext_satir_no:
@@ -29,7 +39,8 @@
     - 262
     urller:
     - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20201201-1266188/1266188_spinconcentricaaron46.pdf
-    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3;
+      ANOTASYON — değişiklik listesi DEĞİŞMEZ'
 - satir:
     tarih: '2020-12-02'
     tarih_ham: December 2, 2020
@@ -38,7 +49,8 @@
     cikan: AMCX
     cikan_ad: AMC Networks
     satir_no: 261
-  karar: esle:AMCX->CNXC
+    alt_no: 0
+  karar: cift:AMCX->CNXC
   gerekce: Market capitalization change. || S&P MidCap 400 constituent SYNNEX Corp. spun off Concentrix.
   kaynak:
     wikitext_satir_no:
@@ -46,7 +58,73 @@
     - 262
     urller:
     - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20201201-1266188/1266188_spinconcentricaaron46.pdf
-    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3;
+      ANOTASYON — değişiklik listesi DEĞİŞMEZ'
+- satir:
+    tarih: '2021-01-07'
+    tarih_ham: January 7, 2021
+    eklenen: BRKS
+    eklenen_ad: Brooks Automation
+    cikan: WPX
+    cikan_ad: WPX Energy
+    satir_no: 258
+    alt_no: 0
+    etkisiz_adimlar:
+    - adim: discard
+      sembol: BRKS
+    etkisiz_semboller:
+    - BRKS
+  karar: belirsiz
+  gerekce: S&P 500 constituent Devon Energy acquired WPX Energy.
+  kaynak:
+    wikitext_satir_no:
+    - 258
+    urller: []
+    kural: öneri kuralı karar veremedi — belirsiz KALIR (uydurma yok)
+- satir:
+    tarih: '2021-06-04'
+    tarih_ham: June 4, 2021
+    eklenen: HFC
+    eklenen_ad: HollyFrontier
+    cikan: SVC
+    cikan_ad: Service Properties Trust
+    satir_no: 238
+    alt_no: 0
+    etkisiz_adimlar:
+    - adim: discard
+      sembol: HFC
+    etkisiz_semboller:
+    - HFC
+  karar: belirsiz
+  gerekce: Market capitalization change.
+  kaynak:
+    wikitext_satir_no:
+    - 238
+    urller:
+    - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20210527-1385972/1385972_5-mrk.pdf
+    kural: öneri kuralı karar veremedi — belirsiz KALIR (uydurma yok)
+- satir:
+    tarih: '2021-06-15'
+    tarih_ham: June 15, 2021
+    eklenen: ELY
+    eklenen_ad: Callaway Golf
+    cikan: GRUB
+    cikan_ad: Grubhub
+    satir_no: 235
+    alt_no: 0
+    etkisiz_adimlar:
+    - adim: discard
+      sembol: ELY
+    etkisiz_semboller:
+    - ELY
+  karar: belirsiz
+  gerekce: Just Eat Takeaway.com NV acquired GrubHub.
+  kaynak:
+    wikitext_satir_no:
+    - 235
+    urller:
+    - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20210610-1395762/1395762_4-grub.pdf
+    kural: öneri kuralı karar veremedi — belirsiz KALIR (uydurma yok)
 - satir:
     tarih: '2021-08-02'
     tarih_ham: August 2, 2021
@@ -55,14 +133,16 @@
     cikan: null
     cikan_ad: null
     satir_no: 232
-  karar: esle:STRA->GXO
+    alt_no: 0
+  karar: cift:STRA->GXO
   gerekce: Market capitalization change. || Spun off from XPO, Inc.
   kaynak:
     wikitext_satir_no:
     - 231
     - 232
     urller: []
-    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3;
+      ANOTASYON — değişiklik listesi DEĞİŞMEZ'
 - satir:
     tarih: '2021-08-03'
     tarih_ham: August 3, 2021
@@ -71,14 +151,37 @@
     cikan: STRA
     cikan_ad: Strategic Education, Inc.
     satir_no: 231
-  karar: esle:STRA->GXO
+    alt_no: 0
+  karar: cift:STRA->GXO
   gerekce: Market capitalization change. || Spun off from XPO, Inc.
   kaynak:
     wikitext_satir_no:
     - 231
     - 232
     urller: []
-    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3;
+      ANOTASYON — değişiklik listesi DEĞİŞMEZ'
+- satir:
+    tarih: '2022-02-03'
+    tarih_ham: February 3, 2022
+    eklenen: GPS
+    eklenen_ad: Gap
+    cikan: JACK
+    cikan_ad: Jack in the Box
+    satir_no: 203
+    alt_no: 0
+    etkisiz_adimlar:
+    - adim: discard
+      sembol: GPS
+    etkisiz_semboller:
+    - GPS
+  karar: belirsiz
+  gerekce: Market capitalization change.
+  kaynak:
+    wikitext_satir_no:
+    - 203
+    urller: []
+    kural: öneri kuralı karar veremedi — belirsiz KALIR (uydurma yok)
 - satir:
     tarih: '2022-04-05'
     tarih_ham: April 5, 2022
@@ -87,7 +190,8 @@
     cikan: null
     cikan_ad: null
     satir_no: 196
-  karar: esle:PRG->ESAB
+    alt_no: 0
+  karar: cift:PRG->ESAB
   gerekce: Market capitalization change. || S&P MidCap 400 constituent Colfax Corp. spun off ESAB.
   kaynak:
     wikitext_satir_no:
@@ -95,7 +199,8 @@
     - 196
     urller:
     - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20220330-1451140/1451140_6cfx46.pdf
-    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3;
+      ANOTASYON — değişiklik listesi DEĞİŞMEZ'
 - satir:
     tarih: '2022-04-06'
     tarih_ham: April 6, 2022
@@ -104,7 +209,8 @@
     cikan: PRG
     cikan_ad: PROG Holdings
     satir_no: 195
-  karar: esle:PRG->ESAB
+    alt_no: 0
+  karar: cift:PRG->ESAB
   gerekce: Market capitalization change. || S&P MidCap 400 constituent Colfax Corp. spun off ESAB.
   kaynak:
     wikitext_satir_no:
@@ -112,7 +218,56 @@
     - 196
     urller:
     - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20220330-1451140/1451140_6cfx46.pdf
-    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3;
+      ANOTASYON — değişiklik listesi DEĞİŞMEZ'
+- satir:
+    tarih: '2022-07-05'
+    tarih_ham: July 5, 2022
+    eklenen: OMCL
+    eklenen_ad: Omnicell
+    cikan: COHR
+    cikan_ad: Coherent
+    satir_no: 187
+    alt_no: 0
+    etkisiz_adimlar:
+    - adim: ekle
+      sembol: COHR
+    etkisiz_semboller:
+    - COHR
+  karar: belirsiz
+  gerekce: S&P MidCap 400 constituent II-VI Inc. acquired Coherent.
+  kaynak:
+    wikitext_satir_no:
+    - 187
+    urller: []
+    kural: öneri kuralı karar veremedi — belirsiz KALIR (uydurma yok)
+- satir:
+    tarih: '2022-07-21'
+    tarih_ham: July 21, 2022
+    eklenen: HTA
+    eklenen_ad: Healthcare Trust of America
+    cikan: HR
+    cikan_ad: Healthcare Realty Trust
+    satir_no: 183
+    alt_no: 0
+    etkisiz_adimlar:
+    - adim: discard
+      sembol: HTA
+    - adim: ekle
+      sembol: HR
+    etkisiz_semboller:
+    - HR
+    - HTA
+  karar: esle:HTA->HR
+  gerekce: 'Healthcare Trust of America acquired Healthcare Realty Trust. Post-merger, Healthcare Trust
+    of America changed its name and symbol to Healthcare Realty Trust Inc. (NYSE: HR).'
+  kaynak:
+    wikitext_satir_no:
+    - 183
+    urller:
+    - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20220713-1454160/1454160_4hr6psb.pdf
+    kural: gerekçe hücresi yeniden-adlandırma sözlüğüyle eşleşti ve borsa parantezinde TEK sembol verdi;
+      <eski> geri sarmanın ETKİSİZ adımındaki sembol
 - satir:
     tarih: '2022-11-01'
     tarih_ham: November 1, 2022
@@ -121,7 +276,8 @@
     cikan: null
     cikan_ad: null
     satir_no: 169
-  karar: esle:BFH->RXO
+    alt_no: 0
+  karar: cift:BFH->RXO
   gerekce: Market capitalization change. || S&P MidCap 400 constituent XPO, Inc. spun off RXO.
   kaynak:
     wikitext_satir_no:
@@ -129,7 +285,8 @@
     - 169
     urller:
     - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20221027-1457121/1457121_5twtr-4xpo.pdf
-    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3;
+      ANOTASYON — değişiklik listesi DEĞİŞMEZ'
 - satir:
     tarih: '2022-11-02'
     tarih_ham: November 2, 2022
@@ -138,7 +295,8 @@
     cikan: BFH
     cikan_ad: Bread Financial
     satir_no: 168
-  karar: esle:BFH->RXO
+    alt_no: 0
+  karar: cift:BFH->RXO
   gerekce: Market capitalization change. || S&P MidCap 400 constituent XPO, Inc. spun off RXO.
   kaynak:
     wikitext_satir_no:
@@ -146,7 +304,8 @@
     - 169
     urller:
     - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20221027-1457121/1457121_5twtr-4xpo.pdf
-    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3;
+      ANOTASYON — değişiklik listesi DEĞİŞMEZ'
 - satir:
     tarih: '2023-04-04'
     tarih_ham: April 4, 2023
@@ -155,7 +314,8 @@
     cikan: null
     cikan_ad: null
     satir_no: 145
-  karar: esle:PACW->CR
+    alt_no: 0
+  karar: cift:PACW->CR
   gerekce: Market capitalization change. || S&P MidCap 400 constituent Crane Holdings Co. (NYSE:CR) spun
     off new Crane. Following the spin-off, the parent Crane Holdings Co. will have a name change to Crane
     NXT Co., a symbol change to CXT, and will remain in the S&P MidCap 400.
@@ -165,7 +325,8 @@
     - 145
     urller:
     - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20230329-1463391/1463391_4cr.pdf
-    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3;
+      ANOTASYON — değişiklik listesi DEĞİŞMEZ'
 - satir:
     tarih: '2023-04-05'
     tarih_ham: April 5, 2023
@@ -174,7 +335,8 @@
     cikan: PACW
     cikan_ad: PacWest Bancorp
     satir_no: 144
-  karar: esle:PACW->CR
+    alt_no: 0
+  karar: cift:PACW->CR
   gerekce: Market capitalization change. || S&P MidCap 400 constituent Crane Holdings Co. (NYSE:CR) spun
     off new Crane. Following the spin-off, the parent Crane Holdings Co. will have a name change to Crane
     NXT Co., a symbol change to CXT, and will remain in the S&P MidCap 400.
@@ -184,7 +346,51 @@
     - 145
     urller:
     - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20230329-1463391/1463391_4cr.pdf
-    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3;
+      ANOTASYON — değişiklik listesi DEĞİŞMEZ'
+- satir:
+    tarih: '2023-06-19'
+    tarih_ham: June 19, 2023
+    eklenen: ZI
+    eklenen_ad: ZoomInfo
+    cikan: SITM
+    cikan_ad: SiTime
+    satir_no: 133
+    alt_no: 0
+    etkisiz_adimlar:
+    - adim: discard
+      sembol: ZI
+    etkisiz_semboller:
+    - ZI
+  karar: belirsiz
+  gerekce: Market capitalization change.
+  kaynak:
+    wikitext_satir_no:
+    - 133
+    urller: []
+    kural: öneri kuralı karar veremedi — belirsiz KALIR (uydurma yok)
+- satir:
+    tarih: '2023-08-21'
+    tarih_ham: August 21, 2023
+    eklenen: CHK
+    eklenen_ad: Chesapeake Energy
+    cikan: MRCY
+    cikan_ad: Mercury Systems
+    satir_no: 128
+    alt_no: 0
+    etkisiz_adimlar:
+    - adim: discard
+      sembol: CHK
+    etkisiz_semboller:
+    - CHK
+  karar: belirsiz
+  gerekce: Market capitalization change.
+  kaynak:
+    wikitext_satir_no:
+    - 128
+    urller:
+    - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20230816-1465605/1465605_600arnc.pdf
+    kural: öneri kuralı karar veremedi — belirsiz KALIR (uydurma yok)
 - satir:
     tarih: '2023-10-02'
     tarih_ham: October 2, 2023
@@ -193,7 +399,8 @@
     cikan: null
     cikan_ad: null
     satir_no: 114
-  karar: esle:KSS->VSTS
+    alt_no: 0
+  karar: cift:KSS->VSTS
   gerekce: Market capitalization change. || S&P MidCap 400 constituent Aramark spun off Vestis.
   kaynak:
     wikitext_satir_no:
@@ -201,7 +408,8 @@
     - 114
     urller:
     - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20230928-1466640/1466640_554-k-dhr-armk.pdf
-    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3;
+      ANOTASYON — değişiklik listesi DEĞİŞMEZ'
 - satir:
     tarih: '2023-10-03'
     tarih_ham: October 3, 2023
@@ -210,7 +418,8 @@
     cikan: KSS
     cikan_ad: Kohl's
     satir_no: 113
-  karar: esle:KSS->VSTS
+    alt_no: 0
+  karar: cift:KSS->VSTS
   gerekce: Market capitalization change. || S&P MidCap 400 constituent Aramark spun off Vestis.
   kaynak:
     wikitext_satir_no:
@@ -218,4 +427,27 @@
     - 114
     urller:
     - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20230928-1466640/1466640_554-k-dhr-armk.pdf
-    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3'
+    kural: 'gerekçe hücresi: giren satırda spin-off, çıkan satırda market capitalization; |Δgün| ≤ 3;
+      ANOTASYON — değişiklik listesi DEĞİŞMEZ'
+- satir:
+    tarih: '2024-01-05'
+    tarih_ham: January 5, 2024
+    eklenen: PSTG
+    eklenen_ad: Pure Storage
+    cikan: PDCO
+    cikan_ad: Patterson Companies
+    satir_no: 100
+    alt_no: 0
+    etkisiz_adimlar:
+    - adim: discard
+      sembol: PSTG
+    etkisiz_semboller:
+    - PSTG
+  karar: belirsiz
+  gerekce: Market capitalization change.
+  kaynak:
+    wikitext_satir_no:
+    - 100
+    urller:
+    - https://www.spglobal.com/spdji/en/documents/indexnews/announcements/20240102-1469945/1469945_6-chs.pdf
+    kural: öneri kuralı karar veremedi — belirsiz KALIR (uydurma yok)
