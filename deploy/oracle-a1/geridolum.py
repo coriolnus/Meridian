@@ -16,7 +16,10 @@ Bekçiler (her turda, iş AÇILMADAN önce):
     makinenin sahibidir. Koşan tur kesilmez; nice/ionice zaten geri planda tutar.
   · 120 GB tavan: tick kalıcı artefaktları (kotasyon_1s+islem+sayim) tavana ulaştıysa çık,
     TAVAN-DOLDU işareti bırak (dolunca eski gün silme kararı operatörün — panik kararı yok).
-  · Disk payı: ham gz geçicileri için <25 GB boş kaldıysa KIRMIZI çık (ENOSPC'ye yürüme).
+  · Disk payı: ham gz geçicileri için boş alan turun KİPİNE göre ölçülür — geri turda
+    DISK_PAYI_BAYT, ileri turda ILERI_DISK_PAYI_BAYT; altına inildiyse KIRMIZI çık
+    (ENOSPC'ye yürüme). Kip başına işçi sayısı da ayrıdır (ISCI / ILERI_ISCI). Bu kapı
+    yalnız İŞ AÇILACAKSA ölçülür: aday gün kalmadığı turda ölçüm sahte KIRMIZI üretirdi.
   · flock tekilliği: iki sürücü aynı anda koşamaz (timer + elle koşum çakışması).
 
 İşçi dayanıklılığı (TSK-087, 2026-09-02): rc≠0 veren gün AYNI koşumda BİR kez yeniden
@@ -44,8 +47,18 @@ bağlanmaz. Kilit/tavan/pencere/defter mantığı DEĞİŞMEDİ.
   işlendiği an defterin tepesi oraya taşınıyor, arada kalan 09-04..T-2 "geri" sayılıp tavanla
   kesiliyordu — koşum ne kadar sürerse sürsün boşluğun yalnız en yeni ISCI günü doluyordu.
   Sabit sınırla 09-04..T-1 arasındaki TÜM eksik iş günleri, KESİNTİLİ koşumlarda da (defterde
-  yalnız 09-11 varken 09-04..09-10 hâlâ ileridir), ISCI=2'şer dolar; 09-03 ve öncesi geri
+  yalnız 09-11 varken 09-04..09-10 hâlâ ileridir), sırayla dolar; 09-03 ve öncesi geri
   dolumdur ve tavan onları keser.
+
+İLERİ KİP KENDİ KAYNAK ÇİTİNİ TAŞIR (TSK-188 dilim-2, operatör kararı 2026-09-14 "tek işçi +
+  pay 15 GB"): dilim-1'den sonra ileri dolum tavandan muaf kaldı ama DİSK kapısı ortaktı —
+  iki işçi × ~10 GB ham pcap geçicisi 25 GB'lik payı bir hafta içinde KIRMIZI'ya düşürecekti
+  (A1 ölçümü 2026-09-14: boş 27 GB, ileri gün başına KALICI artış ~100 MB). Artık bir tur YA
+  ileri turdur (ILERI_ISCI işçi + ILERI_DISK_PAYI_BAYT kapısı, tavandan muaf) YA DA geri
+  turdur (ISCI işçi + DISK_PAYI_BAYT kapısı, tavan keser); karışmazlar, çünkü karışık tur yine
+  iki geçici demektir. BEDELİ: ileri gün ile geri gün aynı turda paralel koşmaz ve ileri dolum
+  ~2× yavaşlar (bir turda iki iş günü yerine bir tanesi işlenir). Pay altına inildiğinde ileri
+  dal da KIRMIZI'dır — sessizce beklemez, birim failed'a düşer ve operatör görür.
 
 Hüküm/okuyucu (Yasa 6): stdout → journald (birim düşerse /api/infra 'arizali' sınıflar —
 failed'in okuyucusu var); kalıcı defter /opt/veri/tick/manifest.jsonl (pilot yazar) +
@@ -85,6 +98,16 @@ TAZE_YENIDEN_SN = 6 * 3600
 # (yalnız DISK_PAYI_BAYT kapısına tabi) doldurulur. Bir OPERATÖR SINIRIDIR, bir ayar değil:
 # ileri kaydırmak 09-04..sınır arasını sessizce tavana geri verir (çivi: v483).
 ILERI_PENCERE_BASI = dt.date(2026, 9, 4)
+# TSK-188 dilim-2 — İLERİ KİPİN KENDİ KAYNAK ÇİTİ (operatör kararı 2026-09-14: "tek işçi +
+# pay 15 GB"). ÖLÇÜM (A1, 2026-09-14): /opt/veri 147 GB, kullanılan 113 GB, boş 27 GB;
+# ileri gün başına KALICI artış ~100 MB, ama ham pcap GEÇİCİSİ gün başına ~10 GB. İki işçi
+# ~20 GB anlık geçici tutar; 25 GB'lik pay ileri dolumu bir hafta içinde KIRMIZI ile
+# durduracaktı. Tek işçi = aynı anda TEK geçici, ve 15 GB = ~10 GB geçici + ~5 GB emniyet.
+# GERİ kip DEĞİŞMEDİ (ISCI=2, DISK_PAYI_BAYT=25 GB): geçmiş SİLİNMEZ, TAVAN_BAYT'a dokunulmadı
+# (operatör 2026-09-12). Bir tur YA ileri YA geri turdur — karışık tur yine iki geçici demektir
+# ve 15 GB payın tek dayanağı "aynı anda tek geçici"dir (çivi: v483).
+ILERI_ISCI = 1
+ILERI_DISK_PAYI_BAYT = 15 * 1000**3
 
 
 def _simdi_sn() -> float:
@@ -255,33 +278,50 @@ def main() -> int:
             return 0
 
         # TSK-188 kök neden 2: gün SEÇİMİ tavan kapısından ÖNCE gelir — "hangi günler ileri"
-        # sorusu ancak seçimden sonra sorulabilir. Kapı sırası (tavan → disk → boş-pencere)
-        # ve geri dalın mesajı DEĞİŞMEDİ; değişen, tavanın artık ileri günleri kesmemesi.
+        # sorusu ancak seçimden sonra sorulabilir. Geri dalın mesajı DEĞİŞMEDİ; değişen,
+        # tavanın artık ileri günleri kesmemesi. Kapı sırası tavan → boş-pencere → disk
+        # (dilim-2 tur 2: disk kapısı iş AÇILACAKSA ölçülür — gerekçe aşağıda).
         kalici = islenmis()                       # manifest + gecilen: defterin kendisi
         done = kalici | taze_bekleyen(atlanan, simdi)
-        gunler = sonraki_gunler(ISCI, done)
-        ileri = [g for g in gunler if ileri_gun(g)]
+        # TSK-188 dilim-2: TUR TEK KİPLİDİR. Aday havuzu iki kipin BÜYÜK kotasından çekilir
+        # (`max`: hangi kip kazanırsa kazansın yeterli aday gelsin — kotalar ayrışırsa kod
+        # sessizce eksik gün seçmesin); ileri gün VARSA tur ileri kiptir ve kendi çitini
+        # getirir. İleri günler geri günlerden her zaman YENİdir, bu yüzden `sonraki_gunler`
+        # (yeniden → eskiye) sıralamasında önde gelirler: dilimleme onları kesmez.
+        secilen = sonraki_gunler(max(ISCI, ILERI_ISCI), done)
+        ileri = [g for g in secilen if ileri_gun(g)][:ILERI_ISCI]
+        if ileri:
+            gunler, disk_payi, kip = ileri, ILERI_DISK_PAYI_BAYT, "ileri"
+        else:
+            gunler, disk_payi, kip = secilen[:ISCI], DISK_PAYI_BAYT, "geri"
 
         kullanilan = tick_bayt()
         if kullanilan >= TAVAN_BAYT:
             (KOK / "tick" / "TAVAN-DOLDU").write_text(
                 f"{dt.datetime.now(dt.timezone.utc).isoformat()} kullanılan={kullanilan}\n")
-            if not ileri:
+            if kip == "geri":
                 print(f"TAVAN: {kullanilan / 1e9:.1f} GB >= 120 GB — çıkılıyor (karar operatörün)")
                 return 0
-            print(f"TAVAN aşıldı: yalnız ileri günler dolduruluyor ({', '.join(ileri)}) — "
+            print(f"TAVAN aşıldı: yalnız ileri günler dolduruluyor ({', '.join(gunler)}) — "
                   f"{kullanilan / 1e9:.1f} GB, geri dolum durdu (karar operatörün)", flush=True)
-            gunler = ileri
-        if bos_bayt() < DISK_PAYI_BAYT:
-            print(f"KIRMIZI: disk payı < {DISK_PAYI_BAYT / 1e9:.0f} GB — ham geçiciler sığmaz",
-                  flush=True)
-            return 1
-
         if not gunler:
             print("PENCERE-TAMAM: 2020-01-01'e kadar tüm iş günleri işlendi/geçildi")
             (KOK / "tick" / "PENCERE-TAMAM").write_text(
                 dt.datetime.now(dt.timezone.utc).isoformat() + "\n")
             return 0
+
+        # TSK-188 dilim-2 tur 2: disk kapısı boş-pencere kontrolünden SONRAdır. Kapının işi
+        # ENOSPC'ye YÜRÜMEYİ engellemektir; iş AÇILMIYORSA engellenecek bir şey yoktur ve
+        # ölçüm yalnız sahte bir KIRMIZI üretir (birim failed, operatör olmayan bir riski okur).
+        # Eski sıra (tavan → disk → boş-pencere) dilim-1'e kadar zararsızdı çünkü boş alan hep
+        # 25 GB'nin üstündeydi; ileri kip 15–25 GB aralığında çalışacağı için dal erişilebilir
+        # hale geldi ve düzeltildi (Rol-1 kararı 2026-09-14, çivi: v483).
+        if bos_bayt() < disk_payi:
+            # Kip mesajda YAZILIDIR: iki farklı pay iki farklı hükümdür ve operatör journald'da
+            # hangi kapının öttüğünü ayırt edebilmelidir (aynı sayı iki kez uydurulmaz, türetilir).
+            print(f"KIRMIZI: disk payı < {disk_payi / 1e9:.0f} GB ({kip} kip) — "
+                  f"ham geçiciler sığmaz", flush=True)
+            return 1
 
         surecler = [(g, _isci_baslat(g)) for g in gunler]
 
