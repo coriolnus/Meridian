@@ -51,7 +51,7 @@ Toplam **106** kart.
   · HÜKÜM: ön-kayıt 2026-08-31; uygulama kart-önce kuralıyla sonra
   · kart: `EXE-2026-010-hakem-ts-anahtari.yaml`
 
-### Ölçümde (9)
+### Ölçümde (8)
 
 - **EDG-2026-042** (`measuring`) — Sistemin EN KARAR-KRİTİK bilinmeyen sayısı artık gerçek icra friksiyonunun SEVİYESİ.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı, İLK (betimleyici) ara-koşum yapıldı.
@@ -68,9 +68,6 @@ Toplam **106** kart.
 - **EDG-2026-081** (`measuring`) — 
   · HÜKÜM: 2026-09-06 değerlendirme: adım-1/2 canlı, gün-1 ölçümü var; pencere ~2026-09-20 # 2026-09-06 Rol-1 — ön-kayıt; adım-1 köprü (m2.7) bugün, adım-2 router zinciri biçim…
   · kart: `EDG-2026-081-hindsight-konsolidasyon-llm-zinciri.yaml`
-- **EDG-2026-084** (`measuring`) — 
-  · HÜKÜM: 2026-09-07 01:1xZ — beş sayfa kuruldu (00:45–01:10Z), gün-0 sayımı kayıtlı; hüküm 2026-09-14
-  · kart: `EDG-2026-084-zihin-modeli-ek-sayfalar-ii-uretici-okuyucu-acik-sorular.yaml`
 - **EDG-2026-088** (`measuring`) — 
   · HÜKÜM: 2026-09-13 Rol-1: pencere B1 dağıtımıyla (#37 dce388c, 2026-09-12T22:08:34Z) AÇIK — `pencere_kaydi_2026_09_12`; önceki: registered (2026-09-08 ön-kayıt; gölge defteri…
   · kart: `EDG-2026-088-uyuyan-kurulum-golge-pilot.yaml`
@@ -81,7 +78,7 @@ Toplam **106** kart.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`
 
-### Ölçüldü (59)
+### Ölçüldü (60)
 
 - **BASE-2026-001** (`measured`) — Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net −5.542 USD).
   · HÜKÜM: 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1): CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146 seans, bugünkü motor+canlı v3…
@@ -224,6 +221,9 @@ Toplam **106** kart.
 - **EDG-2026-083** (`measured`) — 
   · HÜKÜM: 2026-09-13 05:2xZ Rol-1 — KALDI (hukum_2026_09_13): uydurma %95,7 GEÇTİ, içerik 3/3 GEÇTİ, gerçek-kullanım 1 sayfa (eşik ≥2) KALDI; sökme kararı OPERATÖRDE (TSK-060)
   · kart: `EDG-2026-083-zihin-modeli-talep-uzerine-ek-sayfalar.yaml`
+- **EDG-2026-084** (`measured`) — 
+  · HÜKÜM: 2026-09-14 05:19Z hüküm `hukum_2026_09_14` — KALDI (gerçek kullanım 0/5 sayfa; içerik 5/5 ve uydurma %95.4 GEÇTİ); ÖNCEKİ: measuring # 2026-09-07 01:1xZ — beş sayfa…
+  · kart: `EDG-2026-084-zihin-modeli-ek-sayfalar-ii-uretici-okuyucu-acik-sorular.yaml`
 - **EDG-2026-090** (`measured`) — 
   · HÜKÜM: 2026-09-13 19:30Z hüküm `hukum_2026_09_13` — HİPOTEZ TUTMADI (A/B/C katkısız, birleşik 0,2466 > 0,05); kalan fark R PAYDASI → ardıl EDG-2026-091; ÖNCEKİ: registered —…
   · kart: `EDG-2026-090-golge-gercek-ayrisma-teshisi.yaml`

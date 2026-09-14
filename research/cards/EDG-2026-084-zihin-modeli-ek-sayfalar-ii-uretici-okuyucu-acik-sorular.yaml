@@ -6,7 +6,7 @@
 # 2026-09-07 00:45Z tek-atım (083'ün 00:10Z S3/PK/NK tazelemesinden sonra); paralel reflect YASAK (083 vakası 16:24Z).
 
 card_id: EDG-2026-084
-status: measuring   # 2026-09-07 01:1xZ — beş sayfa kuruldu (00:45–01:10Z), gün-0 sayımı kayıtlı; hüküm 2026-09-14
+status: measured   # 2026-09-14 05:19Z hüküm `hukum_2026_09_14` — KALDI (gerçek kullanım 0/5 sayfa; içerik 5/5 ve uydurma %95.4 GEÇTİ); ÖNCEKİ: measuring   # 2026-09-07 01:1xZ — beş sayfa kuruldu (00:45–01:10Z), gün-0 sayımı kayıtlı; hüküm 2026-09-14
 family: hindsight_hafiza
 on_kayit: 2026-09-06
 ref: [EDG-2026-083, EDG-2026-080, TSK-160, TSK-171, TSK-161, TSK-170]
@@ -81,3 +81,24 @@ adim_1_kurulum_2026_09_07: >
   atıfta basename çalışma listesindeyse `calisma_dosyasi`; `mm-` öneki soyularak bellek listesiyle eşleşme. Kalanlar gerçek doğrulanamayan.
   Reflect failover zinciri 01:11Z (m3 → m2.7 → nemotron-super) canlı — 7. gün minimax sayımı zincir üyelerini model kolonuyla ayrı sayar.
 
+hukum_2026_09_14: >
+  KALDI (Rol-1, 05:19Z) — dört eşikten üçü geçti, kullanım kaldı; EDG-083 ile aynı sınıf. PENCERE 2026-09-07 00:45Z … 2026-09-14 KAPANDI
+  (05:00Z slotu: tazeleme yok — banka 09-13 21:30Z retain 'zaten_var', delta girdi yok; 5 sayfanın son tazelemesi 09-13 10:33–10:37Z,
+  TSK-168 retain akışının tetiklediği otomatik delta koşumu).
+  (1) İÇERİK: mental_model_history pencere içi S4 3 · S5 3 · S6 3 · S7 2 · S8 4 → 5/5 sayfa ≥1 content_written: GEÇTİ.
+  (2) UYDURMA (uydurma_say.py — 083'ün aracı, kopya yok; girdi/bellek_kimlikleri_2026-09-14 17.259 memory + 11 mental model id,
+  calisma_dosyalari_2026-09-14 139; sayfalar/2026-09-14_gun7/ + SHA256; sonuc_2026-09-14_gun7.json sha256 8cf0c39009ced8e8…): 5 sayfa
+  393 atıf / 375 doğrulanan = %95.4 (eşik ≥%80: GEÇTİ); sayfa bazında acik-sorular 132/136 %97.1 · ajan-surec-hatalari 51/53 %96.2 · dagitim-tarihcesi 30/32 %93.8 · karar-gerekceleri 83/87 %95.4 · uretici-okuyucu-haritasi 79/85 %92.9; en düşük meridian-uretici-okuyucu-haritasi %92.9
+  (eşik ≥%60: GEÇTİ). Doğrulanamayan sınıfı yine yol/çivi: `/opt/meridian/ops/meridian-guard.sh` (A1'e özgü), `PRODUCT.md/DESIGN.md`,
+  `fundamentals.csv`, `state/equity_curve.json`, `push_code_a1.sh`, `v248` — depo-dışı/sonradan değişen yollar, rapor md'de.
+  (3) GERÇEK KULLANIM: 'kaynak: zihin modeli <S4..S8 adı>' atfı günlük/ROADMAP/kart/docs/brief'lerde 0 sayfa (eşik ≥3): KALDI.
+  Pencerede yalnız S2 (hedef-sapma) 2 atıf aldı — o 083'ün sayfası. Sahte-kullanım yazılmadı.
+  (4) MALİYET: pencere içi refresh_mental_model LLM çağrısı 45 (09-13, 11 sayfa → ≈4,1 çağrı/tazeleme ≤12: GEÇTİ), 1,96 M token,
+  1.656 s; 09-08 17 failed refresh op (ReflectToolCallError sınıfı, EDG-074) — kota etkisi EDG-081 kolonunda.
+  (5) MEKANİK ADAY (S4/S5): sayfadan doğup ROADMAP'e işlenen kalem 0.
+  DÜRÜSTLÜK NOTU: 083 ile aynı atipik hafta (09-09..09-11 oturum yok; banka 09-07..09-13 girdisiz); TSK-168 retain akışı 09-13'te açıldı ve
+  sayfalar aynı gün otomatik tazelendi — sayfa MEKANİZMASI çalışıyor, kullanım ALIŞKANLIĞI ölçülemedi. Eşik değişmez, hüküm KALDI.
+  basari_tanimi 'kaldıysa sayfalar kapatılır': OPERATÖR KARARI (b) melez+retain (2026-09-13 08:55Z) bu kolu KAPSAR — sayfalar DURUR,
+  yeniden ölçüm EDG-2026-089 penceresiyle (hüküm 09-20; oturum-başı sayfa okuma kuralı CLAUDE.md §0'da). Kill#1 (083 KALDI → yeni sayfa açılmaz) YÜRÜRLÜKTE.
+  K defteri: EDG-084-ek-sayfalar-ii = KALDI (K=1). hafıza: kaynak — EDG-083 hukum_2026_09_13 emsali + memory hindsight-aktif-kullanim;
+  A1 recall koşulmadı (hüküm ölçümden mekanik).
