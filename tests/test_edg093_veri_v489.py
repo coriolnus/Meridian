@@ -36,7 +36,9 @@ MUTASYON KANITI (bu dosyada KOŞMAZ, Rol-1'e raporla teslim edilir — CLAUDE.md
   (b) `filed` kontrolü kaldırılınca `test_edgar_FILED_BOS_satir_REDDEDILIR` kırmızı,
   (c) alpaca anahtar dönüşümü kaldırılınca `test_bar_SINIF_HISSE_anahtari_NOKTAYA_cevrilir` ve
       `test_alpaca_anahtari_DAR_desen` kırmızı,
-  (d) üzerine-yazma koruması kaldırılınca `test_bar_YENIDEN_CEK_ayrisan_icerik_YAN_DOSYAYA` kırmızı.
+  (d) üzerine-yazma koruması kaldırılınca `test_bar_YENIDEN_CEK_ayrisan_icerik_YAN_DOSYAYA` kırmızı,
+  (g) `cift` filtresi (`main`, Rol-1 hükmü 2026-09-14) kaldırılınca
+      `test_edgar_CIFT_CIK_CEKIME_ve_PIT_SERISINE_sizmaz` kırmızı — TUR-2 regresyon çivisi.
 """
 from __future__ import annotations
 
@@ -637,13 +639,16 @@ def test_edgar_SEC_BIR_ama_hepsi_DISKTE_ise_ISTEK_ATILMAZ(tmp_path):
     _, kaynak = _edgar_kos(kohort, cikti, "--sec", "1")
     assert not (cikti / "edgar" / "istek_defteri.jsonl").exists()
     assert kaynak["cekim"]["atilan_istek_n"] == 0
-    assert kaynak["cekim"]["diskte_hazir_n"] == 5
+    # BEŞ ham dosya diskte ama çekim listesi DÖRT CIK'tir: 444 (CNXC) `cift` hükmüyle eşlemeden
+    # ÇIKARILDI (Rol-1 2026-09-14) — "diskte hazır" sayısı by_cik'i izler, ham dizini değil.
+    assert kaynak["cekim"]["diskte_hazir_n"] == 4
 
 
 def test_edgar_ESLEME_SIRASI_harita_sonra_tickers_sonra_cift_sonra_eslesmedi(tmp_path):
     """ELLE: DECK gerçek edgar_facts haritasında (kaynak 1) · AAA/BBB sentetik tickers'ta
-    (kaynak 2) · HTA `esle:HTA->HR` ile HR üzerinden · AMCX `cift:AMCX->CNXC` ile CNXC üzerinden ·
-    ZZZZ hiçbir yerde → EŞLEŞMEYEN (CIK UYDURULMAZ)."""
+    (kaynak 2) · HTA `esle:HTA->HR` ile HR üzerinden · ZZZZ hiçbir yerde → EŞLEŞMEYEN (CIK
+    UYDURULMAZ). AMCX `cift:AMCX->CNXC` ile CNXC'ye ÇÖZÜLÜR ama Rol-1 hükmü (2026-09-14) gereği
+    EŞLEŞMEYENE düşer — sıra çivisi bu yüzden dört eşleşen, iki eşleşmeyen ölçer."""
     kohort, cikti = _edgar_duzen(tmp_path)
     _, kaynak = _edgar_kos(kohort, cikti, "--sec", "0")
     harita = json.loads((cikti / "edgar" / "cik_haritasi_sp400.json").read_text(encoding="utf-8"))
@@ -653,23 +658,70 @@ def test_edgar_ESLEME_SIRASI_harita_sonra_tickers_sonra_cift_sonra_eslesmedi(tmp
     assert kayit["AAA"]["cik_kaynak"] == "sec_company_tickers" and kayit["AAA"]["cik"] == 111
     assert kayit["HTA"]["cik"] == 333 and kayit["HTA"]["cik_kaynak"].startswith(
         "elle_esleme_cifti:esle:HTA->HR")
-    assert [r["symbol"] for r in harita["eslesmeyen"]] == ["ZZZZ"]
+    assert "AMCX" not in kayit, "cift ANOTASYONU eşleşene SIZDI (Rol-1 hükmü 2026-09-14)"
+    assert sorted(r["symbol"] for r in harita["eslesmeyen"]) == ["AMCX", "ZZZZ"]
     assert harita["esleme_sirasi"] == ["edgar_facts_cik_haritasi", "sec_company_tickers",
                                        "elle_esleme_cifti"]
-    assert kaynak["esleme"]["eslesen_n"] == 5 and kaynak["esleme"]["eslesmeyen_n"] == 1
+    assert kaynak["esleme"]["eslesen_n"] == 4 and kaynak["esleme"]["eslesmeyen_n"] == 2
 
 
-def test_edgar_CIFT_turetilen_ANOTASYON_olarak_AYRI_isaretlenir(tmp_path):
-    """`cift` bir ANOTASYONDUR (iki yarım satır, aynı endeks olayı) — aynı ihraççı olduğu
-    KANITLANMAZ. Kayıt onu `esle`den ayırmalı ve ayrıca listelemeli; hüküm Rol-1'in."""
+def test_edgar_CIFT_turetilen_REDDEDILIR_esle_ise_KULLANILIR(tmp_path):
+    """İKİ JETON, İKİ HÜKÜM (Rol-1 2026-09-14). `esle:` bir KİMLİKTİR (aynı ihraççı) → eşleme
+    KULLANILIR. `cift:` bir ANOTASYONDUR (iki yarım satır, aynı endeks olayı) → aynı ihraççı
+    KANITLANMADIĞI için eşleme REDDEDİLİR, sembol eşleşmeyene NEDENİYLE düşer.
+
+    Ayrım kaydın kendisinde de görünür kalmalı: `cift_turetilen` listesi (TANI) ve kayıttaki
+    jeton sözlüğü hükmü ADIYLA söyler — "reddedildi" sessiz bir eksilme olamaz."""
     kohort, cikti = _edgar_duzen(tmp_path)
     _, kaynak = _edgar_kos(kohort, cikti, "--sec", "0")
     harita = json.loads((cikti / "edgar" / "cik_haritasi_sp400.json").read_text(encoding="utf-8"))
     kayit = {r["symbol"]: r for r in harita["eslesen"]}
-    assert kayit["AMCX"]["kimlik_kaniti"] == "anotasyon_cift" and kayit["AMCX"]["uyari"]
+    assert "AMCX" not in kayit
     assert kayit["HTA"]["kimlik_kaniti"] == "yeniden_adlandirma" and kayit["HTA"]["uyari"] is None
-    assert [r["symbol"] for r in kaynak["esleme"]["cift_turetilen"]] == ["AMCX"]
+    red = {r["symbol"]: r for r in harita["eslesmeyen"]}["AMCX"]
+    assert red["neden"].startswith("cift_anotasyon") and red["reddedilen_cik"] == 444
+    assert red["reddedilen_kaynak"].startswith("elle_esleme_cifti:cift:AMCX->CNXC")
+    cift = kaynak["esleme"]["cift_turetilen"]
+    assert [r["symbol"] for r in cift] == ["AMCX"]
+    assert cift[0]["kimlik_kaniti"] == "anotasyon_cift" and cift[0]["uyari"]
+    assert kaynak["esleme"]["cift_turetilen_hukmu"] == red["neden"]
     assert kaynak["sozlesmeler"]["karar_jetonlari"]["cift"].startswith("ANOTASYON")
+    assert "KULLANILMAZ" in kaynak["sozlesmeler"]["karar_jetonlari"]["cift"]
+
+
+def test_edgar_CIFT_CIK_CEKIME_ve_PIT_SERISINE_sizmaz(tmp_path):
+    """ROL-1 HÜKMÜ 2026-09-14 — REGRESYON ÇİVİSİ. `cift:AMCX->CNXC` iki yarım satırın
+    ANOTASYONUdur: AMCX ile CNXC AYRI İHRAÇÇILARDIR. CNXC'nin CIK'i (444) diskte HAZIR bir
+    companyfacts taşısa BİLE AMCX ne çekim listesine (`by_cik` → indirme manifesti) ne de PIT
+    serisine girmelidir — girseydi CNXC'nin hisse adedi AMCX ADINA kitaplanırdı (kimlik hatası).
+
+    Fikstür bunu ölçülebilir kılar: ham dosya 444 için VARDIR. Yani sızıntının yokluğu "dosya
+    yoktu" diye değil, FİLTRE yüzündendir — iki durum birbirine karışmasın diye ayrıca
+    `eksik_dosya`da da görünmediği ölçülür.
+
+    MUTASYON HEDEFİ (g): `main`deki `kimlik_kaniti != anotasyon_cift` filtresi kaldırılırsa 444
+    manifeste girer VE AAA'nın sentetik satırları `symbol=AMCX` adına seriye yazılır — bu çivi
+    üç ayrı assert'ten kırmızıya döner."""
+    kohort, cikti = _edgar_duzen(tmp_path, ciklar=(111, 444))
+    _, kaynak = _edgar_kos(kohort, cikti, "--sec", "0")
+    assert not (cikti / "edgar" / "istek_defteri.jsonl").exists()
+
+    # (1) ÇEKİM: 444 by_cik'e hiç girmediği için indirme manifestinde YOK
+    manifest_cikler = {m["cik"] for m in kaynak["cekim"]["manifest"]}
+    assert manifest_cikler == {111, 222, 333, 910521}, manifest_cikler
+    assert "AMCX" not in {s for m in kaynak["cekim"]["manifest"] for s in m["symbols"]}
+
+    # (2) ÇIKARIM: seride AMCX adına TEK satır yok (ham dosya diskte OLMASINA rağmen)
+    assert (cikti / "edgar" / "raw" / "CIK0000000444.json.gz").exists(), "fikstür kurulmadı"
+    satirlar = _seri_oku(cikti)
+    assert {r["symbol"] for r in satirlar["satirlar"]} == {"AAA"}
+    assert 444 not in {e["cik"] for e in kaynak["kapsam"]["eksik_dosya"]}
+
+    # (3) TANI İZİ KAYBOLMAZ: eşleşmeyene NEDENİYLE düşer, `cift_turetilen` onu ADIYLA taşır
+    eslesmeyen = {r["symbol"]: r for r in kaynak["esleme"]["eslesmeyen"]}
+    assert "AMCX" in eslesmeyen and eslesmeyen["AMCX"]["neden"].startswith("cift_anotasyon")
+    assert eslesmeyen["AMCX"]["reddedilen_cik"] == 444
+    assert [r["symbol"] for r in kaynak["esleme"]["cift_turetilen"]] == ["AMCX"]
 
 
 def test_edgar_CIKARIM_etiket_kumesi_ve_ON_ALTI_kolon(tmp_path):
@@ -721,7 +773,9 @@ def test_edgar_KAPSAM_ve_HAM_DOSYASI_OLMAYAN_cik_ADIYLA_dusulur(tmp_path):
     kohort, cikti = _edgar_duzen(tmp_path, ciklar=(111,))
     _, kaynak = _edgar_kos(kohort, cikti, "--sec", "0")
     eksik = {e["cik"] for e in kaynak["kapsam"]["eksik_dosya"]}
-    assert eksik == {222, 333, 444, 910521}, eksik
+    # 444 (CNXC) BURADA DA YOK: "ham dosyası eksik" değil, eşlemeden ÇIKARILMIŞ bir CIK'tir —
+    # iki durum karışmasın diye ayrıca `..._CIFT_CIK_CEKIME_ve_PIT_SERISINE_sizmaz` ölçer.
+    assert eksik == {222, 333, 910521}, eksik
     assert all(e["neden"] for e in kaynak["kapsam"]["eksik_dosya"])
     kapsam = (cikti / "edgar" / "sembol_kapsam_sp400.csv").read_text(encoding="utf-8").splitlines()
     assert kapsam[0].split(",")[:4] == ["symbol", "cik", "satir_n", "shares_dei_n"]

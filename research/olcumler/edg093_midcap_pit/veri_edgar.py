@@ -28,8 +28,10 @@ CIK EŞLEMESİ — SIRA SABİTTİR VE KAYDA YAZILIR:
 (3) İKİ JETONU AYIRIR ve bu ayrım hükmü taşır: `esle:<eski>-><yeni>` bir YENİDEN ADLANDIRMA
 KİMLİĞİDİR (aynı ihraççı, aynı CIK beklenir); `cift:<cikan>-><giren>` bir ANOTASYONDUR — iki
 yarım satır aynı endeks olayının iki kitaplamasıdır ve tipik olarak İKİ AYRI İHRAÇÇIDIR
-(spin-off). `cift`ten türetilen eşleme bu yüzden "kanıtlanmış kimlik" DEĞİLDİR: kayıt onu
-`kimlik_kaniti: anotasyon_cift` ile ayırır, ayrıca listeler ve hükmü Rol-1'e bırakır.
+(spin-off). `cift`ten türetilen eşleme bu yüzden "kanıtlanmış kimlik" DEĞİLDİR ve ROL-1 HÜKMÜ (2026-09-14)
+gereği KULLANILMAZ: `cik_esle` onu `kimlik_kaniti: anotasyon_cift` ile ayırır, `main` bu kanıtı
+taşıyan kayıtları EŞLEŞMEYENE düşürür (`neden: cift_anotasyon`) — böylece ne çekime ne çıkarıma
+girer. Tanı izi `esleme.cift_turetilen` listesinde AYNEN KALIR.
 
 AĞ DİSİPLİNİ (download.py'nin disiplini, kaynağından türetilir): SIRALI, tek bağlantı, kimlik
 bildiren User-Agent, istek arası gecikme, `Accept-Encoding: gzip`, ham JSON gzip'lenip
@@ -237,6 +239,17 @@ def company_tickers_haritasi(yol: pathlib.Path):
     return out, None
 
 
+#: `cift` anotasyonundan türeyen eşlemenin REDDİ (Rol-1 hükmü 2026-09-14). `esle:` bir KİMLİKTİR
+#: (aynı ihraççı, yeniden adlandırma), `cift:` DEĞİLDİR: iki yarım satır aynı endeks olayının iki
+#: kitaplamasıdır ve tipik olarak İKİ AYRI İHRAÇÇIDIR (AMCX ≠ CNXC). Diğer adın CIK'ini bu sembole
+#: vermek, başka bir ihraççının hisse adedini bu ad altında kitaplamak olurdu — PIT'te bu bir
+#: KİMLİK hatasıdır ve sonucu sessizdir (sayı makul görünür, ihraççı yanlıştır).
+CIFT_RED_NEDENI = ("cift_anotasyon — `cift:<çıkan>-><giren>` bir ANOTASYONDUR (iki yarım satır, "
+                   "aynı endeks olayı); iki adın AYNI İHRAÇÇI olduğu KANITLANMADI, bu yüzden "
+                   "diğer adın CIK'i bu sembole VERİLMEZ (Rol-1 hükmü 2026-09-14). Tanı izi "
+                   "`esleme.cift_turetilen` listesinde KALIR.")
+
+
 def cik_esle(isimler, kaynak1: dict, kaynak2: dict, komsular: dict):
     """(eslesen, eslesmeyen, cift_turetilen) — eşleme SIRASI `ESLEME_SIRASI`dır.
 
@@ -397,6 +410,15 @@ def main() -> int:
     komsular = ortak.esleme_komsulari(ciftler)
     eslesen, eslesmeyen, cift_turetilen = cik_esle(isimler, kaynak1, kaynak2, komsular)
 
+    # ROL-1 HÜKMÜ (2026-09-14): `cift` ANOTASYONUNDAN türeyen eşleme KULLANILMAZ — bkz.
+    # CIFT_RED_NEDENI. Filtre TEK noktadadır ve üç yüzeye birden yansır: `by_cik` (ÇEKİM),
+    # `cik_sembolleri` (ÇIKARIM) ve `cik_haritasi_sp400.json`ın `eslesen` alanı (KAYIT) —
+    # üçü de bu listeden türer. `cift_turetilen` listesi TANI olarak KALIR (kayda yazılır).
+    eslesen = [r for r in eslesen if r["kimlik_kaniti"] != ortak.KARAR_KIMLIK_KANITI["cift"]]
+    eslesmeyen += [{"symbol": r["symbol"], "rol": "sp400", "neden": CIFT_RED_NEDENI,
+                    "reddedilen_cik": r["cik"], "reddedilen_kaynak": r["cik_kaynak"]}
+                   for r in cift_turetilen]
+
     by_cik: dict[int, list[str]] = {}
     for r in eslesen:
         by_cik.setdefault(int(r["cik"]), []).append(r["symbol"])
@@ -544,9 +566,11 @@ def main() -> int:
             "istek_defteri": str(ISTEK_DEFTERI),
             "istek_defteri_notu": "atılan HER istek ATILMADAN ÖNCE buraya düşer; '--sec 0'da ağa "
                                   "çıkılmadı' iddiası bu dosyanın YOKLUĞUYLA ölçülür.",
-            "karar_jetonlari": {"esle": "YENİDEN ADLANDIRMA KİMLİĞİ — aynı ihraççı",
+            "karar_jetonlari": {"esle": "YENİDEN ADLANDIRMA KİMLİĞİ — aynı ihraççı; CIK "
+                                        "eşlemesinde KULLANILIR",
                                 "cift": "ANOTASYON — iki yarım satır, aynı endeks olayı; AYNI "
-                                        "İHRAÇÇI OLDUĞU KANITLANMADI"},
+                                        "İHRAÇÇI OLDUĞU KANITLANMADI, CIK eşlemesinde "
+                                        "KULLANILMAZ (Rol-1 hükmü 2026-09-14)"},
         },
         "esleme": {
             "isim_n": len(isimler), "eslesen_n": len(eslesen), "eslesmeyen_n": len(eslesmeyen),
@@ -555,6 +579,7 @@ def main() -> int:
             "kaynak_dagilimi": _say([r["cik_kaynak"].split(":")[0] for r in eslesen]),
             "cift_turetilen_n": len(cift_turetilen),
             "cift_turetilen": cift_turetilen,
+            "cift_turetilen_hukmu": CIFT_RED_NEDENI,
             "eslesmeyen": eslesmeyen,
             "karar_cifti_n": len(ciftler),
         },
