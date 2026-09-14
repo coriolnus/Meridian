@@ -549,6 +549,57 @@ def test_D5_saglik_birimi_vault_KURULMADAN_atesleme_YAPMAZ():
     assert kosul == "/etc/vault/vault.hcl", f"kurulum kapısı yok/yanlış: {kosul!r}"
 
 
+BIRIM_ADMIN_YENILE = VAULT_DIZIN / "vault-admin-yenile.service"
+TIMER_ADMIN_YENILE = VAULT_DIZIN / "vault-admin-yenile.timer"
+ADMIN_YENILE_SH = VAULT_DIZIN / "vault_admin_yenile.sh"
+
+
+def test_D6_admin_yenileme_birimi_ve_timeri():
+    """Yönetici jetonu PERİYODİK (`-period=720h`); yaşaması için periyot dolmadan `token renew`
+    gerekir. Bu birim onu HAFTALIK yeniler (periyot 30 gün, haftalık = 4× emniyet); düşerse
+    fail-notify alarmı (kurulu ≠ çalışır: kurulum günü elle test-ateşlenir)."""
+    assert BIRIM_ADMIN_YENILE.exists(), "deploy/vault/vault-admin-yenile.service yok"
+    assert TIMER_ADMIN_YENILE.exists(), "deploy/vault/vault-admin-yenile.timer yok"
+    assert _deger(BIRIM_ADMIN_YENILE, "Type") == "oneshot"
+    assert _deger(BIRIM_ADMIN_YENILE, "ExecStart") == "/opt/vault/bin/vault_admin_yenile.sh"
+    assert _deger(BIRIM_ADMIN_YENILE, "ConditionFileNotEmpty") == "/etc/vault/admin.token", (
+        "jeton dosyası yokken birim FAIL değil ATLANMALI (bootstrap öncesi yanlış alarm)")
+    assert _deger(BIRIM_ADMIN_YENILE, "OnFailure") == "meridian-fail-notify.service"
+    assert _deger(BIRIM_ADMIN_YENILE, "User") is None, "betik 0400 root dosyasını okur — root koşar"
+    cal = _deger(TIMER_ADMIN_YENILE, "OnCalendar") or ""
+    assert cal.startswith("Sun") or cal.startswith("weekly"), f"haftalık değil: {cal!r}"
+    assert _deger(TIMER_ADMIN_YENILE, "Persistent") == "true", "kaçan tetik (kapalı makine) telafi edilmeli"
+    assert _deger(TIMER_ADMIN_YENILE, "WantedBy") == "timers.target"
+
+
+def test_D7_admin_yenileme_betigi_SIR_DISIPLINI():
+    """Jeton STDIN'den (`login -no-print -`), argv/ortam YOK, `$(cat`/`read` YOK, `set -x` YOK,
+    oturum yardımcısı çıkışta SİLİNİR (trap); yenileme `token renew` iledir ve HÜKÜM `renewable`+`ttl`
+    ölçümünden gelir (yalnız sayı basılır)."""
+    assert ADMIN_YENILE_SH.exists(), "deploy/vault/vault_admin_yenile.sh yok"
+    assert os.access(ADMIN_YENILE_SH, os.X_OK), "çalıştırılabilir değil"
+    r = subprocess.run(["bash", "-n", str(ADMIN_YENILE_SH)], capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+    metin = _yorumsuz(ADMIN_YENILE_SH.read_text(encoding="utf-8"))
+    assert re.search(r"login\s+-no-print\s+-\s*<", metin), "jeton stdin'den okunmuyor"
+    assert "VAULT_TOKEN=" not in metin and "$(cat" not in metin and "$(<" not in metin
+    assert not re.search(r"^\s*read\b", metin, re.M)
+    assert not re.search(r"^\s*set\s+-[a-z]*x", metin, re.M)
+    assert re.search(r"token\s+renew", metin), "yenileme komutu yok"
+    assert re.search(r"trap\s+'rm -f \"\$\{HOME:-/root\}/\.vault-token\"'\s+EXIT", metin), "oturum çıkışta silinmiyor"
+    for m_ in re.finditer(r"^\s*(?:echo|printf)\s+[^\n]*", metin, re.M):
+        assert "$(" not in m_.group(0), f"çıktı satırında komut ikamesi: {m_.group(0)!r}"
+
+
+def test_I16_kur_betigi_admin_yenileme_birimlerini_KURAR():
+    """Adım 3 betiği (0750 root) ve iki birimi yerleştirir — aksi hâlde timer 'kurulu' görünür,
+    A1'de dosya YOK olur (kurulu ≠ çalışır)."""
+    metin = _yorumsuz(KUR_SH.read_text(encoding="utf-8"))
+    assert "vault_admin_yenile.sh" in metin, "kur betiği yenileme betiğini kurmuyor"
+    assert "vault-admin-yenile.service" in metin and "vault-admin-yenile.timer" in metin, (
+        "kur betiği yenileme birim/timer'ını kurmuyor")
+
+
 # =================================================================================================
 # E) TEK KAYNAK — `deploy/sir_envanteri.yaml::vault_kv` (Task 2)
 # =================================================================================================
@@ -917,6 +968,12 @@ def test_I14_kur_betigi_YONETICI_JETONUNU_ORPHAN_yaratir():
     assert satirlar, "token create satırı yok"
     for s in satirlar:
         assert "-orphan" in s, f"yönetici jetonu -orphan DEĞİL (kök iptali onu da götürür): {s.strip()!r}"
+        # TUR-4 (ölçüldü 2026-09-14 15:1xZ): `-ttl=720h` ile yaratılan jeton `token renew` ile en fazla
+        # SİSTEM AZAMİ TTL'sine (varsayılan 768 sa, yaratılıştan itibaren) uzatılır — yani aylık yenileme
+        # onu kurtarmaz, 32. gün ölür ve kasa yönetimsiz kalır. PERİYODİK jeton (`-period=720h`) her
+        # yenilemede periyodu baştan alır: süresiz yaşar, yenileme timer'ı (vault-admin-yenile) yeter.
+        assert "-period=720h" in s, f"yönetici jetonu PERİYODİK değil (`-period=720h` yok): {s.strip()!r}"
+        assert "-ttl=" not in s, f"`-ttl=` ile yaratılan jeton azami TTL'de ölür — period kullan: {s.strip()!r}"
 
 
 def test_I15_kok_iptali_ONCE_orphan_OLCER_SONRA_yonetici_oturumunu_SINAR():

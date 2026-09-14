@@ -121,6 +121,10 @@
 #       - deploy/vault/vault-sagligi.service  → /etc/systemd/system/  (bekçi — VAULT_SEALED /
 #         VAULT_DOWN alarmları; üretici ops/vault_sagligi.py)
 #       - deploy/vault/vault-sagligi.timer    → /etc/systemd/system/  (o bekçinin tek tetiği)
+#       - deploy/vault/vault_admin_yenile.sh  → /opt/vault/bin/vault_admin_yenile.sh  (0750 root:root;
+#         PERİYODİK yönetici jetonunu yeniler — tur-4)
+#       - deploy/vault/vault-admin-yenile.service → /etc/systemd/system/  (oneshot, root; jeton yokken atlanır)
+#       - deploy/vault/vault-admin-yenile.timer   → /etc/systemd/system/  (haftalık tetik, Persistent)
 # KISALTMA YASAK: "X.service + .timer" biçimi `.timer` dosyasının ADINI hiç yazmaz ve o ad
 # listeden düşse başlık aynı kalırdı — yukarıdaki çivi tam olarak bunu reddediyor.
 set -euo pipefail

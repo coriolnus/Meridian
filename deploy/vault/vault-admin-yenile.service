@@ -1,0 +1,18 @@
+# vault-admin-yenile.service — yönetici jetonunu (periyodik) yeniler (TSK-064 Faz-2, tur-4).
+# NEDEN: `/etc/vault/admin.token` kasanın tek yönetim kimliğidir (kök iptal edildi) ve PERİYODİK bir
+# jetondur: periyot dolmadan yenilenmezse ölür, kasa yönetimsiz kalır (kurtarma yalnız generate-root).
+# Betik ve gerekçe: deploy/vault/vault_admin_yenile.sh. Tetik: vault-admin-yenile.timer (haftalık).
+# ROOT KOŞAR: jeton dosyası 0400 root:root (tasarım). Jeton dosyası yokken birim ATLANIR (Condition),
+# düşmez — bootstrap öncesi yanlış alarm üretmez. Düşerse fail-notify alarmı (kurulu ≠ çalışır;
+# kurulum günü elle test-ateşlenir).
+[Unit]
+Description=Vault yönetici jetonu yenileme (periyodik jeton)
+After=vault.service
+Wants=vault.service
+ConditionFileNotEmpty=/etc/vault/admin.token
+OnFailure=meridian-fail-notify.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/vault/bin/vault_admin_yenile.sh
+TimeoutStartSec=90

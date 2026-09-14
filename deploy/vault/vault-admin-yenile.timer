@@ -1,0 +1,11 @@
+# vault-admin-yenile.timer — haftalık tetik (periyot 30 gün → 4× emniyet payı). Persistent: makine
+# tetik anında kapalıysa açılışta telafi edilir (kaçan yenileme jetonun ölümü demektir).
+[Unit]
+Description=Vault yönetici jetonu yenileme tetiği
+
+[Timer]
+OnCalendar=Sun 03:15 UTC
+Persistent=true
+
+[Install]
+WantedBy=timers.target

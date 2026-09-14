@@ -161,6 +161,10 @@ etkin_timerlar:
                                          # (CLAUDE.md §9 "kurulu ≠ çalışır"), pencere ilk başarılı retain damgasıyla açılır.
   - meridian-bar-arsiv.timer             # TSK-020 UYGULA-3 haftalık tazeleme (Pazar 22:00 UTC; sıra operatör onaylı 2026-09-01);
                                          # kurulum günü elle test-ateşleme Rol-1'de (2026-09-13).
+  - vault-admin-yenile.timer             # TSK-064 Faz-2 tur-4 (2026-09-14): yönetici jetonu (PERİYODİK)
+                                         # haftalık yenileme; birim `ConditionFileNotEmpty=/etc/vault/admin.token`
+                                         # ile jeton yokken sessizce atlanır (bootstrap öncesi yanlış alarm yok).
+                                         # Kurulum günü elle test-ateşleme Rol-1'de (CLAUDE.md §9).
   - vault-sagligi.timer                  # TSK-064 Faz-2 (2026-09-14): kasa mühür/erişilebilirlik bekçisi.
                                          # BİRİM KENDİ KAPISINI TAŞIR: `vault-sagligi.service`
                                          # `ConditionPathExists=/etc/vault/vault.hcl` ile, Vault HENÜZ

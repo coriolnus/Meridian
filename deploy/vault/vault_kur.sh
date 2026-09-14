@@ -195,12 +195,15 @@ adim "3) yapılandırma, betik ve birimler"
 yap install -o root -g vault -m 0640 "$KAYNAK_DIZIN/vault.hcl"  "$ETC/vault.hcl"
 yap install -o root -g vault -m 0640 "$KAYNAK_DIZIN/agent.hcl"  "$ETC/agent.hcl"
 yap install -o root -g root  -m 0750 "$KAYNAK_DIZIN/vault_unseal.sh" "$BETIK_DIZIN/vault_unseal.sh"
+# TUR-4: yönetici jetonu yenileme betiği + birim/timer (periyodik jeton; gerekçe betiğin başlığında)
+yap install -o root -g root  -m 0750 "$KAYNAK_DIZIN/vault_admin_yenile.sh" "$BETIK_DIZIN/vault_admin_yenile.sh"
 for birim in vault.service vault-unseal.service vault-agent.service \
-             vault-sagligi.service vault-sagligi.timer; do
+             vault-sagligi.service vault-sagligi.timer \
+             vault-admin-yenile.service vault-admin-yenile.timer; do
   yap install -o root -g root -m 0644 "$KAYNAK_DIZIN/$birim" "/etc/systemd/system/$birim"
 done
 yap systemctl daemon-reload
-oldu "yapılandırma + 5 birim yerinde"
+oldu "yapılandırma + 2 betik + 7 birim yerinde"
 
 # =================================================================================================
 # 4) SERVİSİ AÇ
@@ -302,14 +305,18 @@ fi
 #     yönetici jetonu kök iptaliyle birlikte gitti (lookup-self 403 'invalid token'); agent AppRole
 #     bağımsız olduğu için canlı etkilenmedi. `-orphan` kök/sudo yetkisi ister — adım 7'deki kök
 #     oturumu tam da bunun için vardır. Çivi: v485 I14 (gerçek satır + kuru satırı birlikte).
+#     TUR-4 (ölçüldü 2026-09-14 15:1xZ): `-ttl=720h` DEĞİL `-period=720h` — ttl'li jeton `renew` ile en
+#     fazla sistem azami TTL'sine (768 sa, yaratılıştan) uzar ve 32. gün ölür; PERİYODİK jeton her
+#     yenilemede periyodu baştan alır. Yenileme: vault_admin_yenile.sh + vault-admin-yenile.timer (haftalık).
+#     Mevcut ttl'li jetonu değiştirmek için: admin.token silinir → adım 10 (kök oturumu gerekir: generate-root).
 # =================================================================================================
 adim "10) yönetici jetonu"
 if [ "$KIP" = "kuru" ]; then
-  kuru "vault token create -orphan -policy=meridian-admin -ttl=720h → $ETC/admin.token (0400)"
+  kuru "vault token create -orphan -period=720h -policy=meridian-admin → $ETC/admin.token (0400)"
 elif [ -s "$ETC/admin.token" ]; then
   oldu "yönetici jetonu zaten var — YENİDEN ÜRETİLMEDİ (idempotent; yenilemek için dosyayı sil)"
 else
-  ( umask 377; "$VAULT_BIN" token create -orphan -policy=meridian-admin -ttl=720h -field=token > "$ETC/admin.token" )
+  ( umask 377; "$VAULT_BIN" token create -orphan -period=720h -policy=meridian-admin -field=token > "$ETC/admin.token" )
   chown root:root "$ETC/admin.token"
   oldu "yönetici jetonu yazıldı (0400 root:root, DEĞER BASILMADI)"
 fi

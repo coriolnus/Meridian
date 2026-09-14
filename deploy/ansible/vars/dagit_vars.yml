@@ -166,6 +166,12 @@ f9_ciftleri:
     canli: "/etc/systemd/system/vault-sagligi.service"
   - repo: "deploy/vault/vault-sagligi.timer"
     canli: "/etc/systemd/system/vault-sagligi.timer"
+  - repo: "deploy/vault/vault_admin_yenile.sh"
+    canli: "/opt/vault/bin/vault_admin_yenile.sh"
+  - repo: "deploy/vault/vault-admin-yenile.service"
+    canli: "/etc/systemd/system/vault-admin-yenile.service"
+  - repo: "deploy/vault/vault-admin-yenile.timer"
+    canli: "/etc/systemd/system/vault-admin-yenile.timer"
 
 # =================================================================================================
 # [5a] doğrulama-token anahtar kontrolü uçları (TSK-148 — dağıtım #13 vakası, 2026-09-04 20:04Z)
