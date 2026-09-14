@@ -926,7 +926,9 @@ def test_I15_kok_iptali_ONCE_orphan_OLCER_SONRA_yonetici_oturumunu_SINAR():
     orphan ölçümü < revoke < iptal-sonrası oturum. Jeton her yerde stdin'den (I4 disiplini)."""
     metin = _yorumsuz(KUR_SH.read_text(encoding="utf-8"))
     i_orphan = metin.find('"orphan": *true')
-    i_revoke = metin.find("token revoke -self")
+    # GERÇEK komut satırı aranır ("$VAULT_BIN" önekli): kuru kipin `kuru "vault token revoke …"`
+    # mesajı aynı metni daha ÖNCE taşır ve çıplak arama kapıyı yanlış sebeple kırmızı yapar (ölçüldü).
+    i_revoke = metin.find('"$VAULT_BIN" token revoke -self')
     assert i_orphan != -1 and i_revoke != -1, "orphan ölçümü ya da revoke satırı yok"
     assert i_orphan < i_revoke, "orphan ölçümü revoke'tan SONRA — kapı işe yaramaz"
     son_login = metin.rfind('login -no-print - < "$ETC/admin.token"')
