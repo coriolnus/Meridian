@@ -259,3 +259,25 @@ _Güncelleme 22:09Z: A-2 korpus gömmesi sürüyor (1 s+); A-3/A-4 şef brifingi
 
 **F. Cepheler (PRG) — kimlik eşlemesi:** PRG-01 İcra → TSK-179/187/182/069/066-068 · PRG-03 Öğrenme → TSK-060/168/142/145 (EDG-089/081) · PRG-04 Veri/Evren → TSK-065/EDG-092, TSK-131 (kapalı) · PRG-05 Ölçüm → TSK-104/138/014/162, EDG-084 · PRG-06 Bütünlük → TSK-064/176/186/020/137 · PRG-07 Skill → EDG-078 penceresi · PRG-08 Pano → TSK-012 (kapandı), TSK-104(b) · PRG-09 QC → kalem yok (fizibilite kuyruğu operatör) · PRG-11 Strateji → TSK-179 (gölge pilotu). PRG-02/10 KAPALI.
 
+## 3e. Durum güncellemesi — 2026-09-14 08:19Z (Rol-1; §3d sırasının 11 saat sonrası)
+
+| §3d satırı | Sonuç |
+|---|---|
+| A-1 TSK-187 R paydası | KAPANDI: main 15f52db, suite #50 12.542/0, DAĞITIM #43 canlı 06:58Z (operatör 'şimdi dağıt'); CRM qty_taban göçü 13:3xZ ilk döngüde |
+| A-2 TSK-186 korpus tazeleme | DONE: 3 saatlik zaman aşımı ikinci kusur → 8 saat; 03:49Z TERFİ 4.452 chunk |
+| A-3/4 TSK-138 · 014 · 181 | Şef 09-13 SESSİZ (hafta sonu) → ölçüm bugün 22:00Z; TSK-181 esitle uygulandı, kanıt 20:3xZ |
+| A-5 TSK-020 UYGULA-3 | Bar-arşiv ilk timer tetiği Result=success (22:03Z) |
+| A-6 EDG-069 / TSK-066 | Yeniden ölçüldü: eksik 0,083 GEÇTİ, n_uygun 21/30 — kapı ÖRNEKLEM (≈9 yeni kapanış) |
+| A-7 EDG-089 | 21:30Z retain zaten_var; hüküm 09-20 |
+| A-8 TSK-188 tick ileri dolumu | Dilim-1 canlı (09-04..09-11 doldu) + dilim-2 (operatör: tek işçi + 15 GB) main 47d04ab + A1; kanıt Salı |
+| B EDG-084 hükmü | KALDI (kullanım 0/5; içerik/uydurma/maliyet geçti) → TSK-160/171 DONE, sayfalar (b) kararıyla durur |
+| B dağıtım #43 | Erken yapıldı (06:58Z, operatör); 20:05Z sonrası ikinci dağıtım yalnız Vault Faz-2 merge'i gerekirse |
+| C-3 EDG-092 | Aşama-2 + ölçüm AYNI SABAH: K1 54/54, PK 4/4 → GEÇTİ; halef kart TSK-065 sırasında (düşük öncelik) |
+| C-4 TSK-167 | DONE (indeks tazelendi) |
+| E tick diski | Operatör kararı: tek işçi + 15 GB → uygulandı (dilim-2) |
+| E eski OpenRouter anahtarı | Operatör: iptal edildi → TSK-064 09-08 adımı kapandı |
+| E (yeni) TSK-064 Faz-2 Vault | Operatör 'A ve B hemen': plan `2026-09-14-vault-faz2.md`, Opus repo tarafı uçuşta (Task 1–4 kodlandı, kapsam koşumu sürüyor); A1 ön hazırlık: 2.1.0 ikili sha doğrulandı, lisans kapısı geçti, kök disk 23 G |
+
+**Bugün kalan sıra:** 10:03Z bekçi brifingi (TSK-138 bekçi kolonu) · Vault: Sonnet inceleme → merge → A1 kurulum (`vault_kur.sh`) → sır taşıma (`vault_sir_koy.sh`) → Agent bağlama + tüketici restart (seans dışı: 13:30Z öncesi ya da 20:05Z sonrası) → canary · 13:40Z ayna dolumu + CRM göç kanıtı · 20:3xZ akşam döngüsü (TSK-180/181) · 22:00Z şef brifingi (TSK-138/014).
+**Kapalı kalanlar (değişmedi):** EDG-089/081 09-20 → 9 kalem; TSK-063 kilitler 11/20; 044/045 kanıt yok; 097/096/010 tetik yok; TSK-020 Kademe C learn kapalı; TSK-176 T1 OCI kimliği.
+
