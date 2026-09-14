@@ -297,15 +297,19 @@ else
 fi
 
 # =================================================================================================
-# 10) YÖNETİCİ JETONU (kök jetonun yerine geçer)
+# 10) YÖNETİCİ JETONU (kök jetonun yerine geçer) — `-orphan` ZORUNLU (ölçülen arıza 2026-09-14 10:10Z):
+#     kök jetonu iptal edilince (adım 11) Vault onun ÇOCUKLARINI da iptal eder; `-orphan`sız yaratılan
+#     yönetici jetonu kök iptaliyle birlikte gitti (lookup-self 403 'invalid token'); agent AppRole
+#     bağımsız olduğu için canlı etkilenmedi. `-orphan` kök/sudo yetkisi ister — adım 7'deki kök
+#     oturumu tam da bunun için vardır. Çivi: v485 I14 (gerçek satır + kuru satırı birlikte).
 # =================================================================================================
 adim "10) yönetici jetonu"
 if [ "$KIP" = "kuru" ]; then
-  kuru "vault token create -policy=meridian-admin -ttl=720h → $ETC/admin.token (0400)"
+  kuru "vault token create -orphan -policy=meridian-admin -ttl=720h → $ETC/admin.token (0400)"
 elif [ -s "$ETC/admin.token" ]; then
   oldu "yönetici jetonu zaten var — YENİDEN ÜRETİLMEDİ (idempotent; yenilemek için dosyayı sil)"
 else
-  ( umask 377; "$VAULT_BIN" token create -policy=meridian-admin -ttl=720h -field=token > "$ETC/admin.token" )
+  ( umask 377; "$VAULT_BIN" token create -orphan -policy=meridian-admin -ttl=720h -field=token > "$ETC/admin.token" )
   chown root:root "$ETC/admin.token"
   oldu "yönetici jetonu yazıldı (0400 root:root, DEĞER BASILMADI)"
 fi
@@ -322,9 +326,21 @@ if [ "$KOK_IPTAL" != "1" ]; then
 elif [ "$KIP" = "kuru" ]; then
   kuru "vault token revoke -self  +  rm -f $ETC/root.token  (GERİ ALINAMAZ)"
 else
+  # ÖN KAPI (ölçülen arıza 2026-09-14 10:10Z): yönetici jetonu kök jetonun ÇOCUĞU ise iptal onu da
+  # götürür ve kasa yönetimsiz kalır. Yönetici jetonuyla oturum açılıp (stdin) `orphan` alanı
+  # ÖLÇÜLÜR; "adım 10 -orphan yazıyor" iddiası yetmez — kurulu ≠ çalışır. Kök oturumu SONRA geri.
+  "$VAULT_BIN" login -no-print - < "$ETC/admin.token" \
+    || die "yönetici jetonuyla oturum açılamadı — kök iptali DURDURULDU (kasa yönetimsiz kalırdı)"
+  "$VAULT_BIN" token lookup -format=json | grep -q '"orphan": *true' \
+    || die "yönetici jetonu ORPHAN DEĞİL — kök iptali onu da götürürdü; $ETC/admin.token silinip adım 10 yeniden koşulmalı"
+  "$VAULT_BIN" login -no-print - < "$ETC/root.token"
   "$VAULT_BIN" token revoke -self
   rm -f "$ETC/root.token"
-  oldu "kök jetonu İPTAL edildi ve dosyası silindi — yönetim artık $ETC/admin.token ile"
+  # SON KAPI: kök gitti — yönetici HÂLÂ açıyor mu? Açmıyorsa kurtarma yolu generate-root'tur
+  # (vault.hcl "KURTARMA KÖKÜ" bloğu); betik bunu ADIYLA söyler, sessizce "tamam" demez.
+  "$VAULT_BIN" login -no-print - < "$ETC/admin.token" \
+    || die "kök iptalinden SONRA yönetici jetonu oturum açamadı — kasa YÖNETİMSİZ; kurtarma: generate-root (vault.hcl KURTARMA KÖKÜ)"
+  oldu "kök jetonu İPTAL edildi ve dosyası silindi — yönetim artık $ETC/admin.token ile (orphan ölçüldü, iptal sonrası oturum sınandı)"
 fi
 
 # =================================================================================================

@@ -49,3 +49,18 @@ ui = false
 # mlock AÇIK (disable_mlock yazılmaz = varsayılan false): Vault bellek sayfalarını diske
 # takas ettirmez. Bunun bedeli `vault.service`teki TEK yetenektir (AmbientCapabilities=
 # CAP_IPC_LOCK) ve birim dosyasında gerekçesiyle yazılıdır.
+
+# -------------------------------------------------------------------------------------------------
+# KURTARMA KÖKÜ — `generate-root` JETONSUZ (ölçülen arıza, A1 2026-09-14 10:1xZ, Rol-1)
+# -------------------------------------------------------------------------------------------------
+# Vault 2.0'dan beri `sys/generate-root/*` VARSAYILAN OLARAK kimlik doğrulaması ister
+# (CVE-2026-5807: jetonsuz bir yerel süreç tek "devam eden işlem" yuvasını işgal edip meşru
+# operatörü engelleyebiliyordu — DoS). Bu kurulumda o kapının kapalı kalması kasanın TEK kurtarma
+# yolunu kapatır: kök jetonu iptal edildikten (vault_kur.sh adım 11) sonra yönetici jetonu
+# kaybolur/süresi dolarsa unseal anahtarı tek başına HİÇBİR şey açamaz ve kasa yeniden KURULMAK
+# zorunda kalır (ölçüldü: kök iptali ÇOCUK yönetici jetonunu da götürdü, generate-root 403 döndü).
+# KARAR: yalnız "generate-root" ailesi jetonsuz açılır — "rekey" ve "generate-operation-token"
+# KAPALI kalır. BEDEL: aynı makinedeki yerel bir süreç generate-root yuvasını meşgul edebilir
+# (DoS); dinleyici yalnız loopback (yukarıda) ve tamamlamak için 0400 root unseal anahtarı
+# gerekir → kabul edildi. Çivi: tests/test_vault_faz2_v485.py §A5 (liste TAM OLARAK bu tek aile).
+enable_unauthenticated_access = ["generate-root"]

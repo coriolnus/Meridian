@@ -147,6 +147,20 @@ def test_A3_storage_file_ve_yolu():
     assert re.search(r'path\s*=\s*"/opt/vault/data"', metin), "depo yolu /opt/vault/data değil"
 
 
+def test_A5_generate_root_JETONSUZ_ACIK_ve_YALNIZ_o_aile():
+    """Kurtarma kökü (ölçülen arıza 2026-09-14): Vault 2.0+ `sys/generate-root/*`'ı varsayılan
+    olarak kimlik doğrulamasına aldı (CVE-2026-5807). Kök jetonu iptal edildikten sonra yönetici
+    jetonu kaybolursa unseal anahtarı tek başına hiçbir şey açamaz → kasa yeniden kurulur. Bu
+    satır o yolu açık tutar; ama YALNIZ bu aile: "rekey" ve "generate-operation-token" kapalı
+    kalır (liste TAM eşitlik, alt-küme değil)."""
+    metin = _yorumsuz(HCL.read_text(encoding="utf-8"))
+    m = re.search(r'enable_unauthenticated_access\s*=\s*\[([^\]]*)\]', metin)
+    assert m, "enable_unauthenticated_access yok — generate-root kapalı, kurtarma yolu yok"
+    aileler = re.findall(r'"([^"]+)"', m.group(1))
+    assert aileler == ["generate-root"], (
+        f"jetonsuz aile listesi TAM OLARAK ['generate-root'] olmalı: {aileler}")
+
+
 def test_A4_MUTASYON_adres_disa_acilirsa_KIRMIZI():
     """Mutasyon: `127.0.0.1` → `0.0.0.0`. Çivi bunu GÖRMELİ, yoksa yasak yazılı ama ölçüsüzdür."""
     bozuk = HCL.read_text(encoding="utf-8").replace("127.0.0.1", "0.0.0.0")
@@ -891,6 +905,33 @@ def test_I7_koy_betigi_DEGERI_BORUDAN_gecirir():
     metin = _yorumsuz(KOY_SH.read_text(encoding="utf-8"))
     assert re.search(r"kv\s+put\s+\"\$yol\"\s+value=-", metin), "değer stdin'den geçmiyor"
     assert not re.search(r"value=[\"']?\$(?!\{?yol)", metin), "değer argv'ye konuyor"
+
+
+def test_I14_kur_betigi_YONETICI_JETONUNU_ORPHAN_yaratir():
+    """Ölçülen arıza (A1 2026-09-14 10:10Z): kök jetonu iptal edilince (adım 11) Vault ÇOCUK jetonları
+    da iptal eder; `-orphan`sız yaratılan yönetici jetonu kök iptaliyle gitti (lookup-self 403
+    'invalid token') — kasa yönetimsiz kaldı; agent AppRole bağımsız olduğu için canlı etkilenmedi.
+    Çivi: gerçek yaratma satırı VE kuru koşum satırı `-orphan` taşır (ikisi ayrışmasın)."""
+    metin = _yorumsuz(KUR_SH.read_text(encoding="utf-8"))
+    satirlar = [s for s in metin.splitlines() if "token create" in s]
+    assert satirlar, "token create satırı yok"
+    for s in satirlar:
+        assert "-orphan" in s, f"yönetici jetonu -orphan DEĞİL (kök iptali onu da götürür): {s.strip()!r}"
+
+
+def test_I15_kok_iptali_ONCE_orphan_OLCER_SONRA_yonetici_oturumunu_SINAR():
+    """Kök iptali bu kurulumun tek geri alınamaz adımıdır. İki kapı, iki ayrı arıza:
+    (ön) yönetici jetonu orphan değilse iptal onu da götürür → iptalden ÖNCE `orphan` ölçülür;
+    (son) iptalden SONRA yönetici jetonuyla oturum sınanır (kurulu ≠ çalışır). Sıra ölçülür:
+    orphan ölçümü < revoke < iptal-sonrası oturum. Jeton her yerde stdin'den (I4 disiplini)."""
+    metin = _yorumsuz(KUR_SH.read_text(encoding="utf-8"))
+    i_orphan = metin.find('"orphan": *true')
+    i_revoke = metin.find("token revoke -self")
+    assert i_orphan != -1 and i_revoke != -1, "orphan ölçümü ya da revoke satırı yok"
+    assert i_orphan < i_revoke, "orphan ölçümü revoke'tan SONRA — kapı işe yaramaz"
+    son_login = metin.rfind('login -no-print - < "$ETC/admin.token"')
+    assert son_login > i_revoke, "iptal sonrası yönetici oturumu sınanmıyor"
+    assert re.search(r"token lookup -format=json \| grep -q", metin), "orphan alanı jetonu argv'ye koymadan ölçülmüyor"
 
 
 def test_I13_koy_betigi_KIMLIGI_STDIN_den_kurar_ve_ORTAMA_KOYMAZ():
