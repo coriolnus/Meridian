@@ -105,3 +105,13 @@ notlar: >
   yerel kopya yok; bar artefaktları `research/olcumler/…/ham/` .gitignore (EDG-092 deseni), yalnız kapsama haritası + SHA256SUMS
   versiyonlanır. EDG-070 askıda KALIR; bu kart onun kaynak-geldi tekrarıdır (üçüncü nesil: 018 → 070 → 093). Ölçüm ajanı
   karta dokunmaz; çıktı yollarını devir brief'ine yazar; hükmü Rol-1 işler.
+
+adim_0a_hukmu_2026_09_14:
+  tarih: "2026-09-14T14:2xZ"
+  hukum: "EKSEN A GEÇTİ (Rol-1; kohort üreticisi main f3964a8 — Opus tur-1 5db0ab4 + tur-2 98e2d0f, Sonnet iki inceleme MERGE HAZIR 0 bloklayıcı)"
+  kohort: "research/pit_universe/sp400_uyelik_tarihi.csv — blob a1fb15143ed1 (163 veri satırı, adım-fonksiyonu; sp500 sözleşmesi: as-of = tarih ≤ t olan son satır); pencere 2020-07-27 → 2026-09-14 (2.241 takvim günü)"
+  elle_esleme: "research/pit_universe/sp400_elle_esleme.yaml — blob 5d3146069e42; kararlar: cift 12 (anotasyon, üyeliği değiştirmez) · esle 1 (HTA→HR, tablonun Reason hücresinden) · belirsiz 8 (BRKS/CHK/COHR/ELY/GPS/HFC/PSTG/ZI — tabloda açık gerekçe yok, MDY varlığı karar gerekçesi SAYILMADI)"
+  sonuc: "research/olcumler/edg093_midcap_pit/adim0a_sonuc_2026-09-14T135546Z.json — blob 4e8e3c52830d: boyut min 400 / ort 402,39 / max 407 (bant [392,408]; bant dışı gün 0); belirsiz isim/gün max 8 / ort 2,45 (tavan 12; aşan gün 0); PIT-PK 10/10 (tam yürürlük günü); çok-sembollü hücre 2/2 bölündü (UA, UAA ayrı üye; csv ayıraçlı satır 0); iki koşum aynı sha (determinizm)"
+  pitlaw: "kayıt GEREKMİYOR — defterler (meridian modülü, fonksiyon) anahtarlı; sp500_uyelik_tarihi.csv de kayıtlı değil; csv okuyan bir meridian/ fonksiyonu doğduğu gün (TSK-065) kayıt zorunlu"
+  kaygilar: "(1) bant marjı 1 (max 407 / 408) — as_of(2020-07-27)=407: 8 belirsiz satır + tablonun eksik yarımları kohortu 2020-07→~2024 arasında 400 üstünde taşıyor; ANA ÖLÇÜMDE belirsiz 8 isim ayrıca damgalanır ve duyarlılık (dahil/hariç) raporlanır — eşik değişmez; (2) ±1 gün toleransı gün kaymasına kör (PIT-PK gerçek girdide tam günde geçti, ölçüm); (3) esle uygulanınca sembol anakronizmi (HR adı HTA döneminde) — bar eşlemesinde (EKSEN B) eski/yeni adın ikisi de sondalanmalı"
+  kalan: "EKSEN B (Alpaca kapsama sondası) A1 üzerinde koşuyor — hüküm ayrı kayıtla"
