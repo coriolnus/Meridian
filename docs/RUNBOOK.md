@@ -1818,6 +1818,10 @@ KASADAN gelen değerle yazar (iki-kanal dönemi), tüketicileri
 yeniden başlatır ve kanıtı ölçer. `--kuru` ile birleşir.
 KAPSAM: yalnız envanterde `rotasyon_siri` ile kasaya BAĞLI
 sırlar; bağlı olmayanlar ADIYLA beyan edilir ve eski yolla döner.
+TAKMA AD (`ayni_deger`, Rol-1 hükmü 2026-09-14): aynı değerin
+TEK kasa yolu vardır; rotasyon BİRİNCİL yola yapılır ve takma
+adlar onu otomatik izler. Restart listesi kasa YOLUNDAN toplanır
+(addan değil) — yani takma adın tüketicileri de kapsanır.
 sudo ./sir_rotasyon.sh --<alt> --esitle → EŞİTLEME (TSK-181, 2026-09-13): değer ÜRETİLMEZ, SORULMAZ,
 BASILMAZ; sırrın tablodaki İLK satırı (REFERANS) okunur, AYRI
 düşen dosya/env/url kopyalarına yazılır (api/sql kanalları

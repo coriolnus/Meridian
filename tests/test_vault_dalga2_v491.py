@@ -80,6 +80,20 @@ ONEK_SOZLUGU = {None, "Bearer"}
 #: resmî belge, ölçüldü 2026-09-14); `root` olan HİÇBİRİ gerektirmez.
 SAHIP_SOZLUGU = {"root", "ubuntu"}
 
+#: TAKMA AD TABLOSU — Rol-1 hükmü (2026-09-14, tur-2). Aynı DEĞERİ taşıyan sırların TEK kasa yolu
+#: vardır; BİRİNCİL kasada ZATEN duran dalga-1 girdisidir, dalga-2 adı TAKMA ADdır. Tablo burada
+#: ELLE durur (DALGA2_ADLARI ile aynı gerekçe): envanterden türetilseydi bir eşleme envanterden
+#: düştüğünde çivi de onunla birlikte küçülür ve "her şey uyuşuyor" derdi.
+#: Yön ÖNEMLİDİR: birincil dalga-1'dir çünkü değer kasada O YOLDA duruyor — tersini seçmek A1'de
+#: bir göç (yeni yol + eski yolun emekliliği) gerektirirdi ve hükmün kazancı tam olarak bunun
+#: gerekMEMESİdir.
+TAKMA_ADLAR = {
+    "openrouter_api_key": "HINDSIGHT_API_LLM_API_KEY",
+    "bot_key_meridian": "kapi_apikey",
+    "hindsight_cp_dataplane_api_key": "HINDSIGHT_API_TENANT_API_KEY",
+}
+TAKMA_AD_ALANI = "ayni_deger"
+
 
 def _envanter() -> dict:
     return yaml.safe_load(ENVANTER.read_text(encoding="utf-8"))
@@ -99,6 +113,19 @@ def _vault_dosyalar() -> list[dict]:
 
 def _kv_adlari() -> set[str]:
     return {g["ad"] for g in _vault_kv()}
+
+
+def _kv_yollu() -> list[dict]:
+    """Kasada KENDİ yolu OLAN girdiler — takma adlar HARİÇ (`ayni_deger`)."""
+    return [g for g in _vault_kv() if TAKMA_AD_ALANI not in g]
+
+
+def _kasa_yolu(ad: str) -> str:
+    """Bir `vault_kv` adının ÇÖZÜLMÜŞ kasa yolu: takma adda BİRİNCİLİNKİ."""
+    ind = {g["ad"]: g for g in _vault_kv()}
+    g = ind[ad]
+    birincil = g.get(TAKMA_AD_ALANI)
+    return ind[birincil]["vault_yolu"] if birincil else g["vault_yolu"]
 
 
 def _yorumsuz(metin: str) -> str:
@@ -147,6 +174,9 @@ def test_A2_dalga2_girdileri_TEK_BICIM_semayi_KORUR():
     döner ve KV-v2'nin `data/` ara segmenti sessizce kayar."""
     for g in _vault_kv():
         if g["ad"] not in DALGA2_ADLARI:
+            continue
+        if TAKMA_AD_ALANI in g:
+            # TAKMA AD: yol/hedef/mod/sahip BİRİNCİLİNDİR — kendi şeması T bölümünde ölçülür.
             continue
         assert g["vault_yolu"] == f"secret/meridian/{g['ad']}", g
         assert g["mod"] == "0400" and g["sahip"] == "root", g
@@ -363,7 +393,9 @@ def test_B1_agent_POLITIKASI_dalga2_yollarini_da_READ_eder():
     metin = POLITIKA_AGENT.read_text(encoding="utf-8")
     yollar = set(re.findall(r'^path\s+"([^"]+)"', metin, re.M))
     for ad in DALGA2_ADLARI:
-        assert f"secret/data/meridian/{ad}" in yollar, f"politikada eksik dalga-2 yolu: {ad}"
+        # TAKMA ADIN yolu BİRİNCİLİNKİDİR: politikada aranan da odur, kendi adı DEĞİL.
+        beklenen = _kasa_yolu(ad).replace("secret/", "secret/data/", 1)
+        assert beklenen in yollar, f"politikada eksik dalga-2 yolu: {ad} → {beklenen}"
 
 
 def test_B2_her_YAN_DOSYA_icin_BIR_sablon_ve_hedef_SIRASI_envanterden():
@@ -371,7 +403,7 @@ def test_B2_her_YAN_DOSYA_icin_BIR_sablon_ve_hedef_SIRASI_envanterden():
     Sıra da sözleşmedir: iki liste arasında bir çivi yoksa biri sessizce ötekinden kopar."""
     metin = AGENT_HCL.read_text(encoding="utf-8")
     hedefler = re.findall(r'^\s*destination\s*=\s*"([^"]+)"', metin, re.M)
-    beklenen = [g["hedef"] for g in _vault_kv()] + [d["yol"] for d in _vault_dosyalar()]
+    beklenen = [g["hedef"] for g in _kv_yollu()] + [d["yol"] for d in _vault_dosyalar()]
     assert hedefler == beklenen, f"şablon hedefleri envanterle ayrıştı:\n{hedefler}\n{beklenen}"
 
 
@@ -550,7 +582,7 @@ def _yan_dosya_dizinleri() -> set[str]:
 
 
 def _hedef_dizinleri() -> set[str]:
-    return {str(pathlib.PurePosixPath(g["hedef"]).parent) for g in _vault_kv()}
+    return {str(pathlib.PurePosixPath(g["hedef"]).parent) for g in _kv_yollu()}
 
 
 def _birim_dropinleri(birim: str) -> list[pathlib.Path]:
@@ -721,10 +753,13 @@ def test_C9_MUTASYON_drop_in_yan_dosyayi_dusurse_C4_KIRMIZI(tmp_path):
     assert d["yol"] not in bozuk, "mutasyon etkisiz"
 
 
-def test_C10_MUTASYON_yazma_yuzeyi_dalga1_de_KALIRSA_C1_KIRMIZI():
-    """Senaryo: `ReadWritePaths` dalga-1'in iki dizininde kalır. Agent yan dosyaları YAZAMAZ
-    (`ProtectSystem=strict`), dosyalar HİÇ doğmaz ve tüketiciler eski kanalda kalır — kasa
-    "kurulu" görünür, hiçbir şey taşınmamıştır."""
+def test_C10_POZITIF_KONTROL_yazma_yuzeyi_dalga1_kumesini_GERCEKTEN_asar():
+    """POZİTİF KONTROL — MUTASYON DEĞİL, ve adı bunu söylemeli (inceleme bulgusu, tur-2).
+
+    C1 iki kümenin EŞİT olduğunu söyler; eşitlik, iki küme de dalga-1'in iki dizininde donmuş
+    olsaydı da sağlanırdı. Bu çivi o körlüğü kapatır: beklenen küme dalga-1'i GERÇEKTEN kapsar
+    ve ondan BÜYÜKTÜR. Kaynağa dokunmadığı için "MUTASYON" etiketi yanıltıcıydı — gerçek
+    mutasyonlar M/D7/E5/T serisindedir."""
     beklenen = _hedef_dizinleri() | _yan_dosya_dizinleri()
     dalga1 = {"/etc/meridian", "/etc/hindsight/creds"}
     assert dalga1 < beklenen, "pozitif kontrol: dalga-2 hiçbir yeni dizin eklemiyor"
@@ -942,7 +977,16 @@ def test_D8_DALGA1_girdisi_KAYNAKSIZ_calismaya_DEVAM_eder(tmp_path):
 from tests.test_sir_rotasyon_v447 import ESKI, _kos, _sahte_ortam  # noqa: E402
 
 YENI_VAULT_DEGERI = "SAHTE-YENI-KASA-ANAHTARI-2026"
-KANONIK_HEDEF = "/etc/meridian/openrouter_api_key"
+
+#: `--openrouter --vault` ARTIK BİRİNCİL YOLA YAZAR (Rol-1 hükmü, tur-2): `openrouter_api_key` bir
+#: TAKMA ADdır ve kasadaki yol `HINDSIGHT_API_LLM_API_KEY`inkidir. Render kanıtı da birincilin
+#: `hedef`idir — takma adın kendi kanonik kopyası YOKTUR (ikinci bir dosya, sırrın diskteki
+#: yüzeyini gereksizce büyütürdü). İki sabit ELLE durur ve tablo ile ölçülür: envanterden
+#: türetilseydi, eşleme envanterde bozulduğunda bu sahne de onunla birlikte bozulur ve "hâlâ
+#: doğru yola yazıyoruz" derdi.
+BIRINCIL_OR = TAKMA_ADLAR["openrouter_api_key"]
+KASA_YOLU_OR = f"secret/meridian/{BIRINCIL_OR}"
+KANONIK_HEDEF = "/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY"
 
 
 def _vault_sim(tmp_path: pathlib.Path, kok: pathlib.Path, render: bool = True) -> pathlib.Path:
@@ -1019,7 +1063,8 @@ def test_E2_vault_KURU_kosumu_HICBIR_KOMUT_cagirmaz(tmp_path):
     assert not log.exists(), f"kuru koşum kasaya çağrı yaptı:\n{log.read_text()}"
     assert not (kok / ".sahte/systemctl.log").read_text().strip(), (
         "kuru koşum birim yeniden başlattı")
-    assert "secret/meridian/openrouter_api_key" in r.stdout, "kasa yolu basılmıyor"
+    assert KASA_YOLU_OR in r.stdout, "kasa yolu basılmıyor"
+    assert BIRINCIL_OR in r.stdout, "takma adın BİRİNCİLİ kuru koşumda ADIYLA basılmıyor"
     assert "/opt/apisix/.env-apisix.vault" in r.stdout, "yan dosya listesi basılmıyor"
     assert "apisix.service" in r.stdout, "yeniden başlatılacak birim basılmıyor"
     assert "90" in r.stdout or "tavan" in r.stdout.lower(), "bekleme tavanı basılmıyor"
@@ -1034,7 +1079,9 @@ def test_E3_vault_UYGULA_kasaya_KOYAR_render_OLCER_ESKI_KANALI_esitler(tmp_path)
     r = _kos(ROTASYON_SH, ortam, "--vault", "--openrouter", girdi=f"{YENI_VAULT_DEGERI}\n")
     assert r.returncode == 0, f"uygula düştü:\n{r.stdout}\n{r.stderr}"
     argv = log.read_text(encoding="utf-8")
-    assert "kv put secret/meridian/openrouter_api_key" in argv, f"kasaya yazılmadı:\n{argv}"
+    assert f"kv put {KASA_YOLU_OR}" in argv, f"kasaya yazılmadı (BİRİNCİL yol):\n{argv}"
+    assert "kv put secret/meridian/openrouter_api_key" not in argv, (
+        f"TAKMA ADIN KENDİ yoluna yazıldı — hüküm 'aynı değer, TEK kasa yolu':\n{argv}")
     assert YENI_VAULT_DEGERI not in argv, "DEĞER ARGV'ye girdi (ps ile herkese görünür)"
     assert YENI_VAULT_DEGERI not in r.stdout, "değer terminale basıldı"
     # Eski kanal: on üç kopyadan üçü örneklenir (hepsi `_yaz` ile aynı yoldan yazılır).
@@ -1098,3 +1145,270 @@ def test_E7_vault_KAPSAM_BEYANI_kasaya_bagli_OLMAYAN_sirri_soyler(tmp_path):
     ortam, _ = _vault_ortam(tmp_path, ortam, kok)
     r = _kos(ROTASYON_SH, ortam, "--vault", "--openrouter", "--kuru")
     assert "NOUS_API_KEY" in r.stdout, f"kasa kapsamı dışındaki sır beyan edilmiyor:\n{r.stdout}"
+
+
+# =================================================================================================
+# T) TAKMA AD (`ayni_deger`) — AYNI DEĞERİN TEK KASA YOLU (Rol-1 hükmü 2026-09-14, tur-2)
+# =================================================================================================
+# TUR-1'İN AÇIK KALEMİ: `openrouter_api_key` ile `HINDSIGHT_API_LLM_API_KEY`, `bot_key_meridian`
+# ile `kapi_apikey`, `hindsight_cp_dataplane_api_key` ile `HINDSIGHT_API_TENANT_API_KEY` BUGÜN
+# aynı değeri taşıyor ama kasada AYRI yollardı. Ayrışma taşıma anında ölçülüyordu; ROTASYONDAN
+# SONRA ayrışma (biri döner, öteki dönmez) ölçülemiyordu — ve tam olarak o hâl, bu deponun en
+# pahalı sınıfının (aynı gerçeğin iki kopyası) kasa içindeki biçimidir.
+#
+# HÜKÜM: aynı değerin TEK kasa yolu vardır ve o yol BİRİNCİLİNDİR — kasada ZATEN duran dalga-1
+# girdisi. Dalga-2 adı bir TAKMA ADdır: kendi yolu, hedefi, modu, sahibi YOKTUR. Bu bölüm hükmün
+# DÖRT yerde birlikte uygulandığını ölçer (envanter · üretici · sir_koy · rotasyon); biri eksik
+# kalırsa hüküm yarım kalır ve yarım kalışı SESSİZDİR.
+
+def test_T1_TAKMA_AD_tablosu_envanterle_BIREBIR():
+    """Tablo ELLE durur, envanterden TÜREMEZ (DALGA2_ADLARI ile aynı gerekçe). İki yönlü ölçüm:
+    beklenen her eşleme envanterde VAR, ve envanterde beklenmeyen bir takma ad YOK. İkinci yön
+    olmasaydı yarın sessizce eklenen bir takma ad hiçbir kapıdan geçmeden kasaya girerdi."""
+    gercek = {g["ad"]: g[TAKMA_AD_ALANI] for g in _vault_kv() if TAKMA_AD_ALANI in g}
+    assert gercek == TAKMA_ADLAR, (
+        f"takma ad tablosu envanterle AYRIŞTI.\n  envanterde fazla: "
+        f"{sorted(set(gercek) - set(TAKMA_ADLAR))}\n  tabloda fazla: "
+        f"{sorted(set(TAKMA_ADLAR) - set(gercek))}")
+
+
+def test_T2_TAKMA_AD_KENDI_yolunu_TASIMAZ_ve_BIRINCIL_DALGA1_dir():
+    """Üç iddia, üçü de hükmün bir yüzü:
+    (a) takma ad `vault_yolu`/`hedef`/`mod`/`sahip` TAŞIMAZ — taşısaydı `ayni_deger` bir süs olur
+        ve kasada ikinci yol yine açılırdı;
+    (b) birincil kendisi bir takma ad DEĞİLDİR (zincir yok) — zincir, "tek yol" iddiasını bir
+        dolambaçla yine ikiye bölerdi;
+    (c) birincil DALGA-1 girdisidir, yani değer kasada O YOLDA zaten duruyor: hükmün bütün
+        pratik kazancı A1'de bir GÖÇ gerekmemesidir."""
+    ind = {g["ad"]: g for g in _vault_kv()}
+    from tests.test_vault_faz2_v485 import DALGA1_ADLARI
+    for takma, birincil in TAKMA_ADLAR.items():
+        g = ind[takma]
+        yasak = {"vault_yolu", "hedef", "mod", "sahip"} & set(g)
+        assert not yasak, f"{takma}: takma ad KENDİ {sorted(yasak)} alanını taşıyor"
+        assert birincil in ind, f"{takma}: `ayni_deger` {birincil!r} envanterde YOK (dangling)"
+        assert TAKMA_AD_ALANI not in ind[birincil], (
+            f"{takma} → {birincil}: birincil de bir takma ad (ZİNCİR) — birincil TEK olmalı")
+        assert birincil in DALGA1_ADLARI, (
+            f"{takma} → {birincil}: birincil dalga-1 girdisi DEĞİL — kasada yeni yol açılır ve "
+            "A1'de göç gerekirdi (hükmün reddettiği yön)")
+        assert "TAKMA AD" in g["tuketici"], (
+            f"{takma}: tüketici beyanı takma ad olduğunu SÖYLEMİYOR: {g['tuketici']!r}")
+
+
+def test_T3_URETICI_takma_adi_BIRINCILIN_yoluna_cozer():
+    """Yan dosya satırı bir takma ada bakıyorsa şablon BİRİNCİLİN kasa yolunu okur. Çözülmeseydi
+    Agent kasada OLMAYAN bir yolu okur (403/404) ve o alan yan dosyada HİÇ doğmazdı."""
+    metin = AGENT_HCL.read_text(encoding="utf-8")
+    olculen = 0
+    for d in _vault_dosyalar():
+        blok = [b for b in _sablon_bloklari(metin) if f'destination = "{d["yol"]}"' in b][0]
+        for s in d["satirlar"]:
+            if s["sir"] not in TAKMA_ADLAR:
+                continue
+            olculen += 1
+            beklenen = f'secret/data/meridian/{TAKMA_ADLAR[s["sir"]]}'
+            assert re.search(
+                rf'^{re.escape(s["alan"])}=(?:Bearer )?\{{\{{ with secret "{re.escape(beklenen)}"',
+                blok, re.M), (
+                f"{d['yol']}: `{s['alan']}` takma adın KENDİ yolunu okuyor "
+                f"(beklenen birincil yol: {beklenen})")
+    assert olculen >= 3, f"pozitif kontrol: takma ad taşıyan yan dosya satırı ölçülemedi ({olculen})"
+
+
+def test_T4_POLITIKADA_yol_TEKRARI_YOK_ve_takma_adin_KENDI_yolu_YOK():
+    """HCL'de aynı `path` iki kez yazılamaz (ikincisi birinciyi gölgeler) ve daha önemlisi: iki
+    kez yazılmış bir yol, politikayı okuyan mühendise iki AYRI sır varmış gibi görünür. Aynı
+    ölçüm agent yapılandırmasının hedeflerinde de yapılır — takma adın kanonik tek-değer kopyası
+    HİÇ doğmamalı (ikinci bir dosya, sırrın diskteki yüzeyini bir dosya daha büyütürdü)."""
+    politika = POLITIKA_AGENT.read_text(encoding="utf-8")
+    yollar = re.findall(r'^path\s+"([^"]+)"', politika, re.M)
+    assert len(yollar) == len(set(yollar)), (
+        f"politikada YOL TEKRARI: {sorted({y for y in yollar if yollar.count(y) > 1})}")
+    hcl = AGENT_HCL.read_text(encoding="utf-8")
+    hedefler = re.findall(r'^\s*destination\s*=\s*"([^"]+)"', hcl, re.M)
+    assert len(hedefler) == len(set(hedefler)), "agent şablonlarında HEDEF TEKRARI"
+    for takma in TAKMA_ADLAR:
+        assert f'secret/data/meridian/{takma}' not in yollar, (
+            f"{takma}: takma ad için KENDİ politika yolu üretilmiş — kasada ikinci yol")
+        assert f"/etc/meridian/{takma}" not in hedefler, (
+            f"{takma}: takma ad için KENDİ kanonik kopyası render ediliyor")
+
+
+def _mutant_envanter(tmp_path: pathlib.Path, eski: str, yeni: str, ad: str) -> pathlib.Path:
+    metin = ENVANTER.read_text(encoding="utf-8")
+    assert eski in metin, f"mutasyon hedefi envanterde yok (çivi bayatlamış): {eski!r}"
+    bozuk = tmp_path / f"{ad}.yaml"
+    bozuk.write_text(metin.replace(eski, yeni, 1), encoding="utf-8")
+    return bozuk
+
+
+@pytest.mark.parametrize("etiket,eski,yeni,beklenen", [
+    ("dangling", "    ayni_deger: kapi_apikey", "    ayni_deger: OLMAYAN_BIRINCIL",
+     "dangling"),
+    ("zincir", "    ayni_deger: kapi_apikey", "    ayni_deger: bot_key_bekci", "ZİNCİR"),
+    ("kendi_yolu", "  - ad: bot_key_meridian\n    ayni_deger: kapi_apikey",
+     '  - ad: bot_key_meridian\n    ayni_deger: kapi_apikey\n'
+     '    vault_yolu: "secret/meridian/bot_key_meridian"',
+     "vault_yolu"),
+])
+def test_T5_MUTASYON_BOZUK_takma_ad_URETICIYI_DURDURUR(tmp_path, etiket, eski, yeni, beklenen):
+    """Üç bozuk hâl, üç ayrı sessiz arıza — üçü de PATLAMALI:
+      · dangling  → şablon kasada OLMAYAN bir yolu okur, dosya hiç doğmaz (403/404)
+      · ZİNCİR    → takma adın takma adı; "tek yol" iddiası bir dolambaçla yine ikiye böler
+      · kendi yolu→ hükmün tam tersi: kasada ikinci yol açılır ve rotasyondan sonra ayrışır
+    Fail-closed olmasaydı üretici "GÜNCEL" der, bayat kapı yeşil kalır ve geçiş yarım yapılırdı.
+
+    NOT (zincir sahnesi): zincir tek bir satırla kurulamaz — `bot_key_meridian`in birincilini
+    `bot_key_bekci` yapmak yetmez, `bot_key_bekci`nin KENDİSİNİN de bir takma ad olması gerekir.
+    İkinci mutasyon onun yol/hedef/mod/sahip satırlarını `ayni_deger` ile değiştirir; yoksa çivi
+    zinciri değil "takma ad kendi yolunu taşıyor" dalını ölçerdi (ilk denemede tam bu oldu)."""
+    bozuk = _mutant_envanter(tmp_path, eski, yeni, f"env_{etiket}")
+    if etiket == "zincir":
+        # `bot_key_bekci`yi de bir takma ada çevir → `bot_key_meridian → bot_key_bekci → …`
+        metin = bozuk.read_text(encoding="utf-8")
+        capa = ('  - ad: bot_key_bekci\n'
+                '    vault_yolu: "secret/meridian/bot_key_bekci"\n'
+                '    hedef: "/etc/meridian/bot_key_bekci"\n'
+                '    mod: "0400"\n'
+                '    sahip: "root"\n')
+        assert capa in metin, "zincir sahnesi kurulamadı (çapa bayatlamış)"
+        bozuk.write_text(
+            metin.replace(capa, '  - ad: bot_key_bekci\n    ayni_deger: kapi_apikey\n', 1),
+            encoding="utf-8")
+    mod = _mutant_uretici(tmp_path, 'MONTAJ = "secret"', 'MONTAJ = "secret"',
+                          f"uret_mut_{etiket}", envanter=bozuk)
+    with pytest.raises(SystemExit) as hata:
+        mod.agent_yapilandirmasi()
+    assert beklenen in str(hata.value), f"{etiket}: beklenen gerekçe basılmadı: {hata.value}"
+
+
+# -------------------------------------------------------------------------------------------------
+# T6-T8 — `vault_sir_koy.sh`: takma ad için `kv put` YOK, EŞİTLİK KAPISI VAR
+# -------------------------------------------------------------------------------------------------
+# Taşıma anında sorulan soru değişti: "bu değeri kasaya koy" değil, "bu takma adın kaynağı ile
+# kasadaki BİRİNCİL değer BUGÜN gerçekten aynı mı". Ayrıştıkları gün takma adın tüketicisi (yan
+# dosya alanı) kasadan BAŞKA bir değer alır ve arıza 401 olarak, kasadan çok uzakta görünür.
+
+SAHTE_BIRINCIL_D = "SAHTE-BIRINCIL-DEGERI-0002"
+
+
+def _takma_ad_sahne(tmp_path: pathlib.Path, takma_degeri: str | None = None) -> pathlib.Path:
+    """İki girdili KÜÇÜK envanter: bir BİRİNCİL (kendi yolu var) + bir TAKMA AD (yolu yok).
+
+    `takma_degeri` verilirse takma adın kaynağı bilerek AYRI yazılır — "aynı sanılan iki değer
+    gerçekten aynı mı" sorusunun kırmızı hâli."""
+    kaynak = tmp_path / "ta_kaynaklar"
+    kaynak.mkdir(exist_ok=True)
+    birincil_dosya = kaynak / "birincil"
+    birincil_dosya.write_text(SAHTE_BIRINCIL_D + "\n", encoding="utf-8")
+    takma_dosya = kaynak / "env-takma"
+    takma_dosya.write_text(
+        f"BIR_ALAN={takma_degeri or SAHTE_BIRINCIL_D}\n", encoding="utf-8")
+    env = tmp_path / "envanter_takma.yaml"
+    env.write_text(yaml.safe_dump({"vault_kv": [
+        {"ad": "sahte_birincil", "vault_yolu": "secret/meridian/sahte_birincil",
+         "hedef": str(birincil_dosya), "mod": "0400", "sahip": "root",
+         "tuketici": "çivi sahnesi (birincil)"},
+        {"ad": "sahte_takma", "ayni_deger": "sahte_birincil",
+         "tuketici": "çivi sahnesi — TAKMA AD",
+         "rotasyon_siri": None,
+         "kaynak": {"tur": "env_satiri", "dosya": str(takma_dosya),
+                    "alan": "BIR_ALAN", "onek": None}},
+    ]}, allow_unicode=True), encoding="utf-8")
+    return env
+
+
+def test_T6_koy_TAKMA_AD_icin_KV_PUT_YAPMAZ_ve_ESITLIGI_olcer(tmp_path):
+    """Mutlu yol: birincil kasaya KONUR, takma ad için `kv put` ÇAĞRILMAZ ve eşitlik ÖLÇÜLÜR.
+    İkinci bir `put`, kasada ikinci bir yol açardı — hükmün engellediği tam olarak budur."""
+    binler, argv_log, kasa = _sahte_vault(tmp_path)
+    r = subprocess.run(["bash", str(KOY_SH), "--uygula"], capture_output=True, text=True,
+                       env=_koy_ortam(tmp_path, binler, _takma_ad_sahne(tmp_path)))
+    assert r.returncode == 0, f"uygula düştü:\n{r.stdout}\n{r.stderr}"
+    argv = argv_log.read_text(encoding="utf-8")
+    assert "kv put secret/meridian/sahte_birincil" in argv, f"birincil kasaya konmadı:\n{argv}"
+    assert "kv put secret/meridian/sahte_takma" not in argv, (
+        f"TAKMA AD için `kv put` çağrıldı — kasada ikinci yol açıldı:\n{argv}")
+    assert not (kasa / "secret_meridian_sahte_takma").exists(), "takma ad kasada kendi yolunu aldı"
+    assert "TAKMA AD" in r.stdout and "EŞİT" in r.stdout, (
+        f"eşitlik ölçümü basılmıyor:\n{r.stdout}")
+    assert SAHTE_BIRINCIL_D not in r.stdout, "değer terminale basıldı"
+
+
+def test_T7_koy_TAKMA_AD_AYRISIRSA_DURUR_ve_IKI_ADI_da_soyler(tmp_path):
+    """Ayrışma bir tahmin işi DEĞİLDİR: hangisinin doğru olduğu buradan bilinemez ve birincili
+    takma adın değeriyle EZMEK, tahmini kasadan bütün tüketicilere yaymak olurdu. Betik DURUR ve
+    iki adı da basar — hangi çiftin ayrıştığı çıktıdan okunabilmeli."""
+    binler, argv_log, kasa = _sahte_vault(tmp_path)
+    sahne = _takma_ad_sahne(tmp_path, takma_degeri="SAHTE-AYRISMIS-TAKMA-DEGER")
+    r = subprocess.run(["bash", str(KOY_SH), "--uygula"], capture_output=True, text=True,
+                       env=_koy_ortam(tmp_path, binler, sahne))
+    assert r.returncode != 0, f"takma ad ayrışmasında taşıma DURMADI:\n{r.stdout}"
+    assert "sahte_takma" in r.stdout and "sahte_birincil" in r.stdout, (
+        f"ayrışan çift ADIYLA basılmıyor:\n{r.stdout}")
+    kasada = (kasa / "secret_meridian_sahte_birincil").read_text(encoding="utf-8")
+    assert kasada == SAHTE_BIRINCIL_D, (
+        "BİRİNCİL takma adın ayrık değeriyle EZİLDİ — tahmin bütün tüketicilere yayılırdı")
+
+
+def test_T8_MUTASYON_takma_ad_dali_silinirse_T6_ve_T7_KIRMIZI(tmp_path):
+    """Çivi yeşili kanıt değildir: dal kaldırıldığında takma ad BİRİNCİLİN yoluna `kv put` yapar
+    ve ayrışan değer birincili SESSİZCE EZER (çıkış 0). Yani T6/T7 gerçekten o dalı ölçüyor."""
+    ham = KOY_SH.read_text(encoding="utf-8")
+    capa = ('  if [ "$birincil" != "-" ]; then\n'
+            '    kasa_sha="$("$VAULT_BIN" kv get -field=value "$yol"')
+    assert capa in ham, f"mutasyon çapası kaynakta yok (çivi bayatlamış): {capa!r}"
+    bozuk = tmp_path / "vault_sir_koy_takma_bozuk.sh"
+    bozuk.write_text(ham.replace(
+        capa, '  if false; then\n    kasa_sha="$("$VAULT_BIN" kv get -field=value "$yol"', 1),
+        encoding="utf-8")
+    binler, argv_log, kasa = _sahte_vault(tmp_path)
+    sahne = _takma_ad_sahne(tmp_path, takma_degeri="SAHTE-AYRISMIS-TAKMA-DEGER")
+    r = subprocess.run(["bash", str(bozuk), "--uygula"], capture_output=True, text=True,
+                       env=_koy_ortam(tmp_path, binler, sahne))
+    kasada = (kasa / "secret_meridian_sahte_birincil").read_text(encoding="utf-8")
+    assert r.returncode == 0 and kasada == "SAHTE-AYRISMIS-TAKMA-DEGER", (
+        f"MUTASYON ISIRMADI: dal silinince de durdu/ezmedi — T6/T7 başka bir dalı ölçüyor "
+        f"olabilir:\n{r.stdout}\n{r.stderr}")
+
+
+# -------------------------------------------------------------------------------------------------
+# T9-T10 — `sir_rotasyon.sh --vault`: rotasyon BİRİNCİL yola, restart listesi TAKMA ADI DA KAPSAR
+# -------------------------------------------------------------------------------------------------
+
+def test_T9_rotasyon_KAPI_takma_adin_TUKETICISINI_de_yeniden_baslatir(tmp_path):
+    """`--kapi --vault`: kasa yolu `secret/meridian/kapi_apikey`tir ve kapının yan dosyası o
+    değeri TAKMA ADLA (`bot_key_meridian`) yazar. Restart listesi kasa YOLUNDAN toplandığı için
+    `apisix.service` listeye girer. Ada göre toplansaydı yan dosya yeni değere döner, konteyner
+    eski değeri ortamında tutar ve motor kapıdan 401 alırdı."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    ortam, log = _vault_ortam(tmp_path, ortam, kok)
+    r = _kos(ROTASYON_SH, ortam, "--vault", "--kapi", "--kuru")
+    assert r.returncode == 0, f"kuru koşum düştü:\n{r.stdout}\n{r.stderr}"
+    assert not log.exists(), "kuru koşum kasaya çağrı yaptı"
+    assert "secret/meridian/kapi_apikey" in r.stdout, f"BİRİNCİL kasa yolu basılmıyor:\n{r.stdout}"
+    assert "TAKMA AD" in r.stdout and "bot_key_meridian" in r.stdout, (
+        f"takma ad ilişkisi kuru koşumda beyan edilmiyor:\n{r.stdout}")
+    assert "/opt/apisix/.env-apisix.vault" in r.stdout, (
+        f"takma adın yan dosyası listeye girmedi:\n{r.stdout}")
+    assert "apisix.service" in r.stdout, (
+        f"takma adın tüketicisi restart listesinde YOK:\n{r.stdout}")
+
+
+def test_T10_MUTASYON_yan_dosya_sorgusu_ADA_donerse_T9_KIRMIZI(tmp_path):
+    """Çivi yeşili kanıt değildir: sorgu kasa YOLU yerine ADA dönerse takma adın yan dosyası
+    HİÇ bulunmaz ve restart listesi sessizce boşalır — yani T9 gerçekten o dalı ölçüyor."""
+    ham = ROTASYON_SH.read_text(encoding="utf-8")
+    capa = "    if any(coz(x[\"sir\"]) == hedef_yol for x in d[\"satirlar\"]):"
+    assert capa in ham, f"mutasyon çapası kaynakta yok (çivi bayatlamış): {capa!r}"
+    bozuk = tmp_path / "sir_rotasyon_takma_bozuk.sh"
+    bozuk.write_text(ham.replace(
+        capa, "    if any(x[\"sir\"] == hedef_yol for x in d[\"satirlar\"]):", 1), encoding="utf-8")
+    bozuk.chmod(0o755)
+    kok, ortam = _sahte_ortam(tmp_path)
+    ortam, _ = _vault_ortam(tmp_path, ortam, kok)
+    r = _kos(bozuk, ortam, "--vault", "--kapi", "--kuru")
+    assert "/opt/apisix/.env-apisix.vault" not in r.stdout, (
+        f"MUTASYON ISIRMADI: ada dönen sorgu da yan dosyayı buldu — T9 başka bir dalı ölçüyor "
+        f"olabilir:\n{r.stdout}\n{r.stderr}")

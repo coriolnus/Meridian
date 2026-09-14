@@ -532,7 +532,7 @@ def test_D3_agent_yazma_yuzeyi_YALNIZ_hedef_dizinler():
     eşitliğini `tests/test_vault_dalga2_v491.py` C1 ölçer."""
     yollar = (_deger(BIRIM_AGENT, "ReadWritePaths") or "").split()
     assert yollar, "yazma yüzeyi boş — Agent hiçbir şey render edemez"
-    dizinler = {str(pathlib.PurePosixPath(g["hedef"]).parent) for g in _vault_kv()}
+    dizinler = {str(pathlib.PurePosixPath(g["hedef"]).parent) for g in _vault_kv_yollu()}
     dizinler |= {str(pathlib.PurePosixPath(d["yol"]).parent) for d in _vault_dosyalar_485()}
     fazla = set(yollar) - dizinler
     assert not fazla, f"envanterde hiçbir dosyanın dizini OLMAYAN yazma yolu: {sorted(fazla)}"
@@ -650,11 +650,29 @@ DALGA1_SAYISI = len(DALGA1_ADLARI)
 #: girdileri bunları TAŞIMAZ: kaynakları hedefin KENDİSİDİR (dosya zaten dolu).
 DALGA2_EK_ALANLAR = {"kaynak", "kopya_kaynaklari", "rotasyon_siri"}
 
+#: TAKMA AD (Rol-1 hükmü 2026-09-14): aynı DEĞERİ taşıyan sırların TEK kasa yolu vardır. Takma ad
+#: girdisi `ayni_deger: <birincil ad>` taşır ve kendi `vault_yolu`sunu/`hedef`ini TAŞIMAZ — yol,
+#: hedef, mod ve sahip birincilin girdisinden okunur. Bu yüzden ŞEMASI da ayrıdır: aşağıdaki iki
+#: küme "bir takma adın ne taşıması gerektiğini" ve "en fazla ne taşıyabileceğini" söyler.
+TAKMA_AD_ALANI = "ayni_deger"
+TAKMA_AD_ZORUNLU = {"ad", TAKMA_AD_ALANI, "tuketici", "kaynak", "rotasyon_siri"}
+TAKMA_AD_IZINLI = TAKMA_AD_ZORUNLU | {"kopya_kaynaklari"}
+
 
 def _vault_kv() -> list[dict]:
     veri = yaml.safe_load(ENVANTER.read_text(encoding="utf-8"))
     assert "vault_kv" in veri, "deploy/sir_envanteri.yaml'da `vault_kv` bölümü yok (Task 2)"
     return veri["vault_kv"]
+
+
+def _vault_kv_yollu() -> list[dict]:
+    """Kasada KENDİ yolu OLAN girdiler — takma adlar (`ayni_deger`) HARİÇ.
+
+    Bu dosyanın "her girdi bir yol ve bir hedef dosyadır" varsayımını taşıyan bütün çivileri
+    (yazma yüzeyi · LoadCredential kapsamı · politika · şablon hedefleri) buradan okur. Takma
+    adları katsaydık, olmayan bir `hedef` alanı üzerinden KeyError alır ya da — daha kötüsü —
+    politikada ikinci bir yol beklerdik; oysa hükmün kendisi ikinci yolun AÇILMAMASIdır."""
+    return [g for g in _vault_kv() if TAKMA_AD_ALANI not in g]
 
 
 def _vault_dosyalar_485() -> list[dict]:
@@ -676,6 +694,19 @@ def test_E1_vault_kv_DALGA1_kumesini_tam_tasir():
     assert not eksik, f"dalga-1 girdisi listeden DÜŞMÜŞ: {eksik}"
     zorunlu = {"ad", "vault_yolu", "hedef", "mod", "sahip", "tuketici"}
     for g in kv:
+        if TAKMA_AD_ALANI in g:
+            # TAKMA AD: kendi kasa yolu/hedefi YOKTUR. Şemayı buraya genişletmek bir gevşetme
+            # DEĞİL, hükmün kendisidir — `vault_yolu` taşıyan bir takma ad kasada ikinci bir yol
+            # açardı ve `ayni_deger` alanı yalnız bir süs olurdu.
+            eksik = TAKMA_AD_ZORUNLU - set(g)
+            assert not eksik, f"{g.get('ad')}: takma adın zorunlu alanı eksik: {sorted(eksik)}"
+            fazla = set(g) - TAKMA_AD_IZINLI
+            assert not fazla, (
+                f"{g['ad']}: takma ad tanınmayan/yasak alan taşıyor: {sorted(fazla)} "
+                "(yol · hedef · mod · sahip BİRİNCİLİNDİR)")
+            assert g["ad"] not in DALGA1_ADLARI, (
+                f"{g['ad']}: dalga-1 girdisi takma ada çevrilmiş — birincil TABAN, takma ad değil")
+            continue
         assert zorunlu <= set(g), f"{g.get('ad')}: zorunlu alan eksik: {sorted(zorunlu - set(g))}"
         fazla = set(g) - zorunlu - DALGA2_EK_ALANLAR
         assert not fazla, f"{g.get('ad')}: tanınmayan alan: {sorted(fazla)}"
@@ -689,7 +720,8 @@ def test_E2_yol_ve_izin_semasi_TEK_BICIM():
     bir tahmin işine çevirirdi (politika `secret/data/meridian/<ad>` üretir ve KV-v2'de `data/`
     ara segmenti ZORUNLUDUR; şema bozulursa agent okuyamaz ama politika yine 'yazılmış' görünür).
     İzin 0400 root: hedef dosyaları systemd PID 1 olarak, sandbox'tan ÖNCE okur."""
-    for g in _vault_kv():
+    # TAKMA ADLAR HARİÇ: onların yolu/hedefi birincilindir, kendi şeması YOKTUR (E1 ölçer).
+    for g in _vault_kv_yollu():
         assert g["vault_yolu"] == f"secret/meridian/{g['ad']}", g
         assert g["mod"] == "0400", g
         assert g["sahip"] == "root", g
@@ -730,7 +762,7 @@ def test_F1_her_LoadCredential_kaynagi_vault_kv_HEDEFIDIR():
     """YÖN 1: systemd'nin OKUDUĞU her dosya Vault'tan doldurulacak. Bir kaynak dışarıda kalırsa
     o sır Faz-2'den sonra da ELLE yönetiliyor demektir — ve bunu kimse fark etmezdi, çünkü
     dosya orada durmaya devam eder."""
-    hedefler = {g["hedef"] for g in _vault_kv()}
+    hedefler = {g["hedef"] for g in _vault_kv_yollu()}
     kaynaklar = _loadcredential_kaynaklari()
     assert kaynaklar, "hiç LoadCredential kaynağı bulunamadı — çivi kör"
     eksik = kaynaklar - hedefler
@@ -750,7 +782,7 @@ def test_F2_LoadCredential_DISINDAKI_hedef_BEYANLI():
     bayat bir beyanla aynı görünürdü. Ölçüm dizge tabanlıdır ve bu bilinçlidir — anlamı ayrıştıran
     bir çivi, kendi ayrıştırıcısının hatalarını da hükme çevirirdi."""
     kaynaklar = _loadcredential_kaynaklari()
-    for g in _vault_kv():
+    for g in _vault_kv_yollu():
         if g["hedef"] in kaynaklar:
             assert "LoadCredential" in g["tuketici"], (
                 f"{g['ad']}: systemd kaynağı ama tüketici beyanı bunu söylemiyor: {g['tuketici']!r}"
@@ -774,7 +806,7 @@ def test_F3_agent_yazma_yuzeyi_envanterden_TURER():
     """`vault-agent.service` ReadWritePaths listesi, hedef dosyaların DİZİN kümesinden BİREBİR
     türemeli. Yeni bir sır başka bir dizine hedeflenip birim güncellenmezse Agent o dosyayı
     yazamaz — ve arıza, dosya ESKİ değerinde durduğu için ancak bir rotasyondan sonra görünür."""
-    dizinler = {str(pathlib.PurePosixPath(g["hedef"]).parent) for g in _vault_kv()}
+    dizinler = {str(pathlib.PurePosixPath(g["hedef"]).parent) for g in _vault_kv_yollu()}
     # DALGA-2: yan dosyalar da Agent'ın YAZDIĞI dosyalardır ve dizinleri aynı listeden gelmek
     # zorundadır. İkisini ayrı ayrı ölçmek, birinin sessizce dışarıda kalmasına izin verirdi.
     dizinler |= {str(pathlib.PurePosixPath(d["yol"]).parent) for d in _vault_dosyalar_485()}
@@ -854,7 +886,7 @@ def test_H1_agent_politikasi_YALNIZ_envanter_yollarini_READ_eder():
     politika, kasaya yarın konacak her sırrı da Agent'a açardı."""
     metin = POLITIKA_AGENT.read_text(encoding="utf-8")
     yollar = set(re.findall(r'^path\s+"([^"]+)"', metin, re.M))
-    beklenen = {f"secret/data/meridian/{g['ad']}" for g in _vault_kv()}
+    beklenen = {f"secret/data/meridian/{g['ad']}" for g in _vault_kv_yollu()}
     assert yollar == beklenen, f"agent politikası envanterle ayrıştı: {yollar ^ beklenen}"
     yetenekler = set(re.findall(r"capabilities\s*=\s*\[([^\]]*)\]", metin))
     assert yetenekler == {'"read"'}, f"agent politikasında okuma dışı yetenek: {yetenekler}"
@@ -879,10 +911,10 @@ def test_H3_agent_sablon_HEDEFLERI_envanterle_BIREBIR():
     hedefler = re.findall(r'^\s*destination\s*=\s*"([^"]+)"', metin, re.M)
     # DALGA-2: hedef kümesi `vault_kv` hedefleri + `vault_dosyalar` yan dosyalarıdır. İki blok,
     # tek sıra: şablonlar önce tek-değer dosyalarını, sonra yan dosyaları yazar.
-    beklenen = [g["hedef"] for g in _vault_kv()] + [d["yol"] for d in _vault_dosyalar_485()]
+    beklenen = [g["hedef"] for g in _vault_kv_yollu()] + [d["yol"] for d in _vault_dosyalar_485()]
     assert hedefler == beklenen, f"şablon hedefleri envanterle ayrıştı: {hedefler} ≠ {beklenen}"
     modlar = re.findall(r"^\s*perms\s*=\s*(\S+)", metin, re.M)
-    beklenen_mod = [g["mod"] for g in _vault_kv()] + [d["mod"] for d in _vault_dosyalar_485()]
+    beklenen_mod = [g["mod"] for g in _vault_kv_yollu()] + [d["mod"] for d in _vault_dosyalar_485()]
     assert modlar == beklenen_mod, f"şablon izinleri ayrıştı: {modlar} ≠ {beklenen_mod}"
 
 
@@ -909,7 +941,7 @@ def test_H6_agent_BOS_RENDER_yapmaz():
     """Eksik anahtarda şablon BOŞ dosya yazsaydı, systemd o boş dosyayı "başarıyla yüklenmiş"
     bir credential sayardı ve tüketici 401 alırdı — arıza kasada değil uygulamada aranırdı."""
     metin = AGENT_HCL.read_text(encoding="utf-8")
-    beklenen = len(_vault_kv()) + len(_vault_dosyalar_485())
+    beklenen = len(_vault_kv_yollu()) + len(_vault_dosyalar_485())
     n = len(re.findall(r"error_on_missing_key\s*=\s*true", metin))
     assert n == beklenen, f"eksik-anahtar kapısı {n} şablonda var, {beklenen} olmalı"
 

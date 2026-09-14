@@ -53,6 +53,15 @@
 #        · `--kuru`  : ayrışma RAPORLANIR, hüküm VERİLMEZ (kuru koşumun sözleşmesi). Ayrışmayı
 #          taşımadan ÖNCE görmek, bu kipin en değerli çıktısıdır.
 #
+#  (5) TAKMA AD (`ayni_deger`) — KASAYA YAZILMAZ, ÖLÇÜLÜR. Rol-1 hükmü 2026-09-14: aynı DEĞERİ
+#      taşıyan sırların TEK kasa yolu vardır ve o yol BİRİNCİLİNDİR (kasada zaten duran dalga-1
+#      girdisi). `openrouter_api_key` → `HINDSIGHT_API_LLM_API_KEY`, `bot_key_meridian` →
+#      `kapi_apikey`, `hindsight_cp_dataplane_api_key` → `HINDSIGHT_API_TENANT_API_KEY`. Bu betik
+#      takma ad için `kv put` YAPMAZ (yeni yol açılmaz, A1'de göç gerekmez); onun yerine takma
+#      adın KAYNAĞINI okur ve sha256'sını kasadaki BİRİNCİL değerle kıyaslar. Ayrışma `--uygula`da
+#      DURDURUR ve iki adı da basar. Ölçüm bir konfor değil: ayrıştıkları gün takma adın tüketicisi
+#      (yan dosya alanı) kasadan BAŞKA bir değer alır ve arıza 401 olarak, kasadan uzakta görünür.
+#
 # GERİ ALIM: bu betik KAYNAK DOSYALARA DOKUNMAZ. Kasaya bir kopya KOYAR, dosyayı bırakır.
 # Yanlış giderse `systemctl stop vault-agent` yeter; dosyalar olduğu gibi durur (tasarım §6.4).
 set -euo pipefail
@@ -97,16 +106,39 @@ done
 # LİSTE ENVANTERDEN TÜRER, BETİĞE YAZILMAZ (tek-kaynak yasası): `deploy/sir_envanteri.yaml`
 # `vault_kv` bloğu hangi sırrın hangi yolda durduğunun TEK kaynağıdır. Burada ikinci bir liste
 # tutsaydık, envantere eklenen bir sır bu betikte sessizce eksik kalırdı.
-# Çıktı biçimi (TSV): "<ad>\t<vault_yolu>\t<kaynak türü>\t<kaynak dosya>\t<alan>\t<önek>"
+# Çıktı biçimi (TSV):
+#   "<ad>\t<KASA YOLU>\t<kaynak türü>\t<kaynak dosya>\t<alan>\t<önek>\t<birincil ad | ->"
 # — yalnız AD ve YOL, DEĞER YOK. `kaynak:` bloğu olmayan (dalga-1) girdide kaynak HEDEFİN
 # KENDİSİDİR ve tür `dosya`dır; boş alanlar `-` ile yazılır (boş dizge TSV'de ayırt edilemez).
+#
+# İKİNCİ SÜTUN ÇÖZÜLMÜŞ YOLDUR: takma ad (`ayni_deger`) girdisinde BİRİNCİLİN yolu basılır ve
+# yedinci sütun birincilin ADIdır. Takma ada kendi yolunu ürettirmek, hükmün (aynı değer = TEK
+# kasa yolu) tam tersini yapardı; `ayni_deger` doğrulaması BURADA fail-closed'dır çünkü bu betik
+# kasaya YAZAN taraftır — sessizce geçen bir dangling referans ikinci bir yol açardı.
 _girdiler() {
   "$PYTHON_BIN" -c '
 import sys, yaml
-for g in yaml.safe_load(open(sys.argv[1], encoding="utf-8"))["vault_kv"]:
-    k = g.get("kaynak") or {"tur": "dosya", "dosya": g["hedef"], "alan": None, "onek": None}
-    print(g["ad"], g["vault_yolu"], k["tur"], k["dosya"],
-          k.get("alan") or "-", k.get("onek") or "-", sep="\t")
+kv = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))["vault_kv"]
+indeks = {g["ad"]: g for g in kv}
+for g in kv:
+    birincil = g.get("ayni_deger")
+    if birincil is None:
+        yol = g["vault_yolu"]
+    else:
+        if birincil not in indeks:
+            sys.exit("%s: ayni_deger %s vault_kv de YOK (dangling takma ad)" % (g["ad"], birincil))
+        if indeks[birincil].get("ayni_deger") is not None:
+            sys.exit("%s: ayni_deger ZINCIRI (%s da takma ad)" % (g["ad"], birincil))
+        if "vault_yolu" in g or "hedef" in g:
+            sys.exit("%s: takma ad KENDI vault_yolu/hedef ini tasiyamaz" % g["ad"])
+        yol = indeks[birincil]["vault_yolu"]
+    k = g.get("kaynak")
+    if k is None:
+        if birincil is not None:
+            sys.exit("%s: takma ad kaynak blogu TASIMALI (esitlik kapisi onsuz olcemez)" % g["ad"])
+        k = {"tur": "dosya", "dosya": g["hedef"], "alan": None, "onek": None}
+    print(g["ad"], yol, k["tur"], k["dosya"],
+          k.get("alan") or "-", k.get("onek") or "-", birincil or "-", sep="\t")
 ' "$ENVANTER"
 }
 
@@ -177,7 +209,7 @@ fi
 
 echo "== sır taşıması ($KIP) — kaynak: $ENVANTER"
 HATA=0
-while IFS=$'\t' read -r ad yol tur kdosya kalan konek; do
+while IFS=$'\t' read -r ad yol tur kdosya kalan konek birincil; do
   [ -n "$yol" ] || continue
   ETIKET="$kdosya"
   [ "$kalan" = "-" ] || ETIKET="$kdosya [$kalan]"
@@ -233,7 +265,38 @@ while IFS=$'\t' read -r ad yol tur kdosya kalan konek; do
   fi
 
   if [ "$KIP" = "kuru" ]; then
-    echo "   (kuru) $yol  ← $ETIKET  ($(stat -c '%a %U:%G' "$kdosya" 2>/dev/null || echo '?'))"
+    if [ "$birincil" != "-" ]; then
+      echo "   (kuru) TAKMA AD $ad → $birincil  ($yol)  ← $ETIKET"
+      echo "          kasaya YAZILMAZ (yeni yol AÇILMAZ); eşitlik --uygula'da ölçülür (kuru koşum"
+      echo "          kasaya HİÇ dokunmaz, yani kasadaki birincil değer burada okunamaz)"
+    else
+      echo "   (kuru) $yol  ← $ETIKET  ($(stat -c '%a %U:%G' "$kdosya" 2>/dev/null || echo '?'))"
+    fi
+    continue
+  fi
+
+  # ---- TAKMA AD (`ayni_deger`) — `kv put` YOK, EŞİTLİK KAPISI VAR ------------------------------
+  # Rol-1 hükmü (2026-09-14): aynı DEĞERİN tek kasa yolu vardır ve o yol BİRİNCİLİNDİR. Takma ad
+  # için ikinci bir `kv put`, tam olarak hükmün engellediği şeyi (rotasyondan sonra sessizce
+  # ayrışan iki yol) geri getirirdi. Ama "yazmıyoruz" demek yetmez: takma adın KAYNAĞI ile
+  # kasadaki BİRİNCİL değer BUGÜN gerçekten aynı mı — ölçülmeden bilinemez ve ayrıştıklarında
+  # takma adın tüketicisi (yan dosya alanı) kasadan BAŞKA bir değer alır. Ölçüm burada, taşıma
+  # anında yapılır; iki taraf da YALNIZ HASH basar.
+  # SIRA: birincil dalga-1 girdisidir ve envanterde takma addan ÖNCE gelir — yani bu noktada
+  # kasaya zaten konmuştur. Konmadıysa `kv get` boş döner, sha uyuşmaz ve kapı DURDURUR.
+  if [ "$birincil" != "-" ]; then
+    kasa_sha="$("$VAULT_BIN" kv get -field=value "$yol" | tr -d '\r\n' | _sha256 | cut -d' ' -f1)" \
+      || kasa_sha=""
+    if [ "$kasa_sha" = "$REF_SHA" ]; then
+      echo "   ✓ TAKMA AD $ad → $birincil  ($yol)  kaynak ile kasadaki BİRİNCİL değer EŞİT"
+      echo "     (yeni kasa yolu AÇILMADI — A1'de göç gerekmez)"
+    else
+      echo "   ✗ TAKMA AD $ad → $birincil  ($yol)  KAYNAK ile kasadaki BİRİNCİL değer AYRIŞTI"
+      echo "     kaynak: $ETIKET"
+      echo "     Bugün aynı sanılan iki değer aynı DEĞİL. Hangisinin doğru olduğu buradan"
+      echo "     BİLİNEMEZ; birincili yeniden taşımak ya da kopyaları eşitlemek AYRI bir karardır."
+      HATA=1
+    fi
     continue
   fi
 

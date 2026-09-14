@@ -55,6 +55,10 @@
 #                                           yeniden başlatır ve kanıtı ölçer. `--kuru` ile birleşir.
 #                                           KAPSAM: yalnız envanterde `rotasyon_siri` ile kasaya BAĞLI
 #                                           sırlar; bağlı olmayanlar ADIYLA beyan edilir ve eski yolla döner.
+#                                           TAKMA AD (`ayni_deger`, Rol-1 hükmü 2026-09-14): aynı değerin
+#                                           TEK kasa yolu vardır; rotasyon BİRİNCİL yola yapılır ve takma
+#                                           adlar onu otomatik izler. Restart listesi kasa YOLUNDAN toplanır
+#                                           (addan değil) — yani takma adın tüketicileri de kapsanır.
 #   sudo ./sir_rotasyon.sh --<alt> --esitle → EŞİTLEME (TSK-181, 2026-09-13): değer ÜRETİLMEZ, SORULMAZ,
 #                                           BASILMAZ; sırrın tablodaki İLK satırı (REFERANS) okunur, AYRI
 #                                           düşen dosya/env/url kopyalarına yazılır (api/sql kanalları
@@ -1824,28 +1828,57 @@ _alt_sirlari() {
   _kopyalar | awk -v a="$1" '$1==a {print $2}' | sort -u
 }
 
-#: `<kv ad>\t<vault_yolu>\t<hedef>\t<rotasyon_siri>` — verilen sır kimliklerinden KASAYA BAĞLI
-#: olanlar. Bağ envanterde `rotasyon_siri` alanıyla kurulur ve o alan `rotasyon_kopyalari`
-#: tablosuna çivilidir (v491 A5): burada üçüncü bir liste tutulmaz.
+#: `<kv ad>\t<KASA YOLU>\t<render kanıtı hedefi>\t<rotasyon_siri>\t<birincil ad | ->` — verilen
+#: sır kimliklerinden KASAYA BAĞLI olanlar. Bağ envanterde `rotasyon_siri` alanıyla kurulur ve o
+#: alan `rotasyon_kopyalari` tablosuna çivilidir (v491 A5): burada üçüncü bir liste tutulmaz.
+#:
+#: TAKMA AD (`ayni_deger`) BURADA ÇÖZÜLÜR: rotasyon BİRİNCİL yola yapılır ve render kanıtı
+#: birincilin `hedef`idir — yani takma adlar yeni değeri OTOMATİK izler. Çözülmeseydi rotasyon
+#: takma adın kendi yoluna yazar, birincil eski değerde kalır ve "aynı" sanılan iki değer tam da
+#: rotasyondan sonra ayrışırdı (hükmün engellediği hâl). Aynı yola çözülen iki satır TEK kez
+#: basılır: operatörden aynı değeri iki kez istemek, ikinci girişte yazım hatası riskidir.
 _vault_kv_satirlari() {
   "$PYTHON_BIN" -c '
 import sys, yaml
 istenen = set(sys.argv[2:])
-for g in yaml.safe_load(open(sys.argv[1], encoding="utf-8"))["vault_kv"]:
-    if g.get("rotasyon_siri") in istenen:
-        print(g["ad"], g["vault_yolu"], g["hedef"], g["rotasyon_siri"], sep="\t")
+kv = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))["vault_kv"]
+indeks = {g["ad"]: g for g in kv}
+gorulen = set()
+for g in kv:
+    if g.get("rotasyon_siri") not in istenen:
+        continue
+    birincil = g.get("ayni_deger")
+    if birincil is not None and birincil not in indeks:
+        sys.exit("%s: ayni_deger %s vault_kv de YOK (dangling takma ad)" % (g["ad"], birincil))
+    kaynak = indeks[birincil] if birincil else g
+    if kaynak["vault_yolu"] in gorulen:
+        continue
+    gorulen.add(kaynak["vault_yolu"])
+    print(g["ad"], kaynak["vault_yolu"], kaynak["hedef"], g["rotasyon_siri"],
+          birincil or "-", sep="\t")
 ' "$VAULT_ENVANTER" "$@"
 }
 
-#: `<yan dosya yolu>\t<yeniden başlatılacak birim ya da `-`>` — bu kasa sırrını TAŞIYAN yan
+#: `<yan dosya yolu>\t<yeniden başlatılacak birim ya da `-`>` — verilen KASA YOLUNU taşıyan yan
 #: dosyalar. Restart listesi ELLE yazılmaz: hangi dosyanın hangi birimi ilgilendirdiği envanterin
 #: `vault_dosyalar.yeniden_baslat` alanında yaşar.
+#:
+#: SORGU ADA DEĞİL YOLA GÖREDİR ve fark hükümdür: `secret/meridian/kapi_apikey` yolunu hem
+#: `kapi_apikey` hem takma adı `bot_key_meridian` taşır, ve kapının yan dosyası satırını TAKMA
+#: ADLA yazar. Ada göre sorsaydık `--kapi --vault` rotasyonu kapıyı yeniden başlatmazdı: yan
+#: dosya yeni değere döner, konteyner eski değeri ortamında tutar ve bot 401 alır.
 _vault_yan_dosyalari() {
   "$PYTHON_BIN" -c '
 import sys, yaml
-ad = sys.argv[2]
-for d in yaml.safe_load(open(sys.argv[1], encoding="utf-8"))["vault_dosyalar"]:
-    if any(x["sir"] == ad for x in d["satirlar"]):
+hedef_yol = sys.argv[2]
+veri = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
+indeks = {g["ad"]: g for g in veri["vault_kv"]}
+def coz(ad):
+    g = indeks[ad]
+    b = g.get("ayni_deger")
+    return indeks[b]["vault_yolu"] if b else g["vault_yolu"]
+for d in veri["vault_dosyalar"]:
+    if any(coz(x["sir"]) == hedef_yol for x in d["satirlar"]):
         print(d["yol"], d.get("yeniden_baslat") or "-", sep="\t")
 ' "$VAULT_ENVANTER" "$1"
 }
@@ -1862,16 +1895,18 @@ _vault_kapsam_beyani() {
 }
 
 _vault_kuru_rapor() {
-  local alt="$1" bagli="$2" ad yol hedef sir yd yb
+  local alt="$1" bagli="$2" ad yol hedef sir birincil yd yb
   echo "=== KURU KOŞUM: --$alt --vault (HİÇBİR ŞEY YAZILMADI, KASAYA DOKUNULMADI) ==="
   _vault_kapsam_beyani "$alt" "$bagli"
-  printf '%s\n' "$bagli" | while IFS=$'\t' read -r ad yol hedef sir; do
+  printf '%s\n' "$bagli" | while IFS=$'\t' read -r ad yol hedef sir birincil; do
     [ -n "$ad" ] || continue
     echo "  kasaya yazılacak : $yol   ($sir → $ad)"
+    [ "$birincil" = "-" ] \
+      || echo "  TAKMA AD         : $ad → $birincil   (yol ve render kanıtı BİRİNCİLİNDİR; takma adın tüketicileri onu izler)"
     echo "  render kanıtı    : $hedef   (kanonik tek-değer kopyası — sha DEĞİL, BİREBİR kıyas)"
     while IFS=$'\t' read -r yd yb; do
       echo "    · yan dosya: $yd   (yeniden başlat: $yb)"
-    done < <(_vault_yan_dosyalari "$ad")
+    done < <(_vault_yan_dosyalari "$yol")
     echo "  eski kanal (iki-kanal dönemi) AYNI pencerede kasadan gelen değerle yazılır:"
     _kopyalar | awk -v a="$alt" -v k="$sir" '$1==a && $2==k {printf "    · %s %s\n", $4, ($5=="-"?"":"["$5"]")}'
   done
@@ -1882,7 +1917,7 @@ _vault_kuru_rapor() {
 }
 
 vault_rotasyon() {
-  local alt="$1" bagli ad yol hedef sir bas gecen poz="" yd yb
+  local alt="$1" bagli ad yol hedef sir birincil bas gecen poz="" yd yb
   echo "=== ROTASYON (KASADAN): --$alt --vault ==="
   bagli="$(_vault_kv_satirlari $(_alt_sirlari "$alt"))"
   [ -n "$bagli" ] || die "--vault: --$alt alt komutunun kasaya BAĞLI sırrı YOK
@@ -1899,9 +1934,11 @@ vault_rotasyon() {
   # SATIRLAR DOSYADAN, fd 3 ÜZERİNDEN okunur: `_oku_gizli` STDIN'den `read -rs` yapar ve döngüyü
   # bir süreç ikamesine bağlasaydık operatörün yapıştırdığı değer değil TABLO okunurdu.
   _vault_kv_satirlari $(_alt_sirlari "$alt") > "$ISLIK/vault_kv.tsv"
-  while IFS=$'\t' read -r ad yol hedef sir <&3; do
+  while IFS=$'\t' read -r ad yol hedef sir birincil <&3; do
     [ -n "$ad" ] || continue
     adim "kasa sırrı: $sir → $yol"
+    [ "$birincil" = "-" ] \
+      || echo "  TAKMA AD: $ad → $birincil — rotasyon BİRİNCİL yola yapılır, takma adın yan dosya alanları onu otomatik izler"
     _oku_gizli "$sir (KASAYA konacak)" "$ISLIK/vault_yeni" \
       || die "değer boş — yapacak iş yok (kasaya HİÇBİR ŞEY yazılmadı)"
     [ -n "$YEDEK" ] || _yedek_al "$alt"
@@ -1936,9 +1973,12 @@ vault_rotasyon() {
     adim "eski kanal (iki-kanal dönemi): kopyalar KASADAN gelen değerle yazılır"
     _yaz "$alt" "$sir" "$ISLIK/vault_render_kanon"
 
+    # RESTART LİSTESİ KASA YOLUNDAN TOPLANIR, ADDAN DEĞİL: aynı yola çözülen her ad (birincil +
+    # takma adları) o yolun tüketicilerini getirir. Ada göre sorsaydık takma adın yan dosyasını
+    # taşıyan birim listeye HİÇ girmezdi.
     while IFS=$'\t' read -r yd yb; do
       [ "$yb" = "-" ] || poz="$poz $yb"
-    done < <(_vault_yan_dosyalari "$ad")
+    done < <(_vault_yan_dosyalari "$yol")
     poz="$poz $(_sir_birimleri "$sir")"
   done 3< "$ISLIK/vault_kv.tsv"
 

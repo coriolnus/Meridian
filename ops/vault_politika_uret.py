@@ -14,6 +14,12 @@ hangi dosyaya render edilir) ve dalga-2 ile gelen `vault_dosyalar` (Agent hangi 
 dosyayı hangi SATIRLARLA, kimin için yazar) blokları. Bu betik ikisinden ÜÇ dosya üretir ve üçü
 de ÜRETİLMİŞ dosyadır (başlıkları bunu söyler, elle düzenlenmez).
 
+TAKMA AD (`ayni_deger`, Rol-1 hükmü 2026-09-14): aynı DEĞERİ taşıyan sırların TEK kasa yolu
+vardır. Takma ad girdisi kendi `vault_yolu`sunu/`hedef`ini TAŞIMAZ — bu betik hem şablon hem
+politika yolunu BİRİNCİLİN girdisinden türetir, takma ad için ne `path` bloğu ne tek-değer
+`template` üretir. Kural olmasaydı aynı değer kasada iki yolda yaşar ve rotasyondan sonra
+sessizce ayrışırdı (biri döner, öteki dönmez).
+
 KOMUT SATIRI SÖZLEŞMESİ (ops aracı sözleşmesi KOMUT SATIRIdır, `main()` değil):
 
     python ops/vault_politika_uret.py              # KURU koşum: farkı basar, HİÇBİR ŞEY YAZMAZ
@@ -108,7 +114,44 @@ def vault_kv() -> list[dict]:
     kv = veri["vault_kv"]
     if not kv:
         raise SystemExit("deploy/sir_envanteri.yaml: `vault_kv` BOŞ — üretilecek bir şey yok")
+    indeks(kv)  # takma ad referansları BURADA doğrulanır: her okuyucu fail-closed olsun
     return kv
+
+
+def indeks(kv: list[dict]) -> dict[str, dict]:
+    """`ad → girdi` indeksi; `ayni_deger` (TAKMA AD) referanslarını DOĞRULAR.
+
+    Doğrulama burada, tek yerde durur çünkü üç çıktı da (iki politika + agent yapılandırması)
+    aynı referansları okur ve üçünde ayrı ayrı kontrol etmek, birinde unutulduğunda sessiz bir
+    boşluk bırakırdı. Üç hâl PATLAR, hiçbiri "en iyi tahminle devam" ETMEZ:
+      · dangling takma ad → şablon kasada OLMAYAN bir yolu okurdu (Agent 403/404, dosya hiç doğmaz)
+      · takma ad ZİNCİRİ → "birincil TEK olmalı" kuralı olmadan aynı değer yine iki yola dağılırdı
+      · takma adın KENDİ `vault_yolu`su → hükmün tam tersi: kasada ikinci bir yol açılırdı"""
+    ind = {g["ad"]: g for g in kv}
+    for g in kv:
+        birincil = g.get("ayni_deger")
+        if birincil is None:
+            continue
+        if birincil not in ind:
+            raise SystemExit(
+                f"{g['ad']}: `ayni_deger` {birincil!r} `vault_kv`de YOK (dangling takma ad)")
+        if ind[birincil].get("ayni_deger") is not None:
+            raise SystemExit(
+                f"{g['ad']}: `ayni_deger` ZİNCİRİ ({birincil} da bir takma ad) — birincil TEK olmalı")
+        if "vault_yolu" in g or "hedef" in g:
+            raise SystemExit(
+                f"{g['ad']}: takma ad KENDİ `vault_yolu`/`hedef`ini taşıyamaz — aynı değerin TEK "
+                "kasa yolu vardır (Rol-1 hükmü 2026-09-14)")
+    return ind
+
+
+def kendi_yolu_olan(kv: list[dict]) -> list[dict]:
+    """Kasada KENDİ yolu olan girdiler — takma adlar (`ayni_deger`) HARİÇ.
+
+    Politika `path` blokları ve tek-değer `template` blokları YALNIZ bunlardan doğar: takma ad
+    için ikinci bir `path` yazmak HCL'de yol TEKRARIdır, ikinci bir `template` ise sırrın
+    diskteki yüzeyini gereksizce büyüten bir kanonik kopya olurdu."""
+    return [g for g in kv if "ayni_deger" not in g]
 
 
 def _veri_yolu(girdi: dict) -> str:
@@ -135,15 +178,22 @@ def vault_dosyalar() -> list[dict]:
     return dosyalar
 
 
-def _ad_veri_yolu(ad: str, indeks: dict[str, dict]) -> str:
+def _ad_veri_yolu(ad: str, ind: dict[str, dict]) -> str:
     """Bir `satirlar[].sir` referansını KV-v2 okuma yoluna çevirir — dangling referans PATLAR.
 
     Sessizce atlamak, o ALANIN yan dosyada HİÇ doğmaması demektir: tüketici değişkeni eski
     kanaldan okumaya devam eder ve geçişin yarım kaldığı ancak eski kanal kapatıldığında,
-    yani en pahalı anda görünür."""
-    if ad not in indeks:
+    yani en pahalı anda görünür.
+
+    TAKMA AD (`ayni_deger`) BURADA ÇÖZÜLÜR: referans bir takma adsa yol BİRİNCİLİNDİR. Aynı
+    değeri taşıyan iki ALAN adı (ör. `OPENROUTER_API_KEY` ile `HINDSIGHT_API_REFLECT_LLM_1_API_KEY`)
+    böylece tek kasa yolunda buluşur ve rotasyondan sonra ayrışamazlar — hükmün bütün mekaniği
+    bu tek satırdır."""
+    if ad not in ind:
         raise SystemExit(f"`vault_dosyalar` {ad!r} sırrına referans veriyor ama `vault_kv`de YOK")
-    return _veri_yolu(indeks[ad])
+    girdi = ind[ad]
+    birincil = girdi.get("ayni_deger")
+    return _veri_yolu(ind[birincil] if birincil else girdi)
 
 
 def _yan_dosya_sablonlari() -> list[str]:
@@ -156,7 +206,7 @@ def _yan_dosya_sablonlari() -> list[str]:
 
     `exec` YALNIZ `sahip: ubuntu` olan dosyada doğar ve komut KABUKSUZ + SABİT argüman
     listesidir: tek iş sahipliği düzeltmektir, restart DEĞİL (tasarım §6.4)."""
-    indeks = {g["ad"]: g for g in vault_kv()}
+    ind = indeks(vault_kv())
     satirlar: list[str] = []
     for d in vault_dosyalar():
         satirlar.append("")
@@ -167,7 +217,7 @@ def _yan_dosya_sablonlari() -> list[str]:
             onek = ONEKLER[s.get("onek")]
             satirlar.append(
                 '%s=%s{{ with secret "%s" }}{{ .Data.data.value }}{{ end }}'
-                % (s["alan"], onek, _ad_veri_yolu(s["sir"], indeks)))
+                % (s["alan"], onek, _ad_veri_yolu(s["sir"], ind)))
         satirlar.append("EOT")
         satirlar.append(f'  destination = "{d["yol"]}"')
         satirlar.append(f'  perms       = {d["mod"]}')
@@ -188,11 +238,16 @@ def politika_agent() -> str:
 
     Joker YOK (`secret/data/meridian/*` yazılmadı) ve bu bilinçlidir: joker bir politika, kasaya
     yarın konacak HER sırrı da Agent'a açardı — oysa Agent'ın okuduğu küme envanterde YAZILIDIR
-    ve o kümeyi genişletmek bir KARAR olmalıdır, bir yan etki değil."""
+    ve o kümeyi genişletmek bir KARAR olmalıdır, bir yan etki değil.
+
+    TAKMA ADLAR (`ayni_deger`) BURADA YOL ÜRETMEZ: yolları birincilinkidir ve o yol listede
+    ZATEN vardır. İkinci bir `path` bloğu HCL'de yol TEKRARIdır — politikayı okuyan mühendise
+    iki AYRI sır varmış gibi görünür ve hükmün kendisini (aynı değer = tek yol) yalanlardı."""
     satirlar = [_baslik(), ""]
     satirlar.append("# Yalnız okuma. Liste `vault_kv`den TÜRER ve envanterin SIRASINI korur —")
     satirlar.append("# düzyazıya gömülü bir sayım (kaç sır) dalga-2'de sessizce yalan olurdu.")
-    for g in vault_kv():
+    satirlar.append("# TAKMA ADLAR (`ayni_deger`) YOL AÇMAZ: birincilin yolunu okurlar, tekrar YOK.")
+    for g in kendi_yolu_olan(vault_kv()):
         satirlar.append("")
         satirlar.append(f'# {g["ad"]} → {g["hedef"]}')
         satirlar.append(f'path "{_veri_yolu(g)}" {{')
@@ -281,7 +336,10 @@ def agent_yapilandirmasi() -> str:
     satirlar.append("    }")
     satirlar.append("  }")
     satirlar.append("}")
-    for g in vault_kv():
+    # TAKMA ADLAR (`ayni_deger`) KENDİ tek-değer şablonunu ÜRETMEZ: kasa yolu birincilindir ve
+    # ikinci bir kanonik kopya, sırrın diskteki yüzeyini bir dosya daha büyütürdü. Render kanıtı
+    # da birincilin `hedef`idir (rotasyon betiği onu okur).
+    for g in kendi_yolu_olan(vault_kv()):
         satirlar.append("")
         satirlar.append(f'# {g["ad"]} — tüketici: {g["tuketici"]}')
         satirlar.append("template {")

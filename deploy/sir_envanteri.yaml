@@ -532,7 +532,7 @@ vault_kv:
     hedef: "/etc/meridian/kapi_apikey"
     mod: "0400"
     sahip: "root"
-    tuketici: "meridian.service (LoadCredential=KAPI_APIKEY)"
+    tuketici: "meridian.service (LoadCredential=KAPI_APIKEY) · BİRİNCİL yol: takma ad bot_key_meridian buraya çözülür · sir_rotasyon.sh --vault render kanıtı"
 
   # ---- KAPI YÖNETİM ANAHTARI — TEK LoadCredential-DIŞI HEDEF, BEYANLI --------------------------
   # Bu dosyayı hiçbir birim açılışta ARAMAZ: okuyucusu operatörün eliyle koştuğu bir ops aracıdır
@@ -561,13 +561,13 @@ vault_kv:
     hedef: "/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY"
     mod: "0400"
     sahip: "root"
-    tuketici: "hindsight-api.service (LoadCredential=HINDSIGHT_API_LLM_API_KEY)"
+    tuketici: "hindsight-api.service (LoadCredential=HINDSIGHT_API_LLM_API_KEY) · BİRİNCİL yol: takma ad openrouter_api_key buraya çözülür · sir_rotasyon.sh --vault render kanıtı"
   - ad: HINDSIGHT_API_TENANT_API_KEY
     vault_yolu: "secret/meridian/HINDSIGHT_API_TENANT_API_KEY"
     hedef: "/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY"
     mod: "0400"
     sahip: "root"
-    tuketici: "hindsight-api.service · meridian.service · meridian-defter-ozeti-retain (LoadCredential=HINDSIGHT_API_TENANT_API_KEY — AYNI dosya)"
+    tuketici: "hindsight-api.service · meridian.service · meridian-defter-ozeti-retain (LoadCredential=HINDSIGHT_API_TENANT_API_KEY — AYNI dosya) · BİRİNCİL yol: takma ad hindsight_cp_dataplane_api_key buraya çözülür · sir_rotasyon.sh --vault render kanıtı"
 
   # ===============================================================================================
   # DALGA-2 — KALAN BÜTÜN SIRLAR (operatör kararı 2026-09-14 17:47Z "HEPSİ"; spec §2)
@@ -586,6 +586,7 @@ vault_kv:
   # (yan dosyanın sha'sı değişti demek, HANGİ alanın değiştiğini söylemez); (2) aynı betiğin
   # iki-kanal yazımı, eski kanal kopyalarını bu dosyadan okuyarak eşitler. Okuyucusu olmayan bir
   # render yapılmaz — "kanonik kopya" gerekçesi tek başına Yasa 6'yı karşılamazdı.
+  # TAKMA ADLAR (`ayni_deger`) BU ALANI TAŞIMAZ: onların render kanıtı BİRİNCİLİN `hedef`idir.
   #
   # `kaynak` / `kopya_kaynaklari` (spec §4): `vault_sir_koy.sh` değeri NEREDEN alacağını buradan
   # okur. `kaynak` REFERANSTIR (ilk kopya), `kopya_kaynaklari` AYNI değerin öteki yerleridir ve
@@ -601,18 +602,39 @@ vault_kv:
   # ise sır rotasyon tablosunda YOKTUR (bot anahtarları, pano parolası, CP erişim anahtarı için
   # bugün böyledir) ve kopya listesi ADIYLA beyanlıdır.
   #
-  # AÇIK KALEM — AYNI DEĞER, ÜÇ KASA YOLU (Rol-1'e): `openrouter_api_key` ile
-  # `HINDSIGHT_API_LLM_API_KEY`, `bot_key_meridian` ile `kapi_apikey`,
-  # `hindsight_cp_dataplane_api_key` ile `HINDSIGHT_API_TENANT_API_KEY` BUGÜN aynı değeri taşıyor
-  # ama kasada AYRI yollardır. Spec §2 sekiz adı ADIYLA sayar ve bu dosya onu izler; ayrışma riski
-  # `kopya_kaynaklari` kapısıyla TAŞIMA anında ölçülür, ama kasadaki iki yol ROTASYONDAN SONRA
-  # ayrışabilir. Kararı (tek yol + takma ad mı, yoksa iki yol + eşitlik çivisi mi) Rol-1 verir.
+  # ===============================================================================================
+  # `ayni_deger` — TAKMA AD (Rol-1 HÜKMÜ 2026-09-14, tur-2; tur-1'in AÇIK KALEMİ kapandı)
+  # ===============================================================================================
+  # SORU ŞUYDU: `openrouter_api_key` ile `HINDSIGHT_API_LLM_API_KEY`, `bot_key_meridian` ile
+  # `kapi_apikey`, `hindsight_cp_dataplane_api_key` ile `HINDSIGHT_API_TENANT_API_KEY` BUGÜN aynı
+  # değeri taşıyor. Tur-1 onları kasada AYRI yollar olarak yazmıştı; ayrışma TAŞIMA anında
+  # `kopya_kaynaklari` kapısıyla ölçülüyordu ama kasadaki iki yol ROTASYONDAN SONRA ayrışabilirdi
+  # (biri döner, öteki dönmez) — yani bu depoda en pahalıya mal olmuş sınıfın (aynı gerçeğin iki
+  # kopyası) kasa içindeki hâli.
+  #
+  # HÜKÜM: AYNI DEĞERİN TEK KASA YOLU VARDIR. Envanter girdisi `ayni_deger: <birincil ad>` taşır
+  # ve o girdi bir TAKMA ADdır: kendi `vault_yolu`su, `hedef`i, `mod`u, `sahip`i YOKTUR — dördü de
+  # birincilin girdisinden okunur. BİRİNCİL, kasada ZATEN duran dalga-1 girdisidir
+  # (`HINDSIGHT_API_LLM_API_KEY` · `kapi_apikey` · `HINDSIGHT_API_TENANT_API_KEY`); yani bu hüküm
+  # kasada YENİ BİR YOL AÇMAZ ve A1'de bir göç GEREKTİRMEZ.
+  #
+  # DÖRT YER BİRLİKTE DEĞİŞİR (yoksa hüküm yarım kalır ve yarım kalışı sessizdir):
+  #   1. BU DOSYA — `ayni_deger` alanı; takma ad yol/hedef taşımaz (çivi: taşırsa PATLAR).
+  #   2. `ops/vault_politika_uret.py` — takma adın şablon/policy yolu BİRİNCİLİN `vault_yolu`sundan
+  #      türer; takma ad KENDİ `path` bloğunu ve KENDİ tek-değer şablonunu ÜRETMEZ (politikada yol
+  #      tekrarı HCL'de bir hatadır, ve ikinci bir kanonik kopya sırrın diskteki yüzeyini büyütürdü).
+  #   3. `deploy/vault/vault_sir_koy.sh` — takma ad için `kv put` YAPILMAZ; kaynağının değeri ile
+  #      BİRİNCİLİN KASADAKİ değeri sha256 ile KIYASLANIR (ayrışma → durur, ADIYLA).
+  #   4. `deploy/oracle-a1/sir_rotasyon.sh --vault` — rotasyon BİRİNCİL yola yapılır, takma adlar
+  #      onu otomatik izler; restart listesi takma adın tüketicilerini de KAPSAR (yan dosya
+  #      referansları kasa YOLUNA çözülerek toplanır, ada göre değil).
+  #
+  # `rotasyon_siri` TAKMA ADDA KALIR ve bu bilinçlidir: dalga-1 girdileri şemalarını GENİŞLETEMEZ
+  # (v485 E1 onların alan kümesini BİREBİR dondurur) ve rotasyon tablosundaki kimlik zaten takma
+  # adın kopya kümesiyle çivilidir (A5). Rotasyon satırı takma addan doğar, YOLU birincilden alır.
   - ad: openrouter_api_key
-    vault_yolu: "secret/meridian/openrouter_api_key"
-    hedef: "/etc/meridian/openrouter_api_key"
-    mod: "0400"
-    sahip: "root"
-    tuketici: "vault_dosyalar şablonları (apisix · hindsight · hermes ×4) · sir_rotasyon.sh --vault render kanıtı (kanonik tek-değer kopyası; birim DEĞİL, systemd kaynağı DEĞİL)"
+    ayni_deger: HINDSIGHT_API_LLM_API_KEY
+    tuketici: "vault_dosyalar şablonları (apisix · hindsight · hermes ×4) — TAKMA AD: kasa yolu ve render kanıtı BİRİNCİLİNDİR (HINDSIGHT_API_LLM_API_KEY); kendi kasa yolu YOK, birim DEĞİL, systemd kaynağı DEĞİL"
     rotasyon_siri: OPENROUTER_API_KEY
     kaynak: {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: OPENROUTER_API_KEY, onek: null}
     kopya_kaynaklari:
@@ -666,14 +688,12 @@ vault_kv:
 
   # `BOT_KEY_MERIDIAN` MOTORUN kapı anahtarıdır ve `KAPI_APIKEY` ile AYNI değerdir — kopya kümesi
   # rotasyon tablosundan TÜRER (`--kapi` iki kopya yazar). Ad `bot_key_meridian`dir çünkü yan
-  # dosyada o ALANI doldurur; kasadaki `kapi_apikey` yolu ise `LoadCredential` kaynağını besler.
-  # İkisinin bugün aynı değeri taşıması, yarın da taşıyacağı anlamına GELMEZ (yukarıdaki AÇIK KALEM).
+  # dosyada o ALANI doldurur; kasadaki YOL ise birincilin (`kapi_apikey`) yoludur: TAKMA AD.
+  # `kaynak` alanı burada birincilin RENDER EDİLMİŞ dosyasıdır — yani taşıma öncesi eşitlik kapısı
+  # "takma adın kaynağı ile kasadaki birincil değer aynı mı" sorusunu doğrudan ölçer.
   - ad: bot_key_meridian
-    vault_yolu: "secret/meridian/bot_key_meridian"
-    hedef: "/etc/meridian/bot_key_meridian"
-    mod: "0400"
-    sahip: "root"
-    tuketici: "vault_dosyalar şablonları (apisix key-auth tüketicisi motor_meridian) · sir_rotasyon.sh --vault render kanıtı"
+    ayni_deger: kapi_apikey
+    tuketici: "vault_dosyalar şablonları (apisix key-auth tüketicisi motor_meridian) — TAKMA AD: kasa yolu ve render kanıtı BİRİNCİLİNDİR (kapi_apikey)"
     rotasyon_siri: KAPI_APIKEY
     kaynak: {tur: dosya, dosya: "/etc/meridian/kapi_apikey", alan: null, onek: null}
     kopya_kaynaklari:
@@ -701,12 +721,11 @@ vault_kv:
     tuketici: "vault_dosyalar şablonu (/opt/hindsight/.env-cp.vault) · sir_rotasyon.sh --vault render kanıtı"
     rotasyon_siri: null
     kaynak: {tur: env_satiri, dosya: "/opt/hindsight/.env-cp", alan: HINDSIGHT_CP_ACCESS_KEY, onek: null}
+  # `DATAPLANE_API_KEY` TENANT anahtarının kopyasıdır → TAKMA AD (birincil
+  # `HINDSIGHT_API_TENANT_API_KEY`, kasada dalga-1'den beri duruyor).
   - ad: hindsight_cp_dataplane_api_key
-    vault_yolu: "secret/meridian/hindsight_cp_dataplane_api_key"
-    hedef: "/etc/meridian/hindsight_cp_dataplane_api_key"
-    mod: "0400"
-    sahip: "root"
-    tuketici: "vault_dosyalar şablonu (/opt/hindsight/.env-cp.vault) · sir_rotasyon.sh --vault render kanıtı"
+    ayni_deger: HINDSIGHT_API_TENANT_API_KEY
+    tuketici: "vault_dosyalar şablonu (/opt/hindsight/.env-cp.vault) — TAKMA AD: kasa yolu ve render kanıtı BİRİNCİLİNDİR (HINDSIGHT_API_TENANT_API_KEY)"
     rotasyon_siri: HINDSIGHT_API_TENANT_API_KEY
     kaynak: {tur: dosya, dosya: "/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY", alan: null, onek: null}
     kopya_kaynaklari:
@@ -736,7 +755,9 @@ vault_kv:
 #                   `tuketici` alanında yazılıdır (timer'lı oneshot / her çağrıda dosyayı okuyan CLI)
 #   satirlar        `{alan, sir, onek}` — `sir` bir `vault_kv.ad`ıdır (çivi: dangling referans yok),
 #                   `onek` `null` ya da `Bearer` (donuk sözlük; rotasyon betiğinin ONEKLER tablosu
-#                   ile AYNI iki jeton)
+#                   ile AYNI iki jeton). `sir` bir TAKMA AD (`ayni_deger`) olabilir: şablon o zaman
+#                   BİRİNCİLİN kasa yolunu okur — yani aynı değeri taşıyan iki ALAN adı tek kasa
+#                   yolunda buluşur ve rotasyondan sonra ayrışamazlar.
 #
 # İKİ KANAL, İKİ ADIM (Faz-1 deseni): bu blok yalnız yan dosyayı tanımlar. Asıl dosyalardaki sır
 # satırları iki-kanal dönemi boyunca (≥2 gece) OLDUĞU GİBİ KALIR ve AYRI bir adımda kaldırılır —

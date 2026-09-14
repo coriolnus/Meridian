@@ -9,6 +9,7 @@
 
 # Yalnız okuma. Liste `vault_kv`den TÜRER ve envanterin SIRASINI korur —
 # düzyazıya gömülü bir sayım (kaç sır) dalga-2'de sessizce yalan olurdu.
+# TAKMA ADLAR (`ayni_deger`) YOL AÇMAZ: birincilin yolunu okurlar, tekrar YOK.
 
 # dash_token → /etc/meridian/dash_token
 path "secret/data/meridian/dash_token" {
@@ -45,11 +46,6 @@ path "secret/data/meridian/HINDSIGHT_API_TENANT_API_KEY" {
   capabilities = ["read"]
 }
 
-# openrouter_api_key → /etc/meridian/openrouter_api_key
-path "secret/data/meridian/openrouter_api_key" {
-  capabilities = ["read"]
-}
-
 # bot_key_bekci → /etc/meridian/bot_key_bekci
 path "secret/data/meridian/bot_key_bekci" {
   capabilities = ["read"]
@@ -65,11 +61,6 @@ path "secret/data/meridian/bot_key_sef" {
   capabilities = ["read"]
 }
 
-# bot_key_meridian → /etc/meridian/bot_key_meridian
-path "secret/data/meridian/bot_key_meridian" {
-  capabilities = ["read"]
-}
-
 # pano_giris_parola → /etc/meridian/pano_giris_parola
 path "secret/data/meridian/pano_giris_parola" {
   capabilities = ["read"]
@@ -77,10 +68,5 @@ path "secret/data/meridian/pano_giris_parola" {
 
 # hindsight_cp_access_key → /etc/meridian/hindsight_cp_access_key
 path "secret/data/meridian/hindsight_cp_access_key" {
-  capabilities = ["read"]
-}
-
-# hindsight_cp_dataplane_api_key → /etc/meridian/hindsight_cp_dataplane_api_key
-path "secret/data/meridian/hindsight_cp_dataplane_api_key" {
   capabilities = ["read"]
 }

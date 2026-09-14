@@ -47,7 +47,7 @@ template {
   error_on_missing_key = true
 }
 
-# kapi_apikey — tüketici: meridian.service (LoadCredential=KAPI_APIKEY)
+# kapi_apikey — tüketici: meridian.service (LoadCredential=KAPI_APIKEY) · BİRİNCİL yol: takma ad bot_key_meridian buraya çözülür · sir_rotasyon.sh --vault render kanıtı
 template {
   contents    = "{{ with secret \"secret/data/meridian/kapi_apikey\" }}{{ .Data.data.value }}{{ end }}"
   destination = "/etc/meridian/kapi_apikey"
@@ -71,7 +71,7 @@ template {
   error_on_missing_key = true
 }
 
-# HINDSIGHT_API_LLM_API_KEY — tüketici: hindsight-api.service (LoadCredential=HINDSIGHT_API_LLM_API_KEY)
+# HINDSIGHT_API_LLM_API_KEY — tüketici: hindsight-api.service (LoadCredential=HINDSIGHT_API_LLM_API_KEY) · BİRİNCİL yol: takma ad openrouter_api_key buraya çözülür · sir_rotasyon.sh --vault render kanıtı
 template {
   contents    = "{{ with secret \"secret/data/meridian/HINDSIGHT_API_LLM_API_KEY\" }}{{ .Data.data.value }}{{ end }}"
   destination = "/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY"
@@ -79,18 +79,10 @@ template {
   error_on_missing_key = true
 }
 
-# HINDSIGHT_API_TENANT_API_KEY — tüketici: hindsight-api.service · meridian.service · meridian-defter-ozeti-retain (LoadCredential=HINDSIGHT_API_TENANT_API_KEY — AYNI dosya)
+# HINDSIGHT_API_TENANT_API_KEY — tüketici: hindsight-api.service · meridian.service · meridian-defter-ozeti-retain (LoadCredential=HINDSIGHT_API_TENANT_API_KEY — AYNI dosya) · BİRİNCİL yol: takma ad hindsight_cp_dataplane_api_key buraya çözülür · sir_rotasyon.sh --vault render kanıtı
 template {
   contents    = "{{ with secret \"secret/data/meridian/HINDSIGHT_API_TENANT_API_KEY\" }}{{ .Data.data.value }}{{ end }}"
   destination = "/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY"
-  perms       = 0400
-  error_on_missing_key = true
-}
-
-# openrouter_api_key — tüketici: vault_dosyalar şablonları (apisix · hindsight · hermes ×4) · sir_rotasyon.sh --vault render kanıtı (kanonik tek-değer kopyası; birim DEĞİL, systemd kaynağı DEĞİL)
-template {
-  contents    = "{{ with secret \"secret/data/meridian/openrouter_api_key\" }}{{ .Data.data.value }}{{ end }}"
-  destination = "/etc/meridian/openrouter_api_key"
   perms       = 0400
   error_on_missing_key = true
 }
@@ -119,14 +111,6 @@ template {
   error_on_missing_key = true
 }
 
-# bot_key_meridian — tüketici: vault_dosyalar şablonları (apisix key-auth tüketicisi motor_meridian) · sir_rotasyon.sh --vault render kanıtı
-template {
-  contents    = "{{ with secret \"secret/data/meridian/bot_key_meridian\" }}{{ .Data.data.value }}{{ end }}"
-  destination = "/etc/meridian/bot_key_meridian"
-  perms       = 0400
-  error_on_missing_key = true
-}
-
 # pano_giris_parola — tüketici: vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --vault render kanıtı
 template {
   contents    = "{{ with secret \"secret/data/meridian/pano_giris_parola\" }}{{ .Data.data.value }}{{ end }}"
@@ -143,25 +127,17 @@ template {
   error_on_missing_key = true
 }
 
-# hindsight_cp_dataplane_api_key — tüketici: vault_dosyalar şablonu (/opt/hindsight/.env-cp.vault) · sir_rotasyon.sh --vault render kanıtı
-template {
-  contents    = "{{ with secret \"secret/data/meridian/hindsight_cp_dataplane_api_key\" }}{{ .Data.data.value }}{{ end }}"
-  destination = "/etc/meridian/hindsight_cp_dataplane_api_key"
-  perms       = 0400
-  error_on_missing_key = true
-}
-
 # /opt/apisix/.env-apisix.vault — tüketici: apisix.service (docker --env-file, ikinci dosya — drop-in 50-vault-yan-dosya.conf; root okur)
 template {
   contents    = <<EOT
 APISIX_ADMIN_KEY={{ with secret "secret/data/meridian/apisix_admin_key" }}{{ .Data.data.value }}{{ end }}
-OPENROUTER_API_KEY={{ with secret "secret/data/meridian/openrouter_api_key" }}{{ .Data.data.value }}{{ end }}
-OPENROUTER_AUTH=Bearer {{ with secret "secret/data/meridian/openrouter_api_key" }}{{ .Data.data.value }}{{ end }}
+OPENROUTER_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
+OPENROUTER_AUTH=Bearer {{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
 PANO_GIRIS_PAROLA={{ with secret "secret/data/meridian/pano_giris_parola" }}{{ .Data.data.value }}{{ end }}
 BOT_KEY_BEKCI={{ with secret "secret/data/meridian/bot_key_bekci" }}{{ .Data.data.value }}{{ end }}
 BOT_KEY_KARNE={{ with secret "secret/data/meridian/bot_key_karne" }}{{ .Data.data.value }}{{ end }}
 BOT_KEY_SEF={{ with secret "secret/data/meridian/bot_key_sef" }}{{ .Data.data.value }}{{ end }}
-BOT_KEY_MERIDIAN={{ with secret "secret/data/meridian/bot_key_meridian" }}{{ .Data.data.value }}{{ end }}
+BOT_KEY_MERIDIAN={{ with secret "secret/data/meridian/kapi_apikey" }}{{ .Data.data.value }}{{ end }}
 EOT
   destination = "/opt/apisix/.env-apisix.vault"
   perms       = 0400
@@ -171,12 +147,12 @@ EOT
 # /opt/hindsight/.env.vault — tüketici: hindsight-api.service (EnvironmentFile, ikinci dosya — drop-in 51-vault-yan-dosya.conf; systemd PID 1 olarak root okur)
 template {
   contents    = <<EOT
-HINDSIGHT_API_REFLECT_LLM_1_API_KEY={{ with secret "secret/data/meridian/openrouter_api_key" }}{{ .Data.data.value }}{{ end }}
-HINDSIGHT_API_REFLECT_LLM_2_API_KEY={{ with secret "secret/data/meridian/openrouter_api_key" }}{{ .Data.data.value }}{{ end }}
-HINDSIGHT_API_REFLECT_LLM_3_API_KEY={{ with secret "secret/data/meridian/openrouter_api_key" }}{{ .Data.data.value }}{{ end }}
-HINDSIGHT_API_CONSOLIDATION_LLM_1_API_KEY={{ with secret "secret/data/meridian/openrouter_api_key" }}{{ .Data.data.value }}{{ end }}
-HINDSIGHT_API_CONSOLIDATION_LLM_2_API_KEY={{ with secret "secret/data/meridian/openrouter_api_key" }}{{ .Data.data.value }}{{ end }}
-HINDSIGHT_API_CONSOLIDATION_LLM_3_API_KEY={{ with secret "secret/data/meridian/openrouter_api_key" }}{{ .Data.data.value }}{{ end }}
+HINDSIGHT_API_REFLECT_LLM_1_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
+HINDSIGHT_API_REFLECT_LLM_2_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
+HINDSIGHT_API_REFLECT_LLM_3_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
+HINDSIGHT_API_CONSOLIDATION_LLM_1_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
+HINDSIGHT_API_CONSOLIDATION_LLM_2_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
+HINDSIGHT_API_CONSOLIDATION_LLM_3_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
 EOT
   destination = "/opt/hindsight/.env.vault"
   perms       = 0400
@@ -187,7 +163,7 @@ EOT
 template {
   contents    = <<EOT
 HINDSIGHT_CP_ACCESS_KEY={{ with secret "secret/data/meridian/hindsight_cp_access_key" }}{{ .Data.data.value }}{{ end }}
-HINDSIGHT_CP_DATAPLANE_API_KEY={{ with secret "secret/data/meridian/hindsight_cp_dataplane_api_key" }}{{ .Data.data.value }}{{ end }}
+HINDSIGHT_CP_DATAPLANE_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_TENANT_API_KEY" }}{{ .Data.data.value }}{{ end }}
 EOT
   destination = "/opt/hindsight/.env-cp.vault"
   perms       = 0400
@@ -198,7 +174,7 @@ EOT
 template {
   contents    = <<EOT
 BOT_KEY_BEKCI={{ with secret "secret/data/meridian/bot_key_bekci" }}{{ .Data.data.value }}{{ end }}
-OPENROUTER_API_KEY={{ with secret "secret/data/meridian/openrouter_api_key" }}{{ .Data.data.value }}{{ end }}
+OPENROUTER_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
 EOT
   destination = "/home/ubuntu/.hermes/profiles/bekci/.env.vault"
   perms       = 0600
@@ -213,7 +189,7 @@ EOT
 template {
   contents    = <<EOT
 BOT_KEY_KARNE={{ with secret "secret/data/meridian/bot_key_karne" }}{{ .Data.data.value }}{{ end }}
-OPENROUTER_API_KEY={{ with secret "secret/data/meridian/openrouter_api_key" }}{{ .Data.data.value }}{{ end }}
+OPENROUTER_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
 EOT
   destination = "/home/ubuntu/.hermes/profiles/karne/.env.vault"
   perms       = 0600
@@ -228,7 +204,7 @@ EOT
 template {
   contents    = <<EOT
 BOT_KEY_SEF={{ with secret "secret/data/meridian/bot_key_sef" }}{{ .Data.data.value }}{{ end }}
-OPENROUTER_API_KEY={{ with secret "secret/data/meridian/openrouter_api_key" }}{{ .Data.data.value }}{{ end }}
+OPENROUTER_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
 EOT
   destination = "/home/ubuntu/.hermes/profiles/sef/.env.vault"
   perms       = 0600
@@ -242,7 +218,7 @@ EOT
 # /home/ubuntu/.hermes/.env.vault — tüketici: hermes CLI GLOBAL env — motorun hermes._agent_call yolu (env_loader ikinci dosya — A1'DE ÖLÇÜLECEK; timer'sız, her çağrıda okunur, restart YOK)
 template {
   contents    = <<EOT
-OPENROUTER_API_KEY={{ with secret "secret/data/meridian/openrouter_api_key" }}{{ .Data.data.value }}{{ end }}
+OPENROUTER_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
 EOT
   destination = "/home/ubuntu/.hermes/.env.vault"
   perms       = 0600
