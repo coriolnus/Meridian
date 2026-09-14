@@ -281,3 +281,16 @@ _Güncelleme 22:09Z: A-2 korpus gömmesi sürüyor (1 s+); A-3/A-4 şef brifingi
 **Bugün kalan sıra:** ✅ 10:03Z bekçi brifingi ölçüldü (denetlenemedi/ReadTimeout → TSK-138 notu) · ✅ Vault Faz-2 CANLI 10:19Z (canary geçti, kök iptal) · dağıtım #44 · 13:40Z ayna dolumu + CRM göç kanıtı · 20:3xZ akşam döngüsü (TSK-180/181) · 22:00Z şef brifingi (TSK-138/014).
 **Kapalı kalanlar (değişmedi):** EDG-089/081 09-20 → 9 kalem; TSK-063 kilitler 11/20; 044/045 kanıt yok; 097/096/010 tetik yok; TSK-020 Kademe C learn kapalı; TSK-176 T1 OCI kimliği.
 
+## 3f. Durum güncellemesi — 2026-09-14 12:00Z (Rol-1; §3e'nin 4 saat sonrası)
+
+| Kalem | Durum | Kapı / sıradaki |
+|---|---|---|
+| Suite #52 | YEŞİL 12660/0 (HEAD 6758d65 başta/sonda) → push 10:01Z | — |
+| TSK-064 Faz-2 Vault | ✅ CANLI 10:19Z: kurulum 1–12, üç birim test-ateşlendi, 7 sır kasada, canary GEÇTİ, kök iptal (orphan admin). A1'de ölçülen üç arıza tur-3'te kapandı (v485 90 çivi) | admin jetonu yenileme 2026-10-14 öncesi · dalga-2 kapsamı operatör |
+| Dağıtım #44 | ✅ 10:25Z (553c1aa), worker 10:26Z, healthz 200, environ 0 | — |
+| TSK-138 bekçi kolonu | 10:03Z ÖLÇÜLDÜ: denetlenemedi/llm_dustu ReadTimeout → KÖK NEDEN: hızlı rota gemma :free 429 → super reasoning 75–138 s; ayrıca OpenRouter 200-içinde-error gövdesi | dilim-3 (reasoning kapalı varsayılan · 200-error tek yeniden deneme · çağrı ölçüm olayı; v486) — Opus tur-1 133b871 worktree'de, Sonnet inceleme uçuşta → merge → dağıtım #45 (13:30Z öncesi ya da 20:05Z sonrası) → kanıt 22:00Z şef / 10:03Z bekçi |
+| TSK-104 (a) | n=2/20 (7 gün penceresi, /api/diagnostics seyrelme 11:5xZ) | kapalı, birikim |
+| TSK-188 ileri dolum | Beklenen davranış: ileri kip 09-13 22:30–23:41Z 09-04..09-11 iş günlerini doldurdu; bugün ileri gün yok (hafta sonu + T-0) → geri kip tavana takılıp çıkıyor (tasarım) | Salı sabahı 09-14 ileri güne girer → kanıt → DONE |
+| A1 failed birimler | 6 tarihî (05–07 Eylül oneshot'ları: gece-kanary080, kanary080-gunduz, ingest067-r2..r5); yeni yok; warn/error 11:00Z sonrası yok; vault bekçisi 5 dk'da bir TAMAM | — |
+
+**Bugün kalan sıra (12:00Z):** TSK-138 dilim-3 zinciri (inceleme → tur-2 `deneme` alanı → merge → kapsam → dağıtım #45) · 13:40Z DE/MPC/MRNA/MU ayna dolumu + CRM `r_payda_gocu` (qty_taban 12) → TSK-187 notu · 20:3xZ akşam döngüsü (TSK-180/181) · 22:00Z şef brifingi (TSK-138 dilim-3 kanıtı: `sef_brifingi_denetci_cagri` sure_sn/reasoning_tok, cevaplayan_model dolu) · saatlik Vault/failed triyajı.
