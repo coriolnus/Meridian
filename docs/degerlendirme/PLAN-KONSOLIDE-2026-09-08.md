@@ -276,8 +276,8 @@ _Güncelleme 22:09Z: A-2 korpus gömmesi sürüyor (1 s+); A-3/A-4 şef brifingi
 | C-4 TSK-167 | DONE (indeks tazelendi) |
 | E tick diski | Operatör kararı: tek işçi + 15 GB → uygulandı (dilim-2) |
 | E eski OpenRouter anahtarı | Operatör: iptal edildi → TSK-064 09-08 adımı kapandı |
-| E (yeni) TSK-064 Faz-2 Vault | Operatör 'A ve B hemen': plan `2026-09-14-vault-faz2.md`, Opus repo tarafı uçuşta (Task 1–4 kodlandı, kapsam koşumu sürüyor); A1 ön hazırlık: 2.1.0 ikili sha doğrulandı, lisans kapısı geçti, kök disk 23 G |
+| E (yeni) TSK-064 Faz-2 Vault | ✅ 10:19Z CANLI — kurulum adım 1–12, üç birim test-ateşlendi, 7 sır kasada, canary GEÇTİ (agent render → meridian 200, environ 0), kök jetonu iptal (orphan admin); A1'de ölçülen üç arıza tur-3'te kapandı (edbf139/d84eebb/0d1dca9; ROADMAP TSK-064 notu 10:19Z). Kalan: dağıtım #44 · admin jetonu yenileme 2026-10-14 öncesi · dalga-2 kapsamı operatör |
 
-**Bugün kalan sıra:** 10:03Z bekçi brifingi (TSK-138 bekçi kolonu) · Vault: Sonnet inceleme → merge → A1 kurulum (`vault_kur.sh`) → sır taşıma (`vault_sir_koy.sh`) → Agent bağlama + tüketici restart (seans dışı: 13:30Z öncesi ya da 20:05Z sonrası) → canary · 13:40Z ayna dolumu + CRM göç kanıtı · 20:3xZ akşam döngüsü (TSK-180/181) · 22:00Z şef brifingi (TSK-138/014).
+**Bugün kalan sıra:** ✅ 10:03Z bekçi brifingi ölçüldü (denetlenemedi/ReadTimeout → TSK-138 notu) · ✅ Vault Faz-2 CANLI 10:19Z (canary geçti, kök iptal) · dağıtım #44 · 13:40Z ayna dolumu + CRM göç kanıtı · 20:3xZ akşam döngüsü (TSK-180/181) · 22:00Z şef brifingi (TSK-138/014).
 **Kapalı kalanlar (değişmedi):** EDG-089/081 09-20 → 9 kalem; TSK-063 kilitler 11/20; 044/045 kanıt yok; 097/096/010 tetik yok; TSK-020 Kademe C learn kapalı; TSK-176 T1 OCI kimliği.
 
