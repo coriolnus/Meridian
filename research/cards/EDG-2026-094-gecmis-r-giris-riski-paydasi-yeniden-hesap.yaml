@@ -8,7 +8,7 @@
 # recall bu kart için ölçüm sırası gelince koşulur.
 
 card_id: EDG-2026-094
-status: registered   # ön-kayıt; ADIM-1 ölçüm (salt-okur) Opus, ADIM-2 yazım (ops betiği, A1 bakım penceresi) Rol-1
+status: measured     # ADIM-1 ölçüldü 2026-09-14; hüküm KALDI (kill-list 2) — ardıl EDG-2026-095
 family: canli_r_paydasi
 on_kayit: 2026-09-14
 selef:
@@ -87,3 +87,13 @@ rol1_hukumleri_2026_09_14: >
   → ölçülemedi; R4 payda_oran = (pnl/r_eski) / (qty_giris×rps) TEŞHİS sütunu (eşik değil; fill≠base_fill kayması); R5 eşikler
   karttan aynen; R6 PK-1 n=0 bilgisiz. Hafıza kontrolü: Hindsight recall 20:2xZ (R'nin position_size_r'den yapısal bağımsızlığı;
   ADV/notional tavanları risk_dollars'ı qty×(base_fill−stop) ile yeniden türetir) — kaynak: recall; kart_benzer ön-kayıtta.
+
+hukum_2026_09_14:
+  tarih: "2026-09-14T21:1xZ"
+  status_gecisi: "registered → measured; K 2/2 harcandı (EDG-094-benimsenmis-ayrisma: GEÇTİ — medyan dR_oran 0,2672 ≥ 0,10, n=13 · EDG-094-benimsemesiz-ozdeslik: KALDI — max |dR| 0,2127 > 0,01, n=10; yalnız plan-stop'lu 8 satırda da 0,0576 > 0,01)"
+  hukum: "KALDI — kill-list 2 tetiklendi (benimsemesiz özdeşlik bozuldu → yazım YOK, kalem TSK-187'ye döner). ADIM-2 KOŞULMADI. Teşhis (Rol-1; eşik DEĞİL): benimsemesiz plan-stop satırlarda payda_oran 0,9625–1,0381 (max |1−payda_oran| 0,0381) → eski payda (risk_dollars = qty × (base_fill − stop)) ile yeni payda (qty × (fill − stop)) arasındaki fark yalnız base_fill↔fill KAYMASIdır (%0,4–4); |dR| = |R| × |1 − payda_oran| olduğundan MUTLAK 0,01 toleransı büyük R'de düşer (MRNA R 14,675 → |dR| 0,0576). Yani 'payda/veri kusuru' değil, kartın özdeşlik kolu YANLIŞ BİRİMDE (mutlak) yazılmıştı; eşik değişmez → ardıl kart EDG-2026-095 göreli toleransla (|1 − payda_oran| ≤ 0,05, plan-stop kümesi) ve PK-1 için damgalı satır ≥1 şartıyla. Benimsenmiş kol GEÇTİ, ayrışma beklenen yönde (VRTX 17→38: R −2,277 → −1,033; AMGN +0,2425; MU +0,2012; CRM 17→19: −0,1325)."
+  pk: "PK-1 (damgalı gerçek satır eşitliği) n=0 → BİLGİSİZ (2026-09-14 sonrası kapanan giris_riski damgalı satır yok; hesap yolu sentetik damgalı satırla T5a doğrulandı) · PK-2 sentetik (T4: benimsemesiz ΔR=0 tam; 17→38 oranı 17/38 tol 1e-9) YEŞİL · PK-3 yazım kuru koşumu (T8: --kuru DB sha aynı; --uygula yalnız hedef extra_json, r_multiple sütun sha aynı, yedek+sha yan dosyası, idempotent, bayrak çelişkisi çıkış 2) sentetik DB'de YEŞİL — gerçek DB'de KOŞULMADI (kill-list)."
+  olculemeyen: "1/24 (0,0417 ≤ 0,10): T00886 ALL — stop yok (plan_id eşleşmesi yok, pencerede trail/koruma olayı yok). Düşük güvenli stop (koruma_oco olayından): NUE, EMR, BKNG, AMGN — EMR payda_oran 1,7436, BKNG 2,0339 (koruyucu emir stop'u giriş stop'u olmayabilir; ardıl kart bu satırları özdeşlik ve yazım kümesinin DIŞINDA tutar)."
+  girdi_blob: "sonuc_094_20260914T205907Z.json blob ee8d6fb2f50d · RAPOR_094_20260914T205907Z.md blob 2705a41dd30f (research/olcumler/edg094_r_yeniden/olcum/); DB yedeği sha256 c87ce32a… ve olay süzgeci sha256 e46e794f… depo dışı (A1 events.jsonl, 24 ticker) — sonuç JSON'unda girdi_kunyesi olarak duruyor"
+  bedel: "Opus ×1 implementer (~254k token, 23 dk) + Sonnet ×1 inceleme + Rol-1 A1 salt-okur ölçümleri (sqlite backup 5,4 MB, olay süzgeci 27 kayıt); A1'e yazım YOK."
+  yan_urun: "olc.py payda_oran teşhis sütunu (ardıl kartta yeniden kullanılır, eşikler --kart ile parametrelenecek) + ops/r_giris_yeniden_yaz.py (ADIM-2 betiği HAZIR, koşulmadı) + v492 21 mutasyon; TSK-187 notu: eski payda base_fill−stop, yeni payda fill−stop — iki payda kıyası ancak GÖRELİ toleransla anlamlı; kart varsayımı 'benimseme kaydı trade extra_json'unda' YANLIŞTI (events.jsonl adet_benimsendi)."

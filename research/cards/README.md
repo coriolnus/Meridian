@@ -11,7 +11,7 @@ Kaynak: `research/cards/*.yaml` → `status` alanı. Üretici: `ops/kart_endeksi
 Bayat mı diye sor: `python ops/kart_endeksi_uret.py --kontrol` (çıkış 1 = bayat).
 Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenmez.
 
-Toplam **108** kart.
+Toplam **109** kart.
 
 ### Kayıtlı — ölçüm bekliyor (13)
 
@@ -41,9 +41,9 @@ Toplam **108** kart.
 - **EDG-2026-086** (`registered`) — 
   · HÜKÜM: 2026-09-07 Rol-1 — ön-kayıt; B1 backend + B2 UI bu karttan sonra; ölçüm penceresi B2 dağıtımından itibaren
   · kart: `EDG-2026-086-pano-sohbet-kalite.yaml`
-- **EDG-2026-094** (`registered`) — 
-  · HÜKÜM: ön-kayıt; ADIM-1 ölçüm (salt-okur) Opus, ADIM-2 yazım (ops betiği, A1 bakım penceresi) Rol-1
-  · kart: `EDG-2026-094-gecmis-r-giris-riski-paydasi-yeniden-hesap.yaml`
+- **EDG-2026-095** (`registered`) — 
+  · HÜKÜM: tetik: ≥1 `r_payda="giris_riski"` damgalı KAPANMIŞ canlı işlem (2026-09-14 sonrası açılan pozisyonlardan)
+  · kart: `EDG-2026-095-gecmis-r-goreli-ozdeslik-damgali-kontrol.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
   · kart: `EXE-2026-009-pencere-kaydirma.yaml`
@@ -78,7 +78,7 @@ Toplam **108** kart.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`
 
-### Ölçüldü (62)
+### Ölçüldü (63)
 
 - **BASE-2026-001** (`measured`) — Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net −5.542 USD).
   · HÜKÜM: 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1): CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146 seans, bugünkü motor+canlı v3…
@@ -236,6 +236,9 @@ Toplam **108** kart.
 - **EDG-2026-093** (`measured`) — 
   · HÜKÜM: 2026-09-14 19:4xZ hüküm `hukum_2026_09_14` — KALDI (bilgisiz: üst-dilim fazlası CI-0-içi; large-cap PK-1 katman i birebir, katman ii kısmi); K 2/2 harcandı + tanı
   · kart: `EDG-2026-093-midcap-pit-kohort-sagkalan-ust-sinir.yaml`
+- **EDG-2026-094** (`measured`) — 
+  · HÜKÜM: ADIM-1 ölçüldü 2026-09-14; hüküm KALDI (kill-list 2) — ardıl EDG-2026-095
+  · kart: `EDG-2026-094-gecmis-r-giris-riski-paydasi-yeniden-hesap.yaml`
 - **EXE-2026-001** (`measured`) — İç defter (koşulsuz ertesi-açılış dolumu) ile canlı ayna (buy-stop GTC bracket) FARKLI icra modelleri koşuyor ve ayna gap durumunda reddediliyor…
   · HÜKÜM: 2026-08-03 ~15:0x UTC — E1 GRİD KOŞULDU (kanıt: research/olcumler/e1_grid_2026-08-03/; determinizm çift-kapılı)
   · kart: `EXE-2026-001-entry-execution.yaml`

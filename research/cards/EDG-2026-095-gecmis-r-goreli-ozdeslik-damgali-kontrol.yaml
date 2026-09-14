@@ -1,0 +1,82 @@
+# EDG-2026-095 — Geçmiş işlemlerin R'si giriş-riski paydasıyla: GÖRELİ özdeşlik + damgalı kontrol şartıyla (EDG-094 ardılı)
+# ÖN-KAYIT 2026-09-14 21:1xZ (Rol-1). Selef EDG-2026-094 KALDI: mutlak |ΔR| ≤ 0,01 özdeşlik kolu büyük R'de düşer
+# (|ΔR| = |R| × |1 − payda_oran|; MRNA R 14,675 → 0,0576), benimsenmiş kol GEÇTİ (medyan 0,2672). Eşik değişmez → yeni kart.
+# Operatör kararı 2026-09-14 17:47Z ("geçmiş işlemlerin R'si yeni paydayla AYRI KARTLA yeniden hesaplanır; eski değer kalır") sürer.
+# HAFIZA KONTROLÜ (21:0xZ): `ops/kart_benzer.py` → EDG-2026-094 (selef, skor 0,34), EDG-2026-091 (KALDI, payda kaynağı), KYS-2026-002/
+# EDG-056/064 (≤0,15, ilgisiz). Hindsight recall 20:2xZ (EDG-094 için): R position_size_r'den yapısal bağımsız; ADV/notional tavanları
+# risk_dollars'ı qty×(base_fill−stop) ile yeniden türetir → göreli sapmanın kaynağı base_fill↔fill kayması. Kaynak: kart_benzer + recall.
+
+card_id: EDG-2026-095
+status: registered   # tetik: ≥1 `r_payda="giris_riski"` damgalı KAPANMIŞ canlı işlem (2026-09-14 sonrası açılan pozisyonlardan)
+family: canli_r_paydasi
+on_kayit: 2026-09-14
+selef:
+  - "EDG-2026-094 (KALDI 2026-09-14: benimsemesiz özdeşlik MUTLAK 0,01 toleransla düştü; benimsenmiş ayrışma GEÇTİ; PK-1 n=0 bilgisiz)"
+  - "EDG-2026-091 (KALDI 2026-09-13: canlı R paydası kaynağı = risk_dollars bütçesi + _adet_benimse → TSK-187)"
+ref:
+  - "TSK-187 / TSK-187b (broker.Position.qty_taban, r_payda_usd, R_PAYDA_GIRIS damgası; göç kanıtı 2026-09-14 20:20Z CRM)"
+  - "EDG-2026-088 PK(2) (yalnız `giris_riski` damgalı çiftler kıyaslanır — bu kart yeni alanı ekler, kuralı değiştirmez)"
+  - "KYS-2026-001 (kıyas kirlenmesi sınıfı)"
+  - "research/olcumler/edg094_r_yeniden/olc.py (R1–R6 hükümleri; payda_oran teşhis sütunu) + ops/r_giris_yeniden_yaz.py"
+
+hipotez: >
+  Geçmiş kapanmış canlı işlemlerde (kaynak `live_paper`; replay tohumları hariç) yeni payda (qty_giris × (fill − stop)) ile
+  eski paydanın (risk_dollars = qty × (base_fill − stop)) oranı benimseme GÖRMEMİŞ ve stop'u plandan gelen işlemlerde
+  1'e yakındır (|1 − payda_oran| ≤ 0,05 — kayma base_fill↔fill'den ibarettir), benimsenmiş işlemlerde ise yeni R eski R'den
+  anlamlı ayrışır (medyan |ΔR| / |R_eski| ≥ 0,10). Her iki kol tutuyorsa ve damgalı gerçek satırlarda hesap yolu defterle
+  eşitse (PK-1, n ≥ 1), geçmiş satırlara `extra_json.r_multiple_giris` AYRI alan olarak yazılır; `r_multiple` DOKUNULMAZ.
+
+k_registry: {registered_at: "2026-09-14", trial_ids: [EDG-095-benimsenmis-ayrisma, EDG-095-benimsemesiz-goreli-ozdeslik, EDG-095-damgali-kontrol-esitligi]}
+# K=3: ayrışma + göreli özdeşlik + damgalı kontrol (n ≥ 1 zorunlu; n=0 → BİLGİSİZ, yazım yok). Yazım adımı K'ye girmez.
+
+adim_1_olcum: >
+  SALT-OKUR, EDG-094 ile AYNI kod yolu: `olc.py --kart EDG-2026-095` (eşikler bu karttan; hükümler R1–R6 aynen —
+  qty_giris = pencere içi SON adet_benimsendi.yeni yoksa trades.qty; stop kaynağı plan → trail from_stop → koruma_oco (düşük
+  güven) → ölçülemedi; payda_oran = (pnl/r_eski) / (qty_giris × (fill − stop))). Girdi: A1 `state/meridian.db` tutarlı yedeği
+  (sqlite backup, sha256) + events.jsonl adet_benimsendi/koruma/trail süzgeci (sha256). Özdeşlik kümesi = benimsemesiz VE
+  stop_kaynak == "plan"; düşük güvenli stop'lu satırlar özdeşlik kümesine ve YAZIM kümesine girmez (ayrı sayılır).
+  Çıktı: işlem başına tablo + özet + girdi künyesi + blob sha; hüküm Rol-1.
+
+adim_2_yazim: >
+  ÖLÇÜM GEÇTİYSE ve HÜKÜM Rol-1'de YAZILDIYSA: `ops/r_giris_yeniden_yaz.py --db … --olcum … --yedek-dizin … --kuru/--uygula`
+  (A1, bakım penceresi, worker DURMUŞKEN; DB yedeği + sha önce; yalnız `olculebildi` VE `guven != dusuk` satırlar — betiğe güven
+  süzgeci ardıl dilimde eklenir; `r_multiple` alanına DOKUNULMAZ; yazılan satır sayısı = hedef sayısı, aksi hâlde rollback).
+
+esikler:
+  benimsenmis_ayrisma_medyan_alt: 0.10        # medyan |ΔR| / |R_eski| (benimsenmiş işlemler)
+  benimsemesiz_goreli_ozdeslik_tol: 0.05      # |1 − payda_oran| ≤ 0,05, benimsemesiz + plan-stop satırların HEPSİNDE (EDG-094 ölçümü: max 0,0381, n=8)
+  olculemeyen_ust_oran: 0.10                  # qty_giris ya da stop ölçülemeyen pay ≤ %10
+  kontrol_esitlik_tol: 0.001                  # PK-1: damgalı satırlarda hesaplanan = defterdeki r_multiple
+  kontrol_asgari_n: 1                         # PK-1 damgalı satır sayısı ≥ 1; 0 → ölçüm BİLGİSİZ, yazım YOK
+
+kill_list:
+  - "PK-1 n=0 ya da eşitlik tutmuyor → hesap yolu doğrulanmadı, hiçbir sayı yayılmaz, yazım YOK"
+  - "benimsemesiz plan-stop satırlarda |1 − payda_oran| > 0,05 olan varsa → payda/veri kusuru, yazım YOK, kalem TSK-187'ye döner"
+  - "ölçülemeyen payı > %10 → yazım YOK (yarım alan kıyas kirletir — KYS-2026-001)"
+  - "replay/tohum satırları (kaynak != live_paper) KAPSAM DIŞI; karışırsa ölçüm geçersiz"
+  - "düşük güvenli stop'lu (koruma_oco) satırlar yazım kümesine GİRMEZ; `r_multiple` eski alanı asla üzerine yazılmaz"
+
+pozitif_kontrol: >
+  (1) PK-1: 2026-09-14 sonrası kapanan `r_payda=giris_riski` damgalı satır(lar)da hesaplanan r_multiple_giris = defterdeki
+  r_multiple (tol 0,001), n ≥ 1 ZORUNLU; (2) sentetik: benimsemesiz qty=qty_giris → ΔR=0; benimsenmiş 17→38 → r_yeni/r_eski = 17/38;
+  base_fill ≠ fill sentetik satırında payda_oran = (base_fill−stop)/(fill−stop) tam; (3) yazım provası: A1 DB YEDEĞİNİN kopyasında
+  `--uygula` → yalnız hedef extra_json değişir, r_multiple sütun sha aynı, ikinci koşum 0 satır; canlı DB'de önce `--kuru`.
+
+veri_penceresi: "canlı trades defteri: ilk canlı işlem (2026-08-07) → ölçüm günü; damgalı satırlar (2026-09-14 sonrası açılıp kapananlar) kontrol kümesi; replay tohumları hariç"
+
+basari_tanimi: >
+  Üç K kaydı + PK üçü yeşil + tablo/özet blob sha ile karta; hüküm (GEÇTİ/KALDI) Rol-1 aynı turda. GEÇTİ ise ADIM-2 bakım
+  penceresinde koşulur ve yazılan satır sayısı karta işlenir; KALDI ise yazım YOK ve neden TSK-187 notuna gider.
+
+notlar: >
+  Kod: EDG-094 `olc.py` eşikleri ESIKLER sözlüğünde donuk — ardıl dilimde `--kart` parametresiyle bu karttan okunur (Opus, küçük
+  dilim; v492 çivisi kart↔kod eşitliğini iki kart için ölçer); `ops/r_giris_yeniden_yaz.py`ye güven süzgeci. Ölçüm tetiği: A1'de
+  `select count(*) from trades where extra_json like '%giris_riski%'` ≥ 1 (Rol-1 günlük triyajında bakılır). Öncelik: damgalı
+  satır oluşunca; şimdilik sıra dışı (bekleyen tetik).
+
+ardil_dilim_gereksinimleri: >
+  EDG-094 Sonnet incelemesi (2026-09-14 21:2xZ) bulguları bu kartın ölçüm/yazım diliminde kapatılır: B1 ops/r_giris_yeniden_yaz.py
+  --olcum girdi_kunyesi.db.sha256 ile --db gerçek sha256'sı EŞİT değilse çıkış 1 ("ölçüm başka bir defter anına ait") — ADIM-2 gerçek
+  koşumdan ÖNCE zorunlu; güven süzgeci (guven == dusuk satırları yazma); B3 qty_taban VARKEN benimseme çapraz-kontrolünün sırası
+  netleşir (qty_taban birinci kaynak, çapraz-kontrol yalnız olay yolunda); B4 "seq defterde yok" ve "sayım uyuşmazlığı → rollback"
+  dalları çiviyle ısırılır; B2 kapsam komutuna EDG094_CIKTI eklenir (T9 skip olmasın). olc.py --kart parametresi (eşikler bu karttan).
