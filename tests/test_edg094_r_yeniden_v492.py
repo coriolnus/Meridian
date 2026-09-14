@@ -326,10 +326,12 @@ def test_T5c_PK1_BOZUK_HESAP_KILL_LIST_TETIKLER(olc_mod, tmp_path):
 # T6/T7 — tek kaynak: kart ve motor
 # ---------------------------------------------------------------------------
 def test_T6_ESIKLER_KARTLA_AYNI(olc_mod):
-    """Kart TEK KAYNAKTIR; ölçüm betiğindeki kopya ondan ayrışırsa bu çivi kırılır."""
+    """Kart TEK KAYNAKTIR. UYARLAMA (EDG-2026-095 ardıl dilimi, 2026-09-15): ölçüm betiğinde
+    donuk `ESIKLER` kopyası KALMADI — eşikler koşum anında karttan okunur, bu çivi de artık
+    "kopya kartla aynı mı" yerine "okuyucu kartın söylediğini mi veriyor" sorusunu ölçer."""
     kart = yaml.safe_load(KART.read_text(encoding="utf-8"))
-    assert kart["esikler"] == olc_mod.ESIKLER
-    assert olc_mod.ESIKLER == {"benimsenmis_ayrisma_medyan_alt": 0.10,
+    assert olc_mod.esikler_oku("EDG-2026-094") == kart["esikler"]
+    assert kart["esikler"] == {"benimsenmis_ayrisma_medyan_alt": 0.10,
                                "benimsemesiz_ozdeslik_tol": 0.01,
                                "kontrol_esitlik_tol": 0.001,
                                "olculemeyen_ust_oran": 0.10}
@@ -382,7 +384,8 @@ def yazim_ortami(olc_mod, tmp_path):
     sonuc_yolu = sorted(cikti.glob("sonuc_094_*.json"))[-1]
     sonuc = json.loads(sonuc_yolu.read_text(encoding="utf-8"))
     assert sonuc["ozet"]["olculen_n"] == 2 and sonuc["ozet"]["olculemeyen_n"] == 1
-    return {"db": db, "olcum": sonuc_yolu, "yedek": tmp_path / "yedek", "sonuc": sonuc}
+    return {"db": db, "olaylar": ol, "olcum": sonuc_yolu, "yedek": tmp_path / "yedek",
+            "sonuc": sonuc}
 
 
 def _ops(args):
@@ -421,12 +424,24 @@ def test_T8b_UYGULA_YALNIZ_EXTRA_JSON_DEGISIR(yazim_ortami):
         hashlib.sha256(yedekler[0].read_bytes()).hexdigest()
 
 
-def test_T8c_IKINCI_UYGULA_IDEMPOTENT(yazim_ortami):
-    ortak = ["--db", str(yazim_ortami["db"]), "--olcum", str(yazim_ortami["olcum"]),
-             "--yedek-dizin", str(yazim_ortami["yedek"]), "--uygula"]
-    assert _ops(ortak).returncode == 0
+def test_T8c_IKINCI_UYGULA_IDEMPOTENT(olc_mod, yazim_ortami, tmp_path):
+    """PK-3: ikinci koşum 0 satır yazar.
+
+    UYARLAMA (EDG-2026-095 ardıl dilimi, 2026-09-15, B1): yazım artık ölçümü defterin O ANKİ
+    sha256'sına BAĞLAR, yani ilk koşum defteri değiştirdikten sonra ESKİ ölçüm dosyası geçerli
+    değildir (v494 T6 bunu çiviler). İdempotanlık iddiası bu yüzden DOĞRU biçimde kurulur:
+    defter yeniden ÖLÇÜLÜR, sonra ikinci yazım koşulur — hedefler aynı, yazılan 0."""
+    ilk = ["--db", str(yazim_ortami["db"]), "--olcum", str(yazim_ortami["olcum"]),
+           "--yedek-dizin", str(yazim_ortami["yedek"]), "--uygula"]
+    assert _ops(ilk).returncode == 0
     sonra = hashlib.sha256(yazim_ortami["db"].read_bytes()).hexdigest()
-    p = _ops(ortak)
+
+    taze_cikti = tmp_path / "cikti2"
+    olc_mod.main(["--db", str(yazim_ortami["db"]),
+                  "--olaylar", str(yazim_ortami["olaylar"]), "--cikti", str(taze_cikti)])
+    taze_olcum = sorted(taze_cikti.glob("sonuc_094_*.json"))[-1]
+    p = _ops(["--db", str(yazim_ortami["db"]), "--olcum", str(taze_olcum),
+              "--yedek-dizin", str(yazim_ortami["yedek"]), "--uygula"])
     assert p.returncode == 0, p.stderr
     assert "yazilan=0 atlanan=2 hedef=2" in p.stdout
     assert hashlib.sha256(yazim_ortami["db"].read_bytes()).hexdigest() == sonra
