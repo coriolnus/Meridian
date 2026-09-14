@@ -1,0 +1,107 @@
+# EDG-2026-093 — S&P 400 PIT kohortu (as-of günlük, 2020-07-27+) + turnover ana etkisinin mid-cap SAĞKALAN ÜST-SINIR ölçümü
+# (EDG-2026-070'in HALEFİ; EDG-2026-092 fizibilitesinin GEÇTİ kolunun ürünü)
+# ÖN-KAYIT 2026-09-14 12:3xZ (Rol-1, otonom). Kod YOK; kart-önce; OPERATÖR SIRASI: "düşük öncelik" (2026-09-13 21:21Z) —
+# ölçüm ancak TSK-065 sırası gelince, Opus ölçüm ajanıyla; kart o güne kadar ön-kayıt olarak durur (eşikler DONUK).
+# NEDEN ŞİMDİ: EDG-092 (2026-09-14 06:10Z GEÇTİ) S&P 400 üyelik tarihçesinin ücretsiz kaynaktan PIT-doğru kurulabildiğini
+# ölçtü; EDG-070'in askıya alınma nedeni (eksen A: kohort kaynaktan inmiyor) böylece kalktı. EDG-070'in eşik/kapsam
+# tanımı YERİNDE DÜZELTİLMEZ (CLAUDE.md §5) — bu YENİ karttır; EDG-070 askıda KALIR.
+# HAFIZA KONTROLÜ (2026-09-14 12:2xZ): `ops/kart_benzer.py` → EDG-018 (askıda, selef), EDG-070 (askıda, selef), EDG-092 (GEÇTİ,
+# kaynak), EDG-021 (KALDI: QC delist doğrulama — QC yolu bu kartta KULLANILMAZ), EDG-075 (KALDI: kart-veri sayım hatası sınıfı —
+# bu kartın PK-4'ü o sınıfa karşı), EDG-079/082 (GEÇTİ, evren PIT çapaları). Hindsight recall (2026-09-14 11:30Z, farklı konu)
+# bu kart için ayrıca koşulmadı — ölçüm sırası gelince ADIM-0 öncesi koşulur (CLAUDE.md §2 karar kapısı).
+
+card_id: EDG-2026-093
+status: registered   # ön-kayıt; ölçüm TSK-065 sırasında (operatör: düşük öncelik). Hüküm Rol-1'de.
+family: pit_midcap_ust_sinir
+on_kayit: 2026-09-14
+selef:
+  - "EDG-2026-070 (askiya_veri_kapisi 2026-09-13: eksen A kohort kaynaksız — bu kart o kaynağı EDG-092'den alır; eşikler AYNEN)"
+  - "EDG-2026-018 (askıda 2026-08-02: sağkalan mid-cap kapsaması yetersiz — aynı ölçümün üçüncü kart nesli)"
+ref:
+  - "EDG-2026-092 (GEÇTİ 2026-09-14: kaynak Wikipedia 'List of S&P 400 companies' değişiklik tablosu oldid + S&P DJI olay kümesi; girdi blob'ları kartında)"
+  - "EDG-2026-016 (large-cap turnover ana etkisi — birincil ölçülerin tanımı ve PK-1 yeniden üretim hedefi)"
+  - "EDG-2026-021 (KALDI — QC delist doğrulama yolu; bu kartta delist barı Alpaca IEX'ten, QC değil)"
+  - "EDG-2026-075 (KALDI — kart-veri sayım hatası sınıfı; PK-4 bu sınıfa karşı)"
+  - "TSK-065 / TSK-084 (delist-bar kaynağı kararı: bu kart ücretsiz Alpaca IEX ile ölçer, ücretli kaynak ÖNERMEZ — hafıza operator-para-kararlari)"
+
+hipotez: >
+  EDG-016'nın large-cap S&P 500 evreninde ön-kayıtlı ölçtüğü turnover ana etkisi (üst-dilim fazlası @20g
+  anlamlı pozitif VE rvol20+momentum kontrolünde artık katkı anlamlı) S&P 400 PIT kohortunda (as-of günlük,
+  2020-07-27→ölçüm günü; üyelik EDG-092 kaynağından, delist edilen isimlerin barları Alpaca IEX'ten) da aynı
+  yönde ve CI-0-dışı olarak ölçülür. ÜST-SINIR damgası KALIR ama DARALIR: EDG-070'ten farklı olarak kohort
+  gerçek mid-cap PIT üyeliğidir ve listeden çıkan isimlerin barı çıkış gününe kadar (Alpaca IEX) kohortta
+  kalır — yanlılık göstergesi (barsız çıkan isim payı) SAYI olarak raporlanır; sıfırsa damga "üst-sınır"
+  yerine "PIT-tam" olur (o hâlde bile Alpaca kapsaması 2020-07-27 öncesini içermediği için pencere kısıtı
+  beyanlıdır). Asimetri EDG-070'teki gibi: pozitif "en iyi ihtimalle var", negatif/bilgisiz güçlü "yok".
+
+k_registry: {registered_at: "2026-09-14", trial_ids: [EDG-093-midcap-ust-dilim-fazlasi-20g, EDG-093-midcap-artik-katki-20g]}
+# K=2 (EDG-016/070 ile bire bir). 10g ufku TANI (K'ye 1×2 olarak çarpılır). Yanlılık göstergesi ve kohort istatistikleri
+# hüküm DEĞİL, beyan alanıdır — K'ye girmez.
+
+adim_0_fizibilite: >
+  ZORUNLU, ölçümden ÖNCE, İKİ EKSEN — ikisi de düşerse status → askiya_veri_kapisi (kill değil; kapsama haritası teslim):
+  EKSEN A — KOHORT ÜRETİCİSİ: `research/pit_universe/sp400_uyelik_tarihi.csv` (kolonlar: date, tickers; sp500_uyelik_tarihi.csv
+  ile AYNI biçim; as-of günlük, 2020-07-27 → ölçüm günü) EDG-092'nin girdi blob'larından üretilir: güncel liste (SSGA MDY
+  holdings xlsx, EDG-092 girdi/) + değişiklik tablosu (Wikipedia oldid 1370891103 ham wikitext, EDG-092 girdi/pk/) geriye
+  doğru yürütülür (EDG-075/092 as_of algoritması). EDG-092 tanısı: as_of(2020-07-27)=407 ≠ 400 — 12 eşleşmemiş satır
+  (spin-off çiftleri, ardışık kitaplama). Bu satırlar ELLE EŞLENİR ve eşleme tablosu (`research/pit_universe/sp400_elle_esleme.yaml`:
+  satır → karar → kaynak URL/olay) kartla birlikte teslim edilir; eşlenemeyen satır "belirsiz" olarak KALIR ve gün
+  başına belirsiz isim sayısı raporlanır. KAPI: her gün için |as_of(t)| ∈ [392, 408] (400 ± %2) VE belirsiz isim ≤ 12/gün;
+  dışında → PIT SIFIR TOLERANS (pitlaw) → askıya. Üretici PIT sözleşmesine kaydolur (`meridian/pitlaw.py` tarayıcı/kaynak
+  listesi — yeni PIT kaynağı kayıtsız kalırsa v341/v342 öter).
+  EKSEN B — BAR KAPSAMASI (EDG-070 eksen E deseni, A1-içi Alpaca IEX sondası, örneklem DEĞİL tam küme): kohortta 2020-07-27
+  sonrası en az bir gün bulunan HER isim için günlük bar aralığı (ilk/son bar) ölçülür; kapsanan isim ≥ 40 (EDG-018/070 ile
+  AYNI eşik) VE ortalama bar-geçmişi ≥ 3 yıl; ek olarak "listeden çıkan isimlerin barsız payı" (yanlılık göstergesinin tabanı)
+  hesaplanır. Kapsama haritası (isim → ilk_bar, son_bar, kaynak) git BLOB'una bağlanır (EDG-059 vakası ×3).
+
+olcum_plani:
+  - "ADIM-0 A/B (yukarıda) → iki ürün: sp400_uyelik_tarihi.csv (+ elle eşleme yaml) ve bar kapsama haritası; ikisi de blob-sha ile karta"
+  - "EDG-016 tasarımı AYNEN, evren = S&P 400 PIT kohortu (as-of günlük): kesit dilim, günlük gözlem, ileri getiri 10/20g, taban = aynı-gün kohort ortalaması, 21g blok CI"
+  - "birincil-1: turnover üst-dilim fazlası @20g (bps) + %95 blok-CI"
+  - "birincil-2: rvol20-dilimi VE koşulsuz-momentum kontrolünde artık katkı @20g + CI"
+  - "tanı: aynı iki ölçü @10g; large-cap (EDG-016) sonucuyla yan yana tablo — KIYAS, hüküm değil"
+  - "yanlılık göstergesi: (a) kohortun pencere boyunca 'hâlâ listede' oranı, (b) listeden çıkan isimlerin ÇIKIŞ GÜNÜNE KADAR barı OLMAYAN payı (Alpaca kapsamasıyla), (c) belirsiz-eşleme isim payı — üçü SAYI olarak; (b)=0 ise damga 'PIT-tam', >0 ise 'üst-sınır'"
+  - "cost_model EDG-016 ile aynı (10 bps + not); mid-cap likidite farkı NOT'a, modele değil (tek değişken evren)"
+  - "Alpaca çağrı bedeli ön ölçülür ve raporlanır (isim sayısı × pencere; A1-içi, ücretsiz IEX; rate limit hesabı) — ölçüm bedelsiz sayılmaz"
+
+esikler:
+  kapsanan_isim_alt: 40                 # EDG-018/070 ADIM-0 ile AYNI — değişmez
+  ortalama_bar_gecmisi_yil_alt: 3       # EDG-018/070 ile AYNI
+  kohort_boyut_bant: [392, 408]         # 400 ± %2, her as-of günü (EDG-092 tanısı: 407, 12 eşleşmemiş satır)
+  belirsiz_isim_gun_ust: 12             # elle eşlemeden sonra gün başına belirsiz kalan isim tavanı (EDG-092 tanısından)
+  # birincil ölçüler için eşik EDG-016'nın ön-kayıtlı tanımıdır: 'anlamlı pozitif' = %95 blok-CI alt sınırı > 0;
+  # sayısal bps eşiği YOK (EDG-016/070'te de yok) — yön + CI-0-dışılık. Bu kart yeni bps eşiği UYDURMAZ.
+
+kill_list:
+  - "ADIM-0 (A ya da B) düşer → askiya_veri_kapisi (kill değil); kapsama haritası + eşleme tablosu teslim"
+  - "pozitif kontrol (PK-1..PK-4) tutmazsa → hiçbir sayı yayılmaz"
+  - "kohort PIT değilse (as-of alanı korunmuyor, boyut bandı dışı, belirsiz > tavan) → SIFIR TOLERANS, ölçüm geçersiz (pitlaw)"
+  - "üst-dilim fazlası CI-0-içi → 'bilgisiz' (arşiv); EDG-016 dili aynen"
+  - "eşik/kohort tanımı sonradan değişmez; 2020-07-27 öncesi pencere istenirse YENİ kart (kaynak değişir)"
+  - "ücretli veri kaynağı bu kartta ÖNERİLMEZ; Alpaca IEX yetmiyorsa kalem operatör masasına (TSK-084) SAYIYLA gider"
+
+pozitif_kontrol: >
+  YOL-TUTARLI, DÖRT PARÇA: (1) aynı ölçüm kodu large-cap PIT kohortuna (sp500_uyelik_tarihi.csv) koşulunca EDG-016'nın
+  kayıtlı sayılarını (yön + CI-0-dışılık) YENİDEN ÜRETMELİ — üretmiyorsa kod ya da veri yolu bozuk (kill-list 2);
+  (2) rastgele 20 kohort-gün için dilim ataması ve ileri getiri ELLE (bar dosyalarından) doğrulanır;
+  (3) yanlılık göstergesi sentetik testte (kohorttan bilinçli 10 isim düşürülünce) beklenen yönde hareket etmeli;
+  (4) PIT-PK: EDG-092 `bilinen_olaylar` kümesinden rastgele 10 giriş/çıkış olayı as-of listede TAM yürürlük gününde
+  yansımalı (t-1'de eski, t'de yeni üyelik; tolerans 1 gün, EDG-092 K1 ile aynı) — kohort üreticisinin kendisi ölçülür,
+  "kart-veri sayım hatası" sınıfına (EDG-075) karşı.
+
+veri_penceresi: "2020-07-27 (Alpaca IEX ilk-bar tabanı, EDG-070 eksen E) → ölçüm günü; as-of günlük kohort; kapsama ADIM-0'da ölçülür ve kayda blob-sha ile bağlanır"
+
+basari_tanimi: >
+  ADIM-0 A+B geçmiş (ya da düşüp harita + eşleme tablosu teslim edilmiş — bu da başarıdır: veri kilidi sayıyla ölçülmüş
+  olur) + dört pozitif kontrol yeşil + iki birincil ölçü CI'larıyla ve üç yanlılık göstergesiyle raporlanmış + K defterine
+  2 (+1×2 tanı) yazılmış + hükümde damga ("üst-sınır" ya da "PIT-tam", göstergeye göre). Hüküm Rol-1 tarafından aynı
+  turda karta + K defterine işlenir. Yan ürün: `research/pit_universe/sp400_uyelik_tarihi.csv` (PIT kaynak, pitlaw kayıtlı)
+  ileride canlı evren genişletmesinin (TSK-065 ana hedefi) girdisidir — o karar AYRI (operatör).
+
+notlar: >
+  Kod yalnız sıra gelince (operatör 'düşük öncelik'), `research/olcumler/edg093_midcap_pit/` altında, `sandbox_state`li;
+  yükleme yardımcıları `ops.sasi_yukleyici` / `tests.conftest.betikten_modul_yukle` (ham exec_module YASAK — v334);
+  EDG-092 `olc.py` ayrıştırıcıları KOPYALANMAZ, ithal edilir (tek-kaynak). Alpaca sondası A1-içi (hafıza alpaca-a1-uzerinden),
+  yerel kopya yok; bar artefaktları `research/olcumler/…/ham/` .gitignore (EDG-092 deseni), yalnız kapsama haritası + SHA256SUMS
+  versiyonlanır. EDG-070 askıda KALIR; bu kart onun kaynak-geldi tekrarıdır (üçüncü nesil: 018 → 070 → 093). Ölçüm ajanı
+  karta dokunmaz; çıktı yollarını devir brief'ine yazar; hükmü Rol-1 işler.
