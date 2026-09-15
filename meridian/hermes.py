@@ -942,8 +942,15 @@ def _model_id(p: str) -> str | None:
         # kapattığı çift-kaynak sınıfının YENİSİ doğardı. OLAY BASILMAZ (`olay=False`,
         # 2026-08-13 düzeltmesi): burası RAPOR yüzeyi — bir pano isteği operatörün
         # defterine "göç oldu" satırı yazamaz; olayı gerçek çağrı yolu basar.
-        return canonical_model(secrets.get("NOUS_MODEL"), kaynak="NOUS_MODEL") \
-            or NOUS_DEFAULT_MODEL
+        #
+        # AYNI AD ARTIK AYNI KAPIDAN GELİR (2026-09-15): burası eskiden çözümleme
+        # ifadesini (sır → göç → varsayılan) ELLE İKİNCİ KEZ yazıyordu. İki kopya bugün
+        # aynı adı üretiyordu ama harita ya da varsayılan değişince sessizce ayrışırdı —
+        # tek-kaynak yasasının kapattığı sınıfın ta kendisi. Artık portal adının TEK
+        # kaynağı `_nous_portal_model`; bu yüzey ondan YALNIZ bayrağıyla ayrılır: giden
+        # ad aynı, defter yazımı yok. Yukarıdaki yerel-ajan `None` koruması bu çağrıdan
+        # ÖNCE durur (uydurma yasağı): orada adı CLI'nın kendi config'i seçer.
+        return _nous_portal_model(olay=False)
     if p == "gemini":
         return gemini_model()
     return None
@@ -2831,7 +2838,7 @@ def _extract_json(text: str) -> str:
     return best or t
 
 
-def _nous_portal_model() -> str:
+def _nous_portal_model(*, olay: bool = True) -> str:
     """PORTAL (uzak, OpenAI-uyumlu) Nous ucuna GERÇEKTEN giden model adı — `_nous_text`in istek
     gövdesine yazdığı değerin TEK kaynağı.
 
@@ -2851,10 +2858,21 @@ def _nous_portal_model() -> str:
 
     KÜNYE İLE GÖVDE AYRIŞAMAZ: ikisi de bu TEK dönüşü okuduğu için göç ikisine birden uygulanır —
     "ne çağırdık / ne rapor ettik" ayrışması burada yapısal olarak imkânsızdır. Tanınmayan ad
-    SERBEST GEÇER (elimizdeki ölü-ad listesi bir kesittir). Çivi:
-    tests/test_yedek_beyin_olu_ad_v493.py (T8a göç+olay · T8b tek kaynak · T8c serbest geçiş)."""
+    SERBEST GEÇER (elimizdeki ölü-ad listesi bir kesittir).
+
+    `olay` BAYRAĞI (2026-09-15) — AD AYNI, DEFTER AYRI: rapor yüzeyi (`_model_id("nous")` →
+    `/api/hermes`, `brain_chain_facts`, `active_model`) aynı adı buradan alır ama `olay=False`
+    ile çağırır; yoksa ya bir pano isteği operatörün defterine "göç oldu" satırı yazardı
+    (2026-08-13 ayrımı) ya da çözümleme ifadesi orada ikinci kez elle yazılırdı (tek-kaynak
+    yasası). Varsayılan `True`dur — yani `canonical_model`/`gemini_model`in "varsayılan sessiz"
+    sözleşmesinin TERSİ — ve bu DAR bir istisnadır: o sözleşme genel bir çeviri kapısını
+    korur (unutulan yeni okuma yüzeyi defter yazmasın), burası ise tanımı gereği çağrı yolunun
+    kendisidir ve bugün tek bir sessiz okuyucusu vardır (`_model_id`, aynı modülde, T9b ile
+    çivili). Varsayılanı sessize çevirmek üretim göçünü tümden dilsizleştirirdi (T8a).
+    Çivi: tests/test_yedek_beyin_olu_ad_v493.py (T8a göç+olay · T8b tek kaynak · T8c serbest
+    geçiş · T9a rapor yüzeyi sessiz · T9b delegasyon · T9c yerel-ajan None koruması)."""
     return canonical_model(secrets.get("NOUS_MODEL") or NOUS_DEFAULT_MODEL,
-                           kaynak="NOUS_MODEL(portal)", olay=True) or NOUS_DEFAULT_MODEL
+                           kaynak="NOUS_MODEL(portal)", olay=olay) or NOUS_DEFAULT_MODEL
 
 
 def _nous_headers() -> dict[str, str]:
