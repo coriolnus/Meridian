@@ -486,8 +486,8 @@ durum**. Aciliyet aşama DEĞİLDİR: acil ama tasarımsız bir kalem yine H0'd�
 |---|---|---|---|---|---|
 | TSK-069 | EDG-2026-042 K1/K3 bandı — Ö-55 friksiyon-koşullu limit sınaması (WP: WP1) | GATED(EDG-042 gerçek-friksiyon bandının dolması, ~4 hafta) | rol1 | S | EDG-042 bandının gerçek-friksiyon eşiğe dolması (B4 kararı buna bağlı) |
 | TSK-061 | Hermes bot roster programı — Faz 5+ rol seçimi (WP: WP12) | GATED(canlı-döngü ölçümünden bot değer-kanıtı birikmesi) | rol1 | M | canlı-döngü ölçümü (Faz 3 usulüyle) |
-| TSK-012 | pano 'Ajan' bölümü — ajan iletişim yüzeyi (dalga-B: sohbet) (WP: WP12) | ACTIVE (DEĞ 2026-09-08: EDG-062 inişi 2026-08-31'de karşılandı; dalga-B canlı — dağıtım #28/#29, EDG-2026-086 ölçüm penceresi açık) | rol1 | M | — |
-| TSK-058 | Skill-görüş dalgası — EDG-019 uygulaması + EDG-063 LLM-üretici sınıfı (WP: WP7) | QUEUED (trigger karşılandı: Ajan-A dalgası TSK-012 kapandı) | rol1 | M | — |
+| TSK-012 | pano 'Ajan' bölümü — ajan iletişim yüzeyi (dalga-B: sohbet) (WP: WP12) | DONE(2026-09-13 — §4 kaydı §8'de; tablo 2026-09-15 güncellendi) | rol1 | M | — |
+| TSK-058 | Skill-görüş dalgası — EDG-019 uygulaması + EDG-063 LLM-üretici sınıfı (WP: WP7) | DONE(2026-09-06 — §4 kaydı §8'de; tablo 2026-09-15 güncellendi) | rol1 | M | — |
 | TSK-062 | Öğrenme kilidi çifti — EDG-064 duvar yeniden-sınama + EDG-058 K-enflasyonu ölçümü (WP: WP3) | GATED(geri-dolum programının tamamlanması — learn program boyunca KAPALI) | rol1 | M | geri-dolum programının kapanışı (2026-09-01 gece operatör onayı: learn açılana dek ertelendi) |
 | TSK-070 | F8 pano durum-sözlüğü (WP: WP8) | QUEUED | rol1 | M | — |
 | TSK-071 | Ö-54 gerçek friksiyon tahmini (n=4'ten çıkış) (WP: WP1) | GATED(K1 örneklem eşiğinin dolması — haftalık otomatik koşum `edg042-friksiyon-haftalik`) | rol1 | M | K1 n≥30 eşiği (takvimli otomatik koşum) |
