@@ -345,6 +345,15 @@ DECLARED_SINKS: dict[str, str] = {
     "pool_exhausted_seen.json": "hermes kimlik-havuzu son-tükenme-zamanı çivisi (v188) — okuyucu "
         "aynı modülde (_pool_seen_at, süreç-yeniden-başlatma sonrası kota-sıfırlama kıyası için "
         "kalıcı olmak ZORUNDA); statik graf modül-içi okumayı göremiyor (finviz vakasındaki sınıf)",
+    "durum_sozlugu_sayac.json": "F8 eşanlamlı-okuma sayaçlarının KALICI defteri (TSK-070, "
+        "2026-09-15). Yazan `durum_sozlugu._say`, okuyan `durum_sozlugu._yukle` — AYNI modülde, "
+        "yani statik graf dış tüketiciyi göremiyor (pool_exhausted_seen.json sınıfı). Kalıcı "
+        "olmak ZORUNDA: sayaçlar süreç-içiyken her worker restart'ı onları sıfırlıyordu ve "
+        "dağıtımlar günlük olduğu için 'eski adın okuyucusu öldü' hükmü ≥30 günlük restart'sız "
+        "pencere isteyen tanımıyla ASLA verilemiyordu. GERÇEK tüketici zinciri erişimci "
+        "fonksiyonlardan geçer: `durum_sozlugu.esanlamli_okumalar` + "
+        "`durum_sozlugu.esanlamli_pencere` → `api._durum_sozlugu` → /api/diagnostics → pano "
+        "sözlük kartı (f8SozlukSatiri)",
     # NOT: `finviz_universe.json` buradan ÇIKARILDI. Beyanı doğruydu — okuyucusu
     # yalnız kendi modülündeydi, statik graf onu göremiyordu. Artık DIŞ bir okuyucusu var:
     # `marketview.build` keşfedilen evreni bars'ta olmayan semboller için satır üretmekte

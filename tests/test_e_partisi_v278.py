@@ -57,9 +57,12 @@ def test_1a_uretici_kanonik_ad_yazar_eski_ad_uretimde_kalmadi():
         assert uretim == [], f"{ad}: eski ad hâlâ ÜRETİLİYOR (yorum değil, kod): {uretim}"
 
 
-def test_1b_eski_ad_esanlamli_okunur_ve_SAYILIR():
+def test_1b_eski_ad_esanlamli_okunur_ve_SAYILIR(sandbox_state):
     """Eski ad listeden SİLİNMEDİ: diskte restart-öncesi persist edilmiş değerler yaşıyor olabilir.
-    Sözleşme "çevir ve SAY"dır — sayaç, adın ölüm tarihini ÖLÇÜLEBİLİR kılan tek şeydir."""
+    Sözleşme "çevir ve SAY"dır — sayaç, adın ölüm tarihini ÖLÇÜLEBİLİR kılan tek şeydir.
+
+    `sandbox_state` TSK-070 ile ZORUNLU oldu: sayaç artık kalıcı deftere yazıyor, sandbox
+    olmasaydı bu test canlı yerel state'e yazardı."""
     durum_sozlugu._sifirla_test_icin()
     assert durum_sozlugu.kol_adi("learning_halted") == "halt_learning"
     assert durum_sozlugu.esanlamli_okumalar().get("kol:learning_halted") == 1

@@ -4125,13 +4125,18 @@ def _durum_sozlugu(bd: dict) -> dict:
        SENTEZ YOK: her satır hükmün OKUNDUĞU alanın adını (`kaynak_alan`) taşır — üretici
        kanonik alanı taşıdığı sürece "ok" yazar; eski adlı bir yük sızarsa alan adı ve aşağıdaki
        sayaç onu GÖRÜNÜR kılar (geçiş haritası canlıda izlenir olur).
-    2) `esanlamli_okumalar` — eski adların okunma sayaçları (ölüm tarihi ölçümü): uzun süre 0
-       kalan eski ad, okuyucusu ölmüş demektir ve dönem sonunda DÜŞÜRÜLEBİLİR (karar Rol-1'de).
-       Sayaç süreç-içidir (gerekçe modül başlığında); restart sıfırlar — tek artış bile "eski ad
-       hâlâ okunuyor" hükmü için yeter, sıfırlanma o hükmü çürütmez ve bu beyan yanıtta taşınır.
+    2) `esanlamli_okumalar` + `pencere` — eski adların okunma sayaçları (ölüm tarihi ölçümü) ve
+       o sayımın ZAMAN EKSENİ: uzun süre 0 kalan eski ad, okuyucusu ölmüş demektir ve dönem
+       sonunda DÜŞÜRÜLEBİLİR (karar Rol-1'de). Sayaç 2026-09-15'ten beri KALICIDIR (TSK-070):
+       restart artık sıfırlamıyor, dolayısıyla "0" bir PENCEREYLE birlikte hüküm taşıyabiliyor —
+       `pencere` tam da o pencereyi (ilk kayıt · son kayıt · son yazım · gün) yanıtta taşır.
 
     Okuyucu zinciri (YASA 6, elle kurulu — fonksiyon-düzeyi yüzeyleri codelaw göremez):
-    durum_sozlugu modülü → bu uç → app.js `f8SozlukSatiri`. Çivi: tests/test_f8_durum_sozlugu_v271.py."""
+    durum_sozlugu modülü → bu uç → app.js `f8SozlukSatiri`. Çivi: tests/test_f8_durum_sozlugu_v271.py.
+    `pencere` ALANININ OKUYUCUSU BEYANLIDIR (sessiz bırakılmadı): bugün panonun sözlük kartı
+    yalnız sayaçları basar; `pencere`yi /api/diagnostics tüketicisi — düşürme hükmünü veren Rol-1
+    ve RUNBOOK teşhis reçetesi — okur. Pano bacağı UI dilimine bağlıdır ve o dilim gelene kadar
+    bu satır BORÇTUR, körlük değil (çivi: tests/test_f8_sayac_kalici_v499.py)."""
     from . import durum_sozlugu as _dsz
     return {
         "kanonik": {
@@ -4145,11 +4150,14 @@ def _durum_sozlugu(bd: dict) -> dict:
         },
         "satirlar": [_dsz.normalize_satir(ad, rapor) for ad, rapor in (bd or {}).items()],
         "esanlamli_okumalar": _dsz.esanlamli_okumalar(),
-        "sayac_rejimi": ("süreç-içi — restart sıfırlar (bekçi süreç-içi mandallarıyla aynı "
-                         "beyanlı karar: diske yazmak artifact_unread yüzeyi doğururdu)"),
+        "pencere": _dsz.esanlamli_pencere(),
+        "sayac_rejimi": ("kalıcı — restart SIFIRLAMAZ (TSK-070, 2026-09-15; defter "
+                         "state/durum_sozlugu_sayac.json, pencere `pencere` alanında)"),
         "beyan": ("F8 geçiş rejimi: üretici kanonik adı ÇİFT alan taşır, okuyucu önce kanonik "
-                  "okur; eşanlamlı okuma sayaçlıdır. Sayaç 0 = bu süreçte hiçbir eski ad "
-                  "okunmadı; eski adı DÜŞÜRME kararı Rol-1'de."),
+                  "okur; eşanlamlı okuma sayaçlıdır ve sayaç KALICIDIR. Sayaç 0 = defterin "
+                  "penceresi boyunca hiçbir eski ad okunmadı (pencere `pencere` alanında; "
+                  "defter yoksa ölçüm HENÜZ BAŞLAMAMIŞTIR, 'ölü' değildir); eski adı DÜŞÜRME "
+                  "kararı Rol-1'de."),
     }
 
 
