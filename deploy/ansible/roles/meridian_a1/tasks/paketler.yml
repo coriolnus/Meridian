@@ -52,6 +52,15 @@
     architectures: arm64
     signed_by: https://apt.releases.hashicorp.com/gpg
     state: present
+  register: hashicorp_depo
+
+# Handler DEĞİL, koşullu görev: v451 Rol-1 hükmü 5 handler kümesini iki kimliğe pinler (restart sözleşmesi);
+# apt listesi Terraform görevinden ÖNCE çekilmeli — cache_valid_time yeni deponun listesini görmez
+# (vaka 2026-09-15 'No package matching terraform'). ansible-lint no-handler bilinçli atlanır.
+- name: Depo yeni eklendiyse apt önbelleğini tazele # noqa: no-handler
+  ansible.builtin.apt:
+    update_cache: true
+  when: hashicorp_depo is changed
 
 # PİN BİR KARARDIR: `state: present` + tam sürüm, `latest` DEĞİL. `latest` olsaydı altyapı aracının
 # sürümü bakım penceresinde kendiliğinden değişir ve `.terraform.lock.hcl` ile state'in birlikte
