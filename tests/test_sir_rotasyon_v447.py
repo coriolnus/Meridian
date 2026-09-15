@@ -592,6 +592,17 @@ sys.exit(0)
 '''
 
 
+#: SAHTE ORTAMIN HAZIRLIK TAVANI — yük-BAĞIMSIZ, "asla ulaşılmaz" bir sınır olmak zorundadır.
+#: Suite #56 (2026-09-15; `-n 4` + makinede eşzamanlı iki worktree pytest'i) N1'i kırmızı yaptı:
+#: tavan 2 s iken sahte `curl` (her çağrıda bir python süreci) dört kez açılmaya 2 s'den fazla
+#: harcadı ve çivi DAVRANIŞ yerine SÜRE ölçtü — flaky bir çivi hüküm değildir (J8/M4 dersi).
+#: Yoklama aralığı 0,01 s KALIR: hazır olan birim ilk yoklamada geçer, yani tavan yalnız HİÇ
+#: hazır olmayan dalın sınırıdır ve o dalın aşımını SAAT değil N (`SAHTE_HAZIR_N`) garantiler.
+#: Tavana bağlı her sayı bu sabitten TÜRETİLİR (tek-kaynak yasası); kendi tavanını kendi kuran
+#: çiviler (N3/N4) ortamı koşum içinde ezer ve bu sabite dokunmaz.
+SAHTE_HAZIR_TAVAN_S = "20"
+
+
 def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
     """Test kökünü + PATH şimlerini kurar. Tohumlar A1'in ÖLÇÜLEN hâlini taklit eder:
     `/opt/meridian/.env` pano token'ının İKİNCİ kopyasını taşır (spec Bulgu-2) ve
@@ -688,9 +699,10 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
     # `TMPDIR=tmp_path`: `mktemp -d` bunu onurlandırır, yani 0700 çalışma dizini KOŞUMUN KENDİ
     # tmp_path'i altında doğar. İlk turda J8 paylaşılan `/tmp`i glob'luyordu ve komşu süreçlerin
     # dizinlerini görüyordu — `-n 4` altında flaky bir çivi, yani hüküm olmayan bir hüküm.
-    # `HAZIR_BEKLE_*`: bekleme penceresi ÇİVİ İÇİN sıkıştırılır (üretimde 2 s / 60 s). Sıkıştırma
-    # sözleşmeyi değiştirmesin diye üretim varsayılanları M0'da AYRICA ölçülür — yoksa biri
-    # varsayılanı 0'a çekse bütün M bölümü yine yeşil kalırdı.
+    # `HAZIR_BEKLE_*`: bekleme penceresi ÇİVİ İÇİN sıkıştırılır (üretimde 2 s aralık / 60 s tavan).
+    # Sıkıştırma sözleşmeyi değiştirmesin diye üretim varsayılanları M0'da AYRICA ölçülür — yoksa
+    # biri varsayılanı 0'a çekse bütün M bölümü yine yeşil kalırdı. Tavanın niye yük-bağımsız
+    # seçildiği: `SAHTE_HAZIR_TAVAN_S` şerhi.
     ortam = dict(os.environ, PATH=f"{binn}:{os.environ['PATH']}", SIR_ROT_KOK=str(kok),
                  SIR_ROT_API="http://motor", SIR_ROT_HINDSIGHT="http://hafiza",
                  SIR_ROT_KAPI="http://kapi/llm/v1", SIR_ROT_KAPI_KOK="http://kapi",
@@ -698,8 +710,8 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
                  # AYNI host'u (`kapi`) taşır — `hazir_butce` eşlemesi HOST üzerindendir ve
                  # apisix'in hazırlık bütçesi bu uca da uygulanmalıdır (M/N bölümünün dersi).
                  SIR_ROT_ADMIN="http://kapi/apisix/admin",
-                 HAZIR_BEKLE_ARALIK_S="0.01", HAZIR_BEKLE_TAVAN_S="2",
-                 HAZIR_TAVAN_S_hindsight_api="2",
+                 HAZIR_BEKLE_ARALIK_S="0.01", HAZIR_BEKLE_TAVAN_S=SAHTE_HAZIR_TAVAN_S,
+                 HAZIR_TAVAN_S_hindsight_api=SAHTE_HAZIR_TAVAN_S,
                  SAHTE_UID="0", TMPDIR=str(tmp_path))
     for bayrak in ("SAHTE_KOR", "SAHTE_MOTOR_OLU", "SAHTE_RM_KIRIK", "SAHTE_PING_GOVDESIZ",
                    "SAHTE_HAZIR_N", "SAHTE_HEALTHZ_KOD", "SAHTE_HEALTH_KOD",
@@ -2203,9 +2215,9 @@ def _url_gunlugu(kok: pathlib.Path) -> list[str]:
 
 
 def test_M0_URETIM_VARSAYILANLARI_ve_UC_HARITASI_betikte():
-    """Çivi ortamı bekleme penceresini SIKIŞTIRIR (0,01 s / 2 s) — sıkıştırmasaydı tek bir
-    aşım çivisi bir dakika sürerdi. Sıkıştırma SÖZLEŞMEYİ değiştirmemelidir: üretim
-    varsayılanları burada ölçülür. Bu satır olmasaydı biri betikteki tavanı 0'a çekse M
+    """Çivi ortamı bekleme penceresini SIKIŞTIRIR (aralık 0,01 s; tavan `SAHTE_HAZIR_TAVAN_S`) —
+    sıkıştırmasaydı tek bir aşım çivisi dakikalar sürerdi. Sıkıştırma SÖZLEŞMEYİ değiştirmemelidir:
+    üretim varsayılanları burada ölçülür. Bu satır olmasaydı biri betikteki tavanı 0'a çekse M
     bölümünün tamamı yine yeşil kalır, canlıda ise hiç beklenmezdi."""
     metin = BETIK.read_text(encoding="utf-8")
     assert 'HAZIR_BEKLE_ARALIK_S="${HAZIR_BEKLE_ARALIK_S:-2}"' in metin
@@ -2277,9 +2289,10 @@ def test_M4_TAVAN_asilirsa_OLCULEMEDI_ve_HICBIR_KALICI_YAZIM(tmp_path):
     """(b) Birim hiç açılmaz. Betik "hazır" DEMEZ: ölçemediğini söyler, çıkış 2 verir ve negatif
     kontrolün geçici yazımı trap ile geri alınır — operatörün TAZE anahtarı hiç yazılmaz.
 
-    N TAVANIN ALTINDA BİR SAYI OLAMAZ. 99 yoklama hızlı bir makinede 2 s'lik tavana varmadan
-    biterdi ve çivi renk değiştirirdi; flaky bir çivi hüküm değildir (J8 dersi). Bu yüzden N
-    tavanın ulaşamayacağı kadar büyük seçilir ve hüküm SÜREYE değil DAVRANIŞA bağlanır."""
+    N TAVANIN ALTINDA BİR SAYI OLAMAZ. 99 yoklama hızlı bir makinede tavana varmadan biterdi ve
+    çivi renk değiştirirdi; flaky bir çivi hüküm değildir (J8 dersi). Bu yüzden N tavanın
+    ulaşamayacağı kadar büyük seçilir (999999 × 0,01 s ≫ `SAHTE_HAZIR_TAVAN_S`) ve hüküm SÜREYE
+    değil DAVRANIŞA bağlanır. BEDELİ: bu çivi tavan kadar bekler — süre sabitle birlikte kayar."""
     kok, ortam = _sahte_ortam(tmp_path)
     ortam["SAHTE_HAZIR_N"] = "999999"
     once = _dosya_imzalari(kok)
@@ -2340,8 +2353,9 @@ def test_M7_KURU_KOSUM_bekleme_BEDELINI_de_soyler(tmp_path, alt, bekleyen):
     assert blok.count("/health") == bekleyen, blok
     assert blok.count("(sağlık ucu YOK, beklenmez)") == len(birimler) - bekleyen, blok
     assert blok.count("kabul: ") == bekleyen and blok.count("tavan: ") == bekleyen, blok
-    # Tavan betiğin KENDİ sabitinden basılır (ortam ikisini de 2'ye sıkıştırdı) — ikinci kopya yok.
-    assert blok.count("tavan: 2 s") == bekleyen, blok
+    # Tavan betiğin KENDİ sabitinden basılır (ortam ikisini de aynı değere sıkıştırdı) — ikinci
+    # kopya yok; beklenen metin de çivi ortamının sabitinden TÜRETİLİR.
+    assert blok.count(f"tavan: {SAHTE_HAZIR_TAVAN_S} s") == bekleyen, blok
 
 
 def test_M5_MUT_hazir_bekle_KALKARSA_M1_kirmizi(tmp_path):
@@ -3135,12 +3149,12 @@ def test_P7_SUDO_ENV_bicimi_SERHTE_ve_KURU_RAPORDA_koddan_turer(tmp_path):
     serh = _serh_metni(BETIK)
     assert (f"sudo env HAZIR_TAVAN_S_hindsight_api={_hindsight_tavani()} "
             "./deploy/oracle-a1/sir_rotasyon.sh --openrouter") in serh, serh[-1500:]
-    # KURU RAPORDA sayı ETKİN değerdir (çivi ortamı 2'ye sıkıştırır) — literal olsaydı operatör
-    # kendi ortamındaki tavanı değil, bir sabiti okurdu.
+    # KURU RAPORDA sayı ETKİN değerdir (çivi ortamı `SAHTE_HAZIR_TAVAN_S`e sıkıştırır) — literal
+    # olsaydı operatör kendi ortamındaki tavanı değil, bir sabiti okurdu.
     _, ortam = _sahte_ortam(tmp_path)
     r = _kos(BETIK, ortam, "--openrouter", "--kuru")
     assert r.returncode == 0, r.stdout + r.stderr
-    assert "sudo env HAZIR_TAVAN_S_hindsight_api=2 " in r.stdout, r.stdout
+    assert f"sudo env HAZIR_TAVAN_S_hindsight_api={SAHTE_HAZIR_TAVAN_S} " in r.stdout, r.stdout
     # hindsight-api YENİDEN BAŞLAMAYAN bir alt komutta satır BASILMAZ: ilgisiz bir tavanı
     # önermek, kuru raporu gürültüyle doldurmaktır (bedel yasası).
     r2 = _kos(BETIK, ortam, "--dash", "--kuru")
