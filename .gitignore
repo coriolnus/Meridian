@@ -114,3 +114,12 @@ research/olcumler/*/duman/
 
 # sembolik bağ da yakalansın (sondaki / yalnız gerçek dizinle eşleşir — 2026-09-13 worktree vakası)
 ui/node_modules
+
+# TERRAFORM ÇALIŞMA KATMANI (TSK-176 T1, 2026-09-15) — kaynak (HCL + kilit dosyası) versiyonlanır,
+# indirilen sağlayıcı ikilileri ve STATE versiyonlanmaz. State ayrıca SIR TAŞIR (kaynak
+# özniteliklerinin düz metin kopyası): `state/`, `.env` ile aynı sınıftadır, depoya asla girmez.
+# `.terraform.lock.hcl` BİLEREK dışarıda DEĞİLDİR: sağlayıcı pini orada tek kaynaktır.
+# UYARI: .gitignore rsync'i ETKİLEMEZ — canlı state zaten rsync ağacının dışında yaşar
+# (`/opt/veri/altyapi/apisix/terraform.tfstate`, altyapi/apisix/backend.tf).
+altyapi/apisix/.terraform/
+altyapi/**/*.tfstate*

@@ -31,3 +31,37 @@
     owner: root
     group: root
     mode: "0644"
+
+# TSK-176 T1 Task 1 — Terraform (HashiCorp apt deposu, aarch64). Sürüm TEK yerde: `terraform_surumu`
+# (defaults/main.yml). Okuyucusu (Yasa 6): bu iki görev + `saglik.yml` sürüm kapısı + `altyapi/altyapi.sh`
+# (A1'de `terraform` ikilisini çağıran tek yer) + çivi `tests/test_ansible_a0_terraform_v501.py`.
+#
+# NEDEN DEPO, NEDEN ELLE ZIP DEĞİL: ikili doğrudan indirilirse imza doğrulaması ve yükseltme yolu
+# bize kalır (uv installer'ının sha256 kapısını yazdıran aynı ders); apt deposu imzayı ve
+# yeniden-kurulabilirliği taşır. `signed_by` bir URL'dir: `deb822_repository` anahtarı indirir ve
+# `/etc/apt/keyrings` altına yazar — `apt-key` (küresel anahtarlık, 2022'den beri kullanım dışı)
+# bilinçli olarak KULLANILMAZ. Modül ansible-core 2.15+ ile gelir; bu depo 2.18.19 ile koşar
+# (ölçüldü 2026-09-15, `.venv/bin/ansible --version`), yani düşürme gerekmedi.
+- name: HashiCorp apt deposu (deb822, imza anahtarı URL'den)
+  ansible.builtin.deb822_repository:
+    name: hashicorp
+    types: deb
+    uris: https://apt.releases.hashicorp.com
+    suites: "{{ ansible_distribution_release }}"
+    components: main
+    architectures: arm64
+    signed_by: https://apt.releases.hashicorp.com/gpg
+    state: present
+
+# PİN BİR KARARDIR: `state: present` + tam sürüm, `latest` DEĞİL. `latest` olsaydı altyapı aracının
+# sürümü bakım penceresinde kendiliğinden değişir ve `.terraform.lock.hcl` ile state'in birlikte
+# yaşadığı bir dünyada bunu ancak plan çıktısı bozulunca görürdük. Yükseltme = `terraform_surumu`
+# satırının değişmesi (bir commit) + bu görevin koşması.
+- name: Terraform (pinli; yükseltme apt'ye bırakılmaz — sürüm değişimi bir commit'tir)
+  ansible.builtin.apt:
+    name: "terraform={{ terraform_surumu }}"
+    state: present
+    update_cache: true
+    # 3600 sn: yukarıdaki sistem paketleri göreviyle aynı gerekçe — aynı saatte ikinci koşum apt
+    # indeksini yeniden çekmez (idempotency turunun "changed=0" hedefi).
+    cache_valid_time: 3600
