@@ -346,12 +346,12 @@ FIKSTUR = {
     # kanonik yol: her satır "ok"tan okunmuş, tüm sayaçlar 0
     "temiz": {"kanonik": _KANONIK,
               "satirlar": [{"kimlik": k, "kaynak_alan": "ok"} for k in DORT_ANAHTAR],
-              "esanlamli_okumalar": {}, "sayac_rejimi": "süreç-içi"},
+              "esanlamli_okumalar": {}, "sayac_rejimi": "kalıcı"},
     # eski ad hâlâ akıyor: sayaç adıyla basılır, satır kaynak alanıyla görünür
     "eski_ad": {"kanonik": _KANONIK,
                 "satirlar": [{"kimlik": "goal_failure", "kaynak_alan": "failed"}],
                 "esanlamli_okumalar": {"hukum:failed": 3, "neden:detail": 1},
-                "sayac_rejimi": "süreç-içi"},
+                "sayac_rejimi": "kalıcı"},
 }
 
 

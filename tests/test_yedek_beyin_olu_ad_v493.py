@@ -27,12 +27,23 @@ BU DOSYA ÇİVİLER:
   T4  config yüzeyi de aynı kanonik adı yazar — sır ölü olsa da, sır hiç yokken de;
   T5  `deploy/hermes/config.yaml` ile kod sabiti TEK KAYNAKTAN türer (iki kopya ayrışmaz);
   T6  yedeğin kendisi ücretsiz ve BİRİNCİLDEN FARKLI üst-akımdan;
-  T7  yeni varsayılan ölü listesine düşerse çivi öter (kendi kuyruğunu yiyen göç yok).
+  T7  yeni varsayılan ölü listesine düşerse çivi öter (kendi kuyruğunu yiyen göç yok);
+  T8  PORTAL ayağı da göçürür ve künye ile istek gövdesi TEK kaynaktan gelir (2026-09-15).
+
+T8 NEDEN SONRADAN GELDİ: TSK-189 kapsamı yedek (`_nous_model_zinciri`) ve config yüzeyleriydi;
+portal ayağı (`_nous_portal_model`) açık kalemdi ve docstring'i bunu dürüstçe beyan ediyordu.
+Kapanışın bedeli ölçülmüştü: bu ayağın adı künye sözleşmesine de giriyor (`chain_text` künyesi
+aynı fonksiyondan okur), yani göç buraya taşınınca istek gövdesi ile künye AYNI kanonik adı
+görmek ZORUNDA — ikisi ayrışırsa "ne çağırdık / ne rapor ettik" sınıfı geri gelir. T8b tam bu
+sözleşmeyi ölçer; T8a olayın süreç başına BİR kez basıldığını (sessiz değiştirme yasağı ama
+alarm gürültüsü de yok), T8c tanınmayan adın serbest geçtiğini çiviler.
 """
 from __future__ import annotations
 
+import inspect
 import json
 
+import httpx
 import yaml
 
 from meridian import hermes, store
@@ -148,3 +159,86 @@ def test_T7_yeni_varsayilan_olu_listesinde_DEGIL():
     assert hermes.NOUS_FALLBACK_DEFAULT not in hermes.GEMINI_DEAD_MODEL_MAP, (
         "yeni varsayılan ölü ad listesine düşmüş")
     assert all(v != k for k, v in hermes.GEMINI_DEAD_MODEL_MAP.items())
+
+
+# ------------------------- T8 PORTAL AYAĞI (göç + künye tek kaynak) -------------------------
+# Kaynak etiketi portal ayağını zincirden/rapor yüzeyinden AYIRIR: olay tekilleştirmesi
+# (kaynak, eski_ad) çiftiyle yapılır, yani aynı sır iki ayrı yüzeyde göçerse ikisi de görünür.
+PORTAL_KAYNAK = "NOUS_MODEL(portal)"
+
+
+class _Yanit:
+    """httpx.Response'un `_nous_text`in DOKUNDUĞU yüzeyi kadarı — ağ yok, gövde saptır."""
+
+    def __init__(self, body: dict):
+        self.status_code, self._body = 200, body
+
+    def json(self):
+        return self._body
+
+    def raise_for_status(self):
+        return None
+
+
+_IYI_CEVAP = {"choices": [{"message": {"content": "tamam"}, "finish_reason": "stop"}],
+              "usage": {"prompt_tokens": 3, "completion_tokens": 2}}
+
+
+def _post_govdesi(monkeypatch) -> dict:
+    """`_nous_text`in GERÇEKTEN gönderdiği istek gövdesini yakala — GERÇEK AĞ ÇAĞRISI YOK."""
+    yakalanan: dict = {}
+
+    def sahte_post(url, **kw):
+        yakalanan["url"] = url
+        yakalanan["json"] = kw.get("json") or {}
+        return _Yanit(_IYI_CEVAP)
+
+    monkeypatch.setattr(httpx, "post", sahte_post)
+    return yakalanan
+
+
+def test_T8a_portal_olu_adi_gocurur_ve_OLAYLAR_bir_kez(sandbox_state, monkeypatch):
+    """Portal birincili ölü bir ada ayarlıysa (canlı 404 sınıfı) burası kanonik adı döndürmeli
+    ve göçü DEFTERE yazmalı. Mandal süreç başınadır: yansıma turu ~5 dakikada bir koşuyor,
+    her turda warn basmak alarmı gürültüye çevirirdi (bkz. `canonical_model` notu)."""
+    _sirlar(monkeypatch, NOUS_MODEL=OLU_YEDEK)
+    assert hermes._nous_portal_model() == hermes.NOUS_FALLBACK_DEFAULT
+    ev = _olaylar(sandbox_state, "agent_model_olu_ad_gocuruldu")
+    assert len(ev) == 1, f"portal göçü sessiz ya da tekrarlı: {ev}"
+    assert ev[0]["kaynak"] == PORTAL_KAYNAK, "hangi yüzeydeki ad göçtü yazılmamış"
+    assert ev[0]["eski"] == OLU_YEDEK and ev[0]["yeni"] == hermes.NOUS_FALLBACK_DEFAULT
+    assert hermes._nous_portal_model() == hermes.NOUS_FALLBACK_DEFAULT
+    assert len(_olaylar(sandbox_state, "agent_model_olu_ad_gocuruldu")) == 1, \
+        "süreç başına mandal tutmuyor — her çağrı deftere satır yazıyor"
+
+
+def test_T8b_istek_govdesi_ile_kunye_TEK_KAYNAK(sandbox_state, monkeypatch):
+    """TEK KAYNAK SÖZLEŞMESİ: `_nous_text`in gövdeye yazdığı `model` ile künyenin okuduğu ad
+    AYNI fonksiyondan gelir. Göç yalnız birine uygulansaydı defter "Hermes-4-405B çağırdık"
+    derken portal başka bir modele giderdi — v246'nın kapattığı ayrışma sınıfı."""
+    _sirlar(monkeypatch, NOUS_MODEL=OLU_YEDEK, NOUS_API_KEY="sahte-anahtar")
+    yakalanan = _post_govdesi(monkeypatch)
+
+    assert hermes._nous_text("merhaba", note="v493 civi") == "tamam"
+
+    giden = yakalanan["json"].get("model")
+    assert giden == hermes.NOUS_FALLBACK_DEFAULT, f"gövdeye ölü ad yazıldı: {giden}"
+    assert giden == hermes._nous_portal_model(), "gövde ile künye ayrıştı (iki kopya)"
+    ev = _olaylar(sandbox_state, "agent_model_olu_ad_gocuruldu")
+    assert len(ev) == 1 and ev[0]["kaynak"] == PORTAL_KAYNAK, ev
+    # YAPISAL ÇİVİ: künye alanı ikinci bir ifade değil, AYNI fonksiyonun dönüşüdür.
+    assert "_nous_portal_model()" in inspect.getsource(hermes.chain_text), \
+        "künye portal adını kendi ifadesiyle kuruyor — tek kaynak kırıldı"
+
+
+def test_T8c_taninmayan_ad_serbest_gecer_ve_sir_yokken_varsayilan(sandbox_state, monkeypatch):
+    """Elimizdeki ölü-ad listesi bir KESİTTİR: gelecekteki geçerli bir adı "onarmak" arızanın
+    kendisi olurdu. Sır hiç yokken portal modunda varsayılan UYDURMA DEĞİL, gerçekten giden addır
+    (gövdeyi biz kuruyoruz) — ve dönüş tipi her iki yolda da `str` kalır."""
+    _sirlar(monkeypatch, NOUS_MODEL="Hermes-9-taninmayan")
+    assert hermes._nous_portal_model() == "Hermes-9-taninmayan"
+    assert _olaylar(sandbox_state, "agent_model_olu_ad_gocuruldu") == [], \
+        "tanınmayan ad göç olayı bastı — kurt masalı"
+    _sirlar(monkeypatch)
+    ad = hermes._nous_portal_model()
+    assert ad == hermes.NOUS_DEFAULT_MODEL and isinstance(ad, str)
