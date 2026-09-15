@@ -6,10 +6,13 @@
    İKİ KATMAN AYRI, operatörün açık isteğiyle: "sistemin çalıştığı ALTYAPI
    bileşenlerini ayrı (sunucu vs), meridian uygulamasında çalışan ALT bileşenlerin
    ne kadar kaynak tükettiğini ayrı ayrı görmek istiyorum". Bu yüzden sayfanın
-   başında iki bağımsız bölüm var (Makine · Meridian bileşenleri) ve kayıtlı beş
-   bölüm (operasyon · müdahale · veri borusu · piyasa · seans içi) onların ardından
-   geliyor. Sıra bir kaza değil: arıza triyajı YUKARIDAN AŞAĞI okunur — önce kutu,
-   sonra süreçler, sonra çalan alarm, sonra kollar, sonra veri, sonra piyasa/akış.
+   başında iki bağımsız bölüm var (Makine · Meridian bileşenleri) ve kayıtlı altı
+   bölüm (operasyon · durum sözlüğü · müdahale · veri borusu · piyasa · seans içi)
+   onların ardından geliyor. Sıra bir kaza değil: arıza triyajı YUKARIDAN AŞAĞI okunur —
+   önce kutu, sonra süreçler, sonra çalan alarm, sonra ALARMIN SÖZLÜĞÜ (hangi mekanizma
+   ne diyor), sonra kollar, sonra veri, sonra piyasa/akış. Sözlük bu sıraya 2026-09-15'te
+   girdi (TSK-070 A2/A8): kanonik satırlar 2026-08-23'ten beri servis ediliyordu ve bu
+   ekranda HİÇ okunmuyorlardı.
 
    DÖRT UÇ TEK YERDE AÇILIR ve bölümlere PROP olarak iner (beşincisi paylaşılan
    `/api/today` nabzıdır — `durum.tsx::useBugun`, kendi isteğimizi AÇMIYORUZ):
@@ -35,6 +38,7 @@ import { Server } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 import { Bilesenler } from "./sistem/Bilesenler";
+import { DurumSozlugu } from "./sistem/DurumSozlugu";
 import { Intraday } from "./sistem/Intraday";
 import { Makine } from "./sistem/Makine";
 import { Mudahale } from "./sistem/Mudahale";
@@ -109,6 +113,7 @@ export function SistemSagligiYuzey() {
       <Makine durum={infra} />
       <Bilesenler durum={infra} />
       <Operasyon durum={alarm} />
+      <DurumSozlugu teshis={teshis} />
       <Mudahale teshis={teshis} bugun={bugun} />
       <Veriboru teshis={teshis} />
       <Piyasa durum={piyasa} />
