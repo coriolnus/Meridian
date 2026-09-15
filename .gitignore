@@ -123,3 +123,4 @@ ui/node_modules
 # (`/opt/veri/altyapi/apisix/terraform.tfstate`, altyapi/apisix/backend.tf).
 altyapi/apisix/.terraform/
 altyapi/**/*.tfstate*
+altyapi/apisix/uretilen.tf   # A1'de üretilir (T1 Task 3); depoya girmez — kaynaklar.tf kararı T2 sonrası
