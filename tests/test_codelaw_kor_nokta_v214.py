@@ -561,7 +561,7 @@ SINK_TABANI = frozenset({
     "agent_tooluse.json", "agent_traces.jsonl", "approvals.jsonl", "auth.json",
     "bar_source_seams.json", "bars_fingerprint.json", "bars_source.json", "brain_cooldown.json",
     "composite_budget.json", "entity_damga.json", "fmp_usage.json", "hypothesis_id_hwm.json",
-    "inc_cache.json", "insider_signals.json", "insider_trades.json", "integrity_alarmed.json",
+    "inc_cache.json", "insider_signals.json", "insider_trades.json",
     "integrity_audit_log.json", "massive_crosscheck.json", "massive_grouped_last.json",
     "massive_verify.json", "monotonic_amnesty.json", "notify_sent.json", "oos_erosion.json",
     "ownership_state.json", "pool_exhausted_seen.json", "probe_cache.json", "regime_trigger.json",
@@ -574,7 +574,7 @@ SINK_TABANI = frozenset({
     "search_progress.json",
     "short_interest.json", "short_interest_float.json", "sieve.json",
     "skill_recommendations.jsonl", "skill_revisions.json", "sp500_constituents.json",
-    "sprint_status.json", "warmup_scale.json", "watchdog_alarmed.json",
+    "sprint_status.json", "warmup_scale.json",
     # 2026-09-05 EKLENDİ (EDG-2026-078 Aşama A, TSK-126): skill_gorus.golge_siralama_kancasi
     # yazar/skill_gorus.golge_kol_raporu okur ve skill_gorus.pencere_yaz yazar/skill_gorus.
     # _pencere_ozeti okur — DÖRDÜ DE AYNI modülde (statik graf dış okuyucu göremiyor). Gerçek
@@ -598,6 +598,17 @@ SINK_TABANI = frozenset({
     # tüketici zinciri codelaw.DECLARED_SINKS gerekçesinde yazılı — `durum_sozlugu.esanlamli_okumalar`
     # + `durum_sozlugu.esanlamli_pencere` → `api._durum_sozlugu` → /api/diagnostics → pano.
     "durum_sozlugu_sayac.json",
+    # v503'TE BEYANLI DÜŞÜRÜLDÜ (2026-09-15, TSK-070 Task 1) — İKİ muafiyet KAPANDI:
+    # `watchdog_alarmed.json` ve `integrity_alarmed.json`. Bu tabanın iki yönü vardır ve bu
+    # DÜŞÜŞ yönüdür: muafiyet, artefakt öldüğü için değil, GERÇEK BİR DIŞ OKUYUCU DOĞDUĞU için
+    # kalkıyor. Eski beyan ("alarm tekilleştirme durumu … dışarıya çıkan şey alarmın kendisidir")
+    # doğruydu: mandalın HÂLİ ("şu an hangi durum mandallı, hangisi düştü") hiçbir uçtan
+    # gelmiyordu ve tasarım §9.1'de T2/YASA-6 boşluğu olarak kayıtlıydı. Yeni zincir:
+    # `durum_sozlugu.mandal_yuzeyi` (DIŞ modül, dosya adları LİTERAL — statik graf okumayı
+    # görsün diye) → `api._durum_sozlugu` mandal ailesi + /api/diagnostics `mandallar` alanı →
+    # pano `DurumSozlugu.tsx`. Çivi: tests/test_durum_sozlugu_aileler_v503.py (yüzey, kelime
+    # türetimi ve uçtan uca kablolama). Muafiyet gerekçesi `codelaw.DECLARED_SINKS` içinde
+    # kapanış notuyla korunuyor — neden kalktığı kayıtsız kalmıyor.
 })
 
 

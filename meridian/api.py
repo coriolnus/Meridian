@@ -4117,7 +4117,7 @@ def _bekci_durumlari() -> dict:
     return out
 
 
-def _durum_sozlugu(bd: dict) -> dict:
+def _durum_sozlugu(bd: dict, teshis: dict | None = None) -> dict:
     """F8 KANONİK DURUM SÖZLÜĞÜNÜN SERVİS YÜZEYİ (WP8-C — tasarım §5/§6; sözlüğün kendisi
     `meridian/durum_sozlugu.py`). İKİ İŞ, İKİSİ DE ÖLÇÜM:
 
@@ -4136,8 +4136,41 @@ def _durum_sozlugu(bd: dict) -> dict:
     `pencere` ALANININ OKUYUCUSU BEYANLIDIR (sessiz bırakılmadı): bugün panonun sözlük kartı
     yalnız sayaçları basar; `pencere`yi /api/diagnostics tüketicisi — düşürme hükmünü veren Rol-1
     ve RUNBOOK teşhis reçetesi — okur. Pano bacağı UI dilimine bağlıdır ve o dilim gelene kadar
-    bu satır BORÇTUR, körlük değil (çivi: tests/test_f8_sayac_kalici_v499.py)."""
+    bu satır BORÇTUR, körlük değil (çivi: tests/test_f8_sayac_kalici_v499.py).
+
+    3) `aileler` — satır sayımının aile kırılımı (TSK-070 A8, tasarım §9.1). `teshis` VERİLİRSE
+       sözlük dört bekçinin ötesine geçer ve DOKUZ aileyi tek kelime kümesiyle taşır: kadans
+       (17) · dedektör (8) · canlılık (2) · bekçi (4) · kitap · kilit (3) · mandal · hermes ·
+       intraday. `teshis` /api/diagnostics gövdesinin YALNIZ okunan dilimidir (watchdog ·
+       alarm_gunluk · integrity · liveness · hud · heartbeat · mlops.warmup · intraday.skipped ·
+       mandallar) ve hepsi ÇAĞIRANIN tek okuma anından gelir — bu fonksiyon hiçbir raporu ikinci
+       kez ÜRETMEZ (aynı yanıtta iki farklı gerçek doğmasın).
+
+    İMZA GENİŞLEDİ, SÖZLEŞME DARALMADI: `teshis` verilmezse çıktı eskisiyle birebirdir (yalnız
+    bekçi satırları) — v261/v271 okuyucuları dokunulmadan yeşil kalır.
+
+    Yeni alanların okuyucusu ADIYLA (YASA 6): `satirlar[].kelime`/`aile`/`n` ve `aileler` →
+    /api/diagnostics → Vite pano yüzeyi `DurumSozlugu.tsx` (TSK-070 Task 2) + çivi
+    `tests/test_durum_sozlugu_aileler_v503.py`."""
     from . import durum_sozlugu as _dsz
+    satirlar = [_dsz.normalize_satir(ad, rapor, aile="bekci")
+                for ad, rapor in (bd or {}).items()]
+    if isinstance(teshis, dict):
+        _wdr = teshis.get("watchdog")
+        # BASTIRILAN ALARM MEKANİZMA BAŞINA: günlük defter zaten çağıranda okundu (`alarm_gunluk`),
+        # burada İKİNCİ KEZ okunmaz — aynı yanıtta iki farklı "kaç alarm bastırıldı" doğardı.
+        _bast = {ad: (v or {}).get("bastirilan")
+                 for ad, v in (((teshis.get("alarm_gunluk") or {}).get("mekanizmalar")
+                                or {}).items())}
+        satirlar += _dsz.kadans_satirlari(
+            _wdr, __import__("meridian.watchdog", fromlist=["EXPECTED"]).EXPECTED, _bast)
+        satirlar += _dsz.dedektor_satirlari(teshis.get("integrity"))
+        satirlar += _dsz.canlilik_satirlari(teshis.get("liveness"))
+        satirlar += _dsz.kitap_satirlari((bd or {}).get("kitap_damga"))
+        satirlar += _dsz.kilit_satirlari(teshis.get("hud"), teshis.get("heartbeat"))
+        satirlar += _dsz.mandal_satirlari(teshis.get("mandallar"))
+        satirlar.append(_dsz.hermes_satiri((teshis.get("mlops") or {}).get("warmup")))
+        satirlar += _dsz.intraday_satirlari((teshis.get("intraday") or {}).get("skipped"))
     return {
         "kanonik": {
             "hukum": {"kanonik": _dsz.HUKUM_KANONIK, "esanlamli": list(_dsz.HUKUM_ESANLAMLI)},
@@ -4148,7 +4181,8 @@ def _durum_sozlugu(bd: dict) -> dict:
             "beyan": _dsz.BEYAN_KANONIK,
             "kol": {k: list(v) for k, v in _dsz.KOL_KANONIK.items()},
         },
-        "satirlar": [_dsz.normalize_satir(ad, rapor) for ad, rapor in (bd or {}).items()],
+        "satirlar": satirlar,
+        "aileler": _dsz.aile_sayimi(satirlar),
         "esanlamli_okumalar": _dsz.esanlamli_okumalar(),
         "pencere": _dsz.esanlamli_pencere(),
         "sayac_rejimi": ("kalıcı — restart SIFIRLAMAZ (TSK-070, 2026-09-15; defter "
@@ -5129,7 +5163,10 @@ def api_diagnostics(request: Request, taze: int = 0):
                                 # ALAN YOKSA None, 0 DEĞİL (uydurma yasağı): rapor henüz
                                 # üretilmediyse ya da eski şemadaysa "hiç plan yok" DEMEZ.
                                 "donusum": _sr_donusum(_sr)} if _sr else None),
-        "hud": {"mode": config.MODE, "broker": config.BROKER,
+        # WALRUS BİLEREK (TSK-070): aşağıdaki `durum_sozlugu` kilit ailesini `hud.halted` ve
+        # `hud.learn_halted`tan okur. `health.halted()`ı orada YENİDEN çağırmak aynı yanıtta iki
+        # farklı kilit gerçeği doğurabilirdi (`_wd_rep`/`_bd` ile aynı gerekçe: TEK OKUMA ANI).
+        "hud": (_hud := {"mode": config.MODE, "broker": config.BROKER,
                 "regime": hb.get("regime"), "exposure_budget_pct": hb.get("exposure_budget_pct"),
                 "explore_mode": bool(hb.get("explore_mode")), "equity": hb.get("equity"),
                 "last_bar": hb.get("last_bar"), "heartbeat_age_s": health.heartbeat_age_seconds(),
@@ -5138,7 +5175,7 @@ def api_diagnostics(request: Request, taze: int = 0):
                 # stream_ok=true iken last_event_ts 3 gün eskiydi. Dürüst değer bayrağı nabız
                 # tazeliğiyle çarpar; şerit "ne kadardır kopuk"u da buradan okur.
                 **stream, "halted": health.halted(),
-                "learn_halted": health.learn_halted(), "data_ok": hb.get("data_ok")},
+                "learn_halted": health.learn_halted(), "data_ok": hb.get("data_ok")}),
         "scheduler": {"updated": sched.get("updated"), "last_tick": sched.get("last_tick"),
                       "poll_seconds": sched.get("poll_seconds"), "cycles": sched.get("cycles"),
                       # ÖĞRENME KADANSININ SEANS DAMGASI: zamanlayıcı seans-sonrası
@@ -5399,13 +5436,20 @@ def api_diagnostics(request: Request, taze: int = 0):
         # `alarm_gunluk` sonradan EKLENDİ: bekçi raporu "şu an ne bayat" der, günlük sayaç "bugün kaç
         # alarm yazıldı, kaçı tavana takıldı, kaçı askıdaydı" der. İkincisi olmadan alarm hijyeni
         # ölçülemez — ve ölçülmeyen bir susturma, susturmanın kendisinden daha tehlikelidir.
-        "watchdog": {**_wd_rep, "alarm_gunluk": _alarm_gunluk()},
+        # WALRUS BİLEREK (TSK-070): günlük sayaç defteri aşağıdaki `durum_sozlugu` kadans
+        # ailesinde de okunur (BASTIRILDI kelimesi + `n`). İkinci bir `_alarm_gunluk()` çağrısı
+        # aynı defteri tek istekte İKİ AYRI ANDA okurdu — panoda iki farklı "kaç alarm
+        # bastırıldı" cevabı doğabilirdi (`_bekci_durumlari` walrus'uyla aynı sınıf).
+        "watchdog": {**_wd_rep, "alarm_gunluk": (_ag := _alarm_gunluk())},
         # CANLILIK: kadans nabzı ("dişli döndü mü") ≠ canlılık ("dişlinin ürettiği
         # iş yaşıyor mu"). `watchdog` (report) sprint_cadence/shadow_fit'i penceresinde sayabilir
         # AMA sprint çocuğu ölü / hipotez defteri donuk olabilir — o sahte-yeşil bu satırda
         # GERÇEĞE bağlanır (sprint orphan + öğrenme durması, ölçülüp BEYAN edilerek). Alarm geçişi
         # `check_liveness_and_alarm` (300 sn poll); bu satır teşhis paneline okunur.
-        "liveness": _wd.liveness_report(),
+        # WALRUS BİLEREK (TSK-070): canlılık ailesi aşağıdaki `durum_sozlugu`da da basılır;
+        # `liveness_report()`u ikinci kez çağırmak aynı yanıtta iki farklı "sprint canlı mı"
+        # cevabı üretebilirdi (rapor dosya okur — iki okuma anı, iki gerçek).
+        "liveness": (_lv := _wd.liveness_report()),
         # BEKÇİ DURUM YÜZEYLERİ — T2.1-T2.4 YASA-6 kapanışı: dört raporun alarm satırı vardı,
         # durum yüzeyi yoktu. Maliyet/yalıtım/persist şerhleri `_bekci_durumlari`nın kendisinde.
         # WALRUS BİLEREK: aynı dört rapor hem burada olduğu gibi hem `durum_sozlugu.py::normalize_satir`
@@ -5418,7 +5462,24 @@ def api_diagnostics(request: Request, taze: int = 0):
         # F8 KANONİK DURUM SÖZLÜĞÜ (WP8-C) — kanonik ad kümeleri + normalize hükümler +
         # eşanlamlı-okuma sayaçları (eski adların ölüm tarihi ölçümü). Okuyucu: app.js
         # `f8SozlukSatiri` (Gözetim & Alarmlar). Şerhler `_durum_sozlugu`nun kendisinde.
-        "durum_sozlugu": _durum_sozlugu(_bd),
+        # MANDAL YÜZEYİ (TSK-070, tasarım §9.1 — T2/YASA-6 boşluğu): üç mandal defteri
+        # (`alarm_mandal` · `watchdog_alarmed` · `integrity_alarmed`) YAZILIYOR ama hiçbir servis
+        # yüzeyi onları taşımıyordu; "hangi durum mandallı, hangisi düştü" sorusunun panoda
+        # cevabı YOKTU. Yüzey YALNIZ DOSYA OKUR (hesap yok, 300 sn poll'da hesaplı) ve defter
+        # yoksa `None` taşır — "0 mandal" DEĞİL. Okuyucular: aşağıdaki `durum_sozlugu` mandal
+        # ailesi + pano `DurumSozlugu.tsx`; çivi tests/test_durum_sozlugu_aileler_v503.py.
+        "mandallar": (_mandallar := __import__(
+            "meridian.durum_sozlugu", fromlist=["mandal_yuzeyi"]).mandal_yuzeyi()),
+        "durum_sozlugu": _durum_sozlugu(_bd, {
+            # /api/diagnostics gövdesinin YALNIZ okunan dilimi — hepsi bu isteğin TEK okuma
+            # anından (yukarıdaki walrus'lar ve yerel değişkenler); hiçbir rapor yeniden üretilmez.
+            "watchdog": _wd_rep, "alarm_gunluk": _ag, "liveness": _lv, "hud": _hud,
+            "heartbeat": hb, "integrity": _integrity_rep, "intraday": _intra,
+            # hermes ısınması: `mlops.warmup` bloğu `skip`i taşır, `last_result` hermes
+            # durumunun kendisindedir — ikisi ısınma satırının iki bacağıdır (tasarım §9.1).
+            "mlops": {"warmup": {"last_result": hstat.get("last_result"),
+                                 "skip": hstat.get("_warm_skip")}},
+            "mandallar": _mandallar}),
         # CANLI ZAMAN ÇİZELGESİ — BEKÇİNİN YANINDA, İÇİNDE DEĞİL. Bekçi raporu
         # "geciken var mı?" der; çizelge "adım adım NE ZAMAN koştu?" der. İkisi aynı dosyadan
         # (mechanism_beats.json) beslenir ama farklı soruların cevabıdır; `watchdog` içine

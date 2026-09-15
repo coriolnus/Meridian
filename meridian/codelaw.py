@@ -566,9 +566,18 @@ DECLARED_SINKS: dict[str, str] = {
                       "değil olaylardır: scan_debt_expired / scan_debt_resolved",
 
     # --- alarm tekilleştirme / bütünlük dedektörü iç durumu (watchdog iş kolu) ---
-    "watchdog_alarmed.json": "alarm tekilleştirme durumu — aynı alarmın her turda yeniden basılmasını "
-                             "engeller; dışarıya çıkan şey alarmın kendisidir",
-    "integrity_alarmed.json": "aynı disiplin, bütünlük alarmları için",
+    # NOT: `watchdog_alarmed.json` ve `integrity_alarmed.json` buradan ÇIKARILDI — OKUYUCU DOĞDU
+    # 2026-09-15 (TSK-070 Task 1). Eski beyanları şunlardı ve DOĞRUYDU: "alarm tekilleştirme
+    # durumu — aynı alarmın her turda yeniden basılmasını engeller; dışarıya çıkan şey alarmın
+    # kendisidir" (watchdog_alarmed) · "aynı disiplin, bütünlük alarmları için"
+    # (integrity_alarmed). O gün dışarıya çıkan şey gerçekten yalnız alarmın kendisiydi: MANDALIN
+    # HÂLİ ("şu an hangi durum mandallı, hangisi düştü") hiçbir uçtan gelmiyordu ve bu tasarım
+    # §9.1'de T2/YASA-6 boşluğu olarak kayıtlıydı. Boşluk kapandı: `durum_sozlugu.mandal_yuzeyi`
+    # iki defteri DIŞ modülden okur, `api._durum_sozlugu` mandal ailesinin satırlarını üretir,
+    # `/api/diagnostics` `mandallar` alanıyla servis eder, pano `DurumSozlugu.tsx` basar.
+    # Muafiyet işi bittikten sonra da yerinde dursaydı liste "kimsenin bakmadığı çöplüğe" dönerdi
+    # — bu sözlüğün KENDİ kuralı (aynı gerekçeyle mechanism_beats, monotonic_state, finviz_universe
+    # ve learning_loop_open çıkmıştı). Çivi: tests/test_durum_sozlugu_aileler_v503.py.
     # NOT: `mechanism_beats.json` buradan ÇIKARILDI ve gerekçesi bu listenin
     # KENDİ kuralıdır ("muafiyet işi bittikten sonra da yerinde dursaydı liste kimsenin bakmadığı
     # çöplüğe dönerdi" — aynı gerekçeyle monotonic_state, finviz_universe ve learning_loop_open
