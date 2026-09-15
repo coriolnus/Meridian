@@ -634,7 +634,7 @@ vault_kv:
   # adın kopya kümesiyle çivilidir (A5). Rotasyon satırı takma addan doğar, YOLU birincilden alır.
   - ad: openrouter_api_key
     ayni_deger: HINDSIGHT_API_LLM_API_KEY
-    tuketici: "vault_dosyalar şablonları (apisix · hindsight · hermes ×4) — TAKMA AD: kasa yolu ve render kanıtı BİRİNCİLİNDİR (HINDSIGHT_API_LLM_API_KEY); kendi kasa yolu YOK, birim DEĞİL, systemd kaynağı DEĞİL"
+    tuketici: "vault_dosyalar şablonları (apisix · hindsight ×2) + hermes ×4 ROTASYON KANALIYLA (sir_rotasyon --vault kasadan gelen değeri .env kopyalarına yazar; hermes-agent .env.vault OKUMAZ — ölçüldü 2026-09-15) — TAKMA AD: kasa yolu ve render kanıtı BİRİNCİLİNDİR (HINDSIGHT_API_LLM_API_KEY); kendi kasa yolu YOK, birim DEĞİL, systemd kaynağı DEĞİL"
     rotasyon_siri: OPENROUTER_API_KEY
     kaynak: {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: OPENROUTER_API_KEY, onek: null}
     kopya_kaynaklari:
@@ -660,7 +660,7 @@ vault_kv:
     hedef: "/etc/meridian/bot_key_bekci"
     mod: "0400"
     sahip: "root"
-    tuketici: "vault_dosyalar şablonları (apisix · hermes bekci profili) · sir_rotasyon.sh --vault render kanıtı"
+    tuketici: "vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --vault render kanıtı — hermes bekci profili ROTASYON KANALIYLA beslenir (yan dosya 2026-09-15'te kaldırıldı: hermes-agent .env.vault OKUMAZ)"
     rotasyon_siri: null
     kaynak: {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: BOT_KEY_BEKCI, onek: null}
     kopya_kaynaklari:
@@ -670,7 +670,7 @@ vault_kv:
     hedef: "/etc/meridian/bot_key_karne"
     mod: "0400"
     sahip: "root"
-    tuketici: "vault_dosyalar şablonları (apisix · hermes karne profili) · sir_rotasyon.sh --vault render kanıtı"
+    tuketici: "vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --vault render kanıtı — hermes karne profili ROTASYON KANALIYLA beslenir (yan dosya 2026-09-15'te kaldırıldı: hermes-agent .env.vault OKUMAZ)"
     rotasyon_siri: null
     kaynak: {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: BOT_KEY_KARNE, onek: null}
     kopya_kaynaklari:
@@ -680,7 +680,7 @@ vault_kv:
     hedef: "/etc/meridian/bot_key_sef"
     mod: "0400"
     sahip: "root"
-    tuketici: "vault_dosyalar şablonları (apisix · hermes sef profili) · sir_rotasyon.sh --vault render kanıtı"
+    tuketici: "vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --vault render kanıtı — hermes sef profili ROTASYON KANALIYLA beslenir (yan dosya 2026-09-15'te kaldırıldı: hermes-agent .env.vault OKUMAZ)"
     rotasyon_siri: null
     kaynak: {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: BOT_KEY_SEF, onek: null}
     kopya_kaynaklari:
@@ -744,15 +744,20 @@ vault_kv:
 #   yol             `<asıl dosya>.vault` — asıl dosyanın YANINDA, aynı dizinde (çivi: asıl dosya
 #                   envanterde TANINIYOR olmalı)
 #   mod             render izni (`template { perms = … }`)
-#   sahip           `root` | `ubuntu`. Agent ROOT koşar ve `template` bloğunda SAHİP parametresi
-#                   YOKTUR (resmî belge, ölçüldü 2026-09-14) → `ubuntu` olan dosya için üretici
-#                   bir `exec { command = ["chown", "ubuntu:ubuntu", <yol>] }` yazar. Bu, Agent'ın
-#                   TEK ek yetkisidir ve `chown` bir RESTART DEĞİLDİR: tasarım §6.4'ün "Agent
-#                   tüketiciyi yeniden başlatmaz" ilkesi KORUNUR.
+#   sahip           YALNIZ `root` (daraltıldı 2026-09-15, dilim-3). Agent ROOT koşar ve `template`
+#                   bloğunda SAHİP parametresi YOKTUR (resmî belge, ölçüldü 2026-09-14), yani
+#                   `ubuntu` sahipli bir dosya render sonrası bir `exec { command = ["chown", …] }`
+#                   gerektirirdi. O yetkinin TEK gerekçesi hermes profilleriydi ve hermes yan
+#                   dosyaları kaldırıldı (aşağıdaki BEYAN bloğu) → birim CAP_CHOWN taşımaz,
+#                   üretici `exec` YAZMAZ ve root DIŞI bir sahip gördüğünde DURUR (fail-closed:
+#                   chown CAP_CHOWN'suz EPERM ile SESSİZCE düşerdi). Yetki ancak bir KARARLA
+#                   geri gelir — üretici, birim ve çivi (v491 B4/C2) birlikte değişir.
 #   tuketici        dosyayı KİMİN, HANGİ kanalla okuduğu (Yasa 6 beyanı). Biçim ÖLÇÜLDÜ, seçilmedi
 #                   — aşağıdaki her satırın kanalı canlı birim dosyasından okundu.
-#   yeniden_baslat  rotasyonun (`--vault`) koşacağı birim; `null` = restart GEREKMEZ ve gerekçesi
-#                   `tuketici` alanında yazılıdır (timer'lı oneshot / her çağrıda dosyayı okuyan CLI)
+#   yeniden_baslat  rotasyonun (`--vault`) koşacağı birim. DİLİM-3'TEN BERİ HER GİRDİDE DOLU:
+#                   `null` olan tek sınıf hermes ağacıydı ("okuyucusu A1'de ölçülecek" beyanı) ve
+#                   ölçüm OKUMUYOR dedi → girdiler kaldırıldı. Okuyucusu ölçülmemiş bir yan dosya
+#                   bu blokta artık YOKTUR (çivi: v491 C4).
 #   satirlar        `{alan, sir, onek}` — `sir` bir `vault_kv.ad`ıdır (çivi: dangling referans yok),
 #                   `onek` `null` ya da `Bearer` (donuk sözlük; rotasyon betiğinin ONEKLER tablosu
 #                   ile AYNI iki jeton). `sir` bir TAKMA AD (`ayni_deger`) olabilir: şablon o zaman
@@ -817,47 +822,32 @@ vault_dosyalar:
       - {alan: HINDSIGHT_CP_ACCESS_KEY, sir: hindsight_cp_access_key, onek: null}
       - {alan: HINDSIGHT_CP_DATAPLANE_API_KEY, sir: hindsight_cp_dataplane_api_key, onek: null}
 
-  # HERMES PROFİLLERİ — SAHİP `ubuntu` VE BU BLOĞUN TEK `exec` GEREKÇESİDİR. Profil `.env`ini
-  # hermes CLI `ubuntu` olarak okur; Agent root render eder ve `template` sahip parametresi
-  # taşımaz → render sonrası `chown ubuntu:ubuntu`.
-  # A1'DE ÖLÇÜLECEK (yerelde ÖLÇÜLEMEZ, uydurma yasağı): hermes `env_loader`ın İKİNCİ bir dosyayı
-  # okuyup okumadığı. Okuyorsa yan dosya doğrudan tüketilir; OKUMUYORSA yol bot birimlerine
-  # `EnvironmentFile=` eklemektir (spec §1) ve o karar ölçümden SONRA verilir. `yeniden_baslat`
-  # her hâlde `null`dur: bot birimleri timer'lı ONESHOT'tur ve yeni değeri bir sonraki tetikte
-  # okur (rotasyon betiğinin kapsam beyanıyla AYNI hüküm).
-  - yol: "/home/ubuntu/.hermes/profiles/bekci/.env.vault"
-    mod: "0600"
-    sahip: "ubuntu"
-    tuketici: "hermes bekci profili (env_loader ikinci dosya — A1'DE ÖLÇÜLECEK; timer'lı oneshot, restart YOK)"
-    yeniden_baslat: null
-    satirlar:
-      - {alan: BOT_KEY_BEKCI, sir: bot_key_bekci, onek: null}
-      - {alan: OPENROUTER_API_KEY, sir: openrouter_api_key, onek: null}
-  - yol: "/home/ubuntu/.hermes/profiles/karne/.env.vault"
-    mod: "0600"
-    sahip: "ubuntu"
-    tuketici: "hermes karne profili (env_loader ikinci dosya — A1'DE ÖLÇÜLECEK; timer'lı oneshot, restart YOK)"
-    yeniden_baslat: null
-    satirlar:
-      - {alan: BOT_KEY_KARNE, sir: bot_key_karne, onek: null}
-      - {alan: OPENROUTER_API_KEY, sir: openrouter_api_key, onek: null}
-  - yol: "/home/ubuntu/.hermes/profiles/sef/.env.vault"
-    mod: "0600"
-    sahip: "ubuntu"
-    tuketici: "hermes sef profili (env_loader ikinci dosya — A1'DE ÖLÇÜLECEK; timer'lı oneshot, restart YOK)"
-    yeniden_baslat: null
-    satirlar:
-      - {alan: BOT_KEY_SEF, sir: bot_key_sef, onek: null}
-      - {alan: OPENROUTER_API_KEY, sir: openrouter_api_key, onek: null}
-
-  # GLOBAL HERMES ENV — profil DEĞİL: motorun `hermes._agent_call` yolu (kind=review/generic) bu
-  # dosyayı okur ve 2026-09-08 rotasyonu tam bu kopyayı ATLADI (TSK-181: akşam inceleme çağrısı
-  # dört gün 401 aldı). Kasaya bağlanan ilk dalga-2 dosyası olması tesadüf değil: "unutulan kopya"
-  # sınıfının tek kalıcı çözümü, kopyanın kaynağının TEK olmasıdır.
-  - yol: "/home/ubuntu/.hermes/.env.vault"
-    mod: "0600"
-    sahip: "ubuntu"
-    tuketici: "hermes CLI GLOBAL env — motorun hermes._agent_call yolu (env_loader ikinci dosya — A1'DE ÖLÇÜLECEK; timer'sız, her çağrıda okunur, restart YOK)"
-    yeniden_baslat: null
-    satirlar:
-      - {alan: OPENROUTER_API_KEY, sir: openrouter_api_key, onek: null}
+  # ══════════════════════════════════════════════════════════════════════════════════════════════
+  # HERMES — DÖRT YAN DOSYA KALDIRILDI (2026-09-15, dilim-3; Rol-1 kararı 07:38Z)
+  # ══════════════════════════════════════════════════════════════════════════════════════════════
+  # BURADA DÖRT GİRDİ VARDI: `~/.hermes/profiles/{bekci,karne,sef}/.env.vault` ve
+  # `~/.hermes/.env.vault`. Dördü de `sahip: ubuntu` idi ve bu bloğun TEK `exec` chown gerekçesiydi.
+  #
+  # NEDEN GİTTİLER — ÖLÇÜLDÜ, SEÇİLMEDİ (A1, 2026-09-15 adım 9): hermes-agent anahtarını
+  # `_get_env_prefer_dotenv` ile `.env` DOSYASINDAN öncelikli okur (process env İKİNCİL) ve
+  # `.env.vault` diye bir ikinci dosya KAVRAMI YOKTUR. Agent dört dosyayı render ediyordu, hiçbiri
+  # okunmuyordu: "okuyucusuz yazım" (Yasa 6) — üstelik geçiş "yapıldı" sanılırken. Bot birimlerine
+  # `EnvironmentFile=-<profil>/.env.vault` eklemek de İŞE YARAMAZ ve bu da ölçüldü: dotenv dosyası
+  # ortam değişkenini EZER. hermes-agent üçüncü parti koddur, fork EDİLMEZ.
+  #
+  # YERİNE NE GEÇTİ (kanal kapatılmadı, DEĞİŞTİ): hermes tüketicisinin kanalı artık
+  # `deploy/oracle-a1/sir_rotasyon.sh --vault`ın hermes `.env` dosyalarını KASADAN GELEN değerle
+  # yazmasıdır. Kaynak yine kasadır — teslim aracı Agent değil rotasyondur. O dört kopya
+  # yukarıdaki `vault_kv` girdilerinin `kopya_kaynaklari` listelerinde YAŞAR ve oradan silinirse
+  # hermes anahtarı kasadan HİÇ beslenmez (çivi: v491 A13/A14/E8). İKİ-KANAL bu tüketicide
+  # KALICIDIR: asıl `.env` dosyalarından sır satırlarının kaldırılması hermes için GEÇERSİZDİR.
+  #
+  # BEDELİ (bedel yasası — kazanç sayıldı, kayıp da sayılır):
+  #   · agent.hcl 19 → 15 `template` bloğu (günlüğün `^template` sayımıyla 20 → 16)
+  #   · `exec` bloğu KALMADI → birim `CapabilityBoundingSet`ten CAP_CHOWN düştü
+  #   · `ReadWritePaths` hermes ağacını taşımıyor → `ProtectHome=read-only` deliği KAPANDI
+  #   · KAYIP: hermes anahtarı artık Agent'ın 1 dk'lık render kadansıyla DEĞİL, rotasyon
+  #     penceresiyle tazelenir. Kabul edilebilir çünkü rotasyon zaten o dosyaları yazan tek
+  #     mekanizmaydı ve bot birimleri timer'lı oneshot'tur (yeni değeri sonraki tetikte okur).
+  # A1 TEMİZLİĞİ: dört `.env.vault` dosyası A1'de SİLİNİR (yedeksiz — kaynak kasadır ve asıl
+  # `.env` dosyaları yerinde durur); silinmezlerse root:root sahipsiz artefakt olarak kalırlar.
