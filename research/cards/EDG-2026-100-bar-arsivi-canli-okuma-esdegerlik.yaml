@@ -1,0 +1,71 @@
+# EDG-2026-100 — Bar arşivi (parquet) ↔ CSV eşdeğerliği ve bayraklı canlı okuma yolu — TSK-020 §3.3 "ayrı kart aç, sıraya al"
+# ÖN-KAYIT 2026-09-15 18:4xZ (Rol-1). OPERATÖR KARARI 2026-09-15 18:3xZ (AskUserQuestion): "Ayrı kart aç, sıraya al" —
+# tasarım docs/TASARIM-BARS-PARQUET-DUCKDB-2026-09-06.md §3.3 "canlı yol (opsiyonel, ayrı karar)". Arşiv (UYGULA-3) 2026-09-13'ten
+# beri canlı: `meridian-bar-arsiv.timer` Pazar 22:00Z, 260 parquet + manifest; canlı motor barları hâlâ CSV'den okur.
+# HAFIZA KONTROLÜ (18:4xZ): `ops/kart_benzer.py --hipotez "canlı bar okuma yolu … byte-eşit …"` → en yüksek benzerlik 0,14 (EDG-092
+# evren_pit, ilgisiz), KALDI/NO-GO benzeri YOK → "benzer yok" beyanı. memory/: tek-kaynak yasası (kopya = türetme + ayrışma çivisi).
+
+card_id: EDG-2026-100
+status: registered
+family: veri_yolu_esdegerlik
+on_kayit: 2026-09-15
+selef:
+  - "benzer yok (ops/kart_benzer.py 2026-09-15 18:4xZ; en yüksek 0,14 EDG-2026-092 — evren üyeliği, ilgisiz)"
+ref:
+  - "TSK-020 (backend mimari kararları; UYGULA-3 bar arşivi CANLI 2026-09-13 — bu kart §3.3 kalanıdır)"
+  - "docs/TASARIM-BARS-PARQUET-DUCKDB-2026-09-06.md §3.3 (canlı yol: `data.load_many(..., kaynak=\"arsiv\")`, varsayılan CSV; fark çivisi parquet ↔ CSV(sanitize) byte-eşit)"
+  - "deploy/oracle-a1/meridian-bar-arsiv.{service,timer} (arşiv üreticisi; manifest tek kaynak)"
+  - "CLAUDE.md §4 tek-kaynak yasası (CSV kaynak, parquet türev — kopya değil türetme + ayrışma çivisi)"
+
+hipotez: >
+  Bar arşivindeki her sembol×ay parquet parçası, canlı motorun bugün CSV(sanitize) yolundan yüklediği çerçeveyle
+  DEĞER-EŞİTTİR (aynı satır sayısı, aynı sütunlar, aynı dtype, hücre başına eşit değer — float'lar bit-eşit; canonical
+  serileştirmede byte-eşit). Eşitlik %100 sembol×ay için sağlanırsa, `data.load_many(kaynak="arsiv")` bayrağı (varsayılan
+  CSV, canlı davranış çivisiyle korunur) canlı yola alınabilir; bayrak AÇILMADAN önce 7 seans gölge kıyası (canlı worker CSV
+  okurken yanda arşiv okuması yapılır, fark defteri 0 satır) şarttır. Kaynak CSV, parquet türevdir: eşitlik bir varsayım değil,
+  her Pazar arşiv tazelemesinden sonra yeniden ölçülen bir çividir (ayrışma çivisi).
+
+k_registry: {registered_at: "2026-09-15", trial_ids: [EDG-100-esitlik-orani-sembol-ay, EDG-100-golge-kiyas-7-seans]}
+# K=2: (1) arşivdeki tüm sembol×ay için eşitlik oranı; (2) 7 seanslık canlı gölge kıyası. Yükleme süresi/bedel K'ye girmez.
+
+adim_olcum: >
+  Kod (Opus dilimi, TDD): `ops/bar_arsiv_kiyas.py --kuru|--rapor` — manifestteki her sembol×ay için parquet çerçevesi ile
+  `meridian.data` CSV(sanitize) yolunun çerçevesini AYNI kıyas fonksiyonuyla karşılaştırır (satır/sütun/dtype/değer; float bit-eşit;
+  NaN ↔ NaN eşit), fark satırlarını `olcum/edg100/fark_<damga>.jsonl` + özet `sonuc_100_<damga>.json` (eşit/farklı/ölçülemeyen
+  sayıları, manifest sha, arşiv damgası) yazar; obs'a yazmaz (sandbox çivisi). `data.load_many(kaynak="arsiv")` bayrağı: parquet
+  varsa oradan (tipli, onarımsız), yoksa CSV; varsayılan "csv" — canlı davranış çivisi: bayraksız çağrı bugünkü CSV yoluyla
+  byte-eşit. Gölge kıyası: worker döngüsünde bayrak kapalıyken yanda `kaynak="arsiv"` yüklemesi yapılıp fark sayısı `obs.log`
+  (beyanlı okuyucu: bu kartın raporu + /api/diagnostics satırı) — 7 seans, fark 0. Hüküm Rol-1.
+
+esikler:
+  esitlik_orani_alt: 1.0            # sembol×ay parçalarının %100'ü eşit (fark = KALDI; tek fark bile kaynak bulunmadan geçilmez)
+  olculemeyen_ust_oran: 0.02        # manifestte olup CSV'de/parquet'te yüklenemeyen parça payı ≤ %2 (üstü: bilgisiz, kapsam)
+  golge_kiyas_seans: 7              # canlı gölge kıyası en az 7 seans
+  golge_fark_ust: 0                 # 7 seansta fark satırı 0
+  manifest_tazelik_gun_ust: 8       # ölçüm anında arşiv manifesti ≤ 8 gün (haftalık timer; bayat manifest → bilgisiz)
+
+kill_list:
+  - "herhangi bir sembol×ay değer-eşit değil → KALDI (fark kaynağı — sanitize/onarım/dtype — bulunup TASARIMDA kapatılmadan arşiv canlı yola giremez; yeni kart)"
+  - "ölçülemeyen parça payı > %2 ya da manifest > 8 gün bayat → bilgisiz (kapsam/tazelik), sayı yayılmaz"
+  - "gölge kıyasında 7 seansta ≥ 1 fark → KALDI (canlı bayrak açılmaz)"
+  - "bayraksız `load_many` çağrısının davranışı değişti (canlı davranış çivisi kırmızı) → dilim geçersiz, merge yok"
+  - "kıyas fonksiyonu obs/state'e yazıyor ya da PK bozuk parçayı yakalamıyor → ölçüm geçersiz"
+
+pozitif_kontrol: >
+  (1) Yol-tutarlı PK: manifestten seçilen bir parçanın parquet kopyasında TEK hücre değiştirilip (sandbox kopyası; canlı arşive
+  dokunulmaz) aynı kıyas fonksiyonundan geçirilir — fark 1 satır olarak ötmelidir (ötmezse ölçüm geçersiz). (2) Sentetik: üç
+  satırlık yapay CSV + ondan üretilmiş parquet eşit; dtype'ı float32'ye düşürülmüş parquet FARKLI (çivi). (3) Bayrak çivisi:
+  `kaynak` verilmeyen çağrı CSV yolunun çıktısıyla byte-eşit (tek-kaynak yasası).
+
+veri_penceresi: "Arşiv manifestindeki TÜM sembol×ay parçaları (260 sembol; ölçüm anındaki manifest sha karta yazılır) ↔ aynı sembol/ay CSV (state/bars); gölge kıyası: bayrak dağıtımından sonraki ilk 7 seans"
+
+basari_tanimi: >
+  Opus dilimi (kıyas betiği + bayrak + çiviler; Sonnet inceleme) → A1'de `bar_arsiv_kiyas.py --rapor` (K1) → hüküm Rol-1 aynı
+  turda: K1 GEÇTİ ise bayrak KAPALI dağıtılır ve 7 seans gölge kıyası (K2) koşar → K2 GEÇTİ ise canlı bayrağın açılması AYRI
+  dağıtım + operatör onayı (canlı davranış değişir); KALDI → arşiv yalnız araştırma/sorgu yolu olarak kalır, TSK-020 §3.3 kapanır.
+  Canlı knob'a bu kart içinde dokunulmaz.
+
+notlar: >
+  Sıra: EDG-089 hükmü (≈20 Eylül) ve dağıtım penceresi sonrası; TSK-020 sırasında (4→2-adım2→3→1→9) 3'ün kalanı. Bedel: Opus ~1 tur
+  + Sonnet + A1 kıyas koşumu (260 sembol × ~70 ay, dakikalar) + 7 seans bekleme. Kazanç: arşiv canlıya girerse CSV onarım
+  yolu ve yükleme süresi tek kaynaktan; gölge kıyası bedeli (yan okuma) 7 seansla sınırlı. Bu kart canlı knob'a dokunmaz.
