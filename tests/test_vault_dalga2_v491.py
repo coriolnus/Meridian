@@ -69,6 +69,19 @@ YAN_DOSYALAR = (
     "/home/ubuntu/.hermes/.env.vault",
 )
 
+#: AGENT BİRİMİNİN YETENEK KÜMESİ — DONUK, SIRALI ve İKİ kalemli. Liste burada ELLE durur (yan
+#: dosya listesiyle aynı gerekçe): birimden türetilseydi çivi birimin söylediğini tekrarlar,
+#: hiçbir şey ÖLÇMEZDİ. İkisi de A1'de ÖLÇÜLMÜŞ bir arızanın bedelidir —
+#:   · CAP_CHOWN      (2026-09-14) — `exec` chown'u root için bile bu yeteneği ister; boş kümede
+#:     `chown ubuntu:ubuntu` EPERM ile düşer ve dosya root:root kalır.
+#:   · CAP_DAC_OVERRIDE (2026-09-15) — root süreç DAC_OVERRIDE'sız kalınca `ubuntu` sahipli
+#:     dizinlere (`/opt/hindsight` 755 ubuntu, `/home/ubuntu/.hermes` ve profil dizinleri 700
+#:     ubuntu) geçici dosya AÇAMAZ: `failed writing file: open <tmp>: permission denied`. Yalnız
+#:     `/opt/apisix` (root sahipli) render edildi; yedi yan dosyanın altısı hiç doğmadı.
+#: KÜME DONUKTUR: fazladan bir yetenek (ör. CAP_SYS_ADMIN) sapmanın gerekçesini sessizce
+#: genişletirdi, eksik bir yetenek render'ı sessizce yarım bırakırdı — ikisi de kırmızıdır.
+AGENT_YETENEKLERI = ("CAP_CHOWN", "CAP_DAC_OVERRIDE")
+
 #: ÖNEK SÖZLÜĞÜ DONUKTUR ve TEK yerde yaşar: `sir_rotasyon.sh`in `ONEKLER` tablosu aynı iki
 #: jetonu tanır (`-` ve `Bearer`). Envanterde önek LİTERAL DEĞİL JETONDUR — literal yazılsaydı
 #: ("Bearer ") iki yazım (boşluklu/boşluksuz) sessizce ayrışırdı ve v485 E3'ün "değer yok"
@@ -610,14 +623,64 @@ def test_C1_agent_YAZMA_YUZEYI_iki_blogun_dizinlerinden_TURER():
         f"\n  envanterde fazla: {sorted(beklenen - beyan)}")
 
 
-def test_C2_agent_CHOWN_YETENEGI_TEK_ve_DAR():
+def _yetenek_kumesi(birim: pathlib.Path) -> list[str]:
+    """Birimin YÜRÜRLÜKTEKİ `CapabilityBoundingSet=` jetonları (şerhler düşer).
+
+    C2 ve onun mutasyonları AYNI fonksiyonu çağırır: mutasyon başka bir okuma yoluyla ölçülseydi
+    "ısırdı" kanıtı C2'nin gerçekten koştuğu dalı değil, kopyasını ölçerdi."""
+    return (_degerler(birim, "CapabilityBoundingSet") or [""])[-1].split()
+
+
+def test_C2_agent_YETENEK_KUMESI_DONUK_iki_kalem():
     """`CapabilityBoundingSet=` dalga-1'de BOŞTU ve bu doğruydu: Agent yalnız dosya yazıyordu.
-    Dalga-2'nin `exec` chown'u root için bile CAP_CHOWN İSTER — boş kümede `chown ubuntu:ubuntu`
-    EPERM ile düşer, dosya root:root kalır ve hermes onu okuyamaz. Yetenek EKLENİR ama TEK ve
-    ADIYLA: ikinci bir yetenek, sapmanın gerekçesini sessizce genişletirdi."""
-    deger = (_degerler(BIRIM_AGENT, "CapabilityBoundingSet") or [""])[-1]
-    assert deger.split() == ["CAP_CHOWN"], (
-        f"agent yetenek kümesi TEK ve CAP_CHOWN olmalı (dalga-2 exec chown'u): {deger!r}")
+    Bugün küme İKİ kalemdir ve ikisi de A1'de ölçülmüş bir arızanın bedelidir (gerekçeler
+    `AGENT_YETENEKLERI` şerhinde, tarihleriyle).
+
+    İDDİA İKİ YÖNLÜDÜR ve bu bilinçlidir: eksik bir yetenek render'ı sessizce yarım bırakır
+    (2026-09-15: yedi yan dosyanın altısı hiç doğmadı, journal'da `permission denied`), fazladan
+    bir yetenek ise root süreci frenleyen TEK katmanı — sandbox'ı — sessizce gevşetir. Bu yüzden
+    çivi "içeriyor mu" değil EŞİTLİK ölçer."""
+    assert _yetenek_kumesi(BIRIM_AGENT) == list(AGENT_YETENEKLERI), (
+        f"agent yetenek kümesi DONUK: {list(AGENT_YETENEKLERI)} bekleniyordu, "
+        f"{_yetenek_kumesi(BIRIM_AGENT)!r} var")
+
+
+def test_C2b_DAC_OVERRIDE_gerekcesi_BIRIM_SERHINDE_OLCUM_TARIHIYLE():
+    """Yetenek eklemek bir SAPMADIR ve bu depoda sapma sessiz olamaz: birim dosyasını okuyan
+    mühendis "root süreç neden DAC_OVERRIDE taşıyor" sorusunun cevabını ORADA bulmalı, günlüğü
+    aramak zorunda kalmadan. Şerh üç şeyi taşır: yeteneğin ADI, ÖLÇÜM TARİHİ ve hangi dizinlerin
+    bunu gerektirdiği — tarihsiz bir gerekçe, kaldırılabilir mi sorusuna cevap veremez."""
+    serh = "\n".join(s for s in BIRIM_AGENT.read_text(encoding="utf-8").splitlines()
+                     if s.strip().startswith("#"))
+    assert "CAP_DAC_OVERRIDE" in serh, "DAC_OVERRIDE gerekçesi birim şerhinde ADIYLA yok"
+    assert "2026-09-15" in serh, "DAC_OVERRIDE'ın ÖLÇÜM TARİHİ şerhte yok"
+    for dizin in ("/opt/hindsight", "/home/ubuntu/.hermes"):
+        assert dizin in serh, f"şerh yeteneği gerektiren dizini ({dizin}) saymıyor"
+
+
+def _mutant_birim(tmp_path: pathlib.Path, eski: str, yeni: str, ad: str) -> pathlib.Path:
+    """Birim dosyasının MUTANT kopyası — mutasyon çapası kaynakta yoksa PATLAR (bayat çivi)."""
+    ham = BIRIM_AGENT.read_text(encoding="utf-8")
+    assert eski in ham, f"mutasyon çapası birimde yok (çivi bayatlamış): {eski!r}"
+    hedef = tmp_path / ad
+    hedef.write_text(ham.replace(eski, yeni, 1), encoding="utf-8")
+    return hedef
+
+
+@pytest.mark.parametrize("yeni,ad,senaryo", [
+    ("CapabilityBoundingSet=CAP_CHOWN", "vault-agent-eksik.service",
+     "DAC_OVERRIDE düşer: root süreç ubuntu sahipli dizinde geçici dosya açamaz, yedi yan "
+     "dosyanın altısı hiç doğmaz (A1 ölçümü 2026-09-15)"),
+    ("CapabilityBoundingSet=CAP_CHOWN CAP_DAC_OVERRIDE CAP_SYS_ADMIN", "vault-agent-fazla.service",
+     "fazladan yetenek: root sürecin TEK freni olan sandbox sessizce gevşer"),
+])
+def test_C2c_MUTASYON_yetenek_kumesi_bozulunca_C2_KIRMIZI(tmp_path, yeni, ad, senaryo):
+    """Çivi yeşili kanıt değildir: C2'nin EŞİTLİK iddiası iki yönde de ısırmalı. `in` ile yazılmış
+    bir çivi ikinci senaryoda (fazladan yetenek) sessizce yeşil kalırdı — donukluğun kendisi
+    ancak buradan bilinir."""
+    bozuk = _mutant_birim(tmp_path, "CapabilityBoundingSet=CAP_CHOWN CAP_DAC_OVERRIDE", yeni, ad)
+    assert _yetenek_kumesi(bozuk) != list(AGENT_YETENEKLERI), (
+        f"MUTASYON ISIRMADI ({senaryo}): bozuk birim C2'nin iddiasını hâlâ geçiyor")
 
 
 def test_C3_agent_HOME_yazma_deligi_BIRIM_SERHINDE_beyanli():

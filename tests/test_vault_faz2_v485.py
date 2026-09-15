@@ -828,6 +828,19 @@ def _uretici():
     return betikten_modul_yukle(URETICI, "vault_politika_uret")
 
 
+def _mutant_uretici(tmp_path: pathlib.Path, eski: str, yeni: str, ad: str):
+    """Üreticinin MUTANT kopyası. `ENVANTER` yükleme SONRASI enjekte edilir: kopya tmp'de doğar,
+    kendi `parents[1]`i depo kökü DEĞİLDİR ve envanteri bulamazdı."""
+    from tests.conftest import betikten_modul_yukle
+    kaynak = URETICI.read_text(encoding="utf-8")
+    assert eski in kaynak, f"mutasyon hedefi kaynakta yok (çivi bayatlamış): {eski!r}"
+    hedef = tmp_path / f"{ad}.py"
+    hedef.write_text(kaynak.replace(eski, yeni, 1), encoding="utf-8")
+    mod = betikten_modul_yukle(hedef, ad)
+    mod.ENVANTER = ENVANTER
+    return mod
+
+
 def test_G1_uretici_VAR_ve_KOMUT_SATIRI_sozlesmesi():
     """Ops aracı sözleşmesi KOMUT SATIRIdır (CLAUDE.md §1). Çelişen bayrak çifti sessizce
     yutulmaz: `--kontrol --uygula` → çıkış 2 (ölçülmüş vaka sınıfı, 2026-08-30)."""
@@ -893,15 +906,83 @@ def test_H1_agent_politikasi_YALNIZ_envanter_yollarini_READ_eder():
     assert "*" not in metin.replace("*/", ""), "agent politikasında joker yol var"
 
 
-def test_H2_admin_politikasi_YONETIM_yollarini_tasir():
+#: ADMIN POLİTİKASININ TAM YOL KÜMESİ — DONUK (yol → yetenekler). Kök jeton İPTAL EDİLDİĞİ için
+#: bu politika kasadaki EN GENİŞ yetkidir ve genişlemesi bir KARAR olmak zorundadır, bir yan etki
+#: değil. Eski çivi "şu yollar VAR mı" diye soruyordu; o iddia yeni bir yol eklendiğinde sessizce
+#: yeşil kalırdı — yani politikanın büyümesini hiç ölçmüyordu. Küme burada ELLE durur ve
+#: üreticiden TÜRETİLMEZ: türetilseydi çivi üreticinin söylediğini tekrarlar, hiçbir şey ölçmezdi.
+#:
+#: `sys/policies/acl/meridian-agent` (2026-09-15): dalga-2'de `vault policy write meridian-agent`
+#: 403 aldı — politika kurulumda KÖKLE yazılmıştı ve kök iptal edilmişti; kurtarma tek seferlik
+#: `generate-root` gerektirdi. Yol AGENT POLİTİKASININ KENDİSİDİR, `sys/policies/acl/*` DEĞİL:
+#: joker olsaydı admin KENDİ politikasını genişletebilir, yani "kök iptal edildi" beyanı anlamını
+#: yitirirdi. `create`/`delete` de YOK — politika kurulum betiğinin ürünüdür, admin onu GÜNCELLER.
+ADMIN_POLITIKA_YOLLARI = {
+    "secret/data/meridian/*": {"create", "read", "update", "delete"},
+    "secret/metadata/meridian/*": {"read", "list", "delete"},
+    "sys/health": {"read"},
+    "sys/policies/acl/meridian-agent": {"read", "update"},
+    "auth/approle/role/agent/secret-id": {"update"},
+}
+
+
+def _hcl_yollari(metin: str) -> dict[str, set[str]]:
+    """`path "<yol>" { capabilities = [...] }` → {yol: {yetenek}}.
+
+    YETENEKLERİ DE OKUR, yalnız yolları değil: aynı yol üzerinde `read` ile `sudo` arasındaki
+    fark bir politikanın TAMAMIDIR ve yalnız yol adlarını sayan bir çivi o farkı göremezdi."""
+    ciftler = re.findall(
+        r'^path\s+"([^"]+)"\s*\{\s*\n\s*capabilities\s*=\s*\[([^\]]*)\]', metin, re.M)
+    return {yol: set(re.findall(r'"([^"]+)"', ham)) for yol, ham in ciftler}
+
+
+def test_H2_admin_politikasi_TAM_YOL_KUMESI_DONUK():
+    """Yönetim politikası kasadaki en geniş yetkidir: kümesi EŞİTLİKLE ölçülür, "içeriyor mu" ile
+    değil. Bir yol eklemek ya da bir yeteneği genişletmek burada kırmızı olur ve o kırmızı,
+    değişikliği bir KARARA çevirir (A1'de bir kez daha `generate-root` gerektirir — bedel de
+    görünür olsun)."""
+    yollar = _hcl_yollari(POLITIKA_ADMIN.read_text(encoding="utf-8"))
+    assert yollar == ADMIN_POLITIKA_YOLLARI, (
+        f"admin politikası DONUK kümeden ayrıştı.\n  fazla: "
+        f"{ {k: v for k, v in yollar.items() if ADMIN_POLITIKA_YOLLARI.get(k) != v} }\n"
+        f"  eksik: { {k: v for k, v in ADMIN_POLITIKA_YOLLARI.items() if yollar.get(k) != v} }")
+
+
+def test_H2b_admin_KENDI_POLITIKASINI_genisletemez():
+    """Hükmün kendisi: admin YALNIZ agent politikasını yazabilir. `sys/policies/acl/*` ya da
+    `.../meridian-admin` bir kendi-kendini-terfi yoludur — o jetonu taşıyan her şey (ve onu ele
+    geçiren her şey) kasanın tamamına tek komutla ulaşırdı. Kök iptali ancak bu yol KAPALIYKEN
+    bir anlam taşır."""
     metin = POLITIKA_ADMIN.read_text(encoding="utf-8")
-    yollar = set(re.findall(r'^path\s+"([^"]+)"', metin, re.M))
-    assert "sys/health" in yollar, "sağlık okuması yok"
-    assert "auth/approle/role/agent/secret-id" in yollar, "secret-id yenileme yolu yok"
-    assert any(y.startswith("secret/data/meridian/") for y in yollar), "sır yazma yolu yok"
-    assert any(y.startswith("secret/metadata/meridian/") for y in yollar), (
-        "KV-v2 meta yolu yok — 'sildim ama duruyor' sınıfı"
-    )
+    politika_yollari = [y for y in _hcl_yollari(metin) if y.startswith("sys/policies/")]
+    assert politika_yollari == ["sys/policies/acl/meridian-agent"], (
+        f"admin politikasında beklenmeyen `sys/policies` yolu: {politika_yollari}")
+    assert "sys/policies/acl/*" not in metin, "joker politika yolu — admin kendini genişletebilir"
+    assert "meridian-admin" not in _yorumsuz(metin), (
+        "admin KENDİ politikasının yolunu taşıyor — kendi-kendini-terfi")
+
+
+def test_H2c_MUTASYON_admin_politikasi_JOKERE_donerse_H2_ve_H2b_KIRMIZI(tmp_path):
+    """Çivi yeşili kanıt değildir. Senaryo: üretici dar yol yerine `sys/policies/acl/*` yazar —
+    403 yine kalkar (yani "çalışıyor" görünür) ama admin artık kendi politikasını da yazabilir.
+    Mutasyon H2'nin eşitliğini VE H2b'nin joker yasağını birden ısırmalı."""
+    mod = _mutant_uretici(tmp_path, 'f"sys/policies/acl/{AGENT_POLITIKA_ADI}"',
+                          '"sys/policies/acl/*"', "uret_mut_politika_joker")
+    metin = mod.politika_admin()
+    assert _hcl_yollari(metin) != ADMIN_POLITIKA_YOLLARI, "MUTASYON ISIRMADI: H2 hâlâ yeşil"
+    assert "sys/policies/acl/*" in metin, "mutasyon uygulanmadı (çivi kendi hedefini kaybetmiş)"
+
+
+def test_H2d_MUTASYON_admin_politikasi_SUDO_alirsa_H2_KIRMIZI(tmp_path):
+    """İkinci yön: yol aynı kalır, YETENEK genişler. Yalnız yol adlarını sayan bir çivi burada
+    sessizce yeşil kalırdı — `_hcl_yollari`nın yetenekleri de okumasının tek gerekçesi budur."""
+    mod = _mutant_uretici(tmp_path, '["read", "update"],\n         "Agent politikasının',
+                          '["read", "update", "sudo"],\n         "Agent politikasının',
+                          "uret_mut_politika_sudo")
+    yollar = _hcl_yollari(mod.politika_admin())
+    assert yollar.get("sys/policies/acl/meridian-agent") == {"read", "update", "sudo"}, (
+        f"mutasyon uygulanmadı (çivi bayatlamış): {yollar.get('sys/policies/acl/meridian-agent')}")
+    assert yollar != ADMIN_POLITIKA_YOLLARI, "MUTASYON ISIRMADI: H2 yetenek genişlemesini görmüyor"
 
 
 def test_H3_agent_sablon_HEDEFLERI_envanterle_BIREBIR():

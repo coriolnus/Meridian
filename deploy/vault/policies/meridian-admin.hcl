@@ -24,6 +24,11 @@ path "sys/health" {
   capabilities = ["read"]
 }
 
+# Agent politikasının KENDİSİ — `acl/*` DEĞİL: admin kendini genişletemez (403 vakası 2026-09-15)
+path "sys/policies/acl/meridian-agent" {
+  capabilities = ["read", "update"]
+}
+
 # Agent'ın secret-id'sini ELLE yenileme yolu (secret_id_ttl=0, kendiliğinden dönmez)
 path "auth/approle/role/agent/secret-id" {
   capabilities = ["update"]
