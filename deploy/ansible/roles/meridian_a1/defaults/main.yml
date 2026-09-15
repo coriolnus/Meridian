@@ -101,6 +101,18 @@ apt_paketleri:
   # bir makinede eksik hiç DOĞMAMALI. Çivi: tests/test_vault_faz2_v485.py §N5.
   - unzip
 
+# --- Terraform (paketler.yml; TSK-176 T1 Task 1, 2026-09-15) ---
+# TEK KAYNAK: sürüm YALNIZ burada yazılıdır — `paketler.yml` paket adını `terraform={{
+# terraform_surumu }}` ile kurar, `saglik.yml` kapısı beklenen sürümü aynı değişkenden türetir
+# (`-<revizyon>` soneki regex ile atılır). İki yerde yazılsaydı yükseltme turunda biri sessizce
+# geride kalır ve "kurulu" ile "beklenen" ayrışırdı — tek-kaynak yasasının aynı sınıfı (`uv_surum`).
+# APT REVİZYONU DEĞERİN PARÇASIDIR: HashiCorp deposunda paket sürümü `1.16.2-1` biçimindedir ve
+# `apt` `name=terraform=1.16.2` ile EŞLEŞMEZ; kapı ise ikili sürümü (`1.16.2`) ölçer, bu yüzden
+# kıyas öncesi sonek atılır.
+# SÜRÜM SEÇİMİ BİR KARARDIR, ölçüm değil (plan Tech Stack; lisans BUSL 1.1 beyanı ROADMAP
+# TSK-176 Ref'te): yükseltme = bu satırın değişmesi + playbook koşumu; apt'ye BIRAKILMAZ.
+terraform_surumu: "1.16.2-1"
+
 # --- uv (venv.yml) ---
 # SÜRÜM PİNİ: resmi installer sürümsüz URL'den çekilirse her koşum farklı uv kurabilir (tedarik
 # zinciri kapısı yok — A0 envanteri Bulgu 5). Değer A1'de ÖLÇÜLMEDİ: ajan A1'e ssh yapmaz

@@ -85,3 +85,38 @@
 - name: Timer raporu
   ansible.builtin.debug:
     msg: "{{ timer_envanteri.stdout_lines | default(['(check-mode: command atlandı)']) }}"
+
+# TSK-176 T1 Task 1 (2026-09-15) — "kurulu != çalışır" sorusunun TERRAFORM yarısı. `paketler.yml`
+# paketi kurar; kurulmuş bir paket ÇALIŞAN bir ikili demek DEĞİLDİR (fail-notify dersi: birim
+# H9'dan beri kuruluydu ve hiç ateşlenmemişti). Kapı iki şeyi birden ölçer: ikili KOŞUYOR mu ve
+# sürümü PİNLE aynı mı — ikincisi olmadan apt bir gün başka bir sürüm bırakır ve
+# `.terraform.lock.hcl` ile state'in birlikte yaşadığı dünyada bunu ancak plan çıktısı bozulunca
+# görürdük. SÜRÜM BURADA SABİT YAZILMAZ: beklenen değer `terraform_surumu` değişkeninden türetilir
+# (apt revizyon soneki atılarak) — tek-kaynak yasası; çivi tests/test_ansible_a0_terraform_v501.py.
+- name: Terraform sürümü (ÖLÇÜM — hüküm bir sonraki görevde)
+  ansible.builtin.command:
+    cmd: terraform version -json
+  register: tf_surum
+  changed_when: false
+
+- name: KAPI — terraform sürümü pinden ayrışmamalı
+  ansible.builtin.assert:
+    that:
+      - (tf_surum.stdout | from_json).terraform_version == (terraform_surumu | regex_replace('-\d+$', ''))
+    fail_msg: >-
+      terraform sürümü PİNDEN AYRIŞTI (ölçülen:
+      {{ (tf_surum.stdout | from_json).terraform_version | default('(ölçülemedi)') }}).
+      Teşhis: `apt policy terraform`; düzeltme `paketler.yml` Terraform görevinin yeniden
+      koşmasıdır — sürümü elle yükseltmek İKİNCİ BİR KAYNAK yaratır (pin `terraform_surumu`).
+    success_msg: "terraform: kurulu sürüm pinle aynı"
+  when: not ansible_check_mode
+
+# Yasa 6 + bedel yasası (yukarıdaki sağlık kapısıyla AYNI disiplin): atlanan kapı SESSİZ kalmaz —
+# "ölçmedim" ile "ölçtüm, iyiydi" aynı görünmemeli.
+- name: Terraform sürüm kapısı ATLANDI — neden (kapı kapalıyken tek çıktı budur)
+  ansible.builtin.debug:
+    msg: >-
+      TERRAFORM SÜRÜM KAPISI ATLANDI — neden: check-mode (--check): `command` görevleri koşmaz,
+      `terraform version` sorulmaz. Bu ATLAMA bir sürüm HÜKMÜ DEĞİLDİR: "kurulu != çalışır"
+      sorusunun terraform yarısı cevapsız kalmıştır.
+  when: ansible_check_mode
