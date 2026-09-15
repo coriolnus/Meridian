@@ -78,6 +78,12 @@ SECRET_ID_DOSYASI = "/etc/vault/agent.secret-id"
 #: AppRole'ün adı — politika (`secret-id` yenileme yolu) ve kurulum betiği AYNI adı kullanır.
 APPROLE_ADI = "agent"
 
+#: Agent politikasının Vault'taki ADI. İki yerde geçer ve TEK kaynaktan gelir: üretilen dosyanın
+#: adı (`<ad>.hcl`, kurulum betiği onu bu adla `vault policy write` eder) ve admin politikasının
+#: `sys/policies/acl/<ad>` yazma yolu. Literal iki kez yazılsaydı biri değiştiğinde öteki sessizce
+#: bayatlar ve sonuç "politika yazılamıyor, 403" olurdu — ölçülmüş vaka (2026-09-15).
+AGENT_POLITIKA_ADI = "meridian-agent"
+
 #: KV-v2 STATİK sırların yeniden render aralığı (dalga-2). Varsayılan 5 dk'dır; rotasyon
 #: penceresinde beklenen süre budur. TEK yerde yaşar: `deploy/oracle-a1/sir_rotasyon.sh --vault`
 #: kendi bekleme TAVANINI bu aralıktan DEĞİL kendi sabitinden alır ve ikisi AYRI gerçeklerdir
@@ -261,7 +267,17 @@ def politika_admin() -> str:
 
     Kök jetonu kurulum sonunda İPTAL EDİLİR (tasarım §6.2); günlük yönetim bu dar politikayla
     yapılır. `sys/health` okuması bekçinin (ops/vault_sagligi.py) jetonlu koşumu için değil —
-    bekçi jetonsuz koşar — operatörün `vault status` çağrısı için buradadır."""
+    bekçi jetonsuz koşar — operatörün `vault status` çağrısı için buradadır.
+
+    2026-09-15 A1 VAKASI — `sys/policies/acl/meridian-agent` BURAYA BU YÜZDEN GİRDİ: dalga-2'nin
+    3. adımında `vault policy write meridian-agent` 403 aldı. Agent politikası kurulumda KÖKLE
+    yazılmıştı ve kök iptal edilmişti; yani politikayı GÜNCELLEYEBİLECEK hiçbir jeton kalmamıştı
+    ve kurtarma tek seferlik bir `generate-root` gerektirdi (kök yeniden üretildi, kullanıldı,
+    `token revoke -self` ile iptal edildi). Yol AGENT POLİTİKASININ KENDİSİDİR ve joker
+    (`sys/policies/acl/*`) DEĞİLDİR: joker olsaydı admin KENDİ politikasını da yazabilir, yani
+    "kök iptal edildi" beyanı anlamını yitirirdi — jetonu taşıyan (ya da ele geçiren) her şey
+    kasanın tamamına tek komutla ulaşırdı. `create`/`delete` de YOKTUR: politikayı DOĞURAN
+    kurulum betiğidir, admin onu yalnız OKUR ve GÜNCELLER."""
     yollar = [
         (f'{MONTAJ}/data/meridian/*',
          ["create", "read", "update", "delete"],
@@ -273,6 +289,10 @@ def politika_admin() -> str:
         ("sys/health",
          ["read"],
          "mühür durumu — operatörün `vault status` çağrısı"),
+        (f"sys/policies/acl/{AGENT_POLITIKA_ADI}",
+         ["read", "update"],
+         "Agent politikasının KENDİSİ — `acl/*` DEĞİL: admin kendini genişletemez "
+         "(403 vakası 2026-09-15)"),
         (f"auth/approle/role/{APPROLE_ADI}/secret-id",
          ["update"],
          "Agent'ın secret-id'sini ELLE yenileme yolu (secret_id_ttl=0, kendiliğinden dönmez)"),
@@ -357,7 +377,7 @@ def agent_yapilandirmasi() -> str:
 #: ÜRETİLEN DOSYALAR — hedef ↔ üretici eşlemesi. Çivi bu tabloyu gezer; elle yazılmış ikinci
 #: bir liste, bir dosya eklendiğinde sessizce bayatlardı.
 CIKTILAR: tuple[tuple[pathlib.Path, str], ...] = (
-    (POLITIKA_DIZIN / "meridian-agent.hcl", "politika_agent"),
+    (POLITIKA_DIZIN / f"{AGENT_POLITIKA_ADI}.hcl", "politika_agent"),
     (POLITIKA_DIZIN / "meridian-admin.hcl", "politika_admin"),
     (VAULT_DIZIN / "agent.hcl", "agent_yapilandirmasi"),
 )

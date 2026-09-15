@@ -32,8 +32,31 @@
 #     bloğunda SAHİP parametresi YOKTUR — yalnız `perms`; Agent root koşar, dolayısıyla dosya
 #     root:root doğar ve hermes CLI onu OKUYAMAZ). Root bile olsa `chown` CAP_CHOWN İSTER: boş
 #     kümede çağrı EPERM ile düşer, dosya root:root kalır ve arıza "bot sessizce eski anahtarla
-#     koşuyor" diye görünür. Yetenek TEK ve DARdır; `chown` bir RESTART DEĞİLDİR (tasarım §6.4
-#     "Agent tüketiciyi yeniden başlatmaz" ilkesi KORUNUR).
+#     koşuyor" diye görünür. `chown` bir RESTART DEĞİLDİR (tasarım §6.4 "Agent tüketiciyi yeniden
+#     başlatmaz" ilkesi KORUNUR).
+#
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+# DALGA-2 A1 ÖLÇÜMÜ (2026-09-15 07:0xZ) — İKİNCİ YETENEK: CAP_DAC_OVERRIDE
+# ══════════════════════════════════════════════════════════════════════════════════════════════
+# YUKARIDAKİ (2) YETMEDİ ve bunu ancak canlı ölçüm gösterdi. `CapabilityBoundingSet=` BOŞ DEĞİL
+# ama TEK kalemli olduğunda, root koşan süreç DAC_OVERRIDE'ı da KAYBEDER (bounding set kümenin
+# TAVANIdır: listede olmayan yetenek root'ta bile düşer). Sonuç: Agent `ubuntu` sahipli dizinlerde
+# şablonun geçici dosyasını AÇAMAZ —
+#     /opt/hindsight                         755 ubuntu
+#     /home/ubuntu/.hermes                   700 ubuntu
+#     /home/ubuntu/.hermes/profiles/{bekci,karne,sef}   700 ubuntu
+# journal: `error rendering … /opt/hindsight/.env.vault: failed writing file: open
+# /opt/hindsight/<tmp>: permission denied`. Yedi yan dosyanın YALNIZ BİRİ (`/opt/apisix`, root
+# sahipli) render edildi; altısı hiç doğmadı ve tüketiciler sessizce eski kanalda kaldı.
+# A1'de geçici `vault-agent.service.d/60-dac-override.conf` ile ölçüldü: iki yetenekle 7 yan
+# dosya render edildi, `exec` chown çalıştı, hata 0 (değerler kaynakla eşit — değer basılmadı).
+# Drop-in GEÇİCİDİR: bu birim kurulduktan sonra Rol-1 onu KALDIRIR (raporun A1 notu).
+#
+# `AmbientCapabilities` GEREKMEZ ve bilerek YOKTUR: süreç zaten root koşar, yani effective küme
+# bounding set'in izin verdiği her şeyi taşır. Ambient yazmak, ayrıcalığı kullanıcı değiştiren bir
+# zincire de taşımak olurdu — burada öyle bir zincir yok (`exec` yalnız `chown`dur).
+# KÜME DONUKTUR: iki kalem, ikisi de ölçülmüş bir arızanın bedeli. Üçüncü bir yetenek eklemek,
+# root sürecin TEK freni olan sandbox'ı sessizce gevşetmek olurdu (çivi: v491 C2/C2b/C2c).
 #
 # ProtectHome=read-only DURUYOR ama `ReadWritePaths` onun içine BİR DELİK açar (hermes ağacı):
 # systemd yazma yollarını ProtectSystem/ProtectHome salt-okunur bağlarından SONRA uygular, yani
@@ -43,8 +66,10 @@
 #
 # KURULDUĞU GÜN ELLE TEST-ATEŞLENİR (CLAUDE.md §9): canary reçetesi deploy/vault/vault_kur.sh
 # başlığındadır (Vault'ta gerçek değer, eski dosyada sahte → tüketici 200 mü). DALGA-2 EKİ:
-# `systemctl start vault-agent` sonrası her yan dosya için `stat -c '%a %U:%G'` okunur — hermes
-# dosyaları `0600 ubuntu:ubuntu` DEĞİLSE ya CAP_CHOWN ya da ProtectHome deliği tutmamıştır.
+# `systemctl start vault-agent` sonrası her yan dosya için `stat -c '%a %U:%G'` okunur. HÜKÜM İKİ
+# AŞAMALIDIR ve 2026-09-15'te bu ayrım ölçülerek öğrenildi: dosya HİÇ YOKSA yazma engellenmiştir
+# (CAP_DAC_OVERRIDE ya da ProtectHome deliği) — journal'da `failed writing file: … permission
+# denied` arayın; dosya VAR ama `root:root` ise yazma olmuş, `chown` düşmüştür (CAP_CHOWN).
 [Unit]
 Description=Vault Agent (sır şablonlarını dosyaya render eder)
 After=vault.service
@@ -65,12 +90,14 @@ RestartSec=10
 # ==================================================================================================
 # H3 SERTLEŞTİRME — filo ortak seti (gerekçelerin tam metni deploy/oracle-a1/meridian.service'te).
 # BU BİRİMDE SERTLEŞTİRME DAHA KRİTİKTİR, daha az değil: süreç root koşuyor, yani sandbox onun
-# TEK freni. `CapabilityBoundingSet=` dalga-1'de BOŞTU; dalga-2 ona TEK bir yetenek ekledi
-# (CAP_CHOWN) ve gerekçesi başlıktaki DALGA-2 bloğunda ADIYLA yazılıdır. İkinci bir yetenek
-# eklemek, o gerekçeyi sessizce genişletmek olurdu.
+# TEK freni. `CapabilityBoundingSet=` dalga-1'de BOŞTU; bugün İKİ kalem taşır ve ikisi de canlıda
+# ÖLÇÜLMÜŞ bir arızanın bedelidir — CAP_CHOWN (2026-09-14, `exec` chown EPERM) ve
+# CAP_DAC_OVERRIDE (2026-09-15, ubuntu sahipli dizinde `permission denied`). Gerekçelerin tam
+# metni başlıktaki iki DALGA-2 bloğundadır. Küme DONUKTUR: ÜÇÜNCÜ bir yetenek eklemek, iki
+# ölçülmüş gerekçeyi ölçülmemiş bir üçüncüye sessizce genişletmek olurdu.
 # ==================================================================================================
 NoNewPrivileges=true
-CapabilityBoundingSet=CAP_CHOWN
+CapabilityBoundingSet=CAP_CHOWN CAP_DAC_OVERRIDE
 ProtectSystem=strict
 ProtectHome=read-only
 # YAZMA YÜZEYİ — SAPMANIN BEDELİNİ ÖDEYEN SATIR. Root bir süreç `/etc`nin tamamına yazabilirdi;
