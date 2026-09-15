@@ -1,0 +1,72 @@
+# EDG-2026-099 — S&P 400 PIT (as-of) mid-cap kohortunda uzun-ufuk TREND kolu (12-1 momentum, N=10, aylık rebalans) — TSK-065 "devam, başka sinyal"
+# ÖN-KAYIT 2026-09-15 07:2xZ (Rol-1). OPERATÖR KARARI 2026-09-15 06:5xZ: "TSK-065 devam — başka sinyal dene". EDG-093 turnover'ı mid-cap'te
+# bilgisiz buldu; EDG-098 large-cap'te turnover ana etkisini PIT'te sağ, artık katmanını güncel-liste artefaktı buldu. Trend kolu (EDG-009)
+# large-cap PIT-sağkalan evrende yanlılık-düşülmüş +6–7 p/yıl (D hücresi +7,25, t=2,08; C +6,03, t=1,77) ile SAĞ kaldı — mid-cap'te var mı?
+# HAFIZA KONTROLÜ (07:0xZ): `ops/kart_benzer.py` → EDG-070/018 (OPERATOR; 018 askıya_veri_kapisi 2026-08-02 — veri kapısı EDG-092/093 ile AÇILDI:
+# kohort 663 isim, bar 661/661), EDG-093 (KALDI, turnover), EDG-013/016/031 (turnover ailesi), EDG-009 (GEÇTİ, trend rafine), EDG-069 (ACTIVE).
+# Hindsight recall 07:1xZ: PIT üyelik kaynağı (fja05680), EDG-013 arşiv notu — trend mid-cap ölçümü kayıtlı değil. KÜNYE BOŞLUĞU: EDG-009'un
+# ölçüm şasisi kodu (engine2.py/load.py…, kod_damgasi.json sha'ları) DEPODA YOK — yalnız RAPOR/sonuc; bu kart şasiyi YENİDEN yazar ve depoya koyar.
+
+card_id: EDG-2026-099
+status: registered   # kod dilimi (Opus) → A1 koşumu (Rol-1) → hüküm Rol-1
+family: pit_midcap_ust_sinir
+on_kayit: 2026-09-15
+selef:
+  - "EDG-2026-018 (askıya_veri_kapisi 2026-08-02: ADIM-0 düştü; veri kapısı 2026-09-14 EDG-093 ile açıldı — bu kart onun TREND yarısıdır)"
+  - "EDG-2026-093 (KALDI 2026-09-14: mid-cap turnover bilgisiz; kohort/bar/EDGAR altyapısı + k093 boru hattı yan ürün)"
+ref:
+  - "EDG-2026-009 (GEÇTİ 2026-07-31: PIT-sağkalan large-cap D hücresi +7,25 p/yıl t=2,08 — yanlılık-düşülmüş ~6–7 p/yıl şerhi)"
+  - "meridian/trend_shadow.py (canlı gölge-kitap sabitleri: MOM_LOOKBACK 12-1, N_SLOTS 10, FRICTION_BPS 10, ATR_LEN 22, CHANDELIER_K 3,5 — TEK KAYNAK, kopyalanmaz)"
+  - "EDG-2026-092/093 (S&P 400 PIT kohortu sp400_uyelik_tarihi.csv, bar manifesti 661/661; large-cap as-of sp500_uyelik_tarihi.csv + state/bars)"
+  - "TSK-065 (mid-cap evren genişlemesi — sinyal gerekçesi bu karttan çıkar ya da çıkmaz)"
+
+hipotez: >
+  S&P 400 PIT (as-of) kohortunda 12-1 momentum sıralamasıyla ay-sonunda seçilen N=10 sepet, ertesi seans açılışında icra edilen
+  aylık-rebalans (duraksız, D hücresi) koluyla, aynı gün as-of EW-kohort çıtasına karşı 2020-07-27 → 2026-08-20 penceresinde
+  (IEX bar tabanı) yıllık fazla ≥ +3 p ve blok-bootstrap CI-0-dışı (t ≥ 2) üretir. Chandelier (3,5×ATR22) çıkışlı C hücresi de
+  ölçülür (K'ye girer). Large-cap as-of kohortunda AYNI kod D hücresinde pozitif ve CI-0-dışı fazla vermelidir (PK-1, yol tutarlılığı);
+  vermezse ölçüm bilgisizdir (6 yıllık pencere kısa olabilir — o zaman bulgu "pencere yetersiz" olur, sinyal yok DEĞİL).
+
+k_registry: {registered_at: "2026-09-15", trial_ids: [EDG-099-midcap-D-aylik-rebalans-fazla, EDG-099-midcap-C-chandelier-fazla]}
+# K=2 (D ve C hücreleri). PK ve yanlılık göstergeleri K'ye girmez.
+
+adim_olcum: >
+  Kod: `research/olcumler/edg099_midcap_trend/k099.py` — girdiler k093 ile AYNI (kohort csv, bars dir, --baslangic/--bitis, --belirsiz),
+  üyelik `k093.uyelik_haritasi` / `etkin_satirlar` İTHAL (kopya değil), bar yükleme `k093.barlari_yukle`/`veri_bar` deseni; sinyal
+  sabitleri `meridian.trend_shadow` sabitlerinden (ayrışma çivisi). Ay-sonu takvimi XNYS (kohort barlarından TÜRETİLMEZ; fail-closed).
+  Karar t ay-sonu kapanışı, icra t+1 açılış (bakma-ileri yok); üyelik as-of (o gün üye olmayan isim sepete giremez; çıkan isim
+  bir sonraki ay-sonunda satılır). Çıta: aynı gün as-of üyelerin EW aylık-rebalans getirisi. İstatistik: aylık fazla serisi,
+  yıllıklandırılmış ortalama, t (Newey-West 3 gecikme) + blok-bootstrap (12 aylık blok, 2000) CI. Çıktı: sonuc_099_<damga>.json +
+  RAPOR_099 (hücre × ölçü, yıl-yıl dilim, isim-sayısı zaman serisi, ölçülemeyen isimler ve nedenleri, üst-sınır damgası) + PK-1 aynı
+  kod large-cap as-of (sp500 kohortu, state/bars). Hüküm Rol-1.
+
+esikler:
+  fazla_yillik_alt: 0.03            # D ya da C hücresi yıllık fazla ≥ +3 p (EDG-009 PIT D +7,25'in ~yarısı)
+  t_alt: 2.0                        # ve t ≥ 2 (Newey-West) VE bootstrap CI-0-dışı
+  pk1_large_cap: "D hücresi fazla > 0 ve CI-0-dışı (yön + anlamlılık; büyüklük EDG-009 ile kıyaslanır, eşitlik istenmez — pencere farklı)"
+  ay_sonu_aday_alt: 30              # her ay-sonunda momentumu hesaplanabilir üye sayısı ≥ 30 (N=10 seçim anlamlı olsun)
+  olculemeyen_ust_oran: 0.20        # kohort isimlerinin bar/uzunluk nedeniyle ölçülemeyen payı ≤ %20
+
+kill_list:
+  - "PK-1 (large-cap as-of D) CI-0-içi ya da negatif → ölçüm bilgisiz (kod/pencere doğrulanmadı), sayı yayılmaz"
+  - "D ve C hücreleri fazla < +3 p ya da t < 2 → hipotez KALDI (mid-cap PIT'te trend kolu bu pencerede kanıtlanamadı); TSK-065 kapanış adayı"
+  - "ay-sonu aday sayısı < 30 olan ay payı > %10 → bilgisiz (evren ince)"
+  - "ölçülemeyen payı > %20 → bilgisiz; barsız-çıkış payı üst-sınır damgasına yazılır"
+  - "bakma-ileri: karar/icra günü ya da üyelik as-of ihlali (PIT yasası) → ölçüm geçersiz"
+
+pozitif_kontrol: >
+  (1) PK-1 large-cap as-of kohortunda aynı kod D hücresi pozitif + CI-0-dışı; C hücresinin yönü EDG-009 C ile aynı; (2) sentetik:
+  tek-satırlı kohort + yapay bar serisiyle momentum sıralaması ve N=10 seçim elle doğrulanır (çivi), EW çıtası = ortalama; (3) bakma-ileri
+  çivisi: t günü verisi t+1 açılışından önce kullanılmaz (kaydırma testi); (4) sabitler trend_shadow ile eşit (ayrışma çivisi).
+
+veri_penceresi: "2020-07-27 → 2026-08-20 (IEX bar tabanı; ısınma 12 ay → ilk karar 2021-07 ay-sonu); kohort research/pit_universe/sp400_uyelik_tarihi.csv (blob a1fb1514); barlar A1 /opt/veri/olcum/edg093/bars (661); PK-1 sp500_uyelik_tarihi.csv + state/bars"
+
+basari_tanimi: >
+  Kod dilimi (Opus, TDD, Sonnet inceleme) + A1 koşumu + K 2 kaydı + PK üçü yeşil + blob sha ile karta; hüküm Rol-1 aynı turda:
+  GEÇTİ → TSK-065'e "mid-cap trend gerekçesi var" (evren genişletme tasarımı ayrı kalem), EDG-018 arşive; KALDI → TSK-065 kapanış
+  önerisi operatöre. Canlı knob'a dokunulmaz.
+
+notlar: >
+  Bedel: Opus ~2 tur (~500k) + Sonnet + A1 ~10 dk (661 isim, aylık karar). Yan ürün: trend ölçüm şasisi DEPOYA girer (EDG-009'un
+  kayıp şasisinin yerine geçmez ama PIT kolunu yeniden üretebilir kılar). Üst-sınır damgası: delist edilen mid-cap barları IEX'te
+  varsa (2020+) ÜST-SINIR değil GERÇEK PIT'e yakındır — EDG-093 ADIM-0 B kapsama haritası (barsız çıkış %0,38) bunu destekler.
