@@ -28,7 +28,16 @@ BU DOSYA ÇİVİLER:
   T5  `deploy/hermes/config.yaml` ile kod sabiti TEK KAYNAKTAN türer (iki kopya ayrışmaz);
   T6  yedeğin kendisi ücretsiz ve BİRİNCİLDEN FARKLI üst-akımdan;
   T7  yeni varsayılan ölü listesine düşerse çivi öter (kendi kuyruğunu yiyen göç yok);
-  T8  PORTAL ayağı da göçürür ve künye ile istek gövdesi TEK kaynaktan gelir (2026-09-15).
+  T8  PORTAL ayağı da göçürür ve künye ile istek gövdesi TEK kaynaktan gelir (2026-09-15);
+  T9  RAPOR yüzeyi (`_model_id("nous")`) aynı kapıdan okur ama defter YAZMAZ (2026-09-15).
+
+T9 NEDEN GEREKTİ (öneri havuzu, TSK-189 kapanış notu): T8 portal adını `_nous_portal_model`de
+tek kaynağa bağlarken `_model_id`in portal dalı aynı çözümlemeyi (sır → göç → varsayılan) ELLE
+İKİNCİ KEZ yazıyordu. İki ifade ölçüldüğü gün aynı adı üretiyordu — yani hiçbir davranış çivisi
+onları ayıramazdı — ama göç haritası ya da varsayılan değiştiğinde sessizce ayrışırlardı
+(tek-kaynak yasası; Sonnet inceleme bulgusu). Dal artık delege ediyor; ayrım tek bir bayrakta
+kaldı: `olay=False`. T9b bu DELEGASYONU ölçer (sahte dönüş yansımazsa kırmızı) — davranış çivisi
+T9a tek başına eski, kopyalı ifadede de yeşil kalırdı.
 
 T8 NEDEN SONRADAN GELDİ: TSK-189 kapsamı yedek (`_nous_model_zinciri`) ve config yüzeyleriydi;
 portal ayağı (`_nous_portal_model`) açık kalemdi ve docstring'i bunu dürüstçe beyan ediyordu.
@@ -242,3 +251,65 @@ def test_T8c_taninmayan_ad_serbest_gecer_ve_sir_yokken_varsayilan(sandbox_state,
     _sirlar(monkeypatch)
     ad = hermes._nous_portal_model()
     assert ad == hermes.NOUS_DEFAULT_MODEL and isinstance(ad, str)
+
+
+# ------------------ T9 RAPOR YÜZEYİ: AYNI KAPI, AMA SESSİZ (2026-09-15) ------------------
+# `_model_id("nous")` portal dalı ile `_nous_portal_model()` AYNI adı üretmek zorundadır
+# (tek-kaynak yasası: harita ya da varsayılan değişince iki elle yazılmış ifade sessizce
+# ayrışır) ama defteri YALNIZ gerçek çağrı yolu yazar (2026-08-13 ayrımı): bir pano isteği
+# operatörün `state/events.jsonl`ine "göç oldu" satırı doğuramaz.
+# T9a sözleşmeyi DAVRANIŞLA, T9b YAPISAL olarak (delegasyon) ölçer: T9a iki ifade elle
+# senkron tutulduğunda da yeşil kalır — ayrışma riskini yalnız T9b ısırır.
+
+
+def test_T9a_rapor_yuzeyi_ayni_adi_verir_ama_OLAY_BASMAZ(sandbox_state, monkeypatch):
+    """Sır ölü adda: rapor yüzeyi (`/api/hermes`, `brain_chain_facts`, `active_model`) kanonik
+    adı göstermeli — "ne çağırdık / ne rapor ettik" ayrışamaz — ama okuma defter YAZMAMALI."""
+    _sirlar(monkeypatch, NOUS_MODEL=OLU_YEDEK)
+    monkeypatch.setattr(hermes, "_hermes_bin", lambda: None)   # mod makineden bağımsız ölçülsün
+    rapor = hermes._model_id("nous")
+    assert rapor == hermes.NOUS_FALLBACK_DEFAULT, f"rapor yüzeyi ölü adı taşıyor: {rapor}"
+    assert _olaylar(sandbox_state, "agent_model_olu_ad_gocuruldu") == [], \
+        "rapor/pano okuması operatörün defterine göç satırı yazdı (2026-08-13 ayrımı düştü)"
+    assert rapor == hermes._nous_portal_model(), "rapor adı ile istek gövdesine giden ad ayrıştı"
+    ev = _olaylar(sandbox_state, "agent_model_olu_ad_gocuruldu")
+    assert len(ev) == 1 and ev[0]["kaynak"] == PORTAL_KAYNAK, \
+        f"çağrı yolu olayı basmadı (ya da rapor yüzeyi mandalı erken kapattı): {ev}"
+
+
+def test_T9b_rapor_dali_portal_fonksiyonuna_DELEGE_eder(sandbox_state, monkeypatch):
+    """DELEGASYON KANITI: portal adı rapor dalında İKİNCİ KEZ yazılmış olsaydı bu çivi kırmızı
+    olurdu (sahte dönüş yansımaz). İki ifade bugün aynı adı üretiyor — bu çivi yarını, yani
+    haritanın/varsayılanın değiştiği turu ısırır."""
+    _sirlar(monkeypatch, NOUS_MODEL=BIRINCIL)
+    monkeypatch.setattr(hermes, "_hermes_bin", lambda: None)
+    gorulen: dict = {}
+
+    def _sahte_portal(*, olay: bool = True) -> str:
+        gorulen["olay"] = olay
+        return "sahte/delegasyon-kaniti"
+
+    monkeypatch.setattr(hermes, "_nous_portal_model", _sahte_portal)
+    assert hermes._model_id("nous") == "sahte/delegasyon-kaniti", \
+        "portal dalı adı KENDİ ifadesiyle kuruyor — aynı gerçeğin ikinci evi (tek-kaynak yasası)"
+    assert gorulen.get("olay") is False, \
+        "rapor yüzeyi portal adını olay bayrağı AÇIKKEN okudu — pano isteği deftere yazar"
+
+
+def test_T9c_yerel_ajan_adsizken_None_korumasi_DURUYOR(sandbox_state, monkeypatch):
+    """Delegasyon uydurma korumasını YUTMAMALI: yerel ajan modunda adı CLI'nın kendi config'i
+    seçer, `NOUS_DEFAULT_MODEL` orada bir ÖLÇÜM değil bir varsayımdır (v246 m1, v96)."""
+    _sirlar(monkeypatch)                                          # NOUS_MODEL yok
+    monkeypatch.setattr(hermes, "_hermes_bin", lambda: "/bin/true")   # yerel ajan modu
+    assert hermes._nous_local() is True
+    assert hermes._model_id("nous") is None, \
+        "yerel ajan modunda varsayılan uydurulmuş — kimse o modeli seçmedi"
+    cagrilar: list = []
+
+    def _sahte_portal(*, olay: bool = True) -> str:
+        cagrilar.append(olay)
+        return "sahte/olmamali"
+
+    monkeypatch.setattr(hermes, "_nous_portal_model", _sahte_portal)
+    assert hermes._model_id("nous") is None and cagrilar == [], \
+        "koruma delegasyondan SONRAYA kaymış: adsız yerel ajan için portal adı üretildi"
