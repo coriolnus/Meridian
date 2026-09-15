@@ -2265,12 +2265,16 @@ def check_integrity_and_alarm() -> None:
         now.add(tok)
         if tok not in prev:
             obs.alarm("MECHANISM_STALE",
-                      f"BAYAT TÜREV: {st['artifact']} kaynağından {st['behind_h']} sa geride",
+                      f"BAYAT TÜREV: {st['artifact']} kaynağından {st['behind_h']} sa geride "
+                      f"(eşik {st['esik_h']} sa)",
                       # `behind_h` ALAN olarak da basılır (TSK-102, 2026-09-03): değer zaten
                       # ölçülüyordu ama YALNIZ mesaj metnindeydi, yani hiçbir tüketici onu
                       # ayrıştırmadan okuyamıyordu. `selfreview._olay_sure_h` düşüşünün dördüncü
                       # basamağı bu alan olmadan ÖLÜ bir daldı.
-                      kind="coherence", artifact=st["artifact"], behind_h=st["behind_h"])
+                      # `esik_h` (TSK-191) AYNI GEREKÇEYLE alan: gecikme tek başına hüküm değildir,
+                      # neyin aşıldığını söyleyen sayı olmadan operatör her satırı yeniden ölçer.
+                      kind="coherence", artifact=st["artifact"], behind_h=st["behind_h"],
+                      esik_h=st["esik_h"])
     for rg in rep["monotonicity"].get("regressions", []):      # #5 ileri-only nicelik geri gitti
         tok = f"regress:{rg['field']}"
         now.add(tok)
@@ -2333,10 +2337,66 @@ DERIVED_SOURCES = {
 }
 COHERENCE_GRACE_S = 3600      # 1 sa: bir sonraki döngü zaten tazeler — panik yok
 
+# ---- ÜRETİCİ KADANSI: EŞİK TEK KAYNAKTAN TÜRER (TSK-191) --------------------------------------
+# ÖLÇÜLEN ARIZA (A1, 2026-09-15 20:43Z): yukarıdaki pay GÜNLÜK kadanslı türevler için doğrudur ve
+# HAFTALIK yazılanlar için YANLIŞTIR. `arming_report.json` ve `self_review.json` haftada bir
+# yazılır, kaynak defterleri (cf/trades) ise HER GÜN ilerler — yani ikisi de her gün "24 sa geride"
+# diye MECHANISM_STALE üretiyordu (Ağustos'tan beri ~23 olay). Bu bir arıza değil, mekanizmanın
+# NORMAL çalışmasıydı: alarm üretiliyor ama BİLGİ taşımıyordu ve operatör o jetonu görmezden
+# gelmeyi öğrenir — GERÇEK bir bayatlıkta da.
+#
+# TEK KAYNAK: eşik iki yerde duruyordu (mekanizma kadansı `EXPECTED`te, tolerans yukarıdaki sabit
+# payda) ve ikisi birbirini hiç görmüyordu. İzin verilen gecikme artık ÜRETİCİ KADANSINDAN türer:
+#     izin_verilen_gecikme = kadans + COHERENCE_GRACE_S
+#
+# KAYIT NEDEN AYRI SÖZLÜKTE, `DERIVED_SOURCES` değerine gömülü DEĞİL: o sözlüğün değeri KAYNAK
+# LİSTESİDİR ve dışarıdan öyle okunur (çiviler `== ["trades.jsonl"]` ve `"x" in
+# DERIVED_SOURCES[art]` biçiminde indeksler). Değeri sözlüğe çevirmek okuyucuları sessizce
+# kırardı; kadans bu yüzden kendi eşlemesinde durur ve `_coherence_esik_s` ikisini birleştirir.
+#
+# `kadans_s` NE ZAMAN AÇIK YAZILIR: mekanizma `EXPECTED`te kayıtlıysa (nabız atıyorsa) eşik ORADAN
+# okunur — ikinci bir sayı yazmak tek-kaynak yasasını kırardı. `selfreview.weekly` nabız ATMAZ,
+# yani `EXPECTED`te kaydı YOKTUR; kadansı burada AÇIK yazılır: 7 gün (haftalık kadans) + 2 gün pay
+# — akranı `arming_eval` ile AYNI gerekçe ve aynı sayı (9 gün): haftalık bir işin bir hafta
+# gecikmesi bir arıza değildir, iki hafta gecikmesi arızadır.
+#
+# BEDEL YASASI — NE KAYBEDİLDİ: bu iki türev için 1 sa ile 9 gün arasındaki bir gecikme artık
+# alarm ÜRETMEZ. `arming_report.json` o aralıkta KÖR DEĞİLDİR: üreticisi nabız atar ve kadans
+# dedektörü aynı pencereyi zaten izler (`EXPECTED["arming_eval"]`, `report()`). `self_review.json`
+# için ikinci bir bekçi YOKTUR (üreticisi nabız atmaz) — orada kayıp GERÇEKTİR ve beyan edilir;
+# ama eski hâl de bir şey görmüyordu: HER GÜN alarm veren bir dedektör, alarm verdiği için hiçbir
+# şeyi ayırt edemez. Kapanışı üreticiye nabız eklemektir (ayrı kalem), eşiği daraltmak değil.
+DERIVED_MECHANISM: dict[str, dict] = {
+    "arming_report.json": {"mekanizma": "arming_eval"},          # kadans EXPECTED'ten (9 gün)
+    "self_review.json":   {"mekanizma": "selfreview.weekly",
+                           "kadans_s": 9 * 24 * 3600},           # nabızsız → açık kadans
+}
+
+
+def _coherence_esik_s(art: str) -> float:
+    """Türevin izin verilen gecikmesi (saniye): üretici kadansı + pay.
+
+    Kayıtsız türev için ESKİ DAVRANIŞ korunur (yalnız pay) — gevşetme BEYAN EDİLMİŞ kadanslar
+    içindir, beyansız türev için hiçbir şey değişmez. Kayıtlı ama kadansı ÇÖZÜLEMEYEN bir
+    mekanizma da dar paya düşer: geniş eşik uydurmak, dedektörü sessizce körleştirirdi (yanlış
+    NEGATİF); dar eşik en fazla eski gürültüyü geri getirir ve ayrışmayı `test_coherence_kadans_v505`
+    test zamanında zaten kırmızı yapar."""
+    kayit = DERIVED_MECHANISM.get(art)
+    if not kayit:
+        return COHERENCE_GRACE_S
+    kadans = kayit.get("kadans_s")
+    if kadans is None:
+        kadans = EXPECTED.get(kayit.get("mekanizma"))
+    if kadans is None:
+        return COHERENCE_GRACE_S
+    return float(kadans) + COHERENCE_GRACE_S
+
 
 def coherence_report() -> dict:
-    """#4 — türev bayatlığı. Kaynak güncellendiği halde türev eskiyse bayrak. Grace: 1 saat (döngü
-    kadansı). Yalnız gözlem: hangi kalibrasyonun eski veriyle konuştuğunu görünür kılar."""
+    """#4 — türev bayatlığı. Kaynak güncellendiği halde türev eskiyse bayrak. Eşik ÜRETİCİ
+    KADANSINDAN türer (`_coherence_esik_s`): günlük türevde 1 saat (döngü kadansı), haftalık
+    türevde kadans + 1 saat. Yalnız gözlem: hangi kalibrasyonun eski veriyle konuştuğunu görünür
+    kılar."""
     # `store.mtime` ARKA UÇTAN BAĞIMSIZ: kaynakların dördü (trades,
     # trade_plans, portfolio, scoreboard) SQLite'a taşınabilir ve o an dosyaları `.migrated`
     # ekiyle DONAR — `os.path.getmtime` "kaynak hiç güncellenmiyor" derdi, yani bayatlık
@@ -2352,8 +2412,14 @@ def coherence_report() -> dict:
         if a is None:
             absent.append(art); continue
         newest = max([m for m in (_m(s) for s in srcs) if m], default=None)
-        if newest and a < newest - COHERENCE_GRACE_S:
-            stale.append({"artifact": art, "behind_h": round((newest - a) / 3600, 1)})
+        esik = _coherence_esik_s(art)
+        if newest and a < newest - esik:
+            # `esik_h` RAPORA GİRER (Yasa 6 okuyucuları: alarm satırı + v505 çivisi): "240 sa
+            # geride" cümlesi eşiği söylemeden HÜKÜM taşımaz — 217 sa eşikli bir haftalık türevin
+            # 240 sa geride olmasıyla 1 sa eşikli bir günlük türevin 2 sa geride olması aynı
+            # cümleyle anlatılamaz. `behind_h` DEĞİŞMEDEN kalır (TSK-102 tüketicisi).
+            stale.append({"artifact": art, "behind_h": round((newest - a) / 3600, 1),
+                          "esik_h": round(esik / 3600, 1)})
         else:
             ok += 1
     stale.sort(key=lambda x: -x["behind_h"])
