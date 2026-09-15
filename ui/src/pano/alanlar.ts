@@ -71,6 +71,7 @@ import {
   Network,
   Radar,
   Scale,
+  ScrollText,
   Search,
   Send,
   Server,
@@ -203,6 +204,11 @@ export const YUZEYLER = {
     grup: "Panolar",
     bolumler: [
       { kimlik: "operasyon", baslik: "Alarm gelen kutusu", soru: "Çalan bir alarm var mı?", ikon: ShieldAlert },
+      /* DURUM SÖZLÜĞÜ ALARMIN HEMEN ARDINDA (TSK-070 A2/A8, 2026-09-15 · tasarım §9.2):
+         gelen kutusu "bir şey çalıyor mu" der, sözlük "hangi mekanizma ne diyor" der ve
+         triyajın ikinci adımı tam olarak budur. Gövdesi `sistem/DurumSozlugu.tsx`; satırlar
+         uçtan KANONİK kelimeyle gelir (`api.py::_durum_sozlugu`) — pano çeviri yapmaz. */
+      { kimlik: "durum-sozlugu", baslik: "Durum sözlüğü", soru: "Her mekanizma tek dilde ne diyor?", ikon: ScrollText },
       // MÜDAHALE KOLLARI ALARMLA AYNI YÜZEYDE: alarmı gören operatörün bir sonraki
       // hareketi kolu çekmektir. İkisini ayrı yüzeylere koymak, en kötü anda bir
       // gezinme adımı eklemek olurdu. (Users/Roles bu turda gerçek çok-kullanıcı

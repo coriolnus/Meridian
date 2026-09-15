@@ -99,6 +99,63 @@ export interface IntradayKarari {
   readonly [k: string]: unknown;
 }
 
+/* --- KANONİK DURUM SÖZLÜĞÜ · `api.py::_durum_sozlugu` (TSK-070 A8) --------
+   TEK ALAN TİPLENİR VE BU BİR EKSİK DEĞİL, HÜKÜM (tasarım §9.2): pano kanonik
+   `satirlar`ı okur; `watchdog`/`liveness`/`integrity`/`bekci_durumlari` HAM gövdeleri
+   BİLEREK tiplenmez. Ham alanları tiplemek panoya "bu satırı ben de hesaplayabilirim"
+   demenin kapısını açardı; o kapı açıldığı gün aynı ekranda iki hüküm doğar (üreticinin
+   kelimesi ile panonun sentezi) ve hangisinin doğru olduğu sorulamaz.
+
+   KELİME PANODA ÜRETİLMEZ, YALNIZ BASILIR: `kelime` alanı `durum_sozlugu.PANO_KELIME`
+   sözlüğünden gelir (tek kaynak). Buraya bir `kelime: "PENCEREDE" | …` birlik tipi
+   yazmak bile ikinci bir kopya olurdu: sözlük büyüdüğünde tip sessizce bayatlar ve
+   yeni kelimeyi taşıyan satır derlenmez. Çivi: `tests/test_pano_durum_sozlugu_v504.py`. */
+
+/** Bir mekanizmanın tek satırlık kanonik hükmü (tasarım §9.1 şeması). */
+export interface DurumSozluguSatiri {
+  /** Aile kimliği (kadans · dedektor · canlilik · bekci · kitap · kilit · mandal · hermes ·
+   *  intraday). Pano bunu ÇEVİRMEZ, yalnız gruplar — çeviri tablosu ikinci sözlüktür. */
+  readonly aile?: string;
+  readonly kimlik?: string;
+  /** Kanonik kelime — `PANO_KELIME` dışından bir değer buraya GELMEZ. */
+  readonly kelime?: string;
+  /** ÜÇ DEĞERLİ: true/false/null. `null` = hüküm YOK (ölçülemedi · kapsam dışı · askıda). */
+  readonly ok?: boolean | null;
+  readonly olculemedi?: boolean;
+  readonly kapsam_disi?: boolean;
+  readonly askida?: boolean;
+  readonly neden?: string | null;
+  readonly beyan?: string;
+  /** Hükmün OKUNDUĞU uç alanı — "pano öyle diyor"un panzehiri. */
+  readonly kaynak_alan?: string;
+  /** Satırın sayısı. `null` = ölçülemedi ve ekranda "ÖLÇÜLEMEDİ (0 DEĞİL)" diye basılır;
+   *  `0` gerçekten sıfırdır. İkisini tek göstermek intraday atlama ailesinin bütün
+   *  değerini silerdi. */
+  readonly n?: number | null;
+}
+
+/** Eşanlamlı-okuma sayaçlarının ZAMAN EKSENİ — "0" ancak bir pencereyle hüküm taşır. */
+export interface DurumSozluguPenceresi {
+  readonly ilk_kayit_utc?: string | null;
+  readonly son_kayit_utc?: string | null;
+  readonly son_yazim_utc?: string | null;
+  /** İlk kayıttan bugüne TAM gün; `null` = damga yok/çözülemedi (0 DEĞİL). */
+  readonly gun?: number | null;
+  readonly kaynak_dosya?: string;
+}
+
+export interface DurumSozluguGovdesi {
+  readonly satirlar?: readonly DurumSozluguSatiri[];
+  /** Aile → satır sayısı. Pano grup başlığındaki sayıyı BURADAN okur, kendi saymaz
+   *  (iki sayım ayrışırsa hangisinin doğru olduğu sorulamaz). */
+  readonly aileler?: Readonly<Record<string, number>>;
+  /** Eski adların okunma sayaçları — ölüm tarihi ölçümü (geçiş rejimi). */
+  readonly esanlamli_okumalar?: Readonly<Record<string, number>>;
+  readonly pencere?: DurumSozluguPenceresi;
+  readonly sayac_rejimi?: string;
+  readonly beyan?: string;
+}
+
 export interface TeshisGovdesi {
   readonly onbellekten?: boolean;
   readonly hesaplama_ts?: string;
@@ -265,6 +322,9 @@ export interface TeshisGovdesi {
     readonly trades?: number;
   };
   readonly alarm_butcesi?: Readonly<Record<string, unknown>> & { readonly yas_s?: number };
+  /** Kanonik durum sözlüğü (`api.py::_durum_sozlugu`) — okuyucusu `DurumSozlugu.tsx`.
+   *  Alan HİÇ gelmezse pano "ölçülemedi" der; boş liste ile alan yokluğu AYRI hâllerdir. */
+  readonly durum_sozlugu?: DurumSozluguGovdesi;
 }
 
 /* --- /api/infra?taze=0|1 · `api.py::api_infra` ----------------------------
