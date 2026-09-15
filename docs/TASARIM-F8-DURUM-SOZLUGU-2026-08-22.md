@@ -258,3 +258,62 @@ adını taşır (geçiş haritası canlıda görünür olur).
 ---
 *Ölçüm ajanı damgası: bu belge yalnız envanter + öneridir; hiçbir eşik, jeton, alan bu turda
 değişmedi. Hüküm Rol-1'de.*
+
+---
+
+## 9. EK 2026-09-15 — OPERATÖR HÜKÜMLERİ (A2/A3/A8) VE PANO BACAĞI TASARIMI
+
+Kaynak: operatör AskUserQuestion cevapları 2026-09-15 15:3xZ (ROADMAP TSK-070 notu); keşif raporu (Sonnet, salt-okur,
+scratchpad `kesif_tsk070_pano.md`, 16:4xZ); hafıza: benzer kayıt yok (durum-ozeti-*/tasarim-dili notları çelişmiyor).
+
+**A2 → DÖRT RAPOR PANOYA.** `/api/diagnostics.bekci_durumlari` (2026-08-23'ten beri servis ediliyor, v261) ve kanonik
+`durum_sozlugu.satirlar` VAR; eksik olan PANO: F8 kartı yalnız eski `app.js`de (`/eski`), canlı varsayılan yüzey olan
+Vite panoda (`/`, `/pano`; `ui/src/**`) HİÇ YOK ve `TeshisGovdesi` tipinde `watchdog/liveness/bekci_durumlari/
+durum_sozlugu/sessiz_hat` alanları tanımlı değil. Hüküm: Vite panoya yeni yüzey (`ui/src/pano/yuzeyler/sistem/DurumSozlugu.tsx`)
+— eski `app.js` DOKUNULMAZ (ikincil, emekliliği ayrı kalem).
+
+**A3 → Rol-1 hükmü (A6 emsali):** öğrenme kolunun kanonik adı FONKSİYON ADI `halt_learning`; API alanı `learn_halted`
+KALIR; hermes `last_result` üretici tarafında zaten kanonikleştiriliyor (`hermes_runtime.py::kol_adi`) — çekilecek bir
+şey yok; eşanlamlı okuma sayacı izler.
+
+**A8 → HEPSİ AYNI SÖZLÜĞE.** `satirlar` bütün ailelere genişler; kelime BACKEND'de üretilir (tek kaynak
+`durum_sozlugu.PANO_KELIME`), UI ÇEVİRMEZ (bugün app.js'in yaptığı satır-içi çeviriler bu yüzden tekrarlanmaz).
+
+### 9.1 Aile adaptörleri (backend) ve kanonik kelime hükümleri
+
+| Aile | Kaynak | Adaptör | Kelime (§4b) — hüküm |
+|---|---|---|---|
+| Bekçi raporları (4) | `bekci_durumlari` | mevcut `normalize_satir` | TEMİZ / İHLAL / ÖLÇÜLEMEDİ / KAPSAM DIŞI / DEDEKTÖR DÜŞTÜ |
+| Dedektör (8, integrity) | `integrity[<ad>]` (her biri `ok`) | doğrudan `normalize_satir` (uyumlu) | aynı küme — **hüküm:** ad-hoc metinler `beyan`a iner, kelime tek |
+| Canlılık (2) | `liveness.sprint/learning` | doğrudan | **hüküm:** KOŞUYOR / DURDU (orphan) / DURDU (stall) / ÖLÇÜLEMEDİ; "BOŞTA" üretici ölçmüyor → satır YOK (uydurma yok); sprint "KOŞMADI" → DURDU (orphan) |
+| Kadans (17) | `watchdog.report()` `{stale[], never[], askida[], n_ok, total}` + `EXPECTED` | adaptör `kadans_satirlari()` — mekanizma başına satır: PENCEREDE (ok=true) · GECİKTİ (stale, ok=false) · HİÇ KOŞMADI (never, ok=false) · ASKIDA (askida, ok=null, askida=true); BASTIRILDI ayrı sayaç alanı (`bastirilan_n`, `_alarm_gunluk`) | §4b birebir |
+| Kitap damgası | `bekci_durumlari.kitap_damga.rows[].sinif` (6 sınıf) | adaptör `kitap_satirlari()` — satır başına sinif→kelime | DEĞİŞİM YOK · DAMGALI DEĞİŞİM · İÇERİK-AYNI YENİDEN YAZIM · DAMGASIZ YAZIM · İLK GÖZLEM (`taban_yok`; **hüküm:** büyük harf) · ÖLÇÜLEMEDİ |
+| Kilitler (3 kol) | `hud.halted` (soft_halt) · `hud.learn_halted` (halt_learning) · `heartbeat.breaker_tripped` (devre_kesici) | adaptör `kilit_satirlari()` — ok=true ⇔ KAPALI (normal); ÇEKİLİ ⇔ ok=false; `neden`= kol adı | KAPALI / ÇEKİLİ — "Kademe 1 · Soft Halt", "Kademe 4 · Öğrenme durdurma", **hüküm:** `devre_kesici` etiketi "Devre kesici" (kademe numarası ÖLÇÜLMEDİ, uydurulmaz) |
+| Mandal | BUGÜN SERVİS YÜZEYİ YOK (Yasa-6 boşluğu, T2 sınıfı) | ÖNCE yüzey: `diagnostics.mandallar = {alarm_mandal: {n, jetonlar[]}, watchdog_alarmed: [], integrity_alarmed: [], koruma_alarmed: []}` (obs + watchdog dosyalarından, hesap yok) → adaptör `mandal_satirlari()` | İLK ALARM · MANDALLI · YENİDEN · DÜŞTÜ — **hüküm:** yalnız defterden türeyen dört durum; ölçülemeyen "DÜŞTÜ" satır üretmez |
+| hermes | `mlops.warmup` (`last_result`, `skip`=`_warm_skip` ∈ {learn_halted, halted_or_stale, reflect, bg_reflect, lock_busy, disabled}) | adaptör `hermes_satiri()` — tek satır "ısınma": ok=true (koştu) / ok=null askida=true `neden`=skip kodu (kanonik `neden` ailesi; kol adı DEĞİL) / `last_result` `error:*` → ok=false neden=hata sınıfı | KOŞUYOR / ASKIDA (neden) / İHLAL(hata) — **hüküm:** `_warm_skip` kodları `neden` sözlüğüne (`NEDEN_KANONIK` altında `isinma:` öneki) |
+| intraday atlamaları | `intraday.skipped` `{session, pencere, halt, stale, no_bars}` (sayaç) | adaptör `intraday_satirlari()` — anahtar başına sayılı satır | **hüküm (yeni §4b ailesi):** SEANS DIŞI · PENCERE ÖNCESİ · HALT · BAYAT · BAR YOK — sayı `null` ise "ÖLÇÜLEMEDİ (0 DEĞİL)" |
+
+Her satır şeması (§4a + iki alan): `{aile, kimlik, kelime, ok, olculemedi, kapsam_disi, askida, neden, beyan, kaynak_alan, n}`;
+`kelime` yalnız `PANO_KELIME` sözlüğünden gelir (çivi: kelime kümesi == §4b tablosu — tek kaynak testi §4b'yi dosyadan okur).
+
+### 9.2 Pano yüzeyi (Vite)
+- `ui/src/pano/yuzeyler/sistem/uctipleri.ts`: `TeshisGovdesi`ne `durum_sozlugu` (yalnız bu alan; `watchdog/liveness/...` HAM
+  alanları tiplenmez — pano YALNIZ kanonik satırları okur, sentez yapmaz).
+- Yeni yüzey `DurumSozlugu.tsx`: aile başına grup, satır = kelime rozeti (renk rolü: ok=true nötr, false şiddet, null bilgi —
+  rezerve hue bantları; hafıza tasarim-dili) + kimlik + beyan; altta eşanlamlı-okuma sayaçları + `pencere`; "ÖLÇÜLEMEDİ (0 DEĞİL)"
+  kalıbı. Durak: `alanlar.ts` sistem alanına "Durum sözlüğü" (Operasyon'un yanına); kısayol `komutlar.ts` gerekmiyor.
+- Build: `cd ui && npm run build` (tsc + vite + `ops/pano_artefakt_temizle.py --uygula`) — UI build EN SON adım; dagit [5c]
+  mtime kapısı; v478 artefakt hijyeni.
+
+### 9.3 Çiviler
+- v503 (backend): aile adaptörleri şema; `PANO_KELIME` kümesi == bu belgenin §4b + §9.1 tabloları (dosyadan okur); kadans 17
+  satır (EXPECTED ile birebir); kilit ok/KAPALI ters-işaret; mandal yüzeyi Yasa-6 okuyucusu bu uç; uydurma yasağı (`None`→ÖLÇÜLEMEDİ,
+  0 basılmaz); eşanlamlı sayaç ailelere göre.
+- v504 (UI, kaynak-grep + tip): `DurumSozlugu.tsx` `satirlar[].kelime`yi basar ve HİÇBİR ham kelimeyi çevirmez (ham kelime
+  dizgeleri dosyada geçmez); `uctipleri.ts` `durum_sozlugu` alanı; durak kaydı; `pano.html`/manifest v478.
+- Mevcut v261/v271 (app.js) DOKUNULMADAN yeşil.
+
+### 9.4 Bedel (Bedel yasası)
+Kazanç: pano tek dil, dört rapor + 17 kadans + kilit + mandal görünür. Bedel: `/api/diagnostics` gövdesi büyür (satır ~40);
+mandal yüzeyi yeni dosya okumaları (obs mandal defteri) — 300 sn poll'da hesaplı; app.js ↔ Vite çift yüzey bir sürüm daha
+yaşar (eski UI emekliliği ayrı kalem). Ölçüm: yanıt boyutu ve `/api/diagnostics` süresi önce/sonra (Task 4).

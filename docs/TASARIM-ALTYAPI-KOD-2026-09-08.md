@@ -195,6 +195,16 @@ AppRole parametreleri; `ansible.posix.mount`; Molecule/aarch64; Ubuntu 24.04 `re
 4. **Sıra/onay → HEPSİ ONAYLI:** A-1 → A0 → A1 → T1 → A2 → T2 → T3 (→ T4 sonra). T2 `apply` ve T3 kurulum öncesi kısa onay.
 5. **Ölü GCP yolu → TAMAMEN SİL** (legacy/'ye taşıma yok): sekiz dosya + `secrets.get` GCP kanalı (motor → tam suite). Faz A-1 olarak §5'e eklendi.
 
+### 8.1 Revizyon 2026-09-15 (operatör AskUserQuestion + Rol-1 ruling; kaynak: ROADMAP TSK-176 What 15:3xZ/16:2xZ)
+- **Karar 3 geri alındı:** HCP Terraform hesabı AÇILMAYACAK ("uzak hesap olmadan başla"). Uzak state için tek aday (B) OCI Object Storage
+  S3-uyumlu arka uç (yeni SaaS hesabı yok; OCI Customer Secret Key operatörde; kilit sandbox testi şart — §1.1'deki "best effort" beyanı geçerli).
+- **§1.1 "local KESİNLİKLE değil" ÜRETİM için geçerlidir; bootstrap istisnası:** T1'de `backend "local"` YALNIZ import / `-generate-config-out` /
+  `plan` aşamasında (state `/opt/veri/altyapi/apisix/terraform.tfstate`, rsync ağacının dışında); **`terraform apply` yerel state ile YAPILMAZ** —
+  ilk apply öncesi (B) kurulur ve `terraform init -migrate-state` ile taşınır. Plan: `docs/superpowers/plans/2026-09-15-t1-apisix-terraform.md`.
+- **Sağlayıcı ölçümü (2026-09-15):** `rework-space-com/apisix` 1.8.1 (2026-09-01; MPL-2.0; APISIX 3.15 ile test; kaynaklar route/upstream/consumer/
+  consumer_group/service/ssl_certificate/global_rule/plugin_config/plugin_metadata/stream_route/secret; `plugins` JSON dizgesi; import destekli;
+  route.md `upstream_id`/`service_id` sunuyor — canlı rotaların SATIR-İÇİ upstream'i sağlayıcıda DOĞRULANMADI, T1 Task 3 ölçer). Terraform 1.16.2 (2026-09-09).
+
 ## Ek-A — Kaynaklar (okunanlar)
 developer.hashicorp.com/terraform: /docs, /language/import, /language/resources/ephemeral, /language/state, /language/backend/s3|local,
 /language/checks, /language/tests, /language/moved, /language/block/removed, /cli/workspaces, /cli/commands/plan, /language/values/variables,
