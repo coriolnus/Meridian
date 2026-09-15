@@ -1,0 +1,60 @@
+# EDG-2026-098 — EDG-016 ii katmanı sağkalan yanlılığı: DESEN tutarlılığı kapısı (göreli tolerans yalnız CI-0-dışı bacaklarda) — EDG-097 ardılı
+# ÖN-KAYIT 2026-09-15 03:4xZ (Rol-1, gece otonom). Selef EDG-2026-097 ÖLÇÜLMEDEN GERİ ÇEKİLDİ (retired; K harcanmadı): göreli %5 kapısı
+# CI-0-İÇİ, sıfıra yakın ve 4 ondalığa yuvarlanmış bir bacakta (ii_b @20 0,0089 ↔ 0,0084; kayıt çözünürlüğü ±%2,4) anlamsız birimde
+# tanımlıydı — Opus implementer T7 kanıtı (gerçek EDG-096 çıktısında %5,95). BEYAN: Rol-1 EDG-096'nın sayılarını GÖRMÜŞTÜR; bu kartta
+# hipotez eşikleri (ii_b ≥ 0,015, CI-0-dışı) EDG-096'dan beri DEĞİŞMEDİ ve veriye göre ayarlanmadı; değişen yalnız mekanik tutarlılık
+# kapısının BİRİMİ: anlamsız bacakta göreli fark yerine desen eşitliği. HAFIZA: kart_benzer/recall EDG-096 ön-kaydında; hafıza notu
+# kart-esigi-birimi-tolerans-tuzagi (2026-09-15). Kaynak: EDG-096/097 kayıtları + implementer raporu §7.
+
+card_id: EDG-2026-098
+status: registered   # kod hazır olunca (karsilastir096 `goreli_yalniz_anlamli`) A1 koşumu Rol-1
+family: pit_midcap_ust_sinir
+on_kayit: 2026-09-15
+selef:
+  - "EDG-2026-097 (retired 2026-09-15: ön-kayıt hatası — göreli tolerans CI-0-içi bacakta; ölçülmedi)"
+  - "EDG-2026-096 (KALDI—KAPI 2026-09-15: hipotez kolu geçti; bit-eşitlik ve as-of türevi PK tabanı düştü)"
+  - "EDG-2026-016 (GEÇTİ 2026-08-01; çekince (1) sağkalan yanlılığı)"
+ref:
+  - "EDG-2026-093 PK-1 (as-of large-cap referansı) · EDG-2026-031 (turnover ağırlığı w=0 → canlı etki yok)"
+  - "research/olcumler/edg093_midcap_pit/{k093.py, karsilastir096.py}"
+
+hipotez: >
+  EDG-016 ii katmanının CI-0-dışılığı EVREN SEÇİMİNDEN gelir: aynı pencere (2020-07-27 → 2026-08-20, --belirsiz dahil) ve aynı
+  kodda güncel-liste (B) ve sabit-251 (C) kiplerinde ii_b artık-IC @20 ≥ 0,015 ve CI-0-dışı, as-of PIT (A) kipinde CI-0-içi.
+  A kipi EDG-093 PK-1 ile DESEN (yön + CI-0-dışılık) eşit; CI-0-dışı bacaklarda göreli fark ≤ %5 (CI-0-içi bacakta değer gürültüdür,
+  göreli fark uygulanmaz — yalnız desen).
+
+k_registry: {registered_at: "2026-09-15", trial_ids: [EDG-098-guncel-liste-ii-b-artik-ic-20g, EDG-098-sabit251-ii-b-artik-ic-20g]}
+
+adim_olcum: >
+  EDG-096 ile AYNI kod ve girdiler; üç kip tek nohup (edg098_a1_kosum.sh), `karsilastir096.py --kart <bu kart>`; bar tabanı koşum
+  anında künyelenir (dosya sayısı, en yeni mtime; shares/kohort sha). Hüküm Rol-1.
+
+esikler:
+  ii_b_artik_ic_20g_alt: 0.015                  # B ya da C kipinde ii_b artık-IC @20 ≥ 0,015 VE CI-0-dışı
+  a_kipi_pk1_goreli_tol: 0.05                   # A ↔ PK-1: CI-0-DIŞI bacaklarda |A−PK1|/|PK1| ≤ 0,05
+  a_kipi_pk1_goreli_yalniz_anlamli: true        # göreli tolerans YALNIZ PK-1'in CI-0-dışı bacaklarına; CI-0-içi bacakta yalnız desen (yön + CI-0-dışılık eşit)
+  katman_i_pk_kipler: ["asof", "guncel"]        # PK: katman i @20 bu kiplerde CI-0-dışı pozitif
+  olculemeyen_sabit_liste_ust_oran: 0.20        # sabit-251 kapsam dışı payı ≤ %20
+
+kill_list:
+  - "A kipi PK-1 ile desen (yön + CI-0-dışılık) altı bacakta eşit değil YA DA CI-0-dışı bacakta göreli fark > %5 → kod/veri yolu doğrulanmadı, sayı yayılmaz"
+  - "katman i @20 as-of ya da güncel-liste kipinde CI-0-içi → ölçüm bilgisiz"
+  - "B VE C'de ii_b @20 CI-0-içi → hipotez KALDI (pencere etkisi); EDG-016'ya şerh"
+  - "sabit-251 kapsam dışı payı > %20 → C kipi bilgisiz; yalnız B ile hüküm verilmez"
+
+pozitif_kontrol: >
+  (1) katman i @20 as-of ve güncel-liste kiplerinde CI-0-dışı pozitif; (2) A ↔ PK-1 desen eşitliği + CI-0-dışı bacaklarda göreli
+  tolerans (kod/veri yolu); (3) sentetik tek-satır özdeşliği (v495 T4) ve karşılaştırıcının eşikleri bu karttan okuduğu + göreli
+  toleransı CI-0-içi bacağa UYGULAMADIĞI çivisi (v496 ek).
+
+veri_penceresi: "2020-07-27 → 2026-08-20 (PK-1 bayrakları; etkin başlangıç 2020-08-25); girdiler A1 state/bars (koşum anı künyesi) + edgar_facts/shares_outstanding.csv.gz + sp500_uyelik_tarihi.csv"
+
+basari_tanimi: >
+  Üç kip, K 2 kaydı, PK üçü yeşil, blob sha ile karta; hüküm Rol-1: "sağkalan DOĞRULANDI" (B ya da C geçer, A geçmez) → EDG-016
+  kartına nihai şerh ve TSK-065 notu; "KALDI" → pencere etkisi şerhi. Canlı knob'a dokunulmaz (EDG-031 w=0).
+
+notlar: >
+  Kod: karsilastir096 `a_kipi_pk1_goreli_yalniz_anlamli` alanı (Opus tur-2, aynı worktree; v496 çivisi: CI-0-içi bacakta göreli fark
+  raporlanır ama kapıya girmez). Koşum bedeli ~30 dk A1. Bu kart ölçümle kapanır; dördüncü ardıl AÇILMAZ — kapı yine düşerse hüküm
+  "bilgisiz, tasarım kusuru" olarak yazılır ve konu EDG-016 şerhiyle biter.

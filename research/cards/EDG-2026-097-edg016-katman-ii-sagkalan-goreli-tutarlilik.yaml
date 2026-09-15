@@ -6,7 +6,7 @@
 # HAFIZA: kart_benzer 00:0xZ (EDG-096 için) + EDG-096 hükmü; recall aynı. Kaynak: selef kartı + kart_benzer.
 
 card_id: EDG-2026-097
-status: registered   # kod hazır (k093 --uyelik-kipi, karsilastir096 --kart EDG-2026-097 ile bu kartın eşiklerini okur); A1 koşumu Rol-1
+status: retired      # 2026-09-15 03:4xZ ÖLÇÜLMEDEN geri çekildi (ön-kayıt hatası: göreli tolerans CI-0-içi bacakta; K harcanmadı) → EDG-2026-098
 family: pit_midcap_ust_sinir
 on_kayit: 2026-09-15
 selef:
@@ -53,3 +53,9 @@ basari_tanimi: >
 notlar: >
   karsilastir096 eşik alanlarını karttan okur; bu kartın `katman_i_pk_kipler` ve `a_kipi_pk1_goreli_tol` alanları yeni — karşılaştırıcıda
   küçük uyarlama gerekir (Opus mini-dilim: kip listesi + göreli tolerans + desen eşitliği; v495'e çivi). Koşum bedeli ~30 dk A1.
+
+geri_cekilme_2026_09_15: >
+  Ölçülmeden retired (Rol-1, 03:4xZ): kartın `a_kipi_pk1_goreli_tol` kapısı CI-0-İÇİ, sıfıra yakın ve 4 ondalığa yuvarlanmış
+  bir bacakta (ii_b @20 A 0,0089 ↔ PK-1 0,0084; kayıt çözünürlüğü ±%2,4) göreli fark istiyordu — Opus tur-1 T7 kanıtı: gerçek
+  EDG-096 çıktısında %5,95 > %5. Sonuç görülmüşken eşik çekilmez; K harcanmadı; kod (kart-parametreli kapılar, v496) EDG-2026-098'e
+  taşındı. Bkz hafıza kart-esigi-birimi-tolerans-tuzagi.
