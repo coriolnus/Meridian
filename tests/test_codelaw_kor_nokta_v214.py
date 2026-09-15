@@ -589,6 +589,15 @@ SINK_TABANI = frozenset({
     # ile ölçülür (dosya adı sabiti, yazım, okuma, pozitif kontrollü yetim taraması).
     "bekci_brifingi_damga.json", "karne_brifingi_damga.json",
     "oneri_brifingi_damga.json", "sef_brifingi_damga.json",
+    # v499'DA BEYANLI GÜNCELLENDİ (2026-09-15, TSK-070) — TEK yeni muafiyet:
+    # `durum_sozlugu_sayac.json`. F8 eşanlamlı-okuma sayaçları SÜREÇ-İÇİYDİ ve her worker
+    # restart'ı onları sıfırlıyordu; dağıtımlar günlük olduğu için "eski adın okuyucusu öldü"
+    # hükmü (≥30 gün restart'sız pencere) yapısal olarak ASLA verilemiyordu. Sayaç kalıcı deftere
+    # taşındı; yazan `durum_sozlugu._say`, okuyan `durum_sozlugu._yukle` — DÖRT damga dosyasıyla
+    # aynı sınıf (aynı modül → statik graf dış tüketiciyi göremiyor). Artefakt ÖLÜ DEĞİL: gerçek
+    # tüketici zinciri codelaw.DECLARED_SINKS gerekçesinde yazılı — `durum_sozlugu.esanlamli_okumalar`
+    # + `durum_sozlugu.esanlamli_pencere` → `api._durum_sozlugu` → /api/diagnostics → pano.
+    "durum_sozlugu_sayac.json",
 })
 
 

@@ -31,7 +31,7 @@ import subprocess
 
 import pytest
 
-from meridian import durum_sozlugu as dsz
+from meridian import config, durum_sozlugu as dsz
 
 SRC = pathlib.Path(__file__).resolve().parents[1]
 APIPY = (SRC / "meridian" / "api.py").read_text(encoding="utf-8")
@@ -44,10 +44,17 @@ NULLSIFIR = re.compile(r"(\?\?|\|\|)\s*0(?![\d.])")
 
 
 @pytest.fixture(autouse=True)
-def _temiz_sayac():
-    """Sayaç süreç-içi ve modül-küresel: test sırası birbirine sızmasın diye her testte
-    sıfırlanır (yalnız test hijyeni — üretim yolu sayaç sıfırlamaz, sıfırlasaydı ölçmeye
-    çalıştığımız ölüm tarihini silerdi)."""
+def _temiz_sayac(tmp_path, monkeypatch):
+    """Sayaç modül-küresel VE (TSK-070'ten beri) KALICI: test sırası birbirine sızmasın diye her
+    testte sıfırlanır (yalnız test hijyeni — üretim yolu sayaç sıfırlamaz, sıfırlasaydı ölçmeye
+    çalıştığımız ölüm tarihini silerdi).
+
+    STATE SANDBOX'A ALINIR: sayaç artık diske yazıyor ve bu dosyadaki testlerin çoğu
+    `sandbox_state` istemiyor — yönlendirme olmasaydı kapsam koşusu CANLI YEREL deftere
+    (`config.STATE`) yazardı; bu deponun tekrarlayan kusur sınıflarından biri tam olarak budur
+    (ajan koşumunun yerel state'i kirletmesi). `sandbox_state` isteyen testlerde o fikstür bu
+    yönlendirmenin ÜSTÜNE yazar (sonra kurulur), yani ikisi çakışmaz."""
+    monkeypatch.setattr(config, "STATE", tmp_path / "f8_sayac_state")
     dsz._sifirla_test_icin()
     yield
     dsz._sifirla_test_icin()

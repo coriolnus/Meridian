@@ -35,7 +35,7 @@ import time
 
 import pytest
 
-from meridian import durum_sozlugu as dsz, skills, store, watchdog
+from meridian import config, durum_sozlugu as dsz, skills, store, watchdog
 
 SRC = pathlib.Path(__file__).resolve().parents[1]
 APIPY = (SRC / "meridian" / "api.py").read_text(encoding="utf-8")
@@ -43,8 +43,12 @@ APPJS = (SRC / "meridian" / "web" / "app.js").read_text(encoding="utf-8")
 
 
 @pytest.fixture(autouse=True)
-def _temiz_sayac():
-    """Sayaç süreç-içi ve modül-küresel: testler arası sızıntıyı keser (v271 hijyeni)."""
+def _temiz_sayac(tmp_path, monkeypatch):
+    """Sayaç modül-küresel ve (TSK-070'ten beri) KALICI: testler arası sızıntıyı keser (v271
+    hijyeni). `config.STATE` sandbox'a alınır çünkü bu dosyadaki bazı sayaç testleri
+    `sandbox_state` istemiyor ve kalıcı defter aksi hâlde CANLI YEREL state'e yazılırdı;
+    `sandbox_state` isteyen testlerde o fikstür bu yönlendirmenin üstüne yazar."""
+    monkeypatch.setattr(config, "STATE", tmp_path / "f8_sayac_state")
     dsz._sifirla_test_icin()
     yield
     dsz._sifirla_test_icin()
