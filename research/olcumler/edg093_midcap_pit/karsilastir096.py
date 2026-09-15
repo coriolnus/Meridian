@@ -1,8 +1,21 @@
-"""EDG-2026-096 · ÜÇ ÜYELİK KİPİNİN KARŞILAŞTIRMASI — kart eşikleri, PK kapısı, kill-list tetiği.
+"""EDG-2026-096 / EDG-2026-097 · ÜÇ ÜYELİK KİPİNİN KARŞILAŞTIRMASI — kart eşikleri, PK kapısı,
+kill-list tetiği.
 
-Kart: research/cards/EDG-2026-096-edg016-katman-ii-sagkalan-yanliligi.yaml (`esikler`,
-`kill_list`, `pozitif_kontrol`). KART DIŞINA ÖLÇÜM YOK; KARTA DOKUNULMAZ (yalnız OKUNUR); eşik
-sonradan DEĞİŞMEZ. HÜKÜM YOK — `hukum` alanı sabit "YOK — Rol-1" (CLAUDE.md §3, §5).
+Kart `--kart` ile verilir (`esikler`, `kill_list`, `card_id`, `k_registry`). KART DIŞINA ÖLÇÜM
+YOK; KARTA DOKUNULMAZ (yalnız OKUNUR); eşik sonradan DEĞİŞMEZ. HÜKÜM YOK — `hukum` alanı sabit
+"YOK — Rol-1" (CLAUDE.md §3, §5).
+
+İKİ KART, İKİ KAPI ŞEMASI — ŞEMAYI KART SEÇER. EDG-096'nın iki kapısı YANLIŞ BİRİMDEYDİ (hüküm
+2026-09-15, KALDI—KAPI): (a) A kipi ≡ PK-1 BİT-EŞİTLİĞİ canlı-tazelenen bar tabanına karşı
+tutmaz; (b) katman i PK tabanı as-of değerinden türetilmişti, sabit-251 evrenine uygulanamazdı.
+Eşik YERİNDE DÜZELTİLMEZ (yeni eşik = yeni kart) → ardıl EDG-2026-097 aynı iki soruyu başka
+birimde sorar. Bu betik hangi kapıyı kuracağını KARTIN EŞİK ADLARINDAN öğrenir:
+    `a_kipi_pk1_tutarlilik_tol` → MUTLAK fark ≤ tolerans          (EDG-096)
+    `a_kipi_pk1_goreli_tol`     → GÖRELİ fark ≤ tolerans VE yön eşit VE CI-0-dışılık eşit (097)
+    `katman_i_pk_20g_alt`       → ÜÇ kipte sayısal TABAN           (EDG-096)
+    `katman_i_pk_kipler`        → yalnız LİSTEDEKİ kiplerde CI-0-dışı pozitif, taban YOK (097)
+Bilinmeyen, eksik ya da aynı kapı için ÇELİŞİK (iki ad birden) eşik adı ÇIKIŞ 2'dir: varsayılan
+seçmek, kartın istemediği bir kapıyı sessizce kurardı (uydurma yasağı).
 
 NE YAPAR. EDG-093 ölçüm betiğinin (`k093.py`) ÜÇ ayrı koşumunun sonuç JSON'larını okur:
     A `asof`   — as-of PIT kohortu (EDG-093 PK-1'in TEKRARI),
@@ -29,7 +42,7 @@ KOMUT SATIRI (sözleşme burasıdır, ana akış değil — CLAUDE.md §1):
     cd <depo kökü> && .venv/bin/python research/olcumler/edg093_midcap_pit/karsilastir096.py \\
         --asof <sonuc_093_<damga>.json> --guncel <sonuc_093_guncel_<damga>.json> \\
         --sabit <sonuc_093_sabit_<damga>.json> --pk1-referans <EDG-093 sonuc_093_*.json> \\
-        --kart <EDG-2026-096 yaml> --cikti <dizin>
+        --kart <kart yaml (EDG-2026-096 ya da EDG-2026-097)> --cikti <dizin>
 `--guncel`/`--sabit`/`--pk1-referans` ZORUNLU DEĞİLDİR: verilmeyen kip "ölçülemedi"dir ve o
 eşiğin hükmü `None` kalır — eksik girdiyi "geçti" saymak, eşiği hak etmeden geçme yönünde yanlı
 olurdu (CLAUDE.md §5, EXE-2026-006 dersi).
@@ -53,8 +66,18 @@ import sys
 
 import yaml
 
-KART_ID = "EDG-2026-096"
 HUKUM = "YOK — Rol-1"
+
+#: A kipi tutarlılık kapısının İKİ ŞEMASI — anahtar KART EŞİK ADI, değer kurulacak kapı.
+#: İkisi AYNI kartta bulunamaz: biri mutlak, öteki göreli birimdedir ve hangisinin hüküm verdiği
+#: belirsiz kalırdı.
+A_KIPI_SEMALARI = {"a_kipi_pk1_tutarlilik_tol": "mutlak", "a_kipi_pk1_goreli_tol": "goreli"}
+
+#: Katman i PK kapısının İKİ ŞEMASI — sayısal taban (EDG-096) ya da kip listesi (EDG-097).
+KATMAN_I_SEMALARI = {"katman_i_pk_20g_alt": "taban", "katman_i_pk_kipler": "kip_listesi"}
+
+#: İki kartta da AYNI olan eşikler — biri eksikse kapı kurulamaz, koşum DURUR.
+ZORUNLU_ESIKLER = ("ii_b_artik_ic_20g_alt", "olculemeyen_sabit_liste_ust_oran")
 
 #: Karşılaştırılan kipler — SIRA ANLAMLIDIR (A referans, B ve C sınanan).
 KIPLER = ("asof", "guncel", "sabit")
@@ -73,13 +96,28 @@ BIRINCIL_KOSUM = "dahil"
 #: cümlesinde ARANAN belirteç. Cümlenin KENDİSİ karttan gelir (kopya metin YOK); belirteç yalnız
 #: "hangi cümle hangi kapıya bağlı" sorusunu çözer. Eşleşmeyen kart kalemi ADIYLA sayılır —
 #: kart değişirse eşleme sessizce kaybolmasın.
+#: BELİRTEÇLER İKİ KARTIN DA CÜMLESİNE UYAR (096 "katman i PK üç kipin…" / 097 "katman i @20
+#: as-of…"; 096 "sabit-251 ölçülemeyen payı…" / 097 "sabit-251 kapsam dışı payı…") — daha dar bir
+#: belirteç ardıl kartta sessizce eşleşmez ve tetik KAYBOLURDU.
 KILL_ESLEME = (
     ("a_kipi_pk1", "A kipi PK-1"),
-    ("katman_i_pk", "katman i PK"),
+    ("katman_i_pk", "katman i"),
     ("b_ve_c_ci0_ici", "B VE C"),
-    ("sabit_olculemeyen", "ölçülemeyen payı"),
+    ("sabit_olculemeyen", "sabit-251"),
     ("asof_regresyonu", "as-of kipi çıktısı"),
 )
+
+
+def _uclu_ve(*durumlar):
+    """ÜÇ DEĞERLİ VE (True / False / None=ölçülemedi).
+
+    False BASKINDIR: ölçülemeyen bir bileşen, KESİN bir düşüşü maskeleyemez — maskeleseydi
+    kill-list "ölçülemedi" diye sessizleşir ve düşen bir kapı hükme hiç girmezdi."""
+    if any(d is False for d in durumlar):
+        return False
+    if any(d is None for d in durumlar):
+        return None
+    return True
 
 
 # =================================================================================================
@@ -200,7 +238,35 @@ def kart_oku(yol) -> dict:
         kullanim_hatasi(f"kartta `esikler` bloğu yok ya da sözlük değil: {p}")
     if not isinstance(kart.get("kill_list"), list):
         kullanim_hatasi(f"kartta `kill_list` listesi yok: {p}")
+    if not isinstance(kart.get("card_id"), str) or not kart["card_id"].strip():
+        kullanim_hatasi(f"kartta `card_id` yok — çıktı hangi kartın koşumu olduğunu söyleyemez "
+                        f"ve kimlik UYDURULMAZ: {p}")
     return kart
+
+
+def kapi_semasi_sec(kart_esikler: dict) -> dict:
+    """Kartın eşik ADLARINDAN kapı şemasını seçer — şema koda GÖMÜLMEZ (tek-kaynak yasası).
+
+    Bilinmeyen ad, eksik zorunlu ad ve aynı kapı için ÇELİŞİK iki ad ÇIKIŞ 2'dir; hangi adın
+    sorunlu olduğu stderr'e ADIYLA yazılır (ölçülemeyen bir seçim varsayılana DÜŞMEZ)."""
+    bilinen = set(A_KIPI_SEMALARI) | set(KATMAN_I_SEMALARI) | set(ZORUNLU_ESIKLER)
+    bilinmeyen = sorted(set(kart_esikler) - bilinen)
+    if bilinmeyen:
+        kullanim_hatasi(f"kartta BİLİNMEYEN eşik adı: {bilinmeyen} — bu adı ölçen kapı bu "
+                        f"betikte YOK, hüküm UYDURULMAZ (bilinen adlar: {sorted(bilinen)})")
+    eksik = [a for a in ZORUNLU_ESIKLER if a not in kart_esikler]
+    if eksik:
+        kullanim_hatasi(f"kartta ZORUNLU eşik adı EKSİK: {eksik}")
+    out = {}
+    for etiket, semalar in (("a_kipi", A_KIPI_SEMALARI), ("katman_i", KATMAN_I_SEMALARI)):
+        adlar = sorted(a for a in semalar if a in kart_esikler)
+        if len(adlar) != 1:
+            kullanim_hatasi(
+                f"`{etiket}` kapısı için kartta TEK eşik adı olmalı, bulunan: {adlar} "
+                f"(seçenekler: {sorted(semalar)})")
+        out[etiket] = semalar[adlar[0]]
+        out[f"{etiket}_esik_adi"] = adlar[0]
+    return out
 
 
 # =================================================================================================
@@ -231,43 +297,92 @@ def tablo_kur(kipler: dict) -> list[dict]:
 # =================================================================================================
 # 3. KAPI — A kipi ≡ EDG-093 PK-1 (altı bacak, kart toleransı)
 # =================================================================================================
-def a_kipi_pk1_kapisi(asof: dict, pk1: dict, tol: float) -> dict:
-    """A kipi PK-1'in ALTI bacağını (3 bacak × 2 ufuk) TOLERANS İÇİNDE yeniden üretmeli.
+def a_kipi_pk1_kapisi(asof: dict, pk1: dict, tol: float, sema: str = "mutlak") -> dict:
+    """A kipi PK-1'in ALTI bacağını (3 bacak × 2 ufuk) kartın istediği BİRİMDE yeniden üretmeli.
 
-    Bu kapı kartın PK (2)'sidir ve aynı zamanda İKİ kill-list kaleminin ölçümüdür ("A kipi PK-1
-    ile eşit değilse → kod yolu bozuk" ve "as-of kipi çıktısı EDG-093 sonucundan ayrışırsa →
-    regresyon"): bu koşumda EDG-093 referansı PK-1 detayının ta kendisidir, yani iki cümle TEK
-    ölçüme bakar — bu bir kopya değil, yazılı bir eşleştirmedir."""
-    out = {"tolerans": tol, "kiyaslanan_bacak_n": 0, "maks_mutlak_fark": None, "gecti": None,
-           "detay": [], "neden": None,
-           "tanim": "A kipi (as-of) EDG-093 PK-1 detayının ALTI bacağını tolerans içinde "
-                    "yeniden üretmeli — kod yolunun bozulmadığının kanıtı"}
+    Bu kapı kartın PK (2)'sidir ve aynı zamanda kill-list kalemlerinin ölçümüdür: bu koşumda
+    EDG-093 referansı PK-1 detayının ta kendisidir, yani birden çok cümle TEK ölçüme bakar — bu
+    bir kopya değil, yazılı bir eşleştirmedir.
+
+    `mutlak` (EDG-096): |A − PK1| ≤ tol. `goreli` (EDG-097): |A − PK1| / |PK1| ≤ tol VE yön eşit
+    VE CI-0-dışılık deseni eşit — bar tabanı canlı tazelendiği için bit-eşitliği İSTENMEZ, ama
+    DESEN eşitliği istenir (aynı büyüklükte fakat başka anlamlılıkta bir sonuç "aynı" değildir).
+    PK-1 değeri SIFIRSA oran TANIMSIZDIR: None + neden (sıfıra bölme "0 fark" diye yazılmaz),
+    ve sıfırın işareti olmadığı için yön de ölçülemez."""
+    if sema not in ("mutlak", "goreli"):
+        kullanim_hatasi(f"bilinmeyen A kipi kapı şeması: {sema!r}")
+    goreli = sema == "goreli"
+    out = {"sema": sema, "tolerans": tol, "kiyaslanan_bacak_n": 0, "maks_mutlak_fark": None,
+           "gecti": None, "detay": [], "neden": None,
+           "tanim": ("A kipi (as-of) EDG-093 PK-1 detayının ALTI bacağını tolerans içinde "
+                     "yeniden üretmeli — kod yolunun bozulmadığının kanıtı") if not goreli else
+                    ("A kipi (as-of) EDG-093 PK-1 detayının ALTI bacağıyla GÖRELİ tolerans "
+                     "içinde, AYNI yönde ve AYNI CI-0-dışılık deseninde olmalı — bit-eşitlik "
+                     "istenmez (bar tabanı canlı tazelenir), desen eşitliği istenir")}
+    if goreli:
+        out["maks_goreli_fark"] = None
     if not asof.get("okundu"):
         out["neden"] = f"A kipi okunamadı: {asof.get('neden')}"
         return out
     if not pk1.get("okundu"):
         out["neden"] = pk1.get("neden")
         return out
-    ref = {(str(r.get("bacak")), str(r.get("ufuk"))): r.get("pk1_deger") for r in pk1["detay"]}
-    farklar = []
+    ref = {(str(r.get("bacak")), str(r.get("ufuk"))): r for r in pk1["detay"]}
+    farklar, oranlar, bacak_durumlari = [], [], []
     for bacak, alan in BACAKLAR:
         for ufuk in UFUKLAR:
-            a = ((asof["bacaklar"].get(bacak) or {}).get(ufuk) or {}).get(alan)
-            r = ref.get((bacak, ufuk))
+            hucre = ((asof["bacaklar"].get(bacak) or {}).get(ufuk) or {})
+            r_satir = ref.get((bacak, ufuk)) or {}
+            a, r = hucre.get(alan), r_satir.get("pk1_deger")
             fark = None if (a is None or r is None) else abs(float(a) - float(r))
             if fark is not None:
                 farklar.append(fark)
-            out["detay"].append({
-                "bacak": bacak, "ufuk": ufuk, "a_kipi_deger": a, "pk1_deger": r,
-                "mutlak_fark": fark, "gecti": None if fark is None else bool(fark <= tol),
-                "neden": None if fark is not None else "değer ÖLÇÜLEMEDİ — kıyas yapılamadı"})
+            satir = {"bacak": bacak, "ufuk": ufuk, "a_kipi_deger": a, "pk1_deger": r,
+                     "mutlak_fark": fark}
+            if not goreli:
+                satir["gecti"] = None if fark is None else bool(fark <= tol)
+                satir["neden"] = (None if fark is not None
+                                  else "değer ÖLÇÜLEMEDİ — kıyas yapılamadı")
+            else:
+                oran, neden = None, None
+                if fark is None:
+                    neden = "değer ÖLÇÜLEMEDİ — kıyas yapılamadı"
+                elif float(r) == 0.0:
+                    neden = ("PK-1 değeri SIFIR — göreli fark TANIMSIZ (sıfıra bölme); mutlak "
+                             "fark yazıldı, oran UYDURULMAZ")
+                else:
+                    oran = fark / abs(float(r))
+                    oranlar.append(oran)
+                tol_ici = None if oran is None else bool(oran <= tol)
+                yon = None if (a is None or r is None or float(a) == 0.0 or float(r) == 0.0) \
+                    else bool((float(a) > 0) == (float(r) > 0))
+                a_ci0, r_ci0 = hucre.get("anlamli"), r_satir.get("pk1_anlamli")
+                ci_esit = None if (a_ci0 is None or r_ci0 is None) \
+                    else bool(bool(a_ci0) == bool(r_ci0))
+                durum = _uclu_ve(tol_ici, yon, ci_esit)
+                satir.update({
+                    "goreli_fark": oran, "tolerans_ici": tol_ici, "yon_esit": yon,
+                    "a_kipi_ci0_disi": a_ci0, "pk1_ci0_disi": r_ci0, "ci0_disi_esit": ci_esit,
+                    "gecti": durum,
+                    "neden": neden or (None if durum is not None else
+                                       "kıyas bileşenlerinden biri ÖLÇÜLEMEDİ (oran / yön / "
+                                       "CI-0-dışılık) — bacak 'geçti' SAYILMAZ")})
+            out["detay"].append(satir)
+            bacak_durumlari.append(satir["gecti"])
     out["kiyaslanan_bacak_n"] = len(out["detay"])
     if not farklar:
         out["neden"] = "hiçbir bacak kıyaslanamadı — kapı ÖLÇÜLEMEDİ"
         return out
     out["maks_mutlak_fark"] = max(farklar)
     out["olculen_bacak_n"] = len(farklar)
-    out["gecti"] = bool(max(farklar) <= tol and len(farklar) == len(out["detay"]))
+    if not goreli:
+        out["gecti"] = bool(max(farklar) <= tol and len(farklar) == len(out["detay"]))
+        return out
+    out["maks_goreli_fark"] = max(oranlar) if oranlar else None
+    out["gecti"] = _uclu_ve(*bacak_durumlari)
+    if out["gecti"] is None:
+        out["neden"] = ("bir ya da daha çok bacak ÖLÇÜLEMEDİ — kapı 'geçti' SAYILMAZ (eksik "
+                        "girdi eşiği hak etmeden geçme yönünde yanlı olurdu)")
     return out
 
 
@@ -325,6 +440,48 @@ def _katman_i_esigi(kipler: dict, esik: float) -> dict:
     }
 
 
+def _katman_i_kip_listesi(kipler: dict, kip_listesi) -> dict:
+    """EDG-097 PK (1): katman i @20 YALNIZ kartın listelediği kiplerde CI-0-dışı pozitif olmalı.
+
+    SAYISAL TABAN YOKTUR — EDG-096'nın 0,003 tabanı as-of değerinden türetilmişti ve sabit-251
+    evrenine uygulanamazdı (hüküm 2026-09-15). Listede OLMAYAN kip yine RAPORLANIR (`kapida:
+    false`): sessizce düşseydi okuyucu "ölçülmedi" ile "kapıya girmedi"yi ayıramazdı."""
+    if not isinstance(kip_listesi, (list, tuple)) or not kip_listesi:
+        kullanim_hatasi(f"`katman_i_pk_kipler` eşiği BOŞ OLMAYAN bir liste olmalı: "
+                        f"{kip_listesi!r}")
+    bilinmeyen = [str(k) for k in kip_listesi if str(k) not in KIPLER]
+    if bilinmeyen:
+        kullanim_hatasi(f"`katman_i_pk_kipler` BİLİNMEYEN kip adı taşıyor: {bilinmeyen} "
+                        f"(bilinen kipler: {list(KIPLER)})")
+    kapidakiler_ad = [str(k) for k in kip_listesi]
+    detay, degerler, durumlar = [], [], []
+    for kip in KIPLER:
+        h = _bacak_degeri(kipler[kip], "i_ust20_kohort_fazlasi", "ort", "20")
+        ort, ci0 = h.get("deger"), h.get("ci0_disi")
+        gecti = None if (ort is None or ci0 is None) else bool(ci0 and ort > 0)
+        kapida = kip in kapidakiler_ad
+        detay.append({"kip": kip, "ort": ort, "ci0_disi": ci0, "kapida": kapida, "gecti": gecti,
+                      "neden": h.get("neden")})
+        if kapida:
+            durumlar.append(gecti)
+            if ort is not None:
+                degerler.append(ort)
+    gecti = _uclu_ve(*durumlar) if durumlar else None
+    neden = None
+    if not durumlar:
+        neden = "kart listesindeki hiçbir kip kapıya girmedi — kapı KURULAMADI"
+    elif gecti is None:
+        neden = "kapıdaki bir ya da daha çok kip ÖLÇÜLEMEDİ — 'geçti' SAYILMAZ"
+    return {
+        "esik": kapidakiler_ad, "deger": min(degerler) if degerler else None, "gecti": gecti,
+        "detay": detay,
+        "tanim": "katman i @20 YALNIZ kartın listelediği kiplerde CI-0-dışı POZİTİF olmalı; "
+                 "sayısal taban YOKTUR (eşik bir KİP LİSTESİDİR). Listede olmayan kip "
+                 "raporlanır ama kapıya GİRMEZ (`kapida: false`).",
+        "neden": neden,
+    }
+
+
 def _olculemeyen_esigi(kipler: dict, esik: float) -> dict:
     """Kart: sabit listenin bar/shares kapsamı dışında kalan payı eşiği AŞMAMALI.
 
@@ -346,27 +503,36 @@ def _olculemeyen_esigi(kipler: dict, esik: float) -> dict:
             "neden": neden}
 
 
-def esikleri_olc(kart_esikler: dict, kipler: dict, kapi: dict) -> dict:
+def _a_kipi_esigi(kapi: dict, esik, sema: str) -> dict:
+    """A kipi eşiği — DEĞER kapının maksimum farkıdır; hangi fark olduğu ŞEMAYA bağlıdır."""
+    if sema == "mutlak":
+        return {"esik": esik, "deger": kapi.get("maks_mutlak_fark"), "gecti": kapi.get("gecti"),
+                "tanim": "A kipi ≡ EDG-093 PK-1 (altı bacak) — değer maksimum mutlak farktır",
+                "neden": kapi.get("neden")}
+    return {"esik": esik, "deger": kapi.get("maks_goreli_fark"), "gecti": kapi.get("gecti"),
+            "tanim": "A kipi ↔ EDG-093 PK-1 (altı bacak): göreli fark ≤ tolerans VE yön eşit VE "
+                     "CI-0-dışılık deseni eşit — değer maksimum GÖRELİ farktır",
+            "neden": kapi.get("neden")}
+
+
+def esikleri_olc(kart_esikler: dict, kipler: dict, kapi: dict, sema: dict) -> dict:
     """Kartın DÖRT eşiği — adlar ve değerler KARTTAN; burada yalnız ölçüm bağlanır.
 
-    Kartta olup burada bağlanmayan bir eşik SESSİZCE DÜŞMEZ: `neden` ile yazılır ve
-    `gecti` None kalır (kart büyürse bu betiğin körlüğü görünür olsun diye)."""
+    Ad kümesi `kapi_semasi_sec` tarafından ZATEN doğrulanmıştır (bilinmeyen/eksik/çelişik ad
+    çıkış 2'dir); buradaki son kontrol bir KOD kusurunu (bağlayıcıya eklenmemiş şema) sessiz
+    bırakmamak içindir."""
     baglayici = {
         "ii_b_artik_ic_20g_alt": lambda e: _ii_b_esigi(kipler, e),
-        "katman_i_pk_20g_alt": lambda e: _katman_i_esigi(kipler, e),
         "olculemeyen_sabit_liste_ust_oran": lambda e: _olculemeyen_esigi(kipler, e),
-        "a_kipi_pk1_tutarlilik_tol": lambda e: {
-            "esik": e, "deger": kapi.get("maks_mutlak_fark"), "gecti": kapi.get("gecti"),
-            "tanim": "A kipi ≡ EDG-093 PK-1 (altı bacak) — değer maksimum mutlak farktır",
-            "neden": kapi.get("neden")},
+        "katman_i_pk_20g_alt": lambda e: _katman_i_esigi(kipler, e),
+        "katman_i_pk_kipler": lambda e: _katman_i_kip_listesi(kipler, e),
+        "a_kipi_pk1_tutarlilik_tol": lambda e: _a_kipi_esigi(kapi, e, "mutlak"),
+        "a_kipi_pk1_goreli_tol": lambda e: _a_kipi_esigi(kapi, e, "goreli"),
     }
     out = {}
     for ad, deger in kart_esikler.items():
         if ad not in baglayici:
-            out[ad] = {"esik": deger, "deger": None, "gecti": None,
-                       "neden": "bu eşiği ölçen kapı bu betikte YOK — kart büyümüş olabilir, "
-                                "hüküm UYDURULMAZ"}
-            continue
+            kullanim_hatasi(f"eşiği ölçen kapı bu betikte YOK: {ad} (şema {sema})")
         out[ad] = baglayici[ad](deger)
     return out
 
@@ -374,7 +540,8 @@ def esikleri_olc(kart_esikler: dict, kipler: dict, kapi: dict) -> dict:
 # =================================================================================================
 # 5. KILL-LIST — METİN KARTTAN, TETİK ÖLÇÜMDEN
 # =================================================================================================
-def kill_list_tetikleri(kart_kill: list, esikler: dict, kapi: dict, kipler: dict) -> tuple:
+def kill_list_tetikleri(kart_kill: list, esikler: dict, kapi: dict, kipler: dict,
+                        sema: dict) -> tuple:
     """(tetiklenen kalemler, eşleme muhasebesi). Kalem METNİ kartın kendi cümlesidir.
 
     Tetik durumu ÜÇ DEĞERLİDİR: True (tetiklendi), False (tetiklenmedi), None (ölçülemedi —
@@ -387,7 +554,9 @@ def kill_list_tetikleri(kart_kill: list, esikler: dict, kapi: dict, kipler: dict
         return bool(not any(ci))
 
     def _katman_i_dusen():
-        g = (esikler.get("katman_i_pk_20g_alt") or {}).get("gecti")
+        # Hangi katman i eşiği kurulduğu KARTA bağlıdır; ad koda gömülseydi ardıl kart
+        # (kip listesi şeması) bu kalemi sessizce ölçülemez sayardı.
+        g = (esikler.get(sema["katman_i_esik_adi"]) or {}).get("gecti")
         return None if g is None else bool(not g)
 
     def _sabit_pay():
@@ -402,7 +571,7 @@ def kill_list_tetikleri(kart_kill: list, esikler: dict, kapi: dict, kipler: dict
                 "sabit_olculemeyen": _sabit_pay()}
     kaynak_kapi = {
         "a_kipi_pk1": "a_kipi_pk1_kapisi", "asof_regresyonu": "a_kipi_pk1_kapisi",
-        "katman_i_pk": "esikler.katman_i_pk_20g_alt",
+        "katman_i_pk": f"esikler.{sema['katman_i_esik_adi']}",
         "b_ve_c_ci0_ici": "esikler.ii_b_artik_ic_20g_alt",
         "sabit_olculemeyen": "esikler.olculemeyen_sabit_liste_ust_oran"}
 
@@ -410,9 +579,16 @@ def kill_list_tetikleri(kart_kill: list, esikler: dict, kapi: dict, kipler: dict
     for anahtar, belirtec in KILL_ESLEME:
         kalemler = [str(k) for k in kart_kill if belirtec in str(k)]
         if len(kalemler) != 1:
-            durum_satirlari.append({"anahtar": anahtar, "belirtec": belirtec,
-                                    "kalem": None, "durum": None, "aday_n": len(kalemler),
-                                    "neden": "kart kalemi TEK eşleşmedi — metin değişmiş olabilir"})
+            # SIFIR eşleşme ile ÇOKLU eşleşme AYNI ŞEY DEĞİLDİR: ardıl kart bir kalemi
+            # kaldırmış olabilir (097, as-of regresyonu kalemini 1. kaleme kattı) — bu bir
+            # metin bozulması değil, kartın kendi kararıdır ve ADIYLA sayılır.
+            durum_satirlari.append({
+                "anahtar": anahtar, "belirtec": belirtec, "kalem": None, "durum": None,
+                "aday_n": len(kalemler),
+                "neden": ("kart bu kalemi TAŞIMIYOR — kapı ölçülür ama kartta karşılığı YOK "
+                          "(ardıl kart kalemi kaldırmış olabilir)" if not kalemler else
+                          "belirteç BİRDEN ÇOK kart kalemine uydu — eşleme belirsiz, tetik "
+                          "YAZILMAZ")})
             continue
         kalem, durum = kalemler[0], durumlar.get(anahtar)
         eslesen_metin.add(kalem)
@@ -452,13 +628,27 @@ def _isaret(x):
     return {True: "EVET", False: "hayır", None: "—"}.get(x, str(x))
 
 
+def _hucre(x, nd=6):
+    """Eşik/değer hücresi — kip LİSTESİ bir sayı DEĞİLDİR; `_sayi` onu çökertirdi."""
+    if x is None:
+        return "—"
+    if isinstance(x, bool):
+        return _isaret(x)
+    if isinstance(x, (list, tuple)):
+        return ", ".join(str(k) for k in x) if x else "—"
+    return _sayi(x, nd)
+
+
 def rapor_metni(sonuc: dict) -> str:
     """RAPOR_096 — okuyan Rol-1 / operatör masası. HÜKÜM YOK: yalnız sayı, eşik ve tetik."""
     s: list[str] = []
     a = s.append
-    a("# EDG-2026-096 · üç üyelik kipinin karşılaştırması (as-of · güncel · sabit)")
+    a(f"# {sonuc['kart_id']} · üç üyelik kipinin karşılaştırması (as-of · güncel · sabit)")
     a("")
-    a(f"**Hüküm:** {sonuc['hukum']} · **Damga:** {sonuc['damga_utc']}")
+    a(f"**Hüküm:** {sonuc['hukum']} · **Damga:** {sonuc['damga_utc']} · **Kapı şeması:** "
+      f"A kipi `{sonuc['kapi_semasi']['a_kipi']}` "
+      f"(`{sonuc['esik_adlari']['a_kipi']}`) · katman i `{sonuc['kapi_semasi']['katman_i']}` "
+      f"(`{sonuc['esik_adlari']['katman_i']}`)")
     a("")
     a("> Bu betik ÖLÇMEZ, OKUR: bütün sayılar EDG-093 ölçüm betiğinin üç koşumundan gelir. "
       "Eşikler ve kill-list metinleri KARTTAN okunur; hüküm Rol-1'indir.")
@@ -495,23 +685,51 @@ def rapor_metni(sonuc: dict) -> str:
     a("| Eşik (karttan) | Değer | Eşik | Geçti |")
     a("|---|---:|---:|---|")
     for ad, e in sonuc["esikler"].items():
-        a(f"| {ad} | {_sayi(e.get('deger'))} | {_sayi(e.get('esik'))} | "
+        a(f"| {ad} | {_hucre(e.get('deger'))} | {_hucre(e.get('esik'))} | "
           f"{_isaret(e.get('gecti'))}{(' · ' + str(e.get('neden'))) if e.get('neden') else ''} |")
     a("")
 
+    katman_i = sonuc["esikler"].get(sonuc["esik_adlari"]["katman_i"]) or {}
+    if sonuc["kapi_semasi"]["katman_i"] == "kip_listesi":
+        a("## Katman i kapısı (kip listesi)")
+        a("")
+        a("| Kip | i @20 | CI-0-dışı | Kapıda | Geçti |")
+        a("|---|---:|---|---|---|")
+        for r in katman_i.get("detay") or []:
+            a(f"| {r['kip']} | {_yuzde(r['ort'])} | {_isaret(r['ci0_disi'])} | "
+              f"{_isaret(r['kapida'])} | {_isaret(r['gecti'])} |")
+        a("")
+        a(f"Kapıdaki kipler (karttan): **{_hucre(katman_i.get('esik'))}** · kapı geçti: "
+          f"**{_isaret(katman_i.get('gecti'))}**"
+          f"{(' · ' + str(katman_i.get('neden'))) if katman_i.get('neden') else ''}")
+        a("")
+
     k = sonuc["a_kipi_pk1_kapisi"]
-    a("## A kipi ≡ EDG-093 PK-1 kapısı")
+    goreli = k.get("sema") == "goreli"
+    a("## A kipi ↔ EDG-093 PK-1 kapısı (göreli)" if goreli else
+      "## A kipi ≡ EDG-093 PK-1 kapısı")
     a("")
-    a(f"Kıyaslanan bacak: **{k.get('kiyaslanan_bacak_n')}** · maksimum mutlak fark: "
-      f"**{_sayi(k.get('maks_mutlak_fark'), 9)}** · tolerans: {_sayi(k.get('tolerans'), 9)} · "
-      f"geçti: **{_isaret(k.get('gecti'))}**"
+    a(f"Kıyaslanan bacak: **{k.get('kiyaslanan_bacak_n')}** · maksimum "
+      f"{'göreli' if goreli else 'mutlak'} fark: "
+      f"**{_sayi(k.get('maks_goreli_fark') if goreli else k.get('maks_mutlak_fark'), 9)}** · "
+      f"tolerans: {_sayi(k.get('tolerans'), 9)} · geçti: **{_isaret(k.get('gecti'))}**"
       f"{(' · ' + str(k.get('neden'))) if k.get('neden') else ''}")
     a("")
-    a("| Bacak | Ufuk | A kipi | PK-1 | Mutlak fark | Geçti |")
-    a("|---|---|---:|---:|---:|---|")
-    for r in k.get("detay") or []:
-        a(f"| {r['bacak']} | {r['ufuk']}g | {_sayi(r['a_kipi_deger'])} | "
-          f"{_sayi(r['pk1_deger'])} | {_sayi(r['mutlak_fark'], 9)} | {_isaret(r['gecti'])} |")
+    if goreli:
+        a("| Bacak | Ufuk | A kipi | PK-1 | Göreli fark | Yön eşit | CI-0-dışılık eşit | Geçti |")
+        a("|---|---|---:|---:|---:|---|---|---|")
+        for r in k.get("detay") or []:
+            a(f"| {r['bacak']} | {r['ufuk']}g | {_sayi(r['a_kipi_deger'])} | "
+              f"{_sayi(r['pk1_deger'])} | {_sayi(r['goreli_fark'], 9)} | "
+              f"{_isaret(r['yon_esit'])} | {_isaret(r['ci0_disi_esit'])} | "
+              f"{_isaret(r['gecti'])}"
+              f"{(' · ' + str(r.get('neden'))) if r.get('neden') else ''} |")
+    else:
+        a("| Bacak | Ufuk | A kipi | PK-1 | Mutlak fark | Geçti |")
+        a("|---|---|---:|---:|---:|---|")
+        for r in k.get("detay") or []:
+            a(f"| {r['bacak']} | {r['ufuk']}g | {_sayi(r['a_kipi_deger'])} | "
+              f"{_sayi(r['pk1_deger'])} | {_sayi(r['mutlak_fark'], 9)} | {_isaret(r['gecti'])} |")
     a("")
 
     a("## Kill-list tetikleri")
@@ -565,14 +783,17 @@ def main(argv=None) -> int:
     damga = damga_uret()
 
     kart = kart_oku(ARGV.kart)
+    kart_id = kart["card_id"].strip()
+    sema = kapi_semasi_sec(kart["esikler"])
     yollar = {"asof": ARGV.asof, "guncel": ARGV.guncel, "sabit": ARGV.sabit}
     kipler = {kip: kip_oku(yollar[kip], kip) for kip in KIPLER}
     pk1 = pk1_detayi_oku(ARGV.pk1_referans)
 
     kapi = a_kipi_pk1_kapisi(kipler["asof"], pk1,
-                             float(kart["esikler"].get("a_kipi_pk1_tutarlilik_tol") or 0.0))
-    esikler = esikleri_olc(kart["esikler"], kipler, kapi)
-    tetik, kill_muhasebe = kill_list_tetikleri(kart["kill_list"], esikler, kapi, kipler)
+                             float(kart["esikler"][sema["a_kipi_esik_adi"]]), sema["a_kipi"])
+    esikler = esikleri_olc(kart["esikler"], kipler, kapi, sema)
+    tetik, kill_muhasebe = kill_list_tetikleri(kart["kill_list"], esikler, kapi, kipler, sema)
+    trial_ids = [str(x) for x in ((kart.get("k_registry") or {}).get("trial_ids") or [])]
 
     girdi = {kip: damgala(yollar[kip]) for kip in KIPLER}
     girdi["pk1_referans"] = damgala(ARGV.pk1_referans)
@@ -580,7 +801,11 @@ def main(argv=None) -> int:
     girdi["olcum_kodu"] = damgala(pathlib.Path(__file__).resolve())
 
     sonuc = {
-        "kart": KART_ID,
+        "kart": kart_id,
+        "kart_id": kart_id,
+        "kapi_semasi": {"a_kipi": sema["a_kipi"], "katman_i": sema["katman_i"]},
+        "esik_adlari": {"a_kipi": sema["a_kipi_esik_adi"],
+                        "katman_i": sema["katman_i_esik_adi"]},
         "asama": "kip karşılaştırması — EDG-093 kodunun üç evren kipindeki koşumları",
         "hukum": HUKUM,
         "rol": "ölçüm ajanı — HÜKÜM VERMEZ, hüküm ÖNERİSİ DE YAZMAZ; kart dosyasına DOKUNULMADI",
@@ -601,12 +826,17 @@ def main(argv=None) -> int:
         "a_kipi_pk1_kapisi": kapi,
         "kill_list_tetik": tetik,
         "kill_list_muhasebesi": kill_muhasebe,
-        "k_beyani": {"satirlar": [
-            "K = 2 (kart `k_registry`): EDG-096-guncel-liste-ii-b-artik-ic-20g ve "
-            "EDG-096-sabit251-ii-b-artik-ic-20g — B ve C kiplerinin ii_b artık-IC @20 bacağı.",
-            "A kipi EDG-093 PK-1'in TEKRARIdır ve K'ye GİRMEZ; tutarlılık kapısıdır.",
-            "Katman i ve ii_a1 raporlanır, K harcamaz (kart `k_registry` şerhi).",
-        ]},
+        # K beyanı KARTTAN türetilir: deneme kimlikleri koda gömülseydi ardıl kartın koşumu
+        # selefinin kimliklerini taşır ve K defteri yanlış kalemi sayardı (tek-kaynak yasası).
+        "k_beyani": {
+            "trial_ids": trial_ids, "kaynak": "kart `k_registry.trial_ids`",
+            "satirlar": [
+                (f"K = {len(trial_ids)} (kart `k_registry`): {', '.join(trial_ids)} — B ve C "
+                 "kiplerinin ii_b artık-IC @20 bacağı." if trial_ids else
+                 "K = ÖLÇÜLEMEDİ: kartta `k_registry.trial_ids` YOK (sayı UYDURULMAZ)."),
+                "A kipi EDG-093 PK-1'in TEKRARIdır ve K'ye GİRMEZ; tutarlılık kapısıdır.",
+                "Katman i ve ii_a1 raporlanır, K harcamaz (kart `k_registry` şerhi).",
+            ]},
     }
 
     json_yolu = cikti / f"sonuc_096_{damga}.json"
@@ -618,8 +848,8 @@ def main(argv=None) -> int:
     print(f"YAZILDI: {json_yolu}")
     print(f"YAZILDI: {rapor_yolu}")
     okunan = [k for k in KIPLER if kipler[k]["okundu"]]
-    print(f"okunan kip={okunan} · A≡PK-1 geçti={kapi.get('gecti')} · "
-          f"kill-list tetik={len(tetik)} · hüküm={HUKUM}")
+    print(f"kart={kart_id} · şema={sonuc['kapi_semasi']} · okunan kip={okunan} · "
+          f"A↔PK-1 geçti={kapi.get('gecti')} · kill-list tetik={len(tetik)} · hüküm={HUKUM}")
     return 0
 
 
