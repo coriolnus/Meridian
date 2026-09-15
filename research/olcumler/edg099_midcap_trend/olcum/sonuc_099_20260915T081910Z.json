@@ -1,0 +1,7596 @@
+{
+  "kart": "EDG-2026-099",
+  "aile": "pit_midcap_ust_sinir",
+  "asama": "ANA ÖLÇÜM — mid-cap PIT trend kolu (EDG-009 C/D hücreleri, evren S&P 400 PIT)",
+  "hukum": "YOK — Rol-1",
+  "rol": "ölçüm ajanı — HÜKÜM VERMEZ, hüküm ÖNERİSİ DE YAZMAZ; kart dosyasına DOKUNULMADI",
+  "okuyan": "(1) Rol-1: hüküm AYNI turda karta + K defterine işlenir (CLAUDE.md §5); (2) RAPOR_099_<damga>.md bu dosyadan üretilir.",
+  "yazim_beyani": "YAZILAN HER ŞEY --cikti altındadır: sonuc_099_<damga>.json, RAPOR_099_<damga>.md ve _state/ (config.STATE buraya çevrildi). repo/state'e yazım YOK; canlı gölge-defterine (trend_book.json) DOKUNULMADI — `run_cycle`/`_kaydet` ÇAĞRILMADI; ağa çıkılmadı.",
+  "damga_utc": "20260915T081910Z",
+  "olcum_tarihi": "2026-09-15T08:21:39.861532+00:00",
+  "uretici": "research/olcumler/edg099_midcap_trend/k099.py",
+  "cozulen_yollar": {
+    "repo": "/opt/meridian",
+    "meridian": "/opt/meridian/meridian",
+    "meridian_repo_icinde_mi": true,
+    "wp2_ortak": "/opt/meridian/research/olcumler/wp2_olcum/ortak.py",
+    "k016": "/opt/meridian/research/olcumler/wp2_olcum/k016.py",
+    "parti1_ortak": "/opt/meridian/research/olcumler/edg093_midcap_pit/ortak.py",
+    "config_state": "/opt/veri/olcum/edg099/_state",
+    "config_bars": "/opt/veri/olcum/edg093/bars",
+    "k093": "/opt/meridian/research/olcumler/edg093_midcap_pit/k093.py",
+    "trend_shadow": "/opt/meridian/meridian/trend_shadow.py"
+  },
+  "DURUM": "OLCULDU",
+  "kart_kaydi": {
+    "yol": "/opt/meridian/research/cards/EDG-2026-099-midcap-pit-trend-kolu.yaml",
+    "card_id": "EDG-2026-099",
+    "family": "pit_midcap_ust_sinir",
+    "esikler_sayisal": {
+      "fazla_yillik_alt": 0.03,
+      "t_alt": 2.0,
+      "ay_sonu_aday_alt": 30.0,
+      "olculemeyen_ust_oran": 0.2
+    },
+    "pk1_lafzi": "D hücresi fazla > 0 ve CI-0-dışı (yön + anlamlılık; büyüklük EDG-009 ile kıyaslanır, eşitlik istenmez — pencere farklı)",
+    "veri_penceresi": "2020-07-27 → 2026-08-20 (IEX bar tabanı; ısınma 12 ay → ilk karar 2021-07 ay-sonu); kohort research/pit_universe/sp400_uyelik_tarihi.csv (blob a1fb1514); barlar A1 /opt/veri/olcum/edg093/bars (661); PK-1 sp500_uyelik_tarihi.csv + state/bars",
+    "k_registry": {
+      "registered_at": "2026-09-15",
+      "trial_ids": [
+        "EDG-099-midcap-D-aylik-rebalans-fazla",
+        "EDG-099-midcap-C-chandelier-fazla"
+      ]
+    }
+  },
+  "girdi_damgasi": {
+    "kohort_csv": {
+      "yol": "/opt/meridian/research/pit_universe/sp400_uyelik_tarihi.csv",
+      "sha256": "65ff6c5a8bf5e6145d511d4674cd65b55ebb736bb1422922a7061703211a5203",
+      "neden": null
+    },
+    "kart": {
+      "yol": "/opt/meridian/research/cards/EDG-2026-099-midcap-pit-trend-kolu.yaml",
+      "sha256": "32540fd69bbe0371934337ae887fa87fadd7f3fcb932e6d18d7da71287512954",
+      "neden": null
+    },
+    "elle_esleme": {
+      "yol": "/opt/meridian/research/pit_universe/sp400_elle_esleme.yaml",
+      "sha256": "81e67ef88865c11b57f002fc6292706a81c4fb3f402c644900ac8b669f552f0f",
+      "neden": null
+    },
+    "kapsama_haritasi": {
+      "yol": "/opt/veri/olcum/edg093/kapsama_haritasi_20260914T150444Z.json",
+      "sha256": "5f8d169d94d92d818418eedbc0993514c4966b85fedb0e0e883437a0c26349bf",
+      "neden": null
+    },
+    "pk_kohort_csv": {
+      "yol": "/opt/meridian/research/pit_universe/sp500_uyelik_tarihi.csv",
+      "sha256": "39a9202c9ef69a74c0ff07e2113ad41fb6da7c8c5b6cd9541f0185fb4391e717",
+      "neden": null
+    },
+    "bars_dizin": {
+      "yol": "/opt/veri/olcum/edg093/bars",
+      "sha256": null,
+      "neden": "dizin — tek sha yok; isim başına sha bars_manifest'tedir"
+    },
+    "olcum_kodu": {
+      "yol": "/opt/meridian/research/olcumler/edg099_midcap_trend/k099.py",
+      "sha256": "4d5e1158d71ae3de48861f7591740c1b36867da5cfb5ba9d877d0cc8966a8545",
+      "neden": null
+    },
+    "k093": {
+      "yol": "/opt/meridian/research/olcumler/edg093_midcap_pit/k093.py",
+      "sha256": "faf23a4d43518b292f08d5e9fd888f0e552c9d6c1f6f7a9a086c82858c919932",
+      "neden": null
+    },
+    "parti1_ortak": {
+      "yol": "/opt/meridian/research/olcumler/edg093_midcap_pit/ortak.py",
+      "sha256": "86ba30dc70d31adbc5045093021b3b04e0199877e38b46cc2d0e50666e2bfc99",
+      "neden": null
+    },
+    "trend_shadow": {
+      "yol": "/opt/meridian/meridian/trend_shadow.py",
+      "sha256": "01c69d4bdbccfc508028a0da2f2722fa6aa4c3d5cf6bb9b720ea7967dfd5d3dc",
+      "neden": null
+    },
+    "wp2_ortak": {
+      "yol": "/opt/meridian/research/olcumler/wp2_olcum/ortak.py",
+      "sha256": "8b274c5645838eb5fe11bbdd065703639c0917dac5a27059656c2f5572e94442",
+      "neden": null
+    }
+  },
+  "sabitler": {
+    "kaynak": "meridian/trend_shadow.py — SABİTLER İTHAL EDİLİR, bu dosyada yeniden YAZILMAZ; ayrışma çivisi tests/test_edg099_midcap_trend_v497.py",
+    "MOM_LOOKBACK": 12,
+    "N_SLOTS": 10,
+    "FRICTION_BPS": 10.0,
+    "ATR_LEN": 22,
+    "CHANDELIER_K": 3.5,
+    "DELIST_GRACE": 10,
+    "INIT_EQUITY": 100000.0,
+    "momentum_tanimi": "12-1: P(ay-sonu t-1) / P(ay-sonu t-12) − 1 (şasinin ay-sonu tanımı)"
+  },
+  "pencere_kaynagi": {
+    "baslangic": "--baslangic ile ELLE verildi",
+    "bitis": "--bitis ile ELLE verildi"
+  },
+  "tohum": {
+    "deger": 2206328332,
+    "kaynak": "kart kimliğinden türetildi: sha256('EDG-2026-099')[:8]",
+    "tekrar": 2000,
+    "blok_ay": 12,
+    "nw_gecikme": 3
+  },
+  "pencere": {
+    "baslangic": "2020-07-27",
+    "bitis": "2026-08-20",
+    "seans_n": 1525,
+    "ay_sonu_n": 73,
+    "ilk_karar_ay_sonu": "2021-07-30",
+    "olcum_ay_n": 61,
+    "isinma_ay_n": 12,
+    "takvim": {
+      "ay_sonu_n": 73,
+      "cevapsiz_gun_n": 0,
+      "cevapsiz_ornek": [],
+      "kaynak": "meridian.trend_shadow.ay_sonu_mu (XNYS, fail-closed)"
+    }
+  },
+  "evren": {
+    "as_of_satir_n": 163,
+    "kohort_ham_satir_n": 163,
+    "pencere_oncesi_capa_satiri_var_mi": true,
+    "isim_n_birlesim": 661,
+    "dusurulen_n": 0,
+    "olculecek_n": 661,
+    "bar_yuklenen_n": 646
+  },
+  "bar_muhasebesi": {
+    "istenen": 661,
+    "dosya_yok": 0,
+    "okunamadi": 0,
+    "kisa": 15,
+    "yuklendi": 646,
+    "hayalet_dusen": 0,
+    "karantina_dusen": 6,
+    "takvim_reddedilen": [],
+    "defter_yolu_dusen": 0,
+    "defter_yolu_sembol": 0,
+    "hesaplanan_dislanan_satir_UYGULANMADI": 19815,
+    "hesaplanan_dislanan_sembol": 28,
+    "kirilma_sinifi": {
+      "hayalet_gecmis": 26,
+      "olcek_dikisi": 12
+    },
+    "bar_min_uzunluk": 317,
+    "takvim_reddedilen_n": 0
+  },
+  "hucreler": {
+    "D": {
+      "tanim": {
+        "ad": "D_rotate_pit_midcap",
+        "cikis": "aylik_rebalans_duraksiz",
+        "evren": "sp400_pit_asof",
+        "cita_esli": "cita_esli",
+        "cita_taban": "cita_taban"
+      },
+      "stats": {
+        "total_return": 1.631203954920574,
+        "cagr": 0.21084028884070127,
+        "vol_ann": 0.3513516401460393,
+        "sharpe": 0.6000834057671269,
+        "max_dd": -0.37729188847334505,
+        "years": 5.0568104038329915,
+        "n_ay": 60,
+        "ilk_gun": "2021-07-30",
+        "son_gun": "2026-08-20",
+        "ilk_equity": 100000.0,
+        "son_equity": 263120.3954920574
+      },
+      "fazla": {
+        "ann_pct": 17.577834081652266,
+        "t_nw": 1.5680421064190817,
+        "t_neden": null,
+        "ci95": [
+          0.4780059886672448,
+          35.55488561646114
+        ],
+        "ci0_disi": true,
+        "ci_neden": null,
+        "n_months": 60,
+        "pozitif_ay_pct": 53.333333333333336,
+        "fazla_std_yillik_pct": 27.354506846533777,
+        "tanim": "aylık (hücre − çıta) serisi; ann_pct = ortalama × 12; t = Newey-West 3 gecikme; CI = dairesel blok-bootstrap (12 ay blok, 2000 tekrar, sabit tohum)"
+      },
+      "fazla_taban_citaya": {
+        "ann_pct": 17.520624858169384,
+        "t_nw": 1.654732765522965,
+        "t_neden": null,
+        "ci95": [
+          1.5973379689009586,
+          34.37536842841397
+        ],
+        "ci0_disi": true,
+        "ci_neden": null,
+        "n_months": 60,
+        "pozitif_ay_pct": 51.66666666666667,
+        "fazla_std_yillik_pct": 26.31084725232935,
+        "tanim": "aylık (hücre − çıta) serisi; ann_pct = ortalama × 12; t = Newey-West 3 gecikme; CI = dairesel blok-bootstrap (12 ay blok, 2000 tekrar, sabit tohum)"
+      },
+      "yil_yil_esli_citaya": {
+        "2021": {
+          "kol_pct": 3.7228921372865376,
+          "cita_pct": 3.9040907756931142,
+          "fazla_puan": -0.18119863840657668,
+          "n_ay": 5
+        },
+        "2022": {
+          "kol_pct": -14.724560909118466,
+          "cita_pct": -12.960822365970227,
+          "fazla_puan": -1.763738543148241,
+          "n_ay": 12
+        },
+        "2023": {
+          "kol_pct": 11.923162458264326,
+          "cita_pct": 15.467483468960985,
+          "fazla_puan": -3.5443210106966605,
+          "n_ay": 12
+        },
+        "2024": {
+          "kol_pct": 51.920861027667556,
+          "cita_pct": 8.088833611756252,
+          "fazla_puan": 43.8320274159113,
+          "n_ay": 12
+        },
+        "2025": {
+          "kol_pct": 28.671105499158077,
+          "cita_pct": 5.513836186852883,
+          "fazla_puan": 23.157269312305196,
+          "n_ay": 12
+        },
+        "2026": {
+          "kol_pct": 32.38843213725817,
+          "cita_pct": 12.771084176763381,
+          "fazla_puan": 19.61734796049479,
+          "n_ay": 7
+        }
+      },
+      "devir": {
+        "n_rebalans": 61,
+        "islem_bacagi": 827,
+        "n_giris": 228,
+        "n_kapanan_islem": 218,
+        "cikislar": {
+          "chandelier": 0,
+          "rotate": 202,
+          "uyelik": 16,
+          "no_data": 0,
+          "hedef_disi": 0
+        },
+        "friksiyon_usd": 6661.0249,
+        "fiyatsiz_cikis": 0,
+        "fiyatsiz_giris": 0
+      },
+      "islem_ornegi": [
+        {
+          "sym": "CAR",
+          "giris": "2021-08-02",
+          "cikis": "2021-09-01",
+          "sebep": "rotate",
+          "giris_px": 83.75,
+          "cikis_px": 91.64,
+          "getiri_pct": 9.4209
+        },
+        {
+          "sym": "KSS",
+          "giris": "2021-08-02",
+          "cikis": "2021-09-01",
+          "sebep": "rotate",
+          "giris_px": 50.905,
+          "cikis_px": 57.73,
+          "getiri_pct": 13.4073
+        },
+        {
+          "sym": "SLM",
+          "giris": "2021-08-02",
+          "cikis": "2021-09-01",
+          "sebep": "rotate",
+          "giris_px": 18.95,
+          "cikis_px": 18.75,
+          "getiri_pct": -1.0554
+        },
+        {
+          "sym": "AEO",
+          "giris": "2021-08-02",
+          "cikis": "2021-10-01",
+          "sebep": "rotate",
+          "giris_px": 34.45,
+          "cikis_px": 26.1,
+          "getiri_pct": -24.238
+        },
+        {
+          "sym": "LNW",
+          "giris": "2021-08-02",
+          "cikis": "2021-10-01",
+          "sebep": "rotate",
+          "giris_px": 62.605,
+          "cikis_px": 84.97,
+          "getiri_pct": 35.724
+        },
+        {
+          "sym": "STAA",
+          "giris": "2021-09-01",
+          "cikis": "2021-10-01",
+          "sebep": "rotate",
+          "giris_px": 154.39,
+          "cikis_px": 128.03,
+          "getiri_pct": -17.0736
+        },
+        {
+          "sym": "THC",
+          "giris": "2021-09-01",
+          "cikis": "2021-10-01",
+          "sebep": "rotate",
+          "giris_px": 74.41,
+          "cikis_px": 67.09,
+          "getiri_pct": -9.8374
+        },
+        {
+          "sym": "CIT",
+          "giris": "2021-10-01",
+          "cikis": "2021-11-01",
+          "sebep": "rotate",
+          "giris_px": 52.25,
+          "cikis_px": 50.35,
+          "getiri_pct": -3.6364
+        },
+        {
+          "sym": "CLF",
+          "giris": "2021-08-02",
+          "cikis": "2021-11-01",
+          "sebep": "rotate",
+          "giris_px": 25.14,
+          "cikis_px": 24.38,
+          "getiri_pct": -3.0231
+        },
+        {
+          "sym": "CPRI",
+          "giris": "2021-08-02",
+          "cikis": "2021-11-01",
+          "sebep": "rotate",
+          "giris_px": 57.33,
+          "cikis_px": 53.48,
+          "getiri_pct": -6.7155
+        },
+        {
+          "sym": "X",
+          "giris": "2021-08-02",
+          "cikis": "2021-11-01",
+          "sebep": "rotate",
+          "giris_px": 26.385,
+          "cikis_px": 26.82,
+          "getiri_pct": 1.6487
+        },
+        {
+          "sym": "COTY",
+          "giris": "2021-10-01",
+          "cikis": "2021-12-01",
+          "sebep": "rotate",
+          "giris_px": 8.31,
+          "cikis_px": 9.94,
+          "getiri_pct": 19.6149
+        },
+        {
+          "sym": "THC",
+          "giris": "2021-11-01",
+          "cikis": "2021-12-01",
+          "sebep": "rotate",
+          "giris_px": 71.82,
+          "cikis_px": 74.07,
+          "getiri_pct": 3.1328
+        },
+        {
+          "sym": "SBNY",
+          "giris": "2021-11-01",
+          "cikis": "2022-01-03",
+          "sebep": "uyelik",
+          "giris_px": 300.0,
+          "cikis_px": 326.83,
+          "getiri_pct": 8.9433
+        },
+        {
+          "sym": "TDC",
+          "giris": "2021-11-01",
+          "cikis": "2022-01-03",
+          "sebep": "rotate",
+          "giris_px": 56.3,
+          "cikis_px": 43.03,
+          "getiri_pct": -23.5702
+        },
+        {
+          "sym": "TRGP",
+          "giris": "2021-10-01",
+          "cikis": "2022-01-03",
+          "sebep": "rotate",
+          "giris_px": 49.595,
+          "cikis_px": 52.31,
+          "getiri_pct": 5.4743
+        },
+        {
+          "sym": "CROX",
+          "giris": "2021-08-02",
+          "cikis": "2022-02-01",
+          "sebep": "rotate",
+          "giris_px": 137.34,
+          "cikis_px": 103.15,
+          "getiri_pct": -24.8944
+        },
+        {
+          "sym": "DKS",
+          "giris": "2022-01-03",
+          "cikis": "2022-02-01",
+          "sebep": "rotate",
+          "giris_px": 115.31,
+          "cikis_px": 117.64,
+          "getiri_pct": 2.0206
+        },
+        {
+          "sym": "GME",
+          "giris": "2021-09-01",
+          "cikis": "2022-02-01",
+          "sebep": "rotate",
+          "giris_px": 55.9,
+          "cikis_px": 28.32,
+          "getiri_pct": -49.3381
+        },
+        {
+          "sym": "M",
+          "giris": "2022-01-03",
+          "cikis": "2022-02-01",
+          "sebep": "rotate",
+          "giris_px": 26.775,
+          "cikis_px": 25.87,
+          "getiri_pct": -3.38
+        },
+        {
+          "sym": "BLDR",
+          "giris": "2022-02-01",
+          "cikis": "2022-03-01",
+          "sebep": "rotate",
+          "giris_px": 68.84,
+          "cikis_px": 76.58,
+          "getiri_pct": 11.2435
+        },
+        {
+          "sym": "CALX",
+          "giris": "2022-02-01",
+          "cikis": "2022-03-01",
+          "sebep": "rotate",
+          "giris_px": 49.94,
+          "cikis_px": 54.0,
+          "getiri_pct": 8.1298
+        },
+        {
+          "sym": "GT",
+          "giris": "2022-02-01",
+          "cikis": "2022-03-01",
+          "sebep": "rotate",
+          "giris_px": 20.87,
+          "cikis_px": 15.34,
+          "getiri_pct": -26.4974
+        },
+        {
+          "sym": "LPX",
+          "giris": "2022-02-01",
+          "cikis": "2022-03-01",
+          "sebep": "rotate",
+          "giris_px": 66.86,
+          "cikis_px": 72.15,
+          "getiri_pct": 7.9121
+        },
+        {
+          "sym": "SYNA",
+          "giris": "2021-12-01",
+          "cikis": "2022-03-01",
+          "sebep": "rotate",
+          "giris_px": 288.945,
+          "cikis_px": 232.66,
+          "getiri_pct": -19.4795
+        }
+      ],
+      "ay_sonu_defteri": [
+        {
+          "ay_sonu": "2021-07-30",
+          "hucre": "D",
+          "uye_n": 403,
+          "aday_n": 391,
+          "sepet_n": 10,
+          "sepet": [
+            "LNW",
+            "CLF",
+            "OLN",
+            "CPRI",
+            "AEO",
+            "X",
+            "CROX",
+            "SLM",
+            "CAR",
+            "KSS"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2021-08-31",
+          "hucre": "D",
+          "uye_n": 403,
+          "aday_n": 390,
+          "sepet_n": 10,
+          "sepet": [
+            "GME",
+            "OLN",
+            "CLF",
+            "CPRI",
+            "CROX",
+            "X",
+            "LNW",
+            "AEO",
+            "STAA",
+            "THC"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2021-09-30",
+          "hucre": "D",
+          "uye_n": 403,
+          "aday_n": 391,
+          "sepet_n": 10,
+          "sepet": [
+            "GME",
+            "OLN",
+            "CLF",
+            "X",
+            "COTY",
+            "CAR",
+            "CROX",
+            "CPRI",
+            "TRGP",
+            "CIT"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2021-10-29",
+          "hucre": "D",
+          "uye_n": 403,
+          "aday_n": 391,
+          "sepet_n": 10,
+          "sepet": [
+            "GME",
+            "CAR",
+            "SBNY",
+            "MUR",
+            "TDC",
+            "TRGP",
+            "OLN",
+            "CROX",
+            "THC",
+            "COTY"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2021-11-30",
+          "hucre": "D",
+          "uye_n": 403,
+          "aday_n": 391,
+          "sepet_n": 10,
+          "sepet": [
+            "GME",
+            "CAR",
+            "SITM",
+            "MUR",
+            "CROX",
+            "SBNY",
+            "OLN",
+            "TDC",
+            "SYNA",
+            "TRGP"
+          ],
+          "cikis_n": 2,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2021-12-31",
+          "hucre": "D",
+          "uye_n": 403,
+          "aday_n": 393,
+          "sepet_n": 10,
+          "sepet": [
+            "GME",
+            "CAR",
+            "SYNA",
+            "SITM",
+            "CROX",
+            "M",
+            "OLN",
+            "MUR",
+            "DKS",
+            "AA"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate",
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-01-31",
+          "hucre": "D",
+          "uye_n": 403,
+          "aday_n": 394,
+          "sepet_n": 10,
+          "sepet": [
+            "CAR",
+            "AA",
+            "SYNA",
+            "CALX",
+            "OLN",
+            "SITM",
+            "BLDR",
+            "MUR",
+            "LPX",
+            "GT"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-02-28",
+          "hucre": "D",
+          "uye_n": 402,
+          "aday_n": 394,
+          "sepet_n": 10,
+          "sepet": [
+            "CAR",
+            "SITM",
+            "AA",
+            "MUR",
+            "TRGP",
+            "MIME",
+            "PDCE",
+            "M",
+            "OLN",
+            "DKS"
+          ],
+          "cikis_n": 5,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-03-31",
+          "hucre": "D",
+          "uye_n": 402,
+          "aday_n": 393,
+          "sepet_n": 10,
+          "sepet": [
+            "CAR",
+            "AA",
+            "RRC",
+            "MUR",
+            "TRGP",
+            "SITM",
+            "MIME",
+            "PDCE",
+            "EXE",
+            "SYNA"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-04-29",
+          "hucre": "D",
+          "uye_n": 402,
+          "aday_n": 391,
+          "sepet_n": 10,
+          "sepet": [
+            "RRC",
+            "CAR",
+            "SITM",
+            "AA",
+            "MUR",
+            "TRGP",
+            "MTDR",
+            "PDCE",
+            "EXE",
+            "MIME"
+          ],
+          "cikis_n": 1,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-05-31",
+          "hucre": "D",
+          "uye_n": 402,
+          "aday_n": 393,
+          "sepet_n": 10,
+          "sepet": [
+            "CAR",
+            "RRC",
+            "EQT",
+            "TRGP",
+            "MUR",
+            "MUSA",
+            "SITM",
+            "AA",
+            "PDCE",
+            "OPCH"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate",
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-06-30",
+          "hucre": "D",
+          "uye_n": 403,
+          "aday_n": 393,
+          "sepet_n": 10,
+          "sepet": [
+            "CAR",
+            "EQT",
+            "RRC",
+            "EXE",
+            "MUSA",
+            "MUR",
+            "PDCE",
+            "SITM",
+            "MTDR",
+            "AA"
+          ],
+          "cikis_n": 2,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-07-29",
+          "hucre": "D",
+          "uye_n": 404,
+          "aday_n": 397,
+          "sepet_n": 10,
+          "sepet": [
+            "EQT",
+            "CAR",
+            "RRC",
+            "MUSA",
+            "PDCE",
+            "DINO",
+            "MTDR",
+            "EXE",
+            "FLR",
+            "HRB"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-08-31",
+          "hucre": "D",
+          "uye_n": 404,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "EQT",
+            "RRC",
+            "MTDR",
+            "CAR",
+            "MUSA",
+            "EXE",
+            "MUR",
+            "GO",
+            "AZPN",
+            "TRGP"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-09-30",
+          "hucre": "D",
+          "uye_n": 404,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "EQT",
+            "GO",
+            "HRB",
+            "MUSA",
+            "AZPN",
+            "FLR",
+            "EXE",
+            "DINO",
+            "MTDR",
+            "DY"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-10-31",
+          "hucre": "D",
+          "uye_n": 404,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "LNTH",
+            "HRB",
+            "MUSA",
+            "DINO",
+            "AR",
+            "AZPN",
+            "UNM",
+            "GO",
+            "EXE",
+            "KNSL"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate",
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-11-30",
+          "hucre": "D",
+          "uye_n": 404,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "LNTH",
+            "AR",
+            "UNM",
+            "DINO",
+            "NOV",
+            "MUR",
+            "MUSA",
+            "HRB",
+            "EXE",
+            "MTDR"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-12-30",
+          "hucre": "D",
+          "uye_n": 404,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "PBF",
+            "LNTH",
+            "AR",
+            "SMCI",
+            "DINO",
+            "HRB",
+            "MUR",
+            "MTDR",
+            "UNM",
+            "NOV"
+          ],
+          "cikis_n": 2,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-01-31",
+          "hucre": "D",
+          "uye_n": 404,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "PBF",
+            "CELH",
+            "SMCI",
+            "LNTH",
+            "FLR",
+            "HALO",
+            "HAE",
+            "UNM",
+            "HRB",
+            "AR"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-02-28",
+          "hucre": "D",
+          "uye_n": 404,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "PBF",
+            "DINO",
+            "SMCI",
+            "FLR",
+            "UTHR",
+            "HRB",
+            "CELH",
+            "CHX",
+            "VMI",
+            "IRDM"
+          ],
+          "cikis_n": 5,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-03-31",
+          "hucre": "D",
+          "uye_n": 404,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "SMCI",
+            "PBF",
+            "TEX",
+            "CELH",
+            "CROX",
+            "ALGM",
+            "SGI",
+            "VC",
+            "BDC",
+            "IRDM"
+          ],
+          "cikis_n": 6,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-04-28",
+          "hucre": "D",
+          "uye_n": 404,
+          "aday_n": 402,
+          "sepet_n": 10,
+          "sepet": [
+            "SMCI",
+            "AXON",
+            "WING",
+            "LSCC",
+            "ALGM",
+            "CROX",
+            "CELH",
+            "IRDM",
+            "DECK",
+            "BDC"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-05-31",
+          "hucre": "D",
+          "uye_n": 404,
+          "aday_n": 402,
+          "sepet_n": 10,
+          "sepet": [
+            "WING",
+            "CROX",
+            "SMCI",
+            "PEN",
+            "DECK",
+            "DKS",
+            "SWAV",
+            "MZTI",
+            "IRDM",
+            "COTY"
+          ],
+          "cikis_n": 5,
+          "cikis_sebepleri": [
+            "rotate",
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-06-30",
+          "hucre": "D",
+          "uye_n": 403,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "SMCI",
+            "WING",
+            "PEN",
+            "CROX",
+            "BLDR",
+            "CELH",
+            "ALGM",
+            "DECK",
+            "NATI",
+            "TMHC"
+          ],
+          "cikis_n": 5,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-07-31",
+          "hucre": "D",
+          "uye_n": 403,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "SMCI",
+            "PEN",
+            "BLDR",
+            "JBL",
+            "ALGM",
+            "TEX",
+            "TMHC",
+            "DECK",
+            "CLH",
+            "COTY"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-08-31",
+          "hucre": "D",
+          "uye_n": 402,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "SMCI",
+            "BLDR",
+            "ALGM",
+            "SAIA",
+            "TMHC",
+            "KBH",
+            "PEN",
+            "JBL",
+            "TOL",
+            "EME"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-09-29",
+          "hucre": "D",
+          "uye_n": 402,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "SMCI",
+            "WFRD",
+            "BLDR",
+            "SHC",
+            "SAIA",
+            "ESAB",
+            "CELH",
+            "PR",
+            "TEX",
+            "SSD"
+          ],
+          "cikis_n": 7,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-10-31",
+          "hucre": "D",
+          "uye_n": 402,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "SMCI",
+            "SHC",
+            "WFRD",
+            "BLDR",
+            "SAIA",
+            "JBL",
+            "ONTO",
+            "CELH",
+            "ESAB",
+            "LSCC"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-11-30",
+          "hucre": "D",
+          "uye_n": 402,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "SMCI",
+            "WFRD",
+            "XPO",
+            "BRBR",
+            "JBL",
+            "BLDR",
+            "MANH",
+            "NEU",
+            "SHC",
+            "VNT"
+          ],
+          "cikis_n": 5,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-12-29",
+          "hucre": "D",
+          "uye_n": 402,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "SMCI",
+            "XPO",
+            "ONTO",
+            "BRBR",
+            "RMBS",
+            "SSD",
+            "BLD",
+            "SAIA",
+            "MANH",
+            "CNM"
+          ],
+          "cikis_n": 6,
+          "cikis_sebepleri": [
+            "rotate",
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-01-31",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "SMCI",
+            "ELF",
+            "XPO",
+            "BRBR",
+            "ONTO",
+            "BLD",
+            "SSD",
+            "COKE",
+            "CNM",
+            "TOL"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-02-29",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "SMCI",
+            "XPO",
+            "ELF",
+            "ONTO",
+            "VST",
+            "DECK",
+            "BRBR",
+            "BLD",
+            "CNM",
+            "ETRN"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-03-28",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "XPO",
+            "CELH",
+            "ELF",
+            "VST",
+            "SAIA",
+            "MEDP",
+            "ONTO",
+            "FIX",
+            "CNM",
+            "P"
+          ],
+          "cikis_n": 5,
+          "cikis_sebepleri": [
+            "rotate",
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-04-30",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "VST",
+            "GAP",
+            "XPO",
+            "WSM",
+            "CELH",
+            "ETRN",
+            "P",
+            "ONTO",
+            "CNM",
+            "FIX"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-05-31",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "GAP",
+            "WSM",
+            "XPO",
+            "WFRD",
+            "EME",
+            "CNM",
+            "FIX",
+            "BLD",
+            "WING",
+            "CR"
+          ],
+          "cikis_n": 5,
+          "cikis_sebepleri": [
+            "rotate",
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-06-28",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "GAP",
+            "WSM",
+            "SFM",
+            "EME",
+            "KD",
+            "FIX",
+            "ONTO",
+            "WING",
+            "CNM",
+            "XPO"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-07-31",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "ANF",
+            "WING",
+            "GAP",
+            "SFM",
+            "WSM",
+            "KD",
+            "ELF",
+            "THC",
+            "ONTO",
+            "FIX"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-08-30",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "ANF",
+            "SFM",
+            "WING",
+            "CVLT",
+            "WSM",
+            "GAP",
+            "THC",
+            "DKS",
+            "COHR",
+            "FYBR"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-09-30",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "ANF",
+            "THC",
+            "SFM",
+            "COHR",
+            "CVLT",
+            "DKS",
+            "WING",
+            "GAP",
+            "FIX",
+            "COKE"
+          ],
+          "cikis_n": 2,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-10-31",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "THC",
+            "COHR",
+            "SFM",
+            "CVLT",
+            "ANF",
+            "WING",
+            "TOL",
+            "BURL",
+            "FIX",
+            "DOCS"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-11-29",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "SFM",
+            "COHR",
+            "THC",
+            "CVLT",
+            "EME",
+            "MTZ",
+            "FIX",
+            "MLI",
+            "IBKR",
+            "PPC"
+          ],
+          "cikis_n": 5,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-12-31",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "SFM",
+            "CRS",
+            "FIX",
+            "EME",
+            "IBKR",
+            "COHR",
+            "CVLT",
+            "CNX",
+            "JEF",
+            "DTM"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-01-31",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "CRS",
+            "SFM",
+            "GME",
+            "MTZ",
+            "EME",
+            "COHR",
+            "IBKR",
+            "DOCS",
+            "FIX",
+            "JEF"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-02-28",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "CRS",
+            "SFM",
+            "CHWY",
+            "DOCS",
+            "IBKR",
+            "MTZ",
+            "GME",
+            "TKO",
+            "JEF",
+            "DOCU"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-03-31",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "HIMS",
+            "CRS",
+            "DOCS",
+            "CHWY",
+            "SFM",
+            "SATS",
+            "GME",
+            "IBKR",
+            "KD",
+            "GWRE"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate",
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-04-30",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "DOCS",
+            "HIMS",
+            "SFM",
+            "CHWY",
+            "CRS",
+            "GME",
+            "GWRE",
+            "HALO",
+            "G",
+            "COKE"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-05-30",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "SFM",
+            "DOCS",
+            "DUOL",
+            "EXEL",
+            "GWRE",
+            "CHWY",
+            "CRS",
+            "HIMS",
+            "EXLS",
+            "PEGA"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-06-30",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "HIMS",
+            "DUOL",
+            "CRS",
+            "SFM",
+            "EXEL",
+            "DOCS",
+            "IBKR",
+            "CHWY",
+            "CIEN",
+            "DOCU"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-07-31",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "DUOL",
+            "HIMS",
+            "DOCS",
+            "CRS",
+            "EXEL",
+            "IBKR",
+            "LITE",
+            "FIVE",
+            "CHWY",
+            "CAR"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-08-29",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "HIMS",
+            "TLN",
+            "CAR",
+            "TWLO",
+            "FIX",
+            "LITE",
+            "FIVE",
+            "SATS",
+            "CRS",
+            "MTZ"
+          ],
+          "cikis_n": 5,
+          "cikis_sebepleri": [
+            "rotate",
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-09-30",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "MP",
+            "KTOS",
+            "SATS",
+            "HIMS",
+            "TLN",
+            "LITE",
+            "CELH",
+            "CAR",
+            "FIX",
+            "NXT"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-10-31",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "KTOS",
+            "MP",
+            "SATS",
+            "HIMS",
+            "LITE",
+            "TLN",
+            "CIEN",
+            "RMBS",
+            "FIX",
+            "CAR"
+          ],
+          "cikis_n": 2,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-11-28",
+          "hucre": "D",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "KTOS",
+            "MP",
+            "SATS",
+            "CIEN",
+            "NXT",
+            "LITE",
+            "CELH",
+            "FIX",
+            "STRL",
+            "AVAV"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-12-31",
+          "hucre": "D",
+          "uye_n": 400,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "MP",
+            "LITE",
+            "HL",
+            "SATS",
+            "KTOS",
+            "NXT",
+            "CIEN",
+            "FN",
+            "DY",
+            "STRL"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate",
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2026-01-30",
+          "hucre": "D",
+          "uye_n": 400,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "LITE",
+            "SATS",
+            "HL",
+            "TTMI",
+            "CIEN",
+            "MP",
+            "KTOS",
+            "STRL",
+            "FN",
+            "COHR"
+          ],
+          "cikis_n": 2,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2026-02-27",
+          "hucre": "D",
+          "uye_n": 400,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "LITE",
+            "HL",
+            "TTMI",
+            "KTOS",
+            "ARWR",
+            "SATS",
+            "COHR",
+            "STRL",
+            "NXT",
+            "MKSI"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate",
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2026-03-31",
+          "hucre": "D",
+          "uye_n": 400,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "TTMI",
+            "ARWR",
+            "HL",
+            "VICR",
+            "STRL",
+            "AEIS",
+            "ATI",
+            "MKSI",
+            "FIVE",
+            "KTOS"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate",
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2026-04-30",
+          "hucre": "D",
+          "uye_n": 400,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "TTMI",
+            "ARWR",
+            "VICR",
+            "AEIS",
+            "MKSI",
+            "HL",
+            "VAL",
+            "FIVE",
+            "NXT",
+            "PBF"
+          ],
+          "cikis_n": 3,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2026-05-29",
+          "hucre": "D",
+          "uye_n": 400,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "VICR",
+            "TTMI",
+            "ARWR",
+            "AMKR",
+            "HL",
+            "MKSI",
+            "DOCN",
+            "AEIS",
+            "ONTO",
+            "MP"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2026-06-30",
+          "hucre": "D",
+          "uye_n": 400,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "VICR",
+            "DOCN",
+            "ARWR",
+            "VIAV",
+            "TTMI",
+            "STRL",
+            "SMTC",
+            "SITM",
+            "AMKR",
+            "MKSI"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2026-07-31",
+          "hucre": "D",
+          "uye_n": 400,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "VICR",
+            "DOCN",
+            "ARWR",
+            "VIAV",
+            "MKSI",
+            "ONTO",
+            "TTMI",
+            "AMKR",
+            "SITM",
+            "BTSG"
+          ],
+          "cikis_n": 2,
+          "cikis_sebepleri": [
+            "rotate"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        }
+      ]
+    },
+    "C": {
+      "tanim": {
+        "ad": "C_chandelier_pit_midcap",
+        "cikis": "chandelier_mevcut",
+        "evren": "sp400_pit_asof",
+        "cita_esli": "cita_esli",
+        "cita_taban": "cita_taban"
+      },
+      "stats": {
+        "total_return": 0.8538894111730779,
+        "cagr": 0.12983340419349965,
+        "vol_ann": 0.3045915144105294,
+        "sharpe": 0.4262541733795964,
+        "max_dd": -0.38469334475817796,
+        "years": 5.0568104038329915,
+        "n_ay": 60,
+        "ilk_gun": "2021-07-30",
+        "son_gun": "2026-08-20",
+        "ilk_equity": 100000.0,
+        "son_equity": 185388.94111730778
+      },
+      "fazla": {
+        "ann_pct": 8.171916853602708,
+        "t_nw": 0.8474077129964754,
+        "t_neden": null,
+        "ci95": [
+          -6.844593941339888,
+          25.373211913081416
+        ],
+        "ci0_disi": false,
+        "ci_neden": null,
+        "n_months": 60,
+        "pozitif_ay_pct": 55.00000000000001,
+        "fazla_std_yillik_pct": 23.14465004062599,
+        "tanim": "aylık (hücre − çıta) serisi; ann_pct = ortalama × 12; t = Newey-West 3 gecikme; CI = dairesel blok-bootstrap (12 ay blok, 2000 tekrar, sabit tohum)"
+      },
+      "fazla_taban_citaya": {
+        "ann_pct": 8.114707630119822,
+        "t_nw": 0.88248126738686,
+        "t_neden": null,
+        "ci95": [
+          -6.014814595612619,
+          24.407664572089864
+        ],
+        "ci0_disi": false,
+        "ci_neden": null,
+        "n_months": 60,
+        "pozitif_ay_pct": 55.00000000000001,
+        "fazla_std_yillik_pct": 22.41173651356519,
+        "tanim": "aylık (hücre − çıta) serisi; ann_pct = ortalama × 12; t = Newey-West 3 gecikme; CI = dairesel blok-bootstrap (12 ay blok, 2000 tekrar, sabit tohum)"
+      },
+      "yil_yil_esli_citaya": {
+        "2021": {
+          "kol_pct": 6.247423993930501,
+          "cita_pct": 3.9040907756931142,
+          "fazla_puan": 2.3433332182373867,
+          "n_ay": 5
+        },
+        "2022": {
+          "kol_pct": -18.543004707535538,
+          "cita_pct": -12.960822365970227,
+          "fazla_puan": -5.582182341565312,
+          "n_ay": 12
+        },
+        "2023": {
+          "kol_pct": 4.387064584272005,
+          "cita_pct": 15.467483468960985,
+          "fazla_puan": -11.080418884688982,
+          "n_ay": 12
+        },
+        "2024": {
+          "kol_pct": 16.115074410825425,
+          "cita_pct": 8.088833611756252,
+          "fazla_puan": 8.026240799069173,
+          "n_ay": 12
+        },
+        "2025": {
+          "kol_pct": 23.102854969446263,
+          "cita_pct": 5.513836186852883,
+          "fazla_puan": 17.589018782593378,
+          "n_ay": 12
+        },
+        "2026": {
+          "kol_pct": 35.278415629062906,
+          "cita_pct": 12.771084176763381,
+          "fazla_puan": 22.50733145229953,
+          "n_ay": 7
+        }
+      },
+      "devir": {
+        "n_rebalans": 61,
+        "islem_bacagi": 939,
+        "n_giris": 340,
+        "n_kapanan_islem": 330,
+        "cikislar": {
+          "chandelier": 318,
+          "rotate": 0,
+          "uyelik": 12,
+          "no_data": 0,
+          "hedef_disi": 0
+        },
+        "friksiyon_usd": 7288.7878,
+        "fiyatsiz_cikis": 0,
+        "fiyatsiz_giris": 0
+      },
+      "islem_ornegi": [
+        {
+          "sym": "AEO",
+          "giris": "2021-08-02",
+          "cikis": "2021-08-18",
+          "sebep": "chandelier",
+          "giris_px": 34.45,
+          "cikis_px": 30.735,
+          "getiri_pct": -10.7837
+        },
+        {
+          "sym": "OLN",
+          "giris": "2021-08-02",
+          "cikis": "2021-08-20",
+          "sebep": "chandelier",
+          "giris_px": 47.38,
+          "cikis_px": 43.26,
+          "getiri_pct": -8.6957
+        },
+        {
+          "sym": "X",
+          "giris": "2021-08-02",
+          "cikis": "2021-09-09",
+          "sebep": "chandelier",
+          "giris_px": 26.385,
+          "cikis_px": 25.685,
+          "getiri_pct": -2.653
+        },
+        {
+          "sym": "KSS",
+          "giris": "2021-08-02",
+          "cikis": "2021-09-13",
+          "sebep": "chandelier",
+          "giris_px": 50.905,
+          "cikis_px": 52.2,
+          "getiri_pct": 2.544
+        },
+        {
+          "sym": "CLF",
+          "giris": "2021-08-02",
+          "cikis": "2021-09-15",
+          "sebep": "chandelier",
+          "giris_px": 25.14,
+          "cikis_px": 22.465,
+          "getiri_pct": -10.6404
+        },
+        {
+          "sym": "CPRI",
+          "giris": "2021-08-02",
+          "cikis": "2021-09-15",
+          "sebep": "chandelier",
+          "giris_px": 57.33,
+          "cikis_px": 51.9,
+          "getiri_pct": -9.4715
+        },
+        {
+          "sym": "SLM",
+          "giris": "2021-08-02",
+          "cikis": "2021-09-15",
+          "sebep": "chandelier",
+          "giris_px": 18.95,
+          "cikis_px": 17.41,
+          "getiri_pct": -8.1266
+        },
+        {
+          "sym": "OLN",
+          "giris": "2021-09-01",
+          "cikis": "2021-09-21",
+          "sebep": "chandelier",
+          "giris_px": 49.99,
+          "cikis_px": 46.165,
+          "getiri_pct": -7.6515
+        },
+        {
+          "sym": "GME",
+          "giris": "2021-09-01",
+          "cikis": "2021-09-29",
+          "sebep": "chandelier",
+          "giris_px": 55.9,
+          "cikis_px": 45.09,
+          "getiri_pct": -19.3381
+        },
+        {
+          "sym": "CROX",
+          "giris": "2021-08-02",
+          "cikis": "2021-10-05",
+          "sebep": "chandelier",
+          "giris_px": 137.34,
+          "cikis_px": 136.55,
+          "getiri_pct": -0.5752
+        },
+        {
+          "sym": "COTY",
+          "giris": "2021-10-01",
+          "cikis": "2021-10-20",
+          "sebep": "chandelier",
+          "giris_px": 8.31,
+          "cikis_px": 7.48,
+          "getiri_pct": -9.988
+        },
+        {
+          "sym": "CAR",
+          "giris": "2021-08-02",
+          "cikis": "2021-11-03",
+          "sebep": "chandelier",
+          "giris_px": 83.75,
+          "cikis_px": 310.25,
+          "getiri_pct": 270.4478
+        },
+        {
+          "sym": "CLF",
+          "giris": "2021-10-01",
+          "cikis": "2021-11-05",
+          "sebep": "chandelier",
+          "giris_px": 19.88,
+          "cikis_px": 22.44,
+          "getiri_pct": 12.8773
+        },
+        {
+          "sym": "GME",
+          "giris": "2021-10-01",
+          "cikis": "2021-11-10",
+          "sebep": "chandelier",
+          "giris_px": 44.62,
+          "cikis_px": 50.18,
+          "getiri_pct": 12.4608
+        },
+        {
+          "sym": "LNW",
+          "giris": "2021-08-02",
+          "cikis": "2021-11-12",
+          "sebep": "chandelier",
+          "giris_px": 62.605,
+          "cikis_px": 73.3,
+          "getiri_pct": 17.0833
+        },
+        {
+          "sym": "MUR",
+          "giris": "2021-11-01",
+          "cikis": "2021-11-22",
+          "sebep": "chandelier",
+          "giris_px": 28.49,
+          "cikis_px": 26.31,
+          "getiri_pct": -7.6518
+        },
+        {
+          "sym": "X",
+          "giris": "2021-10-01",
+          "cikis": "2021-11-29",
+          "sebep": "chandelier",
+          "giris_px": 22.02,
+          "cikis_px": 24.6,
+          "getiri_pct": 11.7166
+        },
+        {
+          "sym": "CPRI",
+          "giris": "2021-10-01",
+          "cikis": "2021-12-01",
+          "sebep": "chandelier",
+          "giris_px": 48.5,
+          "cikis_px": 61.445,
+          "getiri_pct": 26.6907
+        },
+        {
+          "sym": "OLN",
+          "giris": "2021-10-01",
+          "cikis": "2021-12-01",
+          "sebep": "chandelier",
+          "giris_px": 48.48,
+          "cikis_px": 55.8,
+          "getiri_pct": 15.099
+        },
+        {
+          "sym": "SBNY",
+          "giris": "2021-11-01",
+          "cikis": "2021-12-01",
+          "sebep": "chandelier",
+          "giris_px": 300.0,
+          "cikis_px": 312.645,
+          "getiri_pct": 4.215
+        },
+        {
+          "sym": "TRGP",
+          "giris": "2021-10-01",
+          "cikis": "2021-12-01",
+          "sebep": "chandelier",
+          "giris_px": 49.595,
+          "cikis_px": 53.015,
+          "getiri_pct": 6.8959
+        },
+        {
+          "sym": "GME",
+          "giris": "2021-12-01",
+          "cikis": "2021-12-14",
+          "sebep": "chandelier",
+          "giris_px": 49.91,
+          "cikis_px": 32.81,
+          "getiri_pct": -34.2617
+        },
+        {
+          "sym": "CAR",
+          "giris": "2021-12-01",
+          "cikis": "2021-12-17",
+          "sebep": "chandelier",
+          "giris_px": 281.99,
+          "cikis_px": 210.2,
+          "getiri_pct": -25.4583
+        },
+        {
+          "sym": "CROX",
+          "giris": "2021-12-01",
+          "cikis": "2021-12-17",
+          "sebep": "chandelier",
+          "giris_px": 167.435,
+          "cikis_px": 134.77,
+          "getiri_pct": -19.5091
+        },
+        {
+          "sym": "SITM",
+          "giris": "2021-12-01",
+          "cikis": "2021-12-17",
+          "sebep": "chandelier",
+          "giris_px": 311.12,
+          "cikis_px": 256.9,
+          "getiri_pct": -17.4274
+        }
+      ],
+      "ay_sonu_defteri": [
+        {
+          "ay_sonu": "2021-07-30",
+          "hucre": "C",
+          "uye_n": 403,
+          "aday_n": 391,
+          "sepet_n": 10,
+          "sepet": [
+            "AEO",
+            "CAR",
+            "CLF",
+            "CPRI",
+            "CROX",
+            "KSS",
+            "LNW",
+            "OLN",
+            "SLM",
+            "X"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2021-08-31",
+          "hucre": "C",
+          "uye_n": 403,
+          "aday_n": 390,
+          "sepet_n": 10,
+          "sepet": [
+            "CAR",
+            "CLF",
+            "CPRI",
+            "CROX",
+            "GME",
+            "KSS",
+            "LNW",
+            "OLN",
+            "SLM",
+            "X"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2021-09-30",
+          "hucre": "C",
+          "uye_n": 403,
+          "aday_n": 391,
+          "sepet_n": 10,
+          "sepet": [
+            "CAR",
+            "CLF",
+            "COTY",
+            "CPRI",
+            "CROX",
+            "GME",
+            "LNW",
+            "OLN",
+            "TRGP",
+            "X"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2021-10-29",
+          "hucre": "C",
+          "uye_n": 403,
+          "aday_n": 391,
+          "sepet_n": 10,
+          "sepet": [
+            "CAR",
+            "CLF",
+            "CPRI",
+            "GME",
+            "LNW",
+            "MUR",
+            "OLN",
+            "SBNY",
+            "TRGP",
+            "X"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2021-11-30",
+          "hucre": "C",
+          "uye_n": 403,
+          "aday_n": 391,
+          "sepet_n": 10,
+          "sepet": [
+            "CAR",
+            "CHX",
+            "CLF",
+            "CROX",
+            "GME",
+            "MUR",
+            "SITM",
+            "SYNA",
+            "TDC",
+            "THC"
+          ],
+          "cikis_n": 4,
+          "cikis_sebepleri": [
+            "chandelier"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2021-12-31",
+          "hucre": "C",
+          "uye_n": 403,
+          "aday_n": 393,
+          "sepet_n": 10,
+          "sepet": [
+            "CAR",
+            "CLF",
+            "CROX",
+            "GME",
+            "M",
+            "OLN",
+            "SITM",
+            "SYNA",
+            "TDC",
+            "THC"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-01-31",
+          "hucre": "C",
+          "uye_n": 403,
+          "aday_n": 394,
+          "sepet_n": 10,
+          "sepet": [
+            "AA",
+            "BLDR",
+            "CALX",
+            "CAR",
+            "LPX",
+            "MUR",
+            "OLN",
+            "SITM",
+            "SYNA",
+            "THC"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-02-28",
+          "hucre": "C",
+          "uye_n": 402,
+          "aday_n": 394,
+          "sepet_n": 10,
+          "sepet": [
+            "AA",
+            "BLDR",
+            "CALX",
+            "CAR",
+            "LPX",
+            "MUR",
+            "OLN",
+            "SITM",
+            "SYNA",
+            "TRGP"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-03-31",
+          "hucre": "C",
+          "uye_n": 402,
+          "aday_n": 393,
+          "sepet_n": 10,
+          "sepet": [
+            "AA",
+            "CAR",
+            "EXE",
+            "MIME",
+            "MUR",
+            "PDCE",
+            "RRC",
+            "SITM",
+            "SYNA",
+            "TRGP"
+          ],
+          "cikis_n": 2,
+          "cikis_sebepleri": [
+            "chandelier"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-04-29",
+          "hucre": "C",
+          "uye_n": 402,
+          "aday_n": 391,
+          "sepet_n": 10,
+          "sepet": [
+            "AA",
+            "CAR",
+            "EXE",
+            "MIME",
+            "MTDR",
+            "MUR",
+            "PDCE",
+            "RRC",
+            "SITM",
+            "TRGP"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-05-31",
+          "hucre": "C",
+          "uye_n": 402,
+          "aday_n": 393,
+          "sepet_n": 10,
+          "sepet": [
+            "AA",
+            "CAR",
+            "EQT",
+            "EXE",
+            "MTDR",
+            "MUR",
+            "MUSA",
+            "RRC",
+            "SITM",
+            "TRGP"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-06-30",
+          "hucre": "C",
+          "uye_n": 403,
+          "aday_n": 393,
+          "sepet_n": 10,
+          "sepet": [
+            "AA",
+            "CAR",
+            "EQT",
+            "EXE",
+            "MTDR",
+            "MUR",
+            "MUSA",
+            "PDCE",
+            "RRC",
+            "SITM"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-07-29",
+          "hucre": "C",
+          "uye_n": 404,
+          "aday_n": 397,
+          "sepet_n": 10,
+          "sepet": [
+            "AA",
+            "CAR",
+            "EQT",
+            "EXE",
+            "MTDR",
+            "MUR",
+            "MUSA",
+            "PDCE",
+            "RRC",
+            "SITM"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-08-31",
+          "hucre": "C",
+          "uye_n": 404,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "AA",
+            "AZPN",
+            "EQT",
+            "EXE",
+            "GO",
+            "MTDR",
+            "MUR",
+            "MUSA",
+            "RRC",
+            "TRGP"
+          ],
+          "cikis_n": 1,
+          "cikis_sebepleri": [
+            "chandelier"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-09-30",
+          "hucre": "C",
+          "uye_n": 404,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "AZPN",
+            "DINO",
+            "DY",
+            "EQT",
+            "EXE",
+            "FLR",
+            "GO",
+            "HRB",
+            "MTDR",
+            "MUSA"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-10-31",
+          "hucre": "C",
+          "uye_n": 404,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "AZPN",
+            "DINO",
+            "DY",
+            "EXE",
+            "FLR",
+            "GO",
+            "HRB",
+            "LNTH",
+            "MTDR",
+            "MUSA"
+          ],
+          "cikis_n": 1,
+          "cikis_sebepleri": [
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-11-30",
+          "hucre": "C",
+          "uye_n": 404,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "AR",
+            "DINO",
+            "EXE",
+            "FLR",
+            "HRB",
+            "LNTH",
+            "MTDR",
+            "MUR",
+            "NOV",
+            "UNM"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2022-12-30",
+          "hucre": "C",
+          "uye_n": 404,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "AR",
+            "DINO",
+            "FLR",
+            "HRB",
+            "LNTH",
+            "MTDR",
+            "MUR",
+            "PBF",
+            "SMCI",
+            "UNM"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-01-31",
+          "hucre": "C",
+          "uye_n": 404,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "AR",
+            "CELH",
+            "DINO",
+            "HRB",
+            "LNTH",
+            "MTDR",
+            "MUR",
+            "PBF",
+            "SMCI",
+            "UNM"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-02-28",
+          "hucre": "C",
+          "uye_n": 404,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "CELH",
+            "CHX",
+            "DINO",
+            "FLR",
+            "LNTH",
+            "PBF",
+            "SMCI",
+            "UNM",
+            "UTHR",
+            "VMI"
+          ],
+          "cikis_n": 1,
+          "cikis_sebepleri": [
+            "chandelier"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-03-31",
+          "hucre": "C",
+          "uye_n": 404,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "ALGM",
+            "BDC",
+            "CELH",
+            "CROX",
+            "LNTH",
+            "PBF",
+            "SGI",
+            "SMCI",
+            "TEX",
+            "VC"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-04-28",
+          "hucre": "C",
+          "uye_n": 404,
+          "aday_n": 402,
+          "sepet_n": 10,
+          "sepet": [
+            "ALGM",
+            "AXON",
+            "CELH",
+            "CROX",
+            "DECK",
+            "IRDM",
+            "LNTH",
+            "LSCC",
+            "SMCI",
+            "WING"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-05-31",
+          "hucre": "C",
+          "uye_n": 404,
+          "aday_n": 402,
+          "sepet_n": 10,
+          "sepet": [
+            "ALGM",
+            "CELH",
+            "CROX",
+            "DECK",
+            "DKS",
+            "LSCC",
+            "PEN",
+            "SMCI",
+            "SWAV",
+            "WING"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-06-30",
+          "hucre": "C",
+          "uye_n": 403,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "ALGM",
+            "CELH",
+            "CROX",
+            "DECK",
+            "DKS",
+            "LSCC",
+            "PEN",
+            "SMCI",
+            "SWAV",
+            "WING"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-07-31",
+          "hucre": "C",
+          "uye_n": 403,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "ALGM",
+            "BLDR",
+            "CELH",
+            "DECK",
+            "DKS",
+            "JBL",
+            "PEN",
+            "SMCI",
+            "TEX",
+            "TMHC"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-08-31",
+          "hucre": "C",
+          "uye_n": 402,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "ALGM",
+            "BLDR",
+            "CELH",
+            "JBL",
+            "KBH",
+            "PEN",
+            "SAIA",
+            "SMCI",
+            "TMHC",
+            "TOL"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-09-29",
+          "hucre": "C",
+          "uye_n": 402,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "BLDR",
+            "CELH",
+            "ESAB",
+            "PR",
+            "SAIA",
+            "SHC",
+            "SMCI",
+            "SSD",
+            "TEX",
+            "WFRD"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-10-31",
+          "hucre": "C",
+          "uye_n": 402,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "BLDR",
+            "CELH",
+            "ESAB",
+            "JBL",
+            "ONTO",
+            "PR",
+            "SAIA",
+            "SHC",
+            "SMCI",
+            "WFRD"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-11-30",
+          "hucre": "C",
+          "uye_n": 402,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "BLDR",
+            "BRBR",
+            "ESAB",
+            "JBL",
+            "ONTO",
+            "SAIA",
+            "SHC",
+            "SMCI",
+            "WFRD",
+            "XPO"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2023-12-29",
+          "hucre": "C",
+          "uye_n": 402,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "BLD",
+            "BRBR",
+            "ESAB",
+            "ONTO",
+            "RMBS",
+            "SAIA",
+            "SHC",
+            "SMCI",
+            "SSD",
+            "XPO"
+          ],
+          "cikis_n": 2,
+          "cikis_sebepleri": [
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-01-31",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "BLD",
+            "BRBR",
+            "COKE",
+            "ELF",
+            "ONTO",
+            "RMBS",
+            "SAIA",
+            "SMCI",
+            "SSD",
+            "XPO"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-02-29",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "BLD",
+            "BRBR",
+            "DECK",
+            "ELF",
+            "ONTO",
+            "SAIA",
+            "SMCI",
+            "SSD",
+            "VST",
+            "XPO"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-03-28",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "BLD",
+            "BRBR",
+            "CELH",
+            "ELF",
+            "FIX",
+            "MEDP",
+            "ONTO",
+            "SAIA",
+            "VST",
+            "XPO"
+          ],
+          "cikis_n": 2,
+          "cikis_sebepleri": [
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-04-30",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "CELH",
+            "CNM",
+            "ETRN",
+            "FIX",
+            "GAP",
+            "ONTO",
+            "P",
+            "VST",
+            "WSM",
+            "XPO"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-05-31",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "BLD",
+            "CNM",
+            "EME",
+            "ETRN",
+            "FIX",
+            "GAP",
+            "ONTO",
+            "WFRD",
+            "WSM",
+            "XPO"
+          ],
+          "cikis_n": 2,
+          "cikis_sebepleri": [
+            "chandelier",
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-06-28",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "EME",
+            "FIX",
+            "GAP",
+            "KD",
+            "ONTO",
+            "SFM",
+            "WFRD",
+            "WING",
+            "WSM",
+            "XPO"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-07-31",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "ANF",
+            "ELF",
+            "GAP",
+            "KD",
+            "ONTO",
+            "SFM",
+            "THC",
+            "WING",
+            "WSM",
+            "XPO"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-08-30",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "ANF",
+            "CVLT",
+            "DKS",
+            "GAP",
+            "ONTO",
+            "SFM",
+            "THC",
+            "WING",
+            "WSM",
+            "XPO"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-09-30",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "ANF",
+            "COHR",
+            "COKE",
+            "CVLT",
+            "DKS",
+            "FIX",
+            "GAP",
+            "SFM",
+            "THC",
+            "WING"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-10-31",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "ANF",
+            "BURL",
+            "CVLT",
+            "DOCS",
+            "FIX",
+            "GAP",
+            "SFM",
+            "THC",
+            "TOL",
+            "WING"
+          ],
+          "cikis_n": 2,
+          "cikis_sebepleri": [
+            "chandelier"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-11-29",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "ANF",
+            "BURL",
+            "COHR",
+            "CVLT",
+            "FIX",
+            "GAP",
+            "SFM",
+            "THC",
+            "TOL",
+            "WING"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2024-12-31",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "BURL",
+            "CNX",
+            "COHR",
+            "CRS",
+            "CVLT",
+            "EME",
+            "FIX",
+            "GAP",
+            "IBKR",
+            "SFM"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-01-31",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "BURL",
+            "COHR",
+            "CRS",
+            "DOCS",
+            "EME",
+            "FIX",
+            "GME",
+            "IBKR",
+            "MTZ",
+            "SFM"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-02-28",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "CHWY",
+            "CRS",
+            "DOCS",
+            "DOCU",
+            "GME",
+            "IBKR",
+            "JEF",
+            "MTZ",
+            "SFM",
+            "TKO"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-03-31",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "CHWY",
+            "CRS",
+            "DOCS",
+            "DOCU",
+            "GME",
+            "HIMS",
+            "IBKR",
+            "KD",
+            "SATS",
+            "SFM"
+          ],
+          "cikis_n": 1,
+          "cikis_sebepleri": [
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-04-30",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "CHWY",
+            "CRS",
+            "DOCS",
+            "GME",
+            "GWRE",
+            "HALO",
+            "HIMS",
+            "IBKR",
+            "KD",
+            "SFM"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-05-30",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "CHWY",
+            "CRS",
+            "DOCS",
+            "DUOL",
+            "EXEL",
+            "GWRE",
+            "HIMS",
+            "IBKR",
+            "KD",
+            "SFM"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-06-30",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "CHWY",
+            "CIEN",
+            "CRS",
+            "DOCS",
+            "DUOL",
+            "EXEL",
+            "HIMS",
+            "IBKR",
+            "KD",
+            "SFM"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-07-31",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "CAR",
+            "CHWY",
+            "CIEN",
+            "DOCS",
+            "DUOL",
+            "EXEL",
+            "FIVE",
+            "HIMS",
+            "IBKR",
+            "LITE"
+          ],
+          "cikis_n": 2,
+          "cikis_sebepleri": [
+            "chandelier"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-08-29",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "CAR",
+            "CHWY",
+            "DOCS",
+            "EXEL",
+            "FIVE",
+            "FIX",
+            "HIMS",
+            "LITE",
+            "TLN",
+            "TWLO"
+          ],
+          "cikis_n": 1,
+          "cikis_sebepleri": [
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-09-30",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "CAR",
+            "DOCS",
+            "EXEL",
+            "FIVE",
+            "FIX",
+            "HIMS",
+            "LITE",
+            "MP",
+            "TLN",
+            "TWLO"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-10-31",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "CIEN",
+            "FIX",
+            "HIMS",
+            "KTOS",
+            "LITE",
+            "MP",
+            "RMBS",
+            "SATS",
+            "TLN",
+            "TWLO"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-11-28",
+          "hucre": "C",
+          "uye_n": 401,
+          "aday_n": 401,
+          "sepet_n": 10,
+          "sepet": [
+            "CELH",
+            "CIEN",
+            "FIX",
+            "KTOS",
+            "LITE",
+            "MP",
+            "NXT",
+            "SATS",
+            "STRL",
+            "TLN"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2025-12-31",
+          "hucre": "C",
+          "uye_n": 400,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "CELH",
+            "CIEN",
+            "FN",
+            "HL",
+            "KTOS",
+            "LITE",
+            "MP",
+            "NXT",
+            "SATS",
+            "STRL"
+          ],
+          "cikis_n": 1,
+          "cikis_sebepleri": [
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2026-01-30",
+          "hucre": "C",
+          "uye_n": 400,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "CELH",
+            "CIEN",
+            "FN",
+            "HL",
+            "LITE",
+            "MP",
+            "NXT",
+            "SATS",
+            "STRL",
+            "TTMI"
+          ],
+          "cikis_n": 1,
+          "cikis_sebepleri": [
+            "chandelier"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2026-02-27",
+          "hucre": "C",
+          "uye_n": 400,
+          "aday_n": 400,
+          "sepet_n": 10,
+          "sepet": [
+            "ARWR",
+            "COHR",
+            "FN",
+            "HL",
+            "KTOS",
+            "LITE",
+            "NXT",
+            "SATS",
+            "STRL",
+            "TTMI"
+          ],
+          "cikis_n": 1,
+          "cikis_sebepleri": [
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2026-03-31",
+          "hucre": "C",
+          "uye_n": 400,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "AEIS",
+            "ARWR",
+            "ATI",
+            "FIVE",
+            "HL",
+            "KTOS",
+            "MKSI",
+            "STRL",
+            "TTMI",
+            "VICR"
+          ],
+          "cikis_n": 2,
+          "cikis_sebepleri": [
+            "uyelik"
+          ],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2026-04-30",
+          "hucre": "C",
+          "uye_n": 400,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "AEIS",
+            "ARWR",
+            "ATI",
+            "FIVE",
+            "HL",
+            "MKSI",
+            "STRL",
+            "TTMI",
+            "VAL",
+            "VICR"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2026-05-29",
+          "hucre": "C",
+          "uye_n": 400,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "AEIS",
+            "AMKR",
+            "ARWR",
+            "ATI",
+            "DOCN",
+            "HL",
+            "MKSI",
+            "STRL",
+            "TTMI",
+            "VICR"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2026-06-30",
+          "hucre": "C",
+          "uye_n": 400,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "AEIS",
+            "AMKR",
+            "ARWR",
+            "ATI",
+            "DOCN",
+            "MKSI",
+            "STRL",
+            "TTMI",
+            "VIAV",
+            "VICR"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        },
+        {
+          "ay_sonu": "2026-07-31",
+          "hucre": "C",
+          "uye_n": 400,
+          "aday_n": 399,
+          "sepet_n": 10,
+          "sepet": [
+            "AMKR",
+            "ARWR",
+            "ATI",
+            "DOCN",
+            "MKSI",
+            "ONTO",
+            "SITM",
+            "TTMI",
+            "VIAV",
+            "VICR"
+          ],
+          "cikis_n": 0,
+          "cikis_sebepleri": [],
+          "dolduruldu_hucre": 4481,
+          "dolduruldu_sembol": 403
+        }
+      ]
+    }
+  },
+  "citalar": {
+    "cita_esli": {
+      "tanim": "aynı gün AS-OF üyelerin EW aylık-rebalans getirisi (aynı sürtünme) — kart çıtası",
+      "stats": {
+        "total_return": 0.3605283590565189,
+        "cagr": 0.06277442269424638,
+        "vol_ann": 0.18411592926004164,
+        "sharpe": 0.34095052474023063,
+        "max_dd": -0.24528900333051695,
+        "years": 5.0568104038329915,
+        "n_ay": 60,
+        "ilk_gun": "2021-07-30",
+        "son_gun": "2026-08-20",
+        "ilk_equity": 100000.0,
+        "son_equity": 136052.83590565188
+      },
+      "uye_sayisi": {
+        "ilk": 398,
+        "son": 399,
+        "ay_ort": 401.0,
+        "ay_n": 61,
+        "neden": null
+      },
+      "friksiyon_usd": 635.3908,
+      "islem_bacagi": 24661
+    },
+    "cita_taban": {
+      "tanim": "EW BUY&HOLD: ilk karar ay-sonunun as-of üyeleri bir kez alınır, tutulur (rebalans YOK); yalnız fiyatsız/bayat isim kapanır",
+      "stats": {
+        "total_return": 0.37104921821751025,
+        "cagr": 0.06439460939270414,
+        "vol_ann": 0.17224750143604636,
+        "sharpe": 0.3738493090224195,
+        "max_dd": -0.23073943418725873,
+        "years": 5.0568104038329915,
+        "n_ay": 60,
+        "ilk_gun": "2021-07-30",
+        "son_gun": "2026-08-20",
+        "ilk_equity": 100000.0,
+        "son_equity": 137104.92182175102
+      },
+      "uye_sayisi": {
+        "ilk": 398,
+        "son": 398,
+        "ay_ort": 398.0,
+        "ay_n": 1,
+        "neden": null
+      },
+      "friksiyon_usd": 113.5597,
+      "islem_bacagi": 451
+    }
+  },
+  "aday": {
+    "ay_n": 61,
+    "aday_n_min": 390,
+    "aday_n_ort": 398.4754098360656,
+    "aday_n_son": 399,
+    "seri": [
+      {
+        "ay_sonu": "2021-07-30",
+        "aday_n": 391,
+        "uye_n": 403
+      },
+      {
+        "ay_sonu": "2021-08-31",
+        "aday_n": 390,
+        "uye_n": 403
+      },
+      {
+        "ay_sonu": "2021-09-30",
+        "aday_n": 391,
+        "uye_n": 403
+      },
+      {
+        "ay_sonu": "2021-10-29",
+        "aday_n": 391,
+        "uye_n": 403
+      },
+      {
+        "ay_sonu": "2021-11-30",
+        "aday_n": 391,
+        "uye_n": 403
+      },
+      {
+        "ay_sonu": "2021-12-31",
+        "aday_n": 393,
+        "uye_n": 403
+      },
+      {
+        "ay_sonu": "2022-01-31",
+        "aday_n": 394,
+        "uye_n": 403
+      },
+      {
+        "ay_sonu": "2022-02-28",
+        "aday_n": 394,
+        "uye_n": 402
+      },
+      {
+        "ay_sonu": "2022-03-31",
+        "aday_n": 393,
+        "uye_n": 402
+      },
+      {
+        "ay_sonu": "2022-04-29",
+        "aday_n": 391,
+        "uye_n": 402
+      },
+      {
+        "ay_sonu": "2022-05-31",
+        "aday_n": 393,
+        "uye_n": 402
+      },
+      {
+        "ay_sonu": "2022-06-30",
+        "aday_n": 393,
+        "uye_n": 403
+      },
+      {
+        "ay_sonu": "2022-07-29",
+        "aday_n": 397,
+        "uye_n": 404
+      },
+      {
+        "ay_sonu": "2022-08-31",
+        "aday_n": 399,
+        "uye_n": 404
+      },
+      {
+        "ay_sonu": "2022-09-30",
+        "aday_n": 399,
+        "uye_n": 404
+      },
+      {
+        "ay_sonu": "2022-10-31",
+        "aday_n": 399,
+        "uye_n": 404
+      },
+      {
+        "ay_sonu": "2022-11-30",
+        "aday_n": 399,
+        "uye_n": 404
+      },
+      {
+        "ay_sonu": "2022-12-30",
+        "aday_n": 399,
+        "uye_n": 404
+      },
+      {
+        "ay_sonu": "2023-01-31",
+        "aday_n": 400,
+        "uye_n": 404
+      },
+      {
+        "ay_sonu": "2023-02-28",
+        "aday_n": 400,
+        "uye_n": 404
+      },
+      {
+        "ay_sonu": "2023-03-31",
+        "aday_n": 400,
+        "uye_n": 404
+      },
+      {
+        "ay_sonu": "2023-04-28",
+        "aday_n": 402,
+        "uye_n": 404
+      },
+      {
+        "ay_sonu": "2023-05-31",
+        "aday_n": 402,
+        "uye_n": 404
+      },
+      {
+        "ay_sonu": "2023-06-30",
+        "aday_n": 400,
+        "uye_n": 403
+      },
+      {
+        "ay_sonu": "2023-07-31",
+        "aday_n": 400,
+        "uye_n": 403
+      },
+      {
+        "ay_sonu": "2023-08-31",
+        "aday_n": 399,
+        "uye_n": 402
+      },
+      {
+        "ay_sonu": "2023-09-29",
+        "aday_n": 400,
+        "uye_n": 402
+      },
+      {
+        "ay_sonu": "2023-10-31",
+        "aday_n": 399,
+        "uye_n": 402
+      },
+      {
+        "ay_sonu": "2023-11-30",
+        "aday_n": 399,
+        "uye_n": 402
+      },
+      {
+        "ay_sonu": "2023-12-29",
+        "aday_n": 400,
+        "uye_n": 402
+      },
+      {
+        "ay_sonu": "2024-01-31",
+        "aday_n": 399,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2024-02-29",
+        "aday_n": 399,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2024-03-28",
+        "aday_n": 399,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2024-04-30",
+        "aday_n": 400,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2024-05-31",
+        "aday_n": 400,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2024-06-28",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2024-07-31",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2024-08-30",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2024-09-30",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2024-10-31",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2024-11-29",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2024-12-31",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2025-01-31",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2025-02-28",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2025-03-31",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2025-04-30",
+        "aday_n": 400,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2025-05-30",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2025-06-30",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2025-07-31",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2025-08-29",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2025-09-30",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2025-10-31",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2025-11-28",
+        "aday_n": 401,
+        "uye_n": 401
+      },
+      {
+        "ay_sonu": "2025-12-31",
+        "aday_n": 400,
+        "uye_n": 400
+      },
+      {
+        "ay_sonu": "2026-01-30",
+        "aday_n": 400,
+        "uye_n": 400
+      },
+      {
+        "ay_sonu": "2026-02-27",
+        "aday_n": 400,
+        "uye_n": 400
+      },
+      {
+        "ay_sonu": "2026-03-31",
+        "aday_n": 399,
+        "uye_n": 400
+      },
+      {
+        "ay_sonu": "2026-04-30",
+        "aday_n": 399,
+        "uye_n": 400
+      },
+      {
+        "ay_sonu": "2026-05-29",
+        "aday_n": 399,
+        "uye_n": 400
+      },
+      {
+        "ay_sonu": "2026-06-30",
+        "aday_n": 399,
+        "uye_n": 400
+      },
+      {
+        "ay_sonu": "2026-07-31",
+        "aday_n": 399,
+        "uye_n": 400
+      }
+    ],
+    "kaynak": "D hücresinin ay-sonu defteri (aday süzgeci iki hücrede AYNIdır)",
+    "dusuk_ay_n": 0,
+    "dusuk_ay_payi": 0.0,
+    "dusuk_ay_neden": null,
+    "dusuk_ay_esigi": 30.0
+  },
+  "olculemeyen": {
+    "n": 15,
+    "birlesim_n": 661,
+    "oran": 0.0226928895612708,
+    "neden_dagilimi": {
+      "bar_dosyasi_yok": {
+        "n": 0,
+        "semboller": [],
+        "neden": "kohort ismi için bar csv'si YOK (--bars-dir)"
+      },
+      "kisa_seri": {
+        "n": 15,
+        "semboller": [
+          "CLGX",
+          "CMD",
+          "DLPH",
+          "DNKN",
+          "GRUB",
+          "LM",
+          "LOGM",
+          "PRAH",
+          "PRSP",
+          "SOLS",
+          "TCF",
+          "TCO",
+          "WPX",
+          "WRI",
+          "XEC"
+        ],
+        "neden": "seri 317 bardan KISA (wp2 ortak.BAR_MIN_UZUNLUK — EDG-016 ile AYNI taban)"
+      },
+      "okunamadi": {
+        "n": 0,
+        "ornek": [],
+        "neden": "bar csv'si okunamadı / bütünlük taraması düştü"
+      }
+    },
+    "neden": null,
+    "not": "sayılar `k093.barlari_yukle` muhasebesinden okunur; yeniden hesaplanmaz (tek-kaynak yasası). Ölçülemeyen isim UYDURULMAZ, ADIYLA sayılır."
+  },
+  "esikler": {
+    "fazla_yillik_alt": {
+      "deger": 0.17577834081652266,
+      "esik": 0.03,
+      "gecti": true,
+      "saglayan": [
+        "D",
+        "C"
+      ],
+      "birim": "oran (0,03 = +3 puan/yıl)",
+      "neden": null
+    },
+    "t_alt": {
+      "deger": 1.5680421064190817,
+      "esik": 2.0,
+      "gecti": false,
+      "saglayan": [],
+      "neden": null
+    },
+    "ay_sonu_aday_alt": {
+      "deger": 390.0,
+      "esik": 30.0,
+      "gecti": true,
+      "tanim": "ay-sonu aday sayılarının ASGARİSİ (kart: her ay-sonunda ≥ eşik)",
+      "dusuk_ay_n": 0,
+      "dusuk_ay_payi": 0.0,
+      "ay_n": 61,
+      "neden": null
+    },
+    "olculemeyen_ust_oran": {
+      "deger": 0.0226928895612708,
+      "esik": 0.2,
+      "gecti": true,
+      "neden": null
+    }
+  },
+  "kill_list_tetik": [
+    {
+      "lafiz": "PK-1 (large-cap as-of D) CI-0-içi ya da negatif → ölçüm bilgisiz (kod/pencere doğrulanmadı), sayı yayılmaz",
+      "tetik": false,
+      "olculen": {
+        "kosdu": true,
+        "gecti": true
+      },
+      "neden": null
+    },
+    {
+      "lafiz": "D ve C hücreleri fazla < +3 p ya da t < 2 → hipotez KALDI (mid-cap PIT'te trend kolu bu pencerede kanıtlanamadı); TSK-065 kapanış adayı",
+      "tetik": true,
+      "olculen": {
+        "fazla_saglayan": [
+          "D",
+          "C"
+        ],
+        "t_saglayan": []
+      },
+      "neden": null
+    },
+    {
+      "lafiz": "ay-sonu aday sayısı < 30 olan ay payı > %10 → bilgisiz (evren ince)",
+      "tetik": null,
+      "olculen": {
+        "dusuk_ay_n": 0,
+        "dusuk_ay_payi": 0.0,
+        "ay_n": 61
+      },
+      "neden": "pay eşiği (%10) kartın `esikler` bloğunda YOK — kod onu düzyazıdan TÜRETMEZ (eşik icat etmek olurdu); ölçülen pay yanındadır, hükmü Rol-1 kart lafzıyla işler"
+    },
+    {
+      "lafiz": "ölçülemeyen payı > %20 → bilgisiz; barsız-çıkış payı üst-sınır damgasına yazılır",
+      "tetik": false,
+      "olculen": {
+        "oran": 0.0226928895612708,
+        "esik": 0.2
+      },
+      "neden": null
+    },
+    {
+      "lafiz": "bakma-ileri: karar/icra günü ya da üyelik as-of ihlali (PIT yasası) → ölçüm geçersiz",
+      "tetik": null,
+      "olculen": {
+        "yapisal_kisit": "karar t kapanışı → icra t+1 açılışı; motor bekleyen kararı BİR SONRAKİ seansta icra eder"
+      },
+      "neden": "bu satır bir KOD SÖZLEŞMESİdir, koşum çıktısından ölçülmez — çivisi tests/test_edg099_midcap_trend_v497.py (§T3, §T4)"
+    }
+  ],
+  "pk1": {
+    "kosdu": true,
+    "neden": null,
+    "D": {
+      "fazla": 12.55411309892713,
+      "t_nw": 1.7106742688208432,
+      "ci": [
+        2.3866366685335687,
+        24.135452971042337
+      ],
+      "ci0_disi": true,
+      "n_months": 60
+    },
+    "C": {
+      "fazla": 6.7238356318060815,
+      "t_nw": 0.8433552049333026,
+      "ci": [
+        -6.243450324374825,
+        20.637063707328064
+      ],
+      "ci0_disi": false,
+      "n_months": 60
+    },
+    "gecti": true,
+    "lafiz": "kart `esikler.pk1_large_cap`: D hücresi fazla > 0 ve CI-0-dışı (yön + anlamlılık; büyüklük eşitliği İSTENMEZ)",
+    "evren": {
+      "kohort": "/opt/meridian/research/pit_universe/sp500_uyelik_tarihi.csv",
+      "bars_dir": "/opt/meridian/state/bars",
+      "isim_n": 629,
+      "bar_yuklenen_n": 253,
+      "olcum_ay_n": 61
+    }
+  },
+  "ust_sinir_damgasi": {
+    "a_hala_listede_orani": {
+      "deger": 0.605144,
+      "tanim": "son gün AS-OF üye olan isim / pencerede en az bir gün üye olan isim (birleşim)",
+      "son_gun": "2026-08-20",
+      "son_gun_uye_n": 400,
+      "birlesim_n": 661,
+      "cikan_n": 261
+    },
+    "b_barsiz_cikis_payi": {
+      "payi": 0.0038314176245210726,
+      "tanim": "çıkan bir isim ŞU HÂLDE barsızdır: bar YOK (bar_n == 0) YA DA son_bar < çıkış_günü − 7 takvim günü. Ölçülemeyen isim (bar_n None: hata/çağrılmadı) paya da paydaya da GİRMEZ, ayrıca sayılır.",
+      "tolerans_gun": 7,
+      "cikan_n": 261,
+      "barsiz_n": 1,
+      "barsiz_semboller": [
+        "HRC"
+      ],
+      "kaynak": "/opt/veri/olcum/edg093/kapsama_haritasi_20260914T150444Z.json (damga 20260914T150444Z) — ADIM-0 EKSEN B; BURADA YENİDEN HESAPLANMADI",
+      "neden": null
+    },
+    "c_belirsiz_isim": {
+      "n": 8,
+      "semboller": [
+        "BRKS",
+        "CHK",
+        "COHR",
+        "ELY",
+        "GPS",
+        "HFC",
+        "PSTG",
+        "ZI"
+      ],
+      "payi_birlesime_gore": 0.001513,
+      "not": "duyarlılık (dahil vs hariç) `duyarlilik_belirsiz` bloğundadır"
+    },
+    "d_bar_uzunluk_suzgecinin_bedeli": {
+      "tanim": "EDG-016 ile AYNI asgari seri uzunluğu (317 bar) uygulandı — TEK DEĞİŞKEN EVREN kuralı. Bedeli: kısa seriyle düşen isimler ölçüme HİÇ girmez ve bunların çoğu ERKEN ÇIKAN isimlerdir; bu, (b) göstergesinin ÜSTÜNE binen ikinci bir sağkalan yanlılığı kanalıdır.",
+      "kisa_dusen_n": 15,
+      "kisa_dusen_cikan_n": 14,
+      "kisa_dusen_semboller": [
+        "CLGX",
+        "CMD",
+        "DLPH",
+        "DNKN",
+        "GRUB",
+        "LM",
+        "LOGM",
+        "PRAH",
+        "PRSP",
+        "SOLS",
+        "TCF",
+        "TCO",
+        "WPX",
+        "WRI",
+        "XEC"
+      ],
+      "bar_dosyasi_olmayan_n": 0,
+      "bar_dosyasi_olmayan_cikan_n": 0
+    }
+  },
+  "duyarlilik_belirsiz": {
+    "kip": "dahil",
+    "birincil": "dahil",
+    "belirsiz_n": 8,
+    "belirsiz_semboller": [
+      "BRKS",
+      "CHK",
+      "COHR",
+      "ELY",
+      "GPS",
+      "HFC",
+      "PSTG",
+      "ZI"
+    ],
+    "belirsiz_kaynak": "türetildi: /opt/meridian/research/pit_universe/sp400_elle_esleme.yaml — `karar: belirsiz` satırlarının `satir.etkisiz_semboller` alanı",
+    "belirsiz_neden": null,
+    "kiyas": []
+  },
+  "kosumlar": {
+    "dahil": {
+      "etiket": "dahil",
+      "pencere": {
+        "baslangic": "2020-07-27",
+        "bitis": "2026-08-20",
+        "seans_n": 1525,
+        "ay_sonu_n": 73,
+        "ilk_karar_ay_sonu": "2021-07-30",
+        "olcum_ay_n": 61,
+        "isinma_ay_n": 12
+      },
+      "evren": {
+        "as_of_satir_n": 163,
+        "kohort_ham_satir_n": 163,
+        "pencere_oncesi_capa_satiri_var_mi": true,
+        "isim_n_birlesim": 661,
+        "dusurulen_n": 0,
+        "olculecek_n": 661,
+        "bar_yuklenen_n": 646
+      },
+      "hucreler": {
+        "D": {
+          "stats": {
+            "total_return": 1.631203954920574,
+            "cagr": 0.21084028884070127,
+            "vol_ann": 0.3513516401460393,
+            "sharpe": 0.6000834057671269,
+            "max_dd": -0.37729188847334505,
+            "years": 5.0568104038329915,
+            "n_ay": 60,
+            "ilk_gun": "2021-07-30",
+            "son_gun": "2026-08-20",
+            "ilk_equity": 100000.0,
+            "son_equity": 263120.3954920574
+          },
+          "fazla": {
+            "ann_pct": 17.577834081652266,
+            "t_nw": 1.5680421064190817,
+            "t_neden": null,
+            "ci95": [
+              0.4780059886672448,
+              35.55488561646114
+            ],
+            "ci0_disi": true,
+            "ci_neden": null,
+            "n_months": 60,
+            "pozitif_ay_pct": 53.333333333333336,
+            "fazla_std_yillik_pct": 27.354506846533777,
+            "tanim": "aylık (hücre − çıta) serisi; ann_pct = ortalama × 12; t = Newey-West 3 gecikme; CI = dairesel blok-bootstrap (12 ay blok, 2000 tekrar, sabit tohum)"
+          },
+          "devir": {
+            "n_rebalans": 61,
+            "islem_bacagi": 827,
+            "n_giris": 228,
+            "n_kapanan_islem": 218,
+            "cikislar": {
+              "chandelier": 0,
+              "rotate": 202,
+              "uyelik": 16,
+              "no_data": 0,
+              "hedef_disi": 0
+            },
+            "friksiyon_usd": 6661.0249,
+            "fiyatsiz_cikis": 0,
+            "fiyatsiz_giris": 0
+          },
+          "ay_sonu_defteri": [
+            {
+              "ay_sonu": "2021-07-30",
+              "hucre": "D",
+              "uye_n": 403,
+              "aday_n": 391,
+              "sepet_n": 10,
+              "sepet": [
+                "LNW",
+                "CLF",
+                "OLN",
+                "CPRI",
+                "AEO",
+                "X",
+                "CROX",
+                "SLM",
+                "CAR",
+                "KSS"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2021-08-31",
+              "hucre": "D",
+              "uye_n": 403,
+              "aday_n": 390,
+              "sepet_n": 10,
+              "sepet": [
+                "GME",
+                "OLN",
+                "CLF",
+                "CPRI",
+                "CROX",
+                "X",
+                "LNW",
+                "AEO",
+                "STAA",
+                "THC"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2021-09-30",
+              "hucre": "D",
+              "uye_n": 403,
+              "aday_n": 391,
+              "sepet_n": 10,
+              "sepet": [
+                "GME",
+                "OLN",
+                "CLF",
+                "X",
+                "COTY",
+                "CAR",
+                "CROX",
+                "CPRI",
+                "TRGP",
+                "CIT"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2021-10-29",
+              "hucre": "D",
+              "uye_n": 403,
+              "aday_n": 391,
+              "sepet_n": 10,
+              "sepet": [
+                "GME",
+                "CAR",
+                "SBNY",
+                "MUR",
+                "TDC",
+                "TRGP",
+                "OLN",
+                "CROX",
+                "THC",
+                "COTY"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2021-11-30",
+              "hucre": "D",
+              "uye_n": 403,
+              "aday_n": 391,
+              "sepet_n": 10,
+              "sepet": [
+                "GME",
+                "CAR",
+                "SITM",
+                "MUR",
+                "CROX",
+                "SBNY",
+                "OLN",
+                "TDC",
+                "SYNA",
+                "TRGP"
+              ],
+              "cikis_n": 2,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2021-12-31",
+              "hucre": "D",
+              "uye_n": 403,
+              "aday_n": 393,
+              "sepet_n": 10,
+              "sepet": [
+                "GME",
+                "CAR",
+                "SYNA",
+                "SITM",
+                "CROX",
+                "M",
+                "OLN",
+                "MUR",
+                "DKS",
+                "AA"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate",
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-01-31",
+              "hucre": "D",
+              "uye_n": 403,
+              "aday_n": 394,
+              "sepet_n": 10,
+              "sepet": [
+                "CAR",
+                "AA",
+                "SYNA",
+                "CALX",
+                "OLN",
+                "SITM",
+                "BLDR",
+                "MUR",
+                "LPX",
+                "GT"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-02-28",
+              "hucre": "D",
+              "uye_n": 402,
+              "aday_n": 394,
+              "sepet_n": 10,
+              "sepet": [
+                "CAR",
+                "SITM",
+                "AA",
+                "MUR",
+                "TRGP",
+                "MIME",
+                "PDCE",
+                "M",
+                "OLN",
+                "DKS"
+              ],
+              "cikis_n": 5,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-03-31",
+              "hucre": "D",
+              "uye_n": 402,
+              "aday_n": 393,
+              "sepet_n": 10,
+              "sepet": [
+                "CAR",
+                "AA",
+                "RRC",
+                "MUR",
+                "TRGP",
+                "SITM",
+                "MIME",
+                "PDCE",
+                "EXE",
+                "SYNA"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-04-29",
+              "hucre": "D",
+              "uye_n": 402,
+              "aday_n": 391,
+              "sepet_n": 10,
+              "sepet": [
+                "RRC",
+                "CAR",
+                "SITM",
+                "AA",
+                "MUR",
+                "TRGP",
+                "MTDR",
+                "PDCE",
+                "EXE",
+                "MIME"
+              ],
+              "cikis_n": 1,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-05-31",
+              "hucre": "D",
+              "uye_n": 402,
+              "aday_n": 393,
+              "sepet_n": 10,
+              "sepet": [
+                "CAR",
+                "RRC",
+                "EQT",
+                "TRGP",
+                "MUR",
+                "MUSA",
+                "SITM",
+                "AA",
+                "PDCE",
+                "OPCH"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate",
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-06-30",
+              "hucre": "D",
+              "uye_n": 403,
+              "aday_n": 393,
+              "sepet_n": 10,
+              "sepet": [
+                "CAR",
+                "EQT",
+                "RRC",
+                "EXE",
+                "MUSA",
+                "MUR",
+                "PDCE",
+                "SITM",
+                "MTDR",
+                "AA"
+              ],
+              "cikis_n": 2,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-07-29",
+              "hucre": "D",
+              "uye_n": 404,
+              "aday_n": 397,
+              "sepet_n": 10,
+              "sepet": [
+                "EQT",
+                "CAR",
+                "RRC",
+                "MUSA",
+                "PDCE",
+                "DINO",
+                "MTDR",
+                "EXE",
+                "FLR",
+                "HRB"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-08-31",
+              "hucre": "D",
+              "uye_n": 404,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "EQT",
+                "RRC",
+                "MTDR",
+                "CAR",
+                "MUSA",
+                "EXE",
+                "MUR",
+                "GO",
+                "AZPN",
+                "TRGP"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-09-30",
+              "hucre": "D",
+              "uye_n": 404,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "EQT",
+                "GO",
+                "HRB",
+                "MUSA",
+                "AZPN",
+                "FLR",
+                "EXE",
+                "DINO",
+                "MTDR",
+                "DY"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-10-31",
+              "hucre": "D",
+              "uye_n": 404,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "LNTH",
+                "HRB",
+                "MUSA",
+                "DINO",
+                "AR",
+                "AZPN",
+                "UNM",
+                "GO",
+                "EXE",
+                "KNSL"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate",
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-11-30",
+              "hucre": "D",
+              "uye_n": 404,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "LNTH",
+                "AR",
+                "UNM",
+                "DINO",
+                "NOV",
+                "MUR",
+                "MUSA",
+                "HRB",
+                "EXE",
+                "MTDR"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-12-30",
+              "hucre": "D",
+              "uye_n": 404,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "PBF",
+                "LNTH",
+                "AR",
+                "SMCI",
+                "DINO",
+                "HRB",
+                "MUR",
+                "MTDR",
+                "UNM",
+                "NOV"
+              ],
+              "cikis_n": 2,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-01-31",
+              "hucre": "D",
+              "uye_n": 404,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "PBF",
+                "CELH",
+                "SMCI",
+                "LNTH",
+                "FLR",
+                "HALO",
+                "HAE",
+                "UNM",
+                "HRB",
+                "AR"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-02-28",
+              "hucre": "D",
+              "uye_n": 404,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "PBF",
+                "DINO",
+                "SMCI",
+                "FLR",
+                "UTHR",
+                "HRB",
+                "CELH",
+                "CHX",
+                "VMI",
+                "IRDM"
+              ],
+              "cikis_n": 5,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-03-31",
+              "hucre": "D",
+              "uye_n": 404,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "SMCI",
+                "PBF",
+                "TEX",
+                "CELH",
+                "CROX",
+                "ALGM",
+                "SGI",
+                "VC",
+                "BDC",
+                "IRDM"
+              ],
+              "cikis_n": 6,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-04-28",
+              "hucre": "D",
+              "uye_n": 404,
+              "aday_n": 402,
+              "sepet_n": 10,
+              "sepet": [
+                "SMCI",
+                "AXON",
+                "WING",
+                "LSCC",
+                "ALGM",
+                "CROX",
+                "CELH",
+                "IRDM",
+                "DECK",
+                "BDC"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-05-31",
+              "hucre": "D",
+              "uye_n": 404,
+              "aday_n": 402,
+              "sepet_n": 10,
+              "sepet": [
+                "WING",
+                "CROX",
+                "SMCI",
+                "PEN",
+                "DECK",
+                "DKS",
+                "SWAV",
+                "MZTI",
+                "IRDM",
+                "COTY"
+              ],
+              "cikis_n": 5,
+              "cikis_sebepleri": [
+                "rotate",
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-06-30",
+              "hucre": "D",
+              "uye_n": 403,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "SMCI",
+                "WING",
+                "PEN",
+                "CROX",
+                "BLDR",
+                "CELH",
+                "ALGM",
+                "DECK",
+                "NATI",
+                "TMHC"
+              ],
+              "cikis_n": 5,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-07-31",
+              "hucre": "D",
+              "uye_n": 403,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "SMCI",
+                "PEN",
+                "BLDR",
+                "JBL",
+                "ALGM",
+                "TEX",
+                "TMHC",
+                "DECK",
+                "CLH",
+                "COTY"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-08-31",
+              "hucre": "D",
+              "uye_n": 402,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "SMCI",
+                "BLDR",
+                "ALGM",
+                "SAIA",
+                "TMHC",
+                "KBH",
+                "PEN",
+                "JBL",
+                "TOL",
+                "EME"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-09-29",
+              "hucre": "D",
+              "uye_n": 402,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "SMCI",
+                "WFRD",
+                "BLDR",
+                "SHC",
+                "SAIA",
+                "ESAB",
+                "CELH",
+                "PR",
+                "TEX",
+                "SSD"
+              ],
+              "cikis_n": 7,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-10-31",
+              "hucre": "D",
+              "uye_n": 402,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "SMCI",
+                "SHC",
+                "WFRD",
+                "BLDR",
+                "SAIA",
+                "JBL",
+                "ONTO",
+                "CELH",
+                "ESAB",
+                "LSCC"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-11-30",
+              "hucre": "D",
+              "uye_n": 402,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "SMCI",
+                "WFRD",
+                "XPO",
+                "BRBR",
+                "JBL",
+                "BLDR",
+                "MANH",
+                "NEU",
+                "SHC",
+                "VNT"
+              ],
+              "cikis_n": 5,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-12-29",
+              "hucre": "D",
+              "uye_n": 402,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "SMCI",
+                "XPO",
+                "ONTO",
+                "BRBR",
+                "RMBS",
+                "SSD",
+                "BLD",
+                "SAIA",
+                "MANH",
+                "CNM"
+              ],
+              "cikis_n": 6,
+              "cikis_sebepleri": [
+                "rotate",
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-01-31",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "SMCI",
+                "ELF",
+                "XPO",
+                "BRBR",
+                "ONTO",
+                "BLD",
+                "SSD",
+                "COKE",
+                "CNM",
+                "TOL"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-02-29",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "SMCI",
+                "XPO",
+                "ELF",
+                "ONTO",
+                "VST",
+                "DECK",
+                "BRBR",
+                "BLD",
+                "CNM",
+                "ETRN"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-03-28",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "XPO",
+                "CELH",
+                "ELF",
+                "VST",
+                "SAIA",
+                "MEDP",
+                "ONTO",
+                "FIX",
+                "CNM",
+                "P"
+              ],
+              "cikis_n": 5,
+              "cikis_sebepleri": [
+                "rotate",
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-04-30",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "VST",
+                "GAP",
+                "XPO",
+                "WSM",
+                "CELH",
+                "ETRN",
+                "P",
+                "ONTO",
+                "CNM",
+                "FIX"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-05-31",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "GAP",
+                "WSM",
+                "XPO",
+                "WFRD",
+                "EME",
+                "CNM",
+                "FIX",
+                "BLD",
+                "WING",
+                "CR"
+              ],
+              "cikis_n": 5,
+              "cikis_sebepleri": [
+                "rotate",
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-06-28",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "GAP",
+                "WSM",
+                "SFM",
+                "EME",
+                "KD",
+                "FIX",
+                "ONTO",
+                "WING",
+                "CNM",
+                "XPO"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-07-31",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "ANF",
+                "WING",
+                "GAP",
+                "SFM",
+                "WSM",
+                "KD",
+                "ELF",
+                "THC",
+                "ONTO",
+                "FIX"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-08-30",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "ANF",
+                "SFM",
+                "WING",
+                "CVLT",
+                "WSM",
+                "GAP",
+                "THC",
+                "DKS",
+                "COHR",
+                "FYBR"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-09-30",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "ANF",
+                "THC",
+                "SFM",
+                "COHR",
+                "CVLT",
+                "DKS",
+                "WING",
+                "GAP",
+                "FIX",
+                "COKE"
+              ],
+              "cikis_n": 2,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-10-31",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "THC",
+                "COHR",
+                "SFM",
+                "CVLT",
+                "ANF",
+                "WING",
+                "TOL",
+                "BURL",
+                "FIX",
+                "DOCS"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-11-29",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "SFM",
+                "COHR",
+                "THC",
+                "CVLT",
+                "EME",
+                "MTZ",
+                "FIX",
+                "MLI",
+                "IBKR",
+                "PPC"
+              ],
+              "cikis_n": 5,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-12-31",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "SFM",
+                "CRS",
+                "FIX",
+                "EME",
+                "IBKR",
+                "COHR",
+                "CVLT",
+                "CNX",
+                "JEF",
+                "DTM"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-01-31",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "CRS",
+                "SFM",
+                "GME",
+                "MTZ",
+                "EME",
+                "COHR",
+                "IBKR",
+                "DOCS",
+                "FIX",
+                "JEF"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-02-28",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "CRS",
+                "SFM",
+                "CHWY",
+                "DOCS",
+                "IBKR",
+                "MTZ",
+                "GME",
+                "TKO",
+                "JEF",
+                "DOCU"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-03-31",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "HIMS",
+                "CRS",
+                "DOCS",
+                "CHWY",
+                "SFM",
+                "SATS",
+                "GME",
+                "IBKR",
+                "KD",
+                "GWRE"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate",
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-04-30",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "DOCS",
+                "HIMS",
+                "SFM",
+                "CHWY",
+                "CRS",
+                "GME",
+                "GWRE",
+                "HALO",
+                "G",
+                "COKE"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-05-30",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "SFM",
+                "DOCS",
+                "DUOL",
+                "EXEL",
+                "GWRE",
+                "CHWY",
+                "CRS",
+                "HIMS",
+                "EXLS",
+                "PEGA"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-06-30",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "HIMS",
+                "DUOL",
+                "CRS",
+                "SFM",
+                "EXEL",
+                "DOCS",
+                "IBKR",
+                "CHWY",
+                "CIEN",
+                "DOCU"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-07-31",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "DUOL",
+                "HIMS",
+                "DOCS",
+                "CRS",
+                "EXEL",
+                "IBKR",
+                "LITE",
+                "FIVE",
+                "CHWY",
+                "CAR"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-08-29",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "HIMS",
+                "TLN",
+                "CAR",
+                "TWLO",
+                "FIX",
+                "LITE",
+                "FIVE",
+                "SATS",
+                "CRS",
+                "MTZ"
+              ],
+              "cikis_n": 5,
+              "cikis_sebepleri": [
+                "rotate",
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-09-30",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "MP",
+                "KTOS",
+                "SATS",
+                "HIMS",
+                "TLN",
+                "LITE",
+                "CELH",
+                "CAR",
+                "FIX",
+                "NXT"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-10-31",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "KTOS",
+                "MP",
+                "SATS",
+                "HIMS",
+                "LITE",
+                "TLN",
+                "CIEN",
+                "RMBS",
+                "FIX",
+                "CAR"
+              ],
+              "cikis_n": 2,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-11-28",
+              "hucre": "D",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "KTOS",
+                "MP",
+                "SATS",
+                "CIEN",
+                "NXT",
+                "LITE",
+                "CELH",
+                "FIX",
+                "STRL",
+                "AVAV"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-12-31",
+              "hucre": "D",
+              "uye_n": 400,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "MP",
+                "LITE",
+                "HL",
+                "SATS",
+                "KTOS",
+                "NXT",
+                "CIEN",
+                "FN",
+                "DY",
+                "STRL"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate",
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2026-01-30",
+              "hucre": "D",
+              "uye_n": 400,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "LITE",
+                "SATS",
+                "HL",
+                "TTMI",
+                "CIEN",
+                "MP",
+                "KTOS",
+                "STRL",
+                "FN",
+                "COHR"
+              ],
+              "cikis_n": 2,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2026-02-27",
+              "hucre": "D",
+              "uye_n": 400,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "LITE",
+                "HL",
+                "TTMI",
+                "KTOS",
+                "ARWR",
+                "SATS",
+                "COHR",
+                "STRL",
+                "NXT",
+                "MKSI"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate",
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2026-03-31",
+              "hucre": "D",
+              "uye_n": 400,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "TTMI",
+                "ARWR",
+                "HL",
+                "VICR",
+                "STRL",
+                "AEIS",
+                "ATI",
+                "MKSI",
+                "FIVE",
+                "KTOS"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate",
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2026-04-30",
+              "hucre": "D",
+              "uye_n": 400,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "TTMI",
+                "ARWR",
+                "VICR",
+                "AEIS",
+                "MKSI",
+                "HL",
+                "VAL",
+                "FIVE",
+                "NXT",
+                "PBF"
+              ],
+              "cikis_n": 3,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2026-05-29",
+              "hucre": "D",
+              "uye_n": 400,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "VICR",
+                "TTMI",
+                "ARWR",
+                "AMKR",
+                "HL",
+                "MKSI",
+                "DOCN",
+                "AEIS",
+                "ONTO",
+                "MP"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2026-06-30",
+              "hucre": "D",
+              "uye_n": 400,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "VICR",
+                "DOCN",
+                "ARWR",
+                "VIAV",
+                "TTMI",
+                "STRL",
+                "SMTC",
+                "SITM",
+                "AMKR",
+                "MKSI"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2026-07-31",
+              "hucre": "D",
+              "uye_n": 400,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "VICR",
+                "DOCN",
+                "ARWR",
+                "VIAV",
+                "MKSI",
+                "ONTO",
+                "TTMI",
+                "AMKR",
+                "SITM",
+                "BTSG"
+              ],
+              "cikis_n": 2,
+              "cikis_sebepleri": [
+                "rotate"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            }
+          ]
+        },
+        "C": {
+          "stats": {
+            "total_return": 0.8538894111730779,
+            "cagr": 0.12983340419349965,
+            "vol_ann": 0.3045915144105294,
+            "sharpe": 0.4262541733795964,
+            "max_dd": -0.38469334475817796,
+            "years": 5.0568104038329915,
+            "n_ay": 60,
+            "ilk_gun": "2021-07-30",
+            "son_gun": "2026-08-20",
+            "ilk_equity": 100000.0,
+            "son_equity": 185388.94111730778
+          },
+          "fazla": {
+            "ann_pct": 8.171916853602708,
+            "t_nw": 0.8474077129964754,
+            "t_neden": null,
+            "ci95": [
+              -6.844593941339888,
+              25.373211913081416
+            ],
+            "ci0_disi": false,
+            "ci_neden": null,
+            "n_months": 60,
+            "pozitif_ay_pct": 55.00000000000001,
+            "fazla_std_yillik_pct": 23.14465004062599,
+            "tanim": "aylık (hücre − çıta) serisi; ann_pct = ortalama × 12; t = Newey-West 3 gecikme; CI = dairesel blok-bootstrap (12 ay blok, 2000 tekrar, sabit tohum)"
+          },
+          "devir": {
+            "n_rebalans": 61,
+            "islem_bacagi": 939,
+            "n_giris": 340,
+            "n_kapanan_islem": 330,
+            "cikislar": {
+              "chandelier": 318,
+              "rotate": 0,
+              "uyelik": 12,
+              "no_data": 0,
+              "hedef_disi": 0
+            },
+            "friksiyon_usd": 7288.7878,
+            "fiyatsiz_cikis": 0,
+            "fiyatsiz_giris": 0
+          },
+          "ay_sonu_defteri": [
+            {
+              "ay_sonu": "2021-07-30",
+              "hucre": "C",
+              "uye_n": 403,
+              "aday_n": 391,
+              "sepet_n": 10,
+              "sepet": [
+                "AEO",
+                "CAR",
+                "CLF",
+                "CPRI",
+                "CROX",
+                "KSS",
+                "LNW",
+                "OLN",
+                "SLM",
+                "X"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2021-08-31",
+              "hucre": "C",
+              "uye_n": 403,
+              "aday_n": 390,
+              "sepet_n": 10,
+              "sepet": [
+                "CAR",
+                "CLF",
+                "CPRI",
+                "CROX",
+                "GME",
+                "KSS",
+                "LNW",
+                "OLN",
+                "SLM",
+                "X"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2021-09-30",
+              "hucre": "C",
+              "uye_n": 403,
+              "aday_n": 391,
+              "sepet_n": 10,
+              "sepet": [
+                "CAR",
+                "CLF",
+                "COTY",
+                "CPRI",
+                "CROX",
+                "GME",
+                "LNW",
+                "OLN",
+                "TRGP",
+                "X"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2021-10-29",
+              "hucre": "C",
+              "uye_n": 403,
+              "aday_n": 391,
+              "sepet_n": 10,
+              "sepet": [
+                "CAR",
+                "CLF",
+                "CPRI",
+                "GME",
+                "LNW",
+                "MUR",
+                "OLN",
+                "SBNY",
+                "TRGP",
+                "X"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2021-11-30",
+              "hucre": "C",
+              "uye_n": 403,
+              "aday_n": 391,
+              "sepet_n": 10,
+              "sepet": [
+                "CAR",
+                "CHX",
+                "CLF",
+                "CROX",
+                "GME",
+                "MUR",
+                "SITM",
+                "SYNA",
+                "TDC",
+                "THC"
+              ],
+              "cikis_n": 4,
+              "cikis_sebepleri": [
+                "chandelier"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2021-12-31",
+              "hucre": "C",
+              "uye_n": 403,
+              "aday_n": 393,
+              "sepet_n": 10,
+              "sepet": [
+                "CAR",
+                "CLF",
+                "CROX",
+                "GME",
+                "M",
+                "OLN",
+                "SITM",
+                "SYNA",
+                "TDC",
+                "THC"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-01-31",
+              "hucre": "C",
+              "uye_n": 403,
+              "aday_n": 394,
+              "sepet_n": 10,
+              "sepet": [
+                "AA",
+                "BLDR",
+                "CALX",
+                "CAR",
+                "LPX",
+                "MUR",
+                "OLN",
+                "SITM",
+                "SYNA",
+                "THC"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-02-28",
+              "hucre": "C",
+              "uye_n": 402,
+              "aday_n": 394,
+              "sepet_n": 10,
+              "sepet": [
+                "AA",
+                "BLDR",
+                "CALX",
+                "CAR",
+                "LPX",
+                "MUR",
+                "OLN",
+                "SITM",
+                "SYNA",
+                "TRGP"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-03-31",
+              "hucre": "C",
+              "uye_n": 402,
+              "aday_n": 393,
+              "sepet_n": 10,
+              "sepet": [
+                "AA",
+                "CAR",
+                "EXE",
+                "MIME",
+                "MUR",
+                "PDCE",
+                "RRC",
+                "SITM",
+                "SYNA",
+                "TRGP"
+              ],
+              "cikis_n": 2,
+              "cikis_sebepleri": [
+                "chandelier"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-04-29",
+              "hucre": "C",
+              "uye_n": 402,
+              "aday_n": 391,
+              "sepet_n": 10,
+              "sepet": [
+                "AA",
+                "CAR",
+                "EXE",
+                "MIME",
+                "MTDR",
+                "MUR",
+                "PDCE",
+                "RRC",
+                "SITM",
+                "TRGP"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-05-31",
+              "hucre": "C",
+              "uye_n": 402,
+              "aday_n": 393,
+              "sepet_n": 10,
+              "sepet": [
+                "AA",
+                "CAR",
+                "EQT",
+                "EXE",
+                "MTDR",
+                "MUR",
+                "MUSA",
+                "RRC",
+                "SITM",
+                "TRGP"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-06-30",
+              "hucre": "C",
+              "uye_n": 403,
+              "aday_n": 393,
+              "sepet_n": 10,
+              "sepet": [
+                "AA",
+                "CAR",
+                "EQT",
+                "EXE",
+                "MTDR",
+                "MUR",
+                "MUSA",
+                "PDCE",
+                "RRC",
+                "SITM"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-07-29",
+              "hucre": "C",
+              "uye_n": 404,
+              "aday_n": 397,
+              "sepet_n": 10,
+              "sepet": [
+                "AA",
+                "CAR",
+                "EQT",
+                "EXE",
+                "MTDR",
+                "MUR",
+                "MUSA",
+                "PDCE",
+                "RRC",
+                "SITM"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-08-31",
+              "hucre": "C",
+              "uye_n": 404,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "AA",
+                "AZPN",
+                "EQT",
+                "EXE",
+                "GO",
+                "MTDR",
+                "MUR",
+                "MUSA",
+                "RRC",
+                "TRGP"
+              ],
+              "cikis_n": 1,
+              "cikis_sebepleri": [
+                "chandelier"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-09-30",
+              "hucre": "C",
+              "uye_n": 404,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "AZPN",
+                "DINO",
+                "DY",
+                "EQT",
+                "EXE",
+                "FLR",
+                "GO",
+                "HRB",
+                "MTDR",
+                "MUSA"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-10-31",
+              "hucre": "C",
+              "uye_n": 404,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "AZPN",
+                "DINO",
+                "DY",
+                "EXE",
+                "FLR",
+                "GO",
+                "HRB",
+                "LNTH",
+                "MTDR",
+                "MUSA"
+              ],
+              "cikis_n": 1,
+              "cikis_sebepleri": [
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-11-30",
+              "hucre": "C",
+              "uye_n": 404,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "AR",
+                "DINO",
+                "EXE",
+                "FLR",
+                "HRB",
+                "LNTH",
+                "MTDR",
+                "MUR",
+                "NOV",
+                "UNM"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2022-12-30",
+              "hucre": "C",
+              "uye_n": 404,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "AR",
+                "DINO",
+                "FLR",
+                "HRB",
+                "LNTH",
+                "MTDR",
+                "MUR",
+                "PBF",
+                "SMCI",
+                "UNM"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-01-31",
+              "hucre": "C",
+              "uye_n": 404,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "AR",
+                "CELH",
+                "DINO",
+                "HRB",
+                "LNTH",
+                "MTDR",
+                "MUR",
+                "PBF",
+                "SMCI",
+                "UNM"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-02-28",
+              "hucre": "C",
+              "uye_n": 404,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "CELH",
+                "CHX",
+                "DINO",
+                "FLR",
+                "LNTH",
+                "PBF",
+                "SMCI",
+                "UNM",
+                "UTHR",
+                "VMI"
+              ],
+              "cikis_n": 1,
+              "cikis_sebepleri": [
+                "chandelier"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-03-31",
+              "hucre": "C",
+              "uye_n": 404,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "ALGM",
+                "BDC",
+                "CELH",
+                "CROX",
+                "LNTH",
+                "PBF",
+                "SGI",
+                "SMCI",
+                "TEX",
+                "VC"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-04-28",
+              "hucre": "C",
+              "uye_n": 404,
+              "aday_n": 402,
+              "sepet_n": 10,
+              "sepet": [
+                "ALGM",
+                "AXON",
+                "CELH",
+                "CROX",
+                "DECK",
+                "IRDM",
+                "LNTH",
+                "LSCC",
+                "SMCI",
+                "WING"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-05-31",
+              "hucre": "C",
+              "uye_n": 404,
+              "aday_n": 402,
+              "sepet_n": 10,
+              "sepet": [
+                "ALGM",
+                "CELH",
+                "CROX",
+                "DECK",
+                "DKS",
+                "LSCC",
+                "PEN",
+                "SMCI",
+                "SWAV",
+                "WING"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-06-30",
+              "hucre": "C",
+              "uye_n": 403,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "ALGM",
+                "CELH",
+                "CROX",
+                "DECK",
+                "DKS",
+                "LSCC",
+                "PEN",
+                "SMCI",
+                "SWAV",
+                "WING"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-07-31",
+              "hucre": "C",
+              "uye_n": 403,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "ALGM",
+                "BLDR",
+                "CELH",
+                "DECK",
+                "DKS",
+                "JBL",
+                "PEN",
+                "SMCI",
+                "TEX",
+                "TMHC"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-08-31",
+              "hucre": "C",
+              "uye_n": 402,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "ALGM",
+                "BLDR",
+                "CELH",
+                "JBL",
+                "KBH",
+                "PEN",
+                "SAIA",
+                "SMCI",
+                "TMHC",
+                "TOL"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-09-29",
+              "hucre": "C",
+              "uye_n": 402,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "BLDR",
+                "CELH",
+                "ESAB",
+                "PR",
+                "SAIA",
+                "SHC",
+                "SMCI",
+                "SSD",
+                "TEX",
+                "WFRD"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-10-31",
+              "hucre": "C",
+              "uye_n": 402,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "BLDR",
+                "CELH",
+                "ESAB",
+                "JBL",
+                "ONTO",
+                "PR",
+                "SAIA",
+                "SHC",
+                "SMCI",
+                "WFRD"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-11-30",
+              "hucre": "C",
+              "uye_n": 402,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "BLDR",
+                "BRBR",
+                "ESAB",
+                "JBL",
+                "ONTO",
+                "SAIA",
+                "SHC",
+                "SMCI",
+                "WFRD",
+                "XPO"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2023-12-29",
+              "hucre": "C",
+              "uye_n": 402,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "BLD",
+                "BRBR",
+                "ESAB",
+                "ONTO",
+                "RMBS",
+                "SAIA",
+                "SHC",
+                "SMCI",
+                "SSD",
+                "XPO"
+              ],
+              "cikis_n": 2,
+              "cikis_sebepleri": [
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-01-31",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "BLD",
+                "BRBR",
+                "COKE",
+                "ELF",
+                "ONTO",
+                "RMBS",
+                "SAIA",
+                "SMCI",
+                "SSD",
+                "XPO"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-02-29",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "BLD",
+                "BRBR",
+                "DECK",
+                "ELF",
+                "ONTO",
+                "SAIA",
+                "SMCI",
+                "SSD",
+                "VST",
+                "XPO"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-03-28",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "BLD",
+                "BRBR",
+                "CELH",
+                "ELF",
+                "FIX",
+                "MEDP",
+                "ONTO",
+                "SAIA",
+                "VST",
+                "XPO"
+              ],
+              "cikis_n": 2,
+              "cikis_sebepleri": [
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-04-30",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "CELH",
+                "CNM",
+                "ETRN",
+                "FIX",
+                "GAP",
+                "ONTO",
+                "P",
+                "VST",
+                "WSM",
+                "XPO"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-05-31",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "BLD",
+                "CNM",
+                "EME",
+                "ETRN",
+                "FIX",
+                "GAP",
+                "ONTO",
+                "WFRD",
+                "WSM",
+                "XPO"
+              ],
+              "cikis_n": 2,
+              "cikis_sebepleri": [
+                "chandelier",
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-06-28",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "EME",
+                "FIX",
+                "GAP",
+                "KD",
+                "ONTO",
+                "SFM",
+                "WFRD",
+                "WING",
+                "WSM",
+                "XPO"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-07-31",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "ANF",
+                "ELF",
+                "GAP",
+                "KD",
+                "ONTO",
+                "SFM",
+                "THC",
+                "WING",
+                "WSM",
+                "XPO"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-08-30",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "ANF",
+                "CVLT",
+                "DKS",
+                "GAP",
+                "ONTO",
+                "SFM",
+                "THC",
+                "WING",
+                "WSM",
+                "XPO"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-09-30",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "ANF",
+                "COHR",
+                "COKE",
+                "CVLT",
+                "DKS",
+                "FIX",
+                "GAP",
+                "SFM",
+                "THC",
+                "WING"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-10-31",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "ANF",
+                "BURL",
+                "CVLT",
+                "DOCS",
+                "FIX",
+                "GAP",
+                "SFM",
+                "THC",
+                "TOL",
+                "WING"
+              ],
+              "cikis_n": 2,
+              "cikis_sebepleri": [
+                "chandelier"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-11-29",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "ANF",
+                "BURL",
+                "COHR",
+                "CVLT",
+                "FIX",
+                "GAP",
+                "SFM",
+                "THC",
+                "TOL",
+                "WING"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2024-12-31",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "BURL",
+                "CNX",
+                "COHR",
+                "CRS",
+                "CVLT",
+                "EME",
+                "FIX",
+                "GAP",
+                "IBKR",
+                "SFM"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-01-31",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "BURL",
+                "COHR",
+                "CRS",
+                "DOCS",
+                "EME",
+                "FIX",
+                "GME",
+                "IBKR",
+                "MTZ",
+                "SFM"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-02-28",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "CHWY",
+                "CRS",
+                "DOCS",
+                "DOCU",
+                "GME",
+                "IBKR",
+                "JEF",
+                "MTZ",
+                "SFM",
+                "TKO"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-03-31",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "CHWY",
+                "CRS",
+                "DOCS",
+                "DOCU",
+                "GME",
+                "HIMS",
+                "IBKR",
+                "KD",
+                "SATS",
+                "SFM"
+              ],
+              "cikis_n": 1,
+              "cikis_sebepleri": [
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-04-30",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "CHWY",
+                "CRS",
+                "DOCS",
+                "GME",
+                "GWRE",
+                "HALO",
+                "HIMS",
+                "IBKR",
+                "KD",
+                "SFM"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-05-30",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "CHWY",
+                "CRS",
+                "DOCS",
+                "DUOL",
+                "EXEL",
+                "GWRE",
+                "HIMS",
+                "IBKR",
+                "KD",
+                "SFM"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-06-30",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "CHWY",
+                "CIEN",
+                "CRS",
+                "DOCS",
+                "DUOL",
+                "EXEL",
+                "HIMS",
+                "IBKR",
+                "KD",
+                "SFM"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-07-31",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "CAR",
+                "CHWY",
+                "CIEN",
+                "DOCS",
+                "DUOL",
+                "EXEL",
+                "FIVE",
+                "HIMS",
+                "IBKR",
+                "LITE"
+              ],
+              "cikis_n": 2,
+              "cikis_sebepleri": [
+                "chandelier"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-08-29",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "CAR",
+                "CHWY",
+                "DOCS",
+                "EXEL",
+                "FIVE",
+                "FIX",
+                "HIMS",
+                "LITE",
+                "TLN",
+                "TWLO"
+              ],
+              "cikis_n": 1,
+              "cikis_sebepleri": [
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-09-30",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "CAR",
+                "DOCS",
+                "EXEL",
+                "FIVE",
+                "FIX",
+                "HIMS",
+                "LITE",
+                "MP",
+                "TLN",
+                "TWLO"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-10-31",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "CIEN",
+                "FIX",
+                "HIMS",
+                "KTOS",
+                "LITE",
+                "MP",
+                "RMBS",
+                "SATS",
+                "TLN",
+                "TWLO"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-11-28",
+              "hucre": "C",
+              "uye_n": 401,
+              "aday_n": 401,
+              "sepet_n": 10,
+              "sepet": [
+                "CELH",
+                "CIEN",
+                "FIX",
+                "KTOS",
+                "LITE",
+                "MP",
+                "NXT",
+                "SATS",
+                "STRL",
+                "TLN"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2025-12-31",
+              "hucre": "C",
+              "uye_n": 400,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "CELH",
+                "CIEN",
+                "FN",
+                "HL",
+                "KTOS",
+                "LITE",
+                "MP",
+                "NXT",
+                "SATS",
+                "STRL"
+              ],
+              "cikis_n": 1,
+              "cikis_sebepleri": [
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2026-01-30",
+              "hucre": "C",
+              "uye_n": 400,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "CELH",
+                "CIEN",
+                "FN",
+                "HL",
+                "LITE",
+                "MP",
+                "NXT",
+                "SATS",
+                "STRL",
+                "TTMI"
+              ],
+              "cikis_n": 1,
+              "cikis_sebepleri": [
+                "chandelier"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2026-02-27",
+              "hucre": "C",
+              "uye_n": 400,
+              "aday_n": 400,
+              "sepet_n": 10,
+              "sepet": [
+                "ARWR",
+                "COHR",
+                "FN",
+                "HL",
+                "KTOS",
+                "LITE",
+                "NXT",
+                "SATS",
+                "STRL",
+                "TTMI"
+              ],
+              "cikis_n": 1,
+              "cikis_sebepleri": [
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2026-03-31",
+              "hucre": "C",
+              "uye_n": 400,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "AEIS",
+                "ARWR",
+                "ATI",
+                "FIVE",
+                "HL",
+                "KTOS",
+                "MKSI",
+                "STRL",
+                "TTMI",
+                "VICR"
+              ],
+              "cikis_n": 2,
+              "cikis_sebepleri": [
+                "uyelik"
+              ],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2026-04-30",
+              "hucre": "C",
+              "uye_n": 400,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "AEIS",
+                "ARWR",
+                "ATI",
+                "FIVE",
+                "HL",
+                "MKSI",
+                "STRL",
+                "TTMI",
+                "VAL",
+                "VICR"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2026-05-29",
+              "hucre": "C",
+              "uye_n": 400,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "AEIS",
+                "AMKR",
+                "ARWR",
+                "ATI",
+                "DOCN",
+                "HL",
+                "MKSI",
+                "STRL",
+                "TTMI",
+                "VICR"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2026-06-30",
+              "hucre": "C",
+              "uye_n": 400,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "AEIS",
+                "AMKR",
+                "ARWR",
+                "ATI",
+                "DOCN",
+                "MKSI",
+                "STRL",
+                "TTMI",
+                "VIAV",
+                "VICR"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            },
+            {
+              "ay_sonu": "2026-07-31",
+              "hucre": "C",
+              "uye_n": 400,
+              "aday_n": 399,
+              "sepet_n": 10,
+              "sepet": [
+                "AMKR",
+                "ARWR",
+                "ATI",
+                "DOCN",
+                "MKSI",
+                "ONTO",
+                "SITM",
+                "TTMI",
+                "VIAV",
+                "VICR"
+              ],
+              "cikis_n": 0,
+              "cikis_sebepleri": [],
+              "dolduruldu_hucre": 4481,
+              "dolduruldu_sembol": 403
+            }
+          ]
+        }
+      },
+      "citalar": {
+        "cita_esli": {
+          "stats": {
+            "total_return": 0.3605283590565189,
+            "cagr": 0.06277442269424638,
+            "vol_ann": 0.18411592926004164,
+            "sharpe": 0.34095052474023063,
+            "max_dd": -0.24528900333051695,
+            "years": 5.0568104038329915,
+            "n_ay": 60,
+            "ilk_gun": "2021-07-30",
+            "son_gun": "2026-08-20",
+            "ilk_equity": 100000.0,
+            "son_equity": 136052.83590565188
+          },
+          "uye_sayisi": {
+            "ilk": 398,
+            "son": 399,
+            "ay_ort": 401.0,
+            "ay_n": 61,
+            "neden": null
+          }
+        },
+        "cita_taban": {
+          "stats": {
+            "total_return": 0.37104921821751025,
+            "cagr": 0.06439460939270414,
+            "vol_ann": 0.17224750143604636,
+            "sharpe": 0.3738493090224195,
+            "max_dd": -0.23073943418725873,
+            "years": 5.0568104038329915,
+            "n_ay": 60,
+            "ilk_gun": "2021-07-30",
+            "son_gun": "2026-08-20",
+            "ilk_equity": 100000.0,
+            "son_equity": 137104.92182175102
+          },
+          "uye_sayisi": {
+            "ilk": 398,
+            "son": 398,
+            "ay_ort": 398.0,
+            "ay_n": 1,
+            "neden": null
+          }
+        }
+      },
+      "aday": {
+        "ay_n": 61,
+        "aday_n_min": 390,
+        "aday_n_ort": 398.4754098360656,
+        "aday_n_son": 399,
+        "kaynak": "D hücresinin ay-sonu defteri (aday süzgeci iki hücrede AYNIdır)",
+        "dusuk_ay_n": 0,
+        "dusuk_ay_payi": 0.0,
+        "dusuk_ay_neden": null,
+        "dusuk_ay_esigi": 30.0
+      },
+      "olculemeyen": {
+        "n": 15,
+        "birlesim_n": 661,
+        "oran": 0.0226928895612708,
+        "neden": null,
+        "not": "sayılar `k093.barlari_yukle` muhasebesinden okunur; yeniden hesaplanmaz (tek-kaynak yasası). Ölçülemeyen isim UYDURULMAZ, ADIYLA sayılır."
+      }
+    }
+  },
+  "k_beyani": {
+    "satirlar": [
+      "K = 2 (kart `k_registry`): EDG-099-midcap-D-aylik-rebalans-fazla ve EDG-099-midcap-C-chandelier-fazla — BİRİNCİL koşumdan (belirsiz `dahil`).",
+      "PK-1 (large-cap as-of), yanlılık göstergeleri, taban çıtasına karşı fazla, yıl-yıl dilim ve belirsiz-isim duyarlılığı TANIdır — K harcamaz.",
+      "Eşik kartın ön-kayıtlı tanımıdır ve bu dosya YENİ EŞİK UYDURMAZ; kartta sayısı olmayan kill-list lafzı `tetik: None` ile durur."
+    ]
+  },
+  "ithal_yan_etkisi": {
+    "_cache": {
+      "koşumdan_once_vardi": false,
+      "silindi": true,
+      "icerik": [],
+      "neden": null
+    },
+    "_state": {
+      "koşumdan_once_vardi": false,
+      "silindi": true,
+      "icerik": [],
+      "neden": null
+    }
+  }
+}

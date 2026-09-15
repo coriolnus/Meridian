@@ -8,7 +8,7 @@
 # ölçüm şasisi kodu (engine2.py/load.py…, kod_damgasi.json sha'ları) DEPODA YOK — yalnız RAPOR/sonuc; bu kart şasiyi YENİDEN yazar ve depoya koyar.
 
 card_id: EDG-2026-099
-status: registered   # kod dilimi (Opus) → A1 koşumu (Rol-1) → hüküm Rol-1
+status: measured     # 2026-09-15 08:3xZ hüküm hukum_2026_09_15 — KALDI (t kapısı; nokta tahmini büyük, CI-0-dışı; güç/pencere)
 family: pit_midcap_ust_sinir
 on_kayit: 2026-09-15
 selef:
@@ -70,3 +70,14 @@ notlar: >
   Bedel: Opus ~2 tur (~500k) + Sonnet + A1 ~10 dk (661 isim, aylık karar). Yan ürün: trend ölçüm şasisi DEPOYA girer (EDG-009'un
   kayıp şasisinin yerine geçmez ama PIT kolunu yeniden üretebilir kılar). Üst-sınır damgası: delist edilen mid-cap barları IEX'te
   varsa (2020+) ÜST-SINIR değil GERÇEK PIT'e yakındır — EDG-093 ADIM-0 B kapsama haritası (barsız çıkış %0,38) bunu destekler.
+
+hukum_2026_09_15:
+  tarih: "2026-09-15T08:3xZ"
+  status_gecisi: "registered → measured; K 2/2 harcandı (EDG-099-midcap-D-aylik-rebalans-fazla: +17,58 p/yıl, CI95 [+0,48; +35,55] CI-0-dışı, t_NW 1,57 → t kapısı DÜŞTÜ · EDG-099-midcap-C-chandelier-fazla: +8,17 p/yıl, CI95 [−6,84; +25,37] CI-0-içi, t 0,85 → DÜŞTÜ)"
+  hukum: "KALDI — kill-list 2 (t < 2). D hücresinde fazla eşiği (+3 p) ve bootstrap CI-0-dışılığı SAĞLANDI ama Newey-West t 1,57 < 2; C hücresi hiçbir kapıyı geçmedi. TEŞHİS (Rol-1, eşik değil): 60 aylık fazla serisinin yıllık sapması %27,4 → t≥2 için ≥ +22 p/yıl gerekirdi; aynı pencerede large-cap PK-1 D'de de t 1,71 (< 2) — kısıt sinyal değil PENCERE GÜCÜ (IEX bar tabanı 2020-07'den başlar, ilk karar 2021-07, 60 ay). Sinyal yönü ve ölçeği large-cap ile tutarlı (mid-cap D +17,6 vs large-cap D +12,6; Sharpe 0,60 vs çıta 0,34; pozitif ay %53). Mid-cap PIT'te trend kolu 'kanıtlanamadı', 'yok' DEĞİL. TSK-065 için cevap: mid-cap evren genişletmesinin sinyal gerekçesi OLASI ama bu veriyle kanıtsız; kanıt için 2020 öncesi mid-cap bar geçmişi (IEX'te yok → ücretli kaynak, operatör para kararı) ya da canlı yılların birikmesi (yılda +12 gözlem). Dördüncü kart açılmaz; kalem veri kapısına bağlanır."
+  pk: "PK-1 large-cap as-of (sp500 kohortu 629 isim, 253 bar yüklendi, 61 ay): D +12,55 p/yıl CI95 [+2,39; +24,14] CI-0-dışı ✓ (t 1,71), C +6,72 CI-0-içi — kart lafzı (D pozitif + CI-0-dışı) SAĞLANDI; PK-2 sentetik (v497 T2/T5/T6) ✓; PK-3 bakma-ileri çivisi (T3) ✓; sabitler trend_shadow ile eşit (T1/T10) ✓. ay_sonu_aday asgari 390 ≥ 30 ✓ (düşük ay payı 0); ölçülemeyen 15/661 = 0,023 ≤ 0,20 ✓ (hepsi 317 bardan kısa seri: CLGX, CMD, DLPH, DNKN, GRUB, LM, LOGM, PRAH, PRSP, SOLS, TCF, TCO, WPX, WRI, XEC)."
+  ust_sinir_damgasi: "kapsama haritası (EDG-093 ADIM-0 B, 20260914T150444Z): barsız-çıkış payı 0,38% → yanlılık ÜST-SINIR küçük; delist edilen mid-cap barları IEX'te var (2020+) — gerçek PIT'e yakın. Karantina 6 sembol, kısa 15."
+  devir: "D: 61 rebalans, 827 işlem bacağı, 218 kapanan, friksiyon 6.661 $ (100k sermaye); çıkışlar rotate 202 / üyelik 16 / hedef_disi 0. C: chandelier 318 / üyelik 12 / hedef_disi 0."
+  girdi_blob: "sonuc_099_20260915T081910Z.json blob e546400aa9c3 · RAPOR_099_20260915T081910Z.md blob 7477fd4559bf (research/olcumler/edg099_midcap_trend/olcum/); kohort sha 65ff6c5a…, kart sha 32540fd6…, elle eşleme sha 81e67ef8…; barlar A1 /opt/veri/olcum/edg093/bars (661) + state/bars (260, PK); pencere 2020-07-27→2026-08-20, --belirsiz dahil; tohum 2206328332 (kart kimliğinden); kod k099.py (main 6c0e42a, sha 4d5e1158…)."
+  bedel: "Opus ×1 (~407k token, 48 dk) + Sonnet ×1 + A1 koşumu 2,5 dk (661 isim + PK 253)."
+  yan_urun: "Trend ölçüm şasisi DEPOYA girdi (EDG-009'un kayıp şasisinin yerine; PIT as-of üyelikli, PK'li); mid-cap D hücresinin CI-0-dışı fazlası ileride daha uzun pencerede yeniden ölçülebilir (tek komut)."
