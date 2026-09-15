@@ -14,7 +14,9 @@ kuralı silmeden/gevşetmeden önce o kaydı oku. Sayı taşıyan her satır öl
    worktree/ikinci terminal/cloud klonu ise **yan oturum**; subagent isen **ajan**.
 3. Bu turda geçemeyeceğin kapıları listele (§3 matrisi). Örn. "Ajanım: git yok, dağıtım yok,
    tam suite yok, kartsız ölçüm yok, pytest dışı koşum yok."
-4. Rol-1 isen A1'de `~/bin/sayfa_oku.sh meridian-hedef-sapma` (LLM'siz GET) oku; sayfa bir karara
+4. Rol-1 isen `gh run list --branch main --limit 3` oku: CI kırmızıysa o turun İLK işi kök nedendir (vaka
+   2026-09-15: 8 gün kırmızı, TSK-190).
+5. Rol-1 isen A1'de `~/bin/sayfa_oku.sh meridian-hedef-sapma` (LLM'siz GET) oku; sayfa bir karara
    girerse o kararın yanına `kaynak: zihin modeli <ad> v<n>` yaz, girmezse yazma (sahte-kullanım yasağı).
    Kural EDG-2026-089 penceresinin ön şartıdır (operatör (b) melez+retain, 2026-09-13); kaldırılırsa kart KALIR.
 
@@ -213,6 +215,9 @@ Zorlanma katmanı dürüstçe etiketlidir — zorlanamayan yasa, zorlananla ayn�
 - Tur kapanışı: commit → `git push origin main`. Push'lanmamış iş cloud'da yoktur. **Push ≠ dağıtım.**
 - Motor kaynağına (`meridian/`) dokunan turda push, tam suite hükmünden ÖNCE atılmaz — üç ardışık
   commit CI kırmızısı üretti (vaka 2026-08-29).
+- Push'tan sonra CI hükmü AYNI turda okunur: `gh run list --branch main --limit 3` — kırmızıysa kök neden
+  o turda, sonraki push'a ertelenmez. main 8 gün kırmızı kaldı, hiçbir triyaj sormuyordu (vaka
+  2026-09-15, TSK-190). Motor turunda üçlü suite hükmü CI'nın yerine geçmez: ikisi ayrı kapıdır.
 - Ajan uçuştayken: `git add <açık yollar>`. `git add -A` yasak (vaka a94d425).
 - Üretilmiş belgeler (RUNBOOK) tur kapanışında BİR kez üretilir; günlük düzenlemesi + yeniden
   üretim TEK commit'te (ayrışırsa çivi her günlük commit'inde kırılır — tekrarlanan vaka).
