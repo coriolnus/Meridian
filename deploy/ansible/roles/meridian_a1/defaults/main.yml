@@ -95,6 +95,7 @@ apt_paketleri:
   - jq
   - git
   - unattended-upgrades
+  - python3-debian   # deb822_repository modülünün hedef bağımlılığı (TSK-176 T1, 2026-09-15: check kipi kuramadı → önce bu liste)
   # ÖLÇÜLEN EKSİK (TSK-064 Faz-2, A1 ilk kurulumu 2026-09-14 09:0xZ): `unzip` A1'de KURULU
   # DEĞİLDİ ve `deploy/vault/vault_kur.sh` adım 1 tam da doğrulanmış zip'i açacağı yerde düştü.
   # Betik artık stdlib'e (python3 zipfile) düşebiliyor, ama fallback bir ÖZÜR değildir: temiz
