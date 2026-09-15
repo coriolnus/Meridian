@@ -75,9 +75,9 @@ zorunlu_sir_dosyalari:
   - yol: /etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY
     sahip: root
     mod: "0400"
-  - yol: /opt/meridian/.dash.env
-    sahip: ubuntu
-    mod: "0600"
+  # /opt/meridian/.dash.env LİSTEDEN ÇIKTI (2026-09-15): faz-2 drop-in (51-dash-env-kaldir.conf) ortam kanalını kapattı,
+  # dash jetonu yalnız LoadCredential (/etc/meridian/dash_token, Vault Agent üretir); dosya A1'de yok — beklenti bayattı
+  # ve A0 koşumunu düşürüyordu. Kalan .dash.env izleri dalga-2 iki-kanal temizliğinde (TSK-064 (d), ≥2026-09-17).
 
 # ==============================================================================================
 # Task 2 (görev dosyaları) eklemeleri — 2026-09-08. Değerlerin kaynağı ADIYLA yazılıdır:
