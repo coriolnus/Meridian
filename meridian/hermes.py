@@ -2840,13 +2840,21 @@ def _nous_portal_model() -> str:
     kendisiydi. Varsayılan burada UYDURMA DEĞİLDİR ve ayrım `_model_id` docstring'inde yazılı:
     portal modunda gövdeyi BİZ kuruyoruz, yani `NOUS_DEFAULT_MODEL` gerçekten GİDEN addır (yerel
     ajan modunda değildi — orada adı CLI'nın kendi config'i seçer, bu yüzden orası None döner).
-    ÖLÜ-AD GÖÇÜ BU YÜZEYDE HÂLÂ UYGULANMIYOR — ama GEREKÇESİ 2026-09-14'te (TSK-189) DEĞİŞTİ ve
-    dürüstçe yazılması gerekiyor: harita artık yalnız Google adlarını taşımıyor, OpenRouter
-    404'lerini de taşıyor, yani "çeviri burada adı BOZARDI" savı ARTIK GEÇERLİ DEĞİL. Bugünkü
-    gerekçe daha dar: bu ayağın adı künye sözleşmesine giriyor (`chain_text` → `model_istenen`)
-    ve göçü buraya taşımak o sözleşmenin ÖLÇÜLMESİNİ ister; TSK-189 kapsamı yedek/config
-    yüzeyleriydi. AÇIK KALEM: portal birincili ölü bir ada ayarlanırsa burası 404 yer."""
-    return secrets.get("NOUS_MODEL") or NOUS_DEFAULT_MODEL
+
+    ÖLÜ-AD GÖÇÜ BU YÜZEYDE DE UYGULANIR (2026-09-15): sırdaki ad bilinen-ölü ise kanonik alias'a
+    çevrilir, yani portal birincili ölü bir ada ayarlıyken burası artık 404 YEMEZ. Olay `olay=True`
+    ile basılır çünkü burası bir RAPOR yüzeyi DEĞİL, gerçek çağrı yoludur: dönüş ya `_nous_text`in
+    HTTP gövdesine yazılır ya da aynı çağrının yanında künye olarak okunur (rapor/sonda yüzeyleri
+    `_model_id` üzerinden sessiz okur). Kaynak etiketi `NOUS_MODEL(portal)`: aynı sırrı zincir ayağı
+    da okuyor ve olay tekilleştirmesi (kaynak, ad) çiftiyle yapılıyor — etiket ayrık olmasaydı iki
+    yüzeyden biri sessizce yutulurdu.
+
+    KÜNYE İLE GÖVDE AYRIŞAMAZ: ikisi de bu TEK dönüşü okuduğu için göç ikisine birden uygulanır —
+    "ne çağırdık / ne rapor ettik" ayrışması burada yapısal olarak imkânsızdır. Tanınmayan ad
+    SERBEST GEÇER (elimizdeki ölü-ad listesi bir kesittir). Çivi:
+    tests/test_yedek_beyin_olu_ad_v493.py (T8a göç+olay · T8b tek kaynak · T8c serbest geçiş)."""
+    return canonical_model(secrets.get("NOUS_MODEL") or NOUS_DEFAULT_MODEL,
+                           kaynak="NOUS_MODEL(portal)", olay=True) or NOUS_DEFAULT_MODEL
 
 
 def _nous_headers() -> dict[str, str]:
