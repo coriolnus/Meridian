@@ -224,7 +224,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
   - `meridian/watchdog.py::check_integrity_and_alarm` → mesaj şablonu: `f"KORUNUM İHLALİ: {_kon['unexplained']} plan kayıtsız kayboldu " f"(payda: uyuyan-kurulum terminali {_uyk} · silahlanma tarihçesi " f"OKUNAMAYAN {_uyo} — damgasız plan terminal SAYILMAZ)"`
   - `meridian/watchdog.py::check_integrity_and_alarm` → mesaj şablonu: `f"MAKULLÜK: {pr['check']} — {pr['detail']}"`
   - `meridian/watchdog.py::check_integrity_and_alarm` → mesaj şablonu: `f"DEĞER AYRIŞMASI: {dv['olgu']} — aynı olguyu iddia eden kaynaklar ZIT " f"değer taşıyor ({_k}) · {dv['neden']}"`
-  - `meridian/watchdog.py::check_integrity_and_alarm` → mesaj şablonu: `f"BAYAT TÜREV: {st['artifact']} kaynağından {st['behind_h']} sa geride"`
+  - `meridian/watchdog.py::check_integrity_and_alarm` → mesaj şablonu: `f"BAYAT TÜREV: {st['artifact']} kaynağından {st['behind_h']} sa geride " f"(eşik {st['esik_h']} sa)"`
   - `meridian/watchdog.py::check_integrity_and_alarm` → mesaj şablonu: `f"OKUNMAYAN ARTEFAKT: {_a} yazılıyor ama hiçbir modül okumuyor"`
   - `meridian/watchdog.py::check_liveness_and_alarm` → mesaj şablonu: `f"SPRINT CANLILIĞI ÖLÇÜLEMEDİ: {sp.get('beyan')}"`
   - `meridian/watchdog.py::check_liveness_and_alarm` → mesaj şablonu: `f"ÖĞRENME CANLILIĞI ÖLÇÜLEMEDİ: {lr.get('beyan')}"`

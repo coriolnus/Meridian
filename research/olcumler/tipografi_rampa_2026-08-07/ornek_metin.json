@@ -55,7 +55,7 @@
  "`meridian/watchdog.py::check_integrity_and_alarm` → mesaj şablonu: `f\"mekanizma ÜRETMİYOR: {s['name']} — {s['note']} (0 çıktı)\"`",
  "`meridian/watchdog.py::check_integrity_and_alarm` → mesaj şablonu: `f\"KORUNUM İHLALİ: {_kon['unexplained']} plan kayıtsız kayboldu \" f\"(payda: uyuyan-kurulum terminali {_uyk} · silahlanma tarihçesi \" f\"OKUNAMAYAN {_uyo} — damgasız plan terminal SAYILMAZ)\"`",
  "`meridian/watchdog.py::check_integrity_and_alarm` → mesaj şablonu: `f\"DEĞER AYRIŞMASI: {dv['olgu']} — aynı olguyu iddia eden kaynaklar ZIT \" f\"değer taşıyor ({_k}) · {dv['neden']}\"`",
- "`meridian/watchdog.py::check_integrity_and_alarm` → mesaj şablonu: `f\"BAYAT TÜREV: {st['artifact']} kaynağından {st['behind_h']} sa geride\"`",
+ "`meridian/watchdog.py::check_integrity_and_alarm` → mesaj şablonu: `f\"BAYAT TÜREV: {st['artifact']} kaynağından {st['behind_h']} sa geride \" f\"(eşik {st['esik_h']} sa)\"`",
  "`meridian/watchdog.py::check_integrity_and_alarm` → mesaj şablonu: `f\"OKUNMAYAN ARTEFAKT: {_a} yazılıyor ama hiçbir modül okumuyor\"`",
  "`meridian/watchdog.py::check_mutabakat_and_alarm` → mesaj şablonu: `f\"MUTABAKAT TAZELİĞİ ÖLÇÜLEMEDİ: {rep.get('neden')}\"`",
  "`ops/keepalive.sh` — gövdesinde `obs.alarm('MECHANISM_STALE')` ateşliyor (satır 46); bu betik jetonun KURTARMA YÖNETİCİSİDİR.",
