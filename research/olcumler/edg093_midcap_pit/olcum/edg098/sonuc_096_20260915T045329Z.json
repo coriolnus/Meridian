@@ -1,0 +1,683 @@
+{
+  "kart": "EDG-2026-098",
+  "kart_id": "EDG-2026-098",
+  "kapi_semasi": {
+    "a_kipi": "goreli_yalniz_anlamli",
+    "katman_i": "kip_listesi"
+  },
+  "esik_adlari": {
+    "a_kipi": "a_kipi_pk1_goreli_tol",
+    "katman_i": "katman_i_pk_kipler"
+  },
+  "asama": "kip karşılaştırması — EDG-093 kodunun üç evren kipindeki koşumları",
+  "hukum": "YOK — Rol-1",
+  "rol": "ölçüm ajanı — HÜKÜM VERMEZ, hüküm ÖNERİSİ DE YAZMAZ; kart dosyasına DOKUNULMADI",
+  "okuyan": "(1) Rol-1: hüküm AYNI turda karta + K defterine işlenir (CLAUDE.md §5); (2) RAPOR_096_<damga>.md okuyucusu (operatör masası).",
+  "yazim_beyani": "YAZILAN HER ŞEY --cikti altındadır: sonuc_096_<damga>.json ve RAPOR_096_<damga>.md. repo/state'e yazım YOK; meridian İTHAL EDİLMEDİ; ağa çıkılmadı; hiçbir sayı yeniden hesaplanmadı (hepsi girdi json'larından OKUNDU).",
+  "damga_utc": "20260915T045329Z",
+  "olcum_tarihi": "2026-09-15T04:53:29.350777+00:00",
+  "uretici": "research/olcumler/edg093_midcap_pit/karsilastir096.py",
+  "girdi_damgasi": {
+    "asof": {
+      "yol": "/opt/veri/olcum/edg098/asof/sonuc_093_20260915T042345Z.json",
+      "sha256": "4541177527beb1fa7155d3461750e6c58fe40fc6062b5cbe7dbc02f4f029f2cb",
+      "neden": null
+    },
+    "guncel": {
+      "yol": "/opt/veri/olcum/edg098/guncel/sonuc_093_guncel_20260915T042826Z.json",
+      "sha256": "1c90eff1ac6b5ade5b06b859b98a9972343c1403e22adbb88a70e1dc9e90f2e5",
+      "neden": null
+    },
+    "sabit": {
+      "yol": "/opt/veri/olcum/edg098/sabit/sonuc_093_sabit_20260915T044047Z.json",
+      "sha256": "712e8f20aedacccae7fa07fd9df706a25d1733e9fc160efbfe74203d5316da14",
+      "neden": null
+    },
+    "pk1_referans": {
+      "yol": "/opt/veri/olcum/edg093/olcum/sonuc_093_20260914T191231Z.json",
+      "sha256": "bd2320e5aa907d96172b924046b9b22440a6eb23a901bb6f4ef73ea1ffbe5232",
+      "neden": null
+    },
+    "kart": {
+      "yol": "/opt/meridian/research/cards/EDG-2026-098-edg016-katman-ii-sagkalan-desen-tutarliligi.yaml",
+      "sha256": "6e2dcc4b6e1b76bacd7ea205eccbb1f4ffaebe43afc9912527e6d4d5e8c9d42d",
+      "neden": null
+    },
+    "olcum_kodu": {
+      "yol": "/opt/meridian/research/olcumler/edg093_midcap_pit/karsilastir096.py",
+      "sha256": "431996decaa60edc995a4b2a68158c70189d80d49d50bf67960cc1bbaae6c680",
+      "neden": null
+    }
+  },
+  "kipler": {
+    "asof": {
+      "okundu": true,
+      "yol": "/opt/veri/olcum/edg098/asof/sonuc_093_20260915T042345Z.json",
+      "beklenen_kip": "asof",
+      "bulunan_kip": "asof",
+      "damga": "20260915T042345Z",
+      "DURUM": "OLCULDU",
+      "kosum_anahtari": "dahil",
+      "sabit_liste_kunyesi": {
+        "kaynak": null,
+        "n": null,
+        "sha256": null,
+        "kapsam_disi_n": null,
+        "kapsam_disi_oran": null,
+        "kapsam_disi_ornek": [],
+        "belirsiz_kesisim_n": null,
+        "belirsiz_kesisim": [],
+        "tanim": "sabit liste YALNIZ `--uyelik-kipi sabit` koşumunda kullanılır",
+        "neden": "üyelik kipi `asof` — sabit liste KULLANILMADI"
+      },
+      "neden": null
+    },
+    "guncel": {
+      "okundu": true,
+      "yol": "/opt/veri/olcum/edg098/guncel/sonuc_093_guncel_20260915T042826Z.json",
+      "beklenen_kip": "guncel",
+      "bulunan_kip": "guncel",
+      "damga": "20260915T042826Z",
+      "DURUM": "OLCULDU",
+      "kosum_anahtari": "dahil",
+      "sabit_liste_kunyesi": {
+        "kaynak": null,
+        "n": null,
+        "sha256": null,
+        "kapsam_disi_n": null,
+        "kapsam_disi_oran": null,
+        "kapsam_disi_ornek": [],
+        "belirsiz_kesisim_n": null,
+        "belirsiz_kesisim": [],
+        "tanim": "sabit liste YALNIZ `--uyelik-kipi sabit` koşumunda kullanılır",
+        "neden": "üyelik kipi `guncel` — sabit liste KULLANILMADI"
+      },
+      "neden": null
+    },
+    "sabit": {
+      "okundu": true,
+      "yol": "/opt/veri/olcum/edg098/sabit/sonuc_093_sabit_20260915T044047Z.json",
+      "beklenen_kip": "sabit",
+      "bulunan_kip": "sabit",
+      "damga": "20260915T044047Z",
+      "DURUM": "OLCULDU",
+      "kosum_anahtari": "dahil",
+      "sabit_liste_kunyesi": {
+        "kaynak": "ithal yüzeyi: meridian adapters data modülünün REPLAY_UNIVERSE listesi (EDG-016'nın sabit evreni) — dosya verilmedi",
+        "n": 248,
+        "sha256": "e61c2dab3319cd97da7498def2d080c50aa0e02cf2868bb05337d66d70100ce2",
+        "kapsam_disi_n": 6,
+        "kapsam_disi_oran": 0.024194,
+        "kapsam_disi_ornek": [
+          "EL",
+          "HRL",
+          "META",
+          "MKC",
+          "STZ",
+          "TSN"
+        ],
+        "belirsiz_kesisim_n": 0,
+        "belirsiz_kesisim": [],
+        "tanim": "sabit listede bar/shares kapsamının DIŞINDA kalan isimler ÖLÇÜLEMEDİ sayılır (değer UYDURULMAZ, geriye taşınmaz); kart eşiği `olculemeyen_sabit_liste_ust_oran` bu oranı okur. `belirsiz_kesisim` bir UYARIDIR — sabit kipte belirsiz isimler DÜŞÜRÜLMEZ.",
+        "neden": null
+      },
+      "neden": null
+    }
+  },
+  "pk1_referansi": {
+    "okundu": true,
+    "yol": "/opt/veri/olcum/edg093/olcum/sonuc_093_20260914T191231Z.json",
+    "damga": "20260914T191231Z",
+    "neden": null
+  },
+  "tablo": [
+    {
+      "kip": "asof",
+      "bacak": "i_ust20_kohort_fazlasi",
+      "deger_alani": "ort",
+      "ufuk": "10",
+      "deger": 0.003268,
+      "ci": {
+        "lo": 9.7e-05,
+        "hi": 0.006303,
+        "seviye": 0.95
+      },
+      "ci0_disi": true,
+      "pozitif_anlamli": true,
+      "n": 69125,
+      "neden": null
+    },
+    {
+      "kip": "asof",
+      "bacak": "i_ust20_kohort_fazlasi",
+      "deger_alani": "ort",
+      "ufuk": "20",
+      "deger": 0.006346,
+      "ci": {
+        "lo": 0.000321,
+        "hi": 0.011838,
+        "seviye": 0.95
+      },
+      "ci0_disi": true,
+      "pozitif_anlamli": true,
+      "n": 68665,
+      "neden": null
+    },
+    {
+      "kip": "asof",
+      "bacak": "ii_a1_kova_tabanli_fazla",
+      "deger_alani": "ort",
+      "ufuk": "10",
+      "deger": 0.002219,
+      "ci": {
+        "lo": -0.000507,
+        "hi": 0.004823,
+        "seviye": 0.95
+      },
+      "ci0_disi": false,
+      "pozitif_anlamli": false,
+      "n": 69125,
+      "neden": null
+    },
+    {
+      "kip": "asof",
+      "bacak": "ii_a1_kova_tabanli_fazla",
+      "deger_alani": "ort",
+      "ufuk": "20",
+      "deger": 0.004545,
+      "ci": {
+        "lo": -0.000859,
+        "hi": 0.009688,
+        "seviye": 0.95
+      },
+      "ci0_disi": false,
+      "pozitif_anlamli": false,
+      "n": 68665,
+      "neden": null
+    },
+    {
+      "kip": "asof",
+      "bacak": "ii_b_artik_ic_fazla",
+      "deger_alani": "ic",
+      "ufuk": "10",
+      "deger": 0.0061,
+      "ci": {
+        "lo": -0.0196,
+        "hi": 0.0297,
+        "seviye": 0.95
+      },
+      "ci0_disi": false,
+      "pozitif_anlamli": false,
+      "n": 342148,
+      "neden": null
+    },
+    {
+      "kip": "asof",
+      "bacak": "ii_b_artik_ic_fazla",
+      "deger_alani": "ic",
+      "ufuk": "20",
+      "deger": 0.0089,
+      "ci": {
+        "lo": -0.0224,
+        "hi": 0.0385,
+        "seviye": 0.95
+      },
+      "ci0_disi": false,
+      "pozitif_anlamli": false,
+      "n": 339818,
+      "neden": null
+    },
+    {
+      "kip": "guncel",
+      "bacak": "i_ust20_kohort_fazlasi",
+      "deger_alani": "ort",
+      "ufuk": "10",
+      "deger": 0.003176,
+      "ci": {
+        "lo": 0.001456,
+        "hi": 0.004979,
+        "seviye": 0.95
+      },
+      "ci0_disi": true,
+      "pozitif_anlamli": true,
+      "n": 178089,
+      "neden": null
+    },
+    {
+      "kip": "guncel",
+      "bacak": "i_ust20_kohort_fazlasi",
+      "deger_alani": "ort",
+      "ufuk": "20",
+      "deger": 0.00644,
+      "ci": {
+        "lo": 0.003198,
+        "hi": 0.009721,
+        "seviye": 0.95
+      },
+      "ci0_disi": true,
+      "pozitif_anlamli": true,
+      "n": 177639,
+      "neden": null
+    },
+    {
+      "kip": "guncel",
+      "bacak": "ii_a1_kova_tabanli_fazla",
+      "deger_alani": "ort",
+      "ufuk": "10",
+      "deger": 0.002683,
+      "ci": {
+        "lo": 0.001147,
+        "hi": 0.004258,
+        "seviye": 0.95
+      },
+      "ci0_disi": true,
+      "pozitif_anlamli": true,
+      "n": 178089,
+      "neden": null
+    },
+    {
+      "kip": "guncel",
+      "bacak": "ii_a1_kova_tabanli_fazla",
+      "deger_alani": "ort",
+      "ufuk": "20",
+      "deger": 0.005512,
+      "ci": {
+        "lo": 0.002662,
+        "hi": 0.008237,
+        "seviye": 0.95
+      },
+      "ci0_disi": true,
+      "pozitif_anlamli": true,
+      "n": 177639,
+      "neden": null
+    },
+    {
+      "kip": "guncel",
+      "bacak": "ii_b_artik_ic_fazla",
+      "deger_alani": "ic",
+      "ufuk": "10",
+      "deger": 0.0197,
+      "ci": {
+        "lo": 0.0039,
+        "hi": 0.0375,
+        "seviye": 0.95
+      },
+      "ci0_disi": true,
+      "pozitif_anlamli": true,
+      "n": 881427,
+      "neden": null
+    },
+    {
+      "kip": "guncel",
+      "bacak": "ii_b_artik_ic_fazla",
+      "deger_alani": "ic",
+      "ufuk": "20",
+      "deger": 0.0283,
+      "ci": {
+        "lo": 0.0088,
+        "hi": 0.0489,
+        "seviye": 0.95
+      },
+      "ci0_disi": true,
+      "pozitif_anlamli": true,
+      "n": 879167,
+      "neden": null
+    },
+    {
+      "kip": "sabit",
+      "bacak": "i_ust20_kohort_fazlasi",
+      "deger_alani": "ort",
+      "ufuk": "10",
+      "deger": 0.001433,
+      "ci": {
+        "lo": -0.001561,
+        "hi": 0.00404,
+        "seviye": 0.95
+      },
+      "ci0_disi": false,
+      "pozitif_anlamli": false,
+      "n": 180298,
+      "neden": null
+    },
+    {
+      "kip": "sabit",
+      "bacak": "i_ust20_kohort_fazlasi",
+      "deger_alani": "ort",
+      "ufuk": "20",
+      "deger": 0.002944,
+      "ci": {
+        "lo": -0.00271,
+        "hi": 0.007721,
+        "seviye": 0.95
+      },
+      "ci0_disi": false,
+      "pozitif_anlamli": false,
+      "n": 179828,
+      "neden": null
+    },
+    {
+      "kip": "sabit",
+      "bacak": "ii_a1_kova_tabanli_fazla",
+      "deger_alani": "ort",
+      "ufuk": "10",
+      "deger": 0.002796,
+      "ci": {
+        "lo": 0.001243,
+        "hi": 0.004434,
+        "seviye": 0.95
+      },
+      "ci0_disi": true,
+      "pozitif_anlamli": true,
+      "n": 180298,
+      "neden": null
+    },
+    {
+      "kip": "sabit",
+      "bacak": "ii_a1_kova_tabanli_fazla",
+      "deger_alani": "ort",
+      "ufuk": "20",
+      "deger": 0.005776,
+      "ci": {
+        "lo": 0.00278,
+        "hi": 0.008534,
+        "seviye": 0.95
+      },
+      "ci0_disi": true,
+      "pozitif_anlamli": true,
+      "n": 179828,
+      "neden": null
+    },
+    {
+      "kip": "sabit",
+      "bacak": "ii_b_artik_ic_fazla",
+      "deger_alani": "ic",
+      "ufuk": "10",
+      "deger": 0.0188,
+      "ci": {
+        "lo": 0.0033,
+        "hi": 0.0356,
+        "seviye": 0.95
+      },
+      "ci0_disi": true,
+      "pozitif_anlamli": true,
+      "n": 892821,
+      "neden": null
+    },
+    {
+      "kip": "sabit",
+      "bacak": "ii_b_artik_ic_fazla",
+      "deger_alani": "ic",
+      "ufuk": "20",
+      "deger": 0.0274,
+      "ci": {
+        "lo": 0.0094,
+        "hi": 0.0472,
+        "seviye": 0.95
+      },
+      "ci0_disi": true,
+      "pozitif_anlamli": true,
+      "n": 890501,
+      "neden": null
+    }
+  ],
+  "esikler": {
+    "ii_b_artik_ic_20g_alt": {
+      "esik": 0.015,
+      "deger": 0.0283,
+      "gecti": true,
+      "detay": [
+        {
+          "kip": "guncel",
+          "ic": 0.0283,
+          "ci0_disi": true,
+          "gecti": true,
+          "neden": null
+        },
+        {
+          "kip": "sabit",
+          "ic": 0.0274,
+          "ci0_disi": true,
+          "gecti": true,
+          "neden": null
+        }
+      ],
+      "tanim": "B ya da C kipinde ii_b artık-IC @20 eşiği aşar VE CI-0-dışıysa geçer; iki kip de ölçülemediyse hüküm None (eksik girdi 'geçti' sayılmaz)",
+      "neden": null
+    },
+    "a_kipi_pk1_goreli_tol": {
+      "esik": 0.05,
+      "deger": 0.021735630333279615,
+      "gecti": true,
+      "tanim": "A kipi ↔ EDG-093 PK-1 (altı bacak): desen (yön + CI-0-dışılık) EŞİT ve PK-1'in CI-0-DIŞI bacaklarında göreli fark ≤ tolerans — değer O bacakların maksimum göreli farkıdır (bütün bacakların maksimumu kapı bloğunda `maks_goreli_fark` olarak durur)",
+      "neden": null
+    },
+    "a_kipi_pk1_goreli_yalniz_anlamli": {
+      "esik": true,
+      "deger": [
+        "i_ust20_kohort_fazlasi@10",
+        "i_ust20_kohort_fazlasi@20"
+      ],
+      "gecti": null,
+      "tanim": "KAPI DEĞİL — A kipi göreli kapısının BİRİM ayarı: True ise göreli tolerans YALNIZ PK-1'in CI-0-dışı bacaklarına uygulanır; değer o bacakların listesidir. Hüküm `a_kipi_pk1_goreli_tol` satırındadır.",
+      "neden": "ayar satırı — kapı değil (hüküm `a_kipi_pk1_goreli_tol` satırında)"
+    },
+    "katman_i_pk_kipler": {
+      "esik": [
+        "asof",
+        "guncel"
+      ],
+      "deger": 0.006346,
+      "gecti": true,
+      "detay": [
+        {
+          "kip": "asof",
+          "ort": 0.006346,
+          "ci0_disi": true,
+          "kapida": true,
+          "gecti": true,
+          "neden": null
+        },
+        {
+          "kip": "guncel",
+          "ort": 0.00644,
+          "ci0_disi": true,
+          "kapida": true,
+          "gecti": true,
+          "neden": null
+        },
+        {
+          "kip": "sabit",
+          "ort": 0.002944,
+          "ci0_disi": false,
+          "kapida": false,
+          "gecti": false,
+          "neden": null
+        }
+      ],
+      "tanim": "katman i @20 YALNIZ kartın listelediği kiplerde CI-0-dışı POZİTİF olmalı; sayısal taban YOKTUR (eşik bir KİP LİSTESİDİR). Listede olmayan kip raporlanır ama kapıya GİRMEZ (`kapida: false`).",
+      "neden": null
+    },
+    "olculemeyen_sabit_liste_ust_oran": {
+      "esik": 0.2,
+      "deger": 0.024194,
+      "gecti": true,
+      "kaynak": "ithal yüzeyi: meridian adapters data modülünün REPLAY_UNIVERSE listesi (EDG-016'nın sabit evreni) — dosya verilmedi",
+      "sabit_liste_sha256": "e61c2dab3319cd97da7498def2d080c50aa0e02cf2868bb05337d66d70100ce2",
+      "kapsam_disi_n": 6,
+      "sabit_liste_n": 248,
+      "tanim": "sabit listenin ÖLÇÜLEMEYEN payı eşiği aşarsa C kipi bilgisizdir; sayı C koşumunun künyesinden OKUNUR, yeniden hesaplanmaz",
+      "neden": null
+    }
+  },
+  "a_kipi_pk1_kapisi": {
+    "sema": "goreli_yalniz_anlamli",
+    "tolerans": 0.05,
+    "kiyaslanan_bacak_n": 6,
+    "maks_mutlak_fark": 0.0005000000000000004,
+    "gecti": true,
+    "detay": [
+      {
+        "bacak": "i_ust20_kohort_fazlasi",
+        "ufuk": "10",
+        "a_kipi_deger": 0.003268,
+        "pk1_deger": 0.003208,
+        "mutlak_fark": 6.000000000000016e-05,
+        "goreli_uygulandi": true,
+        "goreli_fark": 0.018703241895261895,
+        "tolerans_ici": true,
+        "yon_esit": true,
+        "a_kipi_ci0_disi": true,
+        "pk1_ci0_disi": true,
+        "ci0_disi_esit": true,
+        "gecti": true,
+        "neden": null
+      },
+      {
+        "bacak": "i_ust20_kohort_fazlasi",
+        "ufuk": "20",
+        "a_kipi_deger": 0.006346,
+        "pk1_deger": 0.006211,
+        "mutlak_fark": 0.0001349999999999997,
+        "goreli_uygulandi": true,
+        "goreli_fark": 0.021735630333279615,
+        "tolerans_ici": true,
+        "yon_esit": true,
+        "a_kipi_ci0_disi": true,
+        "pk1_ci0_disi": true,
+        "ci0_disi_esit": true,
+        "gecti": true,
+        "neden": null
+      },
+      {
+        "bacak": "ii_a1_kova_tabanli_fazla",
+        "ufuk": "10",
+        "a_kipi_deger": 0.002219,
+        "pk1_deger": 0.002159,
+        "mutlak_fark": 6.000000000000016e-05,
+        "goreli_uygulandi": false,
+        "goreli_fark": 0.027790643816581827,
+        "tolerans_ici": null,
+        "yon_esit": true,
+        "a_kipi_ci0_disi": false,
+        "pk1_ci0_disi": false,
+        "ci0_disi_esit": true,
+        "gecti": true,
+        "neden": null
+      },
+      {
+        "bacak": "ii_a1_kova_tabanli_fazla",
+        "ufuk": "20",
+        "a_kipi_deger": 0.004545,
+        "pk1_deger": 0.004406,
+        "mutlak_fark": 0.00013900000000000023,
+        "goreli_uygulandi": false,
+        "goreli_fark": 0.03154788924194286,
+        "tolerans_ici": null,
+        "yon_esit": true,
+        "a_kipi_ci0_disi": false,
+        "pk1_ci0_disi": false,
+        "ci0_disi_esit": true,
+        "gecti": true,
+        "neden": null
+      },
+      {
+        "bacak": "ii_b_artik_ic_fazla",
+        "ufuk": "10",
+        "a_kipi_deger": 0.0061,
+        "pk1_deger": 0.0059,
+        "mutlak_fark": 0.00020000000000000052,
+        "goreli_uygulandi": false,
+        "goreli_fark": 0.03389830508474585,
+        "tolerans_ici": null,
+        "yon_esit": true,
+        "a_kipi_ci0_disi": false,
+        "pk1_ci0_disi": false,
+        "ci0_disi_esit": true,
+        "gecti": true,
+        "neden": null
+      },
+      {
+        "bacak": "ii_b_artik_ic_fazla",
+        "ufuk": "20",
+        "a_kipi_deger": 0.0089,
+        "pk1_deger": 0.0084,
+        "mutlak_fark": 0.0005000000000000004,
+        "goreli_uygulandi": false,
+        "goreli_fark": 0.05952380952380958,
+        "tolerans_ici": null,
+        "yon_esit": true,
+        "a_kipi_ci0_disi": false,
+        "pk1_ci0_disi": false,
+        "ci0_disi_esit": true,
+        "gecti": true,
+        "neden": null
+      }
+    ],
+    "neden": null,
+    "tanim": "A kipi (as-of) EDG-093 PK-1 detayının ALTI bacağıyla AYNI yönde ve AYNI CI-0-dışılık deseninde olmalı; GÖRELİ tolerans YALNIZ PK-1'in CI-0-DIŞI bacaklarına uygulanır — CI-0-İÇİ bacakta oran anlamsız birimdedir, RAPORLANIR ama hüküm vermez",
+    "maks_goreli_fark": 0.05952380952380958,
+    "maks_goreli_fark_kapida": 0.021735630333279615,
+    "olculen_bacak_n": 6
+  },
+  "kill_list_tetik": [],
+  "kill_list_muhasebesi": {
+    "kart_kalem_n": 4,
+    "eslesen_n": 4,
+    "eslesmeyen_kart_kalemleri": [],
+    "durumlar": [
+      {
+        "anahtar": "a_kipi_pk1",
+        "belirtec": "A kipi PK-1",
+        "kalem": "A kipi PK-1 ile desen (yön + CI-0-dışılık) altı bacakta eşit değil YA DA CI-0-dışı bacakta göreli fark > %5 → kod/veri yolu doğrulanmadı, sayı yayılmaz",
+        "durum": false,
+        "kaynak_kapi": "a_kipi_pk1_kapisi",
+        "neden": null
+      },
+      {
+        "anahtar": "katman_i_pk",
+        "belirtec": "katman i",
+        "kalem": "katman i @20 as-of ya da güncel-liste kipinde CI-0-içi → ölçüm bilgisiz",
+        "durum": false,
+        "kaynak_kapi": "esikler.katman_i_pk_kipler",
+        "neden": null
+      },
+      {
+        "anahtar": "b_ve_c_ci0_ici",
+        "belirtec": "B VE C",
+        "kalem": "B VE C'de ii_b @20 CI-0-içi → hipotez KALDI (pencere etkisi); EDG-016'ya şerh",
+        "durum": false,
+        "kaynak_kapi": "esikler.ii_b_artik_ic_20g_alt",
+        "neden": null
+      },
+      {
+        "anahtar": "sabit_olculemeyen",
+        "belirtec": "sabit-251",
+        "kalem": "sabit-251 kapsam dışı payı > %20 → C kipi bilgisiz; yalnız B ile hüküm verilmez",
+        "durum": false,
+        "kaynak_kapi": "esikler.olculemeyen_sabit_liste_ust_oran",
+        "neden": null
+      },
+      {
+        "anahtar": "asof_regresyonu",
+        "belirtec": "as-of kipi çıktısı",
+        "kalem": null,
+        "durum": null,
+        "aday_n": 0,
+        "neden": "kart bu kalemi TAŞIMIYOR — kapı ölçülür ama kartta karşılığı YOK (ardıl kart kalemi kaldırmış olabilir)"
+      }
+    ],
+    "tanim": "kalem METNİ karttan gelir; burada yalnız 'hangi cümle hangi kapıya bağlı' eşlemesi durur. Eşleşmeyen kart kalemi ADIYLA sayılır — kart değişirse eşleme sessizce kaybolmasın."
+  },
+  "k_beyani": {
+    "trial_ids": [
+      "EDG-098-guncel-liste-ii-b-artik-ic-20g",
+      "EDG-098-sabit251-ii-b-artik-ic-20g"
+    ],
+    "kaynak": "kart `k_registry.trial_ids`",
+    "satirlar": [
+      "K = 2 (kart `k_registry`): EDG-098-guncel-liste-ii-b-artik-ic-20g, EDG-098-sabit251-ii-b-artik-ic-20g — B ve C kiplerinin ii_b artık-IC @20 bacağı.",
+      "A kipi EDG-093 PK-1'in TEKRARIdır ve K'ye GİRMEZ; tutarlılık kapısıdır.",
+      "Katman i ve ii_a1 raporlanır, K harcamaz (kart `k_registry` şerhi)."
+    ]
+  }
+}

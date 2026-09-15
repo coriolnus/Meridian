@@ -47,3 +47,9 @@ rol1_serhi_2026_09_15: >
   +0,65% / +0,56% / 0,0284); PIT as-of üyelikte katman i sağ (+0,635%) ama ii katmanı CI-0-içi (ii_b @20 0,0089). Okuma: ii
   katmanının (rvol/mom-kontrollü artık) CI-0-dışılığı üyelik seçiminin (sağkalan) artefaktı olabilir; formel hüküm ardıl
   EDG-2026-097 kartında (göreli tutarlılık kapısı). Canlı etki yok (EDG-031 w=0). Katman i (ana etki) PIT'te sağ kalır.
+
+rol1_nihai_serhi_2026_09_15: >
+  EDG-2026-098 (formel hüküm, sayılar orada): aynı kod ve 2020-07-27→2026-08-20 penceresinde ii katmanının (rvol/mom-kontrollü
+  artık) CI-0-dışılığı yalnız GÜNCEL-LİSTE / SABİT-251 üyelikte var; PIT as-of üyelikte YOK → çekince (1) ölçüldü: ii katmanı iddiası
+  sağkalan artefaktı. Katman i (ana etki) PIT'te sağ. EDG-013 "akraba sinyal" tezi bu kartın kendi hükmüyle çelişmez; EDG-031 w=0 →
+  canlı etki yok. Bu kartın GEÇTİ hükmü katman i için sürer, ii katmanı için geri alınmıştır (2026-09-15, Rol-1).

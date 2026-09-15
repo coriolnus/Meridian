@@ -1,0 +1,4015 @@
+{
+  "kart": "EDG-2026-093",
+  "aile": "pit_midcap_ust_sinir",
+  "asama": "ANA ÖLÇÜM Parti-2 — turnover ana etkisi (EDG-016 tasarımı aynen)",
+  "hukum": "YOK — Rol-1",
+  "rol": "ölçüm ajanı — HÜKÜM VERMEZ, hüküm ÖNERİSİ DE YAZMAZ; kart dosyasına DOKUNULMADI",
+  "okuyan": "(1) Rol-1: hüküm AYNI turda karta + K defterine işlenir (CLAUDE.md §5); (2) RAPOR_093_<damga>.md üreteci bu dosyayı okur.",
+  "yazim_beyani": "YAZILAN HER ŞEY --cikti altındadır: sonuc_093_<damga>.json, RAPOR_093_<damga>.md ve _state/ (config.STATE buraya çevrildi — canlı boru hattının obs yazımları canlı deftere DÜŞMESİN diye). repo/state'e yazım YOK; meridian.obs İTHAL EDİLMEDİ; ağa çıkılmadı.",
+  "damga_utc": "20260915T042345Z",
+  "olcum_tarihi": "2026-09-15T04:28:26.285373+00:00",
+  "uretici": "research/olcumler/edg093_midcap_pit/k093.py",
+  "cozulen_yollar": {
+    "repo": "/opt/meridian",
+    "meridian": "/opt/meridian/meridian",
+    "meridian_repo_icinde_mi": true,
+    "wp2_ortak": "/opt/meridian/research/olcumler/wp2_olcum/ortak.py",
+    "k016": "/opt/meridian/research/olcumler/wp2_olcum/k016.py",
+    "parti1_ortak": "/opt/meridian/research/olcumler/edg093_midcap_pit/ortak.py",
+    "config_state": "/opt/veri/olcum/edg098/asof/_state",
+    "config_bars": "/opt/meridian/state/bars"
+  },
+  "DURUM": "OLCULDU",
+  "girdi_damgasi": {
+    "kohort_csv": {
+      "yol": "/opt/meridian/research/pit_universe/sp500_uyelik_tarihi.csv",
+      "sha256": "39a9202c9ef69a74c0ff07e2113ad41fb6da7c8c5b6cd9541f0185fb4391e717",
+      "neden": null
+    },
+    "shares_csv": {
+      "yol": "/opt/meridian/research/edgar_facts/shares_outstanding.csv.gz",
+      "sha256": "446f7bf00a227c586697f0a9669e82dc85abbb9504d67df45e4b695a03d998a3",
+      "neden": null
+    },
+    "kart": {
+      "yol": "/opt/meridian/research/cards/EDG-2026-093-midcap-pit-kohort-sagkalan-ust-sinir.yaml",
+      "sha256": "9133ae6631d43a92d1d8ad28e0869c2ce63e2b31fa9d17d07455e26d59b2c9d9",
+      "neden": null
+    },
+    "kart092": {
+      "yol": "/opt/meridian/research/cards/EDG-2026-092-sp400-uyelik-tarihcesi-ucretsiz-kaynak-fizibilite.yaml",
+      "sha256": "10a77decb4a99d7c7851425987838ee5438c2eed512330ab2d11e016102165af",
+      "neden": null
+    },
+    "elle_esleme": {
+      "yol": "/opt/meridian/research/pit_universe/sp400_elle_esleme.yaml",
+      "sha256": "81e67ef88865c11b57f002fc6292706a81c4fb3f402c644900ac8b669f552f0f",
+      "neden": null
+    },
+    "kapsama_haritasi": {
+      "yol": null,
+      "sha256": null,
+      "neden": "yol verilmedi"
+    },
+    "sonuc_016_referans": {
+      "yol": "/opt/meridian/research/olcumler/wp2_olcum/sonuc_016.json",
+      "sha256": "4f45e5e946d115c29ae0de6592c859ee3d21ab364ec4bc6af972b09422025e05",
+      "neden": null
+    },
+    "bars_manifest": {
+      "yol": null,
+      "sha256": null,
+      "neden": "yol verilmedi"
+    },
+    "bars_dizin": {
+      "yol": "/opt/meridian/state/bars",
+      "sha256": null,
+      "neden": "dizin — tek sha yok; isim başına sha bars_manifest'tedir"
+    },
+    "olcum_kodu": {
+      "yol": "/opt/meridian/research/olcumler/edg093_midcap_pit/k093.py",
+      "sha256": "faf23a4d43518b292f08d5e9fd888f0e552c9d6c1f6f7a9a086c82858c919932",
+      "neden": null
+    },
+    "k016": {
+      "yol": "/opt/meridian/research/olcumler/wp2_olcum/k016.py",
+      "sha256": "fee321d9c66fcb35c992d43cb9a9476b3fd8b0895f0f1972eaaf5bf7e94c58b4",
+      "neden": null
+    },
+    "wp2_ortak": {
+      "yol": "/opt/meridian/research/olcumler/wp2_olcum/ortak.py",
+      "sha256": "8b274c5645838eb5fe11bbdd065703639c0917dac5a27059656c2f5572e94442",
+      "neden": null
+    },
+    "parti1_ortak": {
+      "yol": "/opt/meridian/research/olcumler/edg093_midcap_pit/ortak.py",
+      "sha256": "86ba30dc70d31adbc5045093021b3b04e0199877e38b46cc2d0e50666e2bfc99",
+      "neden": null
+    },
+    "bars_integrity_defteri": {
+      "yol": null,
+      "sha256": null,
+      "kopyalandi": false,
+      "neden": "--defter verilmedi → bars_integrity defteri YOK; `measurement_bars` hiçbir dönemi dışlamaz. EDG-016 turunda defter VARDI (canlı S&P 500 sembolleri); bu kohortun sembolleri o defterde yok — dışlama farkı `bar_muhasebesi.defter_yolu_dusen` ile ölçülür."
+    },
+    "sabit_liste": {
+      "yol": null,
+      "sha256": null,
+      "neden": "yol verilmedi"
+    }
+  },
+  "sabitler": {
+    "kaynak": "SABİTLER İTHAL EDİLİR — bu dosyada yeniden yazılmaz; v490 çivisi eşitliği ölçer",
+    "HORIZONS": [
+      10,
+      20
+    ],
+    "UST_PCT": 0.2,
+    "KONTROL_DILIM": 3,
+    "KOVA_MIN": 2,
+    "BLOCK": 21,
+    "BOOT": 2000,
+    "BOOT_IC": 600,
+    "MIN_SLICE": 30,
+    "MIN_KESIT": 50,
+    "MALIYET_BPS": 10.0,
+    "BAR_MIN_UZUNLUK": 317,
+    "BAYAT_GUN": 200
+  },
+  "uyelik_kipi": "asof",
+  "sabit_liste_kunyesi": {
+    "kaynak": null,
+    "n": null,
+    "sha256": null,
+    "kapsam_disi_n": null,
+    "kapsam_disi_oran": null,
+    "kapsam_disi_ornek": [],
+    "belirsiz_kesisim_n": null,
+    "belirsiz_kesisim": [],
+    "tanim": "sabit liste YALNIZ `--uyelik-kipi sabit` koşumunda kullanılır",
+    "neden": "üyelik kipi `asof` — sabit liste KULLANILMADI"
+  },
+  "evren_muhasebesi": {
+    "pencere_baslangic": "2020-07-27",
+    "pencere_baslangic_kaynak": "--baslangic ile ELLE verildi",
+    "pencere_bitis": "2026-08-20",
+    "pencere_bitis_kaynak": "--bitis ile ELLE verildi",
+    "as_of_satir_n": 96,
+    "kohort_ham_satir_n": 2718,
+    "pencere_oncesi_capa_satiri_var_mi": true,
+    "isim_n_birlesim": 629,
+    "son_gun_uye_n": 503,
+    "gozlem_gunu_n": 5710,
+    "uye_gun_hucre": 372330,
+    "olculen_sembol_n": 253,
+    "etkin_baslangic_olculen": "2020-07-27",
+    "etkin_baslangic_neden": null,
+    "isinma_notu": "Alpaca IEX bar tabanı 2020-07-27 (A1 ölçümü 2026-09-14, ADIM-0 EKSEN B kapsama haritası). turnover21 = medyan21(hacim)/shares, rvol20 ve mom21 ısınma ister; bu yüzden kohort penceresi 2020-07-27'de başlasa da ETKİN ölçüm penceresi ~2020-09'dan başlar. Ölçülen etkin başlangıç `etkin_baslangic_olculen` alanındadır — beyan ile ölçüm AYNI piksele düşmez.",
+    "belirsiz_n": 8,
+    "belirsiz_semboller": [
+      "BRKS",
+      "CHK",
+      "COHR",
+      "ELY",
+      "GPS",
+      "HFC",
+      "PSTG",
+      "ZI"
+    ],
+    "belirsiz_kaynak": "türetildi: /opt/meridian/research/pit_universe/sp400_elle_esleme.yaml — `karar: belirsiz` satırlarının `satir.etkisiz_semboller` alanı",
+    "belirsiz_neden": null
+  },
+  "kosumlar": {
+    "dahil": {
+      "kip": "dahil",
+      "DURUM": "OLCULDU",
+      "bar_muhasebesi": {
+        "istenen": 629,
+        "dosya_yok": 376,
+        "okunamadi": 0,
+        "kisa": 0,
+        "yuklendi": 253,
+        "hayalet_dusen": 0,
+        "karantina_dusen": 0,
+        "takvim_reddedilen": [],
+        "defter_yolu_dusen": 0,
+        "defter_yolu_sembol": 0,
+        "hesaplanan_dislanan_satir_UYGULANMADI": 48664,
+        "hesaplanan_dislanan_sembol": 60,
+        "kirilma_sinifi": {
+          "olcek_dikisi": 88,
+          "hayalet_gecmis": 4,
+          "bozuk_kesit": 1
+        },
+        "kisa_semboller": [],
+        "dosya_yok_semboller": [
+          "A",
+          "AAL",
+          "AAP",
+          "ABC",
+          "ABMD",
+          "ABNB",
+          "ACGL",
+          "ACN",
+          "ADM",
+          "ADP",
+          "AEE",
+          "AES",
+          "AIV",
+          "AIZ",
+          "AJG",
+          "AKAM",
+          "ALGN",
+          "ALK",
+          "ALLE",
+          "ALXN",
+          "AMCR",
+          "AME",
+          "AMP",
+          "AMTM",
+          "ANET",
+          "ANTM",
+          "AON",
+          "AOS",
+          "APA",
+          "APH",
+          "APP",
+          "APTV",
+          "ARE",
+          "ARES",
+          "ATO",
+          "ATVI",
+          "AVY",
+          "AWK",
+          "AXON",
+          "BALL",
+          "BBWI",
+          "BBY",
+          "BEN",
+          "BF.B",
+          "BG",
+          "BIO",
+          "BK",
+          "BLDR",
+          "BLL",
+          "BNY",
+          "BR",
+          "BRK.B",
+          "BRO",
+          "BWA",
+          "BXP",
+          "CAH",
+          "CARR",
+          "CASY",
+          "CBOE",
+          "CDAY",
+          "CDW",
+          "CE",
+          "CERN",
+          "CFG",
+          "CHRW",
+          "CIEN",
+          "CINF",
+          "CMA",
+          "CME",
+          "CMG",
+          "CMS",
+          "CNC",
+          "CNP",
+          "COG",
+          "COHR",
+          "COIN",
+          "COO",
+          "COR",
+          "COTY",
+          "CPAY",
+          "CPB",
+          "CPRT",
+          "CPT",
+          "CRH",
+          "CRL",
+          "CRWD",
+          "CSCO",
+          "CSGP",
+          "CTAS",
+          "CTL",
+          "CTLT",
+          "CTRA",
+          "CTVA",
+          "CTXS",
+          "CVNA",
+          "CXO",
+          "CZR",
+          "DASH",
+          "DAY",
+          "DDOG",
+          "DELL",
+          "DGX",
+          "DHI",
+          "DISCA",
+          "DISCK",
+          "DISH",
+          "DOC",
+          "DPZ",
+          "DRE",
+          "DRI",
+          "DTE",
+          "DVA",
+          "DXC",
+          "DXCM",
+          "EBAY",
+          "ECHO",
+          "EFX",
+          "EG",
+          "EIX",
+          "ELV",
+          "EME",
+          "EMN",
+          "EPAM",
+          "ERIE",
+          "ESS",
+          "ETFC",
+          "ETR",
+          "ETSY",
+          "EVRG",
+          "EXE",
+          "EXPD",
+          "EXR",
+          "FAST",
+          "FB",
+          "FBHS",
+          "FDS",
+          "FDXF",
+          "FE",
+          "FFIV",
+          "FICO",
+          "FIS",
+          "FITB",
+          "FIX",
+          "FLEX",
+          "FLIR",
+          "FLS",
+          "FLT",
+          "FMC",
+          "FOX",
+          "FOXA",
+          "FRC",
+          "FRT",
+          "FSLR",
+          "FTI",
+          "FTNT",
+          "FTV",
+          "GDDY",
+          "GEHC",
+          "GEN",
+          "GEV",
+          "GL",
+          "GLW",
+          "GM",
+          "GNRC",
+          "GPC",
+          "GPN",
+          "GPS",
+          "GRMN",
+          "GWW",
+          "HAS",
+          "HBAN",
+          "HBI",
+          "HCA",
+          "HFC",
+          "HIG",
+          "HII",
+          "HOLX",
+          "HONA",
+          "HOOD",
+          "HPE",
+          "HPQ",
+          "HRB",
+          "HSIC",
+          "HST",
+          "HUBB",
+          "IBKR",
+          "IBM",
+          "ICE",
+          "IDXX",
+          "IEX",
+          "IFF",
+          "ILMN",
+          "INCY",
+          "INFO",
+          "INVH",
+          "IPGP",
+          "IQV",
+          "IR",
+          "IT",
+          "IVZ",
+          "J",
+          "JBHT",
+          "JBL",
+          "JCI",
+          "JKHY",
+          "JNPR",
+          "KEY",
+          "KEYS",
+          "KIM",
+          "KMX",
+          "KSS",
+          "KSU",
+          "L",
+          "LB",
+          "LDOS",
+          "LEG",
+          "LEN",
+          "LH",
+          "LII",
+          "LITE",
+          "LKQ",
+          "LNC",
+          "LNT",
+          "LUMN",
+          "LVS",
+          "LW",
+          "MAA",
+          "MAS",
+          "MCK",
+          "MCO",
+          "MGM",
+          "MHK",
+          "MKTX",
+          "MMC",
+          "MOH",
+          "MOS",
+          "MRO",
+          "MRSH",
+          "MSCI",
+          "MSI",
+          "MTB",
+          "MTD",
+          "MXIM",
+          "MYL",
+          "NBL",
+          "NDAQ",
+          "NDSN",
+          "NI",
+          "NLOK",
+          "NLSN",
+          "NOV",
+          "NRG",
+          "NTAP",
+          "NTRS",
+          "NVR",
+          "NWL",
+          "NWS",
+          "NWSA",
+          "ODFL",
+          "OGN",
+          "OTIS",
+          "PAYC",
+          "PAYX",
+          "PBCT",
+          "PCG",
+          "PEAK",
+          "PENN",
+          "PFG",
+          "PHM",
+          "PKI",
+          "PLTR",
+          "PNR",
+          "PNW",
+          "PODD",
+          "POOL",
+          "PPL",
+          "PRGO",
+          "PSKY",
+          "PTC",
+          "PVH",
+          "PWR",
+          "PXD",
+          "Q",
+          "QRVO",
+          "RE",
+          "REG",
+          "RF",
+          "RHI",
+          "RJF",
+          "RL",
+          "RMD",
+          "ROL",
+          "ROP",
+          "RSG",
+          "RVTY",
+          "SATS",
+          "SBAC",
+          "SBNY",
+          "SEDG",
+          "SEE",
+          "SIVB",
+          "SJM",
+          "SLG",
+          "SMCI",
+          "SNA",
+          "SNDK",
+          "SOLS",
+          "SOLV",
+          "SPGI",
+          "STE",
+          "STT",
+          "STX",
+          "SW",
+          "SWK",
+          "TAP",
+          "TDY",
+          "TECH",
+          "TEL",
+          "TFC",
+          "TFX",
+          "TIF",
+          "TKO",
+          "TPL",
+          "TPR",
+          "TRMB",
+          "TROW",
+          "TSCO",
+          "TT",
+          "TTD",
+          "TWTR",
+          "TXT",
+          "TYL",
+          "UA",
+          "UAA",
+          "UBER",
+          "UDR",
+          "UHS",
+          "ULTA",
+          "UNM",
+          "URI",
+          "VAR",
+          "VEEV",
+          "VIAC",
+          "VICI",
+          "VLTO",
+          "VNO",
+          "VNT",
+          "VRSK",
+          "VRSN",
+          "VRT",
+          "VST",
+          "VTRS",
+          "WAB",
+          "WAT",
+          "WDAY",
+          "WDC",
+          "WHR",
+          "WLTW",
+          "WM",
+          "WRB",
+          "WRK",
+          "WSM",
+          "WST",
+          "WTW",
+          "WU",
+          "WY",
+          "WYNN",
+          "XLNX",
+          "XRAY",
+          "XRX",
+          "XYL",
+          "XYZ",
+          "YUM",
+          "ZBRA",
+          "ZION",
+          "ZTS"
+        ],
+        "okunamadi_semboller": [],
+        "bar_min_uzunluk": 317,
+        "takvim_reddedilen_n": 0
+      },
+      "hisse_muhasebesi": {
+        "ham_satir": 161856,
+        "birim_veya_val_dusen": 76,
+        "anlik_iki_etiket_satir": 32954,
+        "birincil_dei": 244,
+        "birincil_usgaap": 8,
+        "yedek_etiket_eklenen_kayit": 22,
+        "fiziksel_bekci": {
+          "tavan": 1.0,
+          "gecersiz_kayit": 7,
+          "etkilenen_sembol": {
+            "BKR": {
+              "kayit": 1,
+              "ornek_deger": 100.0
+            },
+            "CSX": {
+              "kayit": 1,
+              "ornek_deger": 3.0
+            },
+            "ETN": {
+              "kayit": 1,
+              "ornek_deger": 100.0
+            },
+            "LIN": {
+              "kayit": 2,
+              "ornek_deger": 25000.0
+            },
+            "SPG": {
+              "kayit": 1,
+              "ornek_deger": 8000.0
+            },
+            "WBA": {
+              "kayit": 1,
+              "ornek_deger": 100.0
+            }
+          },
+          "bar_yok_sembol": 6
+        },
+        "seri_olmayan_sembol_REPLAY_UNIVERSE_n": 6,
+        "seri_olmayan_sembol_KOHORT": [
+          "EL",
+          "HRL",
+          "META",
+          "MKC",
+          "PARA",
+          "STZ",
+          "TSN"
+        ],
+        "seri_olmayan_sembol_KOHORT_n": 7
+      },
+      "split_takvimi_muhasebesi": {
+        "aday_sicrama": 169,
+        "snap_olmayan": 68,
+        "kanitsiz": 27,
+        "kabul": 74,
+        "kabul_sembol": 58,
+        "kirik_sinir": 51,
+        "olcek_gidis_donus": 24,
+        "yalniz_anlik_kanitla_ayni_mi": false,
+        "yalniz_anlik_kanitla_kabul_n": 64
+      },
+      "panel_muhasebesi": {
+        "sembol": 253,
+        "gozlem_hucre": 1334404,
+        "neden_sayimi": {
+          "dosyalama_yok": 655114,
+          "olcek_hatasi_gidis_donus": 1884,
+          "bayat_seri": 38137,
+          "olcek_hatasi_fiziksel_imkansiz": 5262,
+          "anlik_hisse_serisi_yok": 37097
+        },
+        "turnover_gecerli": 924325,
+        "rvol_gecerli": 1329501,
+        "mom_gecerli": 1329091,
+        "ucu_de": 924246,
+        "pit_sizinti_satir": 0,
+        "bayat_seri_sembol_ilk10": {
+          "V": 4039,
+          "CMCSA": 4024,
+          "UPS": 4023,
+          "MA": 3850,
+          "F": 3719,
+          "REGN": 3418,
+          "NKE": 2966,
+          "WBD": 2925,
+          "CHTR": 2400,
+          "HSY": 1519
+        }
+      },
+      "uyelik_suzgeci": {
+        "tanim": "bir (t, isim) hücresi ancak isim t gününde AS-OF ÜYE ise panele girer — EDG-016'dan TEK FARK budur (orada evren SABİT REPLAY_UNIVERSE listesiydi).",
+        "panel_satir_suzgecten_once": 1334404,
+        "panel_satir_uye": 372330,
+        "dusen_satir_uye_degil": 962074,
+        "gozlem_gunu_suzgecten_once": 5710,
+        "gozlem_gunu_uye": 1541,
+        "sembol_suzgecten_once": 253,
+        "sembol_uye": 253,
+        "olculen_semboller": [
+          "AAPL",
+          "ABBV",
+          "ABT",
+          "ADBE",
+          "ADI",
+          "ADSK",
+          "AEP",
+          "AFL",
+          "AIG",
+          "ALB",
+          "ALL",
+          "AMAT",
+          "AMD",
+          "AMGN",
+          "AMT",
+          "AMZN",
+          "ANSS",
+          "APD",
+          "APO",
+          "AVB",
+          "AVGO",
+          "AXP",
+          "AZO",
+          "BA",
+          "BAC",
+          "BAX",
+          "BDX",
+          "BIIB",
+          "BKNG",
+          "BKR",
+          "BLK",
+          "BMY",
+          "BSX",
+          "BX",
+          "C",
+          "CAG",
+          "CAT",
+          "CB",
+          "CBRE",
+          "CCI",
+          "CCL",
+          "CDNS",
+          "CEG",
+          "CF",
+          "CHD",
+          "CHTR",
+          "CI",
+          "CL",
+          "CLX",
+          "CMCSA",
+          "CMI",
+          "COF",
+          "COP",
+          "COST",
+          "CRM",
+          "CSX",
+          "CTSH",
+          "CVS",
+          "CVX",
+          "D",
+          "DAL",
+          "DD",
+          "DE",
+          "DECK",
+          "DFS",
+          "DG",
+          "DHR",
+          "DIS",
+          "DLR",
+          "DLTR",
+          "DOV",
+          "DOW",
+          "DUK",
+          "DVN",
+          "EA",
+          "ECL",
+          "ED",
+          "EL",
+          "EMR",
+          "ENPH",
+          "EOG",
+          "EQIX",
+          "EQR",
+          "EQT",
+          "ES",
+          "ETN",
+          "EW",
+          "EXC",
+          "EXPE",
+          "F",
+          "FANG",
+          "FCX",
+          "FDX",
+          "FI",
+          "FISV",
+          "GD",
+          "GE",
+          "GILD",
+          "GIS",
+          "GOOG",
+          "GOOGL",
+          "GS",
+          "HAL",
+          "HD",
+          "HES",
+          "HLT",
+          "HON",
+          "HRL",
+          "HSY",
+          "HUM",
+          "HWM",
+          "INTC",
+          "INTU",
+          "IP",
+          "IPG",
+          "IRM",
+          "ISRG",
+          "ITW",
+          "JNJ",
+          "JPM",
+          "K",
+          "KDP",
+          "KHC",
+          "KKR",
+          "KLAC",
+          "KMB",
+          "KMI",
+          "KO",
+          "KR",
+          "KVUE",
+          "LHX",
+          "LIN",
+          "LLY",
+          "LMT",
+          "LOW",
+          "LRCX",
+          "LULU",
+          "LUV",
+          "LYB",
+          "LYV",
+          "MA",
+          "MAR",
+          "MCD",
+          "MCHP",
+          "MDLZ",
+          "MDT",
+          "MET",
+          "META",
+          "MKC",
+          "MLM",
+          "MMM",
+          "MNST",
+          "MO",
+          "MPC",
+          "MPWR",
+          "MRK",
+          "MRNA",
+          "MRVL",
+          "MS",
+          "MSFT",
+          "MTCH",
+          "MU",
+          "NCLH",
+          "NEE",
+          "NEM",
+          "NFLX",
+          "NKE",
+          "NOC",
+          "NOW",
+          "NSC",
+          "NUE",
+          "NVDA",
+          "NXPI",
+          "O",
+          "OKE",
+          "OMC",
+          "ON",
+          "ORCL",
+          "ORLY",
+          "OXY",
+          "PANW",
+          "PARA",
+          "PCAR",
+          "PEG",
+          "PEP",
+          "PFE",
+          "PG",
+          "PGR",
+          "PH",
+          "PKG",
+          "PLD",
+          "PM",
+          "PNC",
+          "PPG",
+          "PRU",
+          "PSA",
+          "PSX",
+          "PYPL",
+          "QCOM",
+          "RCL",
+          "REGN",
+          "ROK",
+          "ROST",
+          "RTX",
+          "SBUX",
+          "SCHW",
+          "SHW",
+          "SLB",
+          "SNPS",
+          "SO",
+          "SPG",
+          "SRE",
+          "STLD",
+          "STZ",
+          "SWKS",
+          "SYF",
+          "SYK",
+          "SYY",
+          "T",
+          "TDG",
+          "TER",
+          "TGT",
+          "TJX",
+          "TMO",
+          "TMUS",
+          "TRGP",
+          "TRV",
+          "TSLA",
+          "TSN",
+          "TTWO",
+          "TXN",
+          "UAL",
+          "UNH",
+          "UNP",
+          "UPS",
+          "USB",
+          "V",
+          "VFC",
+          "VLO",
+          "VMC",
+          "VRTX",
+          "VTR",
+          "VZ",
+          "WBA",
+          "WBD",
+          "WEC",
+          "WELL",
+          "WFC",
+          "WMB",
+          "WMT",
+          "XEL",
+          "XOM",
+          "ZBH"
+        ],
+        "sembol_uye_gun_araligi": {
+          "AAPL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ABBV": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ABT": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ADBE": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ADI": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ADSK": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "AEP": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "AFL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "AIG": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ALB": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ALL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "AMAT": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "AMD": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "AMGN": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "AMT": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "AMZN": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ANSS": {
+            "ilk": "2020-07-27",
+            "son": "2025-07-16",
+            "gun_n": 1249
+          },
+          "APD": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "APO": {
+            "ilk": "2024-12-23",
+            "son": "2026-09-14",
+            "gun_n": 431
+          },
+          "AVB": {
+            "ilk": "2020-07-27",
+            "son": "2026-08-14",
+            "gun_n": 1521
+          },
+          "AVGO": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "AXP": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "AZO": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "BA": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "BAC": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "BAX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "BDX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "BIIB": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "BKNG": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "BKR": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "BLK": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "BMY": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "BSX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "BX": {
+            "ilk": "2023-09-18",
+            "son": "2026-09-14",
+            "gun_n": 750
+          },
+          "C": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CAG": {
+            "ilk": "2020-07-27",
+            "son": "2026-06-29",
+            "gun_n": 1488
+          },
+          "CAT": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CB": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CBRE": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CCI": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CCL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CDNS": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CEG": {
+            "ilk": "2022-02-02",
+            "son": "2026-09-14",
+            "gun_n": 1157
+          },
+          "CF": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CHD": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CHTR": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CI": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CLX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CMCSA": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CMI": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "COF": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "COP": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "COST": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CRM": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CSX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CTSH": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CVS": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "CVX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "D": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "DAL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "DD": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "DE": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "DECK": {
+            "ilk": "2024-03-18",
+            "son": "2026-09-14",
+            "gun_n": 625
+          },
+          "DFS": {
+            "ilk": "2020-07-27",
+            "son": "2025-05-15",
+            "gun_n": 1208
+          },
+          "DG": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "DHR": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "DIS": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "DLR": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "DLTR": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "DOV": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "DOW": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "DUK": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "DVN": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "EA": {
+            "ilk": "2020-07-27",
+            "son": "2026-08-04",
+            "gun_n": 1513
+          },
+          "ECL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ED": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "EL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "EMR": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ENPH": {
+            "ilk": "2021-01-07",
+            "son": "2025-09-19",
+            "gun_n": 1181
+          },
+          "EOG": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "EQIX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "EQR": {
+            "ilk": "2020-07-27",
+            "son": "2026-08-17",
+            "gun_n": 1522
+          },
+          "EQT": {
+            "ilk": "2022-10-03",
+            "son": "2026-09-14",
+            "gun_n": 990
+          },
+          "ES": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ETN": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "EW": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "EXC": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "EXPE": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "F": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "FANG": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "FCX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "FDX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "FI": {
+            "ilk": "2023-06-07",
+            "son": "2025-11-07",
+            "gun_n": 609
+          },
+          "FISV": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 931
+          },
+          "GD": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "GE": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "GILD": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "GIS": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "GOOG": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "GOOGL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "GS": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "HAL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "HD": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "HES": {
+            "ilk": "2020-07-27",
+            "son": "2025-07-17",
+            "gun_n": 1250
+          },
+          "HLT": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "HON": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "HRL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "HSY": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "HUM": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "HWM": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "INTC": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "INTU": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "IP": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "IPG": {
+            "ilk": "2020-07-27",
+            "son": "2025-11-25",
+            "gun_n": 1342
+          },
+          "IRM": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ISRG": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ITW": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "JNJ": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "JPM": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "K": {
+            "ilk": "2020-07-27",
+            "son": "2025-12-09",
+            "gun_n": 1351
+          },
+          "KDP": {
+            "ilk": "2022-06-21",
+            "son": "2026-09-14",
+            "gun_n": 1062
+          },
+          "KHC": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "KKR": {
+            "ilk": "2024-06-24",
+            "son": "2026-09-14",
+            "gun_n": 558
+          },
+          "KLAC": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "KMB": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "KMI": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "KO": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "KR": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "KVUE": {
+            "ilk": "2023-08-25",
+            "son": "2026-09-14",
+            "gun_n": 765
+          },
+          "LHX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "LIN": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "LLY": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "LMT": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "LOW": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "LRCX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "LULU": {
+            "ilk": "2023-10-18",
+            "son": "2026-09-14",
+            "gun_n": 728
+          },
+          "LUV": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "LYB": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "LYV": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MA": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MAR": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MCD": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MCHP": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MDLZ": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MDT": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MET": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "META": {
+            "ilk": "2022-06-09",
+            "son": "2026-09-14",
+            "gun_n": 1069
+          },
+          "MKC": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MLM": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MMM": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MNST": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MO": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MPC": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MPWR": {
+            "ilk": "2021-02-12",
+            "son": "2026-09-14",
+            "gun_n": 1402
+          },
+          "MRK": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MRNA": {
+            "ilk": "2021-07-21",
+            "son": "2026-09-14",
+            "gun_n": 1293
+          },
+          "MRVL": {
+            "ilk": "2026-06-22",
+            "son": "2026-09-14",
+            "gun_n": 59
+          },
+          "MS": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MSFT": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "MTCH": {
+            "ilk": "2021-09-20",
+            "son": "2026-03-20",
+            "gun_n": 1130
+          },
+          "MU": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "NCLH": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "NEE": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "NEM": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "NFLX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "NKE": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "NOC": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "NOW": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "NSC": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "NUE": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "NVDA": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "NXPI": {
+            "ilk": "2021-03-22",
+            "son": "2026-09-14",
+            "gun_n": 1377
+          },
+          "O": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "OKE": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "OMC": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ON": {
+            "ilk": "2022-06-21",
+            "son": "2026-09-14",
+            "gun_n": 1062
+          },
+          "ORCL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ORLY": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "OXY": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PANW": {
+            "ilk": "2023-06-20",
+            "son": "2026-09-14",
+            "gun_n": 812
+          },
+          "PARA": {
+            "ilk": "2022-02-17",
+            "son": "2025-08-06",
+            "gun_n": 869
+          },
+          "PCAR": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PEG": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PEP": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PFE": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PG": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PGR": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PH": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PKG": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PLD": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PM": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PNC": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PPG": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PRU": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PSA": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PSX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "PYPL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "QCOM": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "RCL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "REGN": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ROK": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ROST": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "RTX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "SBUX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "SCHW": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "SHW": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "SLB": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "SNPS": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "SO": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "SPG": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "SRE": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "STLD": {
+            "ilk": "2022-12-22",
+            "son": "2026-09-14",
+            "gun_n": 933
+          },
+          "STZ": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "SWKS": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "SYF": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "SYK": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "SYY": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "T": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "TDG": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "TER": {
+            "ilk": "2020-09-21",
+            "son": "2026-09-14",
+            "gun_n": 1502
+          },
+          "TGT": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "TJX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "TMO": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "TMUS": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "TRGP": {
+            "ilk": "2022-10-12",
+            "son": "2026-09-14",
+            "gun_n": 983
+          },
+          "TRV": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "TSLA": {
+            "ilk": "2020-12-21",
+            "son": "2026-09-14",
+            "gun_n": 1438
+          },
+          "TSN": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "TTWO": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "TXN": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "UAL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "UNH": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "UNP": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "UPS": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "USB": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "V": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "VFC": {
+            "ilk": "2020-07-27",
+            "son": "2024-03-28",
+            "gun_n": 925
+          },
+          "VLO": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "VMC": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "VRTX": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "VTR": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "VZ": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "WBA": {
+            "ilk": "2020-07-27",
+            "son": "2025-08-27",
+            "gun_n": 1279
+          },
+          "WBD": {
+            "ilk": "2022-04-11",
+            "son": "2026-09-14",
+            "gun_n": 1110
+          },
+          "WEC": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "WELL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "WFC": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "WMB": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "WMT": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "XEL": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "XOM": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          },
+          "ZBH": {
+            "ilk": "2020-07-27",
+            "son": "2026-09-14",
+            "gun_n": 1541
+          }
+        }
+      },
+      "kesit_muhasebesi": {
+        "gozlem_gunu_toplam": 1541,
+        "kesit_yeterli_gun": 1541,
+        "min_kesit": 50,
+        "kesit_buyuklugu": {
+          "medyan": 225.0,
+          "min": 210,
+          "maks": 233
+        },
+        "tarih_araligi": [
+          "2020-07-27",
+          "2026-09-14"
+        ],
+        "n_satir": 344468,
+        "n_sembol": 237,
+        "turnover21_dagilimi": {
+          "0.01": 0.001746,
+          "0.25": 0.004153,
+          "0.5": 0.005617,
+          "0.75": 0.008045,
+          "0.99": 0.03967
+        },
+        "kova_buyuklugu": {
+          "medyan": 25.0,
+          "n_kova": 9
+        }
+      },
+      "akrabalik_beyani": {
+        "not": "rvol20 ZATEN skorda; kontrol değişkenleriyle akrabalık beyan edilir (EDG-016).",
+        "n_ornek": 200000,
+        "spearman_turnover_rvol20": -0.065234,
+        "spearman_turnover_mom21": -0.020433
+      },
+      "i_katman_turnover_ust20": {
+        "n_sembol_gun": 69586,
+        "n_gun": 1541,
+        "n_sembol": 175,
+        "taban_tanimi": "aynı-gün KOHORT (as-of üye) ortalaması. EDG-016'da bu taban SABİT evrenin ortalamasıydı; şema anahtarı (`evren_fazlasi`) kıyas yapılabilsin diye KORUNDU, tanım burada kohorttur.",
+        "turnover21_medyan": 0.012895,
+        "turnover21_ort": 0.016949,
+        "mom21_ort": 0.016656,
+        "rvol20_ort": 0.990193,
+        "ufuklar": {
+          "10": {
+            "ham": {
+              "n": 69125,
+              "ort": 0.008983,
+              "medyan": 0.005054,
+              "std": 0.089774,
+              "pozitif_oran": 0.528391,
+              "ci": {
+                "lo": 0.002725,
+                "hi": 0.015003,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": 0.002725,
+                "hi": 0.015003,
+                "n_gun": 1531,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": true,
+              "pozitif_anlamli": true,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": 0.007983,
+              "neden": null
+            },
+            "evren_fazlasi": {
+              "n": 69125,
+              "ort": 0.003268,
+              "medyan": -0.00067,
+              "std": 0.080796,
+              "pozitif_oran": 0.495942,
+              "ci": {
+                "lo": 9.7e-05,
+                "hi": 0.006303,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": 9.7e-05,
+                "hi": 0.006303,
+                "n_gun": 1531,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": true,
+              "pozitif_anlamli": true,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": 0.002268,
+              "neden": null
+            }
+          },
+          "20": {
+            "ham": {
+              "n": 68665,
+              "ort": 0.017754,
+              "medyan": 0.008464,
+              "std": 0.128835,
+              "pozitif_oran": 0.532688,
+              "ci": {
+                "lo": 0.00641,
+                "hi": 0.02899,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": 0.00641,
+                "hi": 0.02899,
+                "n_gun": 1521,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": true,
+              "pozitif_anlamli": true,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": 0.016754,
+              "neden": null
+            },
+            "evren_fazlasi": {
+              "n": 68665,
+              "ort": 0.006346,
+              "medyan": -0.002025,
+              "std": 0.116878,
+              "pozitif_oran": 0.491415,
+              "ci": {
+                "lo": 0.000321,
+                "hi": 0.011838,
+                "seviye": 0.95
+              },
+              "ci_meta": {
+                "lo": 0.000321,
+                "hi": 0.011838,
+                "n_gun": 1521,
+                "n_boot_gecerli": 2000,
+                "blok": 21,
+                "atlanan": 0,
+                "neden": null
+              },
+              "anlamli": true,
+              "pozitif_anlamli": true,
+              "negatif_anlamli": false,
+              "maliyet_dusulmus_ort": 0.005346,
+              "neden": null
+            }
+          }
+        }
+      },
+      "ii_katman_turnover_artik_rvol_mom_kontrollu": {
+        "kontrol": "rvol20 terzili × mom21 terzili (gün bazlı kesit), 9 kova",
+        "A1_kova_tabanli_ust20_fazlasi": {
+          "tanim": "KAYITLI dilim (turnover üst %20) — taban AYNI-GÜN AYNI-KOVA leave-one-out ortalaması. Katman 1 ile TEK farkı tabandır.",
+          "ufuklar": {
+            "10": {
+              "kova_yetersiz_dusen_satir": 0,
+              "loo_kova_fazlasi": {
+                "n": 69125,
+                "ort": 0.002219,
+                "medyan": -0.001287,
+                "std": 0.0799,
+                "pozitif_oran": 0.491501,
+                "ci": {
+                  "lo": -0.000507,
+                  "hi": 0.004823,
+                  "seviye": 0.95
+                },
+                "ci_meta": {
+                  "lo": -0.000507,
+                  "hi": 0.004823,
+                  "n_gun": 1531,
+                  "n_boot_gecerli": 2000,
+                  "blok": 21,
+                  "atlanan": 0,
+                  "neden": null
+                },
+                "anlamli": false,
+                "pozitif_anlamli": false,
+                "negatif_anlamli": false,
+                "maliyet_dusulmus_ort": 0.001219,
+                "neden": null
+              },
+              "kendini_iceren_kova_fazlasi_ort_CI_YOK": 0.002126
+            },
+            "20": {
+              "kova_yetersiz_dusen_satir": 0,
+              "loo_kova_fazlasi": {
+                "n": 68665,
+                "ort": 0.004545,
+                "medyan": -0.00289,
+                "std": 0.115653,
+                "pozitif_oran": 0.487323,
+                "ci": {
+                  "lo": -0.000859,
+                  "hi": 0.009688,
+                  "seviye": 0.95
+                },
+                "ci_meta": {
+                  "lo": -0.000859,
+                  "hi": 0.009688,
+                  "n_gun": 1521,
+                  "n_boot_gecerli": 2000,
+                  "blok": 21,
+                  "atlanan": 0,
+                  "neden": null
+                },
+                "anlamli": false,
+                "pozitif_anlamli": false,
+                "negatif_anlamli": false,
+                "maliyet_dusulmus_ort": 0.003545,
+                "neden": null
+              },
+              "kendini_iceren_kova_fazlasi_ort_CI_YOK": 0.004354
+            }
+          }
+        },
+        "A2_edg007_kova_ici_ust20_eksi_kalan": {
+          "tanim": "EDG-007 çift-sıralama şablonu: her kontrol kovasında O KOVANIN turnover üst %20'si vs kalanı; hücre farkları + kova-içi merkezlenmiş havuzlanmış yayılım.",
+          "ufuklar": {
+            "10": {
+              "kovalar": {
+                "0": {
+                  "nA": 7615,
+                  "nB": 27433,
+                  "fark": 0.002217,
+                  "ci": {
+                    "lo": -0.002185,
+                    "hi": 0.006226,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1531,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": false,
+                  "pozitif_anlamli": false,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t1_mom_t1",
+                  "ort_yuksek": 0.0081,
+                  "ort_kalan": 0.005883
+                },
+                "1": {
+                  "nA": 8202,
+                  "nB": 29662,
+                  "fark": 0.002336,
+                  "ci": {
+                    "lo": -0.000753,
+                    "hi": 0.005647,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1531,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": false,
+                  "pozitif_anlamli": false,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t1_mom_t2",
+                  "ort_yuksek": 0.00714,
+                  "ort_kalan": 0.004803
+                },
+                "2": {
+                  "nA": 8644,
+                  "nB": 31529,
+                  "fark": 0.002288,
+                  "ci": {
+                    "lo": -0.002291,
+                    "hi": 0.007141,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1531,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": false,
+                  "pozitif_anlamli": false,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t1_mom_t3",
+                  "ort_yuksek": 0.007088,
+                  "ort_kalan": 0.0048
+                },
+                "3": {
+                  "nA": 7986,
+                  "nB": 28922,
+                  "fark": 0.001558,
+                  "ci": {
+                    "lo": -0.002468,
+                    "hi": 0.005661,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1531,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": false,
+                  "pozitif_anlamli": false,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t2_mom_t1",
+                  "ort_yuksek": 0.008078,
+                  "ort_kalan": 0.00652
+                },
+                "4": {
+                  "nA": 8553,
+                  "nB": 31204,
+                  "fark": 0.0025,
+                  "ci": {
+                    "lo": -0.000811,
+                    "hi": 0.005541,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1531,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": false,
+                  "pozitif_anlamli": false,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t2_mom_t2",
+                  "ort_yuksek": 0.007338,
+                  "ort_kalan": 0.004838
+                },
+                "5": {
+                  "nA": 8073,
+                  "nB": 29237,
+                  "fark": 0.005411,
+                  "ci": {
+                    "lo": 0.000836,
+                    "hi": 0.010186,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1531,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": true,
+                  "pozitif_anlamli": true,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t2_mom_t3",
+                  "ort_yuksek": 0.010415,
+                  "ort_kalan": 0.005004
+                },
+                "6": {
+                  "nA": 8841,
+                  "nB": 32261,
+                  "fark": 0.001019,
+                  "ci": {
+                    "lo": -0.003548,
+                    "hi": 0.005464,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1531,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": false,
+                  "pozitif_anlamli": false,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t3_mom_t1",
+                  "ort_yuksek": 0.008397,
+                  "ort_kalan": 0.007378
+                },
+                "7": {
+                  "nA": 7888,
+                  "nB": 28469,
+                  "fark": 0.000702,
+                  "ci": {
+                    "lo": -0.002487,
+                    "hi": 0.00429,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1531,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": false,
+                  "pozitif_anlamli": false,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t3_mom_t2",
+                  "ort_yuksek": 0.005333,
+                  "ort_kalan": 0.004631
+                },
+                "8": {
+                  "nA": 8121,
+                  "nB": 29508,
+                  "fark": 0.006004,
+                  "ci": {
+                    "lo": 0.000729,
+                    "hi": 0.011019,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1531,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": true,
+                  "pozitif_anlamli": true,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t3_mom_t3",
+                  "ort_yuksek": 0.010936,
+                  "ort_kalan": 0.004932
+                }
+              },
+              "havuzlanmis": {
+                "nA": 73923,
+                "nB": 268225,
+                "fark": 0.00277,
+                "ci": {
+                  "lo": -0.00071,
+                  "hi": 0.005913,
+                  "seviye": 0.95
+                },
+                "n_gun": 1531,
+                "blok": 21,
+                "n_boot_gecerli": 2000,
+                "atlanan": 0,
+                "anlamli": false,
+                "pozitif_anlamli": false,
+                "negatif_anlamli": false,
+                "neden": null,
+                "aciklama": "kova-içi (leave-one-out) MERKEZLENMİŞ getirilerde üst%20 − kalan: kova bileşimi farkından arınmış havuzlanmış yayılım"
+              }
+            },
+            "20": {
+              "kovalar": {
+                "0": {
+                  "nA": 7562,
+                  "nB": 27241,
+                  "fark": 0.00846,
+                  "ci": {
+                    "lo": -0.000618,
+                    "hi": 0.016367,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1521,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": false,
+                  "pozitif_anlamli": false,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t1_mom_t1",
+                  "ort_yuksek": 0.020796,
+                  "ort_kalan": 0.012336
+                },
+                "1": {
+                  "nA": 8149,
+                  "nB": 29462,
+                  "fark": 0.004748,
+                  "ci": {
+                    "lo": -0.000968,
+                    "hi": 0.010485,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1521,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": false,
+                  "pozitif_anlamli": false,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t1_mom_t2",
+                  "ort_yuksek": 0.014871,
+                  "ort_kalan": 0.010123
+                },
+                "2": {
+                  "nA": 8587,
+                  "nB": 31310,
+                  "fark": 0.004792,
+                  "ci": {
+                    "lo": -0.003612,
+                    "hi": 0.012606,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1521,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": false,
+                  "pozitif_anlamli": false,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t1_mom_t3",
+                  "ort_yuksek": 0.014746,
+                  "ort_kalan": 0.009954
+                },
+                "3": {
+                  "nA": 7934,
+                  "nB": 28732,
+                  "fark": 0.004228,
+                  "ci": {
+                    "lo": -0.003835,
+                    "hi": 0.011532,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1521,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": false,
+                  "pozitif_anlamli": false,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t2_mom_t1",
+                  "ort_yuksek": 0.017551,
+                  "ort_kalan": 0.013323
+                },
+                "4": {
+                  "nA": 8493,
+                  "nB": 30989,
+                  "fark": 0.004679,
+                  "ci": {
+                    "lo": -0.000625,
+                    "hi": 0.010121,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1521,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": false,
+                  "pozitif_anlamli": false,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t2_mom_t2",
+                  "ort_yuksek": 0.013936,
+                  "ort_kalan": 0.009257
+                },
+                "5": {
+                  "nA": 8019,
+                  "nB": 29041,
+                  "fark": 0.010474,
+                  "ci": {
+                    "lo": 0.002219,
+                    "hi": 0.018699,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1521,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": true,
+                  "pozitif_anlamli": true,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t2_mom_t3",
+                  "ort_yuksek": 0.019425,
+                  "ort_kalan": 0.008951
+                },
+                "6": {
+                  "nA": 8776,
+                  "nB": 32047,
+                  "fark": 0.003428,
+                  "ci": {
+                    "lo": -0.004821,
+                    "hi": 0.010775,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1521,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": false,
+                  "pozitif_anlamli": false,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t3_mom_t1",
+                  "ort_yuksek": 0.017486,
+                  "ort_kalan": 0.014058
+                },
+                "7": {
+                  "nA": 7836,
+                  "nB": 28264,
+                  "fark": 0.002861,
+                  "ci": {
+                    "lo": -0.002923,
+                    "hi": 0.008479,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1521,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": false,
+                  "pozitif_anlamli": false,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t3_mom_t2",
+                  "ort_yuksek": 0.012646,
+                  "ort_kalan": 0.009785
+                },
+                "8": {
+                  "nA": 8067,
+                  "nB": 29309,
+                  "fark": 0.010028,
+                  "ci": {
+                    "lo": 0.00175,
+                    "hi": 0.019045,
+                    "seviye": 0.95
+                  },
+                  "n_gun": 1521,
+                  "blok": 21,
+                  "n_boot_gecerli": 2000,
+                  "atlanan": 0,
+                  "anlamli": true,
+                  "pozitif_anlamli": true,
+                  "negatif_anlamli": false,
+                  "neden": null,
+                  "ad": "rvol_t3_mom_t3",
+                  "ort_yuksek": 0.018577,
+                  "ort_kalan": 0.00855
+                }
+              },
+              "havuzlanmis": {
+                "nA": 73423,
+                "nB": 266395,
+                "fark": 0.006186,
+                "ci": {
+                  "lo": -7.4e-05,
+                  "hi": 0.012287,
+                  "seviye": 0.95
+                },
+                "n_gun": 1521,
+                "blok": 21,
+                "n_boot_gecerli": 2000,
+                "atlanan": 0,
+                "anlamli": false,
+                "pozitif_anlamli": false,
+                "negatif_anlamli": false,
+                "neden": null,
+                "aciklama": "kova-içi (leave-one-out) MERKEZLENMİŞ getirilerde üst%20 − kalan: kova bileşimi farkından arınmış havuzlanmış yayılım"
+              }
+            }
+          }
+        },
+        "B_artik_ic": {
+          "tanim": "havuzlanmış Spearman IC. HEADLINE: artık ↔ FAZLA getiri (kohort tabanı düşülmüş). Ham getiriye karşı okuma TANI (CI'sız).",
+          "ufuklar": {
+            "10": {
+              "artik_ic_fazla": {
+                "ic": 0.0061,
+                "n": 342148,
+                "ci": {
+                  "lo": -0.0196,
+                  "hi": 0.0297,
+                  "seviye": 0.95
+                },
+                "ci_meta": {
+                  "lo": -0.019631,
+                  "hi": 0.029707,
+                  "n_gun": 1531,
+                  "n_boot_gecerli": 600,
+                  "blok": 21,
+                  "atlanan": 0,
+                  "neden": null
+                },
+                "anlamli": false,
+                "pozitif_anlamli": false,
+                "negatif_anlamli": false,
+                "neden": null
+              },
+              "ham_turnover_ic_fazla": {
+                "ic": 0.0121,
+                "n": 342148,
+                "ci": {
+                  "lo": -0.0191,
+                  "hi": 0.0374,
+                  "seviye": 0.95
+                },
+                "ci_meta": {
+                  "lo": -0.019066,
+                  "hi": 0.037384,
+                  "n_gun": 1531,
+                  "n_boot_gecerli": 600,
+                  "blok": 21,
+                  "atlanan": 0,
+                  "neden": null
+                },
+                "anlamli": false,
+                "pozitif_anlamli": false,
+                "negatif_anlamli": false,
+                "neden": null
+              },
+              "artik_ic_HAM_getiri_TANI_CI_YOK": {
+                "ic": 0.0065,
+                "n": 342148,
+                "ci": null,
+                "anlamli": null,
+                "neden": "CI istenmedi (tanı okuması — kart bacağı değil)"
+              }
+            },
+            "20": {
+              "artik_ic_fazla": {
+                "ic": 0.0089,
+                "n": 339818,
+                "ci": {
+                  "lo": -0.0224,
+                  "hi": 0.0385,
+                  "seviye": 0.95
+                },
+                "ci_meta": {
+                  "lo": -0.022406,
+                  "hi": 0.038512,
+                  "n_gun": 1521,
+                  "n_boot_gecerli": 600,
+                  "blok": 21,
+                  "atlanan": 0,
+                  "neden": null
+                },
+                "anlamli": false,
+                "pozitif_anlamli": false,
+                "negatif_anlamli": false,
+                "neden": null
+              },
+              "ham_turnover_ic_fazla": {
+                "ic": 0.0157,
+                "n": 339818,
+                "ci": {
+                  "lo": -0.0175,
+                  "hi": 0.0486,
+                  "seviye": 0.95
+                },
+                "ci_meta": {
+                  "lo": -0.017549,
+                  "hi": 0.048615,
+                  "n_gun": 1521,
+                  "n_boot_gecerli": 600,
+                  "blok": 21,
+                  "atlanan": 0,
+                  "neden": null
+                },
+                "anlamli": false,
+                "pozitif_anlamli": false,
+                "negatif_anlamli": false,
+                "neden": null
+              },
+              "artik_ic_HAM_getiri_TANI_CI_YOK": {
+                "ic": 0.0076,
+                "n": 339818,
+                "ci": null,
+                "anlamli": null,
+                "neden": "CI istenmedi (tanı okuması — kart bacağı değil)"
+              }
+            }
+          }
+        },
+        "artik_ortogonallik_bekcisi": {
+          "maks_mutlak_kova_korelasyon": 0.0,
+          "maks_mutlak_gun_ici_ortalama": 0.0,
+          "tekil_gun": 0,
+          "gun": 1541,
+          "gecti": true,
+          "tanim": "gün bazlı OLS artığı: kontrol değişkenlerine kesit-içi TAM dik ve gün-içi ortalaması 0 olmalı; değilse artıklaştırma yapılmamıştır"
+        }
+      },
+      "iii_maliyet_sonrasi_net": {
+        "tanim": "Maliyet bir SABİT olduğundan CI aynı sabitle ötelenir (cebirsel özdeş). Kart modeli tek-yön; gidiş-dönüş BEYANLI duyarlılıktır.",
+        "kart_modeli_tek_yon_bps": 10.0,
+        "duyarlilik_gidis_donus_bps": 20.0,
+        "mid_cap_notu": "Kart: 'mid-cap likidite farkı NOT'a, modele değil (tek değişken evren)'. Maliyet EDG-016'nınkiyle AYNI 10 bps'tir; mid-cap likiditesinin daha düşük olması bir MODEL değişikliği DEĞİL, bu notun konusudur.",
+        "ufuklar": {
+          "10": {
+            "katman1_evren_fazlasi": {
+              "kart_modeli": {
+                "brut": 0.003268,
+                "maliyet": 0.001,
+                "net": 0.002268,
+                "ci": {
+                  "lo": -0.000903,
+                  "hi": 0.005303,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              },
+              "gidis_donus_duyarlilik": {
+                "brut": 0.003268,
+                "maliyet": 0.002,
+                "net": 0.001268,
+                "ci": {
+                  "lo": -0.001903,
+                  "hi": 0.004303,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              }
+            },
+            "katman2_kova_fazlasi_A1": {
+              "kart_modeli": {
+                "brut": 0.002219,
+                "maliyet": 0.001,
+                "net": 0.001219,
+                "ci": {
+                  "lo": -0.001507,
+                  "hi": 0.003823,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              },
+              "gidis_donus_duyarlilik": {
+                "brut": 0.002219,
+                "maliyet": 0.002,
+                "net": 0.000219,
+                "ci": {
+                  "lo": -0.002507,
+                  "hi": 0.002823,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              }
+            }
+          },
+          "20": {
+            "katman1_evren_fazlasi": {
+              "kart_modeli": {
+                "brut": 0.006346,
+                "maliyet": 0.001,
+                "net": 0.005346,
+                "ci": {
+                  "lo": -0.000679,
+                  "hi": 0.010838,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              },
+              "gidis_donus_duyarlilik": {
+                "brut": 0.006346,
+                "maliyet": 0.002,
+                "net": 0.004346,
+                "ci": {
+                  "lo": -0.001679,
+                  "hi": 0.009838,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              }
+            },
+            "katman2_kova_fazlasi_A1": {
+              "kart_modeli": {
+                "brut": 0.004545,
+                "maliyet": 0.001,
+                "net": 0.003545,
+                "ci": {
+                  "lo": -0.001859,
+                  "hi": 0.008688,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              },
+              "gidis_donus_duyarlilik": {
+                "brut": 0.004545,
+                "maliyet": 0.002,
+                "net": 0.002545,
+                "ci": {
+                  "lo": -0.002859,
+                  "hi": 0.007688,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              }
+            }
+          }
+        },
+        "likidite_beyani": {
+          "not": "Betimleyici kanıt (CI YOK, kart bacağı DEĞİL): dilimin medyan-21g DOLAR hacmi.",
+          "ust20_medyan_dolar_hacim": 384876885.73,
+          "kohort_medyan_dolar_hacim": 366028969.98485,
+          "ust20_medyan_dolar_hacim_orani": 1.051493,
+          "ust20_medyan_kapanis": 70.285,
+          "kohort_medyan_kapanis": 115.8
+        }
+      },
+      "iv_tani": {
+        "not": "TANI — kart grid'inde OLMAYAN kesitler. CI BİLEREK hesaplanmadı; CI'lı sınansaydı K çarpılırdı. Üst %20 dilimi kartın KAYITLI katmanıdır ve CI'sı I. bölümdedir. @10 ufku da TANIdır (kart success_metric'i @20 yazıyor).",
+        "turnover_q5_kohort_fazlasi": {
+          "aciklama": "0 = en düşük turnover, 4 = en yüksek",
+          "ufuklar": {
+            "10": {
+              "0": {
+                "n": 69131,
+                "fazla_ort": -0.001404,
+                "turnover_ort": 0.003151
+              },
+              "1": {
+                "n": 68121,
+                "fazla_ort": -0.000986,
+                "turnover_ort": 0.004514
+              },
+              "2": {
+                "n": 68126,
+                "fazla_ort": -0.000274,
+                "turnover_ort": 0.005644
+              },
+              "3": {
+                "n": 68087,
+                "fazla_ort": 0.000845,
+                "turnover_ort": 0.007436
+              },
+              "4": {
+                "n": 68683,
+                "fazla_ort": 0.003265,
+                "turnover_ort": 0.017004
+              }
+            },
+            "20": {
+              "0": {
+                "n": 68681,
+                "fazla_ort": -0.002886,
+                "turnover_ort": 0.003149
+              },
+              "1": {
+                "n": 67671,
+                "fazla_ort": -0.001995,
+                "turnover_ort": 0.004511
+              },
+              "2": {
+                "n": 67622,
+                "fazla_ort": -0.000192,
+                "turnover_ort": 0.00564
+              },
+              "3": {
+                "n": 67621,
+                "fazla_ort": 0.001646,
+                "turnover_ort": 0.007432
+              },
+              "4": {
+                "n": 68223,
+                "fazla_ort": 0.006341,
+                "turnover_ort": 0.017004
+              }
+            }
+          }
+        }
+      },
+      "bekciler": {
+        "fiziksel_devir_bekcisi": {
+          "tavan": 1.0,
+          "gecersiz_kayit": 7,
+          "etkilenen_sembol": {
+            "BKR": {
+              "kayit": 1,
+              "ornek_deger": 100.0
+            },
+            "CSX": {
+              "kayit": 1,
+              "ornek_deger": 3.0
+            },
+            "ETN": {
+              "kayit": 1,
+              "ornek_deger": 100.0
+            },
+            "LIN": {
+              "kayit": 2,
+              "ornek_deger": 25000.0
+            },
+            "SPG": {
+              "kayit": 1,
+              "ornek_deger": 8000.0
+            },
+            "WBA": {
+              "kayit": 1,
+              "ornek_deger": 100.0
+            }
+          },
+          "bar_yok_sembol": 6
+        },
+        "bayatlik_bekcisi": {
+          "kural": "son dosyalama t'den 200 günden eskiyse as-of None + neden='bayat_seri'",
+          "bayat_seri_hucre": 38137,
+          "etkilenen_sembol_sayisi": 26,
+          "en_cok_etkilenen_sembol_ilk10": {
+            "V": 4039,
+            "CMCSA": 4024,
+            "UPS": 4023,
+            "MA": 3850,
+            "F": 3719,
+            "REGN": 3418,
+            "NKE": 2966,
+            "WBD": 2925,
+            "CHTR": 2400,
+            "HSY": 1519
+          }
+        },
+        "pit_sizinti_HAM_PANEL": {
+          "kural": "seçilen as-of kaydının `filed`ı gözlem gününü ASLA aşamaz",
+          "ihlal_satir": 0,
+          "gecti": true
+        },
+        "pit_sizinti_OLCULEN_UYE_SATIRLAR": {
+          "kural": "aynı kural, YALNIZ üyelik süzgecinden geçen (ölçüme giren) satırlarda",
+          "ihlal_satir": 0,
+          "etkilenen_sembol": 0,
+          "gecti": true
+        },
+        "artik_ortogonallik": {
+          "maks_mutlak_kova_korelasyon": 0.0,
+          "maks_mutlak_gun_ici_ortalama": 0.0,
+          "tekil_gun": 0,
+          "gun": 1541,
+          "gecti": true,
+          "tanim": "gün bazlı OLS artığı: kontrol değişkenlerine kesit-içi TAM dik ve gün-içi ortalaması 0 olmalı; değilse artıklaştırma yapılmamıştır"
+        },
+        "hizli_spearman_ozdesligi": {
+          "tanim": "IC bootstrap'ının hızlı yolu kanonik `spearman_ic` ile BİREBİR aynı sayıyı vermeli",
+          "n_ornek": 3,
+          "maks_mutlak_fark": 0.0,
+          "gecti": true,
+          "neden": null
+        }
+      },
+      "bacaklar": {
+        "i_ust20_kohort_fazlasi": {
+          "10": {
+            "n": 69125,
+            "ort": 0.003268,
+            "ci": {
+              "lo": 9.7e-05,
+              "hi": 0.006303,
+              "seviye": 0.95
+            },
+            "anlamli": true,
+            "pozitif_anlamli": true,
+            "negatif_anlamli": false
+          },
+          "20": {
+            "n": 68665,
+            "ort": 0.006346,
+            "ci": {
+              "lo": 0.000321,
+              "hi": 0.011838,
+              "seviye": 0.95
+            },
+            "anlamli": true,
+            "pozitif_anlamli": true,
+            "negatif_anlamli": false
+          }
+        },
+        "ii_a1_kova_tabanli_fazla": {
+          "10": {
+            "n": 69125,
+            "ort": 0.002219,
+            "ci": {
+              "lo": -0.000507,
+              "hi": 0.004823,
+              "seviye": 0.95
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false
+          },
+          "20": {
+            "n": 68665,
+            "ort": 0.004545,
+            "ci": {
+              "lo": -0.000859,
+              "hi": 0.009688,
+              "seviye": 0.95
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false
+          }
+        },
+        "ii_a2_edg007_havuzlanmis_yayilim": {
+          "10": {
+            "nA": 73923,
+            "nB": 268225,
+            "fark": 0.00277,
+            "ci": {
+              "lo": -0.00071,
+              "hi": 0.005913,
+              "seviye": 0.95
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false
+          },
+          "20": {
+            "nA": 73423,
+            "nB": 266395,
+            "fark": 0.006186,
+            "ci": {
+              "lo": -7.4e-05,
+              "hi": 0.012287,
+              "seviye": 0.95
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false
+          }
+        },
+        "ii_b_artik_ic_fazla": {
+          "10": {
+            "ic": 0.0061,
+            "n": 342148,
+            "ci": {
+              "lo": -0.0196,
+              "hi": 0.0297,
+              "seviye": 0.95
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false
+          },
+          "20": {
+            "ic": 0.0089,
+            "n": 339818,
+            "ci": {
+              "lo": -0.0224,
+              "hi": 0.0385,
+              "seviye": 0.95
+            },
+            "anlamli": false,
+            "pozitif_anlamli": false,
+            "negatif_anlamli": false
+          }
+        },
+        "iii_maliyet_sonrasi_net": {
+          "10": {
+            "katman1_evren_fazlasi": {
+              "kart_modeli": {
+                "brut": 0.003268,
+                "maliyet": 0.001,
+                "net": 0.002268,
+                "ci": {
+                  "lo": -0.000903,
+                  "hi": 0.005303,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              },
+              "gidis_donus_duyarlilik": {
+                "brut": 0.003268,
+                "maliyet": 0.002,
+                "net": 0.001268,
+                "ci": {
+                  "lo": -0.001903,
+                  "hi": 0.004303,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              }
+            },
+            "katman2_kova_fazlasi_A1": {
+              "kart_modeli": {
+                "brut": 0.002219,
+                "maliyet": 0.001,
+                "net": 0.001219,
+                "ci": {
+                  "lo": -0.001507,
+                  "hi": 0.003823,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              },
+              "gidis_donus_duyarlilik": {
+                "brut": 0.002219,
+                "maliyet": 0.002,
+                "net": 0.000219,
+                "ci": {
+                  "lo": -0.002507,
+                  "hi": 0.002823,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              }
+            }
+          },
+          "20": {
+            "katman1_evren_fazlasi": {
+              "kart_modeli": {
+                "brut": 0.006346,
+                "maliyet": 0.001,
+                "net": 0.005346,
+                "ci": {
+                  "lo": -0.000679,
+                  "hi": 0.010838,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              },
+              "gidis_donus_duyarlilik": {
+                "brut": 0.006346,
+                "maliyet": 0.002,
+                "net": 0.004346,
+                "ci": {
+                  "lo": -0.001679,
+                  "hi": 0.009838,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              }
+            },
+            "katman2_kova_fazlasi_A1": {
+              "kart_modeli": {
+                "brut": 0.004545,
+                "maliyet": 0.001,
+                "net": 0.003545,
+                "ci": {
+                  "lo": -0.001859,
+                  "hi": 0.008688,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              },
+              "gidis_donus_duyarlilik": {
+                "brut": 0.004545,
+                "maliyet": 0.002,
+                "net": 0.002545,
+                "ci": {
+                  "lo": -0.002859,
+                  "hi": 0.007688,
+                  "seviye": 0.95
+                },
+                "net_pozitif_anlamli": false,
+                "net_ort_pozitif": true,
+                "neden": null
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "yanlilik_gostergesi": {
+    "a_hala_listede_orani": {
+      "deger": 0.799682,
+      "tanim": "son gün AS-OF üye olan isim / pencerede en az bir gün üye olan isim (birleşim)",
+      "son_gun": "2026-09-14",
+      "son_gun_uye_n": 503,
+      "birlesim_n": 629,
+      "cikan_n": 126
+    },
+    "b_barsiz_cikis_payi": {
+      "payi": null,
+      "kaynak": null,
+      "neden": "--kapsama verilmedi → ADIM-0 B haritası okunamadı; pay UYDURULMAZ"
+    },
+    "c_belirsiz_isim": {
+      "n": 8,
+      "semboller": [
+        "BRKS",
+        "CHK",
+        "COHR",
+        "ELY",
+        "GPS",
+        "HFC",
+        "PSTG",
+        "ZI"
+      ],
+      "payi_birlesime_gore": 0.004769,
+      "not": "duyarlılık (dahil vs hariç) `duyarlilik_belirsiz` bloğundadır"
+    },
+    "d_bar_uzunluk_suzgecinin_bedeli": {
+      "tanim": "EDG-016 ile AYNI asgari seri uzunluğu (317 bar) uygulandı — TEK DEĞİŞKEN EVREN kuralı. Bedeli: kısa seriyle düşen isimler ölçüme HİÇ girmez ve bunların çoğu ERKEN ÇIKAN isimlerdir; bu, (b) göstergesinin ÜSTÜNE binen ikinci bir sağkalan yanlılığı kanalıdır.",
+      "kisa_dusen_n": 0,
+      "kisa_dusen_cikan_n": 0,
+      "kisa_dusen_semboller": [],
+      "bar_dosyasi_olmayan_n": 376,
+      "bar_dosyasi_olmayan_cikan_n": 114
+    }
+  },
+  "duyarlilik_belirsiz": {
+    "kip": "dahil",
+    "birincil": "dahil",
+    "belirsiz_semboller": [
+      "BRKS",
+      "CHK",
+      "COHR",
+      "ELY",
+      "GPS",
+      "HFC",
+      "PSTG",
+      "ZI"
+    ],
+    "belirsiz_kaynak": "türetildi: /opt/meridian/research/pit_universe/sp400_elle_esleme.yaml — `karar: belirsiz` satırlarının `satir.etkisiz_semboller` alanı",
+    "belirsiz_neden": null,
+    "kiyas": []
+  },
+  "pk": {
+    "pk1": {
+      "kosdu": false,
+      "yon_esit": null,
+      "ci0_disi_esit": null,
+      "neden": "--pk-kohort/--pk-bars-dir/--pk-shares verilmedi — PK-1 KOŞMADI"
+    },
+    "pk2": {
+      "n": 20,
+      "tohum": 1561449679,
+      "aciklama": "ELLE DOĞRULAMA İÇİN: bar dosyasında `t` ve `t_arti_20_tarihi` satırlarının `close` değerleri `close_t`/`close_t_arti_20` ile eşleşmeli ve fwd20 = close_t+20/close_t − 1 olmalı.",
+      "ic_tutarli_n": 20,
+      "ic_olculen_n": 20,
+      "ic_hepsi_tutarli": true,
+      "satirlar": [
+        {
+          "sembol": "DD",
+          "t": "2020-09-01",
+          "bar_dosyasi": "dd.csv",
+          "turnover_pct_rutbe": 0.014151,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.00145105,
+          "close_t": 171.78,
+          "close_t_arti_20": 166.44,
+          "t_arti_20_tarihi": "2020-09-30",
+          "fwd20": -0.03108627,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "CCI",
+          "t": "2021-02-16",
+          "bar_dosyasi": "cci.csv",
+          "turnover_pct_rutbe": 0.432558,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.00508455,
+          "close_t": 161.96,
+          "close_t_arti_20": 165.05,
+          "t_arti_20_tarihi": "2021-03-16",
+          "fwd20": 0.01907878,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "SO",
+          "t": "2021-02-17",
+          "bar_dosyasi": "so.csv",
+          "turnover_pct_rutbe": 0.134259,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.00308398,
+          "close_t": 59.27,
+          "close_t_arti_20": 60.7,
+          "t_arti_20_tarihi": "2021-03-17",
+          "fwd20": 0.02412688,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "QCOM",
+          "t": "2021-03-30",
+          "bar_dosyasi": "qcom.csv",
+          "turnover_pct_rutbe": 0.833333,
+          "dilim_ust20_mu": true,
+          "turnover21": 0.00949077,
+          "close_t": 130.11,
+          "close_t_arti_20": 136.57,
+          "t_arti_20_tarihi": "2021-04-28",
+          "fwd20": 0.0496503,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "ROK",
+          "t": "2021-04-22",
+          "bar_dosyasi": "rok.csv",
+          "turnover_pct_rutbe": 0.578704,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.00506928,
+          "close_t": 265.05,
+          "close_t_arti_20": 258.35,
+          "t_arti_20_tarihi": "2021-05-20",
+          "fwd20": -0.02527825,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "PM",
+          "t": "2021-06-22",
+          "bar_dosyasi": "pm.csv",
+          "turnover_pct_rutbe": 0.138889,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.00272888,
+          "close_t": 100.0,
+          "close_t_arti_20": 96.54,
+          "t_arti_20_tarihi": "2021-07-21",
+          "fwd20": -0.0346,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "DE",
+          "t": "2021-09-02",
+          "bar_dosyasi": "de.csv",
+          "turnover_pct_rutbe": 0.592593,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.00443332,
+          "close_t": 384.95,
+          "close_t_arti_20": 342.2,
+          "t_arti_20_tarihi": "2021-10-01",
+          "fwd20": -0.11105338,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "EOG",
+          "t": "2022-01-03",
+          "bar_dosyasi": "eog.csv",
+          "turnover_pct_rutbe": 0.62212,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.00528327,
+          "close_t": 91.16,
+          "close_t_arti_20": 113.18,
+          "t_arti_20_tarihi": "2022-02-01",
+          "fwd20": 0.24155331,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "DVN",
+          "t": "2023-02-07",
+          "bar_dosyasi": "dvn.csv",
+          "turnover_pct_rutbe": 0.901786,
+          "dilim_ust20_mu": true,
+          "turnover21": 0.01106325,
+          "close_t": 62.21,
+          "close_t_arti_20": 54.5,
+          "t_arti_20_tarihi": "2023-03-08",
+          "fwd20": -0.12393506,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "UNP",
+          "t": "2023-02-14",
+          "bar_dosyasi": "unp.csv",
+          "turnover_pct_rutbe": 0.373333,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.00488656,
+          "close_t": 204.03,
+          "close_t_arti_20": 192.04,
+          "t_arti_20_tarihi": "2023-03-15",
+          "fwd20": -0.05876587,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "ROST",
+          "t": "2023-06-08",
+          "bar_dosyasi": "rost.csv",
+          "turnover_pct_rutbe": 0.737778,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.00750043,
+          "close_t": 103.24,
+          "close_t_arti_20": 109.58,
+          "t_arti_20_tarihi": "2023-07-10",
+          "fwd20": 0.06141031,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "PGR",
+          "t": "2024-04-18",
+          "bar_dosyasi": "pgr.csv",
+          "turnover_pct_rutbe": 0.436681,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.00498022,
+          "close_t": 209.75,
+          "close_t_arti_20": 207.01,
+          "t_arti_20_tarihi": "2024-05-16",
+          "fwd20": -0.01306317,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "GILD",
+          "t": "2024-05-22",
+          "bar_dosyasi": "gild.csv",
+          "turnover_pct_rutbe": 0.585153,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.00576895,
+          "close_t": 67.8,
+          "close_t_arti_20": 70.67,
+          "t_arti_20_tarihi": "2024-06-21",
+          "fwd20": 0.04233038,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "NEE",
+          "t": "2024-07-25",
+          "bar_dosyasi": "nee.csv",
+          "turnover_pct_rutbe": 0.452174,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.00496864,
+          "close_t": 73.44,
+          "close_t_arti_20": 78.92,
+          "t_arti_20_tarihi": "2024-08-22",
+          "fwd20": 0.07461874,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "SBUX",
+          "t": "2024-07-29",
+          "bar_dosyasi": "sbux.csv",
+          "turnover_pct_rutbe": 0.873913,
+          "dilim_ust20_mu": true,
+          "turnover21": 0.00959187,
+          "close_t": 75.2,
+          "close_t_arti_20": 95.63,
+          "t_arti_20_tarihi": "2024-08-26",
+          "fwd20": 0.27167553,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "WELL",
+          "t": "2024-07-29",
+          "bar_dosyasi": "well.csv",
+          "turnover_pct_rutbe": 0.273913,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.00409422,
+          "close_t": 111.65,
+          "close_t_arti_20": 119.24,
+          "t_arti_20_tarihi": "2024-08-26",
+          "fwd20": 0.0679803,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "WMT",
+          "t": "2024-11-07",
+          "bar_dosyasi": "wmt.csv",
+          "turnover_pct_rutbe": 0.013043,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.00138345,
+          "close_t": 83.85,
+          "close_t_arti_20": 95.7,
+          "t_arti_20_tarihi": "2024-12-06",
+          "fwd20": 0.14132379,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "MTCH",
+          "t": "2025-05-16",
+          "bar_dosyasi": "mtch.csv",
+          "turnover_pct_rutbe": 0.909483,
+          "dilim_ust20_mu": true,
+          "turnover21": 0.015805,
+          "close_t": 29.25,
+          "close_t_arti_20": 30.79,
+          "t_arti_20_tarihi": "2025-06-16",
+          "fwd20": 0.05264957,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "FCX",
+          "t": "2025-08-11",
+          "bar_dosyasi": "fcx.csv",
+          "turnover_pct_rutbe": 0.747826,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.0092095,
+          "close_t": 41.46,
+          "close_t_arti_20": 43.89,
+          "t_arti_20_tarihi": "2025-09-09",
+          "fwd20": 0.05861071,
+          "ic_tutarli": true,
+          "neden": null
+        },
+        {
+          "sembol": "NEE",
+          "t": "2025-12-19",
+          "bar_dosyasi": "nee.csv",
+          "turnover_pct_rutbe": 0.142222,
+          "dilim_ust20_mu": false,
+          "turnover21": 0.00455854,
+          "close_t": 79.54,
+          "close_t_arti_20": 83.85,
+          "t_arti_20_tarihi": "2026-01-21",
+          "fwd20": 0.05418657,
+          "ic_tutarli": true,
+          "neden": null
+        }
+      ]
+    },
+    "pk3": {
+      "tohum": 1561449679,
+      "dusen_n": 10,
+      "taban_oran": 0.799682,
+      "kalan_havuz_n": 503,
+      "cikan_havuz_n": 126,
+      "kalanlardan_dusurulunce": {
+        "dusen": [
+          "ADI",
+          "CLX",
+          "FIS",
+          "GOOG",
+          "HWM",
+          "MNST",
+          "NOC",
+          "SLB",
+          "SWK",
+          "ZTS"
+        ],
+        "oran": 0.796446,
+        "beklenen_yon": "düşer",
+        "gecti": true
+      },
+      "cikanlardan_dusurulunce": {
+        "dusen": [
+          "ALK",
+          "CZR",
+          "FMC",
+          "IPGP",
+          "LKQ",
+          "NLOK",
+          "PRGO",
+          "SEE",
+          "TIF",
+          "WRK"
+        ],
+        "oran": 0.812601,
+        "beklenen_yon": "yükselir",
+        "gecti": true
+      },
+      "gecti": true
+    },
+    "pk4": {
+      "ornek_n": 10,
+      "olay_havuzu_n": 54,
+      "tohum": 1561449679,
+      "tolerans_gozlem_gunu": 1,
+      "olculemedi_n": 10,
+      "gecti_strict_n": 0,
+      "gecti_toleransli_n": 0,
+      "hepsi_gecti_toleransli": false,
+      "detay": [
+        {
+          "sembol": "FLEX",
+          "yon": "giris",
+          "yurulukte": "2024-11-25",
+          "t_gozlem": null,
+          "t_onceki_gozlem": null,
+          "t_1_panelde": null,
+          "t_panelde": null,
+          "gecti_strict": null,
+          "gecti_toleransli": null,
+          "neden": "sembol panelde YOK (bar/uzunluk süzgeci ya da hiç üye olmadı) — ÖLÇÜLEMEDİ"
+        },
+        {
+          "sembol": "BSY",
+          "yon": "giris",
+          "yurulukte": "2025-10-06",
+          "t_gozlem": null,
+          "t_onceki_gozlem": null,
+          "t_1_panelde": null,
+          "t_panelde": null,
+          "gecti_strict": null,
+          "gecti_toleransli": null,
+          "neden": "sembol panelde YOK (bar/uzunluk süzgeci ya da hiç üye olmadı) — ÖLÇÜLEMEDİ"
+        },
+        {
+          "sembol": "CADE",
+          "yon": "cikis",
+          "yurulukte": "2026-02-02",
+          "t_gozlem": null,
+          "t_onceki_gozlem": null,
+          "t_1_panelde": null,
+          "t_panelde": null,
+          "gecti_strict": null,
+          "gecti_toleransli": null,
+          "neden": "sembol panelde YOK (bar/uzunluk süzgeci ya da hiç üye olmadı) — ÖLÇÜLEMEDİ"
+        },
+        {
+          "sembol": "SITM",
+          "yon": "giris",
+          "yurulukte": "2026-03-23",
+          "t_gozlem": null,
+          "t_onceki_gozlem": null,
+          "t_1_panelde": null,
+          "t_panelde": null,
+          "gecti_strict": null,
+          "gecti_toleransli": null,
+          "neden": "sembol panelde YOK (bar/uzunluk süzgeci ya da hiç üye olmadı) — ÖLÇÜLEMEDİ"
+        },
+        {
+          "sembol": "CASY",
+          "yon": "cikis",
+          "yurulukte": "2026-04-09",
+          "t_gozlem": null,
+          "t_onceki_gozlem": null,
+          "t_1_panelde": null,
+          "t_panelde": null,
+          "gecti_strict": null,
+          "gecti_toleransli": null,
+          "neden": "sembol panelde YOK (bar/uzunluk süzgeci ya da hiç üye olmadı) — ÖLÇÜLEMEDİ"
+        },
+        {
+          "sembol": "SIRI",
+          "yon": "giris",
+          "yurulukte": "2026-06-11",
+          "t_gozlem": null,
+          "t_onceki_gozlem": null,
+          "t_1_panelde": null,
+          "t_panelde": null,
+          "gecti_strict": null,
+          "gecti_toleransli": null,
+          "neden": "sembol panelde YOK (bar/uzunluk süzgeci ya da hiç üye olmadı) — ÖLÇÜLEMEDİ"
+        },
+        {
+          "sembol": "COTY",
+          "yon": "cikis",
+          "yurulukte": "2026-06-22",
+          "t_gozlem": null,
+          "t_onceki_gozlem": null,
+          "t_1_panelde": null,
+          "t_panelde": null,
+          "gecti_strict": null,
+          "gecti_toleransli": null,
+          "neden": "sembol panelde YOK (bar/uzunluk süzgeci ya da hiç üye olmadı) — ÖLÇÜLEMEDİ"
+        },
+        {
+          "sembol": "SMTC",
+          "yon": "giris",
+          "yurulukte": "2026-06-22",
+          "t_gozlem": null,
+          "t_onceki_gozlem": null,
+          "t_1_panelde": null,
+          "t_panelde": null,
+          "gecti_strict": null,
+          "gecti_toleransli": null,
+          "neden": "sembol panelde YOK (bar/uzunluk süzgeci ya da hiç üye olmadı) — ÖLÇÜLEMEDİ"
+        },
+        {
+          "sembol": "BLD",
+          "yon": "cikis",
+          "yurulukte": "2026-07-01",
+          "t_gozlem": null,
+          "t_onceki_gozlem": null,
+          "t_1_panelde": null,
+          "t_panelde": null,
+          "gecti_strict": null,
+          "gecti_toleransli": null,
+          "neden": "sembol panelde YOK (bar/uzunluk süzgeci ya da hiç üye olmadı) — ÖLÇÜLEMEDİ"
+        },
+        {
+          "sembol": "IESC",
+          "yon": "giris",
+          "yurulukte": "2026-07-01",
+          "t_gozlem": null,
+          "t_onceki_gozlem": null,
+          "t_1_panelde": null,
+          "t_panelde": null,
+          "gecti_strict": null,
+          "gecti_toleransli": null,
+          "neden": "sembol panelde YOK (bar/uzunluk süzgeci ya da hiç üye olmadı) — ÖLÇÜLEMEDİ"
+        }
+      ]
+    },
+    "olay_kumesi_meta": {
+      "kaynak": "/opt/meridian/research/cards/EDG-2026-092-sp400-uyelik-tarihcesi-ucretsiz-kaynak-fizibilite.yaml `bilinen_olaylar` → EDG-092 olc.olay_kumesi (kohort.py üzerinden ithal)",
+      "tohum": 1561449679,
+      "ornek_n": 10,
+      "tolerans": 1,
+      "neden": null,
+      "kart_beyan_n": 54,
+      "olay_n": 54
+    }
+  },
+  "tohum": {
+    "deger": 1561449679,
+    "kaynak": "/opt/meridian/research/cards/EDG-2026-092-sp400-uyelik-tarihcesi-ucretsiz-kaynak-fizibilite.yaml `bilinen_olaylar` → EDG-092 olc.olay_kumesi (kohort.py üzerinden ithal)"
+  },
+  "k_beyani": {
+    "satirlar": [
+      "K = 2 (kart `k_registry`): EDG-093-midcap-ust-dilim-fazlasi-20g ve EDG-093-midcap-artik-katki-20g — BİRİNCİL koşumdan (belirsiz `dahil`, kohort defteri AYNEN).",
+      "@10 ufku TANIdır (kart: 1×2 olarak çarpılır); 5'li tablo, 9 kova hücresi ve likidite beyanı TANIdır, K harcamaz.",
+      "Yanlılık göstergeleri, kohort istatistikleri ve belirsiz-isim duyarlılığı kartın lafzıyla BEYAN alanıdır — K'ye GİRMEZ (kart `k_registry` şerhi).",
+      "Eşik kartın ön-kayıtlı tanımıdır: 'anlamlı pozitif' = %95 blok-CI alt sınırı > 0; sayısal bps eşiği YOKTUR ve bu kart yeni eşik UYDURMAZ."
+    ]
+  },
+  "ithal_yan_etkisi": {
+    "_cache": {
+      "koşumdan_once_vardi": true,
+      "silindi": false,
+      "neden": "koşumdan ÖNCE vardı — dokunulmadı"
+    },
+    "_state": {
+      "koşumdan_once_vardi": true,
+      "silindi": false,
+      "neden": "koşumdan ÖNCE vardı — dokunulmadı"
+    }
+  }
+}

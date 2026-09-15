@@ -13,7 +13,7 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **112** kart.
 
-### Kayıtlı — ölçüm bekliyor (14)
+### Kayıtlı — ölçüm bekliyor (13)
 
 - **EDG-2026-053** (`registered`) — 15d-A2 (taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md K2'den AYNEN): İLK-İFŞA filtreli çeyrek gelir (Revenues) YoY büyümesi ve İVMESİ…
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt (ölçüm 050/051'den biri inince sırada)
@@ -44,9 +44,6 @@ Toplam **112** kart.
 - **EDG-2026-095** (`registered`) — 
   · HÜKÜM: tetik: ≥1 `r_payda="giris_riski"` damgalı KAPANMIŞ canlı işlem (2026-09-14 sonrası açılan pozisyonlardan)
   · kart: `EDG-2026-095-gecmis-r-goreli-ozdeslik-damgali-kontrol.yaml`
-- **EDG-2026-098** (`registered`) — 
-  · HÜKÜM: kod hazır olunca (karsilastir096 `goreli_yalniz_anlamli`) A1 koşumu Rol-1
-  · kart: `EDG-2026-098-edg016-katman-ii-sagkalan-desen-tutarliligi.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
   · kart: `EXE-2026-009-pencere-kaydirma.yaml`
@@ -81,7 +78,7 @@ Toplam **112** kart.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`
 
-### Ölçüldü (64)
+### Ölçüldü (65)
 
 - **BASE-2026-001** (`measured`) — Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net −5.542 USD).
   · HÜKÜM: 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1): CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146 seans, bugünkü motor+canlı v3…
@@ -245,6 +242,9 @@ Toplam **112** kart.
 - **EDG-2026-096** (`measured`) — 
   · HÜKÜM: 2026-09-15 03:2xZ hüküm hukum_2026_09_15 — KALDI—KAPI (hipotez kolu geçti; tutarlılık/PK kapıları yanlış birimde) → ardıl EDG-2026-097
   · kart: `EDG-2026-096-edg016-katman-ii-sagkalan-yanliligi.yaml`
+- **EDG-2026-098** (`measured`) — 
+  · HÜKÜM: 2026-09-15 hüküm hukum_2026_09_15 — GEÇTİ — SAĞKALAN DOĞRULANDI
+  · kart: `EDG-2026-098-edg016-katman-ii-sagkalan-desen-tutarliligi.yaml`
 - **EXE-2026-001** (`measured`) — İç defter (koşulsuz ertesi-açılış dolumu) ile canlı ayna (buy-stop GTC bracket) FARKLI icra modelleri koşuyor ve ayna gap durumunda reddediliyor…
   · HÜKÜM: 2026-08-03 ~15:0x UTC — E1 GRİD KOŞULDU (kanıt: research/olcumler/e1_grid_2026-08-03/; determinizm çift-kapılı)
   · kart: `EXE-2026-001-entry-execution.yaml`

@@ -7,7 +7,7 @@
 # kart-esigi-birimi-tolerans-tuzagi (2026-09-15). Kaynak: EDG-096/097 kayıtları + implementer raporu §7.
 
 card_id: EDG-2026-098
-status: registered   # kod hazır olunca (karsilastir096 `goreli_yalniz_anlamli`) A1 koşumu Rol-1
+status: measured     # 2026-09-15 hüküm hukum_2026_09_15 — GEÇTİ — SAĞKALAN DOĞRULANDI
 family: pit_midcap_ust_sinir
 on_kayit: 2026-09-15
 selef:
@@ -58,3 +58,12 @@ notlar: >
   Kod: karsilastir096 `a_kipi_pk1_goreli_yalniz_anlamli` alanı (Opus tur-2, aynı worktree; v496 çivisi: CI-0-içi bacakta göreli fark
   raporlanır ama kapıya girmez). Koşum bedeli ~30 dk A1. Bu kart ölçümle kapanır; dördüncü ardıl AÇILMAZ — kapı yine düşerse hüküm
   "bilgisiz, tasarım kusuru" olarak yazılır ve konu EDG-016 şerhiyle biter.
+
+hukum_2026_09_15:
+  tarih: "2026-09-15T04:58Z"
+  status_gecisi: "registered → measured; K 2/2 harcandı (EDG-098-guncel-liste-ii-b-artik-ic-20g: ii_b @20 0.0283 CI[0.0088; 0.0489] CI-0-dışı=True · EDG-098-sabit251-ii-b-artik-ic-20g: 0.0274 CI[0.0094; 0.0472] CI-0-dışı=True; eşik 0,015 → True)"
+  hukum: "GEÇTİ — SAĞKALAN DOĞRULANDI. As-of (PIT) kipinde ii_b @20 0.0089 CI[-0.0224; 0.0385] CI-0-dışı=False; güncel-liste ve sabit-251 kiplerinde eşik geçildi → EDG-016 ii katmanının (rvol/mom-kontrollü artık) CI-0-dışılığı üyelik seçiminin (sağkalan) artefaktıdır; PIT üyelikte ii katmanı YOK. Katman i (ana etki) PIT'te sağ: as-of +0.635%, güncel +0.644%, sabit-251 +0.294% (CI-0-dışı=False; PK'ye girmez). Kapılar: A↔PK-1 desen altı bacakta eşit, kapıda maks göreli fark 0.0217 ≤ 0,05 (gecti=True); katman i PK as-of/güncel True; sabit-251 kapsam dışı 0.0242 ≤ 0,20; kill_list_tetik 0. Canlı etki yok (EDG-031 w=0); sonuç EDG-016 kartına nihai şerh + TSK-065 notu."
+  pk: "PK-1 katman i @20 as-of +0.635% CI-0-dışı=True · güncel +0.644% CI-0-dışı=True ✓; PK-2 A↔PK-1 desen + göreli (kapıda 0.0217; kapı dışı maks 0.0595 — CI-0-içi ii_b bacağı) ✓; PK-3 sentetik tek-satır özdeşliği v495 T4 + göreli-yalnız-anlamlı çivileri v496 T8–T12 ✓."
+  girdi_blob: "sonuc_096_20260915T045329Z.json blob 509831ce2d6c · RAPOR_096_20260915T045329Z.md blob 93a985973013 (research/olcumler/edg093_midcap_pit/olcum/edg098/); bar tabanı 260 dosya, en yeni mtime 2026-09-14T20:39:48Z (EDG-096 koşumuyla AYNI taban → aynı sayılar); shares sha 446f7bf0…, kohort sha 39a9202c…; kod karsilastir096 sha 431996de… (main 4687596), k093 faf23a4d…; pencere 2020-07-27 → 2026-08-20, --belirsiz dahil."
+  bedel: "Opus ×2 (tur-1 ~266k + tur-2 ~235k) + Sonnet ×1 + A1 koşumu ~30 dk; EDG-096/097 bedeli ayrıca."
+  yan_urun: "karsilastir096 kart-parametreli kapı şeması (göreli/desen; kip listesi) — ileriki kohort kartları için yeniden kullanılabilir; ders hafızada (kart-esigi-birimi-tolerans-tuzagi)."
