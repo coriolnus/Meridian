@@ -112,6 +112,17 @@ BICIM_USTUNLUGU = (
 # EKLEMEZ — kırpma bir kayıptır ve BEYAN EDİLİR (bedel yasası).
 CEVAP_BAS_TAVANI = 200
 
+# BRİFİNG İLK SATIR TAVANI — HÜKMÜN KONUSU, METNİN KOPYASI DEĞİL (TSK-138 dilim-4, 2026-09-15).
+# Canlıda ölçülen boşluk: iki turda da "ilk satır sade tek cümle DEĞİL" ihlali kalıyor ve HAM
+# teslim ediliyor, ama defterde o hükmün KONUSU yok — teslim edilen metin yalnız Telegram'a
+# gidiyor. Bedel (ham teslim) ölçülüyor, kazanç (ihlal gerçek miydi) ölçülemiyor.
+# 160, ihlalin YANLIŞ-POZİTİF olup olmadığını okumaya yeter (bir "sade tek cümle" iddiası bu
+# pencerede tamamen görünür) ve brifingin GÖVDESİNİ deftere kopyalamaz — teşhis alanı bir
+# arşiv yüzeyi olamaz. `CEVAP_BAS_TAVANI`ndan KÜÇÜKTÜR ve bu bilinçlidir: orada sınıflanan şey
+# ŞEMA DIŞI bir cevabın biçimi (kod çiti · hata dizgesi), burada TEK bir cümle. Kırpma bir
+# kayıptır ve BEYAN EDİLİR (bedel yasası).
+BRIFING_ILK_SATIR_TAVANI = 160
+
 OLAY = "brifing_kural_denetimi"
 
 
@@ -666,6 +677,45 @@ def _olay_cevap_basi(bas: str | None) -> str | None:
     return None if bas is None else notify.scrub(bas)
 
 
+def _olay_ilk_satir(metin: str | None) -> str | None:
+    """Olaya yazılacak `brifing_ilk_satir` — TESLİM EDİLEN metnin ilk DOLU satırı (TSK-138
+    dilim-4, 2026-09-15).
+
+    GİRDİ `Gecis.metin`DİR, `ilk_metin` DEĞİL: bir yeniden-üretim olduğunda operatöre giden metin
+    İKİNCİsidir ve alan onu anlatmalıdır. İlk metne bağlansaydı defter GİTMEYEN bir metnin ilk
+    satırını gösterir, "kalan ihlal yanlış-pozitif miydi" sorusu ters metinden cevaplanırdı.
+
+    ÜÇ DEĞER, ÜÇ AYRI BİLGİ (`cevap_bas` ile AYNI sözleşme, uydurma yasağı):
+      `None` — TESLİM EDİLEN METİN YOK: ham dal (`metin is None`) ya da boş metin (SESSİZ tur).
+      `""`   — metin VAR (baytları gitti) ama tek bir DOLU satırı yok.
+      dolu   — ilk dolu satırın kendisi.
+    İkisi tek değere katlansaydı, ham teslim edilen bir tur ile boş giden bir tur defterde
+    ayırt edilemezdi.
+
+    BAŞTAKİ BOŞ SATIRLAR ATLANIR: ham `splitlines()[0]` alınsaydı, başında bir boş satır taşıyan
+    her brifing defterde `""` görünürdü — yani alan tam da ölçmek için doğduğu turlarda susardı.
+
+    SIRA SÖZLEŞMEDİR — KATLA → SÜZ → KIRP. Katlama defterin tek-satır JSONL biçimini korur ve
+    pencereyi girintilere harcamaz (`_cevap_basi` gerekçesi). SÜZGEÇ KIRPMADAN ÖNCE koşar ve bu
+    bir GÜVENLİK sözleşmesidir: önce kırpılsaydı tavanın ortasından kesilen bir anahtar `scrub`ın
+    desenine uymaz hâle gelir ve HAM ÖNEKİ deftere düşerdi. Brifing metni bir MODEL ÇIKTISIDIR ve
+    bir istisna dizgesini (`?apikey=…`) taşıyabilir; defter de bir veri yüzeyidir (yedeklenir,
+    sorgulanır, panoya taşınır) — `_olay_cevap_basi` ile birebir aynı gerekçe.
+
+    OKUYUCU (Yasa 6): `ops/olay_sorgu.py --sql` ile HAFTALIK SINIFLAMA — `ilk_ihlal`/`suzulen`
+    ile AYNI yüzey; "ham teslime düşüren ihlalin konusu neydi" sorusu bu alandan cevaplanır."""
+    if metin is None:
+        return None
+    ham = str(metin)
+    if not ham:
+        return None
+    for satir in ham.splitlines():
+        katli = " ".join(satir.split())
+        if katli:
+            return notify.scrub(katli)[:BRIFING_ILK_SATIR_TAVANI]
+    return ""
+
+
 def gecir(*, profil_evi, ilk_metin: str, ilk_istem: str, veri_terimleri, cagir,
           dogrula=None, bot: str = "", baslangic_cagri: int = 1,
           model_kimligi: str | None = None, cevaplayan_oku=None) -> Gecis:
@@ -754,6 +804,13 @@ def gecir(*, profil_evi, ilk_metin: str, ilk_istem: str, veri_terimleri, cagir,
             # ADIYLA ayrı bir olaya yazar. OKUYUCU: `ops/sef_brifingi.py` durum satırı +
             # `ops/olay_sorgu.py --sql` ile iki gecelik rota ölçümü (TSK-138 dilim-2).
             cevaplayan_model=gecis.hukum.cevaplayan_model,
+            # TESLİM EDİLEN BRİFİNGİN İLK SATIRI (TSK-138 dilim-4, 2026-09-15) — AYNI emsalle
+            # YALNIZ olaya gider, `Gecis.kayit()` İÇİNE DEĞİL (damganın okuyucusu bu alanı
+            # bilmez, Yasa 6/O4). Değer `gecis.metin`den türetilir, yani YENİDEN ÜRETİM olduysa
+            # GİDEN metinden. OKUYUCU: `ops/olay_sorgu.py --sql` ile haftalık sınıflama —
+            # `ilk_ihlal`/`suzulen` ile aynı yüzey: kalan ihlalin konusu okunmadan o ihlalin
+            # yanlış-pozitif olup olmadığı sorulamaz (bedel ölçülür, kazanç ölçülmezdi).
+            brifing_ilk_satir=_olay_ilk_satir(gecis.metin),
             detail="teslim öncesi SOUL kural denetimi — hiçbir dalda teslimat düşmez "
                    "(fail-open, beyanlı)")
     return gecis
