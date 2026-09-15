@@ -85,3 +85,17 @@ def test_e_provider_blogu_anahtarsiz_ve_pinli():
     assert 'required_version = "= 1.16.2"' in ver and 'version = "= 1.8.1"' in ver and "rework-space-com/apisix" in ver
     back = (ROOT / "altyapi/apisix/backend.tf").read_text(encoding="utf-8")
     assert 'backend "local"' in back and "/opt/veri/altyapi/apisix/terraform.tfstate" in back
+
+
+def test_f_uretim_kipi_provider_satiri_yalniz_istenince():
+    """T1 Task 3 ölçümü (2026-09-15, iki yönlü Terraform kısıtı): `-generate-config-out` kaynak bloğu yokken
+    `provider = apisix` İSTER (yoksa hashicorp/apisix'e düşer), kaynak blokları doğunca aynı satır YASAKTIR.
+    Depodaki import.tf sabit (provider'sız); üretim kipi geçici. Çivi iki kipi de ölçer."""
+    r = _routes()
+    normal, uretim = U.uret(r), U.uret(r, uretim=True)
+    n = len(r["rotalar"]) + len(r["tuketici_gruplari"]) + len(r["tuketiciler"])
+    assert normal.count("provider = apisix") == 0
+    assert uretim.count("provider = apisix") == n and uretim.count("import {") == n
+    assert (ROOT / "altyapi/apisix/import.tf").read_text(encoding="utf-8").count("provider = apisix") == 0, "depo hâli provider'sız"
+    sh = (ROOT / "altyapi/altyapi.sh").read_text(encoding="utf-8")
+    assert "--uretim" in sh and "generate-config-out" in sh, "ilk üretim koşumu geçici üretim kipini kullanır"

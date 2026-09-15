@@ -64,12 +64,16 @@ case "${1:-}" in
     "$PY" "$KOK/ops/apisix_tf_uret.py" --kontrol
     ;;
   plan)
-    if [ ! -f uretilen.tf ]; then
-      terraform plan -input=false -generate-config-out=uretilen.tf
+    if [ ! -f uretilen.tf ] && [ ! -f kaynaklar.tf ]; then
+      # İLK ÜRETİM: import blokları GEÇİCİ olarak provider satırı taşır (Terraform kısıtı, ops/apisix_tf_uret.py şerhi);
+      # üretim biter bitmez import.tf normale (provider'sız, depo hâli) döndürülür — kalıcı fark bırakılmaz.
+      "$PY" "$KOK/ops/apisix_tf_uret.py" --cikti "$DIZIN/import.tf" --uretim
+      terraform plan -input=false -generate-config-out=uretilen.tf; rc=$?
+      "$PY" "$KOK/ops/apisix_tf_uret.py" --cikti "$DIZIN/import.tf"
+      exit $rc
     else
       terraform plan -input=false
-    fi
-    ;;
+    fi ;;
   denetle)
     terraform plan -input=false -detailed-exitcode
     ;;

@@ -50,19 +50,20 @@ def hcl_ad(kimlik: str) -> str:
     return ad if re.match(r"[a-z_]", ad) else "_" + ad
 
 
-def _blok(tur: str, kimlik: str) -> str:
-    # `provider = apisix` ZORUNLU (ölçüldü 2026-09-15, T1 Task 3): `-generate-config-out` ile kaynak bloğu henüz yokken
-    # Terraform import hedefinin sağlayıcısını `required_providers`tan DEĞİL varsayılan ad alanından (hashicorp/apisix) türetir
-    # ve "unavailable provider" ile düşer; yerel ad açıkça verilince rework-space-com/apisix çözülür.
-    return f'import {{\n  to = {tur}.{hcl_ad(kimlik)}\n  id = "{kimlik}"\n  provider = apisix\n}}\n\n'
+def _blok(tur: str, kimlik: str, uretim: bool = False) -> str:
+    # `provider = apisix` YALNIZ üretim kipinde (ölçüldü 2026-09-15, T1 Task 3, iki yönlü): kaynak bloğu henüz yokken
+    # `-generate-config-out` sağlayıcıyı varsayılan ad alanından (hashicorp/apisix) türetip "unavailable provider" ile düşer →
+    # provider gerekir; kaynak blokları doğduktan SONRA aynı satır "Invalid import provider argument" hatasıdır → olmamalı.
+    # Depodaki import.tf sabit hâl (provider'sız); üretim koşumu GEÇİCİ olarak `--uretim` ile yazar, sonra normale döner.
+    prov = "  provider = apisix\n" if uretim else ""
+    return f'import {{\n  to = {tur}.{hcl_ad(kimlik)}\n  id = "{kimlik}"\n{prov}}}\n\n'
 
-
-def uret(routes: dict) -> str:
+def uret(routes: dict, uretim: bool = False) -> str:
     """routes.yaml gövdesinden import bloklarının TAM metnini üretir (grup → tüketici → rota)."""
     out = [BASLIK]
-    out += [_blok("apisix_consumer_group", g["id"]) for g in routes.get("tuketici_gruplari", [])]
-    out += [_blok("apisix_consumer", c["username"]) for c in routes.get("tuketiciler", [])]
-    out += [_blok("apisix_route", r["id"]) for r in routes.get("rotalar", [])]
+    out += [_blok("apisix_consumer_group", g["id"], uretim) for g in routes.get("tuketici_gruplari", [])]
+    out += [_blok("apisix_consumer", c["username"], uretim) for c in routes.get("tuketiciler", [])]
+    out += [_blok("apisix_route", r["id"], uretim) for r in routes.get("rotalar", [])]
     return "".join(out)
 
 
@@ -70,8 +71,9 @@ def main(argv=None) -> int:
     p = argparse.ArgumentParser(description="routes.yaml → import.tf (TSK-176 T1)")
     p.add_argument("--cikti", help="yazılacak dosya yolu (stdout'a yazılmaz)")
     p.add_argument("--kontrol", action="store_true", help="depodaki import.tf güncel mi (0/1)")
+    p.add_argument("--uretim", action="store_true", help="import bloklarına provider = apisix ekle — YALNIZ ilk -generate-config-out koşumu için, kalıcı dosya değil")
     a = p.parse_args(argv)
-    metin = uret(yaml.safe_load(ROUTES.read_text(encoding="utf-8")))
+    metin = uret(yaml.safe_load(ROUTES.read_text(encoding="utf-8")), uretim=a.uretim)
     if a.kontrol:
         guncel = HEDEF.exists() and HEDEF.read_text(encoding="utf-8") == metin
         print("import.tf güncel" if guncel else "import.tf BAYAT — --cikti ile yeniden üret", file=sys.stderr)
