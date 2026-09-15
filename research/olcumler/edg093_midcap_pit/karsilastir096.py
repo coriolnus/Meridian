@@ -1,21 +1,30 @@
-"""EDG-2026-096 / EDG-2026-097 · ÜÇ ÜYELİK KİPİNİN KARŞILAŞTIRMASI — kart eşikleri, PK kapısı,
+"""EDG-2026-096 / 097 / 098 · ÜÇ ÜYELİK KİPİNİN KARŞILAŞTIRMASI — kart eşikleri, PK kapısı,
 kill-list tetiği.
 
 Kart `--kart` ile verilir (`esikler`, `kill_list`, `card_id`, `k_registry`). KART DIŞINA ÖLÇÜM
 YOK; KARTA DOKUNULMAZ (yalnız OKUNUR); eşik sonradan DEĞİŞMEZ. HÜKÜM YOK — `hukum` alanı sabit
 "YOK — Rol-1" (CLAUDE.md §3, §5).
 
-İKİ KART, İKİ KAPI ŞEMASI — ŞEMAYI KART SEÇER. EDG-096'nın iki kapısı YANLIŞ BİRİMDEYDİ (hüküm
+ÜÇ KART, ÜÇ KAPI ŞEMASI — ŞEMAYI KART SEÇER. EDG-096'nın iki kapısı YANLIŞ BİRİMDEYDİ (hüküm
 2026-09-15, KALDI—KAPI): (a) A kipi ≡ PK-1 BİT-EŞİTLİĞİ canlı-tazelenen bar tabanına karşı
 tutmaz; (b) katman i PK tabanı as-of değerinden türetilmişti, sabit-251 evrenine uygulanamazdı.
-Eşik YERİNDE DÜZELTİLMEZ (yeni eşik = yeni kart) → ardıl EDG-2026-097 aynı iki soruyu başka
-birimde sorar. Bu betik hangi kapıyı kuracağını KARTIN EŞİK ADLARINDAN öğrenir:
+EDG-097 aynı iki soruyu göreli birimde sordu ama ÖLÇÜLMEDEN GERİ ÇEKİLDİ: göreli tolerans
+PK-1'in CI-0-İÇİ (sıfırdan ayırt edilemeyen) bacağında da hüküm veriyordu ve orada oranın payı
+da paydası da GÜRÜLTÜDÜR. Eşik YERİNDE DÜZELTİLMEZ (yeni eşik = yeni kart) → ardıl EDG-2026-098
+toleransı yalnız ANLAMLI bacaklara uygular. Bu betik hangi kapıyı kuracağını KARTIN EŞİK
+ADLARINDAN öğrenir:
     `a_kipi_pk1_tutarlilik_tol` → MUTLAK fark ≤ tolerans          (EDG-096)
     `a_kipi_pk1_goreli_tol`     → GÖRELİ fark ≤ tolerans VE yön eşit VE CI-0-dışılık eşit (097)
     `katman_i_pk_20g_alt`       → ÜÇ kipte sayısal TABAN           (EDG-096)
     `katman_i_pk_kipler`        → yalnız LİSTEDEKİ kiplerde CI-0-dışı pozitif, taban YOK (097)
-Bilinmeyen, eksik ya da aynı kapı için ÇELİŞİK (iki ad birden) eşik adı ÇIKIŞ 2'dir: varsayılan
-seçmek, kartın istemediği bir kapıyı sessizce kurardı (uydurma yasağı).
+`a_kipi_pk1_goreli_yalniz_anlamli` bir ŞEMA DEĞİL, göreli şemanın BİRİM AYARIDIR (EDG-098): True
+ise göreli tolerans YALNIZ PK-1'in CI-0-DIŞI bacaklarına uygulanır, CI-0-İÇİ bacakta yalnız
+DESEN (yön + CI-0-dışılık) ölçülür ve oran YİNE RAPORLANIR — kapıdan çıkarmak, okuyucudan
+gizlemek değildir (bedel yasası). Alan yoksa ya da False ise EDG-097 davranışı AYNEN durur.
+Bilinmeyen, eksik ya da aynı kapı için ÇELİŞİK (iki ad birden) eşik adı ÇIKIŞ 2'dir; ayarın
+MUTLAK şemayla ya da bayrak olmayan bir değerle verilmesi de ÇIKIŞ 2'dir (okunmayan bir ayar,
+kartın istediği kapıyı sessizce iptal ederdi): varsayılan seçmek, kartın istemediği bir kapıyı
+sessizce kurardı (uydurma yasağı).
 
 NE YAPAR. EDG-093 ölçüm betiğinin (`k093.py`) ÜÇ ayrı koşumunun sonuç JSON'larını okur:
     A `asof`   — as-of PIT kohortu (EDG-093 PK-1'in TEKRARI),
@@ -72,6 +81,14 @@ HUKUM = "YOK — Rol-1"
 #: İkisi AYNI kartta bulunamaz: biri mutlak, öteki göreli birimdedir ve hangisinin hüküm verdiği
 #: belirsiz kalırdı.
 A_KIPI_SEMALARI = {"a_kipi_pk1_tutarlilik_tol": "mutlak", "a_kipi_pk1_goreli_tol": "goreli"}
+
+#: A kipi GÖRELİ kapısının BİRİM AYARI (EDG-2026-098) — şema SEÇMEZ, göreli şemayı DARALTIR.
+#: Ayrı bir şema adı olarak eklenemezdi: kart hem toleransın DEĞERİNİ (`a_kipi_pk1_goreli_tol`)
+#: hem de UYGULANDIĞI YERİ söyler ve `kapi_semasi_sec` "tek ad" kuralı ikisini çelişik sayardı.
+A_KIPI_GORELI_AYARI = "a_kipi_pk1_goreli_yalniz_anlamli"
+
+#: Göreli birimi paylaşan şemalar — `mutlak` bunların dışındadır (başka alan adları yazar).
+GORELI_SEMALAR = ("goreli", "goreli_yalniz_anlamli")
 
 #: Katman i PK kapısının İKİ ŞEMASI — sayısal taban (EDG-096) ya da kip listesi (EDG-097).
 KATMAN_I_SEMALARI = {"katman_i_pk_20g_alt": "taban", "katman_i_pk_kipler": "kip_listesi"}
@@ -249,7 +266,8 @@ def kapi_semasi_sec(kart_esikler: dict) -> dict:
 
     Bilinmeyen ad, eksik zorunlu ad ve aynı kapı için ÇELİŞİK iki ad ÇIKIŞ 2'dir; hangi adın
     sorunlu olduğu stderr'e ADIYLA yazılır (ölçülemeyen bir seçim varsayılana DÜŞMEZ)."""
-    bilinen = set(A_KIPI_SEMALARI) | set(KATMAN_I_SEMALARI) | set(ZORUNLU_ESIKLER)
+    bilinen = (set(A_KIPI_SEMALARI) | set(KATMAN_I_SEMALARI) | set(ZORUNLU_ESIKLER)
+               | {A_KIPI_GORELI_AYARI})
     bilinmeyen = sorted(set(kart_esikler) - bilinen)
     if bilinmeyen:
         kullanim_hatasi(f"kartta BİLİNMEYEN eşik adı: {bilinmeyen} — bu adı ölçen kapı bu "
@@ -266,6 +284,22 @@ def kapi_semasi_sec(kart_esikler: dict) -> dict:
                 f"(seçenekler: {sorted(semalar)})")
         out[etiket] = semalar[adlar[0]]
         out[f"{etiket}_esik_adi"] = adlar[0]
+    if A_KIPI_GORELI_AYARI in kart_esikler:
+        deger = kart_esikler[A_KIPI_GORELI_AYARI]
+        if not isinstance(deger, bool):
+            # `bool` dışı bir değer sessizce doğru/yanlışa DÜŞÜRÜLMEZ: Python'da boş olmayan
+            # her dizge doğrudur, yani "hayir" yazan bir kart kapıyı AÇARDI.
+            kullanim_hatasi(f"`{A_KIPI_GORELI_AYARI}` bir BAYRAKTIR (true/false), bulunan: "
+                            f"{deger!r} ({type(deger).__name__}) — ayar UYDURULMAZ")
+        if out["a_kipi"] != "goreli":
+            # Ayar yalnız göreli kapıyı daraltır; mutlak kapı onu OKUMAZ. Sessizce yok saymak,
+            # kart bir birim isterken kodun başka birimde hüküm vermesi olurdu.
+            kullanim_hatasi(
+                f"`{A_KIPI_GORELI_AYARI}` yalnız GÖRELİ A kipi kapısının ayarıdır; kartın "
+                f"kurduğu şema `{out['a_kipi']}` (`{out['a_kipi_esik_adi']}`) — bu şemada ayar "
+                f"OKUNMAZ ve sessizce ölürdü")
+        if deger:
+            out["a_kipi"] = "goreli_yalniz_anlamli"
     return out
 
 
@@ -307,20 +341,34 @@ def a_kipi_pk1_kapisi(asof: dict, pk1: dict, tol: float, sema: str = "mutlak") -
     `mutlak` (EDG-096): |A − PK1| ≤ tol. `goreli` (EDG-097): |A − PK1| / |PK1| ≤ tol VE yön eşit
     VE CI-0-dışılık deseni eşit — bar tabanı canlı tazelendiği için bit-eşitliği İSTENMEZ, ama
     DESEN eşitliği istenir (aynı büyüklükte fakat başka anlamlılıkta bir sonuç "aynı" değildir).
+    `goreli_yalniz_anlamli` (EDG-098): AYNI göreli kapı, ama tolerans YALNIZ PK-1'in CI-0-DIŞI
+    bacaklarına uygulanır. CI-0-İÇİ bir bacakta referansın kendisi sıfırdan ayırt edilemez;
+    oranın payı da paydası da gürültüdür ve "%5" orada bir şey ÖLÇMEZ (EDG-097 tam bu yüzden
+    ölçülmeden geri çekildi). O bacakta hüküm DESENDİR (`yon_esit` ∧ `ci0_disi_esit`) ve oran
+    YİNE YAZILIR (`goreli_fark`) — kapıdan çıkarmak, okuyucudan gizlemek değildir.
     PK-1 değeri SIFIRSA oran TANIMSIZDIR: None + neden (sıfıra bölme "0 fark" diye yazılmaz),
-    ve sıfırın işareti olmadığı için yön de ölçülemez."""
-    if sema not in ("mutlak", "goreli"):
+    ve sıfırın işareti olmadığı için yön de ölçülemez. `pk1_anlamli` YOKSA toleransın uygulanıp
+    uygulanmayacağı BİLİNEMEZ: `goreli_uygulandi` None ve bacak "geçti" SAYILMAZ."""
+    if sema not in ("mutlak",) + GORELI_SEMALAR:
         kullanim_hatasi(f"bilinmeyen A kipi kapı şeması: {sema!r}")
-    goreli = sema == "goreli"
+    goreli = sema in GORELI_SEMALAR
+    yalniz_anlamli = sema == "goreli_yalniz_anlamli"
     out = {"sema": sema, "tolerans": tol, "kiyaslanan_bacak_n": 0, "maks_mutlak_fark": None,
            "gecti": None, "detay": [], "neden": None,
            "tanim": ("A kipi (as-of) EDG-093 PK-1 detayının ALTI bacağını tolerans içinde "
                      "yeniden üretmeli — kod yolunun bozulmadığının kanıtı") if not goreli else
                     ("A kipi (as-of) EDG-093 PK-1 detayının ALTI bacağıyla GÖRELİ tolerans "
                      "içinde, AYNI yönde ve AYNI CI-0-dışılık deseninde olmalı — bit-eşitlik "
-                     "istenmez (bar tabanı canlı tazelenir), desen eşitliği istenir")}
+                     "istenmez (bar tabanı canlı tazelenir), desen eşitliği istenir")
+                    if not yalniz_anlamli else
+                    ("A kipi (as-of) EDG-093 PK-1 detayının ALTI bacağıyla AYNI yönde ve AYNI "
+                     "CI-0-dışılık deseninde olmalı; GÖRELİ tolerans YALNIZ PK-1'in CI-0-DIŞI "
+                     "bacaklarına uygulanır — CI-0-İÇİ bacakta oran anlamsız birimdedir, "
+                     "RAPORLANIR ama hüküm vermez")}
     if goreli:
         out["maks_goreli_fark"] = None
+    if yalniz_anlamli:
+        out["maks_goreli_fark_kapida"] = None
     if not asof.get("okundu"):
         out["neden"] = f"A kipi okunamadı: {asof.get('neden')}"
         return out
@@ -328,7 +376,7 @@ def a_kipi_pk1_kapisi(asof: dict, pk1: dict, tol: float, sema: str = "mutlak") -
         out["neden"] = pk1.get("neden")
         return out
     ref = {(str(r.get("bacak")), str(r.get("ufuk"))): r for r in pk1["detay"]}
-    farklar, oranlar, bacak_durumlari = [], [], []
+    farklar, oranlar, oranlar_kapida, bacak_durumlari = [], [], [], []
     for bacak, alan in BACAKLAR:
         for ufuk in UFUKLAR:
             hucre = ((asof["bacaklar"].get(bacak) or {}).get(ufuk) or {})
@@ -359,7 +407,29 @@ def a_kipi_pk1_kapisi(asof: dict, pk1: dict, tol: float, sema: str = "mutlak") -
                 a_ci0, r_ci0 = hucre.get("anlamli"), r_satir.get("pk1_anlamli")
                 ci_esit = None if (a_ci0 is None or r_ci0 is None) \
                     else bool(bool(a_ci0) == bool(r_ci0))
-                durum = _uclu_ve(tol_ici, yon, ci_esit)
+                # EDG-098: toleransın UYGULANIP uygulanmayacağına PK-1'in KENDİ anlamlılığı
+                # karar verir. Alan yoksa bu karar ÖLÇÜLEMEZ (None) — varsayılan seçmek
+                # (uygula / uygulama) kartın sormadığı bir kapıyı sessizce kurardı.
+                uygulandi = True
+                if yalniz_anlamli:
+                    uygulandi = None if r_ci0 is None else bool(r_ci0)
+                    if uygulandi is not True:
+                        tol_ici = None
+                if uygulandi is False:
+                    # Tolerans UYGULANMADI: onun `None`ı üçlü VE'ye GİRMEZ. Girseydi desenle
+                    # geçen bir bacak "ölçülemedi" görünür, kapı hiç hüküm veremez ve kart
+                    # "yalnız desen" derken kod hiçbir şey ölçmemiş olurdu.
+                    durum = _uclu_ve(yon, ci_esit)
+                else:
+                    durum = _uclu_ve(tol_ici, yon, ci_esit)
+                    if oran is not None and uygulandi:
+                        oranlar_kapida.append(oran)
+                if yalniz_anlamli:
+                    satir["goreli_uygulandi"] = uygulandi
+                    if uygulandi is None:
+                        neden = neden or (
+                            "PK-1 satırında `pk1_anlamli` YOK — göreli toleransın uygulanıp "
+                            "uygulanmayacağı ÖLÇÜLEMEDİ; bacak 'geçti' SAYILMAZ")
                 satir.update({
                     "goreli_fark": oran, "tolerans_ici": tol_ici, "yon_esit": yon,
                     "a_kipi_ci0_disi": a_ci0, "pk1_ci0_disi": r_ci0, "ci0_disi_esit": ci_esit,
@@ -379,6 +449,11 @@ def a_kipi_pk1_kapisi(asof: dict, pk1: dict, tol: float, sema: str = "mutlak") -
         out["gecti"] = bool(max(farklar) <= tol and len(farklar) == len(out["detay"]))
         return out
     out["maks_goreli_fark"] = max(oranlar) if oranlar else None
+    if yalniz_anlamli:
+        # İKİ maksimum AYRI durur: biri BÜTÜN bacakların (okuyucu kaybedileni görür), öteki
+        # kartın eşiğiyle kıyaslanan KAPIDAKİ bacakların. Tek sayıya indirmek ya kapıyı haksız
+        # düşürür ya da raporlanan oranı gizlerdi (bedel yasası).
+        out["maks_goreli_fark_kapida"] = max(oranlar_kapida) if oranlar_kapida else None
     out["gecti"] = _uclu_ve(*bacak_durumlari)
     if out["gecti"] is None:
         out["neden"] = ("bir ya da daha çok bacak ÖLÇÜLEMEDİ — kapı 'geçti' SAYILMAZ (eksik "
@@ -509,10 +584,38 @@ def _a_kipi_esigi(kapi: dict, esik, sema: str) -> dict:
         return {"esik": esik, "deger": kapi.get("maks_mutlak_fark"), "gecti": kapi.get("gecti"),
                 "tanim": "A kipi ≡ EDG-093 PK-1 (altı bacak) — değer maksimum mutlak farktır",
                 "neden": kapi.get("neden")}
+    if sema == "goreli_yalniz_anlamli":
+        deger = kapi.get("maks_goreli_fark_kapida")
+        neden = kapi.get("neden")
+        if neden is None and deger is None and kapi.get("detay"):
+            neden = ("göreli tolerans HİÇBİR bacakta UYGULANMADI (PK-1'in CI-0-dışı bacağı "
+                     "YOK) — hüküm yalnız DESENDEN geldi; boş bir maksimum '0 fark' diye "
+                     "YAZILMAZ (uydurma yasağı)")
+        return {"esik": esik, "deger": deger, "gecti": kapi.get("gecti"),
+                "tanim": "A kipi ↔ EDG-093 PK-1 (altı bacak): desen (yön + CI-0-dışılık) EŞİT "
+                         "ve PK-1'in CI-0-DIŞI bacaklarında göreli fark ≤ tolerans — değer O "
+                         "bacakların maksimum göreli farkıdır (bütün bacakların maksimumu kapı "
+                         "bloğunda `maks_goreli_fark` olarak durur)",
+                "neden": neden}
     return {"esik": esik, "deger": kapi.get("maks_goreli_fark"), "gecti": kapi.get("gecti"),
             "tanim": "A kipi ↔ EDG-093 PK-1 (altı bacak): göreli fark ≤ tolerans VE yön eşit VE "
                      "CI-0-dışılık deseni eşit — değer maksimum GÖRELİ farktır",
             "neden": kapi.get("neden")}
+
+
+def _a_kipi_goreli_ayari(kapi: dict, deger) -> dict:
+    """`a_kipi_pk1_goreli_yalniz_anlamli` bir KAPI DEĞİLDİR — A kipi göreli kapısının BİRİM
+    ayarıdır ve kendi başına hüküm VERMEZ (`gecti` None; hükmü `a_kipi_pk1_goreli_tol` satırı
+    taşır). Yine de eşik tablosunda ADIYLA durur: kart bir ayar taşırken çıktı susarsa okuyucu
+    hükmün hangi birimde verildiğini göremez (Yasa 6). DEĞER = toleransın UYGULANDIĞI bacaklar;
+    boş liste "hiçbiri" demektir ve None olarak yazılır (sayı gibi görünmesin)."""
+    uygulanan = [f"{r['bacak']}@{r['ufuk']}" for r in (kapi.get("detay") or [])
+                 if r.get("goreli_uygulandi")]
+    return {"esik": deger, "deger": uygulanan or None, "gecti": None,
+            "tanim": "KAPI DEĞİL — A kipi göreli kapısının BİRİM ayarı: True ise göreli "
+                     "tolerans YALNIZ PK-1'in CI-0-dışı bacaklarına uygulanır; değer o "
+                     "bacakların listesidir. Hüküm `a_kipi_pk1_goreli_tol` satırındadır.",
+            "neden": "ayar satırı — kapı değil (hüküm `a_kipi_pk1_goreli_tol` satırında)"}
 
 
 def esikleri_olc(kart_esikler: dict, kipler: dict, kapi: dict, sema: dict) -> dict:
@@ -527,7 +630,8 @@ def esikleri_olc(kart_esikler: dict, kipler: dict, kapi: dict, sema: dict) -> di
         "katman_i_pk_20g_alt": lambda e: _katman_i_esigi(kipler, e),
         "katman_i_pk_kipler": lambda e: _katman_i_kip_listesi(kipler, e),
         "a_kipi_pk1_tutarlilik_tol": lambda e: _a_kipi_esigi(kapi, e, "mutlak"),
-        "a_kipi_pk1_goreli_tol": lambda e: _a_kipi_esigi(kapi, e, "goreli"),
+        "a_kipi_pk1_goreli_tol": lambda e: _a_kipi_esigi(kapi, e, sema["a_kipi"]),
+        A_KIPI_GORELI_AYARI: lambda e: _a_kipi_goreli_ayari(kapi, e),
     }
     out = {}
     for ad, deger in kart_esikler.items():
@@ -705,17 +809,39 @@ def rapor_metni(sonuc: dict) -> str:
         a("")
 
     k = sonuc["a_kipi_pk1_kapisi"]
-    goreli = k.get("sema") == "goreli"
-    a("## A kipi ↔ EDG-093 PK-1 kapısı (göreli)" if goreli else
+    yalniz = k.get("sema") == "goreli_yalniz_anlamli"
+    goreli = k.get("sema") in GORELI_SEMALAR
+    a("## A kipi ↔ EDG-093 PK-1 kapısı (göreli — tolerans YALNIZ PK-1'in CI-0-dışı bacaklarında)"
+      if yalniz else
+      "## A kipi ↔ EDG-093 PK-1 kapısı (göreli)" if goreli else
       "## A kipi ≡ EDG-093 PK-1 kapısı")
     a("")
-    a(f"Kıyaslanan bacak: **{k.get('kiyaslanan_bacak_n')}** · maksimum "
-      f"{'göreli' if goreli else 'mutlak'} fark: "
-      f"**{_sayi(k.get('maks_goreli_fark') if goreli else k.get('maks_mutlak_fark'), 9)}** · "
-      f"tolerans: {_sayi(k.get('tolerans'), 9)} · geçti: **{_isaret(k.get('gecti'))}**"
-      f"{(' · ' + str(k.get('neden'))) if k.get('neden') else ''}")
+    if yalniz:
+        # İKİ maksimum birlikte yazılır: yalnız kapıdakini yazmak kaybedileni gizler, yalnız
+        # bütünü yazmak eşiği aşmış gibi gösterirdi (bedel yasası — okuyucu ikisini de görür).
+        a(f"Kıyaslanan bacak: **{k.get('kiyaslanan_bacak_n')}** · maksimum göreli fark "
+          f"(kapıdaki bacaklarda): **{_sayi(k.get('maks_goreli_fark_kapida'), 9)}** · "
+          f"(bütün bacaklarda, hüküm vermez): {_sayi(k.get('maks_goreli_fark'), 9)} · "
+          f"tolerans: {_sayi(k.get('tolerans'), 9)} · geçti: **{_isaret(k.get('gecti'))}**"
+          f"{(' · ' + str(k.get('neden'))) if k.get('neden') else ''}")
+    else:
+        a(f"Kıyaslanan bacak: **{k.get('kiyaslanan_bacak_n')}** · maksimum "
+          f"{'göreli' if goreli else 'mutlak'} fark: "
+          f"**{_sayi(k.get('maks_goreli_fark') if goreli else k.get('maks_mutlak_fark'), 9)}** · "
+          f"tolerans: {_sayi(k.get('tolerans'), 9)} · geçti: **{_isaret(k.get('gecti'))}**"
+          f"{(' · ' + str(k.get('neden'))) if k.get('neden') else ''}")
     a("")
-    if goreli:
+    if yalniz:
+        a("| Bacak | Ufuk | A kipi | PK-1 | Göreli fark | Göreli uygulandı | Yön eşit | "
+          "CI-0-dışılık eşit | Geçti |")
+        a("|---|---|---:|---:|---:|---|---|---|---|")
+        for r in k.get("detay") or []:
+            a(f"| {r['bacak']} | {r['ufuk']}g | {_sayi(r['a_kipi_deger'])} | "
+              f"{_sayi(r['pk1_deger'])} | {_sayi(r['goreli_fark'], 9)} | "
+              f"{_isaret(r.get('goreli_uygulandi'))} | {_isaret(r['yon_esit'])} | "
+              f"{_isaret(r['ci0_disi_esit'])} | {_isaret(r['gecti'])}"
+              f"{(' · ' + str(r.get('neden'))) if r.get('neden') else ''} |")
+    elif goreli:
         a("| Bacak | Ufuk | A kipi | PK-1 | Göreli fark | Yön eşit | CI-0-dışılık eşit | Geçti |")
         a("|---|---|---:|---:|---:|---|---|---|")
         for r in k.get("detay") or []:

@@ -1,5 +1,6 @@
-"""tests/test_edg097_goreli_kapi_v496.py — EDG-2026-097 KART-PARAMETRELİ KAPILAR
-(karşılaştırma betiğinin iki şeması: A kipi mutlak↔göreli, katman i taban↔kip listesi).
+"""tests/test_edg097_goreli_kapi_v496.py — EDG-2026-097 / EDG-2026-098 KART-PARAMETRELİ KAPILAR
+(karşılaştırma betiğinin şemaları: A kipi mutlak ↔ göreli ↔ göreli-yalnız-anlamlı, katman i
+taban ↔ kip listesi).
 
 vNNN KİMLİK KAYDI: ölçüm anında (2026-09-15) `grep -rl v496 tests/ ops/ meridian/ research/
 docs/` BOŞ döndü — çakışma yok, taşıma yok (CLAUDE.md §2 vNNN kimlik kuralı).
@@ -24,6 +25,19 @@ betik hangi kapıyı kuracağını KARTIN EŞİK ADLARINDAN öğrenir.
        "kart bu kalemi taşımıyor" diye ADIYLA sayılır, sessizce kaybolmaz.
   T7 — GERÇEK EDG-096 çıktısı (env `EDG096_CIKTI`, yoksa skip) 097 kartıyla yeniden okunur:
        kapı mantığının gerçek sayılar üzerinde ne DEDİĞİNİN kanıtı. Hüküm YOK — Rol-1'in.
+  T8 — AYNI gerçek çıktı 098 kartıyla (env `EDG096_CIKTI`, yoksa skip): göreli tolerans YALNIZ
+       PK-1'in CI-0-DIŞI bacaklarına uygulanır. PK-1 referansı A1 koşumunun okuduğu dosyanın
+       DEPODAKİ kopyasıdır ve sha256'sı gerçek çıktının künyesinden DOĞRULANIR — `pk1_anlamli`
+       uydurulmaz. T8d karşıtlık çivisidir: AYNI girdi 097 kartıyla DÜŞER (birim değişti, veri
+       değil).
+  T9 — sentetik: CI-0-İÇİ bacakta %50 fark GEÇER (desen eşit), CI-0-DIŞI bacakta %6 DÜŞER,
+       desen farkı tolerans uygulanmayan bacakta da DÜŞÜRÜR, hiçbir bacak anlamlı değilse
+       eşiğin değeri None + NEDEN, `pk1_anlamli` yoksa bacak "geçti" SAYILMAZ.
+  T10 — ayar alanı YOK ya da FALSE ise tur-1 (EDG-097) davranışı AYNEN; ayar mutlak şemayla ya
+       da bayrak olmayan bir değerle gelirse ÇIKIŞ 2 (okunmayan ayar sessizce ölmez).
+  T11 — beyan: RAPOR "Göreli uygulandı" sütununu ve İKİ maksimumu taşır; 097 raporuna SIZMAZ.
+  T12 — AYRIŞMA ÇİVİSİ: EDG-2026-098 kartı depoya girdiği gün eşik/kill-list fikstürü onunla
+       karşılaştırılır (kart yoksa skip — kartı Rol-1 koyar, ajan karta DOKUNMAZ).
 
 BU DOSYA ÖLÇÜM KOŞMAZ: `k093` çalıştırılmaz, ağa çıkılmaz, kart dosyasına YAZILMAZ (yalnız
 OKUNUR — eşik ve kill-list metni oradan gelir). T7 yalnız HAZIR çıktı dosyalarını okur.
@@ -35,10 +49,12 @@ kopya, üreticinin alan adları değiştiğinde sessizce ayrışır ve bu dosya 
 eşleşip eşleşmediğidir (aynı ad değil, farklı sözleşme).
 
 MUTASYON KANITI (bu dosyada KOŞMAZ, rapora yazılır — CLAUDE.md §6): her çivinin ısırdığı dal
-rapor tablosundadır (şema seçimi, göreli oran, üçlü VE, kip listesi, eşik adı doğrulaması).
+rapor tablosundadır (şema seçimi, göreli oran, üçlü VE, kip listesi, eşik adı doğrulaması,
+toleransın uygulandığı bacak kümesi, iki maksimum, ayar doğrulaması, rapor sütunu).
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import pathlib
@@ -615,3 +631,397 @@ def mod_bacaklari():
     """Bacak → değer alanı eşlemesi TEK KAYNAKTAN (karşılaştırma betiği) okunur; kopya bir
     eşleme, `ii_b`nin korelasyon (`ic`) olduğunu unutur ve sessizce None kıyaslardı."""
     return betikten_modul_yukle(KARSILASTIR, "v496_bacak_eslemesi").BACAKLAR
+
+
+# =================================================================================================
+# T8–T12 — EDG-2026-098: GÖRELİ TOLERANS YALNIZ PK-1'İN CI-0-DIŞI BACAKLARINDA
+# =================================================================================================
+# EDG-2026-097 ÖLÇÜLMEDEN GERİ ÇEKİLDİ: göreli %5 kapısı, PK-1'in CI-0-İÇİ (dolayısıyla sıfırdan
+# ayırt edilemeyen) bir bacağında da hüküm veriyordu — gerçek EDG-096 çıktısında ii_b @20 bacağı
+# 0,0089 ↔ 0,0084 idi ve göreli fark %5,95 çıkıyordu. O bacakta pay da payda da GÜRÜLTÜ; oran
+# ANLAMSIZ BİRİMDEDİR. Ardıl kart EDG-2026-098 kapının birimini değiştirir (eşik yerinde
+# düzeltilmez — yeni eşik = yeni kart, CLAUDE.md §5):
+#     `a_kipi_pk1_goreli_yalniz_anlamli: true` → göreli tolerans YALNIZ PK-1'in CI-0-DIŞI
+#     bacaklarına uygulanır; CI-0-İÇİ bacakta yalnız DESEN (yön + CI-0-dışılık) ölçülür ve
+#     `goreli_fark` yine RAPORLANIR (bedel yasası: kapıdan çıkarmak, gizlemek değildir).
+#: Kart ESİK/KILL blokları burada FİKSTÜRDÜR: kart dosyasını depoya Rol-1 koyar ve bu çiviler
+#: onun VARLIĞINA bağlı değildir (ajan karta dokunmaz, CLAUDE.md §3). Kopya kaçınılmaz olduğu
+#: için AYRIŞMA ÇİVİSİ vardır (T12): kart depoya girdiği gün blok onunla karşılaştırılır ve
+#: sessizce ayrışamaz (tek-kaynak yasası, CLAUDE.md §4).
+KART098_ID = "EDG-2026-098"
+KART098_DESEN = "EDG-2026-098-*.yaml"
+KART098_ESIKLER = {
+    "ii_b_artik_ic_20g_alt": 0.015,
+    "a_kipi_pk1_goreli_tol": 0.05,
+    "a_kipi_pk1_goreli_yalniz_anlamli": True,
+    "katman_i_pk_kipler": ["asof", "guncel"],
+    "olculemeyen_sabit_liste_ust_oran": 0.20,
+}
+KART098_KILL = [
+    "A kipi PK-1 ile desen (yön + CI-0-dışılık) altı bacakta eşit değil YA DA CI-0-dışı bacakta "
+    "göreli fark > %5 → kod/veri yolu doğrulanmadı, sayı yayılmaz",
+    "katman i @20 as-of ya da güncel-liste kipinde CI-0-içi → ölçüm bilgisiz",
+    "B VE C'de ii_b @20 CI-0-içi → hipotez KALDI (pencere etkisi); EDG-016'ya şerh",
+    "sabit-251 kapsam dışı payı > %20 → C kipi bilgisiz; yalnız B ile hüküm verilmez",
+]
+KART098_TRIAL = ["EDG-098-guncel-liste-ii-b-artik-ic-20g", "EDG-098-sabit251-ii-b-artik-ic-20g"]
+
+#: Gerçek EDG-096 koşumunun (A1, 2026-09-15) A kipi ↔ PK-1 göreli farkları — T8 bunları
+#: BAĞIMSIZCA yeniden hesaplar ve karşılaştırır; buradaki sayılar yalnız "fikstür değişmiş mi"
+#: sorusunun cevabıdır (hüküm Rol-1'in).
+GERCEK_ORAN_I20 = 0.021735630
+GERCEK_ORAN_IIB20 = 0.059523810
+
+
+def _kart098_yaz(kok: pathlib.Path, ad: str = "kart098", **degisiklik) -> pathlib.Path:
+    """EDG-2026-098 kartının ESİK/KILL fikstürü — `degisiklik` ile tek alan oynatılır.
+
+    `_kart_yaz` kullanılmaz: o sınav kartı sabit bir kill-list ve `EDG-2026-SINAV` kimliği
+    taşır; buradaki çiviler kartın KENDİ kill-list cümlelerini ve kimliğini ölçer."""
+    esikler = dict(KART098_ESIKLER)
+    for anahtar, deger in degisiklik.items():
+        if deger is None:
+            esikler.pop(anahtar, None)
+        else:
+            esikler[anahtar] = deger
+    p = kok / f"{ad}.yaml"
+    p.write_text(yaml.safe_dump(
+        {"card_id": KART098_ID, "esikler": esikler, "kill_list": list(KART098_KILL),
+         "k_registry": {"trial_ids": list(KART098_TRIAL)}},
+        allow_unicode=True, sort_keys=False), encoding="utf-8")
+    return p
+
+
+def _detay(kapi: dict) -> dict:
+    return {(r["bacak"], r["ufuk"]): r for r in kapi["detay"]}
+
+
+# -------------------------------------------------------------------------------------------------
+# T8 — GERÇEK EDG-096 ÇIKTISI, 098 KARTIYLA (hazır dosyalar; ölçüm KOŞMAZ)
+# -------------------------------------------------------------------------------------------------
+@pytest.fixture(scope="module")
+def gercek_pk1_yolu(gercek):
+    """A1 koşumunun KULLANDIĞI PK-1 referansının ta kendisi — depodaki kopya sha256 ile
+    DOĞRULANIR.
+
+    T7'nin fikstürü PK-1'i kapı detayından yeniden kurar ve `pk1_anlamli`yi BİLEREK yazmaz (o
+    alan orada ölçülmemiştir). 098 kapısının kararı TAM OLARAK o alana bağlıdır, dolayısıyla T8
+    referansı uydurmak yerine A1'in okuduğu dosyayı okur: dosya ADI ve sha256'sı gerçek
+    çıktının `girdi_damgasi` künyesinden gelir (tek-kaynak: kıyas ölçütü A1 kaydındadır)."""
+    kayit = (gercek["s096"].get("girdi_damgasi") or {}).get("pk1_referans") or {}
+    ad = pathlib.Path(str(kayit.get("yol") or "")).name
+    if not ad:
+        pytest.skip("gerçek çıktı PK-1 referans yolunu künyelemedi — kıyas ölçütü YOK")
+    p = REPO / "research" / "olcumler" / "edg093_midcap_pit" / "olcum" / ad
+    if not p.is_file():
+        pytest.skip(f"A1 koşumunun PK-1 referansı depoda YOK: {ad}")
+    bulunan = hashlib.sha256(p.read_bytes()).hexdigest()
+    assert bulunan == kayit.get("sha256"), (
+        f"depodaki PK-1 kopyası A1 koşumunun referansı DEĞİL: {bulunan} ≠ {kayit.get('sha256')}")
+    return p
+
+
+@pytest.fixture(scope="module")
+def gercek_098(gercek, gercek_pk1_yolu, k096_modul, tmp_path_factory):
+    kok = tmp_path_factory.mktemp("edg098_gercek")
+    kart = _kart098_yaz(kok)
+    return _kosum(k096_modul, kok, kart, "gercek098", gercek["asof"], gercek["guncel"],
+                  gercek["sabit"], gercek_pk1_yolu)
+
+
+def test_T8a_GERCEK_A_KIPI_KAPISI_GECER_CI0_ICI_BACAK_YALNIZ_DESEN(gercek_098, gercek,
+                                                                   gercek_pk1_yolu):
+    """GERÇEK sayılarla 098 kapısı: A kipi ↔ PK-1 GEÇER. EDG-097'yi düşüren ii_b @20 bacağı
+    (%5,95 > %5) PK-1'de CI-0-İÇİdir → göreli tolerans UYGULANMAZ, yalnız desen ölçülür ve
+    desen eşittir. CI-0-DIŞI olan iki `i` bacağında tolerans UYGULANIR ve %5'in altındadır.
+    Sayılar Rol-1'indir; burada ölçülen şey kapının bu veriye NE DEDİĞİDİR."""
+    s, _ = gercek_098
+    kapi = s["a_kipi_pk1_kapisi"]
+    assert kapi["sema"] == "goreli_yalniz_anlamli", kapi.get("sema")
+    assert kapi["kiyaslanan_bacak_n"] == 6
+    d = _detay(kapi)
+    for ufuk in ("10", "20"):
+        gated = d[("i_ust20_kohort_fazlasi", ufuk)]
+        assert gated["pk1_ci0_disi"] is True and gated["goreli_uygulandi"] is True, gated
+        assert gated["tolerans_ici"] is True and gated["gecti"] is True, gated
+    for bacak in ("ii_a1_kova_tabanli_fazla", "ii_b_artik_ic_fazla"):
+        for ufuk in ("10", "20"):
+            r = d[(bacak, ufuk)]
+            assert r["pk1_ci0_disi"] is False and r["goreli_uygulandi"] is False, r
+            assert r["tolerans_ici"] is None, r
+            assert r["goreli_fark"] is not None, "oran kapıdan çıktı diye GİZLENMEZ"
+            assert r["ci0_disi_esit"] is True and r["yon_esit"] is True and r["gecti"] is True, r
+    assert kapi["gecti"] is True, kapi
+
+
+def test_T8b_GERCEK_ORANLAR_BAGIMSIZ_HESAPLA_AYNI_ve_IKI_MAKSIMUM(gercek_098, gercek,
+                                                                  gercek_pk1_yolu):
+    """Kapının yazdığı oranlar AYNI iki sayıdan bağımsızca yeniden hesaplanır. İKİ maksimum
+    ayrı ayrı durur: `maks_goreli_fark` BÜTÜN bacakların (ii_b @20 = %5,95), eşiğe giren değer
+    ise YALNIZ kapıdaki bacakların maksimumudur (%2,17) — ikisini tek sayıya indirmek ya kapıyı
+    haksız düşürür ya da kaybedileni gizlerdi (bedel yasası)."""
+    s, _ = gercek_098
+    kapi = s["a_kipi_pk1_kapisi"]
+    ham = json.loads(gercek_pk1_yolu.read_text(encoding="utf-8"))
+    ref = {(r["bacak"], r["ufuk"]): r for r in ham["pk"]["pk1"]["detay"]}
+    alanlar = dict(mod_bacaklari())
+    kapidaki = []
+    for r in kapi["detay"]:
+        a_ham = gercek["kipler"]["asof"]["kosumlar"]["dahil"]["bacaklar"][r["bacak"]][r["ufuk"]]
+        a = a_ham[alanlar[r["bacak"]]]
+        rv = ref[(r["bacak"], r["ufuk"])]["pk1_deger"]
+        assert r["a_kipi_deger"] == a and r["pk1_deger"] == rv, r
+        assert r["goreli_fark"] == pytest.approx(abs(a - rv) / abs(rv)), r
+        if r["goreli_uygulandi"]:
+            kapidaki.append(r["goreli_fark"])
+    assert kapi["maks_goreli_fark"] == pytest.approx(GERCEK_ORAN_IIB20), kapi["maks_goreli_fark"]
+    assert kapi["maks_goreli_fark_kapida"] == pytest.approx(GERCEK_ORAN_I20)
+    assert kapi["maks_goreli_fark_kapida"] == max(kapidaki)
+    esik = s["esikler"]["a_kipi_pk1_goreli_tol"]
+    assert esik["esik"] == 0.05 and esik["gecti"] is True
+    assert esik["deger"] == pytest.approx(GERCEK_ORAN_I20), esik
+
+
+def test_T8c_GERCEK_OTEKI_KAPILAR_ve_KILL_LIST_BOS(gercek_098, gercek):
+    """Kartın öteki üç kapısı gerçek sayılarla GEÇER ve hiçbir kill-list kalemi TETİKLENMEZ;
+    hüküm YOKTUR (Rol-1'in). Değerler girdi dosyalarından OKUNUR, yeniden hesaplanmaz."""
+    s, _ = gercek_098
+    e = s["esikler"]
+    assert e["katman_i_pk_kipler"]["gecti"] is True, e["katman_i_pk_kipler"]
+    kapida = {d["kip"]: d for d in e["katman_i_pk_kipler"]["detay"]}
+    assert kapida["sabit"]["kapida"] is False and kapida["sabit"]["gecti"] is False
+    beklenen = max(gercek["kipler"][k]["kosumlar"]["dahil"]["bacaklar"]
+                   ["ii_b_artik_ic_fazla"]["20"]["ic"] for k in ("guncel", "sabit"))
+    assert e["ii_b_artik_ic_20g_alt"]["deger"] == beklenen
+    assert e["ii_b_artik_ic_20g_alt"]["gecti"] is True
+    assert e["olculemeyen_sabit_liste_ust_oran"]["gecti"] is True
+    assert e["olculemeyen_sabit_liste_ust_oran"]["deger"] == (
+        gercek["kipler"]["sabit"]["sabit_liste_kunyesi"]["kapsam_disi_oran"])
+    assert s["kill_list_tetik"] == [], s["kill_list_tetik"]
+    assert s["kill_list_muhasebesi"]["eslesmeyen_kart_kalemleri"] == []
+    assert s["hukum"] == "YOK — Rol-1" and s["kart_id"] == KART098_ID
+    assert s["kapi_semasi"] == {"a_kipi": "goreli_yalniz_anlamli", "katman_i": "kip_listesi"}
+
+
+def test_T8d_AYNI_GERCEK_GIRDI_097_KARTIYLA_DUSER(gercek, gercek_pk1_yolu, k096_modul,
+                                                  tmp_path_factory):
+    """KARŞITLIK ÇİVİSİ: AYNI gerçek girdiler 097 kartıyla (tur-1: göreli tolerans HER bacakta)
+    kapıyı DÜŞÜRÜR — ii_b @20 %5,95 > %5. Kartın değiştirdiği şey veri değil BİRİMDİR; bu çivi
+    olmadan 098'in "geçti"si kapı değişikliğinin değil fikstürün eseri olabilirdi."""
+    kok = tmp_path_factory.mktemp("edg098_karsit")
+    s, _ = _kosum(k096_modul, kok, KART097, "karsit097", gercek["asof"], gercek["guncel"],
+                  gercek["sabit"], gercek_pk1_yolu)
+    kapi = s["a_kipi_pk1_kapisi"]
+    assert kapi["sema"] == "goreli"
+    assert "goreli_uygulandi" not in kapi["detay"][0], "097 çıktısına 098 alanı sızmış"
+    assert "maks_goreli_fark_kapida" not in kapi, "097 çıktısına 098 alanı sızmış"
+    d = _detay(kapi)
+    assert d[("ii_b_artik_ic_fazla", "20")]["tolerans_ici"] is False
+    assert d[("i_ust20_kohort_fazlasi", "20")]["tolerans_ici"] is True
+    assert kapi["gecti"] is False, kapi
+    assert any("A kipi PK-1" in t["kalem"] for t in s["kill_list_tetik"]), s["kill_list_tetik"]
+
+
+# -------------------------------------------------------------------------------------------------
+# T9 — SENTETİK: ANLAMSIZ BACAKTA ORAN KAPIYA GİRMEZ, ANLAMLI BACAKTA GİRER
+# -------------------------------------------------------------------------------------------------
+def _k098(mod, y, ad, **degisiklik):
+    kart = _kart098_yaz(y["kok"], f"kart_{ad}", **degisiklik)
+    sonuc, cikti = _kosum(mod, y["kok"], kart, ad, y["asof"], y["guncel"], y["sabit"], y["pk1"])
+    return sonuc, cikti
+
+
+def test_T9a_CI0_ICI_BACAKTA_YUZDE_ELLI_FARK_GECER(k096_modul, uc_kip):
+    """PK-1'in CI-0-İÇİ `ii_b` bacağında A kipi %50 AYRILIR: 098 kapısı GEÇER (desen eşit),
+    çünkü o bacakta oranın payı da paydası da sıfırdan ayırt edilemez. `goreli_fark` yine
+    RAPORLANIR — kapıdan çıkarmak, okuyucudan gizlemek değildir."""
+    y = uc_kip("t9a", REF_I, REF_A1, REF_IIB * 1.5)
+    s, _ = _k098(k096_modul, y, "t9a")
+    kapi = s["a_kipi_pk1_kapisi"]
+    d = _detay(kapi)
+    for ufuk in ("10", "20"):
+        r = d[("ii_b_artik_ic_fazla", ufuk)]
+        assert r["goreli_uygulandi"] is False and r["tolerans_ici"] is None, r
+        assert r["goreli_fark"] == pytest.approx(0.5), r
+        assert r["gecti"] is True, r
+    assert kapi["maks_goreli_fark"] == pytest.approx(0.5)
+    assert kapi["maks_goreli_fark_kapida"] == pytest.approx(0.0)
+    assert kapi["gecti"] is True, kapi
+    assert s["esikler"]["a_kipi_pk1_goreli_tol"]["gecti"] is True
+    assert s["kill_list_tetik"] == [], s["kill_list_tetik"]
+
+
+def test_T9b_CI0_DISI_BACAKTA_YUZDE_ALTI_FARK_DUSURUR(k096_modul, uc_kip):
+    """PK-1'in CI-0-DIŞI `i` bacağında %6 fark kartın %5 toleransını AŞAR → kapı DÜŞER ve
+    kartın 1. kalemi tetiklenir. "Yalnız anlamlı bacakta ölç" kuralı toleransı KALDIRMAZ,
+    uygulandığı yeri daraltır."""
+    y = uc_kip("t9b", REF_I * 1.06, REF_A1, REF_IIB)
+    s, _ = _k098(k096_modul, y, "t9b")
+    kapi = s["a_kipi_pk1_kapisi"]
+    d = _detay(kapi)
+    for ufuk in ("10", "20"):
+        r = d[("i_ust20_kohort_fazlasi", ufuk)]
+        assert r["goreli_uygulandi"] is True and r["tolerans_ici"] is False, r
+        assert r["gecti"] is False, r
+    assert d[("ii_b_artik_ic_fazla", "20")]["gecti"] is True
+    assert kapi["gecti"] is False, kapi
+    assert kapi["maks_goreli_fark_kapida"] == pytest.approx(0.06)
+    assert s["esikler"]["a_kipi_pk1_goreli_tol"]["gecti"] is False
+    assert any("A kipi PK-1" in t["kalem"] for t in s["kill_list_tetik"]), s["kill_list_tetik"]
+
+
+def test_T9c_CI0_ICI_BACAKTA_DESEN_FARKI_DUSURUR(k096_modul, uc_kip):
+    """Tolerans uygulanmayan bacakta bile DESEN ölçülür: A kipi `ii_b` CI-0-DIŞI, PK-1 CI-0-İÇİ
+    → bacak DÜŞER. Aksi hâlde "yalnız anlamlı bacakta ölç" kuralı, anlamsız bacağı tamamen
+    kapının dışına çıkarır ve kart "desen eşit" derken kod hiçbir şey sormamış olurdu."""
+    y = uc_kip("t9c", REF_I, REF_A1, REF_IIB, a_iib_anlamli=True)
+    s, _ = _k098(k096_modul, y, "t9c")
+    kapi = s["a_kipi_pk1_kapisi"]
+    ayrik = _detay(kapi)[("ii_b_artik_ic_fazla", "20")]
+    assert ayrik["goreli_uygulandi"] is False and ayrik["tolerans_ici"] is None
+    assert ayrik["a_kipi_ci0_disi"] is True and ayrik["pk1_ci0_disi"] is False
+    assert ayrik["ci0_disi_esit"] is False and ayrik["gecti"] is False, ayrik
+    assert kapi["gecti"] is False, kapi
+
+
+def test_T9d_HICBIR_BACAK_ANLAMLI_DEGILSE_TOLERANS_UYGULANMAZ_ve_ADIYLA_DURUR(k096_modul,
+                                                                              uc_kip):
+    """PK-1'in HİÇBİR bacağı CI-0-dışı değilse tolerans hiçbir yerde uygulanmaz: kapı desenle
+    geçer ama eşik satırının DEĞERİ None'dır ve NEDEN bunu ADIYLA söyler — boş bir maksimumu
+    "0 fark" diye yazmak, ölçülmemiş bir toleransı geçmiş göstermek olurdu (uydurma yasağı)."""
+    y = uc_kip("t9d", REF_I * 3, REF_A1, REF_IIB, a_i_anlamli=False,
+               pk1=_pk1_ref(i_anlamli=False))
+    s, _ = _k098(k096_modul, y, "t9d")
+    kapi = s["a_kipi_pk1_kapisi"]
+    assert all(r["goreli_uygulandi"] is False for r in kapi["detay"]), kapi["detay"]
+    assert kapi["maks_goreli_fark"] == pytest.approx(2.0)
+    assert kapi["maks_goreli_fark_kapida"] is None
+    assert kapi["gecti"] is True, kapi
+    e = s["esikler"]["a_kipi_pk1_goreli_tol"]
+    assert e["deger"] is None and e["gecti"] is True
+    assert "UYGULANMADI" in (e["neden"] or ""), e
+
+
+def test_T9e_OLCULEMEYEN_PK1_ANLAMLILIGI_BACAGI_GECTI_SAYDIRMAZ(k096_modul, uc_kip, tmp_path):
+    """PK-1 satırında `pk1_anlamli` YOKSA toleransın uygulanıp uygulanmayacağı BİLİNEMEZ:
+    `goreli_uygulandi` None, bacak "geçti" SAYILMAZ ve kapı None'dır. Varsayılan seçmek
+    (uygula / uygulama) kartın sormadığı bir kapıyı sessizce kurardı."""
+    pk1 = _pk1_ref()
+    for satir in pk1["pk"]["pk1"]["detay"]:
+        if satir["bacak"] == "ii_b_artik_ic_fazla":
+            satir.pop("pk1_anlamli")
+    y = uc_kip("t9e", REF_I, REF_A1, REF_IIB, pk1=pk1)
+    s, _ = _k098(k096_modul, y, "t9e")
+    kapi = s["a_kipi_pk1_kapisi"]
+    bilinmeyen = _detay(kapi)[("ii_b_artik_ic_fazla", "20")]
+    assert bilinmeyen["goreli_uygulandi"] is None, bilinmeyen
+    assert bilinmeyen["pk1_ci0_disi"] is None and bilinmeyen["ci0_disi_esit"] is None
+    assert bilinmeyen["gecti"] is None, bilinmeyen
+    assert kapi["gecti"] is None, kapi
+    assert kapi["neden"]
+
+
+# -------------------------------------------------------------------------------------------------
+# T10 — ALAN YOK / FALSE → TUR-1 (EDG-097) DAVRANIŞI AYNEN
+# -------------------------------------------------------------------------------------------------
+@pytest.mark.parametrize("ad,degisiklik", [
+    ("alan_yok", {"a_kipi_pk1_goreli_yalniz_anlamli": None}),
+    ("alan_false", {"a_kipi_pk1_goreli_yalniz_anlamli": False}),
+])
+def test_T10a_ALAN_YOK_ya_da_FALSE_ISE_TUR1_DAVRANISI(k096_modul, uc_kip, ad, degisiklik):
+    """Alan YOKSA ya da FALSE ise kapı tur-1'deki gibi HER bacakta göreli ölçer: CI-0-İÇİ `ii_b`
+    bacağındaki %50 fark kapıyı DÜŞÜRÜR. 097'nin yayımlanmış davranışı ardıl kartın kodunda
+    yaşamaya devam etmeli — yoksa o kartın hükmü kendi çıktısıyla yeniden üretilemezdi."""
+    y = uc_kip(f"t10_{ad}", REF_I, REF_A1, REF_IIB * 1.5)
+    s, _ = _k098(k096_modul, y, f"t10{ad}", **degisiklik)
+    kapi = s["a_kipi_pk1_kapisi"]
+    assert kapi["sema"] == "goreli", kapi.get("sema")
+    assert s["kapi_semasi"]["a_kipi"] == "goreli"
+    assert "goreli_uygulandi" not in kapi["detay"][0], kapi["detay"][0]
+    assert "maks_goreli_fark_kapida" not in kapi
+    assert _detay(kapi)[("ii_b_artik_ic_fazla", "20")]["tolerans_ici"] is False
+    assert kapi["gecti"] is False, kapi
+    assert s["esikler"]["a_kipi_pk1_goreli_tol"]["deger"] == pytest.approx(0.5)
+
+
+def test_T10b_ALAN_MUTLAK_SEMAYLA_BIRLIKTE_CIKIS_2(k096_modul, uc_kip, capsys):
+    """Ayar alanı MUTLAK şemayla birlikte verilirse koşum DURUR (çıkış 2): mutlak kapı bu alanı
+    okumaz ve alan sessizce ÖLÜ kalırdı — kart bir şey isterken kod başkasını kurardı."""
+    y = uc_kip("t10b", REF_I, REF_A1, REF_IIB)
+    kart = _kart098_yaz(y["kok"], "kart_t10b", a_kipi_pk1_goreli_tol=None,
+                        a_kipi_pk1_tutarlilik_tol=1e-6)
+    with pytest.raises(SystemExit) as e:
+        k096_modul.main(["--asof", str(y["asof"]), "--kart", str(kart),
+                         "--cikti", str(y["kok"] / "cikti_t10b")])
+    assert e.value.code == 2
+    assert "a_kipi_pk1_goreli_yalniz_anlamli" in capsys.readouterr().err
+
+
+def test_T10c_ALAN_BOOL_DEGILSE_CIKIS_2(k096_modul, uc_kip, capsys):
+    """Ayar alanı bir BAYRAKTIR: sayı/metin verilirse koşum DURUR. Python'da boş olmayan her
+    dizge doğrudur — "hayir" yazan bir kart sessizce kapıyı AÇARDI."""
+    y = uc_kip("t10c", REF_I, REF_A1, REF_IIB)
+    kart = _kart098_yaz(y["kok"], "kart_t10c", a_kipi_pk1_goreli_yalniz_anlamli="hayir")
+    with pytest.raises(SystemExit) as e:
+        k096_modul.main(["--asof", str(y["asof"]), "--kart", str(kart),
+                         "--cikti", str(y["kok"] / "cikti_t10c")])
+    assert e.value.code == 2
+    assert "a_kipi_pk1_goreli_yalniz_anlamli" in capsys.readouterr().err
+
+
+# -------------------------------------------------------------------------------------------------
+# T11 — BEYAN: ŞEMA ADI, AYAR SATIRI ve RAPOR SÜTUNU
+# -------------------------------------------------------------------------------------------------
+def test_T11a_RAPOR_GORELI_UYGULANDI_SUTUNU_TASIR(k096_modul, uc_kip):
+    """RAPOR okuyanı (Rol-1 masası) hangi bacağın kapıya girdiğini SÜTUNDAN görmeli: oran
+    yazılıp "uygulandı mı" yazılmazsa okuyucu %5,95'i düşmüş bir kapı sanır (Yasa 6)."""
+    y = uc_kip("t11a", REF_I, REF_A1, REF_IIB * 1.5)
+    s, cikti = _k098(k096_modul, y, "t11a")
+    metin = sorted(cikti.glob("RAPOR_096_*.md"))[0].read_text(encoding="utf-8")
+    assert metin.startswith(f"# {KART098_ID} "), metin.splitlines()[0]
+    assert "goreli_yalniz_anlamli" in metin
+    assert "Göreli uygulandı" in metin, "bacak tablosunda sütun YOK"
+    assert "kapıdaki bacaklarda" in metin
+    for parca in ("## Kart eşikleri", "## Katman i kapısı", "## Kill-list tetikleri"):
+        assert parca in metin, f"RAPOR'da eksik bölüm: {parca}"
+    # Ayar alanı eşik tablosunda ADIYLA durur: kapı DEĞİLDİR, ama görünmez de değildir.
+    ayar = s["esikler"]["a_kipi_pk1_goreli_yalniz_anlamli"]
+    assert ayar["gecti"] is None and ayar["esik"] is True
+    assert ayar["deger"] == ["i_ust20_kohort_fazlasi@10", "i_ust20_kohort_fazlasi@20"], ayar
+    assert "KAPI DEĞİL" in (ayar["neden"] or "") or "KAPI DEĞİL" in (ayar["tanim"] or ""), ayar
+    assert "a_kipi_pk1_goreli_yalniz_anlamli" in metin
+
+
+def test_T11b_097_RAPORUNDA_SUTUN_YOKTUR(k096_modul, uc_kip):
+    """REGRESYON: 097 kartının raporu 098 sütununu TAŞIMAZ — tur-1 çıktısı bu turda değişmedi."""
+    y = uc_kip("t11b", REF_I, REF_A1, REF_IIB)
+    _, cikti = _kosum(k096_modul, y["kok"], KART097, "t11b", y["asof"], y["guncel"], y["sabit"],
+                      y["pk1"])
+    metin = sorted(cikti.glob("RAPOR_096_*.md"))[0].read_text(encoding="utf-8")
+    assert "Göreli fark" in metin
+    assert "Göreli uygulandı" not in metin, "097 raporuna 098 sütunu sızmış"
+    assert "goreli_yalniz_anlamli" not in metin
+
+
+# -------------------------------------------------------------------------------------------------
+# T12 — AYRIŞMA ÇİVİSİ: KART DEPOYA GİRDİĞİNDE FİKSTÜR ONUNLA KARŞILAŞTIRILIR
+# -------------------------------------------------------------------------------------------------
+def test_T12_DEPODAKI_098_KARTI_FIKSTURLE_AYNI(k096_modul):
+    """Kart dosyasını depoya Rol-1 koyar (ajan karta dokunmaz). Girdiği gün bu çivi fikstürle
+    kartı karşılaştırır: eşik adları, değerleri, kill-list cümleleri ve deneme kimlikleri
+    ayrışırsa T8–T11 başka bir kartı ölçüyor demektir ve bunu sessiz bırakmak tek-kaynak
+    yasasının ihlali olurdu. Kart henüz yoksa çivi ATLANIR (kaldıramayacağı bir şeyi kırmaz)."""
+    bulunan = sorted(KARTLAR.glob(KART098_DESEN))
+    if not bulunan:
+        pytest.skip(f"EDG-2026-098 kartı depoda henüz YOK ({KART098_DESEN}) — Rol-1 koyacak")
+    assert len(bulunan) == 1, bulunan
+    kart = yaml.safe_load(bulunan[0].read_text(encoding="utf-8"))
+    assert kart["card_id"] == KART098_ID
+    assert kart["esikler"] == KART098_ESIKLER, "fikstür kart eşiklerinden AYRIŞTI"
+    assert list(kart["kill_list"]) == KART098_KILL, "fikstür kart kill-list'inden AYRIŞTI"
+    assert list(kart["k_registry"]["trial_ids"]) == KART098_TRIAL
+    # Kart GERÇEKTEN 098 şemasını kurar: eşik adları betiğin kapı seçicisinden geçer.
+    sema = k096_modul.kapi_semasi_sec(kart["esikler"])
+    assert sema["a_kipi"] == "goreli_yalniz_anlamli"
+    assert sema["a_kipi_esik_adi"] == "a_kipi_pk1_goreli_tol"
+    assert sema["katman_i"] == "kip_listesi"
