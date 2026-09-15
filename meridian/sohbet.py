@@ -1474,8 +1474,15 @@ def _sohbet_turu(mesaj: str, oturum: str, *, model_cagir=None,
         if msg is None:
             llm_dustu = True
             sebepler = ", ".join(f"{m}: {s}" for m, s in (sonuc.get("neden") or {}).items())
-            cevap = (f"model yok — zincirin hiçbir ayağı cevap vermedi ({sebepler or 'sebep '
-                     'ölçülemedi'}). Cevap ÜRETİLMEDİ; uydurulmadı.")
+            # NEDEN METNİ ALANIN DIŞINDA: bir f-string YERLEŞTİRME ALANI içinde satır kırmak ve
+            # dış tırnağı yeniden kullanmak PEP 701'dir, yani Python 3.12+. Bu deponun beyan
+            # edilen tabanı >=3.11'dir ve CI venv'i bilerek 3.11'e sabitlenir — aynı sınıf ifade
+            # 2026-08-15'te bir kez CI'ı kesmiş, 2026-09-07'de geri gelmiş ve main'deki her koşum
+            # derleme adımında ölmüştü (o adım düşünce SIFIR test koşar). Üretilen METİN, alan
+            # içinde yazılan hâliyle BİREBİR aynıdır; değişen yalnız nerede hesaplandığıdır.
+            neden_metni = sebepler or "sebep ölçülemedi"
+            cevap = (f"model yok — zincirin hiçbir ayağı cevap vermedi ({neden_metni}). "
+                     "Cevap ÜRETİLMEDİ; uydurulmadı.")
             break
         cagrilar = msg.get("tool_calls") or []
         if not cagrilar:
