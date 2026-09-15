@@ -1,0 +1,72 @@
+# EDG-2026-096 — EDG-016 ii katmanının (rvol/mom-kontrollü ARTIK katkı) CI-0-dışılığı evren SEÇİMİNDEN mi geliyor? (sağkalan yanlılığı ölçümü)
+# ÖN-KAYIT 2026-09-15 00:1xZ (Rol-1, gece otonom). Kaynak şüphe: EDG-093 PK-1 (large-cap as-of S&P 500 kohortu, aynı kod k093,
+# pencere 2020-08-25 → 2026-08-20): katman i EDG-016 ile birebir (@10 +0,321% / @20 +0,621% ↔ +0,310% / +0,648%, yön VE CI-0-dışılık
+# eşit) ama katman ii 4/4 bacakta CI-0-dışılığını KAYBETTİ (ii_a1 @20 +0,441% vs +0,564%; ii_b artık-IC @20 0,0084 vs 0,0284).
+# EDG-016 evreni SABİT 251 sembollük REPLAY_UNIVERSE (güncel liste; kartın kendi beyanlı çekincesi (1): sağkalan yanlılığı
+# "bu veriyle ölçülemez") ve penceresi 2009-08-04 → 2026-07-28 idi. İki karıştırıcı var: EVREN ve PENCERE. Bu kart evreni izole eder:
+# aynı pencere + aynı kod, üç üyelik kipi. Operatör sorusu 2026-09-14 ("EDG-016 ii katmanı için yeni kart?") — operatör
+# "sabaha kadar full otonom" dedi; kart-önce kuralıyla açıldı, hüküm Rol-1'in.
+# HAFIZA KONTROLÜ (00:0xZ): `ops/kart_benzer.py` → EDG-070/018/093 (pit_midcap_ust_sinir; 093 KALDI selef), EDG-031 (turnover
+# ağırlığı w=0 doğrulandı 2026-08-12 → CANLI ETKİ YOK, araştırma hijyeni), EDG-013 (KALDI), EDG-016 (GEÇTİ, bu kartın konusu),
+# EDG-075/079 (evren_pit KALDI). Hindsight recall 00:0xZ: sp500_uyelik_tarihi.csv PIT (fja05680, 1996→2026-06-30); EDG-031 w=0.
+# Kaynak: kart_benzer + recall.
+
+card_id: EDG-2026-096
+status: registered   # ölçüm: Opus dilim (k093 --uyelik-kipi) → A1 koşumu (large-cap PK-1 girdileri) → hüküm Rol-1
+family: pit_midcap_ust_sinir   # EDG-093 ailesi (aynı kod yolu, aynı girdiler); konu large-cap evren seçimi
+on_kayit: 2026-09-15
+selef:
+  - "EDG-2026-093 (KALDI 2026-09-14: mid-cap; PK-1 large-cap katman ii CI-0-dışılığı kayboldu — bu kartın tetiği)"
+  - "EDG-2026-016 (GEÇTİ 2026-08-01: sabit-251 evren, 2009→2026; beyanlı çekince (1) sağkalan yanlılığı ölçülmemiş)"
+ref:
+  - "EDG-2026-031 (turnover ağırlığı w=0 doğrulandı 2026-08-12 → canlı ağırlık sıfır; bu kart canlı knob'a dokunmaz)"
+  - "EDG-2026-092 (PIT S&P 500 kohortu kaynağı) · EDG-2026-075/079 (evren_pit)"
+  - "research/olcumler/edg093_midcap_pit/k093.py (katmanlari_olc, uyelik_haritasi, pk1_large_cap)"
+
+hipotez: >
+  EDG-016 ii katmanının CI-0-dışılığı EVREN SEÇİMİNDEN gelir: aynı pencere (2020-08-25 → 2026-08-20) ve aynı kodda (k093),
+  üyelik SABİT-251 (EDG-016'nın REPLAY_UNIVERSE listesi, C) ya da GÜNCEL-LİSTE (kohort defterinin son as-of günündeki kümesi
+  bütün pencereye geriye uygulanır, B) kipinde ii_b artık-IC @20 CI-0-dışı pozitif çıkar, as-of PIT (A) kipinde CI-0-içi kalır.
+  B/C'de de CI-0-içi kalırsa fark evrenden değil PENCEREDEN gelir (EDG-016'nın 2009–2020 dilimi taşıyordu) ve sağkalan
+  hipotezi KALIR; EDG-016'ya "ii katmanı 2020+ penceresinde tekrarlanamadı" şerhi düşer.
+
+k_registry: {registered_at: "2026-09-15", trial_ids: [EDG-096-guncel-liste-ii-b-artik-ic-20g, EDG-096-sabit251-ii-b-artik-ic-20g]}
+# K=2: B ve C kiplerinde ii_b artık-IC @20 (birincil). A kipi EDG-093 PK-1'in TEKRARIdır (aynı koşumda yeniden üretilir, K'ye girmez;
+# tutarlılık kapısı: A ≡ PK-1 değerleri tol 1e-6). Katman i ve ii_a1 raporlanır, K'ye girmez.
+
+adim_olcum: >
+  k093.py'ye `--uyelik-kipi {asof,guncel,sabit}` + `--sabit-liste <dosya>` eklenir (as-of kipi DEĞİŞMEZ — EDG-093 çıktısı birebir
+  regresyon çivisi). `guncel`: uyelik_haritasi her güne kohort defterinin SON etkin satırındaki kümeyi verir; `sabit`: her güne
+  verilen listeyi verir (EDG-016 REPLAY_UNIVERSE 251 sembol; kaynak dosya sha ile künyelenir; kohort bar/shares kapsamı dışında
+  kalan isimler `olculemedi` + sayı — uydurma yok). A1 koşumu: large-cap PK-1 girdileri (sp500_uyelik_tarihi.csv, PK bars,
+  PK shares; /opt/veri/olcum/edg093/), pencere EDG-093'ünki, üç kip tek komut, çıktı olcum/ + RAPOR. Hüküm Rol-1.
+
+esikler:
+  ii_b_artik_ic_20g_alt: 0.015         # B ya da C kipinde ii_b artık-IC @20 ≥ 0,015 VE CI-0-dışı → sağkalan DOĞRULANDI (EDG-016 0,0284'ün yarısı)
+  a_kipi_pk1_tutarlilik_tol: 0.000001  # A kipi = EDG-093 PK-1 değerleri (ii_b @10 0,0059 / @20 0,0084; i @20 0,006211)
+  katman_i_pk_20g_alt: 0.003           # PK: katman i @20 üç kipte de CI-0-dışı pozitif ve ≥ +0,30% (PK-1'de +0,621%)
+  olculemeyen_sabit_liste_ust_oran: 0.20   # sabit-251 listesinden bar/shares kapsamında olmayan pay ≤ %20; aşarsa C kipi bilgisiz
+
+kill_list:
+  - "A kipi PK-1 ile eşit değilse (tol 1e-6) → kod yolu bozuk, hiçbir sayı yayılmaz"
+  - "katman i PK üç kipin herhangi birinde CI-0-içi → ölçüm bilgisiz (sinyal yolu bu pencerede yok)"
+  - "B VE C'de ii_b @20 CI-0-içi → hipotez KALDI (pencere etkisi); EDG-016'ya şerh, kart kapanır"
+  - "sabit-251 ölçülemeyen payı > %20 → C kipi bilgisiz, yalnız B ile hüküm verilmez (K eksik, yanlı geçiş yok)"
+  - "as-of kipi çıktısı EDG-093 sonucundan ayrışırsa → regresyon, ölçüm geçersiz"
+
+pozitif_kontrol: >
+  (1) yol-tutarlı: katman i @20 üç kipte CI-0-dışı pozitif (EDG-016/PK-1 tekrarı); (2) A kipi ≡ EDG-093 PK-1 (aynı girdiler,
+  tol 1e-6) — kod değişikliğinin as-of yolunu bozmadığının kanıtı; (3) sentetik: kohort defteri TEK satıra indirgenince
+  `asof` ≡ `guncel` ≡ `sabit(o satırın kümesi)` — üç kip aynı sayıyı verir (birim testi).
+
+veri_penceresi: "2020-08-25 → 2026-08-20 (EDG-093 large-cap PK-1 penceresi; IEX bar tabanı + ısınma); girdiler A1 /opt/veri/olcum/edg093/ (bars, edgar) + research/pit_universe/sp500_uyelik_tarihi.csv"
+
+basari_tanimi: >
+  Üç kip tek koşumda, K 2 kaydı + PK üçü yeşil + tablo/özet blob sha ile karta; hüküm Rol-1 aynı turda: "sağkalan DOĞRULANDI"
+  (B ya da C eşiği geçer, A geçmez) ya da "KALDI — pencere etkisi" (B ve C de geçmez). Her iki durumda EDG-016 kartına Rol-1 şerhi
+  (çekince (1) ölçüldü: büyüklük = B/C − A). Canlı knob'a dokunulmaz (EDG-031 w=0).
+
+notlar: >
+  Kod dilimi: Opus (k093 --uyelik-kipi/--sabit-liste + tests v495: regresyon (asof birebir), sentetik tek-satır özdeşliği, sabit liste
+  kapsama sayımı); A1 koşumu Rol-1 (nohup, </dev/null; ~25 dk × 3 kip beklenir). Sabit liste kaynağı: EDG-016'nın `full_251`
+  evreni = meridian REPLAY_UNIVERSE (ajan kaynağı bulur, sha künyeler; canlı evren 251, PSKY dışarıda, FISV içeride — hafıza evren-emekliligi).
