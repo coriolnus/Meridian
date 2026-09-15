@@ -51,7 +51,10 @@ def hcl_ad(kimlik: str) -> str:
 
 
 def _blok(tur: str, kimlik: str) -> str:
-    return f'import {{\n  to = {tur}.{hcl_ad(kimlik)}\n  id = "{kimlik}"\n}}\n\n'
+    # `provider = apisix` ZORUNLU (ölçüldü 2026-09-15, T1 Task 3): `-generate-config-out` ile kaynak bloğu henüz yokken
+    # Terraform import hedefinin sağlayıcısını `required_providers`tan DEĞİL varsayılan ad alanından (hashicorp/apisix) türetir
+    # ve "unavailable provider" ile düşer; yerel ad açıkça verilince rework-space-com/apisix çözülür.
+    return f'import {{\n  to = {tur}.{hcl_ad(kimlik)}\n  id = "{kimlik}"\n  provider = apisix\n}}\n\n'
 
 
 def uret(routes: dict) -> str:
