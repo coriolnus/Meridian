@@ -183,6 +183,11 @@ def test_f2_mandal_defteri_dolunca_kelime_defterden_turer(sandbox_state):
     # `alarm_mandal` satırı — mandallı durum İLK görüşte zaten alarmlandı).
     assert all(x["ok"] is True for x in s.values() if x["kimlik"] != "koruma_alarmed")
     assert s["koruma_alarmed"]["kelime"] == "ÖLÇÜLEMEDİ", "süreç-içi mandal ölçülmüş gibi basıldı"
+    # ALAN ADI SÖZLEŞMESİ: `neden` her defterin KENDİ beyan edilmiş alanından gelir — alarm
+    # mandalı `jetonlar`dan, ad listesi defterleri `adlar`dan. Takas yok (bkz. test_f4).
+    assert s["alarm_mandal"]["neden"] == "MIRROR_DRIFT"
+    assert s["integrity_alarmed"]["neden"] == "parity:artifact_unread"
+    assert s["watchdog_alarmed"]["neden"] is None, "boş defterde olmayan ad basıldı"
 
 
 def test_f3_ilk_alarm_ve_yeniden_ayri_kelimelerdir(sandbox_state):
@@ -193,6 +198,41 @@ def test_f3_ilk_alarm_ve_yeniden_ayri_kelimelerdir(sandbox_state):
     store.write_json("alarm_mandal.json", {"X|a": {"token": "X", "n": 5, "yeniden": True}})
     s = {x["kimlik"]: x for x in D.mandal_satirlari(D.mandal_yuzeyi())}
     assert s["alarm_mandal"]["kelime"] == "YENİDEN"
+
+
+def test_f4_neden_yalniz_beyan_edilen_alandan_okunur(sandbox_state):
+    """ALAN ADI SÖZLEŞMESİ — v56 şema-takası dersi (2026-09-15, suite #58).
+
+    İki defter sınıfı İKİ AYRI şekil üretir: `alarm_mandal` imza sözlüğünden JETON kümesi
+    (`jetonlar`), ötekiler düpedüz AD listesi (`adlar`). Hangi defterin hangi alanı taşıdığı
+    `durum_sozlugu._MANDAL_OGE_ALANI`da TEK KAYNAKtır ve satır üreticisi YALNIZ onu okur.
+    Eskiden iki ad birbirine `or` ile yedekleniyordu; o ifade yanlış şekli SESSİZ geçirirdi ve
+    v56 dedektörü onu beyan edilmemiş şema takası olarak ötüyordu. Yanlış şekilde doğru hüküm:
+    sayı (`n`) ÖLÇÜLMÜŞTÜR ama öğe adları ÖLÇÜLMEMİŞTİR → `neden` None (uydurma yasağı)."""
+    assert D._MANDAL_OGE_ALANI["alarm_mandal"] == "jetonlar"
+    assert D._MANDAL_OGE_ALANI["watchdog_alarmed"] == "adlar"
+    assert D._MANDAL_OGE_ALANI["integrity_alarmed"] == "adlar"
+    # Beyan tablosu defter listesiyle AYRIŞMAZ: yeni defter alanını beyan etmeden eklenemez.
+    assert set(D._MANDAL_OGE_ALANI) == set(D.MANDAL_DEFTERLERI)
+    # Defterler KARŞI şekli taşırsa öğe adı okunmaz — takas olsaydı ikisi de dolu basardı.
+    y = {"watchdog_alarmed": {"n": 2, "jetonlar": ["A", "B"]},
+         "alarm_mandal": {"n": 1, "ilk_n": 1, "adlar": ["C"]}}
+    s = {x["kimlik"]: x for x in D.mandal_satirlari(y)}
+    assert s["watchdog_alarmed"]["n"] == 2 and s["watchdog_alarmed"]["neden"] is None
+    assert s["alarm_mandal"]["n"] == 1 and s["alarm_mandal"]["neden"] is None
+
+
+def test_f5_jetonsuz_imza_satiri_atlanir(sandbox_state):
+    """İmza satırı `token` taşımıyorsa JETON ÜRETİLMEZ: `n` imzaları sayar, `jetonlar` yalnız
+    gerçekten okunan jetonları taşır — eksik alan "None" diye basılmaz (uydurma yasağı)."""
+    from meridian import store
+    store.write_json("alarm_mandal.json", {"A|a": {"token": "REAL", "n": 2},
+                                           "B|b": {"n": 2}})          # token ALANI YOK
+    m = D.mandal_yuzeyi()
+    assert m["alarm_mandal"]["n"] == 2, "imza sayımı jeton eksikliğinden etkilenmemeli"
+    assert m["alarm_mandal"]["jetonlar"] == ["REAL"]
+    s = {x["kimlik"]: x for x in D.mandal_satirlari(m)}
+    assert s["alarm_mandal"]["neden"] == "REAL"
 
 
 # =============================================================================================

@@ -349,6 +349,21 @@ _MANDAL_BEYAN = {
     "koruma_alarmed": ("koruma/mutabakat mandalı SÜREÇ-İÇİdir (defter yok) — api süreci onu "
                        "okuyamaz; 'mandal yok' DEĞİL, 'ölçülemedi'"),
 }
+#: Her mandal defterinin YÜZEYİNDE öğe listesini taşıyan alan adı — YEDEK AD DEĞİL, SÖZLEŞME.
+#: İki defter sınıfı iki AYRI şekil üretir ve şekiller birbirinin yerine geçmez:
+#:   · `alarm_mandal`  → `alarm_mandal.json` imza sözlüğüdür (imza → {token, n, yeniden, …});
+#:     yüzey ondan JETON kümesi türetir (`jetonlar`), yani bir ALARM KİMLİĞİdir.
+#:   · ötekiler        → defterin kendisi düpedüz bir AD listesidir (`adlar`): kadans kontrol adı
+#:     / bütünlük jetonu. Sayım `n` iki şekilde de vardır ama SAYDIĞI ŞEY farklıdır (imza vs ad).
+#: Tek alana indirmek ya da iki alanı `or` ile birbirine yedekletmek ikisini ayırt edilemez
+#: kılardı: öyle bir ifade "hangisi doluysa" demektir ve bir defter yanlış şekli taşısa da SESSİZ
+#: geçerdi (v56 şema-takası dedektörü tam o deseni kovalar — beyan değil, kaynakta giderilir).
+#: Yasak deseni bu şerh de LİTERAL YAZAMAZ: dedektör dosya metnini ham tarar, açıklama niyetiyle
+#: yazılan örnek de ihlal olarak öter (aynı sınıf: çapa yasağının yorumlarda da geçerli olması).
+#: Sözlük `MANDAL_DEFTERLERI` üzerinde TAMdır ve `[]` ile okunur: yeni bir defter alanını BEYAN
+#: ETMEDEN eklenirse satır üretimi KeyError ile düşer, sessizce nedensiz satır basmaz.
+_MANDAL_OGE_ALANI = {"alarm_mandal": "jetonlar", "watchdog_alarmed": "adlar",
+                     "integrity_alarmed": "adlar", "koruma_alarmed": "adlar"}
 
 
 # ---- OKUYUCULAR -----------------------------------------------------------------------------
@@ -649,10 +664,16 @@ def mandal_yuzeyi() -> dict:
     defter "yazılıyor ama okuyucusu yok" sayılmaya devam ederdi. Yani literal ad burada bir üslup
     değil, YASA 6'nın ölçülebilirlik şartıdır: `watchdog_alarmed.json` + `integrity_alarmed.json`
     2026-09-15'te `codelaw.DECLARED_SINKS`ten tam da bu okuma doğduğu için DÜŞTÜ (muafiyet beyanı
-    gerçek okuyucuyla değiştirildi)."""
+    gerçek okuyucuyla değiştirildi).
+
+    İKİ ŞEKİL, İKİ ALAN ADI: imza sözlüğünden türeyen `alarm_mandal` öğelerini `jetonlar`da, ad
+    listesi olan defterler `adlar`da taşır. Hangi defterin hangi alanı taşıdığı TEK KAYNAKTA
+    yazılıdır (`_MANDAL_OGE_ALANI`) ve `mandal_satirlari` onu oradan okur — iki adı `or` ile
+    yedekleyen bir ifade şekil hatasını sessizce yutardı."""
     from . import store
 
     def _kume(d):
+        """Ad listesi defterleri (`watchdog_alarmed` · `integrity_alarmed`) → `{n, adlar}`."""
         if not isinstance(d, (dict, list, tuple, set)):
             return None
         adlar = sorted(str(x) for x in d)
@@ -697,10 +718,14 @@ def mandal_satirlari(yuzey) -> list[dict]:
             kelime = PANO_KELIME["mandal:ilk"]
         else:
             kelime = PANO_KELIME["mandal:mandalli"]
+        # Öğe listesi defterin BEYAN EDİLMİŞ alanından okunur (`_MANDAL_OGE_ALANI`) — iki şekil
+        # AYRI AYRI okunur, "hangisi doluysa" takası yapılmaz. Alan yoksa/şekil bozuksa `neden`
+        # None kalır: sayı (`n`) ölçülmüştür ama öğe adları ölçülmemiştir (uydurma yasağı).
+        ogeler = d.get(_MANDAL_OGE_ALANI[kimlik])
+        neden = (", ".join(str(x) for x in ogeler)[:160] or None) if isinstance(ogeler, list) else None
         out.append(_satir("mandal", kimlik, kelime, True, n=n,
                           beyan=_MANDAL_BEYAN[kimlik], kaynak_alan=f"mandallar.{kimlik}",
-                          neden=(", ".join(d.get("jetonlar") or d.get("adlar") or [])[:160]
-                                 or None)))
+                          neden=neden))
     return out
 
 
