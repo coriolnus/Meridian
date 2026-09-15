@@ -36,8 +36,11 @@ PIT — SIFIR TOLERANS (CLAUDE.md §4):
   * ölçülen satırlarda sızıntı sayacı AYRICA koşar (`_leak_kontrol`, üye günler üzerinde).
 
 YAZIM — TEK YER `--cikti` (Yasa 6, okuyanı aşağıda):
-  * `<cikti>/sonuc_093_<damga>.json`  → okuyan: Rol-1 (hüküm + K defteri) ve RAPOR üreteci.
-  * `<cikti>/RAPOR_093_<damga>.md`    → okuyan: Rol-1 / operatör masası.
+  * `<cikti>/sonuc_093[_<kip>]_<damga>.json` → okuyan: Rol-1 (hüküm + K defteri), RAPOR üreteci
+    ve EDG-096 karşılaştırma betiği. KİP EKİ `asof` DIŞINDAKİ kiplerde eklenir: eksiz adlar üç
+    koşumu aynı dizinde birbirine karıştırırdı, `asof`a ek koymak ise EDG-093'ün okuyucularını
+    kırardı (iki yönlü kural, v495 çivisi).
+  * `<cikti>/RAPOR_093[_<kip>]_<damga>.md`   → okuyan: Rol-1 / operatör masası.
   * `<cikti>/_state/`                 → `meridian.config.STATE` BURAYA çevrilir; canlı boru
     hattının (`sanitize_bars`/`measurement_bars`) `obs.warn` çağrıları CANLI deftere değil
     buraya düşer (CLAUDE.md §2 "pytest dışı koşum obs'a ulaşırsa canlı deftere YAZAR").
@@ -50,11 +53,22 @@ sonuç `ithal_yan_etkisi` alanında ADIYLA durur. Silinemeyen hâl UYDURULMAZ, n
 
 AĞA ÇIKILMAZ. `meridian.obs` İTHAL EDİLMEZ. Alt süreç YOKTUR. Bekleme döngüsü YOKTUR.
 
+EDG-2026-096 EKİ (2026-09-15) — ÜYELİK KİPİ. `--uyelik-kipi {asof,guncel,sabit}` evreni tek
+başına oynatır (pencere ve kod AYNI kalır): `asof` VARSAYILANDIR ve EDG-093'ün davranışıdır —
+sayılar VE çıktı dosya adları BİREBİR korunur (regresyon çivisi v495). `guncel` defterin SON
+etkin satırındaki kümeyi bütün pencereye geriye uygular; `sabit` verilen listeyi (EDG-016'nın
+sabit evreni) her güne uygular ve listenin künyesi (kaynak, n, sha256, bar/shares kapsamı DIŞINDA
+kalan pay) çıktıya yazılır. Kip eki dosya adındadır — `asof` HARİÇ (bkz. yazım bloğu).
+KARŞILAŞTIRMA AYRI BETİKTEDİR: üç kipin kıyası ve kart eşikleri `karsilastir096.py`dedir;
+bu betik TEK BİR evreni ölçer ve HÜKÜM VERMEZ.
+
 KOMUT SATIRI (sözleşme burasıdır, `main()` değil — CLAUDE.md §1):
     cd <depo kökü> && .venv/bin/python research/olcumler/edg093_midcap_pit/k093.py \\
         --repo <kök> --kohort <sp400_uyelik_tarihi.csv> --bars-dir <bars/> \\
-        --shares <shares_outstanding_sp400.csv.gz> --cikti <dizin> [--kapsama <harita.json>]
-Çıkış kodu: 0 = sonuç yazıldı · 2 = kullanım hatası (eksik/bozuk girdi).
+        --shares <shares_outstanding_sp400.csv.gz> --cikti <dizin> [--kapsama <harita.json>] \\
+        [--uyelik-kipi asof|guncel|sabit] [--sabit-liste <semboller.txt>]
+Çıkış kodu: 0 = sonuç yazıldı · 2 = kullanım hatası (eksik/bozuk girdi, bilinmeyen kip,
+`--sabit-liste` yanlış kiple verildi — bayrak SESSİZCE YOK SAYILMAZ).
 
 MODÜL DÜZEYİ TEMİZDİR: argparse `main()` içinde kurulur, G/Ç yoktur, `meridian` ithal
 edilmez — ithal etmek bir koşum TETİKLEMEZ (çiviler bu yüzden fonksiyonları doğrudan çağırır).
@@ -80,6 +94,17 @@ HUKUM = "YOK — Rol-1"
 #: BİRİNCİL `dahil`dir (defterin kendisi budur), `haric` DUYARLILIKTIR.
 BELIRSIZ_KIPLERI = ("dahil", "haric", "ikisi")
 BIRINCIL_KIP = "dahil"
+
+#: ÜYELİK KİPLERİ — EDG-2026-096 (`--uyelik-kipi`). EDG-093'ün evreni AS-OF adım fonksiyonuydu;
+#: EDG-016'nınki SABİT bir listeydi ve iki kart arasında EVREN ile PENCERE birlikte değişmişti.
+#: Bu üç kip evreni tek başına oynatır — pencere ve kod AYNI kalır:
+#:   `asof`   (A) = EDG-093 DAVRANIŞI, VARSAYILAN; t'den küçük-eşit SON kohort satırı;
+#:   `guncel` (B) = defterin SON etkin satırındaki küme BÜTÜN pencereye geriye uygulanır;
+#:   `sabit`  (C) = verilen liste (EDG-016'nın sabit evreni) her güne uygulanır.
+#: VARSAYILAN DEĞİŞMEZ: EDG-093 çıktısı (sayılar VE dosya adları) birebir korunur — regresyon
+#: çivisi v495'tedir ve kartın kill-list'i ayrışmayı "ölçüm geçersiz" sayar.
+UYELIK_KIPLERI = ("asof", "guncel", "sabit")
+VARSAYILAN_UYELIK_KIPI = "asof"
 
 #: PK-2 doğrulama tablosunun satır sayısı — kart `pozitif_kontrol` (2) lafzı ("rastgele 20
 #: kohort-gün"). PK-3'ün düşürdüğü isim sayısı kart lafzı ("bilinçli 10 isim").
@@ -273,11 +298,39 @@ def etkin_satirlar(p1, kohort_csv: pathlib.Path, baslangic: dt.date, bitis: dt.d
     return etkin, capa, len(satirlar)
 
 
-def uyelik_haritasi(etkin, gunler: list[str], dusur: frozenset[str] = frozenset()) -> dict:
-    """gün → o gün ÜYE sembol kümesi. As-of adım fonksiyonu: t'den küçük-eşit SON satır.
+def uyelik_haritasi(etkin, gunler: list[str], dusur: frozenset[str] = frozenset(), *,
+                    kip: str = VARSAYILAN_UYELIK_KIPI, sabit=None) -> dict:
+    """gün → o gün ÜYE sembol kümesi. ÜÇ KİP (EDG-2026-096); VARSAYILAN `asof` = EDG-093 davranışı.
 
-    `dusur` kümesi (belirsiz isimler) TÜM günlerden çıkarılır — `haric` duyarlılık koşumu budur.
-    Gözlem günü ilk satırdan ÖNCE ise o gün ÜYE YOKTUR (uydurma yasağı: geriye taşınmaz)."""
+    `asof` (A) — AS-OF ADIM FONKSİYONU: t'den küçük-eşit SON satır. `dusur` kümesi (belirsiz
+    isimler) TÜM günlerden çıkarılır — `haric` duyarlılık koşumu budur. Gözlem günü ilk satırdan
+    ÖNCE ise o gün ÜYE YOKTUR (uydurma yasağı: geriye taşınmaz).
+
+    `guncel` (B) — defterin SON etkin satırındaki küme (− `dusur`) HER güne uygulanır: "bugünün
+    listesiyle geçmişi ölçmek", yani sağkalan yanlılığının ta kendisi. EDG-096 bunu bir HATA
+    olarak değil ÖLÇÜLEN BİR KİP olarak koşar — hipotez tam olarak bu kipin ii katmanını
+    CI-0-dışına taşıyıp taşımadığıdır.
+
+    `sabit` (C) — verilen liste HER güne uygulanır ve `dusur` UYGULANMAZ: sabit liste kohort
+    defterinden gelmez, dolayısıyla defterin belirsiz-isim tablosu onun üzerinde TANIMSIZDIR.
+    Kesişim varsa künyede SAYILIR (`belirsiz_kesisim`), sessizce düşürülmez.
+
+    Bilinmeyen kip ya da listesiz `sabit` KULLANIM HATASIDIR (çıkış 2): sessizce `asof`a düşen
+    bir kip, yanlış evrenle koşan bir ölçümü "başarılı" gösterirdi."""
+    if kip not in UYELIK_KIPLERI:
+        kullanim_hatasi(f"bilinmeyen üyelik kipi {kip!r} — seçenekler: {', '.join(UYELIK_KIPLERI)}")
+    if kip == "sabit":
+        if sabit is None:
+            kullanim_hatasi("`--uyelik-kipi sabit` için sabit liste GEREKLİ (--sabit-liste ya da "
+                            "ithal yüzeyindeki REPLAY_UNIVERSE) — küme UYDURULMAZ")
+        k = frozenset(str(s).upper().strip() for s in sabit if str(s).strip())
+        return {g: k for g in gunler}
+    if kip == "guncel":
+        if not etkin:
+            kullanim_hatasi("`--uyelik-kipi guncel` için etkin as-of satırı YOK — 'son satır' "
+                            "tanımsız, küme UYDURULMAZ")
+        son = frozenset(etkin[-1][1]) - dusur if dusur else frozenset(etkin[-1][1])
+        return {g: son for g in gunler}
     tarihler = [d.isoformat() for d, _ in etkin]
     kumeler = [k - dusur if dusur else k for _, k in etkin]
     out = {}
@@ -285,6 +338,71 @@ def uyelik_haritasi(etkin, gunler: list[str], dusur: frozenset[str] = frozenset(
         i = bisect.bisect_right(tarihler, g) - 1
         out[g] = kumeler[i] if i >= 0 else frozenset()
     return out
+
+
+def sabit_liste_oku(yol: pathlib.Path) -> list[str]:
+    """Satır başına bir sembol; boş satır ve `#` yorumu atlanır. Dosya yoksa/okunamazsa
+    KULLANIM HATASI — boş listeye sessizce düşmek, evreni sessizce SIFIRLAMAK olurdu."""
+    p = pathlib.Path(yol)
+    try:
+        ham = p.read_text(encoding="utf-8").splitlines()
+    except OSError as e:
+        # sessiz-yutma DEĞİL: sabit liste okunamadı — koşum durur, boş evrene DÜŞÜLMEZ
+        kullanim_hatasi(f"--sabit-liste okunamadı ({type(e).__name__}: {e}): {p}")
+    isimler = [s.strip().upper() for s in ham if s.strip() and not s.strip().startswith("#")]
+    if not isimler:
+        kullanim_hatasi(f"--sabit-liste BOŞ (yorum/boş satır dışında sembol yok): {p}")
+    return isimler
+
+
+def sabit_liste_kunyesi(semboller, kaynak: str, kapsam, belirsiz: frozenset) -> dict:
+    """Sabit listenin KÜNYESİ: kaynak, n, sha256 ve bar/shares kapsamı DIŞINDA kalan pay.
+
+    `sha256` SIRALI benzersiz sembollerin satır-sonuyla birleşiminin sha256'sıdır — dosyanın
+    değil LİSTENİN damgası: aynı 251 ismin iki farklı yazımı AYNI künyeyi vermeli, yoksa künye
+    içeriği değil biçimi damgalardı.
+
+    `kapsam` = ölçümde gerçekten kullanılabilen isimler (bar serisi VE hisse serisi olanlar).
+    Dışarıda kalan isim ÖLÇÜLEMEDİ'dir: sayılır, oranı ve örneği yazılır, geriye TAŞINMAZ.
+    Kartın `olculemeyen_sabit_liste_ust_oran` eşiği tam bu oranı okur. Kapsam ÖLÇÜLEMEDİYSE
+    (panel kurulamadı) sayı SIFIR yazılmaz — None + neden (sıfır ile 'bilmiyorum' aynı değildir).
+
+    `belirsiz` kesişimi SAYILIR ama DÜŞÜRÜLMEZ: sabit liste defterden gelmediği için defterin
+    belirsiz tablosu onun üzerinde tanımsızdır; kesişim bir UYARIDIR, bir süzgeç değil."""
+    benzersiz = sorted({str(s).upper().strip() for s in semboller if str(s).strip()})
+    sha = hashlib.sha256("\n".join(benzersiz).encode("utf-8")).hexdigest()
+    kunye = {
+        "kaynak": kaynak, "n": len(benzersiz), "sha256": sha,
+        "kapsam_disi_n": None, "kapsam_disi_oran": None, "kapsam_disi_ornek": [],
+        "belirsiz_kesisim_n": None, "belirsiz_kesisim": [],
+        "tanim": "sabit listede bar/shares kapsamının DIŞINDA kalan isimler ÖLÇÜLEMEDİ sayılır "
+                 "(değer UYDURULMAZ, geriye taşınmaz); kart eşiği "
+                 "`olculemeyen_sabit_liste_ust_oran` bu oranı okur. `belirsiz_kesisim` bir "
+                 "UYARIDIR — sabit kipte belirsiz isimler DÜŞÜRÜLMEZ.",
+        "neden": None,
+    }
+    kesisim = sorted(set(benzersiz) & set(belirsiz or frozenset()))
+    kunye["belirsiz_kesisim"] = kesisim
+    kunye["belirsiz_kesisim_n"] = len(kesisim)
+    if kapsam is None:
+        kunye["neden"] = ("kapsam kümesi ÖLÇÜLEMEDİ (panel kurulamadı) — kapsam dışı pay SIFIR "
+                          "YAZILMAZ")
+        return kunye
+    disarida = sorted(set(benzersiz) - set(kapsam))
+    kunye["kapsam_disi_n"] = len(disarida)
+    kunye["kapsam_disi_oran"] = (round(len(disarida) / len(benzersiz), 6) if benzersiz else None)
+    kunye["kapsam_disi_ornek"] = disarida[:10]
+    return kunye
+
+
+def sabit_liste_kunyesi_yok(kip: str) -> dict:
+    """`asof`/`guncel` kiplerinde künye alanı BOŞ BIRAKILMAZ, NEDENİYLE durur — alanın yokluğu
+    "ölçtük, sıfırdı" ile karıştırılabilirdi (Yasa 6 okuyanı: Rol-1 karşılaştırma tablosu)."""
+    return {"kaynak": None, "n": None, "sha256": None, "kapsam_disi_n": None,
+            "kapsam_disi_oran": None, "kapsam_disi_ornek": [], "belirsiz_kesisim_n": None,
+            "belirsiz_kesisim": [],
+            "tanim": "sabit liste YALNIZ `--uyelik-kipi sabit` koşumunda kullanılır",
+            "neden": f"üyelik kipi `{kip}` — sabit liste KULLANILMADI"}
 
 
 def belirsiz_isimler(esleme_yaml: pathlib.Path) -> tuple[frozenset[str], str, str | None]:
@@ -1174,6 +1292,22 @@ def rapor_metni(sonuc: dict) -> str:
     a(f"- Etkin ölçüm başlangıcı (ÖLÇÜLDÜ): **{em.get('etkin_baslangic_olculen')}** — "
       f"{em.get('isinma_notu')}")
     a(f"- Belirsiz isim: **{em.get('belirsiz_n')}** ({', '.join(em.get('belirsiz_semboller') or []) or '—'})")
+    # EDG-2026-096: kip ve sabit liste künyesi RAPORDA durur — okuyan (Rol-1 / operatör masası)
+    # JSON'a inmek zorunda kalsaydı iki kaynak sessizce ayrışırdı (tek-kaynak yasası).
+    a(f"- Üyelik kipi: **{sonuc.get('uyelik_kipi')}** — `asof` as-of PIT adım fonksiyonu "
+      f"(EDG-093 davranışı) · `guncel` defterin SON satırı bütün pencereye · `sabit` verilen "
+      f"liste her güne (EDG-2026-096)")
+    sk = sonuc.get("sabit_liste_kunyesi") or {}
+    if sk.get("kaynak"):
+        a(f"- Sabit liste: **{sk.get('n')}** sembol · sha256 `{sk.get('sha256')}` · kaynak "
+          f"`{str(sk.get('kaynak')).replace('`', chr(39))}`")
+        a(f"  - Kapsam DIŞI (ÖLÇÜLEMEDİ): **{sk.get('kapsam_disi_n')}** "
+          f"({_yuzde(sk.get('kapsam_disi_oran'))}) · örnek: "
+          f"{', '.join(sk.get('kapsam_disi_ornek') or []) or '—'}"
+          f"{(' · neden: ' + str(sk.get('neden'))) if sk.get('neden') else ''}")
+        a(f"  - Belirsiz-isim kesişimi (UYARI, düşürülmedi): **{sk.get('belirsiz_kesisim_n')}**")
+    else:
+        a(f"- Sabit liste: KULLANILMADI — {sk.get('neden') or '—'}")
     a("")
 
     for kip, kosum_s in (sonuc.get("kosumlar") or {}).items():
@@ -1324,6 +1458,12 @@ def _ayristirici() -> argparse.ArgumentParser:
                     help="pencere sonu; varsayılan kohort defterinin SON günü")
     ap.add_argument("--belirsiz", choices=BELIRSIZ_KIPLERI, default="ikisi",
                     help="belirsiz isimler: dahil | haric | ikisi (varsayılan)")
+    ap.add_argument("--uyelik-kipi", choices=UYELIK_KIPLERI, default=VARSAYILAN_UYELIK_KIPI,
+                    help="EDG-096 evren kipi: asof (varsayılan, EDG-093 davranışı) | guncel "
+                         "(defterin SON satırı bütün pencereye) | sabit (--sabit-liste)")
+    ap.add_argument("--sabit-liste", type=pathlib.Path, default=None,
+                    help="`sabit` kipinin evren listesi (satır başına sembol). VERİLMEZSE ithal "
+                         "yüzeyindeki REPLAY_UNIVERSE kullanılır ve kaynak adı çıktıya yazılır")
     ap.add_argument("--esleme", type=pathlib.Path, default=None,
                     help="sp400_elle_esleme.yaml (belirsiz isimler BURADAN türetilir)")
     ap.add_argument("--kapsama", type=pathlib.Path, default=None,
@@ -1348,6 +1488,17 @@ def _ayristirici() -> argparse.ArgumentParser:
 def main(argv=None) -> int:
     ap = _ayristirici()
     ARGV = ap.parse_args(argv)
+    # BAYRAK TUTARLILIĞI EN BAŞTA — HİÇBİR YAN ETKİ DOĞMADAN. `--sabit-liste` yalnız `sabit`
+    # kipinde ANLAMLIDIR; başka bir kipte verilmişse operatör bir şey İSTEMİŞTİR ve o istek
+    # sessizce düşerse koşum "başarılı" görünürken yanlış evreni ölçer (emsal: 18 çivi yeşilken
+    # bir bayrağın sessizce yok sayılması). KONTROL BURADADIR, ithalden ÖNCE: wp2 ithali modül
+    # düzeyinde `_state/` açar ve kullanım hatasıyla çıkan bir koşum onu geride bırakıp Rol-1'in
+    # `git status --porcelain` kapısını kirletirdi (ölçüldü 2026-09-15).
+    uyelik_kipi = ARGV.uyelik_kipi
+    if ARGV.sabit_liste is not None and uyelik_kipi != "sabit":
+        kullanim_hatasi(
+            f"--sabit-liste YALNIZ `--uyelik-kipi sabit` ile anlamlıdır (verilen kip: "
+            f"{uyelik_kipi}) — bayrak sessizce YOK SAYILMAZ")
     repo = ARGV.repo.resolve()
     cikti = ARGV.cikti.resolve()
     cikti.mkdir(parents=True, exist_ok=True)
@@ -1397,6 +1548,19 @@ def main(argv=None) -> int:
     for _, k in etkin:
         birlesim |= set(k)
 
+    # ---------- EDG-096 sabit liste çözümü (kip tutarlılığı ana akışın BAŞINDA sınandı) ----------
+    # Çözüm BURADADIR çünkü dosyasız hâl ithal yüzeyindeki REPLAY_UNIVERSE'e bakar; bayrak
+    # tutarlılığı ise yan etki doğmadan yukarıda sınanır.
+    sabit_semboller, sabit_kaynak = None, None
+    if uyelik_kipi == "sabit":
+        if ARGV.sabit_liste is not None:
+            sabit_semboller = sabit_liste_oku(ARGV.sabit_liste)
+            sabit_kaynak = f"--sabit-liste dosyası: {pathlib.Path(ARGV.sabit_liste).resolve()}"
+        else:
+            sabit_semboller = list(yuzey["dat"].REPLAY_UNIVERSE)
+            sabit_kaynak = ("ithal yüzeyi: meridian adapters data modülünün REPLAY_UNIVERSE "
+                            "listesi (EDG-016'nın sabit evreni) — dosya verilmedi")
+
     # ---------- olay kümesi + tohum ----------
     olaylar, olay_meta = olay_kumesi_yukle(repo, kart092)
     tohum = ARGV.tohum if ARGV.tohum is not None else olay_meta.get("tohum")
@@ -1412,7 +1576,20 @@ def main(argv=None) -> int:
     # panelde satır taşısa bile süzgeçten geçemez, yani sonuç aynıdır ve bedel yarıya iner.
     kipler = [BIRINCIL_KIP] if ARGV.belirsiz == BIRINCIL_KIP else (
         ["haric"] if ARGV.belirsiz == "haric" else [BIRINCIL_KIP, "haric"])
-    hazir = veri_hazirla(sorted(birlesim), ARGV.bars_dir, ARGV.shares, yuzey, np, pd)
+    # `sabit` kipinde YÜKLENECEK isimler kohort birleşiminden GENİŞTİR: sabit listedeki bir isim
+    # kohorta hiç girmemiş olabilir ve barı okunmazsa üyelik haritası onu üye SAYAR ama panelde
+    # satırı OLMAZ — evren sessizce daralırdı. `asof`/`guncel` kiplerinde küme AYNEN kohorttur
+    # (EDG-093 davranışı birebir korunur).
+    yuklenecek = set(birlesim) | set(sabit_semboller or ())
+    hazir = veri_hazirla(sorted(yuklenecek), ARGV.bars_dir, ARGV.shares, yuzey, np, pd)
+    # KAPSAM = bar serisi VE hisse serisi olan isimler. `seri_olmayan_sembol_KOHORT` hisse serisi
+    # olmayanları ADIYLA taşır; ikisinin farkı ölçümde gerçekten kullanılabilen kümedir.
+    kapsam = None
+    if hazir.get("DURUM") == "HAZIR":
+        kapsam = set(hazir["pan"]) - set(
+            (hazir.get("hisse_muhasebesi") or {}).get("seri_olmayan_sembol_KOHORT") or [])
+    sabit_kunye = (sabit_liste_kunyesi(sabit_semboller, sabit_kaynak, kapsam, belirsiz)
+                   if uyelik_kipi == "sabit" else sabit_liste_kunyesi_yok(uyelik_kipi))
     kosumlar: dict[str, dict] = {}
     uyelikler: dict[str, dict] = {}
     for kip in kipler:
@@ -1423,7 +1600,8 @@ def main(argv=None) -> int:
                              "neden": hazir.get("neden")}
             uyelikler[kip] = {}
             continue
-        uyelikler[kip] = uyelik_haritasi(etkin, hazir["gunler"], dusur)
+        uyelikler[kip] = uyelik_haritasi(etkin, hazir["gunler"], dusur,
+                                         kip=uyelik_kipi, sabit=sabit_semboller)
         kosumlar[kip] = katmanlari_olc(kip, hazir, uyelikler[kip], yuzey, np, pd)
 
     birincil = kosumlar.get(BIRINCIL_KIP) or kosumlar[kipler[0]]
@@ -1516,6 +1694,7 @@ def main(argv=None) -> int:
         "wp2_ortak": dmg(yuzey["wp2_dizin"] / "ortak.py"),
         "parti1_ortak": dmg(repo / "research" / "olcumler" / "edg093_midcap_pit" / "ortak.py"),
         "bars_integrity_defteri": yuzey["defter"],
+        "sabit_liste": dmg(ARGV.sabit_liste),
     }
 
     k016 = yuzey["k016"]
@@ -1545,6 +1724,10 @@ def main(argv=None) -> int:
         "DURUM": "OLCULDU" if birincil.get("DURUM") == "OLCULDU" else "OLCULEMEDI",
         "girdi_damgasi": girdi,
         "sabitler": sabitler,
+        # EDG-2026-096: hangi EVREN kipiyle ölçüldüğü ÇIKTININ KENDİSİNDE durur — üç koşum aynı
+        # dizine düşer ve etiket olmadan hangi sayının hangi evrenden geldiği kaybolurdu.
+        "uyelik_kipi": uyelik_kipi,
+        "sabit_liste_kunyesi": sabit_kunye,
         "evren_muhasebesi": em,
         "kosumlar": {k: {kk: vv for kk, vv in v.items() if not kk.startswith("_")}
                      for k, v in kosumlar.items()},
@@ -1568,15 +1751,19 @@ def main(argv=None) -> int:
         "ithal_yan_etkisi": ithal_yan_etkisini_geri_al(yuzey),
     }
 
-    json_yolu = cikti / f"sonuc_093_{damga}.json"
+    # DOSYA ADI KİP EKİ TAŞIR — `asof` HARİÇ. Gerekçe İKİ YÖNLÜ: (1) üç koşum aynı dizine düşer
+    # ve eksiz adlar birbirini sessizce gölgelerdi; (2) `asof` ekini de alsaydı EDG-093'ün
+    # okuyucuları (Rol-1 hüküm akışı, rapor üreteci, v490 çivisi) dosyayı bulamazdı — regresyon.
+    ek = "" if uyelik_kipi == VARSAYILAN_UYELIK_KIPI else f"_{uyelik_kipi}"
+    json_yolu = cikti / f"sonuc_093{ek}_{damga}.json"
     O.json_yaz(json_yolu, sonuc)
-    rapor_yolu = cikti / f"RAPOR_093_{damga}.md"
+    rapor_yolu = cikti / f"RAPOR_093{ek}_{damga}.md"
     rapor_yolu.write_text(rapor_metni(sonuc), encoding="utf-8")
 
     print(f"YAZILDI: {json_yolu}")
     print(f"YAZILDI: {rapor_yolu}")
-    print(f"durum={sonuc['DURUM']} · koşum={list(kosumlar)} · üye-gün="
-          f"{em.get('uye_gun_hucre')} · hüküm={HUKUM}")
+    print(f"durum={sonuc['DURUM']} · üyelik-kipi={uyelik_kipi} · koşum={list(kosumlar)} · "
+          f"üye-gün={em.get('uye_gun_hucre')} · hüküm={HUKUM}")
     return 0
 
 
