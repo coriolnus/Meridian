@@ -40,3 +40,10 @@ status: measured   # 2026-08-01 ~16:00 — SUCCESS (üç kill de tetiklenmedi; R
 #   default-0 eklenmesi (öğrenme döngüsü kendi ölçer; gölge-önce). Ayrı implementasyon turu.
 #   Kanıt: research/olcumler/wp2_olcum/sonuc_016.json + RAPOR_016.md.
 notes: "scratchpad/wp2_olcum/ altyapısı YENİDEN KULLANILIR (yeni sandbox açma — as-of/split-takvimi/bekçiler hazır); karta ajan DOKUNMAZ. Bu hüküm + EDG-013 birlikte okunup entegrasyon kararı Rol-1'de."
+
+rol1_serhi_2026_09_15: >
+  ÇEKİNCE (1) ÖLÇÜLDÜ (EDG-2026-096, KALDI—KAPI; teşhis sayıları yayılmaz, kayıt): aynı kod (k093) ve 2020-07-27→2026-08-20
+  penceresinde GÜNCEL-LİSTE üyeliği bu kartın üç bacağını birebir üretir (i @20 +0,644% · ii_a1 @20 +0,551% · ii_b @20 0,0283 ↔
+  +0,65% / +0,56% / 0,0284); PIT as-of üyelikte katman i sağ (+0,635%) ama ii katmanı CI-0-içi (ii_b @20 0,0089). Okuma: ii
+  katmanının (rvol/mom-kontrollü artık) CI-0-dışılığı üyelik seçiminin (sağkalan) artefaktı olabilir; formel hüküm ardıl
+  EDG-2026-097 kartında (göreli tutarlılık kapısı). Canlı etki yok (EDG-031 w=0). Katman i (ana etki) PIT'te sağ kalır.

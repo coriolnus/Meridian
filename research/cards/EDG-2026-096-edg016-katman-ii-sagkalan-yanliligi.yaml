@@ -12,7 +12,7 @@
 # Kaynak: kart_benzer + recall.
 
 card_id: EDG-2026-096
-status: registered   # ölçüm: Opus dilim (k093 --uyelik-kipi) → A1 koşumu (large-cap PK-1 girdileri) → hüküm Rol-1
+status: measured     # 2026-09-15 03:2xZ hüküm hukum_2026_09_15 — KALDI—KAPI (hipotez kolu geçti; tutarlılık/PK kapıları yanlış birimde) → ardıl EDG-2026-097
 family: pit_midcap_ust_sinir   # EDG-093 ailesi (aynı kod yolu, aynı girdiler); konu large-cap evren seçimi
 on_kayit: 2026-09-15
 selef:
@@ -70,3 +70,13 @@ notlar: >
   Kod dilimi: Opus (k093 --uyelik-kipi/--sabit-liste + tests v495: regresyon (asof birebir), sentetik tek-satır özdeşliği, sabit liste
   kapsama sayımı); A1 koşumu Rol-1 (nohup, </dev/null; ~25 dk × 3 kip beklenir). Sabit liste kaynağı: EDG-016'nın `full_251`
   evreni = meridian REPLAY_UNIVERSE (ajan kaynağı bulur, sha künyeler; canlı evren 251, PSKY dışarıda, FISV içeride — hafıza evren-emekliligi).
+
+hukum_2026_09_15:
+  tarih: "2026-09-15T03:2xZ"
+  status_gecisi: "registered → measured; K 2/2 harcandı (EDG-096-guncel-liste-ii-b-artik-ic-20g: ii_b artık-IC @20 0,0283 CI[0,0088; 0,0489] CI-0-dışı ≥ 0,015 · EDG-096-sabit251-ii-b-artik-ic-20g: 0,0274 CI[0,0094; 0,0472] CI-0-dışı ≥ 0,015) — ikisi de eşiği geçti; ama kill-list 1 ve 2 tetiklendi"
+  hukum: "KALDI — KAPI (kill-list 1: A kipi ≡ PK-1 tol 1e-6 tutmadı, maks mutlak fark 0,0005 = altı bacakta %1–2 göreli; kill-list 2: katman i PK sabit-251 kipinde CI-0-içi +0,294%). Hipotez testinin kendisi (B/C ii_b @20 ≥ 0,015 CI-0-dışı, A CI-0-içi 0,0089) eşiği GEÇTİ; hüküm kapılar yüzünden formen KALDI, sayı yayılmaz. TEŞHİS (Rol-1): (1) A≠PK-1 farkı KOD değil VERİ: A1 state/bars 260 dosyanın 245'i 2026-09-14T20:39Z günlük döngüsünde yeniden yazıldı (PK-1 19:12Z'de koştu; pencere 2026-08-20'de bitse de seri yeniden ayarlanıyor) — bit-eşitlik toleransı canlı-tazelenen bar tabanına karşı yanlış birimdi (EDG-094'teki mutlak-tolerans hatasının ikizi); yön ve CI-0-dışılık deseni altı bacakta PK-1 ile AYNI. (2) Katman i sabit-251'de zayıf (+0,29%, CI-0-içi): EDG-016'nın +0,65%'i 2009–2026 penceresindendir; 2020+ penceresinde 251'lik sabit evrende ana etki de sönük — PK tabanı 0,003 PK-1'in as-of değerinden (0,62%) türetilmişti, sabit-251 evrenine uygulanamazdı. Eşik yerinde düzeltilmez → ardıl EDG-2026-097 (A kipi tutarlılığı: yön+CI-0-dışılık deseni eşit VE göreli fark ≤ %5; katman i PK yalnız as-of ve güncel-liste kiplerinde CI-0-dışı; K aynı)."
+  teshis_sayilari: "YAYILMAZ (kapı) — kayıt: as-of ii_b @10 0,0061 / @20 0,0089 (CI-0-içi); güncel-liste i @20 +0,644% · ii_a1 @20 +0,551% · ii_b @20 0,0283 — EDG-016 (sabit-251, 2009→2026) ile birebir: +0,65% / +0,56% / 0,0284; sabit-251 (2020+) ii_b @20 0,0274 CI-0-dışı, i @20 +0,294% CI-0-içi. Okuma: EDG-016 ii katmanının CI-0-dışılığı GÜNCEL-LİSTE üyeliğinden gelir (sağkalan yanlılığı); PIT as-of üyelikte ii katmanı YOK."
+  pk: "PK-1 (katman i üç kipte CI-0-dışı): as-of +0,635% ✓ · güncel +0,644% ✓ · sabit-251 +0,294% ✗ (CI-0-içi) → kill-list 2. PK-2 (A ≡ PK-1 tol 1e-6): maks fark 0,0005 ✗ → kill-list 1 (neden: bar tazelenmesi, yukarıda). PK-3 sentetik (tek-satır kohortta asof ≡ guncel ≡ sabit): v495 T4 YEŞİL. Sabit-251 kapsam dışı oranı 0,0242 ≤ 0,20 ✓ (REPLAY_UNIVERSE 251, 6 isim kapsam dışı; liste sha e61c2dab…)."
+  girdi_blob: "sonuc_096_20260915T013812Z.json + RAPOR_096 + üç kip sonucu (research/olcumler/edg093_midcap_pit/olcum/edg096/; blob'lar commit mesajında); girdiler A1: sp500_uyelik_tarihi.csv sha 39a9202c…, shares_outstanding.csv.gz sha 446f7bf0… (2026-08-01), state/bars (260 dosya, 2026-09-14T20:39Z tazelenmiş — PK-1'den FARKLI), pencere 2020-07-27 → 2026-08-20, --belirsiz dahil; kod k093.py sha faf23a4d… (main 75900a5)."
+  bedel: "Opus ×1 (~336k token) + Sonnet ×1 + A1 koşumu 30 dk (asof 4,7 dk · guncel 12,5 dk · sabit 12,7 dk)."
+  yan_urun: "k093 üyelik kipleri + karsilastir096 (ardıl kartta yeniden kullanılır); EDG-093 PK-1 girdi künyesi boşluğu kapandı (large-cap PK girdileri: state/bars + edgar_facts/shares_outstanding.csv.gz); ders: canlı-tazelenen veriyle bit-eşitlik toleransı KONMAZ (göreli tolerans + desen eşitliği)."

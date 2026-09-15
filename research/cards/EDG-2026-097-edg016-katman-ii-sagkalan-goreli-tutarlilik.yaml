@@ -1,0 +1,55 @@
+# EDG-2026-097 — EDG-016 ii katmanı sağkalan yanlılığı: GÖRELİ tutarlılık kapısı + kipe uygun PK ile (EDG-096 ardılı)
+# ÖN-KAYIT 2026-09-15 03:2xZ (Rol-1, gece otonom). Selef EDG-2026-096 KALDI—KAPI: hipotez testi geçti (güncel-liste/sabit-251 ii_b @20
+# 0,0283/0,0274 CI-0-dışı; as-of 0,0089 CI-0-içi) ama iki kapı yanlış birimdeydi: (1) A ≡ PK-1 bit-eşitliği (1e-6) canlı-tazelenen bar
+# tabanına karşı (245/260 dosya 20:39Z'de yeniden yazıldı) tutmadı — desen eşitti; (2) katman i PK tabanı (0,003) as-of'tan türetilmişti,
+# sabit-251 evreninde 2020+ penceresinde ana etki sönük (+0,29%). Eşik yerinde düzeltilmez → yeni kart.
+# HAFIZA: kart_benzer 00:0xZ (EDG-096 için) + EDG-096 hükmü; recall aynı. Kaynak: selef kartı + kart_benzer.
+
+card_id: EDG-2026-097
+status: registered   # kod hazır (k093 --uyelik-kipi, karsilastir096 --kart EDG-2026-097 ile bu kartın eşiklerini okur); A1 koşumu Rol-1
+family: pit_midcap_ust_sinir
+on_kayit: 2026-09-15
+selef:
+  - "EDG-2026-096 (KALDI—KAPI 2026-09-15: hipotez kolu geçti, tutarlılık/PK kapıları yanlış birimde)"
+  - "EDG-2026-016 (GEÇTİ 2026-08-01; çekince (1) sağkalan yanlılığı)"
+ref:
+  - "EDG-2026-093 PK-1 (as-of large-cap referansı) · EDG-2026-031 (turnover ağırlığı w=0, canlı etki yok)"
+  - "research/olcumler/edg093_midcap_pit/{k093.py, karsilastir096.py}"
+
+hipotez: >
+  EDG-016 ii katmanının CI-0-dışılığı EVREN SEÇİMİNDEN gelir: aynı pencere (2020-07-27 → 2026-08-20, --belirsiz dahil) ve aynı
+  kodda güncel-liste (B) ve sabit-251 (C) kiplerinde ii_b artık-IC @20 ≥ 0,015 ve CI-0-dışı, as-of PIT (A) kipinde CI-0-içi.
+  A kipi EDG-093 PK-1 ile YÖN ve CI-0-DIŞILIK deseninde eşit ve göreli fark ≤ %5 (bit-eşitlik istenmez: bar tabanı canlı tazelenir).
+
+k_registry: {registered_at: "2026-09-15", trial_ids: [EDG-097-guncel-liste-ii-b-artik-ic-20g, EDG-097-sabit251-ii-b-artik-ic-20g]}
+# K=2 (EDG-096 ile aynı iki kayıt; EDG-096'da harcanan K'ler KALDI kaydıyla durur — bu kart yeniden ölçer, aynı sayıları yayınlamaz).
+
+adim_olcum: >
+  EDG-096 ile AYNI kod ve girdiler; üç kip tek nohup (edg096_a1_kosum.sh deseni), `karsilastir096.py --kart <bu kart>`; bar tabanı
+  koşum anında sha/mtime ile künyelenir (PK-1 farkının izlenebilirliği). Hüküm Rol-1.
+
+esikler:
+  ii_b_artik_ic_20g_alt: 0.015           # B ya da C kipinde ii_b artık-IC @20 ≥ 0,015 VE CI-0-dışı
+  a_kipi_pk1_goreli_tol: 0.05            # A kipi ↔ EDG-093 PK-1: altı bacakta |A−PK1| / |PK1| ≤ 0,05 VE yön VE CI-0-dışılık deseni eşit
+  katman_i_pk_kipler: ["asof", "guncel"] # PK: katman i @20 bu kiplerde CI-0-dışı pozitif (sabit-251 PK'ye girmez: 2020+ penceresinde ana etki ayrı soru)
+  olculemeyen_sabit_liste_ust_oran: 0.20 # sabit-251 kapsam dışı payı ≤ %20 (EDG-096: 0,024)
+
+kill_list:
+  - "A kipi PK-1 ile desen (yön + CI-0-dışılık) eşit değil YA DA göreli fark > %5 → kod/veri yolu doğrulanmadı, sayı yayılmaz"
+  - "katman i @20 as-of ya da güncel-liste kipinde CI-0-içi → ölçüm bilgisiz"
+  - "B VE C'de ii_b @20 CI-0-içi → hipotez KALDI (pencere etkisi); EDG-016'ya şerh"
+  - "sabit-251 kapsam dışı payı > %20 → C kipi bilgisiz; yalnız B ile hüküm verilmez"
+
+pozitif_kontrol: >
+  (1) katman i @20 as-of ve güncel-liste kiplerinde CI-0-dışı pozitif (EDG-016/PK-1 tekrarı); (2) A kipi ↔ PK-1 desen eşitliği + göreli
+  tolerans (kod yolu); (3) sentetik tek-satır özdeşliği (v495 T4) ve karşılaştırıcının eşikleri bu karttan okuduğu çivisi.
+
+veri_penceresi: "2020-07-27 → 2026-08-20 (PK-1 bayrakları; etkin başlangıç ısınma sonrası 2020-08-25); girdiler A1 state/bars (koşum anı künyesi) + edgar_facts/shares_outstanding.csv.gz + sp500_uyelik_tarihi.csv"
+
+basari_tanimi: >
+  Üç kip, K 2 kaydı, PK üçü yeşil, blob sha ile karta; hüküm Rol-1: "sağkalan DOĞRULANDI" (B ya da C geçer, A geçmez) → EDG-016 kartına
+  şerh (ii katmanı iddiası güncel-liste artefaktı; katman i PIT'te sağ) ve EDG-013/031 notları; "KALDI" → pencere etkisi şerhi.
+
+notlar: >
+  karsilastir096 eşik alanlarını karttan okur; bu kartın `katman_i_pk_kipler` ve `a_kipi_pk1_goreli_tol` alanları yeni — karşılaştırıcıda
+  küçük uyarlama gerekir (Opus mini-dilim: kip listesi + göreli tolerans + desen eşitliği; v495'e çivi). Koşum bedeli ~30 dk A1.
