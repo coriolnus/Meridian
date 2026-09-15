@@ -87,7 +87,7 @@ template {
   error_on_missing_key = true
 }
 
-# bot_key_bekci — tüketici: vault_dosyalar şablonları (apisix · hermes bekci profili) · sir_rotasyon.sh --vault render kanıtı
+# bot_key_bekci — tüketici: vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --vault render kanıtı — hermes bekci profili ROTASYON KANALIYLA beslenir (yan dosya 2026-09-15'te kaldırıldı: hermes-agent .env.vault OKUMAZ)
 template {
   contents    = "{{ with secret \"secret/data/meridian/bot_key_bekci\" }}{{ .Data.data.value }}{{ end }}"
   destination = "/etc/meridian/bot_key_bekci"
@@ -95,7 +95,7 @@ template {
   error_on_missing_key = true
 }
 
-# bot_key_karne — tüketici: vault_dosyalar şablonları (apisix · hermes karne profili) · sir_rotasyon.sh --vault render kanıtı
+# bot_key_karne — tüketici: vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --vault render kanıtı — hermes karne profili ROTASYON KANALIYLA beslenir (yan dosya 2026-09-15'te kaldırıldı: hermes-agent .env.vault OKUMAZ)
 template {
   contents    = "{{ with secret \"secret/data/meridian/bot_key_karne\" }}{{ .Data.data.value }}{{ end }}"
   destination = "/etc/meridian/bot_key_karne"
@@ -103,7 +103,7 @@ template {
   error_on_missing_key = true
 }
 
-# bot_key_sef — tüketici: vault_dosyalar şablonları (apisix · hermes sef profili) · sir_rotasyon.sh --vault render kanıtı
+# bot_key_sef — tüketici: vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --vault render kanıtı — hermes sef profili ROTASYON KANALIYLA beslenir (yan dosya 2026-09-15'te kaldırıldı: hermes-agent .env.vault OKUMAZ)
 template {
   contents    = "{{ with secret \"secret/data/meridian/bot_key_sef\" }}{{ .Data.data.value }}{{ end }}"
   destination = "/etc/meridian/bot_key_sef"
@@ -168,63 +168,4 @@ EOT
   destination = "/opt/hindsight/.env-cp.vault"
   perms       = 0400
   error_on_missing_key = true
-}
-
-# /home/ubuntu/.hermes/profiles/bekci/.env.vault — tüketici: hermes bekci profili (env_loader ikinci dosya — A1'DE ÖLÇÜLECEK; timer'lı oneshot, restart YOK)
-template {
-  contents    = <<EOT
-BOT_KEY_BEKCI={{ with secret "secret/data/meridian/bot_key_bekci" }}{{ .Data.data.value }}{{ end }}
-OPENROUTER_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
-EOT
-  destination = "/home/ubuntu/.hermes/profiles/bekci/.env.vault"
-  perms       = 0600
-  error_on_missing_key = true
-  exec {
-    command = ["chown", "ubuntu:ubuntu", "/home/ubuntu/.hermes/profiles/bekci/.env.vault"]
-    timeout = "10s"
-  }
-}
-
-# /home/ubuntu/.hermes/profiles/karne/.env.vault — tüketici: hermes karne profili (env_loader ikinci dosya — A1'DE ÖLÇÜLECEK; timer'lı oneshot, restart YOK)
-template {
-  contents    = <<EOT
-BOT_KEY_KARNE={{ with secret "secret/data/meridian/bot_key_karne" }}{{ .Data.data.value }}{{ end }}
-OPENROUTER_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
-EOT
-  destination = "/home/ubuntu/.hermes/profiles/karne/.env.vault"
-  perms       = 0600
-  error_on_missing_key = true
-  exec {
-    command = ["chown", "ubuntu:ubuntu", "/home/ubuntu/.hermes/profiles/karne/.env.vault"]
-    timeout = "10s"
-  }
-}
-
-# /home/ubuntu/.hermes/profiles/sef/.env.vault — tüketici: hermes sef profili (env_loader ikinci dosya — A1'DE ÖLÇÜLECEK; timer'lı oneshot, restart YOK)
-template {
-  contents    = <<EOT
-BOT_KEY_SEF={{ with secret "secret/data/meridian/bot_key_sef" }}{{ .Data.data.value }}{{ end }}
-OPENROUTER_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
-EOT
-  destination = "/home/ubuntu/.hermes/profiles/sef/.env.vault"
-  perms       = 0600
-  error_on_missing_key = true
-  exec {
-    command = ["chown", "ubuntu:ubuntu", "/home/ubuntu/.hermes/profiles/sef/.env.vault"]
-    timeout = "10s"
-  }
-}
-
-# /home/ubuntu/.hermes/.env.vault — tüketici: hermes CLI GLOBAL env — motorun hermes._agent_call yolu (env_loader ikinci dosya — A1'DE ÖLÇÜLECEK; timer'sız, her çağrıda okunur, restart YOK)
-template {
-  contents    = <<EOT
-OPENROUTER_API_KEY={{ with secret "secret/data/meridian/HINDSIGHT_API_LLM_API_KEY" }}{{ .Data.data.value }}{{ end }}
-EOT
-  destination = "/home/ubuntu/.hermes/.env.vault"
-  perms       = 0600
-  error_on_missing_key = true
-  exec {
-    command = ["chown", "ubuntu:ubuntu", "/home/ubuntu/.hermes/.env.vault"]
-    timeout = "10s"
-  }
 }

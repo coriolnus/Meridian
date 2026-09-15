@@ -210,11 +210,25 @@ def _yan_dosya_sablonlari() -> list[str]:
     okuyan operatör, hangi alanın hangi kasa yolundan geldiğini göremezdi (üretilmiş dosya da
     okunmak içindir). Heredoc gövdesi sondaki yeni satırı TAŞIR — `.env` sözleşmesi budur.
 
-    `exec` YALNIZ `sahip: ubuntu` olan dosyada doğar ve komut KABUKSUZ + SABİT argüman
-    listesidir: tek iş sahipliği düzeltmektir, restart DEĞİL (tasarım §6.4)."""
+    `exec` ÜRETİLMEZ ve bu bir SADELEŞTİRME DEĞİL, bir YETKİ KAPISIDIR (2026-09-15, dilim-3).
+    Dalga-2'de `sahip: ubuntu` olan dosyalar için bir `exec { command = ["chown", …] }` yazılıyordu
+    ve o yetkinin TEK gerekçesi hermes profil `.env`leriydi. Hermes yan dosyaları envanterden
+    çıktı (hermes-agent `.env.vault` OKUMUYOR — A1'de ölçüldü), yetki gereksizleşti ve
+    `vault-agent.service` `CapabilityBoundingSet`ten CAP_CHOWN düştü.
+
+    BU YÜZDEN ROOT DIŞI SAHİP FAIL-CLOSED: envantere sessizce eklenen bir `ubuntu` girdisi için
+    `exec` yazsaydık, o `chown` CAP_CHOWN'suz bir birimde EPERM ile SESSİZCE düşerdi — dosya
+    root:root kalır, tüketici okuyamaz ve arıza "bot eski anahtarla koşuyor" diye, kasadan uzakta
+    görünürdü. Yetki ancak bir KARARLA geri gelir (üretici + birim + çivi birlikte)."""
     ind = indeks(vault_kv())
     satirlar: list[str] = []
     for d in vault_dosyalar():
+        if d["sahip"] != "root":
+            raise SystemExit(
+                f'{d["yol"]}: `sahip: {d["sahip"]}` — root DIŞI sahip render sonrası bir `exec` '
+                "chown ister, ama o yetki 2026-09-15'te EMEKLİ edildi ve `vault-agent.service` "
+                "CAP_CHOWN TAŞIMIYOR: chown EPERM ile sessizce düşer, dosya root:root kalır. "
+                "Geri getirmek bir KARARDIR — birim, üretici ve çivi (v491 B4/C2) birlikte değişir")
         satirlar.append("")
         satirlar.append(f'# {d["yol"]} — tüketici: {d["tuketici"]}')
         satirlar.append("template {")
@@ -228,13 +242,6 @@ def _yan_dosya_sablonlari() -> list[str]:
         satirlar.append(f'  destination = "{d["yol"]}"')
         satirlar.append(f'  perms       = {d["mod"]}')
         satirlar.append("  error_on_missing_key = true")
-        if d["sahip"] != "root":
-            sahip = d["sahip"]
-            satirlar.append("  exec {")
-            satirlar.append(
-                f'    command = ["chown", "{sahip}:{sahip}", "{d["yol"]}"]')
-            satirlar.append('    timeout = "10s"')
-            satirlar.append("  }")
         satirlar.append("}")
     return satirlar
 
@@ -320,18 +327,20 @@ def agent_yapilandirmasi() -> str:
     `remove_secret_id_file_after_reading = false`: dosya silinirse Agent yeniden başladığında
     login EDEMEZ (secret_id_ttl=0, dönmez). Tasarım §6.3'ün bilinçli kararı.
 
-    DALGA-2 (2026-09-14) İKİ ŞEY EKLEDİ, BİRİ BİR YETKİ GENİŞLEMESİDİR ve adıyla yazılıdır:
+    DALGA-2 (2026-09-14) İKİ ŞEY EKLEDİ; DİLİM-3 (2026-09-15) BİRİNİ GERİ ALDI:
       · `template_config { static_secret_render_interval }` — KV-v2 STATİK sırlar varsayılan
         5 dk'da yeniden render edilir; rotasyon penceresindeki bekleme o süreyle SINIRLIDIR.
-      · `exec { command = ["chown", ...] }` — YALNIZ `sahip: ubuntu` olan yan dosyalarda.
-        `template` bloğunda dosya SAHİBİ parametresi YOKTUR (yalnız `perms`; resmî belge,
-        ölçüldü 2026-09-14) ve Agent root koşar → render edilen dosya root:root olur. Tüketicisi
-        `ubuntu` olan hermes profil dosyaları o hâlde OKUNAMAZ. Komut KABUKSUZ ve SABİT argüman
-        listesiyle verilir: kabuk olsaydı şablon içeriği komut satırına sızabilirdi.
+        DURUYOR.
+      · `exec { command = ["chown", ...] }` — `sahip: ubuntu` olan yan dosyalar içindi (Agent root
+        koşar, `template` bloğunda SAHİP parametresi YOKTUR — resmî belge, ölçüldü 2026-09-14 — ve
+        dosya root:root doğar). Tek gerekçesi hermes profil dosyalarıydı; hermes-agent'ın
+        `.env.vault` OKUMADIĞI A1'de ölçülünce o dosyalar envanterden çıktı ve yetki EMEKLİ oldu.
+        Bugün üretici `exec` YAZMAZ ve root DIŞI sahip gördüğünde DURUR (bkz.
+        `_yan_dosya_sablonlari`); birim de CAP_CHOWN taşımaz.
 
-    HÂLÂ BİLEREK YOK — RESTART: Agent render sonrası tüketiciyi YENİDEN BAŞLATMAZ. `chown` bir
-    restart DEĞİLDİR; bir render'ın bakım penceresi dışında worker'ı düşürmesi bu depoda hiçbir
-    yerde verilmemiş bir yetkidir ve restart operatörün/rotasyonun reçetesindedir (tasarım §6.4)."""
+    HÂLÂ BİLEREK YOK — HER TÜRLÜ KOMUT: Agent render sonrası HİÇBİR komut çalıştırmaz. Bir
+    render'ın bakım penceresi dışında worker'ı düşürmesi bu depoda hiçbir yerde verilmemiş bir
+    yetkidir; restart operatörün/rotasyonun reçetesindedir (tasarım §6.4)."""
     satirlar = [_baslik(), ""]
     satirlar.append("# Kasa adresi — deploy/vault/vault.hcl listener'ı ile TEK KAYNAK.")
     satirlar.append("vault {")

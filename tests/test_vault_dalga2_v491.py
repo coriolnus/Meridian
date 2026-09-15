@@ -8,17 +8,26 @@ Bu dosya o kararın repo tarafını çakar —
 
   A  Envanter: `vault_kv` dalga-2 girdileri + YENİ `vault_dosyalar` bloğu (şema, referans
      bütünlüğü, DEĞER YOK, önek sözlüğü, sahip sözlüğü)
-  B  Üretici: `ops/vault_politika_uret.py` yan dosya şablonları + `exec` chown + render aralığı
+  B  Üretici: `ops/vault_politika_uret.py` yan dosya şablonları + `exec` YASAĞI + render aralığı
   C  Birim ve tüketici bağlama: `vault-agent.service` yazma yüzeyi + drop-in'ler + A0 rolü
   D  `deploy/vault/vault_sir_koy.sh`: `env_satiri` kaynağı + KOPYA EŞİTLİĞİ kapısı
   E  `deploy/oracle-a1/sir_rotasyon.sh --vault`: kasadan başlayan rotasyon
   M  MUTASYONLAR — her çivinin hedeflediği dalı gerçekten ısırdığının kanıtı
 
+DİLİM-3 (2026-09-15) — HERMES YAN DOSYALARI EMEKLİ. A1'de ölçüldü: hermes-agent `.env.vault`
+DESTEKLEMİYOR (`_get_env_prefer_dotenv` `.env` dosyasını öncelikli okur, process env ikincil) ve
+üçüncü parti kod fork edilmez. Dört hermes yan dosyası render ediliyor ama HİÇ okunmuyordu. Rol-1
+kararı: hermes kanalı = `sir_rotasyon.sh --vault`ın hermes `.env` dosyalarını KASADAN gelen
+değerle yazması (bu tüketicide iki-kanal KALICI). Bedel envanterden TÜRER ve bu dosyada ölçülür:
+şablon 15, `exec` bloğu YOK, `ReadWritePaths` hermes ağacını TAŞIMAZ, yetenek kümesi tek kalem.
+Kaldırılan şeyin YERİNE ne geçtiği de çivilidir (A13/A14/E8) — bir kanalı kapatıp ötekini
+ölçmemek, kazancı sayıp bedeli saymamak olurdu (bedel yasası).
+
 NEDEN KAYNAK METNİ ÇİVİLERİ (v485 ile aynı gerekçe). Yerelde `vault` ikilisi YOKTUR, ajan A1'e
 ssh yapmaz (CLAUDE.md §3) ve docker/hermes tüketicileri burada KOŞMAZ. Ölçülebilen şey
-SÖZLEŞMEdir: hangi dosya, hangi alan, hangi kaynak, hangi sıra. Gerçek render, gerçek `--env-file`
-çözümü ve hermes `env_loader`ın ikinci dosyayı okuyup okumadığı A1'de test-ateşlemesiyle ölçülür
-(CLAUDE.md §9 "kurulu ≠ çalışır"); bu dosya o ölçümün YERİNE GEÇMEZ, önünü açar.
+SÖZLEŞMEdir: hangi dosya, hangi alan, hangi kaynak, hangi sıra. Gerçek render ve gerçek
+`--env-file` çözümü A1'de test-ateşlemesiyle ölçülür (CLAUDE.md §9 "kurulu ≠ çalışır"); bu dosya
+o ölçümün YERİNE GEÇMEZ, önünü açar.
 
 SIR DEĞERİ YASAĞI: hiçbir testte gerçek bir sır değeri yoktur; sahte değerler `SAHTE-` önekiyle
 yazılır ve yalnız eşitlik/sha karşılaştırması için kullanılır.
@@ -59,28 +68,55 @@ DALGA2_ADLARI = (
 
 #: YAN DOSYALARIN TAM KÜMESİ (spec §2). Elle durur: envanterden türeyen bir liste, bir dosya
 #: envanterden düştüğünde sessizce küçülürdü.
+#:
+#: DİLİM-3 (2026-09-15) KÜMEYİ YEDİDEN ÜÇE İNDİRDİ ve sebebi ÖLÇÜLDÜ, seçilmedi: hermes-agent
+#: anahtarını `_get_env_prefer_dotenv` ile `.env` DOSYASINDAN öncelikli okur ve `.env.vault`
+#: DESTEĞİ YOKTUR (üçüncü parti kod, fork edilmez — Rol-1 kararı 2026-09-15). A1'de dört hermes
+#: yan dosyası render EDİLİYORDU ve HİÇBİRİ okunmuyordu: Yasa 6'nın tam tanımı, üstelik geçiş
+#: "yapıldı" sanılırken. Hermes tüketicisinin KANALI artık `sir_rotasyon.sh --vault`ın hermes
+#: `.env` dosyalarını KASADAN gelen değerle yazmasıdır (kopya listesi `kopya_kaynaklari`) —
+#: yani kaynak yine kasadır, teslim aracı değişmiştir. Çivi A13/A14 o kanalın YERİNDE durduğunu
+#: ölçer; kümenin kendisi burada, kaldırma sessiz olamasın diye ELLE durur.
 YAN_DOSYALAR = (
     "/opt/apisix/.env-apisix.vault",
     "/opt/hindsight/.env.vault",
     "/opt/hindsight/.env-cp.vault",
-    "/home/ubuntu/.hermes/profiles/bekci/.env.vault",
-    "/home/ubuntu/.hermes/profiles/karne/.env.vault",
-    "/home/ubuntu/.hermes/profiles/sef/.env.vault",
-    "/home/ubuntu/.hermes/.env.vault",
 )
 
-#: AGENT BİRİMİNİN YETENEK KÜMESİ — DONUK, SIRALI ve İKİ kalemli. Liste burada ELLE durur (yan
+#: HERMES `.env` KOPYALARI — DİLİM-3'ün BEDEL SATIRI. Yan dosyalar kaldırıldı; bu dört kopya
+#: rotasyonun yazdığı kanaldır ve kaldırılırsa hermes anahtarı kasadan HİÇ beslenmez. Liste elle
+#: durur (YAN_DOSYALAR ile aynı gerekçe): `kopya_kaynaklari`ndan türetilseydi, bir satır oradan
+#: düştüğünde çivi de onunla küçülür ve "her şey uyuşuyor" derdi.
+HERMES_ENV_KOPYALARI = (
+    "/home/ubuntu/.hermes/profiles/bekci/.env",
+    "/home/ubuntu/.hermes/profiles/karne/.env",
+    "/home/ubuntu/.hermes/profiles/sef/.env",
+    "/home/ubuntu/.hermes/.env",
+)
+
+#: AGENT ŞABLON SAYISI — DONUK. `template { … }` blokları: `vault_kv`nin kendi yolu olan 12
+#: girdisi + üç yan dosya. Sayı ELLE durur çünkü B2/B3 hedefleri envanterden TÜRETİR ve envanter
+#: küçüldüğünde onlarla birlikte sessizce küçülürdü — "kaç şablon" sorusu bir kez, burada,
+#: ölçülmüş bir sayıyla cevaplanır.
+#: NOT — ROADMAP/günlükteki "20 → 16" sayımı `template_config` bloğunu da sayar (`^template`
+#: öneki); bu sabit YALNIZ `template { … }` bloklarını sayar. İki sayım aynı dosyayı anlatır,
+#: farkı `template_config`tir ve aşağıda ADIYLA ölçülür (B8).
+AGENT_SABLON_SAYISI = 15
+
+#: AGENT BİRİMİNİN YETENEK KÜMESİ — DONUK, SIRALI ve TEK kalemli. Liste burada ELLE durur (yan
 #: dosya listesiyle aynı gerekçe): birimden türetilseydi çivi birimin söylediğini tekrarlar,
-#: hiçbir şey ÖLÇMEZDİ. İkisi de A1'de ÖLÇÜLMÜŞ bir arızanın bedelidir —
-#:   · CAP_CHOWN      (2026-09-14) — `exec` chown'u root için bile bu yeteneği ister; boş kümede
-#:     `chown ubuntu:ubuntu` EPERM ile düşer ve dosya root:root kalır.
+#: hiçbir şey ÖLÇMEZDİ.
 #:   · CAP_DAC_OVERRIDE (2026-09-15) — root süreç DAC_OVERRIDE'sız kalınca `ubuntu` sahipli
-#:     dizinlere (`/opt/hindsight` 755 ubuntu, `/home/ubuntu/.hermes` ve profil dizinleri 700
-#:     ubuntu) geçici dosya AÇAMAZ: `failed writing file: open <tmp>: permission denied`. Yalnız
-#:     `/opt/apisix` (root sahipli) render edildi; yedi yan dosyanın altısı hiç doğmadı.
-#: KÜME DONUKTUR: fazladan bir yetenek (ör. CAP_SYS_ADMIN) sapmanın gerekçesini sessizce
-#: genişletirdi, eksik bir yetenek render'ı sessizce yarım bırakırdı — ikisi de kırmızıdır.
-AGENT_YETENEKLERI = ("CAP_CHOWN", "CAP_DAC_OVERRIDE")
+#:     dizinlerde şablonun GEÇİCİ dosyasını AÇAMAZ: `failed writing file: open <tmp>: permission
+#:     denied`. Bugün gerekçe TEK dizindir ve duruyor: `/opt/hindsight` 755 ubuntu.
+#: EMEKLİ — CAP_CHOWN (doğdu 2026-09-14, kaldırıldı 2026-09-15 dilim-3): `exec` chown YALNIZ
+#: `sahip: ubuntu` olan hermes yan dosyaları içindi. O dosyalar envanterden çıktı, üretici artık
+#: `exec` YAZMIYOR (ve root-dışı sahip isteyen bir girdide FAIL-CLOSED duruyor), dolayısıyla
+#: yetenek gereksizdir. Gereksiz bir yetenek zararsız DEĞİLDİR: root sürecin TEK freni sandbox'tır
+#: ve kullanılmayan her kalem o freni ölçülmemiş bir gerekçeye açık bırakır.
+#: KÜME DONUKTUR: fazladan bir yetenek (ör. CAP_CHOWN'un geri gelmesi) sapmanın gerekçesini
+#: sessizce genişletirdi, eksik bir yetenek render'ı sessizce yarım bırakırdı — ikisi de kırmızıdır.
+AGENT_YETENEKLERI = ("CAP_DAC_OVERRIDE",)
 
 #: ÖNEK SÖZLÜĞÜ DONUKTUR ve TEK yerde yaşar: `sir_rotasyon.sh`in `ONEKLER` tablosu aynı iki
 #: jetonu tanır (`-` ve `Bearer`). Envanterde önek LİTERAL DEĞİL JETONDUR — literal yazılsaydı
@@ -88,10 +124,14 @@ AGENT_YETENEKLERI = ("CAP_CHOWN", "CAP_DAC_OVERRIDE")
 #: taraması da onu bir sır değeri sanabilirdi.
 ONEK_SOZLUGU = {None, "Bearer"}
 
-#: Agent'ın render edeceği dosyanın SAHİBİ iki değerden biridir. `ubuntu` olan her dosya bir
-#: `exec` chown gerektirir (Agent root koşar ve `template` bloğunda sahip parametresi YOKTUR —
-#: resmî belge, ölçüldü 2026-09-14); `root` olan HİÇBİRİ gerektirmez.
-SAHIP_SOZLUGU = {"root", "ubuntu"}
+#: Agent'ın render edeceği dosyanın SAHİBİ — DİLİM-3'ten (2026-09-15) beri TEK değer. `ubuntu`
+#: sahipli bir dosya render sonrası bir `exec` chown gerektirirdi (Agent root koşar ve `template`
+#: bloğunda sahip parametresi YOKTUR — resmî belge, ölçüldü 2026-09-14) ve o `exec` yetkisinin
+#: TEK gerekçesi hermes profilleriydi. Hermes yan dosyaları kaldırıldığı gün gerekçe de bitti:
+#: birim CAP_CHOWN taşımaz, üretici `exec` YAZMAZ ve root-dışı bir sahip isteyen girdide DURUR.
+#: Sözlük burada daraltıldı ki envantere sessizce eklenen bir `ubuntu` girdisi, birimin yetenek
+#: kümesiyle ölçülmeden buluşmasın (yetki ancak bir KARARLA geri gelir, yan etkiyle değil).
+SAHIP_SOZLUGU = {"root"}
 
 #: TAKMA AD TABLOSU — Rol-1 hükmü (2026-09-14, tur-2). Aynı DEĞERİ taşıyan sırların TEK kasa yolu
 #: vardır; BİRİNCİL kasada ZATEN duran dalga-1 girdisidir, dalga-2 adı TAKMA ADdır. Tablo burada
@@ -300,17 +340,25 @@ def test_A8_yan_dosya_ASIL_dosyanin_YANINDA_ve_asil_dosya_envanterde_TANINIR():
             "sır yüzeyine yan dosya yazılıyor")
 
 
-def test_A9_UBUNTU_sahipli_yan_dosya_YALNIZ_hermes_agacinda():
-    """Agent'ın `exec` yetkisi (chown) TEK gerekçeyle var: hermes profil `.env`lerini `ubuntu`
-    okur. Başka bir ağaçta `ubuntu` sahipliği istemek, o yetkinin gerekçesini sessizce
-    genişletirdi (tasarım §6.3'ün "Agent tüketiciyi yeniden başlatmaz" ilkesinin komşusu)."""
+def test_A9_HICBIR_yan_dosya_HOME_altinda_DEGIL_ve_sahip_ROOT():
+    """DİLİM-3 (2026-09-15) BU ÇİVİYİ TERSİNE ÇEVİRDİ ve iddiayı GÜÇLENDİRDİ.
+
+    Eski hâl "ubuntu sahipliği YALNIZ hermes ağacında" diyordu — bir yetkinin (Agent'ın `exec`
+    chown'u) kapsamını sınırlıyordu. O yetki bugün YOK: hermes yan dosyaları kaldırıldı, üretici
+    `exec` yazmıyor, birim CAP_CHOWN taşımıyor. Kalan iddia daha dardır: hiçbir yan dosya `/home`
+    altında DEĞİLDİR ve hepsinin sahibi `root`tur.
+
+    NEDEN İKİSİ BİRDEN: `/home` altında bir yan dosya, `ProtectHome=read-only` içine yeniden bir
+    delik açmayı gerektirirdi (C3); root DIŞI bir sahip ise `exec` chown'u geri getirirdi ve o
+    komut CAP_CHOWN'suz bir birimde EPERM ile SESSİZCE düşerdi — dosya root:root kalır, tüketici
+    (ubuntu) okuyamaz, bot her tetikte eski kanala düşer. İki yolun ikisi de bir KARAR ister."""
     for d in _vault_dosyalar():
-        if d["sahip"] == "ubuntu":
-            assert d["yol"].startswith("/home/ubuntu/.hermes/"), (
-                f"{d['yol']}: hermes ağacı DIŞINDA ubuntu sahipliği isteniyor")
-        else:
-            assert not d["yol"].startswith("/home/"), (
-                f"{d['yol']}: /home altında root sahipli yan dosya — tüketici (ubuntu) okuyamaz")
+        assert not d["yol"].startswith("/home/"), (
+            f"{d['yol']}: `/home` altında yan dosya — ProtectHome deliği geri açılırdı "
+            "(dilim-3, 2026-09-15: hermes kanalı rotasyonun `.env` yazımıdır)")
+        assert d["sahip"] == "root", (
+            f"{d['yol']}: root DIŞI sahip ({d['sahip']!r}) `exec` chown ister; birim CAP_CHOWN "
+            "TAŞIMIYOR, chown EPERM ile sessizce düşerdi")
 
 
 def test_A10_ENVANTERDE_DEGER_YOK_kurali_dalga2_bloklarinda_da_GECERLI():
@@ -364,6 +412,57 @@ def test_A12_HINDSIGHT_failover_UYELERININ_ALTISI_da_yan_dosyada():
     assert alanlar == beklenen, f"failover üye kümesi ayrıştı: {alanlar ^ beklenen}"
     assert {s["sir"] for s in d["satirlar"]} == {"openrouter_api_key"}, (
         "üye satırları tek kasa yolundan gelmeli (altısı da OpenRouter anahtarının kopyasıdır)")
+
+
+def _kopya_dosyalari() -> set[str]:
+    """Envanterdeki BÜTÜN `kopya_kaynaklari`/`kaynak` girdilerinin dosya yolları."""
+    yollar: set[str] = set()
+    for g in _vault_kv():
+        for k in [g.get("kaynak"), *(g.get("kopya_kaynaklari") or [])]:
+            if k:
+                yollar.add(k["dosya"])
+    return yollar
+
+
+def test_A13_HERMES_yan_dosyasi_YOK_ama_HERMES_env_KOPYALARI_VAR():
+    """DİLİM-3'ÜN İKİ YÜZÜ TEK ÇİVİDE — ve bu bilinçli: bir kanalı kapatırken ötekini ayrı bir
+    çiviye bırakmak, kaldırmanın yeşil, ikamenin sessizce eksik kalmasına izin verirdi.
+
+    YÜZ 1 (kaldırma): envanter hiçbir hermes `.env.vault` yan dosyası TANIMLAMAZ. Tanımlasaydı
+    Agent onu render eder ve HİÇ KİMSE okumazdı — hermes-agent `.env.vault` desteklemiyor
+    (A1'de ölçüldü 2026-09-15). Okunmayan artefakt üretilmemişten farksızdır (Yasa 6).
+
+    YÜZ 2 (ikame): hermes `.env` dosyaları `kopya_kaynaklari`nda DURUYOR. Rotasyon (`--vault`)
+    kasadan gelen değeri o dosyalara yazar; liste düşerse hermes anahtarı kasadan HİÇ beslenmez
+    ve TSK-181'in tam olarak ölçtüğü hâl (dört gün eski anahtarla 401) geri gelir."""
+    yan = [d["yol"] for d in _vault_dosyalar()]
+    assert not [y for y in yan if ".hermes" in y], (
+        f"hermes yan dosyası envanterde geri gelmiş: {[y for y in yan if '.hermes' in y]} — "
+        "hermes-agent `.env.vault` OKUMUYOR (ölçüldü 2026-09-15), render okuyucusuz kalırdı")
+    kopyalar = _kopya_dosyalari()
+    eksik = [y for y in HERMES_ENV_KOPYALARI if y not in kopyalar]
+    assert not eksik, (
+        f"hermes KANALI kopmuş: {eksik} `kopya_kaynaklari`nda yok — yan dosya da kaldırıldığı "
+        "için hermes anahtarı kasadan HİÇ beslenmez (TSK-181 sınıfı)")
+
+
+def test_A14_MUTASYON_hermes_kopya_satiri_silinirse_A13_KIRMIZI(tmp_path):
+    """Çivi yeşili kanıt değildir: A13'ün İKİNCİ yüzü (ikame kanal) gerçekten ısırmalı. Senaryo —
+    GLOBAL hermes `.env` kopya satırı envanterden düşer. Rotasyon o dosyayı bir daha yazmaz,
+    motorun `hermes._agent_call` yolu eski anahtarda donar ve hiçbir şey bağırmaz (2026-09-08'de
+    tam olarak bu oldu: dört gün 401, TSK-181)."""
+    ham = ENVANTER.read_text(encoding="utf-8")
+    capa = ('      - {tur: env_satiri, dosya: "/home/ubuntu/.hermes/.env", '
+            "alan: OPENROUTER_API_KEY, onek: null}\n")
+    assert capa in ham, f"mutasyon çapası envanterde yok (çivi bayatlamış): {capa!r}"
+    bozuk = tmp_path / "envanter_hermes_kopyasiz.yaml"
+    bozuk.write_text(ham.replace(capa, "", 1), encoding="utf-8")
+    veri = yaml.safe_load(bozuk.read_text(encoding="utf-8"))
+    yollar = {k["dosya"] for g in veri["vault_kv"]
+              for k in [g.get("kaynak"), *(g.get("kopya_kaynaklari") or [])] if k}
+    assert "/home/ubuntu/.hermes/.env" not in yollar, (
+        "MUTASYON ISIRMADI: kopya satırı silinmesine rağmen yol hâlâ kopya kümesinde — A13 "
+        "başka bir dalı ölçüyor olabilir")
 
 
 # =================================================================================================
@@ -436,20 +535,35 @@ def test_B3_yan_dosya_SABLONU_her_alan_icin_BIR_satir_uretir():
             f"{d['yol']}: şablon satır sayısı envanterle ayrıştı")
 
 
-def test_B4_UBUNTU_sahipli_dosyada_EXEC_CHOWN_var_ROOT_sahiplide_YOK():
-    """`template` bloğunda dosya SAHİBİ parametresi YOKTUR (yalnız `perms`; resmî belge, ölçüldü
-    2026-09-14) ve Agent root koşar → render edilen dosya root:root olur. Tüketicisi `ubuntu`
-    olan dosyalar için tek yol render sonrası `exec` chown'dur; KABUKSUZ ve SABİT argüman
-    listesiyle. Root sahipli dosyada aynı `exec`, gereksiz bir yetki kullanımı olurdu."""
+def test_B4_HICBIR_sablonda_EXEC_YOK_ve_URETICI_root_disi_sahipte_DURUR(tmp_path):
+    """DİLİM-3 (2026-09-15): `exec` YETKİSİ EMEKLİ. Tek gerekçesi hermes profil dosyalarıydı
+    (`template` bloğunda SAHİP parametresi YOKTUR — yalnız `perms`; resmî belge, ölçüldü
+    2026-09-14 — ve Agent root koşar, yani dosya root:root doğar). Hermes yan dosyaları
+    envanterden çıkınca gerekçe de bitti; birim CAP_CHOWN'u BIRAKTI.
+
+    İDDİA İKİ BACAKLI ve ikincisi olmadan birincisi kör olurdu: (1) üretilen `agent.hcl`de hiçbir
+    `exec` bloğu YOK; (2) üretici root DIŞI bir sahip gördüğünde DURUR. (2) olmasaydı envantere
+    sessizce eklenen bir `ubuntu` girdisi yeniden `exec` yazdırırdı ve o `chown` CAP_CHOWN'suz
+    birimde EPERM ile SESSİZCE düşerdi — dosya root:root kalır, tüketici okuyamaz, bot eski
+    kanala düşer. Yetkinin geri gelmesi bir KARAR olmalıdır, bir yan etki değil (fail-closed)."""
     metin = AGENT_HCL.read_text(encoding="utf-8")
     for d in _vault_dosyalar():
         blok = [b for b in _sablon_bloklari(metin) if f'destination = "{d["yol"]}"' in b][0]
-        if d["sahip"] == "ubuntu":
-            assert re.search(
-                r'command\s*=\s*\["chown",\s*"ubuntu:ubuntu",\s*"' + re.escape(d["yol"]) + r'"\]',
-                blok), f"{d['yol']}: exec chown YOK/biçimsiz (kabuksuz, sabit argüman listesi)"
-        else:
-            assert "exec" not in blok, f"{d['yol']}: root sahipli dosyada exec bloğu var"
+        assert "exec" not in blok, f"{d['yol']}: şablonda `exec` bloğu var (yetki emekli edildi)"
+    assert "chown" not in metin, "agent yapılandırmasına chown sızmış — CAP_CHOWN birimde YOK"
+
+    bozuk = tmp_path / "envanter_ubuntu_sahip.yaml"
+    ham = ENVANTER.read_text(encoding="utf-8")
+    capa = '  - yol: "/opt/hindsight/.env-cp.vault"\n    mod: "0400"\n    sahip: "root"\n'
+    assert capa in ham, f"mutasyon çapası envanterde yok (çivi bayatlamış): {capa!r}"
+    bozuk.write_text(ham.replace(capa, capa.replace('sahip: "root"', 'sahip: "ubuntu"'), 1),
+                     encoding="utf-8")
+    mod = _mutant_uretici(tmp_path, 'MONTAJ = "secret"', 'MONTAJ = "secret"',
+                          "uret_b4_ubuntu_sahip", envanter=bozuk)
+    with pytest.raises(SystemExit) as hata:
+        mod.agent_yapilandirmasi()
+    assert "ubuntu" in str(hata.value) and "CAP_CHOWN" in str(hata.value), (
+        f"üretici durdu ama gerekçesi emekli yetkiyi ADIYLA söylemiyor: {hata.value}")
 
 
 def test_B5_RENDER_ARALIGI_bir_dakika_ve_TEK_yerde():
@@ -461,17 +575,43 @@ def test_B5_RENDER_ARALIGI_bir_dakika_ve_TEK_yerde():
     assert m == ["1m"], f"render aralığı yok/tekrarlı: {m}"
 
 
-def test_B6_agent_TUKETICIYI_YENIDEN_BASLATMAZ_exec_YALNIZ_chown():
-    """Tasarım §6.4 KORUNUR: `exec` yetkisi dalga-2 ile doğdu ama SINIRI adıyla yazılıdır —
-    `chown` bir restart DEĞİLDİR. Bir render'ın bakım penceresi dışında worker'ı düşürmesi hiçbir
-    yerde verilmemiş bir yetkidir; restart operatörün/rotasyonun reçetesindedir."""
+def test_B6_agent_HICBIR_KOMUT_CALISTIRMAZ():
+    """Tasarım §6.4 tam gücünde GERİ DÖNDÜ. Dalga-2 `exec`i TEK bir iş için (chown) açmıştı ve
+    dilim-3 o işi ortadan kaldırdı; iddia yeniden EN DAR hâlindedir: Agent render sonrası HİÇBİR
+    komut çalıştırmaz.
+
+    Neden `command` ANAHTARINI tarıyoruz, `systemctl`i değil: yasak olan restart değil, ölçülmemiş
+    her yan etkidir. `systemctl` ayrıca aranır çünkü o, yetkinin en pahalı kaçış yoludur — bir
+    render'ın bakım penceresi dışında worker'ı düşürmesi bu depoda hiçbir yerde verilmemiştir."""
     metin = AGENT_HCL.read_text(encoding="utf-8")
     assert "systemctl" not in metin, "agent yapılandırmasına restart yolu sızmış"
     komutlar = re.findall(r"command\s*=\s*(\[[^\]]*\])", metin)
-    assert komutlar, "exec komutu hiç yok — dalga-2'nin ubuntu sahipli dosyaları chown'suz kalır"
-    for k in komutlar:
-        assert k.startswith('["chown", "ubuntu:ubuntu", "/home/ubuntu/.hermes'), (
-            f"exec komutu chown DIŞINDA bir şey yapıyor: {k}")
+    assert not komutlar, (
+        f"`exec` komutu geri gelmiş: {komutlar} — yetki 2026-09-15'te emekli edildi, birim "
+        "CAP_CHOWN taşımıyor ve komut EPERM ile sessizce düşerdi")
+
+
+def test_B8_SABLON_SAYISI_DONUK_ve_template_config_TEK():
+    """DONUK SAYI ÇİVİSİ. B2/B3 hedefleri envanterden TÜRETİR — envanter küçüldüğünde onlar da
+    küçülür ve "her şey uyuşuyor" derler. Bu çivi tam o körlüğü kapatır: kaç şablon üretildiği
+    bir kez, ELLE, ölçülmüş bir sayıyla yazılıdır (dilim-3: 12 tek-değer + 3 yan dosya = 15).
+
+    `template_config` AYRI sayılır ve TEK olmalıdır: `^template` önekiyle sayan bir göz (günlükteki
+    "20 → 16" sayımı) onu da sayar, `template { … }` blokları ise saymaz. İki sayımın FARKI burada
+    ADIYLA ölçülür — ölçülmeseydi "16 mı 15 mi" sorusu her okumada yeniden doğardı."""
+    metin = AGENT_HCL.read_text(encoding="utf-8")
+    bloklar = _sablon_bloklari(metin)
+    assert len(bloklar) == AGENT_SABLON_SAYISI, (
+        f"şablon sayısı {len(bloklar)}, {AGENT_SABLON_SAYISI} bekleniyordu — envanter değiştiyse "
+        "bu sabit de bir KARARLA değişir")
+    assert len(_kv_yollu()) + len(_vault_dosyalar()) == AGENT_SABLON_SAYISI, (
+        "envanter ile donuk sayı ayrıştı — biri elle, öteki türetilmiş; ikisi de aynı dosyayı "
+        "anlatmalı")
+    assert len(re.findall(r"^template_config \{", metin, re.M)) == 1, (
+        "`template_config` bloğu tek değil — render aralığı iki yerde yaşarsa biri sessizce bayatlar")
+    assert len(re.findall(r"^template", metin, re.M)) == AGENT_SABLON_SAYISI + 1, (
+        "`^template` sayımı (günlük/ROADMAP'in saydığı biçim) blok sayısı + template_config "
+        "olmalı — aradaki fark başka bir şeye kaymış")
 
 
 def test_B7_uretim_DETERMINISTIK_ve_diskteki_dosyalar_GUNCEL():
@@ -508,19 +648,32 @@ def _mutant_uretici(tmp_path: pathlib.Path, eski: str, yeni: str, ad: str,
     return mod
 
 
-def test_M1_MUTASYON_exec_chown_dusurulurse_B4_KIRMIZI(tmp_path):
-    """Senaryo: üretici `sahip: ubuntu` dalını atlar. Dosya render EDİLİR ama root:root kalır —
-    hermes CLI (`ubuntu`) onu OKUYAMAZ ve bot her tetikte sessizce eski kanala düşer. Çıktı
-    "başarılı" görünür; arıza ancak eski kanal kapatıldığında doğar."""
+def test_M1_MUTASYON_root_disi_sahip_KAPISI_kaldirilirsa_B4_KIRMIZI(tmp_path):
+    """DİLİM-3'ÜN MUTASYONU (eski M1'in yerine — o, artık var olmayan `exec` dalını ölçüyordu).
+
+    Senaryo: üreticinin fail-closed kapısı `if False`a çevrilir ve envanterde `ubuntu` sahipli bir
+    yan dosya vardır. Kapı olmasaydı üretim SESSİZCE devam eder ve dosya root:root render edilirdi
+    — tüketici (ubuntu) onu okuyamaz, bot her tetikte eski kanala düşer ve çıktı "başarılı"
+    görünür. Mutasyon, B4'ün ikinci bacağının gerçekten O KAPIYI ölçtüğünü gösterir."""
+    bozuk = tmp_path / "envanter_ubuntu_sahip_m1.yaml"
+    ham = ENVANTER.read_text(encoding="utf-8")
+    capa = '  - yol: "/opt/hindsight/.env-cp.vault"\n    mod: "0400"\n    sahip: "root"\n'
+    assert capa in ham, f"mutasyon çapası envanterde yok (çivi bayatlamış): {capa!r}"
+    bozuk.write_text(ham.replace(capa, capa.replace('sahip: "root"', 'sahip: "ubuntu"'), 1),
+                     encoding="utf-8")
+    # POZİTİF KONTROL — mutasyonu ölçmeden önce kapının GERÇEKTEN orada olduğunu göster. Bu adım
+    # olmadan aşağıdaki iddia ("mutant durmadı") kapının hiç var olmadığı bir dünyada da yeşildi.
+    saglam = _mutant_uretici(tmp_path, 'MONTAJ = "secret"', 'MONTAJ = "secret"',
+                             "uret_m1_pozitif", envanter=bozuk)
+    with pytest.raises(SystemExit):
+        saglam.agent_yapilandirmasi()
+
     mod = _mutant_uretici(tmp_path, '        if d["sahip"] != "root":', "        if False:",
-                          "uret_mut_chown")
+                          "uret_mut_sahip_kapisi", envanter=bozuk)
     metin = mod.agent_yapilandirmasi()
-    ubuntu_dosyalari = [d for d in _vault_dosyalar() if d["sahip"] == "ubuntu"]
-    assert ubuntu_dosyalari, "pozitif kontrol: ubuntu sahipli yan dosya YOK — mutasyon ölçemez"
-    assert "chown" not in metin, "mutasyon uygulanmadı (çivi kendi hedefini kaybetmiş)"
-    for d in ubuntu_dosyalari:
-        blok = [b for b in _sablon_bloklari(metin) if f'destination = "{d["yol"]}"' in b][0]
-        assert "exec" not in blok, "mutant yine de exec yazmış — mutasyon etkisiz"
+    assert 'destination = "/opt/hindsight/.env-cp.vault"' in metin, (
+        "MUTASYON ISIRMADI: kapı kaldırıldığında üretim yine durdu — B4 başka bir dalı ölçüyor "
+        "olabilir")
 
 
 def test_M2_MUTASYON_onek_dusurulurse_B3_KIRMIZI(tmp_path):
@@ -621,6 +774,13 @@ def test_C1_agent_YAZMA_YUZEYI_iki_blogun_dizinlerinden_TURER():
     assert beyan == beklenen, (
         f"agent yazma yüzeyi envanterle AYRIŞTI.\n  birimde fazla: {sorted(beyan - beklenen)}"
         f"\n  envanterde fazla: {sorted(beklenen - beyan)}")
+    # DİLİM-3 (2026-09-15): türetim yeşil olsa bile `/home` altına açılan bir delik AYRI bir
+    # karardır (`ProtectHome=read-only` onun tek freni). Eşitlik iddiası bunu tek başına
+    # söyleyemez — envanterin İKİ tarafı da birlikte kayarsa sessiz kalırdı.
+    ev = sorted(y for y in beyan if y.startswith("/home"))
+    assert not ev, (
+        f"`ProtectHome` içine delik geri açılmış: {ev} — hermes kanalı artık rotasyonun `.env` "
+        "yazımıdır, Agent hermes ağacına YAZMAZ")
 
 
 def _yetenek_kumesi(birim: pathlib.Path) -> list[str]:
@@ -631,31 +791,40 @@ def _yetenek_kumesi(birim: pathlib.Path) -> list[str]:
     return (_degerler(birim, "CapabilityBoundingSet") or [""])[-1].split()
 
 
-def test_C2_agent_YETENEK_KUMESI_DONUK_iki_kalem():
+def test_C2_agent_YETENEK_KUMESI_DONUK_tek_kalem():
     """`CapabilityBoundingSet=` dalga-1'de BOŞTU ve bu doğruydu: Agent yalnız dosya yazıyordu.
-    Bugün küme İKİ kalemdir ve ikisi de A1'de ölçülmüş bir arızanın bedelidir (gerekçeler
-    `AGENT_YETENEKLERI` şerhinde, tarihleriyle).
+    Dalga-2 İKİ kalem ekledi, dilim-3 (2026-09-15) birini EMEKLİ etti — bugün küme TEK kalemdir
+    ve o kalem A1'de ölçülmüş bir arızanın bedelidir (gerekçe `AGENT_YETENEKLERI` şerhinde,
+    tarihiyle).
 
     İDDİA İKİ YÖNLÜDÜR ve bu bilinçlidir: eksik bir yetenek render'ı sessizce yarım bırakır
     (2026-09-15: yedi yan dosyanın altısı hiç doğmadı, journal'da `permission denied`), fazladan
     bir yetenek ise root süreci frenleyen TEK katmanı — sandbox'ı — sessizce gevşetir. Bu yüzden
-    çivi "içeriyor mu" değil EŞİTLİK ölçer."""
+    çivi "içeriyor mu" değil EŞİTLİK ölçer; CAP_CHOWN'un geri gelmesi de bir SAPMADIR."""
     assert _yetenek_kumesi(BIRIM_AGENT) == list(AGENT_YETENEKLERI), (
         f"agent yetenek kümesi DONUK: {list(AGENT_YETENEKLERI)} bekleniyordu, "
         f"{_yetenek_kumesi(BIRIM_AGENT)!r} var")
 
 
-def test_C2b_DAC_OVERRIDE_gerekcesi_BIRIM_SERHINDE_OLCUM_TARIHIYLE():
-    """Yetenek eklemek bir SAPMADIR ve bu depoda sapma sessiz olamaz: birim dosyasını okuyan
-    mühendis "root süreç neden DAC_OVERRIDE taşıyor" sorusunun cevabını ORADA bulmalı, günlüğü
-    aramak zorunda kalmadan. Şerh üç şeyi taşır: yeteneğin ADI, ÖLÇÜM TARİHİ ve hangi dizinlerin
-    bunu gerektirdiği — tarihsiz bir gerekçe, kaldırılabilir mi sorusuna cevap veremez."""
+def test_C2b_DAC_OVERRIDE_gerekcesi_ve_CHOWN_EMEKLILIGI_BIRIM_SERHINDE_TARIHLI():
+    """Yetenek eklemek de KALDIRMAK da bir SAPMADIR ve bu depoda sapma sessiz olamaz: birim
+    dosyasını okuyan mühendis iki soruyu da ORADA cevaplamalı, günlüğü aramak zorunda kalmadan —
+    "root süreç neden DAC_OVERRIDE taşıyor" ve "CAP_CHOWN neden YOK".
+
+    İKİNCİSİ YENİDİR (dilim-3, 2026-09-15) ve gereklidir: kaldırılan bir yetenek şerhsiz kalsaydı,
+    A1'de `exec` chown'un neden EPERM aldığını araştıran bir sonraki mühendis onu "unutulmuş"
+    sanıp geri ekler ve emeklilik kararı sessizce geri alınırdı. Tarihsiz bir gerekçe,
+    "kaldırılabilir mi" sorusuna da "geri eklenebilir mi" sorusuna da cevap veremez."""
     serh = "\n".join(s for s in BIRIM_AGENT.read_text(encoding="utf-8").splitlines()
                      if s.strip().startswith("#"))
     assert "CAP_DAC_OVERRIDE" in serh, "DAC_OVERRIDE gerekçesi birim şerhinde ADIYLA yok"
     assert "2026-09-15" in serh, "DAC_OVERRIDE'ın ÖLÇÜM TARİHİ şerhte yok"
-    for dizin in ("/opt/hindsight", "/home/ubuntu/.hermes"):
-        assert dizin in serh, f"şerh yeteneği gerektiren dizini ({dizin}) saymıyor"
+    assert "/opt/hindsight" in serh, "şerh yeteneği gerektiren dizini (/opt/hindsight) saymıyor"
+    assert "CAP_CHOWN" in serh, (
+        "CAP_CHOWN'un EMEKLİLİĞİ şerhte ADIYLA yok — kaldırılan yetenek sessizce geri eklenirdi")
+    assert re.search(r"CAP_CHOWN[^\n]*KALDIRILDI", serh), (
+        "şerh CAP_CHOWN'u anıyor ama KALDIRILDIĞINI aynı satırda söylemiyor — okuyucu onu "
+        "yürürlükte sanar (tarihçe ile hüküm karışır)")
 
 
 def _mutant_birim(tmp_path: pathlib.Path, eski: str, yeni: str, ad: str) -> pathlib.Path:
@@ -668,49 +837,63 @@ def _mutant_birim(tmp_path: pathlib.Path, eski: str, yeni: str, ad: str) -> path
 
 
 @pytest.mark.parametrize("yeni,ad,senaryo", [
-    ("CapabilityBoundingSet=CAP_CHOWN", "vault-agent-eksik.service",
-     "DAC_OVERRIDE düşer: root süreç ubuntu sahipli dizinde geçici dosya açamaz, yedi yan "
-     "dosyanın altısı hiç doğmaz (A1 ölçümü 2026-09-15)"),
-    ("CapabilityBoundingSet=CAP_CHOWN CAP_DAC_OVERRIDE CAP_SYS_ADMIN", "vault-agent-fazla.service",
+    ("CapabilityBoundingSet=", "vault-agent-eksik.service",
+     "DAC_OVERRIDE düşer: root süreç ubuntu sahipli `/opt/hindsight`te geçici dosya açamaz ve "
+     "yan dosya HİÇ doğmaz (A1 ölçümü 2026-09-15)"),
+    ("CapabilityBoundingSet=CAP_DAC_OVERRIDE CAP_CHOWN", "vault-agent-chown-geri.service",
+     "emekli yetenek geri gelir: `exec` chown'un gerekçesi (hermes yan dosyaları) 2026-09-15'te "
+     "bitti, yetenek sessizce yürürlüğe dönerdi"),
+    ("CapabilityBoundingSet=CAP_DAC_OVERRIDE CAP_SYS_ADMIN", "vault-agent-fazla.service",
      "fazladan yetenek: root sürecin TEK freni olan sandbox sessizce gevşer"),
 ])
 def test_C2c_MUTASYON_yetenek_kumesi_bozulunca_C2_KIRMIZI(tmp_path, yeni, ad, senaryo):
-    """Çivi yeşili kanıt değildir: C2'nin EŞİTLİK iddiası iki yönde de ısırmalı. `in` ile yazılmış
-    bir çivi ikinci senaryoda (fazladan yetenek) sessizce yeşil kalırdı — donukluğun kendisi
-    ancak buradan bilinir."""
-    bozuk = _mutant_birim(tmp_path, "CapabilityBoundingSet=CAP_CHOWN CAP_DAC_OVERRIDE", yeni, ad)
+    """Çivi yeşili kanıt değildir: C2'nin EŞİTLİK iddiası HER yönde ısırmalı. `in` ile yazılmış
+    bir çivi ikinci ve üçüncü senaryoda (emekli yeteneğin dönüşü · fazladan yetenek) sessizce
+    yeşil kalırdı — donukluğun kendisi ancak buradan bilinir."""
+    bozuk = _mutant_birim(tmp_path, "CapabilityBoundingSet=CAP_DAC_OVERRIDE", yeni, ad)
     assert _yetenek_kumesi(bozuk) != list(AGENT_YETENEKLERI), (
         f"MUTASYON ISIRMADI ({senaryo}): bozuk birim C2'nin iddiasını hâlâ geçiyor")
 
 
-def test_C3_agent_HOME_yazma_deligi_BIRIM_SERHINDE_beyanli():
-    """`ProtectHome=read-only` duruyor ve `ReadWritePaths` onun içine BİR DELİK açıyor (hermes
-    ağacı). Bu, `ProtectSystem=strict` + `/etc` deliği ile aynı sınıftır ve aynı şekilde BEYANLI
-    olmak zorundadır: birim dosyasını okuyan mühendis "home salt-okunur" satırını görüp yanlış bir
-    güvene kapılmamalı. A1'de KURULDUĞU GÜN ölçülür (kurulu ≠ çalışır)."""
+def test_C3_agent_HOME_YAZMA_DELIGI_KAPANDI_ve_kapanis_BEYANLI():
+    """DİLİM-3 (2026-09-15) BU ÇİVİYİ DE TERSİNE ÇEVİRDİ — ve bu, iddianın GÜÇLENMESİDİR.
+
+    Eski hâl bir DELİĞİ beyanlı tutuyordu: `ProtectHome=read-only` duruyordu ama `ReadWritePaths`
+    hermes ağacını taşıyordu, yani "home salt-okunur" satırı tek başına YANILTICIYDI. Hermes yan
+    dosyaları kaldırıldığı gün delik de kapandı: bugün `ProtectHome=read-only` ne diyorsa O
+    yürürlüktedir.
+
+    KAPANIŞ DA BEYANLIDIR ve sebebi ölçülmüş bir sınıftır: şerh eski deliği anlatmaya devam
+    etseydi, birimi okuyan mühendis var olmayan bir yetkiyi hesaba katar (ya da onu "yanlışlıkla
+    silinmiş" sanıp geri açardı). Yorum TARİHÇEdir, hüküm KODdur — ikisi ayrıştığında kod
+    kazanır, ama ayrışmanın kendisi bir kusurdur."""
     assert (_degerler(BIRIM_AGENT, "ProtectHome") or [None])[-1] == "read-only"
-    metin = BIRIM_AGENT.read_text(encoding="utf-8")
-    assert "ProtectHome" in metin.split("[Service]")[0] or "/home/ubuntu" in metin, (
-        "hermes ağacına yazma beyanı birim şerhinde yok")
-    serh = "\n".join(s for s in metin.splitlines() if s.strip().startswith("#"))
+    yollar = (_degerler(BIRIM_AGENT, "ReadWritePaths") or [""])[-1].split()
+    ev = [y for y in yollar if y.startswith("/home")]
+    assert not ev, f"`ProtectHome` içinde hâlâ yazma deliği var: {ev}"
+    serh = "\n".join(s for s in BIRIM_AGENT.read_text(encoding="utf-8").splitlines()
+                     if s.strip().startswith("#"))
     assert "ProtectHome" in serh and "A1" in serh, (
-        "ProtectHome deliği ve A1 ölçümü birim şerhinde ADIYLA beyan edilmemiş")
+        "ProtectHome hükmü ve A1 ölçümü birim şerhinde ADIYLA beyan edilmemiş")
+    assert "hermes" in serh and "KAPANDI" in serh, (
+        "hermes deliğinin KAPANDIĞI birim şerhinde yazmıyor — okuyucu onu hâlâ açık sanar ya da "
+        "kaldırmayı bir kaza sanıp geri açar")
 
 
-def test_C4_SYSTEMD_tuketicisi_olan_her_yan_dosyanin_DROP_INI_var():
-    """`yeniden_baslat` bir birim adıysa o birimin drop-in'i yan dosyayı ADIYLA okumalı. Drop-in
-    yoksa Agent dosyayı render eder ve KİMSE okumaz — Yasa 6'nın tam tanımı, üstelik geçiş
-    "yapıldı" sanılırken."""
+def test_C4_HER_yan_dosyanin_SYSTEMD_tuketicisi_ve_DROP_INI_var():
+    """Yasa 6'nın bu bloktaki hâli: render edilen her dosyanın ÖLÇÜLMÜŞ bir okuyucusu olmalı.
+
+    DALGA-2'DE BİR BEYANLI İSTİSNA VARDI (hermes ağacı: tüketici bir systemd birimi değil hermes
+    CLI'dı ve `env_loader`ın ikinci dosyayı okuyup okumadığı YERELDE ÖLÇÜLEMEZDİ). 2026-09-15'te
+    A1'de ölçüldü: OKUMUYOR. İstisna bir belirsizlik değil bir ARIZAYMIŞ — dört dosya render
+    ediliyor, hiçbiri okunmuyordu. Dilim-3 onları kaldırdı ve istisnanın kendisi de kalktı:
+    bugün her yan dosyanın `yeniden_baslat` alanı bir birim ADIdır ve o birimin drop-in'i dosyayı
+    ADIYLA okur. "Ölçülmemiş okuyucu" sınıfı bu blokta artık YOKTUR."""
     for d in _vault_dosyalar():
         birim = d["yeniden_baslat"]
-        if not birim:
-            # BEYANLI İSTİSNA: hermes ağacı. Tüketici bir systemd birimi değil hermes CLI'dır ve
-            # `env_loader`ın İKİNCİ bir dosyayı okuyup okumadığı YERELDE ÖLÇÜLEMEZ (ajan A1'e ssh
-            # yapmaz). Ölçülmemiş bir yeteneği "var" saymak geçişi sessizce yarım bırakırdı;
-            # beyan ADIYLA durur ve ölçüm A1 penceresine aittir.
-            assert "A1'DE ÖLÇÜLECEK" in d["tuketici"], (
-                f"{d['yol']}: systemd tüketicisi YOK ve ölçüm beyanı da yok: {d['tuketici']!r}")
-            continue
+        assert birim, (
+            f"{d['yol']}: `yeniden_baslat` boş — okuyucusu ölçülmemiş bir yan dosya (dilim-3'ten "
+            "sonra bu sınıf yoktur; hermes kanalı rotasyonun `.env` yazımıdır)")
         metinler = "\n".join(p.read_text(encoding="utf-8") for p in _birim_dropinleri(birim))
         assert d["yol"] in metinler, (
             f"{d['yol']}: `{birim}` drop-in'lerinde bu yan dosyaya atıf YOK — render edilir ama "
@@ -1208,6 +1391,30 @@ def test_E7_vault_KAPSAM_BEYANI_kasaya_bagli_OLMAYAN_sirri_soyler(tmp_path):
     ortam, _ = _vault_ortam(tmp_path, ortam, kok)
     r = _kos(ROTASYON_SH, ortam, "--vault", "--openrouter", "--kuru")
     assert "NOUS_API_KEY" in r.stdout, f"kasa kapsamı dışındaki sır beyan edilmiyor:\n{r.stdout}"
+
+
+def test_E8_KURU_kosum_HERMES_env_KOPYALARINI_PLANDA_gosterir(tmp_path):
+    """DİLİM-3'ÜN İKAME KANALI, OPERATÖRÜN GÖRDÜĞÜ YERDE (2026-09-15).
+
+    Hermes yan dosyaları kaldırıldı; hermes-agent kasadan artık DOLAYLI beslenir — rotasyon
+    `--vault` kipinde kasadan gelen değeri hermes `.env` dosyalarına yazar. Bu, betiğin ZATEN
+    yaptığı iştir (`_kopyalar` tablosu) ve bu çivi onu DEĞİŞTİRMEZ, DOĞRULAR: betiğe dokunulmadı,
+    davranışı ölçüldü.
+
+    NEDEN KURU KOŞUMDA: plan operatörün kararı okuduğu tek yüzeydir. Dört kopya orada GÖRÜNMEZSE
+    operatör "kasaya geçtik, hermes de kapsamda" sanır — oysa kanal bir tablo satırına bağlıdır ve
+    o satır düştüğünde hiçbir şey bağırmaz (TSK-181: dört gün 401). Kuru koşum HİÇBİR ŞEY yazmaz,
+    hiçbir sır değeri geçmez."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    ortam, log = _vault_ortam(tmp_path, ortam, kok)
+    r = _kos(ROTASYON_SH, ortam, "--vault", "--openrouter", "--kuru")
+    assert r.returncode == 0, f"kuru koşum düştü:\n{r.stdout}\n{r.stderr}"
+    assert not log.exists(), "kuru koşum kasaya çağrı yaptı"
+    eksik = [y for y in HERMES_ENV_KOPYALARI if y not in r.stdout]
+    assert not eksik, (
+        f"hermes `.env` kopyaları rotasyon planında GÖRÜNMÜYOR: {eksik}\n{r.stdout}")
+    assert ".hermes/.env.vault" not in r.stdout, (
+        f"emekli hermes YAN DOSYASI hâlâ planda:\n{r.stdout}")
 
 
 # =================================================================================================
