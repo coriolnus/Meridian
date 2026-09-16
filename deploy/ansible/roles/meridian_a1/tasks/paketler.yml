@@ -1,5 +1,6 @@
 ---
 # TSK-176 Faz A0 Task 2 — sistem paketleri + redis + unattended-upgrades (deploy.sh 1).
+# TSK-195 (2026-09-16) EKİ: `docker` grubu üyeliği de burada — gerekçesi ilgili görevin şerhinde.
 #
 # redis-server ŞART, opsiyonel değil: meridian/hotstate.py sıcak durumu (heartbeat, mrd:bars ring)
 # Redis'te tutar, meridian/barsarchive.py o ring'i diske arşivler. Redis yoksa arşivci her turda
@@ -23,6 +24,51 @@
     name: redis-server
     enabled: true
     state: started
+
+# TSK-195 (2026-09-16) — `meridian_kullanici`nın `docker` grubu ÜYELİĞİ.
+#
+# KAPSAM GENİŞLEMESİ, BEYANLI: rol bugüne dek hiçbir SİSTEM GRUBUNA dokunmuyordu — `dizinler.yml`
+# yalnız kendi yarattığı dizinlerin sahipliğini zorlar, kullanıcı hesabına hiç dokunulmazdı. Bu iki
+# görev o sınırı bilerek aşıyor.
+# TAŞIDIĞI RİSK KÜÇÜK DEĞİLDİR ve burada adıyla duruyor: `docker` grubu üyeliği pratikte
+# ROOT-EŞDEĞERİ yetkidir — grubun üyesi konteynere kök dosya sistemini yazılabilir bağlayabilir ve
+# sudo parolası hiç sorulmadan root olabilir; yani bu iki satır, `ubuntu` hesabının yetki sınıfını
+# değiştirir. Üyelik yine de role giriyor çünkü ALTERNATİFİ DAHA KÖTÜ: yetki A1'de ZATEN var
+# (operatör 2026-09-16, sunucu Docker bağlantısı için ELLE verdi) ve elle verilen bir yetki
+# yeniden kurulumda SESSİZCE kaybolur — kök neden aylar sonra aranır (ROADMAP TSK-195 Why).
+# Ölçülebilir bir root-eşdeğeri, ölçülemeyen bir root-eşdeğerinden iyidir.
+#
+# ÖN KOŞUL ÖLÇÜLDÜ (2026-09-16): rol docker'ı KURUYOR — `docker.io` bu dosyanın İLK görevinin
+# çektiği `apt_paketleri` listesindedir ve grubu yaratan o paketin kendisidir; `paketler.yml` de
+# görev zincirinin ilk halkasıdır (`tasks/main.yml`). Yani gerçek koşumda grup bu satıra
+# gelindiğinde VARDIR: aşağıdaki koşul normal yolda DAİMA işler, sessiz atlama değildir.
+#
+# KOŞUL YİNE DE VAR, tek ve ÖLÇÜLMÜŞ bir arıza için: `--check` kipinde apt hiçbir şey KURMAZ, yani
+# soğuk bir hostun kuru koşumunda grup yoktur. `ansible.builtin.user` grup adını `grp.getgrnam` ile
+# çözer ve bulamazsa "Group docker does not exist" ile DÜŞER — bu doğrulama modülün check-mode
+# dalından ÖNCE gelir (ansible-core 2.18.19 `modules/user.py` içindeki `get_groups_set`, kaynaktan
+# okundu). Koşulsuz yazılsaydı soğuk-host kuru koşumu tam burada kırmızı olur ve arıza rolün kendi
+# hatası gibi görünürdü — `python3-debian` satırının kapattığı ("check kipi kuramadı") AYNI sınıf.
+- name: Docker grubu VAR MI (varsayılmaz, ölçülür — üyelik koşulu bundan türer)
+  # `fail_key: false` bir sessiz-yutma DEĞİLDİR: grubun YOKLUĞU burada ölçülen sonucun kendisidir
+  # (kayıt `None` döner ve üyelik görevi atlanır), arıza değil. Modül `getent` ikilisini okur,
+  # `command`/`shell` değildir — check kipinde de gerçekten koşar.
+  ansible.builtin.getent:
+    database: group
+    key: "{{ docker_grubu }}"
+    fail_key: false
+  register: docker_grup_olcumu
+
+- name: Meridian kullanıcısı docker grubuna eklenir (root-eşdeğeri yetki — yukarıdaki şerh)
+  ansible.builtin.user:
+    name: "{{ meridian_kullanici }}"
+    groups: "{{ docker_grubu }}"
+    # `append: true` ŞARTTIR. Modülün varsayılanı `false`'tur ve `false` kullanıcının ikincil grup
+    # kümesini bu listeyle DEĞİŞTİRİR: `ubuntu`nun `adm`/`sudo`/`dialout`/… üyelikleri tek koşumda
+    # silinir, yani hesap sudo'sunu kaybeder ve makineye ancak konsoldan girilebilirdi. Gerçek bir
+    # arıza sınıfı, süs değil — çivi bu bayrağı ADIYLA ölçer.
+    append: true
+  when: docker_grup_olcumu.ansible_facts.getent_group[docker_grubu] is not none
 
 - name: Gözetimsiz güncelleme politikası (52meridian-unattended-upgrades)
   ansible.builtin.copy:
