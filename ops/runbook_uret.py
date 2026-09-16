@@ -66,7 +66,13 @@ YAZILMADI = "runbook girdisi henüz yazılmadı"
 # kök dagit.sh kümeye girdi — sürüm-terfisi sözleşmesi başlığında yaşıyor, belgeye kaynağından
 # akar. Sessiz genişleme değil: sınır beyanı üretilen belgede de güncellenir (aşağıda).
 BETIK_KUMESI = ("ops/*.sh", "deploy/oracle-a1/*.sh", "dagit.sh", "ops/filo.py",
-                "ops/olay_sorgu.py", "ops/olay_sikistir.py", "meridian/auth_cli.py")
+                "ops/olay_sorgu.py", "ops/olay_sikistir.py", "meridian/auth_cli.py",
+                "altyapi/altyapi.sh")
+# altyapi/altyapi.sh eklendi 2026-09-16 (TSK-176 T1 Task 4): A1'de Terraform sarmalayıcısı
+# operatör-yüzlü sözleşme taşır (init/import-uret/plan/denetle alt komutları, anahtar kanalı
+# bildirimi, APPLY ALT KOMUTU YOK kuralı) — RUNBOOK'ta okuyucusu olmadan yaşayamaz (Yasa 6).
+# `ops/*.sh` deseni onu KAPSAMAZ: dosya `altyapi/` altındadır. Başlık sözleşmesi aynı:
+# shebang sonrası bitişik `#` bloğu.
 # ops/olay_sikistir.py eklendi 2026-09-03 gece (TSK-020 [UYGULA-2] adım 2): olay defteri aylık
 # Parquet sıkıştırıcısı operatör-yüzlü sözleşme taşır (--kuru/--ay + 0/2/3 çıkış kodları; defter
 # kırpılmaz, cari ay yazılmaz) — RUNBOOK'ta okuyucusu olmadan yaşayamaz (Yasa 6). Başlık

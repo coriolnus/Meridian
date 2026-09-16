@@ -224,7 +224,7 @@ def test_t3_govde_atesleme_kurtarma_yoneticisini_eslestirir():
 
 
 def test_t3_kapsam_disi_kaynak_sizmamis():
-    """Onaylı küme artık üç desen + iki tekil dosya: `ops/*.sh`, `deploy/oracle-a1/*.sh`, ops/
+    """Onaylı küme artık üç desen + ÜÇ tekil dosya (2026-09-16: +altyapi/altyapi.sh): `ops/*.sh`, `deploy/oracle-a1/*.sh`, ops/
     altındaki operatör-yüzlü .py araçları (`filo.py`, `olay_sorgu.py`) — ve tekiller `dagit.sh`,
     `meridian/auth_cli.py`. Üst düzey `deploy/*.sh` (bugün `hermes_api.sh` +
     `verify_hermes_training.sh`) BİLEREK dışarıda ve sınır belgede yazılı — metin
@@ -235,7 +235,11 @@ def test_t3_kapsam_disi_kaynak_sizmamis():
     assert yollar, "hiç betik okunamadı — kaynak kümesi kırılmış"
     for y in yollar:
         assert (y.startswith("ops/") or y.startswith("deploy/oracle-a1/") or y == "dagit.sh"
-                or y == "meridian/auth_cli.py"), f"kapsam dışı betik: {y}"
+                or y == "meridian/auth_cli.py" or y == "altyapi/altyapi.sh"), f"kapsam dışı betik: {y}"
+        # altyapi/altyapi.sh 2026-09-16 (TSK-176 T1 Task 4): A1 Terraform sarmalayıcısı operatör-yüzlü
+        # sözleşme taşır (init/import-uret/plan/denetle + "apply alt komutu YOK" kuralı) ve `ops/*.sh`
+        # deseni onu kapsamaz — dosya `altyapi/` kökündedir. Kapsam genişlemesi BEYANLIDIR: aynı ad
+        # `ops/runbook_uret.py::BETIK_KUMESI`ne de yazıldı (tek-kaynak; bu iki liste ayrışırsa çivi öter).
         # dagit.sh 2026-08-23 K4 operatör kararıyla kümede
         # meridian/auth_cli.py 2026-09-02 parola-kilidi vakası: unutulan-parola reçetesi RUNBOOK'a akar — Yasa 6
     # SINIR "BÖLÜM AÇMA"DIR, "ADI HİÇ GEÇMESİN" DEĞİL: belge onaylı kaynaklardan ALINTI taşır ve

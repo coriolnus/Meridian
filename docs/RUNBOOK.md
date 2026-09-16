@@ -42,7 +42,7 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
-- **28 ops betiği** başlığıyla okundu
+- **29 ops betiği** başlığıyla okundu
 - **98 günlük maddesi** üç bölümden toplandı
 
 ---
@@ -2102,6 +2102,31 @@ cd /opt/meridian && P=$(openssl rand -hex 16) && rm -f state/auth.json \
 && echo && echo "YENİ PAROLA: $P"
 `rm`↔`set` arası ~1 sn parolasız pencere internete açıktır — satırı BÖLME. Girişte tarayıcının
 kaydetme teklifini kabul etmek bu reçeteye bir daha dönmemenin yoludur.
+```
+
+## `altyapi/altyapi.sh` {#altyapi-altyapi-sh}
+
+```
+altyapi/altyapi.sh — A1'de Terraform sarmalayıcısı (TSK-176 T1). ROOT ile koşar:
+sudo ./altyapi/altyapi.sh <komut>
+
+init         terraform init (sağlayıcı pini versions.tf'te, kilit dosyası depodan)
+import-uret  import.tf'yi routes.yaml'dan yeniden üret (ops/apisix_tf_uret.py) + güncellik kontrolü
+plan         ilk turda `-generate-config-out=uretilen.tf` (import edilen kaynakların HCL'i),
+uretilen.tf zaten varsa düz plan
+denetle      terraform plan -detailed-exitcode (0 drift yok · 2 drift · 1 hata) —
+`ops/apisix_uygula.py --denetle` ikizi; iki denetçinin aynı hükmü vermesi kanıttır
+
+APPLY ALT KOMUTU YOK (Rol-1 ruling 2026-09-15): yerel state YALNIZ import/plan içindir; ilk
+apply'ın ön koşulu T2'nin uzak arka ucudur (backend.tf şerhi). Çivi: v502 test_d alt komut
+kümesini TAM ölçer — buraya `apply)` eklenirse çivi kırılır.
+
+SIR SÖZLEŞMESİ. Admin anahtarı `ops/apisix_uygula.py` ile AYNI sırada okunur: önce credential
+dosyası (0400 root, TSK-064 Faz-1C kanalı), bulunamazsa apisix konteynerinin `--env-file`ı
+(yedek — o satır kapının kendi config çözümü için orada YAŞAMAYA devam eder). DEĞER yalnız
+ortam değişkenine girer: hiçbir echo/log/argv onu görmez. Okunan KANALIN ADI stderr'e yazılır
+(`ops/apisix_uygula.py::kanal_bildir` emsali, çivi v476): "araç hangi kanaldan okudu" sorusunun
+cevabı bildirilmezse kanal göçü ölçülemez.
 ```
 
 ---
