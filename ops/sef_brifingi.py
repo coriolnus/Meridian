@@ -81,6 +81,13 @@ dosyası + `HERMES_HOME/config.yaml` (duruş kapısı). YAZAR: iki kaynağın ke
 (onların `damgala()`sı üzerinden) + kendi damga dosyası (son brifing + YAZARI + ardışık sessizlik
 sayacı) + `state/events.jsonl`. Teslimat YALNIZ `meridian.notify.send`.
 
+DURUM SATIRI GEÇMİŞİ OKUR, BU KOŞUMU DEĞİL (TSK-198, 2026-09-16). İlk satırdaki `kural denetimi:`
+damgadan, `denetçi teşhisi:` olay defterinden gelir; ikisi de `main`in dal kararından ÖNCE basılır,
+yani o koşumda denetim olup olmayacağını BİLEMEZ. Basım orada KALIR (sıralama çağrısı dakikalarca
+sürebilir ve zaman aşımıyla ölebilir — satırı arkaya almak teşhisin en gerekli olduğu koşumda
+operatörü çıktısız bırakırdı); sessiz iki dal (iki kaynak da boş · model `SESSIZ` dedi) bunun
+YERİNE ikinci bir satır basar ve hükmün bu koşuma ait OLMADIĞINI söyler.
+
 ÖLÇÜLDÜ / ÇIKARSANDI — açıkça:
   ÖLÇÜLDÜ · `hermes -z PROMPT` tek-atışlık çağrı ve `--accept-hooks` AYNI üst-düzey ayrıştırıcıda
     (`build_top_level_parser`) tanımlı, yani birlikte kullanılabilir (satıcı kaynağı okundu).
@@ -140,6 +147,13 @@ SESSIZ_SAYAC = "ardisik_sessiz"
 # duruyor, ama defteri operatör OKUMAZ — damga dosyasındaki kopyanın okuyucusu `_durum_satiri`dır
 # ve o, HER koşumun ilk satırıdır (YASA 6: okuyucusuz yazım yok).
 KURAL_DENETIMI = "son_kural_denetimi"
+
+# DURUM SATIRININ İKİ HÜKÜM ETİKETİ — TEK KAYNAK (TSK-198, 2026-09-16). Sessiz dalların uyarısı
+# (`_denetimsiz_kosum_satiri`) operatöre tam BU etiketleri adıyla gösterir ("şu alanlar bu koşuma
+# ait değil"). Etiketler iki yerde ayrı literal dursaydı biri değiştiği gün uyarı, artık var
+# olmayan bir alanı işaret ederdi — ve yanlış adrese bakan bir uyarı, uyarı olmamaktan beterdir.
+ETIKET_KURAL_DENETIMI = "kural denetimi"
+ETIKET_DENETCI_TESHISI = "denetçi teşhisi"
 
 # ARDIŞIK SESSİZLİK TAVANI — devredilen yolun TESLİMAT GARANTİSİNİN yerine geçen taban.
 #
@@ -1210,12 +1224,60 @@ def _damgala(ham: dict, izinli: list[str]) -> list[str]:
 def _durum_satiri(ham: dict) -> str:
     """Operatörün HER koşumda (kuru koşum dâhil) gördüğü ilk satır — ve damgadaki kural hükmünün
     OKUYUCUSU (YASA 6). Hükmü yalnız `events.jsonl`e yazmak, operatörün hiç bakmadığı bir yere
-    yazmaktır; kural denetiminin çalıştığı ya da haftalardır düştüğü buradan görünür."""
+    yazmaktır; kural denetiminin çalıştığı ya da haftalardır düştüğü buradan görünür.
+
+    BU SATIR BU KOŞUMUN HÜKMÜNÜ BİLMEZ (TSK-198): `main`in İLK işidir, yani daldan — ve dolayısıyla
+    denetimin koşup koşmayacağından — ÖNCE basılır. İki hüküm alanı GEÇMİŞİ okur; sessiz turlarda
+    bunu operatöre söyleyen ikinci satırın kaynağı `_denetimsiz_kosum_satiri`dır."""
     teslim = ", ".join(k["ad"] for k in ham["teslim_edilecek"]) or "yok"
     eksik = ", ".join(k["ad"] for k in ham["olculemeyen"]) or "yok"
     return (f"teslim edilecek kaynak: {teslim} · ölçülemeyen: {eksik} · "
-            f"kural denetimi: {_kural_denetimi_satiri()} · "
-            f"denetçi teşhisi: {_denetci_teshis_satiri()}")
+            f"{ETIKET_KURAL_DENETIMI}: {_kural_denetimi_satiri()} · "
+            f"{ETIKET_DENETCI_TESHISI}: {_denetci_teshis_satiri()}")
+
+
+def _denetimsiz_kosum_satiri(neden: str) -> str:
+    """SESSİZ dalların İKİNCİ satırı: durum satırındaki iki hüküm alanının BU KOŞUMA AİT
+    OLMADIĞINI adıyla söyler (TSK-198, 2026-09-16).
+
+    ÖLÇÜLEN SORUN: `_durum_satiri` `main`in ilk işidir ve o noktada bu koşumda denetim olup
+    olmayacağı HENÜZ BİLİNMEZ. Sessiz bir turda (iki kaynak da boş · model `SESSIZ` dedi) denetim
+    akışına hiç varılmaz, ama satır yine `kural denetimi: temiz/llm …` basar ve etiket yüzünden
+    operatör bunu O KOŞUMUN hükmü sanar.
+
+    BASILAN DEĞER BİR UYDURMA DEĞİLDİR ve öyle muamele GÖRMEZ: tarihli ve son BİLİNEN hükümdür,
+    tarihin kendisi de bilinçli bir inceleme kalemiydi (Ö-4, 2026-09-03 — tarihsiz satır bayat
+    hükmü TAZE gösterirdi). Eksik olan tek şey BAĞLAMDI; bu satır yalnız onu ekler, hükmü
+    silmez.
+
+    NEDEN İKİNCİ SATIR — BASIMI DALIN ARKASINA TAŞIMADIK: durum satırı sıralama çağrısından ÖNCE
+    basılır ve o çağrı dakikalarca sürebilir, zaman aşımıyla öldürülebilir (`_sureci_oldur`) ya da
+    profil evi doğrulamasında düşebilir. Basımı dal kararının ARKASINA taşımak, teşhisin en çok
+    gerektiği koşumda operatörü ÇIKTISIZ bırakırdı — kazanç ölçülüp bedel ölçülmemiş olurdu (bedel
+    yasası). Bilgi bu yüzden kesinleştiği yerde, dal kararından SONRA, ayrı bir satırla eklenir.
+
+    NEDEN SATIR İKİYE BÖLÜNMEDİ ("bu koşum: …" / "son teslim edilen hüküm: …"): biçime bağlı
+    okuyucu ARANDI ve BULUNDU — `tests/test_soul_denetimi_v385.py` ve
+    `tests/test_soul_denetimi_teshis_v434.py` `kural denetimi: <hüküm>/<kaynak>` dizgesini
+    ADIYLA arar. Bölme, çözdüğü belirsizlikten geniş bir yüzeyi kırardı; ek satır aynı bilgiyi
+    hiçbir okuyucuyu bozmadan taşır. Etiketler bu yüzden literal değil TEK KAYNAKTAN gelir.
+
+    İKİ ALAN DA ANILIR, ÇÜNKÜ İKİSİ DE GEÇMİŞİ OKUR: kural hükmü DAMGAdan (yalnız teslimattan
+    sonra yazılır), teşhis ise defterin son N olayından gelir — yani ikisi FARKLI koşumlara ait
+    olabilir ve birbiriyle çelişebilir. Tek alanı uyarmak, ötekini örtük olarak "bu koşumun"
+    saydırırdı."""
+    kd = _son_kural_denetimi()
+    if not kd:
+        kaynak_ifadesi = "damgada hüküm YOK"
+    elif kd.get("ts"):
+        kaynak_ifadesi = f"damgadaki hüküm son TESLİMATA ait, ts={kd['ts']}"
+    else:
+        # UYDURMA YASAĞI: damga var ama tarihsiz — "şimdi" varsayılmaz, bilinmezlik ADIYLA basılır.
+        kaynak_ifadesi = "damgada hüküm VAR ama ts BİLİNMİYOR"
+    return (f"⚠ BU KOŞUMDA KURAL DENETİMİ YOK ({neden}) — yukarıdaki "
+            f"`{ETIKET_KURAL_DENETIMI}:` ve `{ETIKET_DENETCI_TESHISI}:` alanları BU KOŞUMUN "
+            f"hükmü DEĞİL, ÖNCEKİ koşumlardan kalan tarihli kayıtlardır ({kaynak_ifadesi}); "
+            f"ikisi ayrı kaynaktan okunur ve birbiriyle çelişebilir")
 
 
 # DEFTER TARAMA PENCERESİ — teşhis okuyucusunun BEDELİ (bedel yasası, beyanlı). Defter üç botun
@@ -1321,6 +1383,9 @@ def main(argv: list[str] | None = None) -> int:
         # harcamak, kotanın gerçekten gerektiği günü riske atar.
         print("SESSİZ: iki kaynak da ÖLÇÜLDÜ ve ikisi de boş — karar döndürmeyen bildirim "
               "gönderilmez (dikkat bütçesi)")
+        # BAĞLAM DALIN İÇİNDE EKLENİR (TSK-198): denetimin koşmadığı ancak BURADA kesindir.
+        print(_denetimsiz_kosum_satiri("iki kaynak da boş — model ÇAĞRILMADI, "
+                                       "denetim akışına hiç varılmadı"))
         return 0
 
     metin, kaynak = sirala(ham)
@@ -1331,6 +1396,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"BOT `SESSIZ` DEDİ: teslimat YOK ve HİÇBİR DAMGA BASILMADI — yığın okunmamış "
               f"sayılmaya devam eder ('bot okudu' ≠ 'operatör okudu'). Ardışık sessiz gün: "
               f"{ardisik}/{ARDISIK_SESSIZ_TAVANI} (tavanda ham brifing ZORLA gider)")
+        # SIRALAMA ÇAĞRISI YAPILDI, DENETİM ÇAĞRISI YAPILMADI — ikisi ayrı katmandır ve `SESSIZ`
+        # hükmü `_kural_gecisi`e hiç varmadan döner (TSK-198).
+        print(_denetimsiz_kosum_satiri("model `SESSIZ` dedi — teslimat yok, "
+                                       "denetim akışına varılmadı"))
         return 0
 
     govde, damgalanabilir = _paketle(metin, kaynak, ham)
