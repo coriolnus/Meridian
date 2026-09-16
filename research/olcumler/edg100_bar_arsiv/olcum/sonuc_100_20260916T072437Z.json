@@ -1,0 +1,83 @@
+{
+  "arsiv": {
+    "bolum": "sembol",
+    "bolum_beyani": "manifest",
+    "damga_utc": "2026-09-13T22:03:32+00:00",
+    "manifest_sha256": "ea81d962d71d452acf19ddd0507d2d496402e615b5e85512785247dd90d22f96",
+    "manifest_yas_gun": 2.389643477627315,
+    "yazan_arac": "ops/bar_arsivle.py",
+    "yazan_surum": "2026-09-08.1"
+  },
+  "deger_ekseni_olculmeyen_parca": 245,
+  "deger_hucre_farki": 1,
+  "esikler": {
+    "esitlik_orani_alt": {
+      "deger": 0.0,
+      "esik": 1.0,
+      "gecti": false,
+      "n": 260,
+      "yon": ">="
+    },
+    "manifest_tazelik_gun_ust": {
+      "deger": 2.389643477627315,
+      "esik": 8,
+      "gecti": true,
+      "n": 260,
+      "yon": "<="
+    },
+    "olculemeyen_ust_oran": {
+      "deger": 0.0,
+      "esik": 0.02,
+      "gecti": true,
+      "n": 260,
+      "yon": "<="
+    }
+  },
+  "fark_dosyasi": "fark_20260916T072437Z.jsonl",
+  "hukum": "YOK — hüküm ROL-1'indir (kart EDG-2026-100, K1)",
+  "k2_olculmedi": {
+    "golge_fark_ust": {
+      "esik": 0,
+      "neden": "K2 — canlı gölge kıyası fark defteri bu koşumun kapsamı DIŞINDA"
+    },
+    "golge_kiyas_seans": {
+      "esik": 7,
+      "neden": "K2 — canlı gölge kıyası (7 seans) bu koşumun kapsamı DIŞINDA"
+    }
+  },
+  "kapsam": {
+    "arsiv_dizin": "/opt/meridian/state/barlar",
+    "kaynak_dizin": "/opt/meridian/state/bars",
+    "manifest_sembol": 260,
+    "olculen": 260,
+    "parca": 260,
+    "sembol_suzgeci": null
+  },
+  "kart": "EDG-2026-100",
+  "kill_list_tetik": [
+    "esitlik_orani_alt"
+  ],
+  "kosum": {
+    "arac": "ops/bar_arsiv_kiyas.py",
+    "kip": "rapor",
+    "surum": "2026-09-16.1",
+    "utc": "2026-09-16T07:24:37+00:00"
+  },
+  "olculemeyen_nedenleri": {},
+  "olculemeyen_ornekleri": [],
+  "oran": {
+    "esitlik_orani": 0.0,
+    "olculemeyen_oran": 0.0
+  },
+  "sayim": {
+    "esit": 0,
+    "farkli": 260,
+    "olculemeyen": 0
+  },
+  "tur_sayilari": {
+    "deger": 1,
+    "dtype": 251,
+    "satir_sayisi": 245,
+    "sutun": 260
+  }
+}

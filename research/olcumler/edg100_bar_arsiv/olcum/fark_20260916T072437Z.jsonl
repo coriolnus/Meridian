@@ -1,0 +1,757 @@
+{"sembol": "AAPL", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "AAPL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "AAPL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ABBV", "parca": null, "tur": "satir_sayisi", "arsiv": 3444, "csv": 3446}
+{"sembol": "ABBV", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ABBV", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ABT", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "ABT", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ABT", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ADBE", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "ADBE", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ADBE", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ADI", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "ADI", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ADI", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ADSK", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "ADSK", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ADSK", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "AEP", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "AEP", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "AEP", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "AFL", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "AFL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "AFL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "AIG", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "AIG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "AIG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ALB", "parca": null, "tur": "satir_sayisi", "arsiv": 5708, "csv": 5710}
+{"sembol": "ALB", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ALB", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ALL", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "ALL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ALL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "AMAT", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "AMAT", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "AMAT", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "AMD", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "AMD", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "AMD", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "AMGN", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "AMGN", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "AMGN", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "AMT", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "AMT", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "AMT", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "AMZN", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "AMZN", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "AMZN", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ANSS", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "APD", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "APD", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "APD", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "APO", "parca": null, "tur": "satir_sayisi", "arsiv": 4508, "csv": 4510}
+{"sembol": "APO", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "APO", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "AVB", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "AVB", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "AVGO", "parca": null, "tur": "satir_sayisi", "arsiv": 4313, "csv": 4315}
+{"sembol": "AVGO", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "AVGO", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "AXP", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "AXP", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "AXP", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "AZO", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "AZO", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "AZO", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "BA", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "BA", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "BA", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "BAC", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "BAC", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "BAC", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "BAX", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "BAX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "BAX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "BDX", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "BDX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "BDX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "BIIB", "parca": null, "tur": "satir_sayisi", "arsiv": 5548, "csv": 5550}
+{"sembol": "BIIB", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "BIIB", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "BKNG", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "BKNG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "BKNG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "BKR", "parca": null, "tur": "satir_sayisi", "arsiv": 2309, "csv": 2311}
+{"sembol": "BKR", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "BKR", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "BLK", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "BLK", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "BLK", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "BMY", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "BMY", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "BMY", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "BSX", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "BSX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "BSX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "BURL", "parca": null, "tur": "satir_sayisi", "arsiv": 3255, "csv": 3257}
+{"sembol": "BURL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "BURL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "BX", "parca": null, "tur": "satir_sayisi", "arsiv": 4830, "csv": 4832}
+{"sembol": "BX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "BX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "C", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "C", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "C", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CAG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CAG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CAT", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "CAT", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CAT", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CB", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "CB", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CB", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CBRE", "parca": null, "tur": "satir_sayisi", "arsiv": 5599, "csv": 5601}
+{"sembol": "CBRE", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CBRE", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CCI", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "CCI", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CCI", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CCL", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "CCL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CCL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CDNS", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "CDNS", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CDNS", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CEG", "parca": null, "tur": "satir_sayisi", "arsiv": 2725, "csv": 2727}
+{"sembol": "CEG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CEG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CF", "parca": null, "tur": "satir_sayisi", "arsiv": 5304, "csv": 5306}
+{"sembol": "CF", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CF", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CHD", "parca": null, "tur": "satir_sayisi", "arsiv": 5708, "csv": 5710}
+{"sembol": "CHD", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CHD", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CHTR", "parca": null, "tur": "satir_sayisi", "arsiv": 4023, "csv": 4025}
+{"sembol": "CHTR", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CHTR", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CI", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "CI", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CI", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CL", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "CL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CLX", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "CLX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CLX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CMCSA", "parca": null, "tur": "satir_sayisi", "arsiv": 5708, "csv": 5710}
+{"sembol": "CMCSA", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CMCSA", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CMI", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "CMI", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CMI", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "COF", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "COF", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "COF", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "COP", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "COP", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "COP", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "COST", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "COST", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "COST", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CRM", "parca": null, "tur": "satir_sayisi", "arsiv": 5591, "csv": 5593}
+{"sembol": "CRM", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CRM", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CSX", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "CSX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CSX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CTSH", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "CTSH", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CTSH", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CVS", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "CVS", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CVS", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "CVX", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "CVX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "CVX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "D", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "D", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "D", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "DAL", "parca": null, "tur": "satir_sayisi", "arsiv": 4864, "csv": 4866}
+{"sembol": "DAL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "DAL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "DD", "parca": null, "tur": "satir_sayisi", "arsiv": 5386, "csv": 5388}
+{"sembol": "DD", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "DD", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "DE", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "DE", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "DE", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "DECK", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "DECK", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "DECK", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "DFS", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "DG", "parca": null, "tur": "satir_sayisi", "arsiv": 4231, "csv": 4233}
+{"sembol": "DG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "DG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "DHR", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "DHR", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "DHR", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "DIS", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "DIS", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "DIS", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "DLR", "parca": null, "tur": "satir_sayisi", "arsiv": 5501, "csv": 5503}
+{"sembol": "DLR", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "DLR", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "DLTR", "parca": null, "tur": "satir_sayisi", "arsiv": 5708, "csv": 5710}
+{"sembol": "DLTR", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "DLTR", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "DOV", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "DOV", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "DOV", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "DOW", "parca": null, "tur": "satir_sayisi", "arsiv": 1872, "csv": 1874}
+{"sembol": "DOW", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "DOW", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "DUK", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "DUK", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "DUK", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "DVN", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "DVN", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "DVN", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "EA", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "EA", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "EA", "parca": null, "tur": "deger", "sutun": "volume", "satir": 5677, "arsiv": 3569440, "csv": 3569440.107552}
+{"sembol": "ECL", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "ECL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ECL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ED", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "ED", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ED", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "EL", "parca": null, "tur": "satir_sayisi", "arsiv": 5708, "csv": 5710}
+{"sembol": "EL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "EL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "EMR", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "EMR", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "EMR", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ENPH", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ENPH", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "EOG", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "EOG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "EOG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "EQIX", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "EQIX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "EQIX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "EQR", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "EQR", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "EQT", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "EQT", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "EQT", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ES", "parca": null, "tur": "satir_sayisi", "arsiv": 4242, "csv": 4244}
+{"sembol": "ES", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ES", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ETN", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "ETN", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ETN", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "EW", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "EW", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "EW", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "EXC", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "EXC", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "EXC", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "EXPE", "parca": null, "tur": "satir_sayisi", "arsiv": 5319, "csv": 5321}
+{"sembol": "EXPE", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "EXPE", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "F", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "F", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "F", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "FANG", "parca": null, "tur": "satir_sayisi", "arsiv": 3480, "csv": 3482}
+{"sembol": "FANG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "FANG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "FCX", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "FCX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "FCX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "FDX", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "FDX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "FDX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "FI", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "FISV", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "FISV", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "FISV", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "GD", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "GD", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "GD", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "GE", "parca": null, "tur": "satir_sayisi", "arsiv": 5708, "csv": 5710}
+{"sembol": "GE", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "GILD", "parca": null, "tur": "satir_sayisi", "arsiv": 5708, "csv": 5710}
+{"sembol": "GILD", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "GILD", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "GIS", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "GIS", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "GIS", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "GOOG", "parca": null, "tur": "satir_sayisi", "arsiv": 5204, "csv": 5206}
+{"sembol": "GOOG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "GOOG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "GOOGL", "parca": null, "tur": "satir_sayisi", "arsiv": 3476, "csv": 3478}
+{"sembol": "GOOGL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "GOOGL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "GS", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "GS", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "GS", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "HAL", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "HAL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "HAL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "HD", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "HD", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "HD", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "HES", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "HLT", "parca": null, "tur": "satir_sayisi", "arsiv": 3205, "csv": 3207}
+{"sembol": "HLT", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "HLT", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "HON", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "HON", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "HON", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "HRL", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "HRL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "HRL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "HSY", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "HSY", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "HSY", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "HUM", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "HUM", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "HUM", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "HWM", "parca": null, "tur": "satir_sayisi", "arsiv": 1620, "csv": 1622}
+{"sembol": "HWM", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "HWM", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "INTC", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "INTC", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "INTC", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "INTU", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "INTU", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "INTU", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "IP", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "IP", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "IP", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "IPG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "IRM", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "IRM", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "IRM", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ISRG", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "ISRG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ISRG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ITW", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "ITW", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ITW", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "JNJ", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "JNJ", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "JNJ", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "JPM", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "JPM", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "JPM", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "K", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "KDP", "parca": null, "tur": "satir_sayisi", "arsiv": 2055, "csv": 2057}
+{"sembol": "KDP", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "KDP", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "KHC", "parca": null, "tur": "satir_sayisi", "arsiv": 2814, "csv": 2816}
+{"sembol": "KHC", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "KHC", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "KKR", "parca": null, "tur": "satir_sayisi", "arsiv": 4065, "csv": 4067}
+{"sembol": "KKR", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "KKR", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "KLAC", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "KLAC", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "KLAC", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "KMB", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "KMB", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "KMB", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "KMI", "parca": null, "tur": "satir_sayisi", "arsiv": 3918, "csv": 3920}
+{"sembol": "KMI", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "KMI", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "KO", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "KO", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "KO", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "KR", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "KR", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "KR", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "KVUE", "parca": null, "tur": "satir_sayisi", "arsiv": 842, "csv": 844}
+{"sembol": "KVUE", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "KVUE", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "LHX", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "LHX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "LHX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "LIN", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "LIN", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "LIN", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "LLY", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "LLY", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "LLY", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "LMT", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "LMT", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "LMT", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "LNG", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "LNG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "LNG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "LOW", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "LOW", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "LOW", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "LRCX", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "LRCX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "LRCX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "LULU", "parca": null, "tur": "satir_sayisi", "arsiv": 4812, "csv": 4814}
+{"sembol": "LULU", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "LULU", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "LUV", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "LUV", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "LUV", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "LYB", "parca": null, "tur": "satir_sayisi", "arsiv": 4001, "csv": 4003}
+{"sembol": "LYB", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "LYB", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "LYV", "parca": null, "tur": "satir_sayisi", "arsiv": 5212, "csv": 5214}
+{"sembol": "LYV", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "LYV", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MA", "parca": null, "tur": "satir_sayisi", "arsiv": 5001, "csv": 5003}
+{"sembol": "MA", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MA", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MAR", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MAR", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MAR", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MCD", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MCD", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MCD", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MCHP", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MCHP", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MCHP", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MDLZ", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MDLZ", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MDLZ", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MDT", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MDT", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MDT", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MET", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MET", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MET", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "META", "parca": null, "tur": "satir_sayisi", "arsiv": 3599, "csv": 3601}
+{"sembol": "META", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "META", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MKC", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MKC", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MKC", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MLM", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MLM", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MLM", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MMM", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MMM", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MMM", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MNST", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MNST", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MNST", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MO", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MO", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MO", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MPC", "parca": null, "tur": "satir_sayisi", "arsiv": 3821, "csv": 3823}
+{"sembol": "MPC", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MPC", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MPWR", "parca": null, "tur": "satir_sayisi", "arsiv": 5486, "csv": 5488}
+{"sembol": "MPWR", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MPWR", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MRK", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MRK", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MRK", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MRNA", "parca": null, "tur": "satir_sayisi", "arsiv": 1950, "csv": 1952}
+{"sembol": "MRNA", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MRNA", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MRVL", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MRVL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MRVL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MS", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MS", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MS", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MSFT", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MSFT", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MSFT", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MTCH", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MTCH", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "MU", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "MU", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "MU", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "NCLH", "parca": null, "tur": "satir_sayisi", "arsiv": 3432, "csv": 3434}
+{"sembol": "NCLH", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "NCLH", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "NEE", "parca": null, "tur": "satir_sayisi", "arsiv": 4583, "csv": 4585}
+{"sembol": "NEE", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "NEE", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "NEM", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "NEM", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "NEM", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "NFLX", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "NFLX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "NFLX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "NKE", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "NKE", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "NKE", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "NOC", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "NOC", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "NOC", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "NOW", "parca": null, "tur": "satir_sayisi", "arsiv": 3570, "csv": 3572}
+{"sembol": "NOW", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "NOW", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "NSC", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "NSC", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "NSC", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "NUE", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "NUE", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "NUE", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "NVDA", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "NVDA", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "NVDA", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "NXPI", "parca": null, "tur": "satir_sayisi", "arsiv": 4049, "csv": 4051}
+{"sembol": "NXPI", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "NXPI", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "O", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "O", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "O", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "OKE", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "OKE", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "OKE", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "OMC", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "OMC", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "OMC", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ON", "parca": null, "tur": "satir_sayisi", "arsiv": 2877, "csv": 2879}
+{"sembol": "ON", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ON", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ORCL", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "ORCL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ORCL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ORLY", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "ORLY", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ORLY", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "OXY", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "OXY", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "OXY", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PANW", "parca": null, "tur": "satir_sayisi", "arsiv": 3556, "csv": 3558}
+{"sembol": "PANW", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PANW", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PARA", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PCAR", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "PCAR", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PCAR", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PEG", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "PEG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PEG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PEP", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "PEP", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PEP", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PFE", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "PFE", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PFE", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PG", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "PG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PGR", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "PGR", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PGR", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PH", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "PH", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PH", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PINS", "parca": null, "tur": "satir_sayisi", "arsiv": 1900, "csv": 1902}
+{"sembol": "PINS", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PINS", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PKG", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "PKG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PKG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PLD", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "PLD", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PLD", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PM", "parca": null, "tur": "satir_sayisi", "arsiv": 4652, "csv": 4654}
+{"sembol": "PM", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PM", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PNC", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "PNC", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PNC", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PPG", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "PPG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PPG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PRU", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "PRU", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PRU", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PSA", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "PSA", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PSA", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PSX", "parca": null, "tur": "satir_sayisi", "arsiv": 3612, "csv": 3614}
+{"sembol": "PSX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PSX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "PYPL", "parca": null, "tur": "satir_sayisi", "arsiv": 2804, "csv": 2806}
+{"sembol": "PYPL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "PYPL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "QCOM", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "QCOM", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "QCOM", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "RCL", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "RCL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "RCL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "REGN", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "REGN", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "REGN", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ROK", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "ROK", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ROK", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ROKU", "parca": null, "tur": "satir_sayisi", "arsiv": 2250, "csv": 2252}
+{"sembol": "ROKU", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ROKU", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ROST", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "ROST", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ROST", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "RTX", "parca": null, "tur": "satir_sayisi", "arsiv": 1843, "csv": 1845}
+{"sembol": "RTX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "RTX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "SBUX", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "SBUX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "SBUX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "SCHW", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "SCHW", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "SCHW", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "SHW", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "SHW", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "SHW", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "SLB", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "SLB", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "SLB", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "SNAP", "parca": null, "tur": "satir_sayisi", "arsiv": 2396, "csv": 2398}
+{"sembol": "SNAP", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "SNAP", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "SNPS", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "SNPS", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "SNPS", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "SO", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "SO", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "SO", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "SPG", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "SPG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "SPG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "SPOT", "parca": null, "tur": "satir_sayisi", "arsiv": 2123, "csv": 2125}
+{"sembol": "SPOT", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "SPOT", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "SPY", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "SPY", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "SPY", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "SRE", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "SRE", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "SRE", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "STLD", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "STLD", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "STLD", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "STZ", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "STZ", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "STZ", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "SWKS", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "SWKS", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "SWKS", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "SYF", "parca": null, "tur": "satir_sayisi", "arsiv": 3047, "csv": 3049}
+{"sembol": "SYF", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "SYF", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "SYK", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "SYK", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "SYK", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "SYY", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "SYY", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "SYY", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "T", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "T", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "T", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "TDG", "parca": null, "tur": "satir_sayisi", "arsiv": 3711, "csv": 3713}
+{"sembol": "TDG", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "TDG", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "TER", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "TER", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "TER", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "TGT", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "TGT", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "TGT", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "TJX", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "TJX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "TJX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "TMO", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "TMO", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "TMO", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "TMUS", "parca": null, "tur": "satir_sayisi", "arsiv": 3362, "csv": 3364}
+{"sembol": "TMUS", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "TMUS", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "TRGP", "parca": null, "tur": "satir_sayisi", "arsiv": 3963, "csv": 3965}
+{"sembol": "TRGP", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "TRGP", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "TRV", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "TRV", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "TRV", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "TSLA", "parca": null, "tur": "satir_sayisi", "arsiv": 4076, "csv": 4078}
+{"sembol": "TSLA", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "TSLA", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "TSN", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "TSN", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "TSN", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "TTWO", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "TTWO", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "TTWO", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "TXN", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "TXN", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "TXN", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "UAL", "parca": null, "tur": "satir_sayisi", "arsiv": 4999, "csv": 5001}
+{"sembol": "UAL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "UAL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "UNH", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "UNH", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "UNH", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "UNP", "parca": null, "tur": "satir_sayisi", "arsiv": 5708, "csv": 5710}
+{"sembol": "UNP", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "UNP", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "UPS", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "UPS", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "UPS", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "USB", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "USB", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "USB", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "V", "parca": null, "tur": "satir_sayisi", "arsiv": 4649, "csv": 4651}
+{"sembol": "V", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "V", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "VFC", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "VFC", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "VLO", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "VLO", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "VLO", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "VMC", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "VMC", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "VMC", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "VRTX", "parca": null, "tur": "satir_sayisi", "arsiv": 5708, "csv": 5710}
+{"sembol": "VRTX", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "VRTX", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "VTR", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "VTR", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "VTR", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "VZ", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "VZ", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "VZ", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "WBA", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "WBD", "parca": null, "tur": "satir_sayisi", "arsiv": 5328, "csv": 5330}
+{"sembol": "WBD", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "WBD", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "WEC", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "WEC", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "WEC", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "WELL", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "WELL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "WELL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "WFC", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "WFC", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "WFC", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "WMB", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "WMB", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "WMB", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "WMT", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "WMT", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "WMT", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "XEL", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "XEL", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "XEL", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "XOM", "parca": null, "tur": "satir_sayisi", "arsiv": 5709, "csv": 5711}
+{"sembol": "XOM", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "XOM", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}
+{"sembol": "ZBH", "parca": null, "tur": "satir_sayisi", "arsiv": 2818, "csv": 2820}
+{"sembol": "ZBH", "parca": null, "tur": "sutun", "arsiv": ["date", "open", "high", "low", "close", "volume", "kaynak", "ayarlama_olcegi"], "csv": ["date", "open", "high", "low", "close", "volume"], "yalniz_arsiv": ["kaynak", "ayarlama_olcegi"], "yalniz_csv": [], "sira_farkli": false}
+{"sembol": "ZBH", "parca": null, "tur": "dtype", "sutun": "volume", "arsiv": "int64", "csv": "float64"}

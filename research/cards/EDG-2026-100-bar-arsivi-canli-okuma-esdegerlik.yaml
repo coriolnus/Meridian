@@ -6,7 +6,7 @@
 # evren_pit, ilgisiz), KALDI/NO-GO benzeri YOK → "benzer yok" beyanı. memory/: tek-kaynak yasası (kopya = türetme + ayrışma çivisi).
 
 card_id: EDG-2026-100
-status: registered
+status: measured     # 2026-09-16 07:2xZ hüküm hukum_2026_09_16 — KALDI (kill-list 1: eşitlik oranı 0,0)
 family: veri_yolu_esdegerlik
 on_kayit: 2026-09-15
 selef:
@@ -78,3 +78,29 @@ rol1_notu_2026_09_16: >
   ürettiği için terk edilmişti. Dolayısıyla "parça" = manifestin `bolum` alanının beyan ettiği birim
   (bugün sembol). Eşik aynen: parçaların %100'ü DEĞER-EŞİT, ölçülemeyen ≤ %2, manifest ≤ 8 gün.
   Canlı okuma yolu kıyasın öteki ucudur: `meridian/dataset.py` → `data.sanitize_bars(pd.read_csv(...))`.
+
+hukum_2026_09_16:
+  tarih: "2026-09-16T07:30Z"
+  status_gecisi: "registered → measured; K 1/2 harcandı (EDG-100-esitlik-orani-sembol-ay). K2 (gölge kıyası) HARCANMADI — bayrak yazılmadı, kart bu koldan kapanıyor."
+  hukum: >
+    KALDI — kill-list 1 (eşitlik oranı 0,0 < 1,0; 260 parçanın 260'ı farklı). Hipotezin LAFZI çürüdü;
+    ama fark DÖRT AYRI SINIFTA ve üçü ölçümün kendi kapsam kusuru ya da tasarım kararı, biri gerçek veri bulgusu:
+    (1) SÜTUN 260/260 — arşiv üst küme: `kaynak` + `ayarlama_olcegi` sütunlarını EKLER (bar_arsivle.py zenginleştirmesi);
+    (2) SATIR SAYISI 245/260 — arşiv 2026-09-13T22:03Z damgalı (haftalık timer), CSV o günden beri 2 seans daha büyüdü
+        (AAPL 5709 ↔ 5711): BAYATLIK, kusur DEĞİL — kart kıyas kapsamında TARİH ARALIĞI KESİŞİMİ tanımlamamıştı (ölçüm tasarımı borcu);
+    (3) DTYPE 251/260 — `volume` arşivde BIGINT, CSV(sanitize) yolunda float64;
+    (4) DEĞER 1/260 — TEK gerçek hücre farkı: EA `volume` satır 5677, arşiv 3.569.440 ↔ CSV 3.569.440,107552.
+        Yani ORTAK eksende (aynı sütun, aynı satır, aynı tip) 259 parçada hücre farkı YOK; asıl sorulan eşitlik
+        neredeyse tamamen SAĞLANIYOR ama kart lafzı sütun+dtype+satır sayısını da eşitlik şartına koymuştu.
+  pk: "PK yol-tutarlı (v506): tek hücre bozulmuş parquet fark üretiyor; dtype/satır/NaN eksenleri sentetik çivilerle ısırdı (3 mutasyon kırmızı). Gerçek koşumda `deger` ekseni 245 parçada ÖLÇÜLEMEDİ (satır sayısı farkı) — bu da raporda ayrı alan (`deger_ekseni_olculmeyen_parca`)."
+  esik_durumu: "esitlik_orani 0,0 (eşik 1,0) DÜŞTÜ · olculemeyen_oran 0,0 (eşik ≤0,02) GEÇTİ · manifest_tazelik 2,39 gün (eşik ≤8) GEÇTİ · K2 eşikleri ölçülmedi (kapsam dışı)."
+  girdi_blob: "sonuc_100_20260916T072437Z.json blob 1cde042b25ff · fark_20260916T072437Z.jsonl blob 67e343f6b56d (research/olcumler/edg100_bar_arsiv/olcum/); manifest sha256 ea81d962d71d452a…, arşiv damgası 2026-09-13T22:03:32Z, 260 sembol."
+  kosum: "A1, 2026-09-16T07:24:37Z, `MERIDIAN_ROOT=/tmp/edg100-kok .venv/bin/python ops/bar_arsiv_kiyas.py --rapor` (ayrı kök: `sanitize_bars` onarım uyarısı canlı deftere düşmesin; ölçüm sonrası /tmp kökü BOŞ doğrulandı)."
+  devir: >
+    TSK-020 §3.3 canlı okuma yolu BU KARTLA AÇILMAZ: arşiv çerçevesi CSV çerçevesiyle aynı DEĞİL (şema + tip + bayatlık).
+    Kart lafzıyla kapanır. ARDIL KART ÖNERİSİ (eşik yerinde değiştirilemez — CLAUDE.md §5): "şema-normalize, tarih-kesişimli
+    değer eşitliği" — ortak sütun kümesi, ortak tarih aralığı, tip normalizasyonu beyanlı; eşik yine %100 hücre eşitliği.
+    O kart geçerse canlı bayrak (K2 gölge kıyası) yeniden gündeme gelir. AYRI BULGU (ilgisiz kalem): EA `volume` CSV'de
+    ONDALIKLI (3.569.440,107552) — hacim tam sayı olmalı; arşivleme onu sessizce yuvarlıyor. Kaynağı ölçülmedi
+    (birleştirme/ayarlama artefaktı olabilir) — veri kalitesi kalemi olarak ROADMAP §4'e yazıldı.
+  bedel: "Opus ×1 (~283k token) + Sonnet ×1 + A1 koşumu ~3 s (260 sembol); araç depoda kalır (yan ürün: her Pazar arşiv tazelemesinden sonra tekrar koşulabilir ayrışma çivisi)."
