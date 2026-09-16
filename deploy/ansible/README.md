@@ -151,6 +151,15 @@ dosyaları `-e brifing_devri=true` verilmeden kurulmaz. Karar Rol-1'indir (A0 ku
   sır dosyaları yalnız `stat` (checksum KAPALI — içerik okunmaz) + `assert` ile denetlenir ve
   eksikse playbook DURUR, hangi betiğin koşulacağını söyler.
 - **Postgres kurulumu YOK** (A2 fazı), **docker konteyner tanımı YOK** (birim dosyalarının işi).
+  Rol `docker.io` paketini kurar ve (TSK-195, 2026-09-16) `meridian_kullanici`yı `docker` grubuna
+  `append` ile ekler — bunun dışında Docker'a dair hiçbir şey yapmaz. Bu **kapsam genişlemesidir**
+  ve beyanı `paketler.yml`in ilgili görev şerhindedir: `docker` grubu üyeliği pratikte
+  **root-eşdeğeri** yetkidir; role girmesinin gerekçesi, yetkinin A1'de zaten ELLE verilmiş olması
+  ve elle verilen yetkinin yeniden kurulumda sessizce kaybolmasıdır. Üyelik görevi grubun
+  varlığına **koşulludur** (grup `getent` ile ÖLÇÜLÜR): gerçek koşumda `docker.io` aynı dosyanın
+  ilk görevinde kurulduğu için koşul daima işler; koşul yalnız `--check` kipindeki soğuk hostu
+  korur (orada apt hiçbir şey kurmaz ve `user` modülü "Group docker does not exist" ile düşerdi).
+  Çivi: `tests/test_ansible_a0_docker_grubu_v509.py`.
 - `deploy.sh` 15'in koşulsuz `restart meridian meridian-barsarchive` adımı ve `--replay` tohumu
   A0'a GEÇMEDİ (bakım penceresi + state kararı).
 - **Enable ettiği birimlerin YAPILANDIRMA dosyalarını taşımaz** ve bu bir kapsam boşluğudur —
