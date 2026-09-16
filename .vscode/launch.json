@@ -1,0 +1,43 @@
+{
+  // Meridian — hata ayıklama yapılandırmaları (2026-09-16).
+  //
+  // BURADA YALNIZ PYTEST VAR, VE BU BİLİNÇLİ. `ops/` betikleri ve `meridian` modülleri doğrudan
+  // koşturulduğunda `meridian.obs`a ulaşabilir ve YEREL canlı deftere yazar (CLAUDE.md §2; üç vaka
+  // 2026-08-30). Davranış görmek isteyen `sandbox_state` fixture'lı bir çivi yazar. `./serve.sh`
+  // yerelde HİÇBİR zaman koşmaz (çift-emir riski) — bu yüzden bir "sunucu" yapılandırması YOKTUR.
+  //
+  // Tam suite buradan koşulmaz: otoriter koşum Rol-1'in arka plan koşumudur (§6, donmuş ağaç).
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "pytest: açık dosya",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["${file}", "-p", "no:cacheprovider"],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "pytest: imleçteki test (-k)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["${file}", "-k", "${input:testAdi}", "-p", "no:cacheprovider"],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "python": "${workspaceFolder}/.venv/bin/python",
+      "cwd": "${workspaceFolder}"
+    }
+  ],
+  "inputs": [
+    {
+      "id": "testAdi",
+      "type": "promptString",
+      "description": "pytest -k deseni (test adının bir parçası)",
+      "default": "test_"
+    }
+  ]
+}
