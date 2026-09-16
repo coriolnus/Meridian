@@ -119,6 +119,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from typing import NamedTuple
 
 import yaml
 
@@ -1282,21 +1283,75 @@ def _denetimsiz_kosum_satiri(neden: str) -> str:
 
 # DEFTER TARAMA PENCERESİ — teşhis okuyucusunun BEDELİ (bedel yasası, beyanlı). Defter üç botun
 # ortağıdır ve iki şef koşumu arasına başka olaylar düşer; pencere ne kadar dar olursa okuma o
-# kadar ucuz, "kayıt yok" ihtimali o kadar yüksektir. `store.read_jsonl` KUYRUKTAN okur, yani
+# kadar ucuz, "bulunamadı" ihtimali o kadar yüksektir. `store.read_jsonl` KUYRUKTAN okur, yani
 # maliyet dosya boyutuna değil bu sayıya bağlıdır. Pencerede kayıt bulunamazsa satır BUNU SÖYLER —
 # "denetim koşmadı" diye YORUMLAMAZ (uydurma yasağı: bulunamamak, olmamak değildir).
-DENETIM_OLAY_PENCERESI = 400
+#
+# PENCERE BİR İŞ GÜNÜDÜR, BİR SATIR SAYISI DEĞİL (TSK-199, 2026-09-16). Eski değer 400'dü ve
+# ÖLÇÜLDÜ ki bu gerçekte ~0,57 GÜNLÜK bir penceredir: A1 `state/events.jsonl` 2026-09-16 ölçümü
+# 20.228.000 bayt / 64.130 satır (~442 bayt/satır), günlük olay sayısı İŞ GÜNÜ ~700 (2026-09-14:
+# 659 · 2026-09-15: 707), hafta sonu 75–105. Yani akşam koşan bir şef, bir ÖNCEKİ akşamın kendi
+# denetim olayını YAPISAL OLARAK göremiyor ve "kayıt yok" basıyordu — aynı satırda damga bir hüküm
+# gösterirken. Dahası pencere hafta sonu 4-5 güne uzuyordu: AYNI KOD GÜNE GÖRE FARKLI SONUÇ verir.
+# 900 = bir iş günü (~700) + pay; hafta sonuna da aynı gerekçeyle yeter.
+#
+# BEDEL (ölçüldü, kazançla BİRLİKTE — bedel yasası): okuyucu kuyruktan okur ve ilk yoklama bloğu
+# 256 KB'dir. 400'de o blok yetiyordu → TEK okuma, ~579 satır çözümleme. 900'de yetmez: ikinci blok
+# 1.024 KB / ~2.300 satır → toplam ~1,28 MB ve ~2.900 çözümleme, yani bugünün ~5 KATI. Bedelin
+# ASIL ÖZELLİĞİ ise SABİT olmasıdır: iki blok da dosya boyutundan BAĞIMSIZDIR, defter büyüdükçe
+# maliyet BÜYÜMEZ. Tam-dosya okuma eşiği (bloğun dosyanın ~%50'sini aşması, bugünkü defterde
+# ~10 MB) bu değerlerde DEVREYE GİRMEZ; girerse de sonuç değişmez, yalnız o koşum pahalılaşır.
+#
+# ZAMAN TABANLI PENCERE SEÇİLMEDİ (beyan: neden seçilmediği de bilgidir). Üç gerekçe: (a) okuyucu
+# API'si (`obs.recent`) yalnız SATIR SAYISI alır — "son 26 saat" için yeni bir okuyucu yazmak
+# gerekirdi ve bu tur teşhis satırını düzeltiyor, defter okuma katmanını değil; (b) zaman tabanlı
+# bir pencere ÜST SINIRSIZDIR — olay hacmi bir gün patlarsa okuma da patlar, oysa satır tabanlı
+# pencerenin bedeli yukarıda ölçülen SABİTtir; (c) "sessiz gün" riski zaten ayrı bir kapıyla
+# tutuluyor (`ARDISIK_SESSIZ_TAVANI`) ve o kapı YALNIZ bir dala uygulanır — yani zamana bağlı bir
+# pencere, kapsamadığı dallarda sınırsız bir boşluğu sessizce tolere ederdi.
+DENETIM_OLAY_PENCERESI = 900
+
+# TEŞHİS OKUMASININ DÖRT SONUCU — "bulunamadı" TEK bir cevap DEĞİLDİR (uydurma yasağı, TSK-199).
+# Ayrım bir üslup tercihi değil: "ÖLÇTÜM, yok" ile "BAKAMADIM" aynı çıktıyla görünürse operatör
+# okumadığı bir defteri okunmuş sayar. `cevap_bas`ın `None`/`""` ayrımıyla (TSK-138 dilim-1) aynı
+# sınıftır ve aynı gerekçeyle ayrı basılır. Değerler İKİ okuyucu tarafından okunur: durum satırı
+# (aşağıda) ve çiviler (`tests/test_teshis_penceresi_v512.py`) — YASA 6.
+PENCERE_BULUNDU = "bulundu"          # olay pencerenin İÇİNDE bulundu
+PENCERE_DISINDA = "pencere_disinda"  # pencere DOLDU ve olay yok → ÖLÇÜLEMEDİ ("yok" DEĞİL)
+PENCERE_KAYIT_YOK = "kayit_yok"      # defter pencereye SIĞDI ve olay yok → gerçek negatif
+PENCERE_OKUNAMADI = "okunamadi"      # defter hiç okunamadı → ÖLÇÜLEMEDİ
 
 
-def _son_denetim_olayi() -> dict:
-    """Defterdeki SON `brifing_kural_denetimi` olayı (bu botunki) — `{}` = pencerede yok.
+class _TeshisOkumasi(NamedTuple):
+    """Teşhis okumasının SONUCU + o sonucun NASIL elde edildiği.
+
+    `durum` olmadan çağıran `{}`e bakıp "yok" derdi; `taranan` olmadan da satır kaç olayın
+    gerçekten tarandığını söyleyemez ve "pencere dolmadı" iddiası kanıtsız kalırdı."""
+
+    olay: dict
+    durum: str
+    taranan: int
+
+
+def _son_denetim_olayi() -> _TeshisOkumasi:
+    """Defterdeki SON `brifing_kural_denetimi` olayı (bu botunki) + okumanın DURUMU.
 
     OLAY ADI ÜRETİMDEN OKUNUR (`soul_denetimi.OLAY`), dizge olarak TEKRARLANMAZ: kopyalanan bir
     olay adı ayrıştığında okuyucu sessizce hiçbir şey bulamaz ve Yasa 6'nın "okundu" iddiası
     sözde kalırdı (tek-kaynak yasası).
 
     BOT SÜZGECİ ZORUNLU: defter `@sef`/`@bekci`/`@karne` olaylarını AYNI ada yazar; süzgeçsiz bir
-    okuma `@karne`nin künyesini `@sef`in durum satırında gösterirdi."""
+    okuma `@karne`nin künyesini `@sef`in durum satırında gösterirdi.
+
+    "PENCERE DOLDU" NASIL ÖLÇÜLÜR (TSK-199): `obs.recent(N)` defterin KUYRUĞUNU döndürür ve EN
+    ÇOK `N` satır verir. Dönen satır sayısı `N`e ULAŞTIYSA pencere tıka basa dolmuştur, yani
+    defterde pencereye GİRMEYEN daha eski kayıtlar olabilir — orada olay bulunamaması bir YOKLUK
+    ölçümü DEĞİLDİR. `N`in ALTINDAysa defterin TAMAMI okunmuştur ve "yok" gerçekten ölçülmüştür.
+
+    SINIRDAKİ EŞİTLİK BİLİNÇLİ OLARAK "ÖLÇÜLEMEDİ" SAYILIR: defter tam `N` satırsa pencere
+    dolmuş görünür ama aslında tamamı okunmuştur. Bu ayrımı kuyruk okuması TEK başına yapamaz
+    (ikinci bir okuma gerekirdi — bedeli iki katına çıkarırdı), ve hatanın YÖNÜ seçilmiştir:
+    yanlışlıkla "ölçülemedi" demek zararsızdır, yanlışlıkla "yok" demek uydurmadır."""
     try:
         olaylar = obs.recent(DENETIM_OLAY_PENCERESI)
     except Exception as e:
@@ -1305,11 +1360,12 @@ def _son_denetim_olayi() -> dict:
         # gitmesin diye yakalanır ve düşüş ADIYLA deftere yazılmaya çalışılır.
         obs.log("sef_brifingi_denetim_olayi_okunamadi", hata=repr(e)[:200],
                 detail="teşhis okuyucusu defteri okuyamadı — durum satırı yine basılır")
-        return {}
+        return _TeshisOkumasi({}, PENCERE_OKUNAMADI, 0)
     for e in reversed(olaylar):
         if str(e.get("event")) == soul_denetimi.OLAY and str(e.get("bot")) == PROFIL_ADI:
-            return e
-    return {}
+            return _TeshisOkumasi(e, PENCERE_BULUNDU, len(olaylar))
+    doldu = len(olaylar) >= DENETIM_OLAY_PENCERESI
+    return _TeshisOkumasi({}, PENCERE_DISINDA if doldu else PENCERE_KAYIT_YOK, len(olaylar))
 
 
 def _denetci_teshis_satiri() -> str:
@@ -1327,10 +1383,26 @@ def _denetci_teshis_satiri() -> str:
 
     ÜÇ DEĞER ÜÇ AYRI BASILIR, çünkü ayrım tam okunduğu yerde kaybolursa hiç yapılmamıştır:
     `None` → `ÖLÇÜLEMEDİ` (cevap hiç gelmedi / hüküm geçerliydi), `""` → `BOŞ` (cevap geldi ve
-    boştu), dolu → metnin kendi baytları (sır süzgecinden ZATEN geçmiş hâli)."""
-    olay = _son_denetim_olayi()
-    if not olay:
-        return f"son {DENETIM_OLAY_PENCERESI} olayda kayıt yok"
+    boştu), dolu → metnin kendi baytları (sır süzgecinden ZATEN geçmiş hâli).
+
+    OLAY BULUNAMADIĞINDA DA AYNI DİSİPLİN (TSK-199, 2026-09-16): "bulamadım" üç AYRI cümledir ve
+    üçü aynı çıktıyla görünemez — pencere doldu (ÖLÇÜLEMEDİ) · defter pencereye sığdı ve olay
+    gerçekten yok (KAYIT YOK) · defter hiç okunamadı (ÖLÇÜLEMEDİ). Eskiden üçü de tek bir "son N
+    olayda kayıt yok" satırına katlanıyordu; o satır, yalnız BAKMADIĞI için görmediği bir kaydı
+    operatöre YOK diye bildiriyordu. `kayıt yok` ifadesi bu yüzden YALNIZ gerçek negatif dalında
+    geçer — okuyucu (operatör ya da çivi) o iki cümleyi dizgeden ayırabilsin diye."""
+    olay, durum, taranan = _son_denetim_olayi()
+    if durum == PENCERE_OKUNAMADI:
+        return ("ÖLÇÜLEMEDİ: defter OKUNAMADI (düşüş ADIYLA deftere yazıldı) — bu koşumda "
+                "teşhis alanlarına hiç BAKILAMADI")
+    if durum == PENCERE_DISINDA:
+        return (f"ÖLÇÜLEMEDİ — PENCERE DIŞINDA: son {DENETIM_OLAY_PENCERESI} olay tarandı ve "
+                f"pencere DOLDU ({taranan} olay); daha eski kayıtlar HİÇ taranmadı, yani yokluk "
+                f"ÖLÇÜLMEDİ")
+    if durum == PENCERE_KAYIT_YOK:
+        return (f"kayıt yok: defterin TAMAMI tarandı ({taranan} olay, "
+                f"{DENETIM_OLAY_PENCERESI}'lik pencere DOLMADI) — bu bota ait denetim olayı "
+                f"defterde HİÇ yok")
     model = olay.get("model")
     cevaplayan = olay.get("cevaplayan_model")
     bas = olay.get("cevap_bas")
