@@ -26,7 +26,6 @@ OKUR/YAZAR: canlıdan yalnız goal.yaml + bounds.yaml kopyalanır (salt okuma); 
 from __future__ import annotations
 
 import argparse
-import datetime as dt
 import json
 import logging
 import os
@@ -546,9 +545,30 @@ def _m_truncate_events(state: Path) -> None:
 
 def _m_stale_derived(state: Path) -> None:
     """Kaynak ilerledi, türev yerinde saydı — gölge modelin 7115 yeni satıra rağmen eski veriyle
-    durduğu canlı olayın sınıfı."""
-    future = dt.datetime.now().timestamp() + 3 * 3600
-    os.utime(state / "counterfactuals.jsonl", (future, future))
+    durduğu canlı olayın sınıfı.
+
+    DAMGALAR GEÇMİŞTE KURULUR (TSK-203). Bu mutasyon eskiden kaynağın (`counterfactuals.jsonl`)
+    damgasını "şimdi + 3 sa"e, yani GELECEĞE itiyordu. `watchdog.coherence_report` bayrağı artık
+    iki şartla kaldırır: türev kaynaktan eşiğinden fazla geride VE kaynağın son yazımının üzerinden
+    bir döngü payı (`COHERENCE_GRACE_S`) geçmiş. Geleceğe damgalı bir kaynakta `şimdi − kaynak`
+    negatiftir; ikinci şart hiç sağlanmaz ve mutasyon tanım gereği iki yazım arasındaki YARIŞ
+    olarak okunur — "kaynak ilerledi, türev durdu" değil. Gerçekte bir defter gelecekte
+    güncellenmiş de olamaz. Niyet aynen korunur, yalnız damgalar gerçekçi GEÇMİŞE alınır: kaynak
+    `şimdi − 2 × COHERENCE_GRACE_S`te (üreticiye bir döngü verildi, yetişmedi), o kaynaktan
+    türeyen her artefakt kaynaktan kendi eşiği + bir pay daha eski. Hangi türevin bu kaynağa bağlı
+    olduğu `watchdog.DERIVED_SOURCES`ten, eşik `watchdog._coherence_esik_s`ten, "şimdi" dedektörün
+    kendi saatinden (`watchdog._now`) okunur — burada sayı ya da liste yazmak, dedektör ile
+    mutasyonun sessizce ayrışması demekti (bu kırmızının kendisi o sınıftandı)."""
+    from . import watchdog as wd
+
+    kaynak = "counterfactuals.jsonl"
+    kaynak_ts = wd._now() - 2 * wd.COHERENCE_GRACE_S
+    os.utime(state / kaynak, (kaynak_ts, kaynak_ts))
+    for art, srcs in wd.DERIVED_SOURCES.items():
+        if kaynak not in srcs or not (state / art).exists():
+            continue                     # bu kaynağa bağlı değil ya da temel durumda yazılmıyor
+        turev_ts = kaynak_ts - wd._coherence_esik_s(art) - wd.COHERENCE_GRACE_S
+        os.utime(state / art, (turev_ts, turev_ts))
 
 
 def _m_zero_out_calibration(state: Path) -> None:
