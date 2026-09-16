@@ -232,6 +232,11 @@ KAYNAK_ADLARI = {"alarm": "alarm yığını", "oneri": "iyileştirme önerileri"
 
 BASLIK = "🧭 Meridian brifing — HAM (sıralama katmanı devrede değil)"
 
+# HAM DAL BEYANININ BU BOTA AİT İKİ ADI (TSK-201). Dal adı · sınıf · neden · denetim cümlesi
+# `soul_denetimi.HAM_DALLARI`ndadır ve üç bot ONU okur; burada yalnız bu botun sözcükleri durur.
+HAM_KATMAN = "sıralama"
+HAM_URUN = "sıralanmamış ham liste"
+
 SESSIZLIK_JETONU = "SESSIZ"
 
 # Jeton karşılaştırmasında KENARLARDAN soyulanlar: boşluk aileleri (NBSP ve sıfır-genişlikliler
@@ -965,6 +970,17 @@ def _cevap_makul(cevap: str, ham: dict) -> str | None:
     return None
 
 
+def _ham_dali(ham: dict, dal: str) -> None:
+    """Ham düşüş dalının İZİ (TSK-201): `ham["dal"]` teslim olayına, beyan zorunlu parçaya gider.
+
+    NEDEN HER HAM DÖNÜŞTE: bu dallarda model metni TESLİM EDİLMEZ (giden şey `_ham_metin`in
+    deterministik listesidir), yani denetlenecek metin YOKTUR ve denetim çağırmak yanlış hedeftir.
+    Eksik olan denetim değil BEYANDI: "ham + 2/2 ihlal" gövdesi `ℹ kural denetimi: …` taşıyordu,
+    "ham + yakın ıska" hiçbir şey — ayırt edici tek işaret bir satırın YOKLUĞUYDU. Metin ORTAK
+    modülden gelir (tek kaynak); bu sarmalayıcı yalnız botun iki adını bağlar."""
+    soul_denetimi.ham_dala_isle(ham, dal, katman=HAM_KATMAN, urun=HAM_URUN)
+
+
 def sirala(ham: dict) -> tuple[str | None, str]:
     """`(metin, kaynak)` döndürür. kaynak: 'llm' = bot sıraladı · 'ham' = bot düştü, ham gitti.
     `metin is None` = teslimat YOK (ve hiçbir damga basılmayacak).
@@ -989,6 +1005,7 @@ def sirala(ham: dict) -> tuple[str | None, str]:
     except Exception as e:
         # SESSİZ YUTMA DEĞİL: hemen aşağıda `obs.log` ile ADIYLA kayda geçer. Kayıt olmasaydı
         # profil haftalarca ölü kalır, brifing her gün ham gider ve kimse fark etmezdi.
+        _ham_dali(ham, "llm_dustu")
         obs.log("sef_brifingi_llm_dustu", hata=repr(e)[:300],
                 detail="sıralama katmanı düştü — HAM birleşik brifing yine teslim edilir")
         return _ham_metin(ham), "ham"
@@ -1000,6 +1017,8 @@ def sirala(ham: dict) -> tuple[str | None, str]:
     if not cevap:
         # BOŞ CEVAP `SESSIZ` HÜKMÜ DEĞİLDİR. İkisini karıştırmak, modelin cevap veremediği günü
         # "bugün önemli bir şey yok" diye okumaktır — sıfır ile 'bilmiyorum' aynı şey değildir.
+        # Beyan ÖLÇÜMDEN ÖNCE işlenir: `ham_uzunluk` operatöre GİDEN gövdenin uzunluğu olsun.
+        _ham_dali(ham, "llm_bos")
         obs.log("sef_brifingi_llm_bos", ham_uzunluk=len(_ham_metin(ham)),
                 detail="profil boş cevap verdi — boş cevap SESSİZ hükmü değildir, ham gider")
         return _ham_metin(ham), "ham"
@@ -1011,6 +1030,7 @@ def sirala(ham: dict) -> tuple[str | None, str]:
             # ölçülemedi" bir öncelik yargısı değil, brifingin kendi ölçüm zincirinin kırıldığının
             # beyanıdır. Onu susturma yetkisi modelde olsaydı, mekanizma kırıldığı gün görünmez
             # olurdu — yani alarm mekanizmasının kendisi sessizce ölürdü.
+            _ham_dali(ham, "sessiz_hukmu_gecersiz")
             obs.log("sef_brifingi_sessiz_hukmu_gecersiz",
                     olculemeyen=[k["kaynak"] for k in ham["olculemeyen"]],
                     detail="model SESSIZ dedi ama ölçülemeyen kaynak var — arıza susturulamaz")
@@ -1026,6 +1046,10 @@ def sirala(ham: dict) -> tuple[str | None, str]:
                 f"kaynaklar HÂLÂ bekliyor (taban {ARDISIK_SESSIZ_TAVANI} gün). Bu mesaj bir "
                 "öncelik yargısı DEĞİL, sıralanmamış ham listedir — bekleyen bir yığın kendi "
                 "kendine çözülmez.")
+            # ZORLA cümlesi AYNEN kalır; beyan onun söylediğini ("sıralanmamış ham liste", neden)
+            # TEKRARLAMAZ, yalnız eksik olanı (denetimin yokluğu) ekler — tablo kaydı
+            # `urun_basilir=False` (TSK-201 K4).
+            _ham_dali(ham, "sessizlik_tavani_asildi")
             obs.log("sef_brifingi_sessizlik_tavani_asildi", ardisik=sessiz_gun,
                     tavan=ARDISIK_SESSIZ_TAVANI, kalem=len(ham["teslim_edilecek"]),
                     detail="model SESSIZ dedi ama taban aşıldı — HAM brifing ZORLA teslim edilir")
@@ -1035,15 +1059,20 @@ def sirala(ham: dict) -> tuple[str | None, str]:
                 detail="bot SESSIZ hükmü verdi — teslimat YOK, hiçbir kaynak damgalanmadı")
         return None, "llm"
     if yakin_iska:
+        _ham_dali(ham, "sessizlik_jetonu_yakin_iska")
         obs.log("sef_brifingi_sessizlik_jetonu_yakin_iska", cevap=cevap[:200],
                 detail="cevap jetona benziyor ama tam değil — niyet ölçülemez, HAM brifing gider")
         return _ham_metin(ham), "ham"
 
     neden = _cevap_makul(cevap, ham)
     if neden:
+        _ham_dali(ham, "cevap_makul_degil")
         obs.log("sef_brifingi_cevap_makul_degil", neden=neden, cevap=cevap[:200],
                 detail="model çıktısı brifing sayılamaz — onarılmaz, HAM brifing gider")
         return _ham_metin(ham), "ham"
+    # DENETİM YOLU DA İŞARETLENİR (TSK-201): teslim olayı `dal` alanı "ölçülmedi" (`None`) ile
+    # "denetim yoluna varıldı" arasında ayrım yapabilsin. Hüküm bu alanda DEĞİL, denetim olayında.
+    ham["dal"] = soul_denetimi.DAL_KURAL_GECISI
     return _kural_gecisi(cevap, istem, ham)
 
 
@@ -1496,7 +1525,11 @@ def main(argv: list[str] | None = None) -> int:
     _kural_denetimini_yaz(ham.get("kural_kaydi"))
     # TESLİMAT ARDIŞIK SESSİZLİK ZİNCİRİNİ KIRAR — zorla teslim de dâhil (operatöre ULAŞTI).
     _sessiz_sayaci_sifirla()
-    obs.log("sef_brifingi_teslim", siralama=kaynak, damgalanan=damgalanan,
+    # `dal` (TSK-201): teslimin HANGİ daldan geldiği — eskiden yalnız aynı dakikadaki ayrı dal
+    # olayıyla EŞLEŞTİRİLEREK bulunabiliyordu. Değer bir ham dal adı (o olayın soneki) ya da
+    # `soul_denetimi.DAL_KURAL_GECISI`; `None` yalnız hiçbir dalın işaretlemediği, bugün erişilmeyen
+    # bir yoldur ("ölçülmedi"). OKUYUCU: `ops/olay_sorgu.py --sql`.
+    obs.log("sef_brifingi_teslim", siralama=kaynak, dal=ham.get("dal"), damgalanan=damgalanan,
             olculemeyen=[k["kaynak"] for k in ham["olculemeyen"]],
             detail="kaynaklar TEK brifingle teslim edildi; yalnız mesaja GİREN kaynaklar "
                    "damgalandı")

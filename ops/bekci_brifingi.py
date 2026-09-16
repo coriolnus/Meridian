@@ -253,6 +253,11 @@ YAZMA_KOKU = os.environ.get("HERMES_WRITE_SAFE_ROOT") or VARSAYILAN_YAZMA_KOKU
 
 BASLIK = "🔭 Meridian bekçi"
 LISTE_BASLIGI = "── ÖLÇÜLEN LİSTE (bekçi yazdı, model DEĞİL) ──"
+# HAM DAL BEYANININ BU BOTA AİT İKİ ADI (TSK-201). Dal adı · sınıf · neden · denetim cümlesi
+# `soul_denetimi.HAM_DALLARI`ndadır ve üç bot ONU okur; ürün adı ZORLA TESLİM cümlesinin kendi
+# sözcüğüyle AYNIDIR ("sıralanmamış ölçüm listesi") — iki ad, iki şey sanılırdı.
+HAM_KATMAN = "sıralama"
+HAM_URUN = "sıralanmamış ölçüm listesi"
 # MODEL BÖLGESİNİN KENDİ ETİKETİ (dal denetimi M5, 2026-08-30). Model metni ölçülen-liste
 # ayıracının ÜSTÜNE ETİKETSİZ konuyordu: ayıraç yalnız ALTINDAKİNE "bekçi yazdı" diyordu, üstteki
 # bölgenin yazarı SÖYLENMİYORDU. `_cevap_makul` de yalnız BİREBİR kopyaları siliyor, yani doğru
@@ -967,6 +972,16 @@ def _cevap_makul(cevap: str, ham: dict) -> str | None:
     return None
 
 
+def _ham_dali(ham: dict, dal: str) -> None:
+    """Ham düşüş dalının İZİ (TSK-201): `ham["dal"]` teslim olayına, beyan `_zorunlu_bas`a gider.
+
+    Bu dallarda model metni teslim EDİLMEZ (`("", "ham")` = ölçülen liste tek başına), yani
+    denetlenecek metin YOKTUR. Eksik olan denetim değil BEYANDI: "ham + 2/2 ihlal" gövdesi
+    `ℹ kural denetimi: …` taşıyordu, "ham + yakın ıska" hiçbir şey. Metin ORTAK modülden gelir
+    (`@sef` ve `@karne` ile tek kaynak); burada yalnız botun iki adı bağlanır."""
+    soul_denetimi.ham_dala_isle(ham, dal, katman=HAM_KATMAN, urun=HAM_URUN)
+
+
 def sirala(ham: dict) -> tuple[str | None, str]:
     """`(siralama_metni, kaynak)`. kaynak: 'llm' = bot sıraladı · 'ham' = bot düştü.
 
@@ -995,6 +1010,7 @@ def sirala(ham: dict) -> tuple[str | None, str]:
     except Exception as e:
         # SESSİZ YUTMA DEĞİL: hemen aşağıda `obs.log` ile ADIYLA kayda geçer. Kayıt olmasaydı
         # profil haftalarca ölü kalır, liste her gün ham gider ve kimse fark etmezdi.
+        _ham_dali(ham, "llm_dustu")
         obs.log("bekci_brifingi_llm_dustu", hata=repr(e)[:300],
                 detail="sıralama katmanı düştü — ÖLÇÜLEN liste yine teslim edilir")
         return "", "ham"
@@ -1003,6 +1019,7 @@ def sirala(ham: dict) -> tuple[str | None, str]:
     if not cevap:
         # BOŞ CEVAP `SESSIZ` HÜKMÜ DEĞİLDİR: modelin cevap veremediği günü "bugün önemli bir şey
         # yok" diye okumaktır — sıfır ile 'bilmiyorum' aynı şey değildir.
+        _ham_dali(ham, "llm_bos")
         obs.log("bekci_brifingi_llm_bos", kalem=len(ham["bildirilecek"]),
                 detail="profil boş cevap verdi — boş cevap SESSİZ hükmü değildir, ham gider")
         return "", "ham"
@@ -1014,6 +1031,7 @@ def sirala(ham: dict) -> tuple[str | None, str]:
             # bir öncelik yargısı DEĞİL, ölçüm zincirinin kırıldığının beyanıdır. Susturma
             # yetkisi modelde olsaydı, mekanizma kırıldığı gün görünmez olurdu — yani bekçinin
             # kendisi sessizce ölürdü. (`@sef` emsali.)
+            _ham_dali(ham, "sessiz_hukmu_gecersiz")
             obs.log("bekci_brifingi_sessiz_hukmu_gecersiz",
                     olculemeyen=[b["ad"] for b in _olculemeyenler(ham)],
                     tarama_hatasi=bool(ham.get("tarama_hatasi")),
@@ -1028,6 +1046,9 @@ def sirala(ham: dict) -> tuple[str | None, str]:
                 f"⚠ ZORLA TESLİM: sıralama katmanı {sessiz_gun} gün üst üste `SESSIZ` dedi ama "
                 f"kalemler HÂLÂ duruyor (taban {ARDISIK_SESSIZ_TAVANI} gün). Bu mesaj bir "
                 "öncelik yargısı DEĞİL, sıralanmamış ölçüm listesidir.")
+            # ZORLA cümlesi AYNEN kalır; beyan onun söylediğini TEKRARLAMAZ, yalnız denetimin
+            # yokluğunu ekler (tablo kaydı `urun_basilir=False`, TSK-201 K4).
+            _ham_dali(ham, "sessizlik_tavani_asildi")
             obs.log("bekci_brifingi_sessizlik_tavani_asildi", ardisik=sessiz_gun,
                     tavan=ARDISIK_SESSIZ_TAVANI, kalem=len(ham["bildirilecek"]),
                     detail="model SESSIZ dedi ama taban aşıldı — liste ZORLA teslim edilir")
@@ -1037,15 +1058,20 @@ def sirala(ham: dict) -> tuple[str | None, str]:
                 detail="bot SESSIZ hükmü verdi — teslimat YOK, hiçbir kalem damgalanmadı")
         return None, "llm"
     if yakin_iska:
+        _ham_dali(ham, "sessizlik_jetonu_yakin_iska")
         obs.log("bekci_brifingi_sessizlik_jetonu_yakin_iska", cevap=cevap[:200],
                 detail="cevap jetona benziyor ama tam değil — niyet ölçülemez, ham gider")
         return "", "ham"
 
     neden = _cevap_makul(cevap, ham)
     if neden:
+        _ham_dali(ham, "cevap_makul_degil")
         obs.log("bekci_brifingi_cevap_makul_degil", neden=neden, cevap=cevap[:200],
                 detail="model çıktısı sıralama sayılamaz — onarılmaz, ölçülen liste ham gider")
         return "", "ham"
+    # DENETİM YOLU DA İŞARETLENİR (TSK-201): teslim olayı `dal` alanı "ölçülmedi" (`None`) ile
+    # "denetim yoluna varıldı" arasında ayrım yapabilsin. Hüküm bu alanda DEĞİL, denetim olayında.
+    ham["dal"] = soul_denetimi.DAL_KURAL_GECISI
     return _kural_gecisi(cevap, istem, ham)
 
 
@@ -1234,7 +1260,11 @@ def main(argv: list[str] | None = None) -> int:
     damgalanan = _damgala(ham, damgalanabilir, simdi)
     # TESLİMAT ARDIŞIK SESSİZLİK ZİNCİRİNİ KIRAR — zorla teslim de dâhil (operatöre ULAŞTI).
     _sessiz_sayaci_sifirla()
-    obs.log("bekci_brifingi_teslim", siralama=kaynak, damgalanan=damgalanan,
+    # `dal` (TSK-201): teslimin HANGİ daldan geldiği — eskiden yalnız aynı dakikadaki ayrı dal
+    # olayıyla EŞLEŞTİRİLEREK bulunabiliyordu. Değer bir ham dal adı (o olayın soneki) ya da
+    # `soul_denetimi.DAL_KURAL_GECISI`; `None` = "ölçülmedi" (bugün erişilmeyen yol).
+    # OKUYUCU: `ops/olay_sorgu.py --sql`.
+    obs.log("bekci_brifingi_teslim", siralama=kaynak, dal=ham.get("dal"), damgalanan=damgalanan,
             bastirilan=len(ham["bastirilan"]),
             detail="ölçülen liste teslim edildi; yalnız mesaja GİREN kalemler damgalandı")
     print(f"TESLİM EDİLDİ · sıralama={kaynak} · damgalanan={len(damgalanan)} kalem · "
