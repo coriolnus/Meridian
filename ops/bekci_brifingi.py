@@ -279,16 +279,9 @@ AYIRAC_CIZGISI = "──"
 _CIZGI_AILESI = "─━┄┅┈┉╌╍═≡—–‒―▬▭▁▔"
 _CIZGI_KATLAMA = str.maketrans({c: "-" for c in _CIZGI_AILESI})
 
-SESSIZLIK_JETONU = "SESSIZ"
-
-# Jeton karşılaştırmasında KENARLARDAN soyulanlar: boşluk aileleri (NBSP ve sıfır-genişlikliler
-# dâhil), markdown vurgusu, backtick, tırnak çeşitleri, madde işaretleri ve cümle noktalaması.
-_KENAR_KARAKTERLERI = " \t\r\n ​‌‍﻿`*_~\"'“”‘’.,;:!?()[]{}<>#-–—•·"
-
-# TÜRKÇE İ/I/i/ı KATLAMASI. `"İ".upper()` YİNE `İ`dir — yani `.upper() == "SESSIZ"` testi
-# `SESSİZ`i KAÇIRIR, ve Türkçe yazan bir modelin "sessiz" kelimesini büyütürken `SESSİZ`
-# üretmesi doğal ortografidir, egzotik bir uç durum değil. Dört harf de tek harfe katlanır.
-_TR_KATLAMA = str.maketrans({"İ": "I", "ı": "I", "i": "I", "I": "I"})
+# SESSİZLİK JETONU BU DOSYADA DEĞİL (TSK-202): jeton, kenar kümesi, Türkçe katlama ve
+# tam-jeton/yakın-ıska kararı `soul_denetimi.jeton_gecer_mi`dedir ve üç bot ONU okur. Bu
+# dosyanın kopyası sessizce ayrışmıştı: şerhi "NBSP dâhil" diyordu, kümede NBSP yoktu.
 
 # --- PROMPT ENJEKSİYONU: GÜVENİLMEZ BÖLGE İŞARETİ -----------------------------------------------
 # TAŞIYICI HAYALİ DEĞİL: kalem adları, sebep dizgeleri ve kanıt alanları DEFTERDEN gelir ve
@@ -935,26 +928,6 @@ def _profili_cagir(prompt: str) -> str:
 # SIRALAMA — modelin cevabı ÖNCE sınanır, sonra teslim edilir
 # ================================================================================================
 
-def _jeton_normalize(s: str) -> str:
-    """Cevabı sessizlik jetonuyla karşılaştırılabilir hâle getirir: Türkçe İ/I/i/ı katlanır,
-    büyütülür, kenarlardaki boşluk/noktalama/tırnak/backtick/madde işareti soyulur."""
-    return s.translate(_TR_KATLAMA).upper().strip(_KENAR_KARAKTERLERI)
-
-
-def _jeton_gecer_mi(cevap: str) -> tuple[bool, bool]:
-    """`(tam_jeton, yakin_iska)`.
-
-    İKİ HATANIN BEDELİ SİMETRİK DEĞİLDİR ve kural o asimetriden türetilmiştir: yakın-ıskayı
-    "sıralama metni" saymak bir arızayı KALICI olarak kaybettirir; ham listeye düşmek ise yalnız
-    daha uzun bir mesaj demektir. Güvenli yön HAMdır, o yüzden jeton bir KONTROL KELİMESİ gibi
-    ele alınır: tam değilse ve cevapta geçiyorsa, cevabın tamamı şüphelidir."""
-    norm = _jeton_normalize(cevap)
-    if norm == SESSIZLIK_JETONU:
-        return True, False
-    kelimeler = [w.strip(_KENAR_KARAKTERLERI) for w in norm.split()]
-    return False, SESSIZLIK_JETONU in kelimeler
-
-
 def _cevap_makul(cevap: str, ham: dict) -> str | None:
     """`None` = cevap bir sıralama olabilir; aksi hâlde REDDETME NEDENİ.
 
@@ -964,7 +937,7 @@ def _cevap_makul(cevap: str, ham: dict) -> str | None:
     kalan = cevap.replace(_kapsam_satiri(ham), " ")
     for satir in _olculen_liste(ham):
         kalan = kalan.replace(satir, " ")
-    anlamli = sum(1 for c in kalan if c.isalnum())
+    anlamli = soul_denetimi.anlamli_karakter_sayisi(kalan)   # TEK sayım: jeton tavanı da bunu okur
     if not anlamli:
         return "cevapta tek bir harf/rakam yok (yalnız noktalama/boşluk)"
     if anlamli < CEVAP_TABANI:
@@ -1024,7 +997,7 @@ def sirala(ham: dict) -> tuple[str | None, str]:
                 detail="profil boş cevap verdi — boş cevap SESSİZ hükmü değildir, ham gider")
         return "", "ham"
 
-    tam_jeton, yakin_iska = _jeton_gecer_mi(cevap)
+    tam_jeton, yakin_iska = soul_denetimi.jeton_gecer_mi(cevap)
     if tam_jeton:
         if _olculemeyenler(ham) or ham.get("tarama_hatasi") or ham.get("bicimsiz"):
             # `SESSIZ` bir ÖNCELİK yargısıdır ve model onu vermeye yetkilidir. Ama "ölçülemedi"

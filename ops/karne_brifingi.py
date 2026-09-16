@@ -437,16 +437,10 @@ def _ayirac_etkisizlestir(metin: str) -> str:
 # modelin susma hükmüdür; burada modelin KENDİSİNE VERİLMEMİŞ bir yetkiyi kullanma denemesidir.
 # Tanınması yine de şart: tanınmazsa "SESSIZ" tek başına bir SUNUM sayılır ve operatöre
 # gerekçe yerine tek kelime gider.
-SESSIZLIK_JETONU = "SESSIZ"
-
-# Jeton karşılaştırmasında KENARLARDAN soyulanlar: boşluk aileleri (NBSP ve sıfır-genişlikliler
-# dâhil), markdown vurgusu, backtick, tırnak çeşitleri, madde işaretleri ve cümle noktalaması.
-_KENAR_KARAKTERLERI = " \t\r\n ​‌‍﻿`*_~\"'“”‘’.,;:!?()[]{}<>#-–—•·"
-
-# TÜRKÇE İ/I/i/ı KATLAMASI. `"İ".upper()` YİNE `İ`dir — yani `.upper() == "SESSIZ"` testi
-# `SESSİZ`i KAÇIRIR, ve Türkçe yazan bir modelin "sessiz" kelimesini büyütürken `SESSİZ`
-# üretmesi doğal ortografidir, egzotik bir uç durum değil. Dört harf de tek harfe katlanır.
-_TR_KATLAMA = str.maketrans({"İ": "I", "ı": "I", "i": "I", "I": "I"})
+# TÜRETİLİR, YAZILMAZ (TSK-202): jeton, kenar kümesi ve katlama `soul_denetimi`ndedir. Bu dosyanın
+# kopyası sessizce ayrışmıştı (şerhi "NBSP dâhil" diyordu, kümede NBSP yoktu). Ad burada durur
+# çünkü SOUL çivisi jetonu bu modülden okur.
+SESSIZLIK_JETONU = soul_denetimi.SESSIZLIK_JETONU
 
 # --- PROMPT ENJEKSİYONU: GÜVENİLMEZ BÖLGE İŞARETİ -----------------------------------------------
 # TAŞIYICI HAYALİ DEĞİL: hüküm gerekçeleri (`neden`) defterden ve ÜÇÜNCÜ TARAF kütüphanelerin
@@ -1281,16 +1275,13 @@ def _profili_cagir(prompt: str) -> str:
 # SUNUM — modelin cevabı ÖNCE sınanır, sonra teslim edilir
 # ================================================================================================
 
-def _jeton_normalize(s: str) -> str:
-    """Cevabı sessizlik jetonuyla karşılaştırılabilir hâle getirir: Türkçe İ/I/i/ı katlanır,
-    büyütülür, kenarlardaki boşluk/noktalama/tırnak/backtick/madde işareti soyulur."""
-    return s.translate(_TR_KATLAMA).upper().strip(_KENAR_KARAKTERLERI)
-
-
 def _jeton_mu(cevap: str) -> bool:
     """Cevabın TAMAMI sessizlik jetonu mu?
 
-    `@bekci`DEN AYNEN ALINDI ama SONUCU FARKLI (SAPMA 1): orada bu bir SUSMA HÜKMÜdür; burada
+    ORTAK İLKELİN YALNIZ TAM YARISI (TSK-202): karar `soul_denetimi.jeton_gecer_mi`dedir ve kardeş
+    botlarla AYNI normalizasyonu kullanır; yakın-ıska yarısı burada bilerek OKUNMAZ (aşağıda).
+
+    `@bekci`DEKİYLE AYNI TANIMA, SONUCU FARKLI (SAPMA 1): orada bu bir SUSMA HÜKMÜdür; burada
     bir MEKANİZMA ANOMALİSİdir. Tanıma yine de gerekli — tanınmazsa "SESSIZ" tek başına bir
     sunum sayılır ve operatöre gerekçe yerine tek kelime gider.
 
@@ -1301,7 +1292,7 @@ def _jeton_mu(cevap: str) -> bool:
     ve SOUL'un kendisi "sessizlik/susmak" kelimelerini defalarca kullanıyor (model prompt
     sözlüğünü aynalar): kusursuz bir sunum, içinde tek bir "sessiz" geçtiği için atılırdı.
     Bedel düşük değildi — FAYDA sıfırdı."""
-    return _jeton_normalize(cevap) == SESSIZLIK_JETONU
+    return soul_denetimi.jeton_gecer_mi(cevap)[0]   # [1] yakın ıska: bu botta bilerek okunmaz
 
 
 def _cevap_makul(cevap: str, ham: dict) -> str | None:
@@ -1313,7 +1304,7 @@ def _cevap_makul(cevap: str, ham: dict) -> str | None:
     kalan = cevap.replace(_kapsam_satiri(ham), " ")
     for satir in _olculen_karne(ham):
         kalan = kalan.replace(satir, " ")
-    anlamli = sum(1 for c in kalan if c.isalnum())
+    anlamli = soul_denetimi.anlamli_karakter_sayisi(kalan)   # TEK sayım: jeton tavanı da bunu okur
     if not anlamli:
         return "cevapta tek bir harf/rakam yok (yalnız noktalama/boşluk)"
     if anlamli < CEVAP_TABANI:
