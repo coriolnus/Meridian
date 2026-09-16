@@ -11,8 +11,11 @@ GET /v2/aggs/ticker/{t}/range/{mult}/{timespan}/{from}/{to}, GET /v3/reference/t
 eşlemesi results[] → CSV şeması (o/h/l/c/v; t unix-ms → ET seans tarihi; vw/n/otc ATILIR).
 (b) Kilit girişler: grouped_daily(), custom_bars(), snapshot()/latest_bar()/bar_for(), covers(),
 write_enabled()/mode()/verify_basis(), verify() (CLI --dogrula), ping(), status(), reset_cache().
-Yazım kapısı İKİ EKSEN ölçer (TSK-194): fiyat (compare) ve hacim (compare_hacim — tam sayı şartı +
-bağıl fark, AYRI eşiklerle); düşüren eksen hüküm dosyasındaki failed_axes alanında adıyla durur.
+Yazım kapısı İKİ EKSEN ölçer (TSK-194): fiyat (compare) ve hacim ÖLÇEĞİ (compare_hacim bağıl farkı);
+düşüren eksen hüküm dosyasındaki failed_axes alanında adıyla durur. Hacmin TAM SAYI şartı üçüncü bir
+ölçümdür ama KAPI EKSENİ DEĞİL, ALARM eksenidir (tur 2): ihlal alarm_axes/alarms alanlarında ve
+massive_hacim_tam_sayi_ihlali olayında görünür, hükmü "uyumsuz" YAPMAZ ve yazımı kapatmaz — bütünlük
+yazım tarafında korunuyor (TSK-192), kapatmanın bedeli ise ölçülmüş kota yağmurudur.
 (c) Değişmezler: ANAHTAR GEREKMEZ sanılmasın — MASSIVE_API_KEY yoksa her uç None döner ve zincir
 (FMP→Cboe→Nasdaq) aynen sürer; None="istek atılamadı", []="sağlayıcı sıfır satır döndürdü"
 (HATA≠BOŞ disiplini) ve anahtar yokluğu bir kez adıyla kaydedilir. YAZIM ZİNCİRİNE GİRİŞ ÖLÇÜME
@@ -122,18 +125,41 @@ ROUND_EPS = 0.005                # CSV'deki yuvarlama payı (yarım cent) — uc
 # yuvarlama payı taşır (`ROUND_EPS`, çünkü CSV kapanışı yuvarlanmış olabilir ve yarım cent ucuz
 # hissede %0.1'i tek başına aşar). Hacimde yuvarlama payı ANLAMSIZDIR: hisse hacmi bir SAYIMdır,
 # yarım hisse diye bir şey yoktur. Bu yüzden hacim kıyası `_tol_for`dan GEÇMEZ.
-VERIFY_VOL_TOL = 0.01            # BAĞIL fark eşiği (%1). GEREKÇE ÖLÇÜMDEN: BASELINE["volume_check"]
+#
+# EŞİKLERİN ROLÜ AYRIDIR (TSK-194 tur 2 — Rol-1 kararı, 2026-09-16). Aşağıdaki üç sabitin DEĞERİ
+# değişmedi; değişen şey her birinin YETKİSİDİR. İki eksen, iki yetki:
+#   * KAPATMA EKSENİ (hacim ÖLÇEĞİ: `VERIFY_VOL_TOL` + `VERIFY_VOL_MAX_MISMATCH`) — hüküm
+#     "uyumsuz", `write_enabled` KAPANIR. Ölçek/birim sapması hacim R'sine, likidite kapılarına ve
+#     RVOL sinyallerine GİRER: orada bozuk veri kararı doğrudan etkiler, yazım durdurulmalıdır.
+#   * ALARM EKSENİ (hacim TAM SAYI: `VERIFY_VOL_FRAC_MAX`) — hüküm "uyumsuz" OLMAZ, kapı KAPANMAZ;
+#     ihlal adıyla duyurulur ve hüküm yapısında (`alarm_axes`/`alarms`) görünür kalır.
+# ALARM EKSENİNİN ÜÇ GEREKÇESİ (hepsi ölçülmüş; hafıza: bu tasarım sorusuna emsal kayıt YOK):
+#   1. TSK-192 YAZIM tarafını kapattı ve bugün CANLIDA: kesirli hacim diske TAM SAYI yazılıyor
+#      (`data._hacim_tam_sayi`) ve tur sonunda duyuruluyor (`data._emit_hacim_round`). Yani kesirli
+#      hacim artık bir VERİ BÜTÜNLÜĞÜ riski DEĞİL — yalnızca bir KAYNAK KALİTESİ sinyali.
+#   2. Kapatmanın BEDELİ ölçülmüş: kapı kapanınca bar zinciri sembol-BAŞINA yedeklere döner ve
+#      ücretsiz plan kotası evren büyüklüğünün ALTINDA (FMP 250 çağrı/gün, evren 251 sembol).
+#      Çalışan bir kanalı kapatmak gerçek ve ölçülmüş bir bedeldir.
+#   3. Kesirli oran sağlayıcıda YÜKSEK (canlı anlık görüntüde 12.404 sembolün 11.085'i, TSK-192
+#      ölçümü): haftalık kol `verify`i OTOMATİK koşuyor, yani sıfır toleranslı kapatma yazım modunu
+#      kendiliğinden ve sürekli kapatırdı.
+VERIFY_VOL_TOL = 0.01            # KAPATMA EKSENİ. BAĞIL fark eşiği (%1). GEREKÇE ÖLÇÜMDEN: BASELINE["volume_check"]
                                  # (2026-07-28, 251 sembol) uyuşan barların BİREBİR aynı olduğunu
                                  # gösterdi (239/251 tam eşit, medyan oran 1.000); ayrışanlar 1.10–2.32
                                  # bandındaydı. Yani ARA BANT GÖZLENMEDİ — %1, kaynakların geç
                                  # düzeltmesi/konsolide bant farkı için bırakılmış DAR paydır,
                                  # yuvarlama payı DEĞİL (hacimde öyle bir şey yok).
-VERIFY_VOL_FRAC_MAX = 0.0        # TAM SAYI ŞARTI: sağlayıcı barlarının kesirli hacim taşıyan oranı bu
-                                 # değeri AŞARSA hacim ekseni uyumsuzdur. SIFIR ve bu bir tercih değil:
-                                 # kesirli hacim bir ÖLÇÜ BİRİMİ kırılmasıdır (TSK-192'de canlı
-                                 # deftere düştü), "biraz kesirli" diye bir şey yoktur — tek bar bile
-                                 # ölçülmüş bir sözleşme ihlalidir.
-VERIFY_VOL_MAX_MISMATCH = 0.10   # örtüşen barların en çok %10'u VERIFY_VOL_TOL'ü aşabilir.
+VERIFY_VOL_FRAC_MAX = 0.0        # ALARM EKSENİ — DUYURUR, KAPATMAZ. TAM SAYI ŞARTI: sağlayıcı
+                                 # barlarının kesirli hacim taşıyan oranı bu değeri AŞARSA ihlal
+                                 # ADIYLA duyurulur (`massive_hacim_tam_sayi_ihlali`) ve hükümde
+                                 # görünür; birleşik hüküm "uyumsuz" OLMAZ, yazım kapısı KAPANMAZ.
+                                 # DEĞER HÂLÂ SIFIR ve bu bir tercih değil: kesirli hacim bir ÖLÇÜ
+                                 # BİRİMİ kırılmasıdır (TSK-192'de canlı deftere düştü), "biraz
+                                 # kesirli" diye bir şey yoktur — tek bar bile ölçülmüş bir sözleşme
+                                 # ihlalidir ve sayılır. Değişen tek şey İHLALİN SONUCU: TSK-192
+                                 # yazım tarafını kapattığı için ihlal artık bütünlük değil KAYNAK
+                                 # KALİTESİ sinyalidir (üç gerekçe yukarıda).
+VERIFY_VOL_MAX_MISMATCH = 0.10   # KAPATMA EKSENİ. örtüşen barların en çok %10'u VERIFY_VOL_TOL'ü aşabilir.
                                  # GEREKÇE: BASELINE["volume_check"]te 12/251 = %4.8 sembol AYRIŞTI ve
                                  # sebebi ölçüldü — ayrışanlar BİZİM önbelleğimizdeki yarım/gecikmeli
                                  # barlardı (Massive'in barı daha tam), sağlayıcı ölçek kırılması
@@ -688,11 +714,18 @@ def verify_basis() -> dict:
         # `failed_axes` PANOYA ÇIKAR (api._saglayici_satiri → "dogrulama"): "uyumsuz" hükmünü gören
         # operatör fiyatın mı hacmin mi düştüğünü tahmin etmek zorunda kalmaz (YASA 6: hüküm
         # dosyasına yazılan eksen alanının DIŞ okuyucusu budur).
+        # `alarms` de PANOYA ÇIKAR ve `failed_axes`ten AYRI durur (TSK-194 tur 2): "uyumlu" hükmü
+        # ALARM taşıyabilir — kapı açıkken bile sağlayıcı kalitesi bozuk olabilir. İkisi tek alanda
+        # birleştirilseydi okuyucu "kapı kapandı mı?" sorusunu alandan cevaplayamazdı (YASA 6).
         return {"basis": "yerel_olcum", "verdict": v.get("verdict"), "samples": v.get("samples"),
                 "checked_at": v.get("checked_at"), "max_dev": v.get("max_dev"),
-                "failed_axes": v.get("failed_axes"), "axes": v.get("axes")}
+                "failed_axes": v.get("failed_axes"), "axes": v.get("axes"),
+                "alarms": v.get("alarms"), "alarm_axes": v.get("alarm_axes")}
     return {"basis": "rol1_taban", "verdict": BASELINE["verdict"], "at": BASELINE["at"],
             "method": BASELINE["method"], "detail": BASELINE["detail"],
+            # TABANDA ALARM ÖLÇÜMÜ YOKTUR — None, boş liste DEĞİL: "[]" okunduğunda "ölçtüm, alarm
+            # yok" demektir ve bu uydurma olurdu (taban tam sayı eksenini hiç sormadı).
+            "alarms": None,
             # TABAN HANGİ EKSENLERİ KAPSAR: fiyat ölçeği + hacim ÖLÇEĞİ. Hacmin TAM SAYI şartı bu
             # tabanda HİÇ ölçülmedi (bkz. BASELINE["volume_check"]) — kapsanmayan eksen için taban
             # değeri UYDURULMAZ, yokluğu adıyla görünür.
@@ -810,9 +843,13 @@ def compare_hacim(ref: dict, mas: dict, tol: float = VERIFY_VOL_TOL) -> dict:
     (a) TAM SAYI ŞARTI sağlayıcı tarafının TEK BAŞINA özelliğidir, kıyas değil: örtüşme olmasa da
         ölçülür, çünkü "kesirli hacim" yerel önbellekten bağımsız bir ölçü birimi kırılmasıdır.
         Bu yüzden `fractional` SAĞLAYICININ TÜM barları üzerinden sayılır, örtüşen günler üzerinden
-        değil — örtüşme dar olduğunda kesir saklanabilirdi.
+        değil — örtüşme dar olduğunda kesir saklanabilirdi. Bu sayaç ALARM ekseninin girdisidir
+        (tur 2): `verify` onu kapıya değil `alarm_axes`e bağlar.
     (b) BAĞIL FARK yalnız ÖRTÜŞEN günlerde ölçülür ve `_tol_for`dan GEÇMEZ (hacimde yuvarlama payı
-        yoktur — gerekçe `VERIFY_VOL_TOL` sabitinin yanında).
+        yoktur — gerekçe `VERIFY_VOL_TOL` sabitinin yanında). Bu sayaç KAPATMA ekseninin girdisidir.
+
+    Bu fonksiyon ÖLÇER, HÜKÜM VERMEZ: iki sayacın hangisinin kapıyı kapattığı burada değil
+    `verify`de kararlaşır — ölçüm ile yetki ayrı tutulmazsa rol değişikliği ölçüm koduna sızardı.
 
     Saf fonksiyon: ağ yok, yazım yok. Okunamayan hacim "uyumlu" SAYILMAZ, `unmeasured` kovasına
     yazılır (K5 sınıfı: eksik alan sessizce geçmesin)."""
@@ -970,13 +1007,19 @@ def verify(symbols: list[str] | None = None, days: int = 60, tol: float = VERIFY
                    varsayılan KAPALI. Brief'in istediği kıyas budur; ölçülür ve raporlanır ama kapıyı
                    tek başına açmaz — çünkü FMP bugün hiçbir sembolün geçmişini sahiplenmiyor.
 
-    İKİ EKSEN ÖLÇÜLÜR, AYRI EŞİKLERLE (TSK-194): FİYAT (kapanış bağıl farkı, `compare`) ve HACİM
-    (tam sayı şartı + bağıl fark, `compare_hacim`). Eksenlerin hükmü AYRI AYRI `out["axes"]`e
-    yazılır ve düşüren eksen(ler) `out["failed_axes"]`te adıyla durur — "uyumsuz" hükmünü okuyan
-    operatör fiyatın mı hacmin mi düştüğünü TAHMİN ETMEK ZORUNDA KALMAZ. Birleşik hüküm en kötü
-    ekseni izler: bir eksen "uyumsuz" ise hüküm uyumsuzdur (`write_enabled` kapanır); hiçbiri
-    uyumsuz değilse ama biri ÖLÇÜLEMEDİYSE hüküm "olculemedi"dir — ölçülememiş bir eksen sessizce
-    "uyumlu" SAYILMAZ (uydurma yasağı), yalnız çürütme de sayılmaz ve kapı tabana döner.
+    İKİ KAPATMA EKSENİ ÖLÇÜLÜR, AYRI EŞİKLERLE (TSK-194): FİYAT (kapanış bağıl farkı, `compare`) ve
+    HACİM ÖLÇEĞİ (bağıl fark, `compare_hacim`). Eksenlerin hükmü AYRI AYRI `out["axes"]`e yazılır ve
+    düşüren eksen(ler) `out["failed_axes"]`te adıyla durur — "uyumsuz" hükmünü okuyan operatör
+    fiyatın mı hacmin mi düştüğünü TAHMİN ETMEK ZORUNDA KALMAZ. Birleşik hüküm en kötü ekseni izler:
+    bir eksen "uyumsuz" ise hüküm uyumsuzdur (`write_enabled` kapanır); hiçbiri uyumsuz değilse ama
+    biri ÖLÇÜLEMEDİYSE hüküm "olculemedi"dir — ölçülememiş bir eksen sessizce "uyumlu" SAYILMAZ
+    (uydurma yasağı), yalnız çürütme de sayılmaz ve kapı tabana döner.
+
+    ÜÇÜNCÜ ÖLÇÜM, AYRI YETKİ (tur 2): hacmin TAM SAYI şartı. Ölçülür ve sayılır ama KAPIYA
+    BAĞLANMAZ — hükmü `out["alarm_axes"]`te, öten alarmlar `out["alarms"]`ta durur, hüküm satırına
+    "ALARM (kapı KAPANMADI): …" eki düşer ve `massive_hacim_tam_sayi_ihlali` olayı basılır.
+    "uyumlu" bir hüküm alarm TAŞIYABİLİR; iki listeyi tek alanda birleştirmek "kapı kapandı mı?"
+    sorusunu cevaplanamaz yapardı. Gerekçe `VERIFY_VOL_FRAC_MAX` şerhinde (üç ölçüm).
 
     Hüküm: yeterli örneklem VE toleransı aşan bar oranı eşiğin altında ise "uyumlu". Aksi hâlde
     "uyumsuz" — ve `write_enabled()` kapalı kalır, yani zincire DOKUNULMAZ (yalnız-alarm sürer).
@@ -995,10 +1038,15 @@ def verify(symbols: list[str] | None = None, days: int = 60, tol: float = VERIFY
                           "vol_tol": VERIFY_VOL_TOL, "vol_frac_max": VERIFY_VOL_FRAC_MAX,
                           "vol_max_mismatch": VERIFY_VOL_MAX_MISMATCH}}
     if not available():
+        # ALARM ekseni de anahtarsız ÖLÇÜLEMEZ. Yapı burada da EKSİKSİZ yazılır ve `failed_axes` ile
+        # AYNI sözleşmeyi taşır: liste "öten alarm YOK" der, eksenin kendi hükmü ("olculemedi")
+        # ölçümün hiç yapılmadığını söyler — ikisi ayrı alan olduğu için karışmazlar.
         out.update({"verdict": "olculemedi", "reason": "MASSIVE_API_KEY yok", "samples": 0,
-                    "failed_axes": [],
+                    "failed_axes": [], "alarms": [],
                     "axes": {"fiyat": {"verdict": "olculemedi", "reason": "MASSIVE_API_KEY yok"},
-                             "hacim": {"verdict": "olculemedi", "reason": "MASSIVE_API_KEY yok"}}})
+                             "hacim": {"verdict": "olculemedi", "reason": "MASSIVE_API_KEY yok"}},
+                    "alarm_axes": {"hacim_tam_sayi": {"verdict": "olculemedi",
+                                                      "reason": "MASSIVE_API_KEY yok"}}})
         return out
     tot_s = tot_m = 0
     worst, worst_sym = 0.0, None
@@ -1067,19 +1115,18 @@ def verify(symbols: list[str] | None = None, days: int = 60, tol: float = VERIFY
     else:
         fiyat = {"verdict": "uyumlu",
                  "reason": f"{tot_s} barın {tot_m} tanesi toleransı aştı — aynı ayarlama ölçeği"}
-    # --- EKSEN 2: HACİM (tam sayı şartı ÖNCE — kıyas gerektirmez) --------------------------
+    # --- EKSEN 2: HACİM ÖLÇEĞİ — KAPATMA EKSENİ (TSK-194 tur 2) ----------------------------
+    # Bu eksen YALNIZ ölçek/birim sapmasını ölçer. Tam sayı şartı buradan ÇIKARILDI: o şart artık
+    # alarm eksenidir (gerekçe `VERIFY_VOL_FRAC_MAX` şerhinde, üç ölçümle). Ayrım şu yüzden
+    # zorunluydu: tam sayı şartı elif zincirinin BAŞINDAYKEN tek bir kesirli bar ölçek kıyasını
+    # KISA DEVRE yapıyordu — kapatma ekseni hiç ölçülmeden hüküm veriliyordu.
     if v_bars == 0:
         hacim = {"verdict": "olculemedi",
                  "reason": (f"sağlayıcı yanıtında okunabilir hacim YOK ({v_unmeasured} bar eksik/"
                             f"biçimsiz alan) — hacim ekseni ÖLÇÜLEMEDİ, sessizce uyumlu SAYILMAZ")}
-    elif (v_frac / v_bars) > VERIFY_VOL_FRAC_MAX:
-        hacim = {"verdict": "uyumsuz",
-                 "reason": (f"{v_bars} sağlayıcı barının {v_frac} tanesi KESİRLİ hacim taşıyor "
-                            f"(örnek {v_frac_ornek}) — hacim bir SAYIMdır, kesir ölçü birimi "
-                            f"kırılmasıdır (eşik VERIFY_VOL_FRAC_MAX)")}
     elif v_s < VERIFY_MIN_SAMPLES:
         hacim = {"verdict": "yetersiz_orneklem",
-                 "reason": (f"tam sayı şartı {v_bars} barda geçti ama örtüşen hacim örneklemi "
+                 "reason": (f"{v_bars} sağlayıcı barı okundu ama örtüşen hacim örneklemi "
                             f"{v_s} < gereken {VERIFY_MIN_SAMPLES} — ölçek KIYASLANAMADI")}
     elif (v_m / v_s) > VERIFY_VOL_MAX_MISMATCH:
         hacim = {"verdict": "uyumsuz",
@@ -1088,8 +1135,27 @@ def verify(symbols: list[str] | None = None, days: int = 60, tol: float = VERIFY
                             f"{v_worst_sym}) — hacim ölçeği ayrışmış")}
     else:
         hacim = {"verdict": "uyumlu",
-                 "reason": (f"{v_bars} barın tamamı tam sayı; {v_s} örtüşen barın {v_m} tanesi "
-                            f"bağıl farkı aştı")}
+                 "reason": (f"{v_s} örtüşen barın {v_m} tanesi %{100 * VERIFY_VOL_TOL:.2f} bağıl "
+                            f"farkını aştı — hacim ölçeği aynı")}
+    # --- ALARM EKSENİ: HACİM TAM SAYI — DUYURUR, KAPATMAZ (TSK-194 tur 2) ------------------
+    # Hüküm sözcüğü BİLEREK "uyumsuz" DEĞİL "ihlal": `failed_axes` kapı vokabülerini kullanır ve
+    # bu eksen oraya ASLA girmemelidir. Ayrı sözcük, ayrı liste (`alarms`), ayrı olay adı —
+    # üçü birden, çünkü tek bir yerde "uyumsuz" yazmak kapıyı sessizce geri kapatırdı.
+    if v_bars == 0:
+        tam_sayi = {"verdict": "olculemedi",
+                    "reason": (f"sağlayıcı yanıtında okunabilir hacim YOK ({v_unmeasured} bar "
+                               f"eksik/biçimsiz alan) — tam sayı şartı ÖLÇÜLEMEDİ, sessizce "
+                               f"uyumlu SAYILMAZ")}
+    elif (v_frac / v_bars) > VERIFY_VOL_FRAC_MAX:
+        tam_sayi = {"verdict": "ihlal",
+                    "reason": (f"{v_bars} sağlayıcı barının {v_frac} tanesi KESİRLİ hacim taşıyor "
+                               f"(örnek {v_frac_ornek}) — hacim bir SAYIMdır, kesir ölçü birimi "
+                               f"kırılmasıdır (eşik VERIFY_VOL_FRAC_MAX). KAPI KAPANMAZ: yazım "
+                               f"tarafı bunu tam sayıya yuvarlar ve duyurur (TSK-192); bu bir "
+                               f"KAYNAK KALİTESİ alarmıdır, veri bütünlüğü çürütmesi değil")}
+    else:
+        tam_sayi = {"verdict": "uyumlu",
+                    "reason": f"{v_bars} sağlayıcı barının tamamı TAM SAYI hacim taşıyor"}
     # --- BİRLEŞİK HÜKÜM: en kötü eksen kazanır, düşüren eksen ADIYLA görünür ----------------
     # KURAL, İKİ CÜMLE: (1) "uyumsuz" her şeyi EZER — bir eksenin çürütmesi, diğerinin onayıyla
     # yıkanamaz; düşüren eksenlerin HEPSİ `failed_axes`te adıyla durur. (2) Çürütme yoksa hüküm,
@@ -1099,6 +1165,13 @@ def verify(symbols: list[str] | None = None, days: int = 60, tol: float = VERIFY
     # insan içindir, kapı için değil.
     eksenler = {"fiyat": fiyat, "hacim": hacim}
     out["axes"] = eksenler
+    # ALARM EKSENLERİ AYRI SÖZLÜKTE ve birleşik hükmün hesabına HİÇ girmezler — `axes` kapının
+    # gördüğü kümedir, `alarm_axes` yalnız okuyucunun. İkisini tek sözlükte tutup sözcükle ayırmak
+    # ucuz görünürdü, ama `dusuren`i hesaplayan bir sonraki eli yanıltmaya AÇIK olurdu.
+    alarm_eksenleri = {"hacim_tam_sayi": tam_sayi}
+    out["alarm_axes"] = alarm_eksenleri
+    oten = [ad for ad, e in alarm_eksenleri.items() if e["verdict"] == "ihlal"]
+    out["alarms"] = oten
     dusuren = [ad for ad, e in eksenler.items() if e["verdict"] == "uyumsuz"]
     out["failed_axes"] = dusuren
     if dusuren:
@@ -1110,6 +1183,12 @@ def verify(symbols: list[str] | None = None, days: int = 60, tol: float = VERIFY
         out["verdict"] = e["verdict"] if e else "uyumlu"
         out["reason"] = (f"{ad.upper()}: {e['reason']}" if e else
                          " | ".join(f"{a.upper()}: {x['reason']}" for a, x in eksenler.items()))
+    if oten:
+        # "uyumlu, AMA hacim tam sayı değil" tek satırda okunabilmeli: hüküm satırı panoya ve
+        # haftalık özete aynen çıkar; alarm oraya yazılmazsa okuyucu `alarm_axes`i açmadan durumu
+        # ayırt edemez ve "uyumlu" sözcüğü ihlali örter.
+        out["reason"] += " || ALARM (kapı KAPANMADI): " + " | ".join(
+            f"{ad.upper()}: {alarm_eksenleri[ad]['reason']}" for ad in oten)
     if write:
         try:
             _store().write_json(VERIFY_FILE, out)
@@ -1125,15 +1204,37 @@ def verify(symbols: list[str] | None = None, days: int = 60, tol: float = VERIFY
               samples=v_s, mismatches=v_m, max_dev=out.get("volume_max_dev"),
               thresholds={"vol_tol": VERIFY_VOL_TOL, "vol_frac_max": VERIFY_VOL_FRAC_MAX,
                           "vol_max_mismatch": VERIFY_VOL_MAX_MISMATCH},
-              detail="yazım kapısı HACİM ekseninde düştü — `massive.write_enabled` KAPANIR ve bar "
-                     "zinciri yedeklere (fmp → cboe → nasdaq) döner. Fiyat ekseni ayrı hüküm "
-                     "taşır; hangisinin düştüğü `failed_axes` alanındadır.")
+              detail="yazım kapısı HACİM ÖLÇEĞİ ekseninde düştü — `massive.write_enabled` KAPANIR "
+                     "ve bar zinciri yedeklere (fmp → cboe → nasdaq) döner. Fiyat ekseni ayrı "
+                     "hüküm taşır; hangisinin düştüğü `failed_axes` alanındadır.")
+    if tam_sayi["verdict"] == "ihlal":
+        # AYRI OLAY ADI, BİLEREK (TSK-194 tur 2). `massive_hacim_uyumsuz` olayı gövdesinde bir
+        # SONUÇ beyan eder: "kapı kapandı, zincir yedeklere döndü". Tam sayı ihlalinde o cümle
+        # YANLIŞ olurdu ve gerçekleşmemiş bir sonucu duyuran alarm, kanalın tamamına olan güveni
+        # aşındırır. İki olayın operatör cevabı da farklıdır: ölçek düşüşü ACİLdir (zincir zaten
+        # düştü, kota yağmuru başladı), tam sayı ihlali DEĞİLdir (yazım sürüyor, yuvarlama
+        # emiyor — sorgulanan şey kaynağın kalitesi). Olay adı bekçi/pano süzgecinin anahtarıdır:
+        # iki şiddeti tek ada toplamak ikisini de süzülemez yapardı.
+        _warn("massive_hacim_tam_sayi_ihlali", reason=tam_sayi["reason"],
+              provider_bars=v_bars, fractional=v_frac, fractional_example=v_frac_ornek,
+              fractional_pct=out.get("volume_fractional_pct"),
+              thresholds={"vol_frac_max": VERIFY_VOL_FRAC_MAX},
+              # `closes_gate` EKSENİN ÖZELLİĞİDİR (her zaman False), `verdict` ise O TURUN birleşik
+              # hükmü. İkisi ayrı: aynı turda ölçek ekseni düşmüş olabilir ve kapı BAŞKA bir sebeple
+              # kapalı olabilir — "bu alarm kapatmadı" ile "kapı açık" AYNI CÜMLE DEĞİLDİR.
+              closes_gate=False, verdict=out["verdict"],
+              detail="sağlayıcı KESİRLİ hacim veriyor — ALARM ekseni: yazım kapısı KAPANMADI ve "
+                     "`massive.write_enabled` bundan etkilenmez. Bütünlük yazım tarafında "
+                     "korunuyor (`data._hacim_tam_sayi` tam sayıya yuvarlar, "
+                     "`data._emit_hacim_round` tur sonunda duyurur); bu olay KAYNAK KALİTESİ "
+                     "sinyalidir. Kapatan eksen ayrıdır: `massive_hacim_uyumsuz`.")
     try:
         from .. import obs
         obs.log("massive_verify", verdict=out["verdict"], samples=tot_s, mismatches=tot_m,
                 max_dev=out.get("max_dev"), mode_after=mode(),
-                failed_axes=",".join(dusuren) or "-",
-                volume_verdict=hacim["verdict"], volume_samples=v_s, volume_fractional=v_frac)
+                failed_axes=",".join(dusuren) or "-", alarms=",".join(oten) or "-",
+                volume_verdict=hacim["verdict"], volume_integrality=tam_sayi["verdict"],
+                volume_samples=v_s, volume_fractional=v_frac)
     except Exception:
         # sessiz-yutma: kayıt kanalı düştü; ölçüm dosyası zaten yazıldı
         pass
@@ -1183,7 +1284,10 @@ def status() -> dict:
             "write_enabled": write_enabled(), "basis": verify_basis(),
             "verify": {"verdict": v.get("verdict"), "samples": v.get("samples"),
                        "checked_at": v.get("checked_at"), "max_dev": v.get("max_dev"),
-                       "failed_axes": v.get("failed_axes")},
+                       # `failed_axes` KAPIYI kapatanlar, `alarms` KAPATMAYAN ihlaller (TSK-194
+                       # tur 2). Pano satırı ikisini ayrı gösterebilmeli: "uyumlu + alarm" gerçek
+                       # ve sık bir durumdur, tek alana çökertilirse yanlış okunur.
+                       "failed_axes": v.get("failed_axes"), "alarms": v.get("alarms")},
             "rate_limit": f"{RATE_PER_MIN}/dk", "history_years": HISTORY_YEARS,
             "reason": "" if available() else f"{KEY_NAME} yok — Ayarlar'dan ekleyin"}
 
