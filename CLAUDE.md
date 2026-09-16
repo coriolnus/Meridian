@@ -40,6 +40,7 @@ kuralı silmeden/gevşetmeden önce o kaydı oku. Sayı taşıyan her satır öl
 | `MERIDIAN_ENGINEERING_LOG.md` | Gerekçe + vaka arşivi; bu dosyadaki künyelerin hedefi |
 | `serve.sh` | Canlı servis — yerelde koşma (çift-emir riski) |
 | `dagit.sh` | Dağıtım — bir sürümlük İNCE SARMALAYICI (2026-09-08): `deploy/ansible/dagit.yml`e yönlendirir (`--dry-run` = `--check --diff`); kapılar ve listeler ORADA (`deploy/ansible/vars/dagit_vars.yml` tek kaynak). Cwd'ye bakmaz, HER ZAMAN ana checkout (`$HOME/AI-Trading`) HEAD'ini iter |
+| `AGENTS.md` | **SYMLINK → `CLAUDE.md`** (kopya DEĞİL — tek-kaynak yasası). Codex ve AGENTS.md okuyan araçlar aynı anayasayı görür; araca bağlı farklar `docs/DEVIR-CODEX-2026-09-16.md`de |
 | `.claude/` | **VERSİYONLANMAZ** (`.gitignore`) → cloud klonuna GİTMEZ. Kural taşıması gereken her şey BU dosyada olmalı (vaka 2026-08-26) |
 
 Canlı: A1 Oracle, `ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87`. A1'e komut her zaman ssh
