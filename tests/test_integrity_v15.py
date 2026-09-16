@@ -161,6 +161,8 @@ def test_coherence_flags_derived_older_than_source(sandbox_state):
     art = config.STATE / "near_miss.json"
     art.write_text("{}")
     src.write_text('{"id":"x"}\n')
+    t_src = time.time() - w.COHERENCE_GRACE_S - 60     # TSK-203: kaynak damgası grace'in ötesine alındı, yarış tanımı
+    os.utime(src, (t_src, t_src))
     old = time.time() - 6 * 3600                       # türev 6 saat ESKİ
     os.utime(art, (old, old))
     rep = w.coherence_report()
