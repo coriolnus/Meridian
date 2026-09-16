@@ -58,5 +58,18 @@
     "deploy/**/*.yaml": "yaml"
   },
   "yaml.format.enable": false,
-  "redhat.telemetry.enabled": false
+  "redhat.telemetry.enabled": false,
+
+  // --- Git / GitHub: UZAKTAN OKUMA otomatik, YAZMA ASLA -------------------------------------
+  // `autofetch` yalnız `git fetch` koşar (yerel ağaca dokunmaz) — "GitHub'da ne değişti"
+  // sorusu editörde görünür olur. Ama hiçbir ayar OTOMATİK PUSH/COMMIT açmaz: commit ve push
+  // Rol-1'in tur kapanışı kararıdır (CLAUDE.md §8) ve kapıları (tam suite/CI) vardır — editörün
+  // "Sync" düğmesi bunları atlatacak bir yola dönüşmemeli. `postCommitCommand: none` bunu çiviler.
+  "git.autofetch": true,
+  "git.autofetchPeriod": 300,
+  "git.postCommitCommand": "none",
+  "git.enableSmartCommit": false,
+  "git.confirmSync": true,
+  "git.pruneOnFetch": true,
+  "githubPullRequests.pullBranch": "never"
 }
