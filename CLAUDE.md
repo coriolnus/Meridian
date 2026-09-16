@@ -202,6 +202,20 @@ Zorlanma katmanı dürüstçe etiketlidir — zorlanamayan yasa, zorlananla ayn�
   makine 8 GB, işçi ~680 MB — daha fazla işçi takasa düşer ve YAVAŞLAR. Hedefli/küçük koşumlar SERİ:
   `-n 4` küçük kümede işçi-açılışıyla net kayıptır. Suite penceresinde ajan/VS Code test koşumu YOK
   (yük-flake, vaka 2026-09-15 suite #56).
+- **DÖRT KATMAN — hangi koşum NEREDE** (operatör 2026-09-16; ölçüm TSK-193, kaynak ROADMAP'ten
+  buraya taşındı — kural burada yaşar):
+  1. **Yazarken tek dosya → VS Code test paneli** (~10 s). `.vscode/` yapılandırması bunun için
+     kuruldu: yorumlayıcı `.venv`e pinli, kaydetmede KEŞİF KAPALI (13k test her kaydetmede yeniden
+     taranmasın ve otoriter suite penceresine düşmesin), `launch.json`da iki koşum (açık dosya · `-k`).
+     Bu katman EDİTÖR KULLANICISININDIR — hızlı geri besleme içindir, hüküm üretmez.
+  2. **Merge öncesi hedefli kapsam + tarama çivileri → terminal, SERİ** (1–3 dk).
+  3. **Motor push öncesi tam suite → Rol-1, ARKA PLAN, `-n 4 --dist worksteal`** (~13 dk).
+  4. **Her push → CI duman** (~2 dk). Tam suite CI'a TAŞINMAZ: temiz klonda ~65 state-bağımlı
+     kırmızı + 2 vCPU + dakika kotası.
+  Rol-1 ve ajanlar 1. katmanı KULLANMAZ, terminalde koşar. Nedeni araç tercihi değil ÖLÇÜM:
+  hüküm ÜÇLÜDÜR ve üçü de DOSYADAN okunur (`FAILED|ERROR` grep + "N passed" satırı + `PYTEST_EXIT`);
+  test paneli bu üçlüyü vermez, ayrıca ajanlar worktree'de çalışır ve editör ana checkout'u açar.
+  Panel yeşili bir HÜKÜM DEĞİLDİR — harness bildirimiyle aynı sınıftadır (§6 üçlü hüküm maddesi).
 - **Donmuş ağaç:** suite koşarken dal değiştirilmez, dosya düzenlenmez. Başlarken HEAD'i çıktı
   dosyasına yaz; biterken karşılaştır — eşit değilse yeşil, tepenin ölçümü DEĞİLDİR: deltanın
   etkilenen kümesini ayrıca koş (vaka: paralel oturum, 2026-08-30).
