@@ -160,29 +160,91 @@ def _bump_wf_rev() -> None:
 # gelen TAM seriyle ezilir; ezilmeyen satır defterde sonsuza dek kalır (canlı: 1.357.997 satırda 1).
 # SÖZLEŞME BURADA KURULUR: hisse adedi tam sayıdır, kesir bilgi değil biçim artığıdır — ve düzeltme
 # SESSİZ DEĞİLDİR (Yasa 4): yuvarlanan her bar adıyla, tarihiyle ve HAM değeriyle duyurulur.
-#: Ondalıklı hacim uyarısının adı. YASA-6 OKUYUCU: `obs.warn` → `state/events.jsonl` →
+#: Ondalıklı hacim özet uyarısının adı. YASA-6 OKUYUCU: `obs.warn` → `state/events.jsonl` →
 #: `api.api_events` (`GET /api/events`, `obs.recent`) → pano olay akışı; aynı defteri
 #: `notify.inbox` bekçisi ve `ops/olay_sorgu.py` sorguları da tarar.
 HACIM_ONDALIK_OLAY = "bar_ondalikli_hacim"
-HACIM_ORNEK_SATIR = 5            # olaya yazılan örnek satır sayısı — kanıt yeter, sel gerekmez
-_HACIM_ONDALIK_GORULDU: set = set()   # (TICKER, tarih): aynı bar iki kez duyurulmaz (süreç-içi)
+HACIM_ORNEK_SATIR = 5            # ÖZETE giren örnek satır sayısı — sayaç büyür, olay BÜYÜMEZ
+# OLAY BAŞINA DEĞİL, TUR SONUNA — ve bu bir ÖLÇÜMÜN sonucudur (inceleme bulgusu 7, 2026-09-16):
+# sağlayıcının anlık görüntüsünde 12.404 sembolün 11.085'i kesirli hacim taşıyor. Yazım anında
+# olay basılsaydı massive kolunun yazdığı İLK turda evren kadar (bu depoda 260, sağlayıcı evreninde
+# on binlerce) satır düşerdi; `obs._emit`te genel bir hız sınırı YOK (6 saatlik susturma yalnız
+# `ALARM_*` jetonlarına uygulanır, bu olay onlardan değil), yani defter de bekçi brifingi de
+# operatörün dikkati de aynı bilgiyi binlerce kez taşırdı. DESEN DEPONUN KENDİSİNDEN: `_note_ghost`
+# (tarih başına, EVREN ÇAPINDA dedup) + `_emit_ghost_round` (tur sonunda TEK satır) — aynı sorunun
+# (259 sembolde 259 satır sinyali gömer) burada da aynı cevabı vardır. `ops/bar_arsivle.py` tarafı
+# da aynı deseni kullanır (koşum sonu tek `HACİM ONDALIK` özeti): iki yerde iki tasarım kalmaz.
+_HACIM_ONDALIK: dict = {}        # {tarih: {rows, tickers:set, ornekler:[...], max_kesir, max_kesir_ticker}}
+_HACIM_ONDALIK_DUYURULDU: set = set()   # TARİH başına BİR özet — sembol başına DEĞİL (evren çapında)
+
+
+def _not_hacim_ondalik(ticker: str, ciftler: list) -> None:
+    """Kesirli hacim satırlarını SAY (tarih başına); duyuru `_emit_hacim_round`ün işidir.
+
+    Sembol kümesi SET'tir: 12 bin sembollük bir turda listede `in` araması O(n²) olurdu ve bu
+    fonksiyon yazım boğazının içinde koşar. Örnek listesi TAVANLIDIR (`HACIM_ORNEK_SATIR`): sayaç
+    büyürken olayın kendisi büyümesin. `max_kesir` ATILAN hisse adedidir — "ne kadar bilgi
+    yuvarlandı" sorusunun ölçüsü; sıfır ile "ölçmedik" aynı görünmesin diye sembolü de saklanır."""
+    for tarih, ham in ciftler:
+        kayit = _HACIM_ONDALIK.setdefault(tarih, {"rows": 0, "tickers": set(), "ornekler": [],
+                                                  "max_kesir": 0.0, "max_kesir_ticker": None})
+        kayit["rows"] += 1
+        kayit["tickers"].add(ticker)
+        kesir = abs(ham - round(ham))
+        if kesir > kayit["max_kesir"]:
+            kayit["max_kesir"], kayit["max_kesir_ticker"] = kesir, ticker
+        if len(kayit["ornekler"]) < HACIM_ORNEK_SATIR:
+            kayit["ornekler"].append(f"{ticker}@{tarih}={ham!r}")
+
+
+def _emit_hacim_round() -> None:
+    """TUR SONU TEK ÖZET: bu turda DUYURULMAMIŞ tarihlerin hepsi tek olayda birleşir.
+
+    Dedup TARİH bazındadır ve EVREN ÇAPINDADIR (`_note_ghost` emsali): aynı seansın kesirli
+    hacmini 260 sembolde ayrı ayrı duyurmak, bir bilgiyi 260 kez taşımak olurdu. Yeni bir TARİH
+    görülmedikçe ikinci olay ATILMAZ — yani aynı bar her turda yeniden bağırmaz.
+    Olayın taşıdığı ölçüler: kaç satır · kaç sembol · hangi tarihler · en büyük atılan kesir
+    (sembolüyle) · ilk `HACIM_ORNEK_SATIR` örnek (sembol@tarih=ham değer). Sayaç (`_HACIM_ONDALIK`)
+    süreçte durur ve bu fonksiyon onun okuyucusudur."""
+    yeni = [t for t in sorted(_HACIM_ONDALIK) if t not in _HACIM_ONDALIK_DUYURULDU]
+    if not yeni:
+        return
+    _HACIM_ONDALIK_DUYURULDU.update(yeni)
+    satir = sum(_HACIM_ONDALIK[t]["rows"] for t in yeni)
+    semboller = {s for t in yeni for s in _HACIM_ONDALIK[t]["tickers"]}
+    ornekler = [o for t in yeni for o in _HACIM_ONDALIK[t]["ornekler"]][:HACIM_ORNEK_SATIR]
+    en_kesir, en_ticker, en_tarih = max((_HACIM_ONDALIK[t]["max_kesir"],
+                                         _HACIM_ONDALIK[t]["max_kesir_ticker"] or "?", t)
+                                        for t in yeni)
+    try:
+        from .. import obs
+        obs.warn(HACIM_ONDALIK_OLAY, rows=satir, tickers=len(semboller), n_dates=len(yeni),
+                 dates=",".join(yeni), ornekler="; ".join(ornekler),
+                 ornek_tavani=HACIM_ORNEK_SATIR, max_kesir=round(float(en_kesir), 6),
+                 max_kesir_ticker=en_ticker, max_kesir_date=en_tarih,
+                 detail="sağlayıcı kesirli hacim verdi (ölçüldü: massive grouped `v`); satırlar "
+                        "TAM SAYIYA yuvarlanarak yazıldı — hisse adedi tam sayıdır. Tarih başına "
+                        "TEK özet: aynı seans sembol sembol duyurulmaz")
+    except Exception as e:
+        # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci kanal yok ve bir telemetri denemesi
+        # bar yazımını ASLA düşüremez; sayaç `_HACIM_ONDALIK`te durur ve olay bir kez görünür kalır.
+        _bar_warn("hacim_ondalik_ozeti_dusti", e, dates=",".join(yeni))
 
 
 def _hacim_tam_sayi(df: pd.DataFrame, ticker: str) -> pd.DataFrame:
-    """Hacmi diske yazılmadan ÖNCE TAM SAYIYA bağlar; ondalık bulursa `HACIM_ONDALIK_OLAY` uyarır.
+    """Hacmi diske yazılmadan ÖNCE TAM SAYIYA bağlar; kesirli satırları SAYAR (duyuru tur sonunda).
 
     NEDEN YAZIM ANINDA, KAYNAKTA DEĞİL: kesirli hacmi bugün massive kolu getiriyor, yarın başka bir
     sağlayıcı getirebilir — sözleşmeyi tek tek kollara yazmak, yeni kolun onu sessizce atlaması
     demekti (bu depoda ölçülmüş sınıf). Burası bar CSV'sinin TEK yazım boğazıdır: hangi kol yazarsa
     yazsın buradan geçer.
 
-    SESSİZ DEĞİL (Yasa 4): yuvarlama bir ONARIMDIR ve onarım duyurulur — sembol, tarih ve HAM değer
-    uyarıya girer, yani "neyi değiştirdik" kaydı ölçülebilir kalır. Süreç-içi (TICKER, tarih)
-    defteri yalnız AYNI barın tekrar tekrar duyurulmasını keser; YENİ bir kesirli bar her zaman
-    duyurulur (gürültü kesme bedeli: aynı süreçte aynı barın ikinci yazımı sayılmaz — `n` bu
-    yazımdaki TOPLAM kesirli satır, `n_yeni` ilk kez duyurulan kısmıdır, ikisi ayrı ölçüdür).
+    SESSİZ DEĞİL (Yasa 4): yuvarlama bir ONARIMDIR ve onarım duyurulur — ama SATIR SATIR değil,
+    `_emit_hacim_round` ile TUR SONUNDA tek özette (gerekçe ve ölçüm sabitin yanında). Duyurunun
+    ertelenmesi onu sessiz yapmaz: sayaç yazım anında dolar, özet turun sonunda ADIYLA düşer ve
+    ham değer örnekte görünür.
 
-    Sembol ADI dosya yolundan türer ve dönüşüm TERSİNMEZDİR (`_cache_path` `.`ı `-` yapar): uyarıda
+    Sembol ADI dosya yolundan türer ve dönüşüm TERSİNMEZDİR (`_cache_path` `.`ı `-` yapar): olayda
     `BRK-B` görünür, `BRK.B` değil — ölçüm sınırı, tahmin değil.
     NaN/sonsuz hacme DOKUNULMAZ: onlar bu kapının sorusu değildir (uydurma yasağı)."""
     if df is None or df.empty or "volume" not in df.columns:
@@ -191,24 +253,11 @@ def _hacim_tam_sayi(df: pd.DataFrame, ticker: str) -> pd.DataFrame:
     kesirli = v.notna() & (v.sub(v.round()).abs() > 0)
     if not bool(kesirli.any()):
         return df
-    # TARİH VE DEĞER AYNI SATIRDAN ÇIKAR: iki listeyi ayrı ayrı süzmek, biri susturulduğunda
-    # diğerini KAYDIRIR ve uyarı "hangi günün hangi değeri" sorusuna yanlış cevap verirdi.
+    # TARİH VE DEĞER AYNI SATIRDAN ÇIKAR: iki listeyi ayrı ayrı toplamak, biri süzüldüğünde
+    # diğerini KAYDIRIR ve özet "hangi günün hangi değeri" sorusuna yanlış cevap verirdi.
     ciftler = ([(str(g)[:10], float(h)) for g, h in zip(df.loc[kesirli, "date"], v[kesirli])]
                if "date" in df.columns else [("?", float(h)) for h in v[kesirli]])
-    yeni = [(t, h) for t, h in ciftler if t == "?" or (ticker, t) not in _HACIM_ONDALIK_GORULDU]
-    _HACIM_ONDALIK_GORULDU.update((ticker, t) for t, _ in ciftler if t != "?")
-    if yeni:
-        try:
-            from .. import obs
-            obs.warn(HACIM_ONDALIK_OLAY, ticker=ticker, n=len(ciftler), n_yeni=len(yeni),
-                     dates=[t for t, _ in yeni[:HACIM_ORNEK_SATIR]],
-                     values=[h for _, h in yeni[:HACIM_ORNEK_SATIR]],
-                     detail="sağlayıcı kesirli hacim verdi (ölçüldü: massive grouped `v`); satır "
-                            "TAM SAYIYA yuvarlanarak yazıldı — hisse adedi tam sayıdır")
-        except Exception as e:
-            # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci kanal yok ve bir telemetri
-            # denemesi bar yazımını ASLA düşüremez; olay `_bar_warn` ile bir kez görünür kalır.
-            _bar_warn("hacim_ondalik_uyarisi_dusti", e, ticker=ticker)
+    _not_hacim_ondalik(ticker, ciftler)
     return df.assign(volume=df["volume"].where(~kesirli, v.round()))
 
 
@@ -2005,6 +2054,10 @@ def repair_coverage(tickers: list[str] | None = None, sessions: int = REPAIR_LOO
                         detail="onarım geçidi: eksik seans grouped anlık görüntüsünden kapatıldı")
             except Exception:  # sessiz-yutma: kayıt kanalı düştü; onarımın kendisi diske yazıldı
                 pass
+    # ONARIM DA BİR TURDUR: bu süpürme `load_many`den bağımsız çağrılır (scheduler) ve bar YAZAR.
+    # Özet burada atılmazsa onarımın yuvarladığı kesirler bir sonraki `load_many`ye kadar
+    # duyurulmadan kalırdı — "sonra duyururuz" ile "hiç duyurmayız" arasındaki fark bir çağrı.
+    _emit_hacim_round()
     return out
 
 
@@ -2675,6 +2728,7 @@ def load_many(tickers: list[str], start: str, end: str, use_cache: bool = True) 
     # son %10'u aksi hâlde yalnız bellekte kalırdı).
     flush_same_evening()
     _emit_ghost_round()               # hayalet/karantina toplamı: tur sonunda TEK satır
+    _emit_hacim_round()               # ondalıklı hacim toplamı: tarih başına TEK özet (aynı desen)
     if failed or quarantined:
         try:
             from .. import obs

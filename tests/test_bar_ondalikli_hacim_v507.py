@@ -21,25 +21,36 @@ KÖK NEDEN (ölçüldü 2026-09-16, EDG-2026-100 bulgusunun ardılı):
     getirmediği bir tarih ise defterde öylece kalır. Bu son halka ÖLÇÜLMEDİ (sağlayıcıya tarihsel
     kapsam sorgusu bu turun kapsamı dışıydı) — çiviler kalıcı sözleşmeyi ölçer, o halkayı değil.
 
+DUYURU BİÇİMİ BİR ÖLÇÜMÜN SONUCUDUR (tur 2, inceleme bulgusu 7): yazım anında satır satır olay
+basmak, 11.085/12.404 kesirli satırlık bir sağlayıcı evreninde tek koşumda binlerce olay demekti
+(`obs._emit`te genel hız sınırı yok; 6 saatlik susturma yalnız `ALARM_*` jetonlarına uygulanır).
+Desen deponun kendisinden alındı — `_note_ghost` (tarih başına, EVREN ÇAPINDA dedup) +
+`_emit_ghost_round` (tur sonunda TEK satır) — ve `ops/bar_arsivle.py` tarafıyla AYNI: koşum sonu
+tek özet. Bedel raporda sayıyla yazılı (olay/koşum: önce ~260, sonra 1).
+
 NE ÇİVİLENİR:
-  1. YAZIM BOĞAZI (`data._write_bars`) — ondalıklı hacim diske ONDALIKLI YAZILAMAZ; yuvarlanır
-     VE duyurulur (`bar_ondalikli_hacim`: sembol/tarih/ham değer). Sessiz düzeltme YOK (Yasa 4).
-  2. TAM SAYI HACİM UYARI ÜRETMEZ — sağlıklı turda olay defteri kirlenmez (bedel yasası).
+  1. YAZIM BOĞAZI (`data._write_bars`) — ondalıklı hacim diske ONDALIKLI YAZILAMAZ (K1/K3).
+  2. DUYURU — yuvarlama sessiz değildir (Yasa 4): tur sonunda `bar_ondalikli_hacim` özeti, ham
+     değer örnekte (K1). Tam sayı hacim NE sayaç NE olay üretir (K2). Aynı bar ikinci kez
+     duyurulmaz (K2b).
   3. KÖK NEDEN REGRESYONU — massive biçimindeki ham satır (`massive.to_bar` → onarım yolu
-     `data._merge_repair_bar`) artık diske ondalık YAZAMAZ; aynı girdi, artık tam sayı.
+     `data._merge_repair_bar`) artık diske ondalık YAZAMAZ (K3).
   4. ARŞİV SESSİZ YUVARLAMASI GÖRÜNÜR — `ops/bar_arsivle.py` `volume`u BIGINT'e cast ederken
      kesri yutuyordu ve bunu HİÇBİR YERDE söylemiyordu (EDG-2026-100'de ancak dış kıyasla
-     görüldü). Artık koşum sonunda `HACİM ONDALIK` özeti düşer; temiz kaynakta hiç düşmez.
+     görüldü). Artık koşum sonunda `HACİM ONDALIK` özeti düşer (K4); temiz kaynakta hiç (K5).
+  5. GÜRÜLTÜ TAVANI — 500 sembol TEK olay (K6) · yeni TARİH yeni özet, eski tarih tekrar
+     duyurulmaz (K7) · örnek listesi TAVANLI, sayaç büyürken olay büyümez (K8).
 
-MUTASYON KANITI (KOŞULDU 2026-09-16; her mutasyondan sonra dosya YEDEK KOPYADAN geri alındı,
-sha256 kıyaslandı ve `__pycache__` silindi — bayat .pyc sahte yeşil üretir):
-  * `data._write_bars`ten `df = _hacim_tam_sayi(...)` satırı silinince K1 · K2b · K3 KIRMIZI
-    (disk ondalık kalır), K2 · K4 · K5 yeşil → yazım boğazı sözleşmesi gerçekten ölçülüyor.
-  * `_hacim_tam_sayi` içindeki `obs.warn` çağrısı ETKİSİZLEŞTİRİLİNCE (değer yine yuvarlanıyor)
-    K1 · K2b · K3 KIRMIZI, gerekçe "sessiz düzeltme (Yasa 4)" — yani duyuru tarafı DEĞER
-    tarafından BAĞIMSIZ ölçülüyor: sessiz bir düzeltme yeşil geçemiyor.
-  * `bar_arsivle._ondalik_hacim_bas` gövdesi erken `return`e çevrilince YALNIZ K4 KIRMIZI,
-    K5 yeşil → arşiv çivisi görünürlüğü ölçüyor, susmayı değil.
+MUTASYON KANITI (KOŞULDU 2026-09-16 tur 2; her mutasyondan sonra dosya YEDEK KOPYADAN geri
+alındı, sha256 kıyaslandı ve `__pycache__` silindi — bayat .pyc sahte yeşil üretir):
+  * A — `data._write_bars`ten `df = _hacim_tam_sayi(...)` silindi: K1 · K2b · K3 · K6 · K7 · K8
+    KIRMIZI (disk ondalık kalır, sayaç boş), K2 · K4 · K5 yeşil.
+  * B — `_emit_hacim_round` gövdesi erken `return`: aynı altı çivi KIRMIZI, ama değer YİNE
+    yuvarlanmış durumda — yani duyuru tarafı DEĞER tarafından bağımsız ölçülüyor (Yasa 4).
+  * C — tur-sonu özeti yerine YAZIM ANINDA satır satır olay: K6 KIRMIZI, gerekçe ölçülü —
+    "500 kesirli sembol 501 olay üretti (yazım anında 500) — gürültü tavanı yok"; K7 de KIRMIZI
+    (aynı tarih sembol sembol tekrar duyuruldu). Gürültü tavanı GERÇEKTEN çivilenmiş.
+  * D — `bar_arsivle._ondalik_hacim_bas` gövdesi erken `return`: YALNIZ K4 KIRMIZI, K5 yeşil.
 GERÇEK DEFTERE DOKUNULMAZ: her çivi `sandbox_state` altında koşar; canlı `state/bars/` açılmaz.
 """
 
@@ -68,12 +79,14 @@ def _seanslar(ay: str, adet: int) -> list[str]:
 
 
 @pytest.fixture(autouse=True)
-def _ondalik_defteri_temiz():
-    """Süreç-içi (TICKER, tarih) duyuru defteri testler arasında SIZMAZ: aynı barın ikinci kez
-    duyurulmamasını sağlayan gürültü kapısı, bir sonraki çivinin ölçümünü kör ederdi."""
-    _data._HACIM_ONDALIK_GORULDU.clear()
+def _hacim_defteri_temiz():
+    """Süreç-içi sayaç ve tarih-duyuru defteri testler arasında SIZMAZ: biri dolu kalsaydı bir
+    sonraki çivi kendi ölçtüğü turu değil, öncekinin kalıntısını okurdu."""
+    _data._HACIM_ONDALIK.clear()
+    _data._HACIM_ONDALIK_DUYURULDU.clear()
     yield
-    _data._HACIM_ONDALIK_GORULDU.clear()
+    _data._HACIM_ONDALIK.clear()
+    _data._HACIM_ONDALIK_DUYURULDU.clear()
 
 
 @pytest.fixture
@@ -83,6 +96,10 @@ def uyarilar(monkeypatch):
     kayit: list[tuple[str, dict]] = []
     monkeypatch.setattr(obs, "warn", lambda ev, **kw: kayit.append((ev, kw)))
     return kayit
+
+
+def _ozetler(uyarilar: list) -> list[dict]:
+    return [kw for ev, kw in uyarilar if ev == _data.HACIM_ONDALIK_OLAY]
 
 
 def _cerceve(gunler: list[str], hacimler: list[float]) -> pd.DataFrame:
@@ -95,10 +112,11 @@ def _cerceve(gunler: list[str], hacimler: list[float]) -> pd.DataFrame:
     return pd.DataFrame(satirlar)[_data.COLS]
 
 
-# ================================ K1 — YAZIM BOĞAZI ============================================
+# ================================ K1 — YAZIM BOĞAZI + TUR SONU ÖZETİ ===========================
 
-def test_K1_ondalikli_hacim_DISKE_TAM_SAYI_yazilir_ve_DUYURULUR(sandbox_state, uyarilar):
-    """Sözleşme + Yasa 4 birlikte: değer tam sayıya bağlanır VE bu bir onarım olarak duyurulur."""
+def test_K1_ondalikli_hacim_TAM_SAYI_yazilir_ve_TUR_SONUNDA_DUYURULUR(sandbox_state, uyarilar):
+    """Sözleşme + Yasa 4 birlikte: değer tam sayıya bağlanır VE duyurulur — ama duyuru YAZIM
+    ANINDA değil TUR SONUNDA, tek özette (gürültü tavanı; gerekçe `_emit_hacim_round`da)."""
     gunler = _seanslar("2024-01", 3)
     cp = _data._cache_path("EA")
     _data._write_bars(_cerceve(gunler, [3710592.0, EA_HAM_HACIM, 4143546.0]), cp)
@@ -106,39 +124,46 @@ def test_K1_ondalikli_hacim_DISKE_TAM_SAYI_yazilir_ve_DUYURULUR(sandbox_state, u
     diskte = pd.read_csv(cp)
     assert list(diskte["volume"]) == [3710592.0, 3569440.0, 4143546.0], \
         f"ondalıklı hacim diske ONDALIKLI yazıldı: {list(diskte['volume'])}"
+    assert _ozetler(uyarilar) == [], "yazım anında olay basıldı — tur sonu deseni bozuldu"
+    assert _data._HACIM_ONDALIK[gunler[1]]["rows"] == 1, "sayaç yazım anında dolmadı"
 
-    olaylar = [(ev, kw) for ev, kw in uyarilar if ev == _data.HACIM_ONDALIK_OLAY]
-    assert len(olaylar) == 1, f"sessiz düzeltme (Yasa 4): {[e for e, _ in uyarilar]}"
-    alanlar = olaylar[0][1]
-    assert alanlar["ticker"] == "EA" and alanlar["n"] == 1
-    assert alanlar["dates"] == [gunler[1]], alanlar
-    assert alanlar["values"] == [EA_HAM_HACIM], "HAM değer duyurulmadı — kayıp ölçülemez"
+    _data._emit_hacim_round()
+    ozet = _ozetler(uyarilar)
+    assert len(ozet) == 1, f"tur sonunda tek özet beklenir: {ozet}"
+    assert ozet[0]["rows"] == 1 and ozet[0]["tickers"] == 1 and ozet[0]["dates"] == gunler[1]
+    assert f"EA@{gunler[1]}={EA_HAM_HACIM!r}" in ozet[0]["ornekler"], \
+        f"HAM değer duyurulmadı — kayıp ölçülemez: {ozet[0]['ornekler']}"
+    assert ozet[0]["max_kesir"] == round(abs(EA_HAM_HACIM - round(EA_HAM_HACIM)), 6)
+    assert ozet[0]["max_kesir_ticker"] == "EA"
 
 
 # ================================ K2 — GÜRÜLTÜ BEDELİ ==========================================
 
-def test_K2_tam_sayi_hacim_UYARI_URETMEZ_ve_DEGERI_DEGISTIRMEZ(sandbox_state, uyarilar):
-    """Sağlıklı tur sessizdir: kapı her yazımda olay basaydı defter gürültüye boğulurdu."""
+def test_K2_tam_sayi_hacim_NE_SAYAC_NE_OLAY_uretir(sandbox_state, uyarilar):
+    """Sağlıklı tur sessizdir: kapı her yazımda sayaç/olay üretseydi defter gürültüye boğulurdu."""
     gunler = _seanslar("2024-01", 3)
     cp = _data._cache_path("AAPL")
     _data._write_bars(_cerceve(gunler, [1000000.0, 2000000.0, 3000000.0]), cp)
+    _data._emit_hacim_round()
 
     assert list(pd.read_csv(cp)["volume"]) == [1000000.0, 2000000.0, 3000000.0]
-    assert [ev for ev, _ in uyarilar if ev == _data.HACIM_ONDALIK_OLAY] == [], \
-        "tam sayı hacimde uyarı basıldı — sağlıklı tur gürültü üretiyor"
+    assert _data._HACIM_ONDALIK == {}, "tam sayı hacim sayaca yazıldı"
+    assert _ozetler(uyarilar) == [], "tam sayı hacimde özet basıldı — sağlıklı tur gürültülü"
 
 
-def test_K2b_ayni_bar_IKINCI_yazimda_tekrar_duyurulmaz(sandbox_state, uyarilar):
-    """Duyuru BAR başınadır, YAZIM başına değil: aynı satır her tur yeniden duyurulsaydı tek bir
-    bozuk bar günlerce alarm üretirdi. Değer sözleşmesi ikinci yazımda da TUTAR."""
+def test_K2b_ayni_tarih_IKINCI_turda_tekrar_duyurulmaz(sandbox_state, uyarilar):
+    """Dedup TARİH bazındadır: aynı seans ikinci turda yeniden bağırmaz (bir bozuk bar günlerce
+    alarm üretemez). Değer sözleşmesi ikinci yazımda da TUTAR."""
     gunler = _seanslar("2024-01", 2)
     cp = _data._cache_path("EA")
     cerceve = _cerceve(gunler, [3710592.0, EA_HAM_HACIM])
     _data._write_bars(cerceve, cp)
+    _data._emit_hacim_round()
     _data._write_bars(cerceve, cp)
+    _data._emit_hacim_round()
 
     assert list(pd.read_csv(cp)["volume"]) == [3710592.0, 3569440.0]
-    assert len([ev for ev, _ in uyarilar if ev == _data.HACIM_ONDALIK_OLAY]) == 1
+    assert len(_ozetler(uyarilar)) == 1, "aynı tarih iki kez duyuruldu"
 
 
 # ================================ K3 — KÖK NEDEN REGRESYONU ====================================
@@ -156,14 +181,67 @@ def test_K3_kok_neden_massive_ham_satiri_TASIR_yazim_bogazi_DURDURUR(sandbox_sta
 
     cp = _data._cache_path("EA")
     _data._write_bars(_cerceve(gunler[:2], [3710592.0, 4143546.0]), cp)
-    uyarilar.clear()
     assert _data._merge_repair_bar("EA", {**bar, "date": gunler[2]}) is True
 
     diskte = pd.read_csv(cp)
     assert len(diskte) == 3, "onarım barı eklenmedi — çivi yolu ölçemedi"
     assert list(diskte["volume"]) == [3710592.0, 4143546.0, 3569440.0], \
         f"massive kaynaklı satır diske ONDALIKLI girdi: {list(diskte['volume'])}"
-    assert [kw["dates"] for ev, kw in uyarilar if ev == _data.HACIM_ONDALIK_OLAY] == [[gunler[2]]]
+
+    _data._emit_hacim_round()
+    ozet = _ozetler(uyarilar)
+    assert len(ozet) == 1 and ozet[0]["dates"] == gunler[2], ozet
+
+
+# ================================ K6/K7/K8 — GÜRÜLTÜ TAVANI ====================================
+
+def test_K6_500_sembol_TEK_ozet_uretir(sandbox_state, uyarilar):
+    """ÖLÇÜLMÜŞ GEREKÇE: sağlayıcı anlık görüntüsünde 11.085/12.404 sembol kesirli hacim taşıyor.
+    Yazım anında olay basılsaydı evren kadar olay düşerdi; özet TEK olaydır ve sayıları TAŞIR."""
+    gun = _seanslar("2024-01", 1)[0]
+    for i in range(500):
+        _data._write_bars(_cerceve([gun], [1000000.0 + i + 0.123456]),
+                          _data._cache_path(f"SYM{i:03d}"))
+    yazim_aninda = len(_ozetler(uyarilar))
+
+    _data._emit_hacim_round()
+    ozet = _ozetler(uyarilar)
+    # SAYI ÖNCE ÖLÇÜLÜR: asıl sözleşme "olay sayısı 1"dir; yazım anındaki sıfır onun nedenidir.
+    assert len(ozet) == 1, (f"500 kesirli sembol {len(ozet)} olay üretti (yazım anında "
+                            f"{yazim_aninda}) — gürültü tavanı yok")
+    assert yazim_aninda == 0, "yazım anında olay basıldı — tur sonu deseni bozuldu"
+    assert ozet[0]["rows"] == 500 and ozet[0]["tickers"] == 500 and ozet[0]["n_dates"] == 1
+    assert ozet[0]["dates"] == gun
+
+
+def test_K7_YENI_TARIH_yeni_ozet_eski_tarih_SESSIZ(sandbox_state, uyarilar):
+    """Dedup EVREN ÇAPINDA ve TARİH bazındadır: ikinci tur yalnız YENİ tarihi duyurur, eskisini
+    tekrar etmez. "Hiç duyurma" ile "bir kez duyur" arasındaki farkı bu çivi ölçer."""
+    g1, g2 = _seanslar("2024-01", 2)
+    _data._write_bars(_cerceve([g1], [1000000.5]), _data._cache_path("EA"))
+    _data._emit_hacim_round()
+    _data._write_bars(_cerceve([g1, g2], [1000000.5, 2000000.25]), _data._cache_path("MSFT"))
+    _data._emit_hacim_round()
+
+    ozet = _ozetler(uyarilar)
+    assert len(ozet) == 2, f"iki ayrı tarih iki özet vermedi: {ozet}"
+    assert ozet[0]["dates"] == g1 and ozet[1]["dates"] == g2, ozet
+    assert ozet[1]["rows"] == 1, "ikinci özet ESKİ tarihin satırlarını da saydı"
+
+
+def test_K8_ornek_listesi_TAVANLI_sayac_buyur_olay_BUYUMEZ(sandbox_state, uyarilar):
+    """Bedel yasası: örnek listesi tavanlıdır (`HACIM_ORNEK_SATIR`) ama SAYIM tam kalır — olay
+    büyümeden kaç satır/sembolün etkilendiği ölçülebilir."""
+    gun = _seanslar("2024-01", 1)[0]
+    n = _data.HACIM_ORNEK_SATIR * 4
+    for i in range(n):
+        _data._write_bars(_cerceve([gun], [500000.0 + i + 0.5]), _data._cache_path(f"T{i:02d}"))
+    _data._emit_hacim_round()
+
+    ozet = _ozetler(uyarilar)[0]
+    assert ozet["rows"] == n and ozet["tickers"] == n, "sayaç tavanla birlikte kırpıldı"
+    assert len(ozet["ornekler"].split("; ")) == _data.HACIM_ORNEK_SATIR, ozet["ornekler"]
+    assert ozet["ornek_tavani"] == _data.HACIM_ORNEK_SATIR, "tavan okuyucuya BEYAN edilmiyor"
 
 
 # ================================ K4/K5 — ARŞİVİN SESSİZ YUVARLAMASI ===========================
@@ -211,4 +289,3 @@ def test_K5_tam_sayi_kaynakta_arsiv_SUSAR(sandbox_state, tmp_path, capsys):
     yakalanan = capsys.readouterr()
     assert rc == 0, yakalanan.out + yakalanan.err
     assert "HACİM ONDALIK" not in yakalanan.err, yakalanan.err
-
