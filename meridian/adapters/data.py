@@ -148,6 +148,70 @@ def _bump_wf_rev() -> None:
         _bar_warn("wf_rev_bump_failed", e)
 
 
+# ---------------- hacim TAM SAYI sözleşmesi (TSK-192) ----------------
+# KÖK NEDEN, ÖLÇÜLDÜ (2026-09-16): ondalıklı hacmi ARİTMETİK ÜRETMEDİ — KAYNAK verdi. massive.com
+# grouped/aggregate ucu `v` alanını KESİRLİ döndürüyor (canlı anlık görüntü `massive_grouped_last.json`,
+# 2026-08-05 günü: 12.404 sembolün 11.085'i kesirli; EA 2026-07-29 → 3569440.107552 — aynı değer
+# sağlayıcı ucundan da birebir okundu). `massive.to_bar` alanı `float(v)` ile AYNEN geçirir,
+# `sanitize_bars` ise YALNIZ OHLC onarır (hacme hiç dokunmaz) — yani sağlayıcının kesri diske
+# olduğu gibi düşer. Kaynak kolu 2026-07-29T20:59:40Z'de `massive.write_enabled` kapısı "uyumlu"
+# hükmüyle açıldığında devreye girdi; o kapının ölçümü YALNIZ fiyat eksenindeydi, hacmin TAM SAYI
+# olup olmadığı hiç sorulmadı. Kesirli satırların çoğu ertesi turda geçmişin sahibinden (cboe/nasdaq)
+# gelen TAM seriyle ezilir; ezilmeyen satır defterde sonsuza dek kalır (canlı: 1.357.997 satırda 1).
+# SÖZLEŞME BURADA KURULUR: hisse adedi tam sayıdır, kesir bilgi değil biçim artığıdır — ve düzeltme
+# SESSİZ DEĞİLDİR (Yasa 4): yuvarlanan her bar adıyla, tarihiyle ve HAM değeriyle duyurulur.
+#: Ondalıklı hacim uyarısının adı. YASA-6 OKUYUCU: `obs.warn` → `state/events.jsonl` →
+#: `api.api_events` (`GET /api/events`, `obs.recent`) → pano olay akışı; aynı defteri
+#: `notify.inbox` bekçisi ve `ops/olay_sorgu.py` sorguları da tarar.
+HACIM_ONDALIK_OLAY = "bar_ondalikli_hacim"
+HACIM_ORNEK_SATIR = 5            # olaya yazılan örnek satır sayısı — kanıt yeter, sel gerekmez
+_HACIM_ONDALIK_GORULDU: set = set()   # (TICKER, tarih): aynı bar iki kez duyurulmaz (süreç-içi)
+
+
+def _hacim_tam_sayi(df: pd.DataFrame, ticker: str) -> pd.DataFrame:
+    """Hacmi diske yazılmadan ÖNCE TAM SAYIYA bağlar; ondalık bulursa `HACIM_ONDALIK_OLAY` uyarır.
+
+    NEDEN YAZIM ANINDA, KAYNAKTA DEĞİL: kesirli hacmi bugün massive kolu getiriyor, yarın başka bir
+    sağlayıcı getirebilir — sözleşmeyi tek tek kollara yazmak, yeni kolun onu sessizce atlaması
+    demekti (bu depoda ölçülmüş sınıf). Burası bar CSV'sinin TEK yazım boğazıdır: hangi kol yazarsa
+    yazsın buradan geçer.
+
+    SESSİZ DEĞİL (Yasa 4): yuvarlama bir ONARIMDIR ve onarım duyurulur — sembol, tarih ve HAM değer
+    uyarıya girer, yani "neyi değiştirdik" kaydı ölçülebilir kalır. Süreç-içi (TICKER, tarih)
+    defteri yalnız AYNI barın tekrar tekrar duyurulmasını keser; YENİ bir kesirli bar her zaman
+    duyurulur (gürültü kesme bedeli: aynı süreçte aynı barın ikinci yazımı sayılmaz — `n` bu
+    yazımdaki TOPLAM kesirli satır, `n_yeni` ilk kez duyurulan kısmıdır, ikisi ayrı ölçüdür).
+
+    Sembol ADI dosya yolundan türer ve dönüşüm TERSİNMEZDİR (`_cache_path` `.`ı `-` yapar): uyarıda
+    `BRK-B` görünür, `BRK.B` değil — ölçüm sınırı, tahmin değil.
+    NaN/sonsuz hacme DOKUNULMAZ: onlar bu kapının sorusu değildir (uydurma yasağı)."""
+    if df is None or df.empty or "volume" not in df.columns:
+        return df
+    v = pd.to_numeric(df["volume"], errors="coerce")
+    kesirli = v.notna() & (v.sub(v.round()).abs() > 0)
+    if not bool(kesirli.any()):
+        return df
+    # TARİH VE DEĞER AYNI SATIRDAN ÇIKAR: iki listeyi ayrı ayrı süzmek, biri susturulduğunda
+    # diğerini KAYDIRIR ve uyarı "hangi günün hangi değeri" sorusuna yanlış cevap verirdi.
+    ciftler = ([(str(g)[:10], float(h)) for g, h in zip(df.loc[kesirli, "date"], v[kesirli])]
+               if "date" in df.columns else [("?", float(h)) for h in v[kesirli]])
+    yeni = [(t, h) for t, h in ciftler if t == "?" or (ticker, t) not in _HACIM_ONDALIK_GORULDU]
+    _HACIM_ONDALIK_GORULDU.update((ticker, t) for t, _ in ciftler if t != "?")
+    if yeni:
+        try:
+            from .. import obs
+            obs.warn(HACIM_ONDALIK_OLAY, ticker=ticker, n=len(ciftler), n_yeni=len(yeni),
+                     dates=[t for t, _ in yeni[:HACIM_ORNEK_SATIR]],
+                     values=[h for _, h in yeni[:HACIM_ORNEK_SATIR]],
+                     detail="sağlayıcı kesirli hacim verdi (ölçüldü: massive grouped `v`); satır "
+                            "TAM SAYIYA yuvarlanarak yazıldı — hisse adedi tam sayıdır")
+        except Exception as e:
+            # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci kanal yok ve bir telemetri
+            # denemesi bar yazımını ASLA düşüremez; olay `_bar_warn` ile bir kez görünür kalır.
+            _bar_warn("hacim_ondalik_uyarisi_dusti", e, ticker=ticker)
+    return df.assign(volume=df["volume"].where(~kesirli, v.round()))
+
+
 def _write_bars(df: pd.DataFrame, cp: Path) -> None:
     """ATOMİK yazım — TEK KAPIDAN (store.write_text). Süreç havuzundaki işçiler (dataset.load_cached)
     aynı dosyayı EŞ ZAMANLI okuyor — yarım yazılmış bir CSV okunduğunda ticker sessizce kırpılmış
@@ -166,12 +230,15 @@ def _write_bars(df: pd.DataFrame, cp: Path) -> None:
         maliyeti yavaş diskte GÖRÜNÜR olur (kör kilidin yapacağı SESSİZ regresyonun tersi).
     STATE'e göreli ad kilidi paylaştırır; STATE dışı cp (olağandışı) mutlak yola düşer (relative_to
     fallback). YASA-6 OKUYUCU: load_bars / dataset.load_cached bar CSV'lerini okur (üstteki eşzamanlı
-    okuyucu). to_csv string döndürülür → kapının fdopen'ı diske yazar; baytlar stream hâliyle birebir."""
+    okuyucu). to_csv string döndürülür → kapının fdopen'ı diske yazar; baytlar stream hâliyle birebir.
+    HACİM SÖZLEŞMESİ (TSK-192): yazılan çerçevenin hacmi TAM SAYIdır — `_hacim_tam_sayi` kapısı
+    ondalık bulursa yuvarlar ve duyurur (gerekçe o fonksiyonun üstünde)."""
     from .. import store as _st
     try:
         name = str(cp.relative_to(_config.STATE))
     except ValueError:  # sessiz-yutma: STATE dışı bar yolu (olağandışı) — relative_to bilinçli ValueError atar, mutlak adla geçer ve veri kaybı yok
         name = str(cp)
+    df = _hacim_tam_sayi(df, cp.stem.upper())
     _st.write_text(name, df.to_csv(index=False))
 
 
