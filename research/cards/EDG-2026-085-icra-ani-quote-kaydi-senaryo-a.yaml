@@ -130,3 +130,32 @@ adim_0_kaydi_2026_09_13: >
   repo ve state/ DIŞI, dagit --delete'ten korunur); PK-2 rastgele 5 dolumun kayıt satırını ham çerçeveyle elle eşler.
   (1) ve (2) 09-07 kaydında. Kod planı: docs/superpowers/plans/2026-09-13-tick-pilot-senaryo-a.md (Rol-1 yazdı;
   implementer sevki Opus tek ajan, Fable ajanı 0).
+
+rol1_notu_2026_09_16: >
+  TABAN ARA ÖLÇÜMÜ + BİR NETLEŞTİRME (ölçüm ÖNCESİ; EŞİKLER DEĞİŞMEDİ — §5 gereği yalnız ölçüm
+  YOLU netleşiyor, sayı değil). A1 salt-okur okuma, /opt/veri/olcum/edg085/taban.jsonl (521 satır).
+
+  (1) TABAN İLERLEMESİ — 09-13 kaydının "eski satırlar alansız = geçersiz, okuyucu bunları ELER"
+  hükmü uygulandı: `cpu_kaynak` alanı taşıyan satır 172, ELENEN 349. Geçerli CPU tabanı YALNIZ İKİ
+  seans: 2026-09-14 (n=86) ve 2026-09-15 (n=86); kaynak değeri tek küme {cgroup}. Kart 5 seans
+  istiyor (09-14..09-18) → CPU tabanı 2/5, HENÜZ DOLMADI. Pilot en erken 2026-09-21 hükmü AYNEN
+  geçerli. (Süzgeçsiz bakışta 7 gün / 6 tam seans görünüyor — bu SAYI YANILTICIDIR, 09-07..09-11
+  satırları CPU ekseninde geçersizdir. İlk bakışta ben de "taban tamamlandı" sandım; düzeltmeyi
+  kartın kendi kaydı verdi.)
+
+  (2) ARA SAYILAR (geçerli 172 satır): cpu_pct_tek_cekirdek p50=0,17 · p95=13,43 · max=28,59
+  (dağılım ÇOK çarpık: medyan sıfıra yakın, p95 iki basamaklı — saat kırılımı pilot raporunda
+  ayrıca okunmalı). healthz_p50_ms p50=1,40 · p95=1,60 · max=1,70. healthz_max_ms p50=1,80 ·
+  p95=1,90 · max=2,00. Bunlar ARA değerlerdir; taban 5 seans dolunca YENİDEN hesaplanır ve rapora
+  o hâliyle girer.
+
+  (3) NETLEŞTİRME — "healthz p95" NASIL HESAPLANIR: eşik `healthz_p95_delta_ms_ust: 50` tabana
+  GÖRELİ tanımlı, ama taban örnekleyicisi p95 ALANI ÜRETMİYOR — her örnekte yalnız `healthz_p50_ms`,
+  `healthz_max_ms` ve `healthz_n=5` var. n=5'te p95 zaten ≈ max olduğu için ayrı bir p95 alanı
+  eklemek yeni bilgi vermezdi. HÜKÜM: "healthz p95" = SEANS ÖRNEKLERİNİN `healthz_max_ms`
+  DAĞILIMININ p95'i (muhafazakâr üst sınır; örnek-içi max'ların seans-genelinde p95'i). Ara tabanla
+  bu 1,90 ms, yani pilot tavanı 1,90 + 50 = 51,90 ms — SAYI TABAN DOLUNCA KESİNLEŞİR.
+  Bu bir BİRİM/YOL netleştirmesidir, eşik değişmedi (emsal: EDG-2026-100 rol1_notu_2026_09_16;
+  ders: hafıza kart-esigi-birimi-tolerans-tuzagi — EDG-094 ve EDG-096 tam bu sınıfta düşmüştü).
+  Ölçüm SONRASI bu yorumu değiştirmek kill_list "eşik/pencere tanımı ölçüm sonrası değişirse →
+  geçersiz" maddesine girer.
