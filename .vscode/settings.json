@@ -63,6 +63,20 @@
   "ansible.executionEnvironment.enabled": false,
   "ansible.lightspeed.enabled": false,
   "ansible.lightspeed.suggestions.enabled": false,
+
+  // MCP sunucusu KAPALI (operatör 2026-09-16, düğmeyle açıldı → ölçüm sonrası geri alındı).
+  // Eklenti kaynağından ölçüldü (redhat.ansible 26.8.2, packages/ansible-mcp-server): sunucu
+  // 10 araç sunar ve VS Code içindeki AI asistanına açılır. Üçü bu depoda doğrudan zararlıdır:
+  //   - ansible-navigator run <playbook>: playbook KOŞTURUR ve yorumlayıcıyı ararken
+  //     .venv/bin'i de tarar → dagit.sh'nin 17 kapısı (temiz ağaç, kuru koşum, mtime, worker
+  //     durdurma) ATLANIR. Dağıtım yalnız Rol-1'indir (CLAUDE.md §9).
+  //   - ansible-lint --fix: deponun YAML dosyalarını yerinde DEĞİŞTİRİR → ağaç sessizce kirlenir,
+  //     üretilmiş/izli dosyalar (dagit_vars.yml, roller) beyansız değişir.
+  //   - ade setup / ADT kurulumu: .venv'e paket kurar → pinli sürümler (pytest-xdist, ansible-lint)
+  //     sessizce kayar, tam suite ölçümü kıyaslanamaz hale gelir.
+  // Yeniden açmak gerekirse: depo ayarı değil, VS Code KULLANICI ayarı olarak açılsın ve o
+  // pencerede dağıtım/suite koşulmasın.
+  "ansible.mcpServer.enabled": false,
   "files.associations": {
     "deploy/ansible/**/*.yml": "ansible",
     "research/cards/*.yaml": "yaml",
