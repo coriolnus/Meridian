@@ -96,7 +96,10 @@ toplam değil, rol dağıtımı da değil (operatör 2026-09-13). Tur başına t
 sahipliğini söyler.
 
 **Konum (NEREDE), modelden bağımsız:** Rol-1 (ana checkout, orkestratör, TEK) · Yan oturum · Ajan.
-İki oturum kendini Rol-1 sayıyorsa dur, sor. İki yönlü zarar (vaka 2026-08-26): (a) ana oturum
+İki oturum kendini Rol-1 sayıyorsa dur, sor. **Rol-1 oturumu masaüstü uygulamasının Code
+sekmesindedir** (operatör 2026-09-16 "burası ana oturum kalsın"); VS Code bir EDİTÖRDÜR — orada açılan
+Claude oturumu YAN oturumdur. İki arayüz aynı oturumu aynı anda süremez: ayrı oturum havuzları tutarlar ve
+koşan bir oturumu sürdürme denemesi KOPYA başlatır (ölçüldü 2026-09-16). İki yönlü zarar (vaka 2026-08-26): (a) ana oturum
 kendini "yalnız implementasyon" sanıp tur kapanışı commit+push'unu atlar; (b) yan oturum kendini
 Rol-1 sanıp otoriter suite/push başlatır.
 
