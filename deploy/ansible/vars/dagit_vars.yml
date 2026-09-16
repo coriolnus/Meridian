@@ -45,6 +45,13 @@ rsync_disla:
   - ".dash.env"
   - ".agents"
   - ".codex"
+  # A1-SAHİPLİ TERRAFORM ÇALIŞMA ARTEFAKTLARI (TSK-176 T1, ölçüldü 2026-09-16 kuru koşumunda):
+  # `.terraform/` indirilen sağlayıcı ikilisidir (~40 MB, `terraform init` üretir), `uretilen.tf` ise
+  # `-generate-config-out` çıktısıdır — ikisi de A1'de DOĞAR, depoda YOK, yani `--delete` onları SİLERDİ
+  # (kuru koşum 14 yol saydı). `state`/`backups` ile aynı sınıf: canlı-sahipli, repo-sahipli değil.
+  # `.terraform.lock.hcl` BU LİSTEDE YOK ve olmamalı: sürüm pinini o kilitler, DEPODAN gider (tek kaynak).
+  - ".terraform"
+  - "/altyapi/apisix/uretilen.tf"
   - ".github"
   - "skills-lock.json"
   - ".impeccable"

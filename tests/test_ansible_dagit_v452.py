@@ -309,7 +309,7 @@ def test_A1b_rsync_disla_SINIF_KURUCULARI_hala_listede():
         assert kurucu in vars_kume, f"`rsync_disla`da sınıf kurucusu eksik: {kurucu!r}"
 
 
-#: `rsync_disla`nın DONMUŞ SÖZLEŞMESİ — 28 dışlama sınıfı (ölçüldü 2026-09-08).
+#: `rsync_disla`nın DONMUŞ SÖZLEŞMESİ — 30 dışlama sınıfı (28 + 2 Terraform artefaktı, 2026-09-16).
 #: TEK-KAYNAK YASASI (CLAUDE.md §4): "aynı gerçeğin iki kopyası sessizce ayrışır — sayı/liste/kural
 #: TEK kaynaktan türetilir; kopya kaçınılmazsa TÜRETME + AYRIŞMA ÇİVİSİ". Task 3'e kadar kıyasın
 #: öteki ucu dagit.sh'ın `RSYNC_EXC` dizisiydi ve küme eşitliği iki yönlü ölçülüyordu; o dizi
@@ -349,6 +349,13 @@ RSYNC_DISLA_SOZLESMESI = (
     'node_modules',
     'ui/node_modules',
     '/ui',
+    # TSK-176 T1 (BEYAN 2026-09-16): A1-sahipli Terraform çalışma artefaktları. `.terraform/` indirilen
+    # sağlayıcı ikilisidir (`terraform init` üretir, ~40 MB), `uretilen.tf` ise `-generate-config-out`
+    # çıktısıdır — ikisi de A1'de DOĞAR ve depoda YOKTUR, yani `--delete` onları silerdi (dağıtım #52
+    # kuru koşumu 14 yol saydı, dağıtım DURDURULDU). `state`/`backups` ile aynı sınıf. `.terraform.lock.hcl`
+    # BİLEREK dışlanmadı: sürüm pinini o kilitler ve DEPODAN gider (tek kaynak).
+    '.terraform',
+    '/altyapi/apisix/uretilen.tf',
 )
 
 
