@@ -1,0 +1,16 @@
+{
+  // Meridian — yeni bir makinede "önerilen eklentiler" kutusunun listesi (2026-09-16).
+  // Gerekçe her satırda: bu depo Python motoru + Ansible dağıtımı + Terraform altyapısı +
+  // YAML kartları/değişkenleri taşır; dördü de dil desteği olmadan sessizce yanlış düzenlenir.
+  "recommendations": [
+    "ms-python.python",            // motor + ops + testler (yorumlayıcı .venv)
+    "ms-python.vscode-pylance",    // tip/otomatik tamamlama
+    "ms-python.debugpy",           // hata ayıklama
+    "redhat.vscode-yaml",          // research/cards/*.yaml, deploy/**/*.yaml, sir_envanteri
+    "redhat.ansible",              // deploy/ansible (site.yml, dagit.yml, roller) + ansible-lint
+    "hashicorp.terraform",         // altyapi/apisix (TSK-176 T1)
+    "tamasfe.even-better-toml",    // pyproject.toml (pytest/import-linter/mutmut yapılandırması)
+    "anthropic.claude-code"        // Rol-1 oturumu
+  ],
+  "unwantedRecommendations": []
+}

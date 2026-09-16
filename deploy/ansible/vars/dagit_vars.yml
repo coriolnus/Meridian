@@ -37,6 +37,9 @@ rsync_disla:
   - ".superpowers"
   - "__pycache__"
   - ".claude"
+  # `.vscode` 2026-09-16: VS Code çalışma alanı ayarı YEREL geliştirme yüzeyidir — A1'de okuyucusu yok
+  #   (`.claude` ile aynı sınıf). Dışlanmasa canlıya gider ve "canlıda ne var" sorusunu kirletirdi.
+  - ".vscode"
   - ".hypothesis"
   - "mutants"
   - ".pytest_cache"

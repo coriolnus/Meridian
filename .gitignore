@@ -124,3 +124,9 @@ ui/node_modules
 altyapi/apisix/.terraform/
 altyapi/**/*.tfstate*
 altyapi/apisix/uretilen.tf   # A1'de üretilir (T1 Task 3); depoya girmez — kaynaklar.tf kararı T2 sonrası
+
+# VS Code: çalışma alanı ayarları DEPO-SAHİPLİDİR (.vscode/settings.json + extensions.json),
+# kişisel tercihler değildir — yeni makinede aynı yorumlayıcı/test/izleyici davranışı doğsun diye
+# versiyonlanır. Kişisel olan yalnız şu iki dosya (2026-09-16):
+.vscode/settings.local.json
+.vscode/*.local.json

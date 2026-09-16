@@ -309,7 +309,7 @@ def test_A1b_rsync_disla_SINIF_KURUCULARI_hala_listede():
         assert kurucu in vars_kume, f"`rsync_disla`da sınıf kurucusu eksik: {kurucu!r}"
 
 
-#: `rsync_disla`nın DONMUŞ SÖZLEŞMESİ — 30 dışlama sınıfı (28 + 2 Terraform artefaktı, 2026-09-16).
+#: `rsync_disla`nın DONMUŞ SÖZLEŞMESİ — 31 dışlama sınıfı (28 + 2 Terraform artefaktı + `.vscode`, 2026-09-16).
 #: TEK-KAYNAK YASASI (CLAUDE.md §4): "aynı gerçeğin iki kopyası sessizce ayrışır — sayı/liste/kural
 #: TEK kaynaktan türetilir; kopya kaçınılmazsa TÜRETME + AYRIŞMA ÇİVİSİ". Task 3'e kadar kıyasın
 #: öteki ucu dagit.sh'ın `RSYNC_EXC` dizisiydi ve küme eşitliği iki yönlü ölçülüyordu; o dizi
@@ -331,6 +331,9 @@ RSYNC_DISLA_SOZLESMESI = (
     '.superpowers',
     '__pycache__',
     '.claude',
+    # '.vscode' eklendi 2026-09-16 (BEYAN): VS Code çalışma alanı ayarı yerel geliştirme yüzeyidir,
+    # A1'de okuyucusu yoktur — `.claude` ile aynı sınıf (dağıtım kapsamı dışı).
+    '.vscode',
     '.hypothesis',
     'mutants',
     '.pytest_cache',
