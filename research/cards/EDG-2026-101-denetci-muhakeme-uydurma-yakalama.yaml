@@ -1,0 +1,76 @@
+# EDG-2026-101 — Brifing kural denetçisinde muhakeme KAPALI iken "uydurma sözcük" yakalama gücü ve yanlış pozitif oranı — TSK-200
+# ÖN-KAYIT 2026-09-16 23:41Z (Rol-1, operatör "full otonom bir şekilde devam et"). Kaynak kalem: ROADMAP TSK-200.
+# ÖNCEKİ KARAR: TSK-138 dilim-3 (2026-09-14, ops/denetci_rota.py başlık şerhi) muhakemeyi VARSAYILAN KAPALI yaptı —
+# kazanç ölçüldü (çağrı 75–138 s → ~2–10 s), BEDEL ÖLÇÜLMEDİ ("muhakemesiz denetçi uydurma sınıfını daha az yakalayabilir").
+# Aynı şerh ara ayarın ("muhakeme tavanı 400") gerçek olay adlarını "uydurma" saydığını yazıyor → ölçüm İKİ YÖNLÜ.
+# KAYITTAN ÖLÇÜLEMEDİ (ROADMAP TSK-200 notu, 2026-09-16 22:5xZ, A1 olay defteri): geçmişte işaretlenen "uydurma" kelimelerinin TAMAMI sıradan
+# Türkçe ("yazim", "bekçi", "Sistemde", "kritik"); doğru pozitif örnek YOK → yakalama oranı ancak EKİLMİŞ setle ölçülür.
+# HAFIZA KONTROLÜ (2026-09-16 23:3xZ, bu ön-kayıttan önce): `ops/kart_benzer.py --hipotez "LLM kural denetçisinde muhakeme kapatılınca uydurma sözcük
+# yakalama oranı düşer mi …"` → en yüksek benzerlik 0,13 (EDG-2026-077 hindsight_hafiza, KALDI — model değişikliği kota
+# imzası; bu kartla ilgisi dolaylı), KALDI/NO-GO doğrudan benzeri YOK → "benzer yok" beyanı. A1 `hafiza_sor.sh` recall
+# (denetçi muhakeme uydurma bedeli) → doğrudan kayıt YOK.
+
+card_id: EDG-2026-101
+status: registered   # 2026-09-16 Rol-1 ön-kayıt; ölçüm kodu kart-önce, implementer sevki ayrı karar
+family: brifing_denetci_muhakeme
+on_kayit: 2026-09-16
+selef: null
+ref: [TSK-200, TSK-138, TSK-196, TSK-202, EDG-2026-077]
+
+hipotez: >
+  Aynı sentetik brifing setinde ve aynı rotada, muhakemesi KAPALI denetçi (`DENETIM_REASONING_KIPLERI["kapali"]`),
+  muhakemesi AÇIK denetçiye (`"acik"`) göre (a) ekilmiş uydurma sözcükleri GÖRELİ olarak en fazla %15 daha az yakalar
+  VE (b) temiz brifinglerde "uydurma" bayrağı kaldırma oranı açık kipten en fazla 5 puan yüksektir. İki yönlü bilgi:
+  (a) düşerse muhakemeyi kapatmanın bedeli ÖLÇÜLMÜŞ olur ve karar yeniden açılır; (b) açık kip daha çok yanlış pozitif
+  üretiyorsa muhakemeyi açmak "uydurma" gürültüsünü ARTIRIR (dilim-3 şerhinin ara-ayar gözlemi) ve kapalı kip iki
+  yönden de doğru seçimdir.
+
+k_registry: {registered_at: "2026-09-16", trial_ids: [EDG-101-yakalama-kapali-vs-acik, EDG-101-yanlis-pozitif-kapali-vs-acik]}
+# K=2. `dusuk` kipi TANI kolu olarak koşulur ve HÜKME GİRMEZ; hükme girerse K 2×2'ye çarpılır (öncesinde karta yazılarak).
+
+olcum_plani:
+  - "SET: 40 brifing metni. TABAN METİNLER UYDURULMAZ — A1'de GERÇEKTEN teslim edilmiş bekçi/şef/karne brifinglerinden (olay defteri ve bildirim kaydı) alınır; her birinin kendi VERİ bölümü (denetçiye giden `<<<VERI:…>>>` içeriği) ile birlikte. Taban metinlerin seçim kuralı ölçüm ÖNCESİ yazılır ve sha'ları rapora girer."
+  - "EKİM: 40 metnin 20'sine metin başına 1–2 UYDURMA SÖZCÜK ekilir: VERİ'de ve SOUL izinli sözlüğünde bulunmayan, olay/mekanizma adı biçimli ama var olmayan terimler (örnek biçim: `kadans_hayalet_kaymasi`, `mirror_sessiz_yetim`). 20 metin TEMİZ bırakılır. Ekilen her terim ve yeri bir anahtar dosyasına yazılır; denetçi anahtarı GÖRMEZ."
+  - "KOLLAR: aynı 40 metin üç kipte (kapali · dusuk · acik) aynı rotaya, aynı SOUL bloğu ve aynı istem kurucusuyla (`soul_denetimi.denetle` yolu, canlıyla BİREBİR) verilir. Kip sırası metin başına RASTGELE ama tohumlu; tohum rapora girer."
+  - "BİRİNCİL-1 YAKALAMA: ekilen terimlerin `Hukum.uydurma` listesinde görünme oranı, kip başına. İzinli-sözlük süzgecinden SONRAKİ liste ölçülür (canlıda teslim kararını o verir); süzgeç öncesi liste tanı sütunu."
+  - "BİRİNCİL-2 YANLIŞ POZİTİF: TEMİZ metinlerde en az bir `uydurma` bayrağı çıkan metin oranı, kip başına (süzgeç sonrası). Tanı: bayraklanan sözcüklerin sınıfı (gerçek olay adı · sıradan Türkçe · gerçekten VERİ dışı)."
+  - "TANI: çağrı süresi ve muhakeme jetonu (`*_denetci_cagri` olayının `reasoning_kipi`/`reasoning_tok` alanları; `DenetciRota.son_olcum`), cevaplayan model kimliği (`DenetciRota.cevaplayan_oku`), şema dışı cevap sayısı — kip başına."
+  - "HER ÇAĞRININ SONUCU ADIYLA kaydedilir: başarılı · üst-akım hatası (429/502/200-gövde-hatası) · şema dışı. Düşen çağrı SESSİZCE atlanmaz; en fazla BİR yeniden deneme (canlı rotanın kendi davranışı)."
+
+esikler:
+  yakalama_goreli_kayip_ust: 0.15     # kapali_yakalama >= (1 - 0.15) × acik_yakalama; GÖRELİ (hafıza kart-esigi-birimi-tolerans-tuzagi: mutlak fark küçük tabanda yanıltır)
+  yanlis_pozitif_fark_ust_puan: 0.05  # kapali_fp <= acik_fp + 0.05; MUTLAK puan (fp tabanı sıfıra yakın olabilir, göreli tanımsızdır)
+  pk_acik_yakalama_alt: 0.60          # POZİTİF KONTROL TABANI: açık kip ekilenlerin %60'ını bile yakalamıyorsa set/istem geçersiz — hüküm YOK
+  dusen_cagri_oran_ust: 0.10          # kip başına düşen (üst-akım/şema dışı) çağrı oranı %10'u aşarsa o kip OKUNAMAZ
+  n_metin: 40                         # 20 ekilmiş + 20 temiz; eksik kalırsa hüküm YOK
+
+kill_list:
+  - "Taban metinler uydurulursa (gerçekte teslim edilmemiş metin) → geçersiz (uydurma yasağı)"
+  - "Ekim anahtarı ya da set sonuç görüldükten SONRA değişirse → geçersiz (yeni kart)"
+  - "Kollar farklı istem kurucusu, farklı SOUL bloğu ya da farklı izinli-sözlük süzgeciyle koşarsa → geçersiz (kıyas kipten başka bir şeyi ölçer)"
+  - "Düşen çağrılar sayılmadan atlanırsa → geçersiz (Yasa 4)"
+  - "Ölçüm canlı `state/` defterine, brifing damgasına ya da `brifing_kural_denetimi` olayına yazarsa → geçersiz (çıktı yalnız research/olcumler/edg101_denetci_muhakeme/)"
+  - "Kollar arasında cevaplayan model FARKLIYSA ve bu ayrı raporlanmazsa → geçersiz (model farkı kip farkı sanılır — cevaplayanı iki yol değiştirebilir: kapının `fallback_strategy` yedeği ve `*_denetci_rota_dustu` ile hermes profil yoluna dönüş, ops/denetci_rota.py `DenetciRota.cagir`)"
+  - "pk_acik_yakalama_alt tutmazsa → hiçbir sayı yayılmaz, hüküm YOK"
+
+pozitif_kontrol: >
+  YOL-TUTARLI, üçlü: (1) SENTETİK-BARİZ — 5 ek metne apaçık uydurma (rastgele harf dizisi biçimli, `xqzv_hayalet`)
+  ekilir; açık kipin bunları yakalaması beklenir, yakalamıyorsa istem/çit yolu bozuktur. (2) GERÇEK OLAY ADI — temiz
+  metinlerdeki gerçek olay adlarının (VERİ'de geçen) süzgeç sonrası HİÇBİR kipte bayraklanmaması beklenir; bayraklanıyorsa
+  izinli-sözlük süzgeci ölçüm yolunda çalışmıyordur. (3) ELLE OKUMA — her kipten rastgele 5 ham denetçi cevabı elle okunur
+  ve otomatik sayımla kıyaslanır; uyuşmazlık varsa sayım kodu hatalıdır.
+
+veri_penceresi: "Tek atım: 40 metin + 5 PK metni × 3 kip = 135 denetçi çağrısı (+ en fazla 135 yeniden deneme). Filo kotası günlük 1000 çağrı (hafıza llm-cagri-kotasi) → en kötü hâl %27. Brifing saatlerinden (bekçi 10:03Z, şef 22:00Z) en az 1 saat uzakta koşulur ki canlı brifing kotası ve üst-akım havuzuyla yarışmasın."
+
+basari_tanimi: >
+  GEÇTİ: iki birincil eşik tutar ve PK tutar → muhakeme KAPALI kalır, TSK-200 kapanır (bedel ölçüldü, kabul edilebilir).
+  KALDI (a): yakalama göreli kaybı %15'i aşar → muhakemeyi kapatmanın bedeli gerçek; `dusuk` tanı kolunun sonucu ile
+  birlikte YENİ kartla "hangi kip" sorusu açılır (bu kartta eşik değişmez).
+  KALDI (b): kapalı kipin yanlış pozitif farkı 5 puanı aşar → beklenmeyen yön, kök neden ayrı kalem.
+  Her iki durumda da süre/jeton tanı sütunları kararın bedel tarafı olarak rapora girer.
+
+notlar: >
+  Ölçüm kodu kart-önce yazılmadı. Kod `soul_denetimi.denetle` ve `denetci_rota.DenetciRota.cagir` yollarını YENİDEN
+  KULLANIR (ikinci bir istem kurucusu yazılmaz — tek-kaynak); kip seçimi ortam değişkeni `DENETIM_REASONING_ENV`
+  üzerinden, canlıdaki GERİ ALIM yoluyla aynı. Ölçüm A1'de koşar (kapı yalnız orada erişilir); çıktı repo dışı değil
+  research/olcumler/edg101_denetci_muhakeme/ altına, canlı defterlere DEĞİL. Implementer sevki ve koşum saati Rol-1 kararı.
