@@ -739,8 +739,11 @@ def _weekly_validation(wk: list) -> dict:
         else:
             v = _ms.verify()               # write=True: hüküm kapının okuduğu dosyaya yazılır
             watchdog.beat("massive_verify")
+            # `failed_axes` (TSK-194): hüküm iki eksenden gelir (fiyat + hacim) ve haftalık özette
+            # HANGİSİNİN düştüğü yazılı olmazsa "uyumsuz" satırı tek başına tanı koydurmaz.
             out["massive_verify"] = {k: v.get(k) for k in
-                                     ("verdict", "samples", "mismatches", "max_dev", "reason")}
+                                     ("verdict", "samples", "mismatches", "max_dev", "reason",
+                                      "failed_axes")}
             obs.log("massive_verify_week", **out["massive_verify"],
                     write_enabled=_ms.write_enabled())
     except Exception as e:
