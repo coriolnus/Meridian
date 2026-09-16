@@ -27,6 +27,7 @@ kaynaşır (körlemesine ezme yok, satır-kaybı reddi + kurumsal-aksiyon deneti
 bars_source.json (sahiplik), bar_source_seams.json, massive_crosscheck.json, symbol_no_data.json,
 bars_integrity.json (okur); bar geçmişi değişince wf_cache_rev.json revizyonu monoton artar."""
 from __future__ import annotations
+import functools
 import time
 from pathlib import Path
 import httpx
@@ -148,6 +149,194 @@ def _bump_wf_rev() -> None:
         _bar_warn("wf_rev_bump_failed", e)
 
 
+# ---------------- hacim TAM SAYI sözleşmesi (TSK-192) ----------------
+# KÖK NEDEN, ÖLÇÜLDÜ (2026-09-16): ondalıklı hacmi ARİTMETİK ÜRETMEDİ — KAYNAK verdi. massive.com
+# grouped/aggregate ucu `v` alanını KESİRLİ döndürüyor (canlı anlık görüntü `massive_grouped_last.json`,
+# 2026-08-05 günü: 12.404 sembolün 11.085'i kesirli; EA 2026-07-29 → 3569440.107552 — aynı değer
+# sağlayıcı ucundan da birebir okundu). `massive.to_bar` alanı `float(v)` ile AYNEN geçirir,
+# `sanitize_bars` ise YALNIZ OHLC onarır (hacme hiç dokunmaz) — yani sağlayıcının kesri diske
+# olduğu gibi düşer. Kaynak kolu 2026-07-29T20:59:40Z'de `massive.write_enabled` kapısı "uyumlu"
+# hükmüyle açıldığında devreye girdi; o kapının ölçümü YALNIZ fiyat eksenindeydi, hacmin TAM SAYI
+# olup olmadığı hiç sorulmadı. Kesirli satırların çoğu ertesi turda geçmişin sahibinden (cboe/nasdaq)
+# gelen TAM seriyle ezilir; ezilmeyen satır defterde sonsuza dek kalır (canlı: 1.357.997 satırda 1).
+# SÖZLEŞME BURADA KURULUR: hisse adedi tam sayıdır, kesir bilgi değil biçim artığıdır — ve düzeltme
+# SESSİZ DEĞİLDİR (Yasa 4): yuvarlanan her bar adıyla, tarihiyle ve HAM değeriyle duyurulur.
+#: Ondalıklı hacim özet uyarısının adı. YASA-6 OKUYUCU: `obs.warn` → `state/events.jsonl` →
+#: `api.api_events` (`GET /api/events`, `obs.recent`) → pano olay akışı; aynı defteri
+#: `notify.inbox` bekçisi ve `ops/olay_sorgu.py` sorguları da tarar.
+HACIM_ONDALIK_OLAY = "bar_ondalikli_hacim"
+HACIM_ORNEK_SATIR = 5            # ÖZETE giren örnek satır sayısı — sayaç büyür, olay BÜYÜMEZ
+# OLAY BAŞINA DEĞİL, TUR SONUNA — ve bu bir ÖLÇÜMÜN sonucudur (inceleme bulgusu 7, 2026-09-16):
+# sağlayıcının anlık görüntüsünde 12.404 sembolün 11.085'i kesirli hacim taşıyor. Yazım anında
+# olay basılsaydı massive kolunun yazdığı İLK turda evren kadar (bu depoda 260, sağlayıcı evreninde
+# on binlerce) satır düşerdi; `obs._emit`te genel bir hız sınırı YOK (6 saatlik susturma yalnız
+# `ALARM_*` jetonlarına uygulanır, bu olay onlardan değil), yani defter de bekçi brifingi de
+# operatörün dikkati de aynı bilgiyi binlerce kez taşırdı. DESEN DEPONUN KENDİSİNDEN: `_note_ghost`
+# (tarih başına, EVREN ÇAPINDA dedup) + `_emit_ghost_round` (tur sonunda TEK satır) — aynı sorunun
+# (259 sembolde 259 satır sinyali gömer) burada da aynı cevabı vardır. `ops/bar_arsivle.py` tarafı
+# da aynı deseni kullanır (koşum sonu tek `HACİM ONDALIK` özeti): iki yerde iki tasarım kalmaz.
+_HACIM_ONDALIK: dict = {}        # {tarih: {rows, tickers:set, ornekler:[...], max_kesir, max_kesir_ticker}}
+_HACIM_ONDALIK_DUYURULDU: set = set()   # TARİH başına BİR özet — sembol başına DEĞİL (evren çapında)
+_HACIM_TUR_DERINLIK = 0          # AÇIK tur kapsamı sayısı; duyuru YALNIZ 0'a dönerken düşer
+
+
+def _not_hacim_ondalik(ticker: str, ciftler: list) -> None:
+    """Kesirli hacim satırlarını SAY (tarih başına); duyuru `_emit_hacim_round`ün işidir.
+
+    Sembol kümesi SET'tir: 12 bin sembollük bir turda listede `in` araması O(n²) olurdu ve bu
+    fonksiyon yazım boğazının içinde koşar. Örnek listesi TAVANLIDIR (`HACIM_ORNEK_SATIR`): sayaç
+    büyürken olayın kendisi büyümesin. `max_kesir` ATILAN hisse adedidir — "ne kadar bilgi
+    yuvarlandı" sorusunun ölçüsü; sıfır ile "ölçmedik" aynı görünmesin diye sembolü de saklanır."""
+    for tarih, ham in ciftler:
+        kayit = _HACIM_ONDALIK.setdefault(tarih, {"rows": 0, "tickers": set(), "ornekler": [],
+                                                  "max_kesir": 0.0, "max_kesir_ticker": None})
+        kayit["rows"] += 1
+        kayit["tickers"].add(ticker)
+        kesir = abs(ham - round(ham))
+        if kesir > kayit["max_kesir"]:
+            kayit["max_kesir"], kayit["max_kesir_ticker"] = kesir, ticker
+        if len(kayit["ornekler"]) < HACIM_ORNEK_SATIR:
+            kayit["ornekler"].append(f"{ticker}@{tarih}={ham!r}")
+
+
+def _emit_hacim_round() -> None:
+    """TUR SONU TEK ÖZET: bu turda DUYURULMAMIŞ tarihlerin hepsi tek olayda birleşir.
+
+    Dedup TARİH bazındadır ve EVREN ÇAPINDADIR (`_note_ghost` emsali): aynı seansın kesirli
+    hacmini 260 sembolde ayrı ayrı duyurmak, bir bilgiyi 260 kez taşımak olurdu. Yeni bir TARİH
+    görülmedikçe ikinci olay ATILMAZ — yani aynı bar her turda yeniden bağırmaz.
+    Olayın taşıdığı ölçüler: kaç satır · kaç sembol · hangi tarihler · en büyük atılan kesir
+    (sembolüyle) · ilk `HACIM_ORNEK_SATIR` örnek (sembol@tarih=ham değer). Sayaç (`_HACIM_ONDALIK`)
+    süreçte durur ve bu fonksiyon onun okuyucusudur."""
+    yeni = [t for t in sorted(_HACIM_ONDALIK) if t not in _HACIM_ONDALIK_DUYURULDU]
+    if not yeni:
+        return
+    _HACIM_ONDALIK_DUYURULDU.update(yeni)
+    satir = sum(_HACIM_ONDALIK[t]["rows"] for t in yeni)
+    semboller = {s for t in yeni for s in _HACIM_ONDALIK[t]["tickers"]}
+    ornekler = [o for t in yeni for o in _HACIM_ONDALIK[t]["ornekler"]][:HACIM_ORNEK_SATIR]
+    en_kesir, en_ticker, en_tarih = max((_HACIM_ONDALIK[t]["max_kesir"],
+                                         _HACIM_ONDALIK[t]["max_kesir_ticker"] or "?", t)
+                                        for t in yeni)
+    try:
+        from .. import obs
+        obs.warn(HACIM_ONDALIK_OLAY, rows=satir, tickers=len(semboller), n_dates=len(yeni),
+                 dates=",".join(yeni), ornekler="; ".join(ornekler),
+                 ornek_tavani=HACIM_ORNEK_SATIR, max_kesir=round(float(en_kesir), 6),
+                 max_kesir_ticker=en_ticker, max_kesir_date=en_tarih,
+                 detail="sağlayıcı kesirli hacim verdi (ölçüldü: massive grouped `v`); satırlar "
+                        "TAM SAYIYA yuvarlanarak yazıldı — hisse adedi tam sayıdır. Tarih başına "
+                        "TEK özet: aynı seans sembol sembol duyurulmaz")
+    except Exception as e:
+        # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci kanal yok ve bir telemetri denemesi
+        # bar yazımını ASLA düşüremez; sayaç `_HACIM_ONDALIK`te durur ve olay bir kez görünür kalır.
+        _bar_warn("hacim_ondalik_ozeti_dusti", e, dates=",".join(yeni))
+
+
+class _HacimTurCtx:
+    """Ondalıklı hacim TURUNUN kapsamı: duyuru tek tek uçlara değil BU KAPSAMA bağlıdır.
+
+    NEDEN KAPSAM, NEDEN UÇ DEĞİL (inceleme bulgusu, düzeltme turu 3, 2026-09-16): duyuru yalnız
+    `load_many` ve `repair_coverage` uçlarına bağlıyken, sayacı dolduran yazım boğazına
+    (`_write_bars`) o ikisinin DIŞINDAN ulaşan GERÇEK yollar vardı — tek başına çağrılan
+    `load_bars` (ölçüm/api/veri-kümesi/yeniden-hesap yolları; bir kısmı AYRI systemd
+    süreçlerinde koşar ve o sürecin ömrü boyunca `load_many` hiç çağrılmayabilir) ve ayrı bir CLI
+    olan `barrepair` aracı. O yollarda sayaç dolar, süreç biter ve olay HİÇ basılmazdı: bu
+    "gecikme" değil KALICI KAYIP — yaması tek yola bağlanan sinyalin bağlanmamış yolda sessiz
+    kalması bu depoda ölçülmüş bir sınıftır (Yasa 4).
+
+    KURAL ARTIK SINIF, LİSTE DEĞİL (tur 4, 2026-09-16): üç tur üst üste "yazım yolları" ELLE sayıldı
+    ve her turda biri atlandı (en son `sip_correct_provisional → _apply_sip_correction →
+    _overwrite_bar`). Sözleşme bu yüzden tek bir cümleye indirildi: **`_write_bars`i çağıran her
+    üretim fonksiyonu ya kapsam dekoratörünü taşır ya da çağrısı bir kapsam bağlamının içindedir.**
+    Kapsamı `_write_bars`ın KENDİSİNE koymak bu cümlenin yanlış çözümüdür — her yazımda derinlik
+    sıfıra düşer ve tur 1'in gürültü seli (232 olay/koşum) geri gelir; kapsam ÇAĞIRANA konur.
+    Cümleyi `test_bar_ondalikli_hacim_v507` K13 çivisi KAYNAKTAN (ast) türeterek zorlar: sabit bir
+    yol listesi tek-kaynak yasasını kırar ve yeni yol eklendiğinde SESSİZ kalırdı.
+
+    İÇ İÇE AÇILIR, YALNIZ EN DIŞTA DUYURUR: `load_many` kendi içinde `load_bars` çağırır; her
+    çağrı kendi duyurusunu yapsaydı 500 sembollük bir tur 500 olay basardı — tur 2'nin kapattığı
+    gürültü seli geri gelirdi. Derinlik sayacının tek işi budur: rows/tickers TOPLAM kalır, olay
+    TEK kalır.
+
+    İSTİSNADA DA DUYURULUR: `with` kapanışı (`__exit__`) çöküşte de koşar ve duyuru BASTIRILMAZ —
+    elde olan sayım kaybolmasın diye. Eksik bir özet, hiç özetten iyidir: ölçülemeyen kayıp yok
+    sayılır.
+
+    SINIR YAZILI: derinlik de sayaç gibi SÜREÇ-İÇİ ve TEK İPLİKLİDİR. Havuz işçisi AYRI SÜREÇtir,
+    kendi sayacını ve kendi derinliğini taşır (bar yolunda iplik havuzu yok — yalnız süreç havuzu,
+    ölçüldü 2026-09-16). Yeniden başlatma derinliği de sayacı da sıfırlar ve aynı tarih yeni
+    süreçte yeniden duyurulur: `_HACIM_ONDALIK`in zaten belgeli sınırı, yeni bir sınır değil."""
+
+    def __enter__(self):
+        """Kapsamı açar (derinlik +1). Duyuru BURADA yapılmaz — tur daha başlamıştır."""
+        global _HACIM_TUR_DERINLIK
+        _HACIM_TUR_DERINLIK += 1
+        return self
+
+    def __exit__(self, *exc):
+        """Kapsamı kapatır (derinlik -1) ve EN DIŞ kapanışta duyuruyu boşaltır. Derinlik negatife
+        düşürülmez: dengesiz bir elle kapanış turu kalıcı olarak sessizleştirmesin. False döner —
+        istisna YUTULMAZ, yalnız duyuru garanti edilir."""
+        global _HACIM_TUR_DERINLIK
+        _HACIM_TUR_DERINLIK -= 1
+        if _HACIM_TUR_DERINLIK <= 0:
+            _HACIM_TUR_DERINLIK = 0
+            _emit_hacim_round()
+        return False
+
+
+def _hacim_turu():
+    """`with _hacim_turu():` — ondalıklı hacim turu kapsamını üretir (iç içe güvenli; gerekçe ve
+    sınırlar `_HacimTurCtx` docstring'inde). `live_session_leg` ile aynı desen: sınıf + üretici."""
+    return _HacimTurCtx()
+
+
+def _hacim_turu_kapsami(fn):
+    """Bir giriş noktasını ondalıklı hacim turunun kapsamına bağlayan dekoratör.
+
+    DEKORATÖR, ÇÜNKÜ SORU GÖVDE DEĞİL GİRİŞ: kapsanan üç fonksiyonun da birden çok `return`u var;
+    gövdeyi elle girintilemek her dönüş yolunda kapanışı yeniden doğrulamayı gerektirirdi ve bir
+    dönüş unutulduğunda arıza SESSİZ olurdu. Girişte açılan `with`, hem her `return`da hem de
+    istisnada kapanır. `functools.wraps` adı ve docstring'i korur: çağıranlar, turşulama (süreç
+    havuzu işçisi) ve testlerin yamaları fonksiyonu özgün adıyla görmeye devam eder."""
+    @functools.wraps(fn)
+    def _sarmal(*a, **kw):
+        with _hacim_turu():
+            return fn(*a, **kw)
+    return _sarmal
+
+
+def _hacim_tam_sayi(df: pd.DataFrame, ticker: str) -> pd.DataFrame:
+    """Hacmi diske yazılmadan ÖNCE TAM SAYIYA bağlar; kesirli satırları SAYAR (duyuru tur sonunda).
+
+    NEDEN YAZIM ANINDA, KAYNAKTA DEĞİL: kesirli hacmi bugün massive kolu getiriyor, yarın başka bir
+    sağlayıcı getirebilir — sözleşmeyi tek tek kollara yazmak, yeni kolun onu sessizce atlaması
+    demekti (bu depoda ölçülmüş sınıf). Burası bar CSV'sinin TEK yazım boğazıdır: hangi kol yazarsa
+    yazsın buradan geçer.
+
+    SESSİZ DEĞİL (Yasa 4): yuvarlama bir ONARIMDIR ve onarım duyurulur — ama SATIR SATIR değil,
+    `_emit_hacim_round` ile TUR SONUNDA tek özette (gerekçe ve ölçüm sabitin yanında). Duyurunun
+    ertelenmesi onu sessiz yapmaz: sayaç yazım anında dolar, özet turun sonunda ADIYLA düşer ve
+    ham değer örnekte görünür.
+
+    Sembol ADI dosya yolundan türer ve dönüşüm TERSİNMEZDİR (`_cache_path` `.`ı `-` yapar): olayda
+    `BRK-B` görünür, `BRK.B` değil — ölçüm sınırı, tahmin değil.
+    NaN/sonsuz hacme DOKUNULMAZ: onlar bu kapının sorusu değildir (uydurma yasağı)."""
+    if df is None or df.empty or "volume" not in df.columns:
+        return df
+    v = pd.to_numeric(df["volume"], errors="coerce")
+    kesirli = v.notna() & (v.sub(v.round()).abs() > 0)
+    if not bool(kesirli.any()):
+        return df
+    # TARİH VE DEĞER AYNI SATIRDAN ÇIKAR: iki listeyi ayrı ayrı toplamak, biri süzüldüğünde
+    # diğerini KAYDIRIR ve özet "hangi günün hangi değeri" sorusuna yanlış cevap verirdi.
+    ciftler = ([(str(g)[:10], float(h)) for g, h in zip(df.loc[kesirli, "date"], v[kesirli])]
+               if "date" in df.columns else [("?", float(h)) for h in v[kesirli]])
+    _not_hacim_ondalik(ticker, ciftler)
+    return df.assign(volume=df["volume"].where(~kesirli, v.round()))
+
+
 def _write_bars(df: pd.DataFrame, cp: Path) -> None:
     """ATOMİK yazım — TEK KAPIDAN (store.write_text). Süreç havuzundaki işçiler (dataset.load_cached)
     aynı dosyayı EŞ ZAMANLI okuyor — yarım yazılmış bir CSV okunduğunda ticker sessizce kırpılmış
@@ -166,12 +355,15 @@ def _write_bars(df: pd.DataFrame, cp: Path) -> None:
         maliyeti yavaş diskte GÖRÜNÜR olur (kör kilidin yapacağı SESSİZ regresyonun tersi).
     STATE'e göreli ad kilidi paylaştırır; STATE dışı cp (olağandışı) mutlak yola düşer (relative_to
     fallback). YASA-6 OKUYUCU: load_bars / dataset.load_cached bar CSV'lerini okur (üstteki eşzamanlı
-    okuyucu). to_csv string döndürülür → kapının fdopen'ı diske yazar; baytlar stream hâliyle birebir."""
+    okuyucu). to_csv string döndürülür → kapının fdopen'ı diske yazar; baytlar stream hâliyle birebir.
+    HACİM SÖZLEŞMESİ (TSK-192): yazılan çerçevenin hacmi TAM SAYIdır — `_hacim_tam_sayi` kapısı
+    ondalık bulursa yuvarlar ve duyurur (gerekçe o fonksiyonun üstünde)."""
     from .. import store as _st
     try:
         name = str(cp.relative_to(_config.STATE))
     except ValueError:  # sessiz-yutma: STATE dışı bar yolu (olağandışı) — relative_to bilinçli ValueError atar, mutlak adla geçer ve veri kaybı yok
         name = str(cp)
+    df = _hacim_tam_sayi(df, cp.stem.upper())
     _st.write_text(name, df.to_csv(index=False))
 
 
@@ -1635,6 +1827,7 @@ def upgrade_divergence(doc: dict | None = None, session: str | None = None) -> d
 SIP_CORRECT_MAX_SESSIONS = 3     # defterdeki EN YENİ K geçici seans (daha eskisi zaten massive'in işi)
 
 
+@_hacim_turu_kapsami
 def _overwrite_bar(ticker: str, bar: dict) -> bool:
     """VAR OLAN bir tarihin barını konsolide değerlerle DEĞİŞTİR. `_merge_repair_bar`ın TERSİ ve
     tamamlayıcısı: o YALNIZ ekler (var olan tarihe dokunmaz), bu YALNIZ var olanı değiştirir (yeni
@@ -1642,7 +1835,15 @@ def _overwrite_bar(ticker: str, bar: dict) -> bool:
     doldurma" ile "üstüne yazma" aynı çağrıda karışır ve bacak geçmiş kurabilir hâle gelirdi.
 
     Geçmiş DEĞİŞTİĞİ için wf revizyonu BUMPLANIR (SANCTIONED yol: watchdog `rev_bumped` görür ve
-    mutasyonu sessiz saymaz). Hiçbir alan değişmiyorsa yazım da bump da YAPILMAZ."""
+    mutasyonu sessiz saymaz). Hiçbir alan değişmiyorsa yazım da bump da YAPILMAZ.
+
+    KAPSAM KENDİ GİRİŞİNDE, ÇAĞIRANINDA DEĞİL (TSK-192 tur 4): gövde `_write_bars`i çağırır, yani
+    ondalıklı hacim sayacını DOLDURAN üretim yollarından biridir. Tur 3'te bu yol (`_apply_sip_correction`
+    → buraya) hiçbir kapsamın içinde değildi ve duyuru yalnız zamanlayıcının `sip_correct_provisional`
+    ardından KOŞULSUZ `repair_coverage` çağırması sayesinde düşüyordu: SIRALAMAYA bağlı, belgesiz,
+    testsiz bir kazaydı — iki çağrının arasına bir `return` girdiği gün sessizce kaybolurdu. Kapsam
+    iç içe güvenlidir (`_HacimTurCtx`): toplu turda derinlik zaten >0 olduğu için sembol başına olay
+    BASILMAZ, tek başına çağrıldığında ise duyuru düşer."""
     cp = _cache_path(ticker)
     try:
         cached = pd.read_csv(cp, parse_dates=["date"])
@@ -1697,6 +1898,7 @@ def _overwrite_bar(ticker: str, bar: dict) -> bool:
     return True
 
 
+@_hacim_turu_kapsami
 def sip_correct_provisional(tickers: list[str] | None = None,
                             max_sessions: int = SIP_CORRECT_MAX_SESSIONS) -> dict:
     """GEÇMİŞ seansların IEX-damgalı satırlarını KONSOLİDE (sip) barla düzelt — massive'den ÖNCE.
@@ -1708,7 +1910,13 @@ def sip_correct_provisional(tickers: list[str] | None = None,
 
     HACİM: sip konsolidedir → ham yazılır ve konsolide/IEX oranı GERÇEK ölçümle tazelenir
     (`sip_correction`). Ölçüm yapıldıktan sonra `iex_volume` defterden DÜŞÜLÜR: aynı IEX hacmini
-    bir de massive ile eşleştirmek, tek bir gerçeği iki bağımsız örnek gibi saymak olurdu."""
+    bir de massive ile eşleştirmek, tek bir gerçeği iki bağımsız örnek gibi saymak olurdu.
+
+    TOPLU GİRİŞ KAPSAMI (TSK-192 tur 4): bu, zamanlayıcıdan çağrılan ve İÇİNDE SEMBOL DÖNGÜSÜ olan
+    bağımsız bir giriş noktasıdır — `load_many` ve `repair_coverage` ile aynı sınıf. İçerideki her
+    `_overwrite_bar` kendi kapsamını açar; bu dış kapsam olmasaydı 100 sembollük bir düzeltme turu
+    100 ayrı ondalıklı-hacim olayı basardı (tur 2'nin kapattığı gürültü seli). İkisi birlikte:
+    tek başına çağrılan yol da duyurur, toplu tur da TEK olay basar."""
     from . import alpaca
     out: dict = {"sessions": {}, "targets": 0, "corrected": 0, "asked_sessions": 0,
                  "skipped": None, "at": None}
@@ -1881,6 +2089,7 @@ def calibrate_volume(tickers: list[str] | None = None, days: int = VOLUME_CAL_DA
 
 
 # ---------------- onarım geçidi: son K seansın kapsaması ------------------------------------------
+@_hacim_turu_kapsami
 def repair_coverage(tickers: list[str] | None = None, sessions: int = REPAIR_LOOKBACK,
                     min_coverage: float = REPAIR_MIN_COVERAGE) -> dict:
     """Son K seansın kapsamasını DİSKTEN ölç; eksik seansı Massive grouped ile KAPAT.
@@ -1938,14 +2147,23 @@ def repair_coverage(tickers: list[str] | None = None, sessions: int = REPAIR_LOO
                         detail="onarım geçidi: eksik seans grouped anlık görüntüsünden kapatıldı")
             except Exception:  # sessiz-yutma: kayıt kanalı düştü; onarımın kendisi diske yazıldı
                 pass
+    # ONARIM DA BİR TURDUR: bu süpürme `load_many`den bağımsız çağrılır (scheduler) ve bar YAZAR —
+    # bu yüzden kendi KAPSAMINI açar (dekoratör). Kapsam olmasaydı onarımın yuvarladığı kesirler
+    # bir sonraki `load_many`ye kadar duyurulmadan kalırdı; o tur hiç koşmazsa HİÇ duyurulmazdı.
     return out
 
 
+@_hacim_turu_kapsami
 def _merge_repair_bar(ticker: str, bar: dict) -> bool:
     """Eksik seansın barını önbelleğe EKLE. Yalnız EKLEME: var olan hiçbir tarih değiştirilmez.
     GEÇMİŞE eklenen bir bar (delik doldurma) wf revizyonunu BUMPLAR — determinizm yasası 'dosya
     büyümesi zararsızdır' derken SONA eklemeyi kastediyor; ortadaki bir deliğin dolması geçmiş
-    pencerelerin sonucunu DEĞİŞTİRİR ve önbelleklenmiş walk-forward'lar artık başka bir seriye aittir."""
+    pencerelerin sonucunu DEĞİŞTİRİR ve önbelleklenmiş walk-forward'lar artık başka bir seriye aittir.
+
+    KAPSAM KENDİ GİRİŞİNDE (TSK-192 tur 4): bugün TEK çağıranı `repair_coverage` (o dekoratörlü) ama
+    güvence ÇAĞIRAN SAYISINA dayanamaz — "bugün tek çağıranı var" üç turdur tekrarlayan hata sınıfının
+    ta kendisidir. Kapsam iç içe güvenli olduğu için bu ekleme toplu onarım turunun tek-olay tavanını
+    (K6/K10) BOZMAZ; tek başına çağrılan bir gelecekteki yolda ise duyuruyu garanti eder."""
     cp = _cache_path(ticker)
     try:
         cached = pd.read_csv(cp, parse_dates=["date"])
@@ -2246,9 +2464,14 @@ def no_data_report() -> dict:
                     "retired = delist hükmü ZATEN verilmiş, bakım adayı DEĞİL"}
 
 
+@_hacim_turu_kapsami
 def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_delay: float = 0.1) -> pd.DataFrame:
     """Load daily bars for [start, end]. Uses the cache when fresh; otherwise fetches and MERGES with
-    the cache (union by date) rather than blindly overwriting."""
+    the cache (union by date) rather than blindly overwriting.
+
+    KAPSAM (TSK-192 tur 3): bu giriş TEK BAŞINA da çağrılıyor (ölçüm/api/veri-kümesi/yeniden-hesap
+    yolları, bir kısmı AYRI süreçlerde) — ondalıklı hacim duyurusu bu yüzden `load_many`nin değil
+    BURANIN kapsamına bağlıdır; `load_many` içinden gelen çağrılar İÇ kapsamdır ve olay basmaz."""
     cp = _cache_path(ticker)
     cached, cached_raw_rows, _gate_dropped = None, 0, 0
     if cp.exists():
@@ -2573,8 +2796,13 @@ def _window(df: pd.DataFrame, start: str, end: str) -> pd.DataFrame:
     return df.loc[m].reset_index(drop=True)
 
 
+@_hacim_turu_kapsami
 def load_many(tickers: list[str], start: str, end: str, use_cache: bool = True) -> dict[str, pd.DataFrame]:
-    """Load bars and DROP any ticker whose data fails the hard integrity gate (never trade on bad data)."""
+    """Load bars and DROP any ticker whose data fails the hard integrity gate (never trade on bad data).
+
+    KAPSAM (TSK-192 tur 3): tur burada AÇILIR ve burada KAPANIR; içerideki her `load_bars` çağrısı
+    İÇ kapsamdır (olay basmaz), böylece 500 sembollük tur hâlâ TEK özet üretir ve sayılar TOPLAM
+    kalır. Gerekçe `_HacimTurCtx`te."""
     out: dict[str, pd.DataFrame] = {}
     failed, quarantined = [], []
     _n_uni = len(tickers)
@@ -2608,6 +2836,8 @@ def load_many(tickers: list[str], start: str, end: str, use_cache: bool = True) 
     # son %10'u aksi hâlde yalnız bellekte kalırdı).
     flush_same_evening()
     _emit_ghost_round()               # hayalet/karantina toplamı: tur sonunda TEK satır
+    # ONDALIKLI HACİM ÖZETİ BURADA DEĞİL: duyuru `_hacim_turu_kapsami` dekoratörüne taşındı (tur 3).
+    # Elle çağrı bu fonksiyonu kapsardı ama `load_bars`ın TEK BAŞINA çağrıldığı yolları kapsamazdı.
     if failed or quarantined:
         try:
             from .. import obs

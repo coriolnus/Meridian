@@ -190,9 +190,18 @@ CSV_SUTUNLARI = ("date", "open", "high", "low", "close", "volume")
 #: SQL tipleri — arşiv tipli olsun diye her sütun AÇIKÇA cast edilir. `volume` CSV'de kayan
 #: noktadır (`2024993600.0`) ve BIGINT'e çevrilir: hisse adedi tam sayıdır, kesir bilgi değil
 #: biçim artığıdır.
+#: CAST SESSİZ DEĞİLDİR (TSK-192, 2026-09-16): kaynakta GERÇEKTEN ondalıklı bir hacim varsa
+#: BIGINT dönüşümü onu yuvarlar ve arşiv, CSV'den FARKLI bir değer taşır — bu fark EDG-2026-100
+#: kıyasında "arşiv ↔ CSV tek hücre farkı" olarak ortaya çıktı ve kaynağı ancak elle bulunabildi.
+#: Artık her koşum ondalıklı hacmi SAYAR ve koşum sonunda adıyla basar (`_ondalik_hacim_bas`);
+#: bedel yasası: dönüşümün NE KAYBETTİĞİ ölçülmeden yapılmaz.
 SUTUN_TIPLERI = {"date": "DATE", "open": "DOUBLE", "high": "DOUBLE", "low": "DOUBLE",
                  "close": "DOUBLE", "volume": "BIGINT", "kaynak": "VARCHAR",
                  "ayarlama_olcegi": "DOUBLE"}
+
+#: `_ondalik_hacim_bas` özetinde gösterilen en fazla (sembol, parça) ve satır örneği sayısı.
+ONDALIK_ORNEK_GRUP = 3
+ONDALIK_ORNEK_SATIR = 3
 
 DURUM_YAZILDI = "yazıldı"
 DURUM_YAZILACAK = "yazılacak"      # yalnız KURU koşum
@@ -264,6 +273,29 @@ def csv_oku(yol: pathlib.Path, sembol: str) -> tuple[pd.DataFrame, list[str]]:
     temiz, _rapor = sanitize_bars(ham, sembol)
     eksik = sorted(set(SUTUNLAR) - set(temiz.columns))
     return temiz, eksik
+
+
+def ondalikli_hacim(dilim: pd.DataFrame) -> tuple[int, list[str]]:
+    """(ondalıklı hacim satırı SAYISI, `TARİH=DEĞER` örnekleri) — BIGINT cast'i YUVARLAMADAN ÖNCE.
+
+    NEDEN ÖLÇÜLÜYOR (TSK-192): `volume` sütunu BIGINT'e cast edilir ve DuckDB kesri yuvarlar;
+    kaynakta gerçekten ondalıklı bir hacim varsa arşiv, CSV'den FARKLI bir değer taşır ve bunu
+    hiçbir yerde SÖYLEMEZDİ. Doğrulama kapısı da göremez: `_dogrula` satır sayısı, ilk/son gün ve
+    KAPANIŞ toplamını kıyaslar — hacim ekseni o kıyasta yoktur. Sayı burada ölçülür, hüküm
+    `_ondalik_hacim_bas`ta operatöre basılır (kaybın ölçülmesi: bedel yasası).
+
+    Ölçüm NaN'a HÜKÜM VERMEZ: ölçülemeyen değer ondalıklı da sayılmaz, tam sayı da (uydurma yasağı).
+    """
+    if dilim is None or dilim.empty or "volume" not in dilim.columns:
+        return 0, []
+    v = pd.to_numeric(dilim["volume"], errors="coerce")
+    kesirli = v.notna() & (v.sub(v.round()).abs() > 0)
+    n = int(kesirli.sum())
+    if not n:
+        return 0, []
+    alt = dilim.loc[kesirli].head(ONDALIK_ORNEK_SATIR)
+    ornekler = [f"{str(g)[:10]}={h!r}" for g, h in zip(alt["date"], alt["volume"])]
+    return n, ornekler
 
 
 # ---------------------------------------------------------------------------------------------
@@ -641,6 +673,7 @@ def main(argv: list[str] | None = None) -> int:
     eksik_sutunlar: dict = {}
     farklar: list[str] = []
     goc_kayitlari: list[str] = []      # `kaynak_hash`siz (eski sözleşme) manifest kayıtları
+    ondalik_kayitlari: list[tuple[str, int, list[str]]] = []   # (etiket, satır, örnek) — BIGINT kaybı
     csv_bayt = 0                       # BEDEL payda: yalnız satır ÜRETEN CSV'ler sayılır
     try:
         for yol in dosyalar:
@@ -669,6 +702,12 @@ def main(argv: list[str] | None = None) -> int:
                 dilim = temiz.loc[maske].reset_index(drop=True)
                 etiket = sembol if parca is None else f"{sembol} {parca}"
                 hedef_dosya = hedef_yolu(hedef, args.bolum, sembol, parca)
+                # KAYIP ÖNCE ÖLÇÜLÜR: sayım cast'ten de, atlama/kuru koşum kapısından da ÖNCE
+                # yapılır — "atlandı" diye geçilen bir dilimin arşivi de yuvarlanmış hâlde durur ve
+                # soru ("arşiv CSV'den farklı mı") o dilimde de geçerlidir.
+                _n_ondalik, _ondalik_ornek = ondalikli_hacim(dilim)
+                if _n_ondalik:
+                    ondalik_kayitlari.append((etiket, _n_ondalik, _ondalik_ornek))
                 try:
                     con.register("_bar_beklenen", dilim)
                     try:
@@ -747,6 +786,7 @@ def main(argv: list[str] | None = None) -> int:
               f"Örnek: {ornek}", file=sys.stderr)
 
     _bedel_bas(args.bolum, satirlar, csv_bayt, args.ay is not None)
+    _ondalik_hacim_bas(ondalik_kayitlari)
 
     if farklar:
         for g in farklar:
@@ -786,6 +826,28 @@ def _bedel_bas(bolum: str, satirlar: list[dict], csv_bayt: int, ay_suzgeci: bool
     else:
         parcalar.append(f"oran {arsiv_bayt / csv_bayt:.2f}x (arşiv/CSV)")
     print(" · ".join(parcalar), file=sys.stderr)
+
+
+def _ondalik_hacim_bas(kayitlar: list[tuple[str, int, list[str]]]) -> None:
+    """ARŞİVİN SESSİZ YUVARLAMASINI GÖRÜNÜR YAPAR (TSK-192). Ondalıklı hacim yoksa TEK SATIR bile
+    basılmaz: "her koşumda sıfır" satırı gürültüdür, bulgu değil.
+
+    Okuyucusu operatördür — `_bedel_bas` ile aynı kanal (stderr, koşum sonu özeti). EDG-2026-100
+    ölçümünde arşiv ile CSV arasındaki TEK değer farkı tam olarak bu yuvarlamaydı ve aracın kendisi
+    bunu hiç söylemiyordu; fark ancak dışarıdan bir kıyas ölçümüyle görüldü. Satır, kaynağın
+    (`state/bars/*.csv`) onarılması gerektiğini söyler: arşiv şeması BIGINT kalır, çünkü hisse adedi
+    tam sayıdır — değişen tek şey, kaybın ARTIK BEYAN EDİLMESİDİR."""
+    if not kayitlar:
+        return
+    toplam = sum(n for _, n, _ in kayitlar)
+    ornek = " · ".join(f"{etiket}: {', '.join(orn)}"
+                       for etiket, _n, orn in kayitlar[:ONDALIK_ORNEK_GRUP])
+    if len(kayitlar) > ONDALIK_ORNEK_GRUP:
+        ornek += " …"
+    print(f"HACİM ONDALIK: {toplam} satır / {len(kayitlar)} (sembol, parça) — kaynak CSV ondalıklı "
+          f"`volume` taşıyor ve arşiv şeması BIGINT: bu satırlar parquet'e YUVARLANARAK yazılır, "
+          f"yani arşiv değeri CSV değerinden FARKLIDIR. Kaynak: hisse adedi tam sayıdır; ondalık "
+          f"sağlayıcıdan gelir (ölçüldü 2026-09-16, TSK-192). Örnek: {ornek}", file=sys.stderr)
 
 
 if __name__ == "__main__":

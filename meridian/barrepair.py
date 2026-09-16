@@ -134,18 +134,28 @@ def repair(symbols: list[str] | None = None, apply: bool = False) -> dict:
     if not apply or not (rapor["ghost_rows"] or rapor["quarantine_rows"]):
         return rapor
     data._bump_wf_rev()          # ÖNCE (yukarıdaki 2. kural: geç bump = sessiz mutasyon riski)
-    for t in sorted(rapor["tickers"]):
-        cp = data._cache_path(t)
-        try:
-            raw = pd.read_csv(cp, parse_dates=["date"])
-            clean, rep = data.sanitize_bars(raw, t)
-            if clean is None or clean.empty or len(clean) >= len(raw):
-                continue                       # kapı bir şey düşürmediyse dosyaya DOKUNMA
-            data._write_bars(clean, cp)
-            rapor["written"].append({"ticker": t, "before": int(len(raw)), "after": int(len(clean)),
-                                     "report": {k: int(v) for k, v in rep.items()}})
-        except Exception as e:
-            rapor["unreadable"].append(f"{t}: YAZIM BAŞARISIZ {type(e).__name__}: {e}")
+    # ONDALIKLI HACİM DUYURUSU BU ARACIN KENDİ İŞİDİR (TSK-192 tur 3). Bu araç AYRI bir CLI
+    # sürecidir: `python -m meridian.barrepair` koşumunda ne bar yükleyici turu ne onarım süpürmesi
+    # çağrılır. Yazımlar `data._write_bars`ten geçtiği için ondalıklı hacim sayacı DOLAR; kapsam
+    # açılmazsa süreç biter ve olay HİÇ basılmaz — hayalet tarafının `bar_ghost_repair_applied`
+    # ile aldığı bağımsız duyuru güvencesinin hacim tarafındaki karşılığı budur.
+    # KAPSAM YÖNETİCİSİ, DOĞRUDAN `_emit_hacim_round()` DEĞİL: doğrudan çağrı, bu fonksiyon bir
+    # gün açık bir turun İÇİNDEN çağrılırsa özeti turun ortasında böler (aynı bilgi iki olaya
+    # dağılır). Kapsam iç içe güvenlidir — tek tasarım, iki modülde iki kural değil.
+    with data._hacim_turu():
+        for t in sorted(rapor["tickers"]):
+            cp = data._cache_path(t)
+            try:
+                raw = pd.read_csv(cp, parse_dates=["date"])
+                clean, rep = data.sanitize_bars(raw, t)
+                if clean is None or clean.empty or len(clean) >= len(raw):
+                    continue                   # kapı bir şey düşürmediyse dosyaya DOKUNMA
+                data._write_bars(clean, cp)
+                rapor["written"].append({"ticker": t, "before": int(len(raw)),
+                                         "after": int(len(clean)),
+                                         "report": {k: int(v) for k, v in rep.items()}})
+            except Exception as e:
+                rapor["unreadable"].append(f"{t}: YAZIM BAŞARISIZ {type(e).__name__}: {e}")
     try:
         from . import obs
         obs.warn("bar_ghost_repair_applied", files=len(rapor["written"]),
