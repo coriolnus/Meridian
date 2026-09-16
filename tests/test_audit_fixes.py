@@ -83,7 +83,7 @@ def test_scheduler_refetches_once_per_session_not_per_poll(sandbox_state):
     # olarak taklit edildiği için yalnız sandbox yetmez — yazma yolları da kapatılır.
     import pandas as pd
     from unittest import mock
-    from meridian import scheduler, store, health
+    from meridian import scheduler, store, health, earnings
     scheduler._state["last_refetch_session"] = None
     idx = pd.DataFrame({"date": pd.to_datetime(["2026-07-13"])})   # latest data bar lags the calendar
     loads = []
@@ -97,7 +97,10 @@ def test_scheduler_refetches_once_per_session_not_per_poll(sandbox_state):
          mock.patch.object(store, "write_json", lambda *a, **k: None), \
          mock.patch.object(store, "append_jsonl", lambda *a, **k: None), \
          mock.patch("meridian.dataset.load", fake_load), \
-         mock.patch("meridian.loop.daily_cycle", lambda b, i: {"date": "2026-07-13", "status": "ok"}):
+         mock.patch("meridian.loop.daily_cycle", lambda b, i: {"date": "2026-07-13", "status": "ok"}), \
+         mock.patch.object(earnings, "refresh", lambda *a, **k: 0):
+        # TSK-193: kazanç takvimi tazelemesi kesilir — test yeniden-çekim bayrağını ölçer, takvimi DEĞİL; yamasız
+        # yol conftest DIŞ AĞ kapısına çarpıp `data._get_json` geri çekilme uykusunda ~260 s yakıyordu.
         scheduler._state["refetch_attempts"] = 0
         scheduler.advance_once(); r2 = scheduler.advance_once(); r3 = scheduler.advance_once()
         # YENİ semantik: seansın barı henüz YAYINLANMADIYSA bayrak tüketilmez — sınırlı yeniden deneme

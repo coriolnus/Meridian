@@ -296,7 +296,7 @@ def test_eksen2_kuru_kosu_hicbir_sey_yazmaz(sandbox_state, monkeypatch):
 # ================================================================= 4) ZAMANLAYICI KADANSI
 def _sched_env(monkeypatch, *, session="2026-07-29", latest="2026-07-20"):
     """v133'ün `_sched_env` deseni: canlı yolun her dış bağımlılığı kesilir, KARAR yolu kalır."""
-    from meridian import dataset as ds, health, loop, reflect, scheduler, watchdog
+    from meridian import dataset as ds, earnings, health, loop, reflect, scheduler, watchdog
     idx = pd.DataFrame({"date": pd.to_datetime([latest])})
     monkeypatch.setattr(scheduler, "_last_closed_session", lambda: session)
     monkeypatch.setattr(scheduler, "_leg_ready", lambda s: None)
@@ -306,6 +306,9 @@ def _sched_env(monkeypatch, *, session="2026-07-29", latest="2026-07-20"):
     monkeypatch.setattr(watchdog, "beat", lambda *a, **k: None)
     monkeypatch.setattr(watchdog, "check_and_alarm", lambda *a, **k: None)
     monkeypatch.setattr(reflect, "clear_wf_caches", lambda *a, **k: None)
+    # TSK-193: kazanç takvimi tazelemesi kesilir — bu testler kadansı ölçer, takvimi DEĞİL; yamasız yol
+    # conftest DIŞ AĞ kapısına çarpıp `data._get_json` geri çekilme uykusunda test başına dakikalar yakıyordu.
+    monkeypatch.setattr(earnings, "refresh", lambda *a, **k: 0)
     # BAR GELMEDİ, SEANS İLERLEMEDİ: `daily_cycle` noop döner — kadansın tam da bu koşulda
     # koşması gerekiyor (rehinelik kusurunun ta kendisi).
     monkeypatch.setattr(loop, "daily_cycle", lambda *a, **k: {"status": "noop", "date": latest})

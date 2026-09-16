@@ -633,7 +633,52 @@ def hermes_bin_cozumleyici_asil(_yerel_ajan_ikilisi_kapali):
 # (`getaddrinfo`) C katmanındadır, Python soket nesnesinden geçmez ve SARILMAZ — yani dış bir ad
 # için DNS sorgusu hâlâ çözümleyiciye gidebilir. Kesilen şey hedefe giden BAĞLANTIdır; "test
 # süreci hiç paket üretmez" DEĞİLDİR ve öyle okunmamalıdır.
+#
+# OTURUM-SONU RAPORU (TSK-193, 2026-09-16): kapının "yamalanmamış yol gürültülü görünsün" hedefi
+# istisnayı `except Exception` ile yutan yollarda TUTMUYORDU — `data._get_json` düşen bağlantıyı
+# üç deneme × üstel geri çekilme uykusuna çeviriyor, test YEŞİL geçiyor ve dört test ~11 dk'yı
+# sessizce uykuda harcıyordu (Rol-1 cProfile). Artık kapı her düşürüşü tetikleyen testin kimliğiyle
+# süreç-içi sayar ve `pytest_terminal_summary` oturum sonunda listeyi basar. OKUYUCU: pytest terminal
+# çıktısı — Rol-1'in tam suite logu (Yasa 6). YALNIZ BİLGİ: rapor hiçbir testi kırmızı yapmaz.
+# xdist SEÇİMİ: işçi sayacını xdist'in workeroutput sözlüğüyle taşır, kontrolcü `pytest_testnodedown`da
+# toplar ve TEK rapor basar — işçi başına rapor bölümü (sections) suite logunda yalnız başarısız testte
+# görünürdü; buradaki bulgu tanım gereği YEŞİL testlerdedir.
 _YEREL_ADLAR = frozenset({"localhost", "localhost.localdomain", ""})
+_AG_KAPISI_TETIK: dict[str, int] = {}       # bu süreç: test kimliği → düşürülen bağlantı denemesi
+_AG_KAPISI_ISCILERDEN: dict[str, int] = {}  # xdist kontrolcüsü: işçilerden toplanan aynı sayaç
+
+
+def ag_kapisi_rapor_satirlari(sayac: dict[str, int]) -> list[str]:
+    """Kapıyı tetikleyen testlerin raporu; tetik yoksa BOŞ liste (sessiz oturum = temiz oturum)."""
+    if not sayac:
+        return []
+    satirlar = [f"DIŞ AĞ KAPISI {len(sayac)} test tarafından tetiklendi (yamalanmamış yol — yeşil "
+                f"geçse de süre harcar; ÇÖZÜM adaptörü testte yamalamak, bkz. conftest "
+                f"'DIŞ AĞ TESTLERE KAPALI' bloğu)"]
+    for kimlik, n in sorted(sayac.items(), key=lambda kv: (-kv[1], kv[0])):
+        satirlar.append(f"  {n:>5} deneme  {kimlik}")
+    return satirlar
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_testnodedown(node, error):
+    """xdist kontrolcüsü: işçinin kapı sayacını birleştirir (hook xdist yoksa hiç çağrılmaz)."""
+    cikti = getattr(node, "workeroutput", None) or {}
+    for kimlik, n in (cikti.get("ag_kapisi_tetik") or {}).items():
+        _AG_KAPISI_ISCILERDEN[kimlik] = _AG_KAPISI_ISCILERDEN.get(kimlik, 0) + n
+
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    if hasattr(config, "workerinput"):
+        return          # işçi terminali kontrolcüye akmaz; işçi verisi workeroutput ile taşınır
+    birlesik = dict(_AG_KAPISI_ISCILERDEN)
+    for kimlik, n in _AG_KAPISI_TETIK.items():
+        birlesik[kimlik] = birlesik.get(kimlik, 0) + n
+    satirlar = ag_kapisi_rapor_satirlari(birlesik)
+    if satirlar:
+        terminalreporter.write_sep("-", "DIŞ AĞ KAPISI RAPORU (TSK-193)")
+        for satir in satirlar:
+            terminalreporter.write_line(satir)
 
 
 class DisAgErisimiKapali(RuntimeError):
@@ -685,7 +730,7 @@ def _yerel_adres_mi(sock, adres) -> bool:
 
 
 @pytest.fixture(autouse=True)
-def _dis_ag_kapali():
+def _dis_ag_kapali(request):
     """Hiçbir test makine DIŞINA TCP bağlantısı açmasın (gerekçe: yukarıdaki blok).
 
     KENDİ YAMASINI KENDİ KURAR/SÖKER — `monkeypatch` FİKSTÜRÜNÜ PAYLAŞMAZ: bu dosyada aynı ders
@@ -712,9 +757,15 @@ def _dis_ag_kapali():
     _vardi = {"connect": "connect" in socket.socket.__dict__,
               "connect_ex": "connect_ex" in socket.socket.__dict__}
 
+    _kimlik = request.node.nodeid
+
+    def _say():
+        _AG_KAPISI_TETIK[_kimlik] = _AG_KAPISI_TETIK.get(_kimlik, 0) + 1   # oturum-sonu raporu
+
     def _kapi(self, adres):
         if _yerel_adres_mi(self, adres):
             return _asil(self, adres)
+        _say()
         raise DisAgErisimiKapali(_mesaj(adres))
 
     def _kapi_ex(self, adres):
@@ -723,6 +774,7 @@ def _dis_ag_kapali():
         # kurulmuş ama görünmez olurdu (bu depodaki en pahalı kusur sınıfı).
         if _yerel_adres_mi(self, adres):
             return _asil_ex(self, adres)
+        _say()
         raise DisAgErisimiKapali(_mesaj(adres))
 
     socket.socket.connect, socket.socket.connect_ex = _kapi, _kapi_ex
@@ -1318,6 +1370,9 @@ def pytest_sessionstart(session):
 
 def pytest_sessionfinish(session, exitstatus):
     import os
+    # DIŞ AĞ KAPISI sayacı xdist işçisinden kontrolcüye (TSK-193; okuyucu `pytest_testnodedown`).
+    if hasattr(session.config, "workeroutput"):
+        session.config.workeroutput["ag_kapisi_tetik"] = dict(_AG_KAPISI_TETIK)
     # ---- .locks BUDAMASI (ROADMAP Ö-5, 2026-08-12) ----
     # pytest sandbox'ları MUTLAK tmp yollarını kilitleyince repo `state/.locks` altında
     # oturum-başına-benzersiz kilit adları birikiyordu (WP-S2 ölçümü: tek koşu +2, budama yok).

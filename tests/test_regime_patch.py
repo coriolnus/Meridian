@@ -471,8 +471,11 @@ def test_scheduler_flag_survives_publish_lag(seeded_sandbox, monkeypatch):
     azınlıktandır; canlıda 07-21 barı 250 sembolün 46'sındaydı ve bayrak ilk denemede tükenip
     kalan 204 sembol bir daha çekilmiyordu. Ölçüt artık EVREN kapsamasıdır, endeks değil."""
     import pandas as pd
-    from meridian import scheduler, health
+    from meridian import scheduler, health, earnings
     monkeypatch.setattr(health, "halted", lambda: False)
+    # TSK-193: kazanç takvimi tazelemesi kesilir — test yeniden-çekim bayrağını ölçer, takvimi DEĞİL; yamasız
+    # yol conftest DIŞ AĞ kapısına çarpıp `data._get_json` geri çekilme uykusunda ~130 s yakıyordu.
+    monkeypatch.setattr(earnings, "refresh", lambda *a, **k: 0)
     monkeypatch.setattr(scheduler, "_last_closed_session", lambda: "2026-07-20")
     seen = []
 
