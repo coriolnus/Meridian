@@ -394,6 +394,11 @@ YAZMA_KOKU = os.environ.get("HERMES_WRITE_SAFE_ROOT") or VARSAYILAN_YAZMA_KOKU
 
 BASLIK = "📊 Meridian karne"
 KARNE_BASLIGI = "── ÖLÇÜLEN KARNE (hesap yazdı, model DEĞİL) ──"
+# HAM DAL BEYANININ BU BOTA AİT İKİ ADI (TSK-201). Dal adı · sınıf · neden · denetim cümlesi
+# `soul_denetimi.HAM_DALLARI`ndadır ve üç bot ONU okur. Katman "sunum"dur, "sıralama" DEĞİL: bu
+# botta model sıralamaz, ölçülen karneyi söze çevirir (SAPMA 1).
+HAM_KATMAN = "sunum"
+HAM_URUN = "sunumsuz ölçülen karne"
 # MODEL BÖLGESİNİN KENDİ ETİKETİ (`@bekci` dal denetimi M5'ten kopya). Etiketsiz bir model
 # bölgesi ölçülen-karne ayıracının ÜSTÜNDE durur ve yazarı SÖYLENMEZ: ayıraç yalnız
 # ALTINDAKİNE "hesap yazdı" der. İki etiket, iki bölge — ikisini de BETİK yazar.
@@ -1316,6 +1321,17 @@ def _cevap_makul(cevap: str, ham: dict) -> str | None:
     return None
 
 
+def _ham_dali(ham: dict, dal: str) -> None:
+    """Ham düşüş dalının İZİ (TSK-201): `ham["dal"]` teslim olayına, beyan `_paketle`nin zorunlu
+    parçasına (zorunlu başın hemen ardı, model payının DIŞI) gider.
+
+    Bu dallarda model metni teslim EDİLMEZ (`("", "ham")` = ölçülen karne tek başına), yani
+    denetlenecek metin YOKTUR. Eksik olan denetim değil BEYANDI: "ham + 2/2 ihlal" gövdesi
+    `ℹ kural denetimi: …` taşıyordu, "ham + jeton anomalisi" hiçbir şey. Metin ORTAK modülden gelir
+    (`@sef` ve `@bekci` ile tek kaynak); burada yalnız botun iki adı bağlanır."""
+    soul_denetimi.ham_dala_isle(ham, dal, katman=HAM_KATMAN, urun=HAM_URUN)
+
+
 def sun(ham: dict) -> tuple[str, str]:
     """`(sunum_metni, kaynak)`. kaynak: 'llm' = bot anlattı · 'ham' = bot düştü/reddedildi.
 
@@ -1332,6 +1348,11 @@ def sun(ham: dict) -> tuple[str, str]:
         # SUNACAK HÜKÜM YOK (hesap düştü ya da dördü de biçimsiz). Model ÇAĞRILMAZ: karar
         # döndürmeyecek bir koşum için ücretsiz katman kotası harcamak, kotanın gerçekten
         # gerektiği haftayı riske atar. TESLİMAT YİNE OLUR — arıza beyanı zaten zorunlu baştadır.
+        # BU DÖNÜŞ TSK-201 ÖLÇÜMÜNDE OKUNMAMIŞTI (kod taraması 2026-09-17): kendi `obs.log` olayı
+        # YOK (kuru koşum gürültüsü gerekçesi `topla`da) ve kardeş dallar gibi beyansızdı. Arızanın
+        # KENDİSİ zorunlu başta `⚠` ile basılıyor, ama "sunum yok, denetim yok" söylenmiyordu —
+        # aynı sınıf. Dal adı olay SONEKİ değildir; teslim olayındaki `dal` bu dalın TEK izidir.
+        _ham_dali(ham, "hukum_yok")
         return "", "ham"
     # İSTEM `try` İÇİNDE KURULUR — ve bu, HEAD'in davranışının GERİ ALINMASIDIR (yeniden-inceleme
     # §2, 2026-09-03). Eskiden satır `cevap = _profili_cagir(_prompt_kur(ham))` idi, yani prompt
@@ -1346,12 +1367,14 @@ def sun(ham: dict) -> tuple[str, str]:
     except Exception as e:
         # SESSİZ YUTMA DEĞİL: hemen aşağıda `obs.log` ile ADIYLA kayda geçer. Kayıt olmasaydı
         # profil aylarca ölü kalır, karne her hafta ham gider ve kimse fark etmezdi.
+        _ham_dali(ham, "llm_dustu")
         obs.log("karne_brifingi_llm_dustu", hata=repr(e)[:300],
                 detail="sunum katmanı düştü — ÖLÇÜLEN karne yine teslim edilir")
         return "", "ham"
 
     cevap = (cevap or "").strip()
     if not cevap:
+        _ham_dali(ham, "llm_bos")
         obs.log("karne_brifingi_llm_bos", hukum=len(ham["hukumler"]),
                 detail="profil boş cevap verdi — ölçülen karne ham gider")
         return "", "ham"
@@ -1361,6 +1384,7 @@ def sun(ham: dict) -> tuple[str, str]:
         # model, KENDİSİNE VERİLMEMİŞ bir yetkiyi kullanmaya çalışmıştır: susma yetkisi bu
         # profilde YOK (SOUL da bunu yazıyor). Bir öncelik yargısı değil, bir MEKANİZMA
         # ANOMALİSİ — adıyla kayda geçer ve ham karne gider.
+        _ham_dali(ham, "sessizlik_jetonu_anomalisi")
         obs.log("karne_brifingi_sessizlik_jetonu_anomalisi", cevap=cevap[:200],
                 hukum=len(ham["hukumler"]),
                 detail="model SESSIZ dedi — bu botta susma yetkisi YOK; anomali, ham karne gider")
@@ -1368,9 +1392,13 @@ def sun(ham: dict) -> tuple[str, str]:
 
     neden = _cevap_makul(cevap, ham)
     if neden:
+        _ham_dali(ham, "cevap_makul_degil")
         obs.log("karne_brifingi_cevap_makul_degil", neden=neden, cevap=cevap[:200],
                 detail="model çıktısı sunum sayılamaz — onarılmaz, ölçülen karne ham gider")
         return "", "ham"
+    # DENETİM YOLU DA İŞARETLENİR (TSK-201): teslim olayı `dal` alanı "ölçülmedi" (`None`) ile
+    # "denetim yoluna varıldı" arasında ayrım yapabilsin. Hüküm bu alanda DEĞİL, denetim olayında.
+    ham["dal"] = soul_denetimi.DAL_KURAL_GECISI
     return _kural_gecisi(cevap, istem, ham)
 
 
@@ -1683,7 +1711,12 @@ def main(argv: list[str] | None = None) -> int:
         damgalanan, damga_hatasi = [], repr(e)[:200]
         obs.log("karne_brifingi_damga_yazilamadi", hata=damga_hatasi,
                 detail="mesaj GİTTİ ama damga yazılamadı — gelecek hafta kıyas 'İLK KARNE' olur")
-    obs.log("karne_brifingi_teslim", sunum=kaynak, damgalanan=damgalanan, giren=giren,
+    # `dal` (TSK-201): `sun`un HANGİ dalından gelindiği — bir ham dal adı ya da
+    # `soul_denetimi.DAL_KURAL_GECISI`. `sunum` ile AYNI ŞEY DEĞİL: `sunum` teslimatta GERÇEKLEŞENİ
+    # söyler (`llm_dusuruldu` · paketleme patladıysa `ham`), `dal` ise `sun`un kararını. `None` =
+    # "ölçülmedi" (bugün erişilmeyen yol). OKUYUCU: `ops/olay_sorgu.py --sql`.
+    obs.log("karne_brifingi_teslim", sunum=kaynak, dal=ham.get("dal"), damgalanan=damgalanan,
+            giren=giren,
             gecis=[f"{s}:{o}→{y}" for s, _d, o, y in ham["gecisler"]],
             bicimsiz=sorted(ham["bicimsiz"]),
             # HESAP ARIZASI DEFTERE DE DÜŞER (denetim LOW-4). Onsuz, hesabın patladığı hafta

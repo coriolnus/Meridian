@@ -865,3 +865,96 @@ def _sonuc(metin, hukum: Hukum, sayac: int, yeniden: bool, beyan: str | None = N
         beyan = ("" if hukum.olculdu
                  else f"kural denetimi yapılamadı: {hukum.gerekce}")
     return Gecis(metin=metin, beyan=beyan, hukum=hukum, cagri_n=sayac, yeniden_uretim=yeniden)
+
+
+# ------------------------------------------------------------------------------------------------
+# HAM DAL BEYANI — denetime HİÇ VARILMAYAN dallar (TSK-201, 2026-09-17)
+# ------------------------------------------------------------------------------------------------
+# NE ÖLÇÜLDÜ (Rol-1, A1 son 30 gün + kod okuması): üç botun sıralama/sunum yolunda `gecir`e VARMADAN
+# ham teslime düşen dallar var ve HİÇBİRİ MODEL METNİ teslim etmez — giden şey betiğin deterministik
+# yazdığı liste/karnedir. Bu modülün denetlediği şey MODEL metnidir; o dallarda denetlenecek metin
+# YOKTUR, denetim çağırmak yanlış hedef olurdu. (Model metninin denetimsiz gittiği tek dal
+# `<bot>_brifingi_kural_gecisi_patladi`dir ve o ZATEN beyanlıdır — bu bölüm ona dokunmaz.)
+#
+# ÖLÇÜLEN SORUN BEYANIN YOKLUĞUYDU: "ham + 2/2 ihlal" gövdesi `ℹ kural denetimi: …` taşıyor,
+# "ham + yakın ıska" HİÇBİR ŞEY taşımıyordu. Operatör açısından ayırt edici tek işaret bir satırın
+# YOKLUĞUYDU — ve yokluk okunamaz. Her ham dal artık kendi nedenini, AYNI kanaldan (`kural_beyani`
+# → botun zorunlu parçası, zarf kırpması düşüremez) söyler; yeni bir yüzey açılmadı.
+#
+# TEK KAYNAK: dal adı · sınıf · neden · denetim cümlesi BURADA; bot yalnız KENDİ iki adını verir
+# (katman: "sıralama"/"sunum" · ürün: botun ham gövdesinin adı). Üç kopya sessizce ayrışırdı.
+# Dal ADI, dalın kendi `obs.log` olayının SONEKİDİR (`<bot>_brifingi_<dal>`) — teslim olayındaki
+# `dal` alanı ile ayrı dal olayı aynı anahtarla eşleşsin (çivi: v513 K6).
+
+#: Beyanın DEĞİŞMEZ yarısı — dal ne olursa olsun operatöre söylenen şey.
+DENETIM_UYGULANMADI = "kural denetimi uygulanmadı (denetlenecek model metni yok)"
+
+#: Teslim olayındaki `dal` alanının DENETİM YOLU değeri. NEDEN `None` DEĞİL: `None` bu depoda
+#: "ölçülmedi" demektir ve teslimde dal BİLİNİYOR. NEDEN "denetimli" DEĞİL: bu değer yalnız model
+#: cevabının ham dallardan geçip `_kural_gecisi`e VARDIĞINI söyler; denetimin HÜKMÜ (temiz · 2/2
+#: ihlal → ham · denetlenemedi · katman patladı) bu alanda değil, `OLAY` kaydında ve gövdedeki
+#: `ℹ kural denetimi…` beyanındadır. "denetimli" demek, katmanın patladığı fail-open teslimde de
+#: denetim YAPILDI iddiası olurdu (uydurma yasağı). OKUYUCU: `ops/olay_sorgu.py --sql`.
+DAL_KURAL_GECISI = "kural_gecisi"
+
+_SINIF_ARIZA = "ariza"
+_SINIF_POLITIKA = "politika"
+
+
+@dataclass(frozen=True)
+class HamDal:
+    """Bir ham dalın beyan kaydı. `urun_basilir=False` YALNIZ gövdenin başka bir zorunlu satırı
+    ürünü ve nedeni ZATEN söylüyorsa (tavan dalının ZORLA TESLİM cümlesi) — ikinci kez basmak
+    aynı iddiayı iki cümlede tekrarlardı."""
+
+    sinif: str
+    neden: str
+    urun_basilir: bool = True
+
+
+# SINIF AYRIMI OPERATÖRÜN OKUMASIDIR: ARIZA = sıralama/sunum katmanı iş görmedi · POLİTİKA = model
+# cevap verdi ama bir kapı onu geçersiz saydı (normal akış). Politika dalı "arıza" DEMEZ — demesi,
+# tasarım gereği çalışan bir kapıyı arıza diye okuturdu.
+HAM_DALLARI: dict[str, HamDal] = {
+    "llm_dustu": HamDal(_SINIF_ARIZA, "model çağrısı düştü"),
+    "llm_bos": HamDal(_SINIF_ARIZA, "model boş cevap verdi"),
+    "cevap_makul_degil": HamDal(
+        _SINIF_ARIZA, "model cevabı makul değil (harf/rakam yok ya da taban altında)"),
+    "sessizlik_jetonu_yakin_iska": HamDal(
+        _SINIF_ARIZA, "cevap `SESSIZ` jetonuna benziyor ama tam değil, niyet ölçülemedi"),
+    # `@karne`: bu botta susma yetkisi YOK; jeton bir öncelik yargısı değil MEKANİZMA ANOMALİSİdir.
+    "sessizlik_jetonu_anomalisi": HamDal(
+        _SINIF_ARIZA, "model `SESSIZ` dedi ama bu botta susma yetkisi yok"),
+    "sessiz_hukmu_gecersiz": HamDal(
+        _SINIF_POLITIKA, "model `SESSIZ` dedi ama ölçülemeyen okuma susturulamaz"),
+    "sessizlik_tavani_asildi": HamDal(
+        _SINIF_POLITIKA, "ardışık `SESSIZ` tavanı aşıldı, zorla teslim gerekçesi yukarıda",
+        urun_basilir=False),
+    # `@karne` `sun` başı: hesap düştü ya da dört soru da biçimsiz — model ÇAĞRILMAZ (kota). Kapı
+    # bir politikadır; arızanın KENDİSİ zorunlu başta `⚠` ile zaten basılır ("yukarıda").
+    "hukum_yok": HamDal(
+        _SINIF_POLITIKA, "sunulacak ölçülmüş hüküm yok, model çağrılmadı (nedeni yukarıda)"),
+}
+
+
+def ham_dal_beyani(dal: str, *, katman: str, urun: str) -> str:
+    """Ham dalın TEK satırlık beyanı: "<ürün> · <sınıf>: <neden> · kural denetimi uygulanmadı".
+
+    TANIMSIZ DAL İSTİSNA ATMAZ: bu fonksiyon `sirala`/`sun`un İÇİNDEN çağrılır; bir istisna
+    `main`e yürür ve o günkü mesaj HİÇ gitmezdi (modül başlığı: "hiçbir dal teslimatı düşüremez").
+    Neden de UYDURULMAZ — yokluk ADIYLA basılır. Bugünkü üç botta erişilmez (v513 K6 her ham
+    dönüşün dal adını tabloya karşı tarar)."""
+    kayit = HAM_DALLARI.get(dal)
+    if kayit is None:
+        return f"{urun} · dal `{dal}` beyan tablosunda TANIMSIZ, nedeni ölçülemedi · {DENETIM_UYGULANMADI}"
+    etiket = f"{katman} katmanı arızası" if kayit.sinif == _SINIF_ARIZA else "politika kapısı"
+    parcalar = ([urun] if kayit.urun_basilir else []) + [f"{etiket}: {kayit.neden}",
+                                                          DENETIM_UYGULANMADI]
+    return " · ".join(parcalar)
+
+
+def ham_dala_isle(ham: dict, dal: str, *, katman: str, urun: str) -> None:
+    """Ham dalın İKİ izi, tek çağrıda: `ham["dal"]` (teslim olayına gider) + `ham["kural_beyani"]`
+    (botun zorunlu parçasına gider). İkisi ayrı yazılsaydı biri unutulan dal doğardı."""
+    ham["dal"] = dal
+    ham["kural_beyani"] = ham_dal_beyani(dal, katman=katman, urun=urun)
