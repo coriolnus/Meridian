@@ -958,3 +958,111 @@ def ham_dala_isle(ham: dict, dal: str, *, katman: str, urun: str) -> None:
     (botun zorunlu parçasına gider). İkisi ayrı yazılsaydı biri unutulan dal doğardı."""
     ham["dal"] = dal
     ham["kural_beyani"] = ham_dal_beyani(dal, katman=katman, urun=urun)
+
+
+# ------------------------------------------------------------------------------------------------
+# SESSİZLİK JETONU — KONTROL KELİMESİ, TEK KAYNAK (TSK-202, 2026-09-17)
+# ------------------------------------------------------------------------------------------------
+# NEDEN BURADA: jeton sabiti, kenar kümesi ve iki fonksiyon ÜÇ botta ayrı kopyaydı ve kopyalar
+# SESSİZCE AYRIŞMIŞTI (bayt karşılaştırması, 2026-09-17): üç kopyanın şerhi de "NBSP dâhil"
+# diyordu, ama `@bekci` ve `@karne` kopyasında NBSP'nin yerinde DÜZ BOŞLUK vardı. Madde işareti +
+# NBSP ile yazılmış bir `SESSIZ` bu yüzden `@sef`te susma, `@bekci`de yakın ıska, `@karne`de
+# "makul değil" sayılıyordu. Üç bot bu modülü zaten ithal ediyor (yukarıdaki ham dal tablosu
+# emsali) ve ters yönde ithal yok — yani türetme MÜMKÜN, kopya gerekçesizdir.
+#
+# BOT YALNIZ TÜKETİMİNİ SEÇER: `@sef`/`@bekci` iki yarıyı da okur (jeton orada bir SUSMA
+# YETKİSİDİR); `@karne` yalnız tam yarıyı okur (SAPMA 1 — orada susma yetkisi yok, yakın-ıska
+# dalının satın aldığı güvenlik sıfırdır). Tasarım farkı ilkelde değil tüketimdedir.
+#
+# Görünmez karakterler KAÇIŞ DİZİSİYLE yazılır: ayrışma tam da gözle ayırt edilemeyen bir
+# karakterin (NBSP ↔ boşluk) kopyalanırken kaybolmasıydı.
+
+#: Modelin "bugün bildirilecek bir şey yok" hükmü. Botların SOUL'u jetonu bu yazımla verir.
+SESSIZLIK_JETONU = "SESSIZ"
+
+#: Jeton karşılaştırmasında KENARLARDAN soyulanlar: boşluk ailesi (NBSP ve sıfır-genişlikliler
+#: dâhil), markdown vurgusu, backtick, tırnak çeşitleri, madde işaretleri ve cümle noktalaması.
+#: Model `SESSIZ` yerine `` `SESSIZ` `` ya da `- SESSIZ.` yazdığında niyet AYNIDIR.
+JETON_KENAR_KARAKTERLERI = (
+    " \t\r\n\u00a0\u200b\u200c\u200d\ufeff"
+    "`*_~\"'\u201c\u201d\u2018\u2019.,;:!?()[]{}<>#-\u2013\u2014\u2022\u00b7")
+
+
+def anlamli_karakter_sayisi(metin: str) -> int:
+    """ANLAMLI KARAKTER — harf ve rakam (`str.isalnum`, Türkçe harfler dâhil); boşluk ve noktalama
+    sayılmaz. TEK TANIMDIR: üç botun makullük kapısı (`_cevap_makul` → `CEVAP_TABANI`) ve jeton
+    kararının kısa/uzun ayrımı (`KISA_CEVAP_ANLAMLI_TAVAN`) AYNI sayımı okur. İki ayrı sayım olsaydı
+    taban ile tavan aynı cevabı farklı ölçebilir ve aradaki sınıf sessizce kayardı (TSK-202 Tur 2)."""
+    return sum(1 for c in str(metin) if c.isalnum())
+
+
+#: KISA CEVAP TAVANI (TSK-202 Tur 2, Rol-1 kararı 2026-09-17). Anlamlı karakter sayısı bunun ALTINDA
+#: olan cevapta yakın ıska KATLANMIŞ kelime eşleşmesidir (eski güvenli davranış); tavanda ve üstünde
+#: yalnız büyük harfli kontrol kelimesi biçimi yakın ıskadır.
+#:
+#: DEĞER İKİ ÖLÇÜLEN KÜMENİN ARASINDADIR (çivi: v515 K7, sayımlar bu fonksiyonla):
+#:   · alt yan — doğal susma niyeti cümleleri: 15 ("sessiz kalıyorum"), 20 ("bugün sessiz
+#:     kalıyorum"), 45, 48, 52, 69 ve bilerek ayrıntılı en uzun tek cümle örneği 98;
+#:   · üst yan — ölçülen dört yanlış pozitifin BİÇİMİNDEKİ uzun brifingler (SOUL yapısı: sade ilk
+#:     satır + kalem satırları): 140 · 158 · 180 · 187.
+#: 120, en uzun niyet örneğinin 22 üstünde ve en kısa uzun-brifing örneğinin 20 altındadır.
+#: SINIR — ADIYLA: dört GERÇEK yanlış pozitifin 200 karakterlik alanları bu depoda yok (A1 olay
+#: defterinde). ROADMAP'e kaydedilen önekleri yalnız ALT SINIR verir (39 · 49 · 51 · 95), yani FP
+#: yanı buradaki metinlerle KANITLANAMAZ; A1'de aynı fonksiyonla sayılması gerekir.
+KISA_CEVAP_ANLAMLI_TAVAN = 120
+
+
+def jeton_normalize(s: str) -> str:
+    """Cevabı jetonla karşılaştırılabilir hâle getirir: Türkçe İ/I/i/ı katlanır, büyütülür
+    (`_katla` — terim korunumuyla AYNI ölçülmüş katlama), kenarlar soyulur."""
+    return _katla(s).strip(JETON_KENAR_KARAKTERLERI)
+
+
+def _kontrol_kelimesi_mi(kelime: str) -> bool:
+    """Kenarları soyulmuş kelime, ORİJİNAL yazımıyla, jetonun KONTROL KELİMESİ biçimi mi: katlanınca
+    jeton VE hiç küçük harf taşımıyor. `"İ".upper()` yine `İ`dir, yani `SESSİZ` de büyük harflidir;
+    `ı`/`i` ise büyütülünce değişir, yani `SESSıZ` kontrol kelimesi SAYILMAZ."""
+    return _katla(kelime) == SESSIZLIK_JETONU and kelime == kelime.upper()
+
+
+def jeton_gecer_mi(cevap: str) -> tuple[bool, bool]:
+    """`(tam_jeton, yakin_iska)`.
+
+    TAM JETON: cevap yalnız BİÇİM olarak farklı (`sessiz`, `SESSİZ`, `` `SESSIZ` ``, `- SESSIZ.` …)
+    — karşılaştırma KATLANMIŞTIR, niyet açıktır, susma demektir. Kenar kümesi NBSP'yi de soyar:
+    `@bekci`/`@karne` kopyasındaki NBSP kaybı bir kopya hatasıydı ve tek kaynakta düzeltildi
+    (madde işareti ya da backtick içinde NBSP'li `SESSIZ` artık üç botta da tam jetondur).
+    YAKIN ISKA: jeton bir KELİME olarak geçiyor ama cevap ondan İBARET DEĞİL (`SESSIZ (bugün bir şey
+    yok)`, `Bugün: SESSİZ`). Niyet ÖLÇÜLEMEZ. Kelimenin nasıl eşleşeceği cevabın UZUNLUĞUNA bağlıdır:
+      · KISA cevap (anlamlı karakter < `KISA_CEVAP_ANLAMLI_TAVAN`): KATLANMIŞ eşleşme — `sessiz`,
+        `Sessiz`, `SESSIZ` hepsi yakın ıskadır;
+      · UZUN cevap: yalnız KONTROL KELİMESİ BİÇİMİ (tümüyle büyük harfli ayrı kelime, `SESSIZ` /
+        `SESSİZ`); doğal küçük harfli ya da cümle başı "Sessiz" yakın ıska DEĞİLDİR.
+
+    İKİ HATANIN BEDELİ SİMETRİK DEĞİLDİR ve kural o asimetriden türetilmiştir: yakın ıskayı
+    "brifing/sıralama metni" saymak bir alarmı KALICI olarak kaybettirebilir (`@sef`te kaynaklar
+    damgalanır); ham yola düşmek ise yalnız daha uzun ve sıralanmamış bir mesaj demektir. Güvenli yön
+    HAMdır, o yüzden jeton bir KONTROL KELİMESİ gibi ele alınır.
+
+    AYRIM NEDEN UZUNLUKTA (TSK-202, 2026-09-17). Tur 1'e kadar yakın ıska her cevapta KATLANMIŞ
+    metinde aranıyordu, yani doğal Türkçe "sessiz" kelimesi jetonla AYNI dizgeye katlanıyordu. A1'de
+    30 günde ölçülen dört `bekci_brifingi_sessizlik_jetonu_yakin_iska` olayının DÖRDÜ DE yanlış
+    pozitifti ve dördü de UZUN, dolu brifinglerdi (biri "operatör müdahalesi gerekebilir" diyordu;
+    iki alarm botunun SOUL ilk-satır örneğinin kendisi küçük harfli "sessiz" taşıyor). Tur 1 büyük
+    harf kuralını HER cevaba uyguladı ve bedeli ölçüldü: "bugün sessiz kalıyorum" gibi KISA bir susma
+    niyeti makullük kapısını geçip gövde oluyordu — asimetrinin korumak için var olduğu sınıf. Rol-1
+    bu bedeli reddetti; kısa cevap eski güvenli davranışı, uzun cevap yeni sınırı alır.
+
+    KALAN BEDEL — ADIYLA (bedel yasası; ölçüm v515 K5 ve K7): (1) tavanın ÜSTÜNDE, küçük harfli,
+    susma niyetli bir PARAGRAF yakın ıskadan kaçar ve `@sef`te gövde olarak gider (kaynaklar
+    damgalanır), `@bekci`de sıralama bloğu olur (ölçülen liste yine gider). Nadirdir: SOUL modele
+    "YALNIZ `SESSIZ` yaz, tek başına" der, niyetini jetonu büyük harfle yazarak belirten model uzun
+    dalda da yakalanır, ve ölçülen 30 günde dört yakın ıska olayının hiçbiri niyet değildi. (2) Tavanın
+    ALTINDAKİ kısa GERÇEK brifing küçük harfli "sessiz" taşıyorsa hâlâ yakın ıska → ham (SOUL
+    ilk-satır örneği tek başına bu sınıftadır) — yön güvenlidir."""
+    if jeton_normalize(cevap) == SESSIZLIK_JETONU:
+        return True, False
+    kelimeler = [w.strip(JETON_KENAR_KARAKTERLERI) for w in str(cevap).split()]
+    if anlamli_karakter_sayisi(cevap) < KISA_CEVAP_ANLAMLI_TAVAN:
+        return False, any(_katla(w) == SESSIZLIK_JETONU for w in kelimeler)
+    return False, any(_kontrol_kelimesi_mi(w) for w in kelimeler)
