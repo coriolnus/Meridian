@@ -2395,8 +2395,10 @@ def _coherence_esik_s(art: str) -> float:
 def coherence_report() -> dict:
     """#4 — türev bayatlığı. Kaynak güncellendiği halde türev eskiyse bayrak. Eşik ÜRETİCİ
     KADANSINDAN türer (`_coherence_esik_s`): günlük türevde 1 saat (döngü kadansı), haftalık
-    türevde kadans + 1 saat. Yalnız gözlem: hangi kalibrasyonun eski veriyle konuştuğunu görünür
-    kılar."""
+    türevde kadans + 1 saat. Bayrak İKİ şartla kalkar (TSK-203): türev kaynaktan eşikten fazla
+    geride VE kaynağın son güncellemesinin üzerinden bir döngü payı (`COHERENCE_GRACE_S`) geçmiş —
+    yani üreticiye bir döngü verildi ve yetişmedi. "Şimdi" modülün saat desenidir (`_now`). Yalnız
+    gözlem: hangi kalibrasyonun eski veriyle konuştuğunu görünür kılar."""
     # `store.mtime` ARKA UÇTAN BAĞIMSIZ: kaynakların dördü (trades,
     # trade_plans, portfolio, scoreboard) SQLite'a taşınabilir ve o an dosyaları `.migrated`
     # ekiyle DONAR — `os.path.getmtime` "kaynak hiç güncellenmiyor" derdi, yani bayatlık
@@ -2406,6 +2408,33 @@ def coherence_report() -> dict:
 
         SQLite'a taşınıp dosyası donan kaynaklarda `os.path.getmtime` yanıltırdı; bu yol yanıltmaz."""
         return store.mtime(name)
+    # SIRA YARIŞI (TSK-203). ÖLÇÜLEN ARIZA (A1 SQLite entity_meta damgaları, 2026-09-16):
+    # `trades.jsonl` 20:34:17Z'de yazıldı, bu denetim 20:34:59Z'de "equity_curve.json kaynağından
+    # 23.9 sa geride (eşik 1.0 sa)" diye alarm verdi, eğri 20:34:59,29Z'de — alarmdan 0,29 sn SONRA
+    # — yazıldı. Eğri bayat DEĞİLDİ; yoklama kaynak ile türevin yazımı ARASINA düştü. Tek şartlı
+    # koşul (türev < kaynak − eşik) eşiği iki damga ARASINDAKİ farka uyguluyordu, kaynağın NE ZAMAN
+    # güncellendiğine değil: `COHERENCE_GRACE_S` şerhinin niyeti ("bir sonraki döngü zaten tazeler")
+    # kodlanmamıştı ve iki yazım arasına düşen HER yoklama — 42 sn'lik aralıkta bile — bayrak
+    # kaldırırdı. İKİNCİ ŞART (Rol-1 kararı, tur 2): kaynağın son güncellemesinin üzerinden bir
+    # döngü payı geçmiş olmalı (`simdi - newest > COHERENCE_GRACE_S`). Çiviler:
+    # `tests/test_coherence_yaris_v514.py`.
+    #
+    # BEKLEME NEDEN PAY, EŞİK DEĞİL: yarışın süresi üreticinin KADANSIYLA değil TEK DÖNGÜYLE
+    # sınırlıdır (vakada kaynak ile türev yazımı arası 42 sn).
+    # Beklemeye türevin eşiğini koymak (tur 1 tasarımı) haftalık türevleri KALICI olarak kör
+    # bırakıyordu: `DERIVED_MECHANISM`teki iki türevin eşiği 9 gün + 1 sa'dir, kaynakları ise HER
+    # GÜN ilerler (yukarıdaki TSK-191 şerhinin kendi ölçümü) — günlük kaynak yazımı beklemeyi her
+    # gün sıfırlıyor ve bayrak hiç kalkmıyordu (`self_review.json` için ikinci bekçi YOKTUR). v514
+    # K7 o geri dönüşü kırmızı yapar. Bayrak EŞİĞİ değişmedi: türev yine kendi kadans eşiğinden
+    # fazla geride olmalıdır (birinci şart).
+    #
+    # BEDEL YASASI — NE KAYBEDİLDİ: gerçek bir bayatlık artık kaynak son yazımından sonra sessiz
+    # kaldıysa EN FAZLA `COHERENCE_GRACE_S` (1 sa) geç bayraklanır — günlük ve haftalık türevlerde
+    # aynı. Haftalık türevlerde kör kalma kaybı YOKTUR. Kalan kayıp: kaynak saatten SIK ilerliyorsa
+    # bekleme her yazımda baştan başlar ve bayrak kaynağın ilk bir saatlik yazımsız penceresine
+    # kayar. Defterlerin gün-içi yazım sıklığı bu dilimde ÖLÇÜLMEDİ (A1 erişimi yok): o ertelemenin
+    # canlıdaki boyu bilinmiyor, sıfır sayılmaz.
+    simdi = _now()
     stale, ok, absent = [], 0, []
     for art, srcs in DERIVED_SOURCES.items():
         a = _m(art)
@@ -2413,7 +2442,7 @@ def coherence_report() -> dict:
             absent.append(art); continue
         newest = max([m for m in (_m(s) for s in srcs) if m], default=None)
         esik = _coherence_esik_s(art)
-        if newest and a < newest - esik:
+        if newest and a < newest - esik and simdi - newest > COHERENCE_GRACE_S:
             # `esik_h` RAPORA GİRER (Yasa 6 okuyucuları: alarm satırı + v505 çivisi): "240 sa
             # geride" cümlesi eşiği söylemeden HÜKÜM taşımaz — 217 sa eşikli bir haftalık türevin
             # 240 sa geride olmasıyla 1 sa eşikli bir günlük türevin 2 sa geride olması aynı

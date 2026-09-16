@@ -43,8 +43,10 @@ def _damgala(art: str, geri_s: float) -> None:
     """`art` türevini ve BEYAN EDİLMİŞ kaynaklarını sandbox state'e yazıp damgalar.
 
     Kaynaklar `watchdog.DERIVED_SOURCES`ten okunur (test kendi kopyasını TUTMAZ — kopya sessizce
-    ayrışırdı). Türevin damgası `geri_s` saniye geriye çekilir; kaynaklar ŞİMDİ."""
-    t = time.time()
+    ayrışırdı). Türevin damgası kaynaktan `geri_s` saniye geride durur. TSK-203: kaynak ve türev
+    damgaları BİRLİKTE `COHERENCE_GRACE_S` + 60 sn geçmişe alınır — az önce yazılmış kaynak sıra
+    yarışıdır ve bayrak kaldırmaz; aradaki `geri_s` farkı ve çivilerin iddiaları korunur."""
+    t = time.time() - watchdog.COHERENCE_GRACE_S - 60   # TSK-203: kaynak damgası grace'in ötesine alındı, yarış tanımı
     yol = config.STATE / art
     yol.write_text("{}")
     for src in watchdog.DERIVED_SOURCES[art]:

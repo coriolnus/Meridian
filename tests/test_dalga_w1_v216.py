@@ -455,7 +455,8 @@ def test_C1_equity_curve_bayatlik_bekcisine_KAYITLI(sandbox_state):
     import time
     yol = config.STATE / "trades.jsonl"
     t = time.time()
-    os.utime(yol, (t, t))                                            # kaynak ilerledi
+    t_src = t - watchdog.COHERENCE_GRACE_S - 60                      # TSK-203: kaynak damgası grace'in ötesine alındı, yarış tanımı
+    os.utime(yol, (t_src, t_src))                                    # kaynak ilerledi
     os.utime(config.STATE / "equity_curve.json",
              (t - 10 * 3600, t - 10 * 3600))                         # türev durdu
     bayat = {s["artifact"] for s in watchdog.coherence_report()["stale"]}
