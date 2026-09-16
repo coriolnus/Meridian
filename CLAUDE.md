@@ -171,10 +171,12 @@ Zorlanma katmanı dürüstçe etiketlidir — zorlanamayan yasa, zorlananla ayn�
 
 ## 6. Test
 
-- Tam suite yalnız Rol-1'de, tek-otoriter, **arka planda**, `-n 4` ile (~9 dk — 2 temiz koşum,
-  8.344 test, 2026-09-01; seri ~26 dk; pytest-xdist dev-grubunda pinli). ~9 dk, 600 sn Bash
-  tavanına TEHLİKELİ yakın — arka plan kuralı KALIR. Hedefli/küçük koşumlar SERİ: `-n 4`
-  küçük kümede işçi-açılışıyla net kayıptır.
+- Tam suite yalnız Rol-1'de, tek-otoriter, **arka planda**, `-n 4 --dist worksteal` ile (~13 dk —
+  13.222 test, 2026-09-16 ölçümü: aynı HEAD'de ardışık `--dist load` 20:28 ↔ `worksteal` 13:13, takas
+  yazımı %40 az; yavaş testler bir işçiyi bağlarken boştaki işçiler iş çalar). `-n 4` BELLEK tavanıdır:
+  makine 8 GB, işçi ~680 MB — daha fazla işçi takasa düşer ve YAVAŞLAR. Hedefli/küçük koşumlar SERİ:
+  `-n 4` küçük kümede işçi-açılışıyla net kayıptır. Suite penceresinde ajan/VS Code test koşumu YOK
+  (yük-flake, vaka 2026-09-15 suite #56).
 - **Donmuş ağaç:** suite koşarken dal değiştirilmez, dosya düzenlenmez. Başlarken HEAD'i çıktı
   dosyasına yaz; biterken karşılaştır — eşit değilse yeşil, tepenin ölçümü DEĞİLDİR: deltanın
   etkilenen kümesini ayrıca koş (vaka: paralel oturum, 2026-08-30).
