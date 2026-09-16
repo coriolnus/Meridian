@@ -69,3 +69,12 @@ notlar: >
   Sıra: EDG-089 hükmü (≈20 Eylül) ve dağıtım penceresi sonrası; TSK-020 sırasında (4→2-adım2→3→1→9) 3'ün kalanı. Bedel: Opus ~1 tur
   + Sonnet + A1 kıyas koşumu (260 sembol × ~70 ay, dakikalar) + 7 seans bekleme. Kazanç: arşiv canlıya girerse CSV onarım
   yolu ve yükleme süresi tek kaynaktan; gölge kıyası bedeli (yan okuma) 7 seansla sınırlı. Bu kart canlı knob'a dokunmaz.
+
+rol1_notu_2026_09_16: >
+  BİRİM NETLEŞTİRMESİ (ölçüm ÖNCESİ, hiçbir sonuç görülmeden; K harcanmadı — eşik DEĞİŞMEDİ):
+  karttaki "sembol×ay parçası" ifadesi arşivin BÖLÜMLEME BİRİMİNİ kasteder. Ölçüldü (2026-09-16,
+  `ops/bar_arsivle.py` VARSAYILAN_BOLUM + S4 koşumu 2026-09-07): bugünkü bölümleme SEMBOL başına
+  TEK parquet (`state/barlar/<SEMBOL>.parquet` + `manifest.json`), ay bölümlemesi 70 bin küçük dosya
+  ürettiği için terk edilmişti. Dolayısıyla "parça" = manifestin `bolum` alanının beyan ettiği birim
+  (bugün sembol). Eşik aynen: parçaların %100'ü DEĞER-EŞİT, ölçülemeyen ≤ %2, manifest ≤ 8 gün.
+  Canlı okuma yolu kıyasın öteki ucudur: `meridian/dataset.py` → `data.sanitize_bars(pd.read_csv(...))`.
