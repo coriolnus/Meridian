@@ -245,6 +245,15 @@ class _HacimTurCtx:
     "gecikme" değil KALICI KAYIP — yaması tek yola bağlanan sinyalin bağlanmamış yolda sessiz
     kalması bu depoda ölçülmüş bir sınıftır (Yasa 4).
 
+    KURAL ARTIK SINIF, LİSTE DEĞİL (tur 4, 2026-09-16): üç tur üst üste "yazım yolları" ELLE sayıldı
+    ve her turda biri atlandı (en son `sip_correct_provisional → _apply_sip_correction →
+    _overwrite_bar`). Sözleşme bu yüzden tek bir cümleye indirildi: **`_write_bars`i çağıran her
+    üretim fonksiyonu ya kapsam dekoratörünü taşır ya da çağrısı bir kapsam bağlamının içindedir.**
+    Kapsamı `_write_bars`ın KENDİSİNE koymak bu cümlenin yanlış çözümüdür — her yazımda derinlik
+    sıfıra düşer ve tur 1'in gürültü seli (232 olay/koşum) geri gelir; kapsam ÇAĞIRANA konur.
+    Cümleyi `test_bar_ondalikli_hacim_v507` K13 çivisi KAYNAKTAN (ast) türeterek zorlar: sabit bir
+    yol listesi tek-kaynak yasasını kırar ve yeni yol eklendiğinde SESSİZ kalırdı.
+
     İÇ İÇE AÇILIR, YALNIZ EN DIŞTA DUYURUR: `load_many` kendi içinde `load_bars` çağırır; her
     çağrı kendi duyurusunu yapsaydı 500 sembollük bir tur 500 olay basardı — tur 2'nin kapattığı
     gürültü seli geri gelirdi. Derinlik sayacının tek işi budur: rows/tickers TOPLAM kalır, olay
@@ -1818,6 +1827,7 @@ def upgrade_divergence(doc: dict | None = None, session: str | None = None) -> d
 SIP_CORRECT_MAX_SESSIONS = 3     # defterdeki EN YENİ K geçici seans (daha eskisi zaten massive'in işi)
 
 
+@_hacim_turu_kapsami
 def _overwrite_bar(ticker: str, bar: dict) -> bool:
     """VAR OLAN bir tarihin barını konsolide değerlerle DEĞİŞTİR. `_merge_repair_bar`ın TERSİ ve
     tamamlayıcısı: o YALNIZ ekler (var olan tarihe dokunmaz), bu YALNIZ var olanı değiştirir (yeni
@@ -1825,7 +1835,15 @@ def _overwrite_bar(ticker: str, bar: dict) -> bool:
     doldurma" ile "üstüne yazma" aynı çağrıda karışır ve bacak geçmiş kurabilir hâle gelirdi.
 
     Geçmiş DEĞİŞTİĞİ için wf revizyonu BUMPLANIR (SANCTIONED yol: watchdog `rev_bumped` görür ve
-    mutasyonu sessiz saymaz). Hiçbir alan değişmiyorsa yazım da bump da YAPILMAZ."""
+    mutasyonu sessiz saymaz). Hiçbir alan değişmiyorsa yazım da bump da YAPILMAZ.
+
+    KAPSAM KENDİ GİRİŞİNDE, ÇAĞIRANINDA DEĞİL (TSK-192 tur 4): gövde `_write_bars`i çağırır, yani
+    ondalıklı hacim sayacını DOLDURAN üretim yollarından biridir. Tur 3'te bu yol (`_apply_sip_correction`
+    → buraya) hiçbir kapsamın içinde değildi ve duyuru yalnız zamanlayıcının `sip_correct_provisional`
+    ardından KOŞULSUZ `repair_coverage` çağırması sayesinde düşüyordu: SIRALAMAYA bağlı, belgesiz,
+    testsiz bir kazaydı — iki çağrının arasına bir `return` girdiği gün sessizce kaybolurdu. Kapsam
+    iç içe güvenlidir (`_HacimTurCtx`): toplu turda derinlik zaten >0 olduğu için sembol başına olay
+    BASILMAZ, tek başına çağrıldığında ise duyuru düşer."""
     cp = _cache_path(ticker)
     try:
         cached = pd.read_csv(cp, parse_dates=["date"])
@@ -1880,6 +1898,7 @@ def _overwrite_bar(ticker: str, bar: dict) -> bool:
     return True
 
 
+@_hacim_turu_kapsami
 def sip_correct_provisional(tickers: list[str] | None = None,
                             max_sessions: int = SIP_CORRECT_MAX_SESSIONS) -> dict:
     """GEÇMİŞ seansların IEX-damgalı satırlarını KONSOLİDE (sip) barla düzelt — massive'den ÖNCE.
@@ -1891,7 +1910,13 @@ def sip_correct_provisional(tickers: list[str] | None = None,
 
     HACİM: sip konsolidedir → ham yazılır ve konsolide/IEX oranı GERÇEK ölçümle tazelenir
     (`sip_correction`). Ölçüm yapıldıktan sonra `iex_volume` defterden DÜŞÜLÜR: aynı IEX hacmini
-    bir de massive ile eşleştirmek, tek bir gerçeği iki bağımsız örnek gibi saymak olurdu."""
+    bir de massive ile eşleştirmek, tek bir gerçeği iki bağımsız örnek gibi saymak olurdu.
+
+    TOPLU GİRİŞ KAPSAMI (TSK-192 tur 4): bu, zamanlayıcıdan çağrılan ve İÇİNDE SEMBOL DÖNGÜSÜ olan
+    bağımsız bir giriş noktasıdır — `load_many` ve `repair_coverage` ile aynı sınıf. İçerideki her
+    `_overwrite_bar` kendi kapsamını açar; bu dış kapsam olmasaydı 100 sembollük bir düzeltme turu
+    100 ayrı ondalıklı-hacim olayı basardı (tur 2'nin kapattığı gürültü seli). İkisi birlikte:
+    tek başına çağrılan yol da duyurur, toplu tur da TEK olay basar."""
     from . import alpaca
     out: dict = {"sessions": {}, "targets": 0, "corrected": 0, "asked_sessions": 0,
                  "skipped": None, "at": None}
@@ -2128,11 +2153,17 @@ def repair_coverage(tickers: list[str] | None = None, sessions: int = REPAIR_LOO
     return out
 
 
+@_hacim_turu_kapsami
 def _merge_repair_bar(ticker: str, bar: dict) -> bool:
     """Eksik seansın barını önbelleğe EKLE. Yalnız EKLEME: var olan hiçbir tarih değiştirilmez.
     GEÇMİŞE eklenen bir bar (delik doldurma) wf revizyonunu BUMPLAR — determinizm yasası 'dosya
     büyümesi zararsızdır' derken SONA eklemeyi kastediyor; ortadaki bir deliğin dolması geçmiş
-    pencerelerin sonucunu DEĞİŞTİRİR ve önbelleklenmiş walk-forward'lar artık başka bir seriye aittir."""
+    pencerelerin sonucunu DEĞİŞTİRİR ve önbelleklenmiş walk-forward'lar artık başka bir seriye aittir.
+
+    KAPSAM KENDİ GİRİŞİNDE (TSK-192 tur 4): bugün TEK çağıranı `repair_coverage` (o dekoratörlü) ama
+    güvence ÇAĞIRAN SAYISINA dayanamaz — "bugün tek çağıranı var" üç turdur tekrarlayan hata sınıfının
+    ta kendisidir. Kapsam iç içe güvenli olduğu için bu ekleme toplu onarım turunun tek-olay tavanını
+    (K6/K10) BOZMAZ; tek başına çağrılan bir gelecekteki yolda ise duyuruyu garanti eder."""
     cp = _cache_path(ticker)
     try:
         cached = pd.read_csv(cp, parse_dates=["date"])

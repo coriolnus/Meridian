@@ -45,6 +45,15 @@ NE ÇİVİLENİR:
      başına `load_bars` (ayrı süreçlerde koşan yollar; K9) ve `barrepair` CLI aracı (K11). Kapsam
      İÇ İÇE açılır ve YALNIZ en dışta duyurur — K6'nın tavanı iç içe turda da korunur (K10) —
      ve çöküşte de duyurur, elde olan sayım kaybolmasın (K12).
+  7. KURAL SINIF OLDU, LİSTE DEĞİL (tur 4, inceleme bulgusu 1) — tur 2, 3 ve 4 aynı hatayı üç kez
+     üretti: yazım yolları ELLE sayıldı ve her turda biri atlandı (en son `sip_correct_provisional
+     → _apply_sip_correction → _overwrite_bar`; o yol canlıda yalnız zamanlayıcının ardından
+     KOŞULSUZ `repair_coverage` çağırması sayesinde duyuruyordu — SIRALAMAYA bağlı, belgesiz,
+     testsiz bir kazaydı). K13 artık yolu değil KURALI ölçer ve listeyi KAYNAKTAN (ast) türetir:
+     `_write_bars`i çağıran her üretim fonksiyonu ya kapsam dekoratörünü taşır ya da çağrısı bir
+     kapsam bağlamının içindedir; `meridian/` + `ops/` ağaçları taranır, istisna kümesi BOŞ başlar
+     ve kendi kendini denetler (gerekçesiz istisna da, ölü istisna da çiviyi kırar). Davranış
+     tarafı: sip yolu tek başına da duyurur (K14a) ve çok sembollü sip turu TEK olay basar (K14b).
 
 MUTASYON KANITI (KOŞULDU 2026-09-16 tur 2; her mutasyondan sonra dosya YEDEK KOPYADAN geri
 alındı, sha256 kıyaslandı ve `__pycache__` silindi — bayat .pyc sahte yeşil üretir):
@@ -65,15 +74,40 @@ silindi — bayat .pyc sahte yeşil üretir):
   * M3 — `load_bars`ın kapsam dekoratörü silindi (tur 2'nin tam hâli): YALNIZ K9 KIRMIZI.
   * M4 — `barrepair.repair` kapsamı etkisiz bir bağlamla değiştirildi: YALNIZ K11 KIRMIZI.
   * M5 — kapanışta istisna varken duyuru bastırıldı: YALNIZ K12 KIRMIZI ("çöküşte sayım kayboldu").
+MUTASYON KANITI (KOŞULDU 2026-09-16 tur 4; her mutasyondan sonra dosya YEDEK KOPYADAN geri alındı,
+sha256 birebir kıyaslandı ve `__pycache__` silindi — bayat .pyc sahte yeşil üretir):
+  * N1 — `_overwrite_bar`ın kapsam dekoratörü silindi (tur 3'ün TAM hâli): K13 KIRMIZI, ihlali
+    ADRESİYLE basarak (modül yolu + satır + `_overwrite_bar()`) + K14a KIRMIZI
+    ("tek başına `_overwrite_bar` SESSİZ yuvarladı (olay: 0)").
+  * N2 — `sip_correct_provisional`ın kapsam dekoratörü silindi: YALNIZ K14b KIRMIZI, ölçüsüyle —
+    "iç kapsam tur ortasında duyurdu: [0, 1, 1]". K13 YEŞİL kalır ve bu SINIRIN kendisidir: K13
+    `_write_bars`in DOĞRUDAN çağıranlarını zorlar, toplu girişin gürültü tavanı K14b'nin işidir.
+  * N3 — `_merge_repair_bar`ın kapsam dekoratörü silindi: YALNIZ K13 KIRMIZI. Bu yolu ölçen bir
+    DAVRANIŞ çivisi yok (tek çağıranı zaten dekoratörlü) — yani K13 gerçekten davranış çivilerinin
+    göremediği şeyi görüyor.
+  * N4 — SINIF KANITI: `meridian/barrepair.py`ye kapsamsız, YENİ bir yazım yolu eklendi
+    (`_mutasyon_yeni_yazim_yolu`): K13 KIRMIZI, doğduğu koşumda, adresiyle. Hiçbir davranış çivisi
+    o fonksiyonu tanımıyordu — sabit listeli bir çivinin KAÇIRACAĞI durum tam olarak budur.
+  * N5 — `barrepair.repair`in `with data._hacim_turu():` bloğu `contextlib.nullcontext()` ile
+    değiştirildi: K13 + K11 KIRMIZI. K13 yalnız dekoratörü değil `with` BİÇİMİNİ de tanıyor
+    (iki meşru koruma biçimi var, çivi ikisini de ayırt ediyor).
+  * N6 — `K13_BEYANLI_ISTISNA`ya ihlal ETMEYEN bir anahtar kondu: K13 KIRMIZI ("ÖLÜ istisna
+    (artık ihlal değil, kaldırılmalı)"). İstisna kümesi çürüyerek muafiyet biriktiremez.
+  * N7 — `_write_bars`in ikinci bir tanımı eklendi: K13 KIRMIZI ("tanımı 2 yerde — yazım boğazı
+    tekliğini kaybetti"). Tarama sessizce körleşemez; boşa dönen bir çivi "yeşil" sayılmaz.
 GERÇEK DEFTERE DOKUNULMAZ: her çivi `sandbox_state` altında koşar; canlı `state/bars/` açılmaz.
 """
 
 from __future__ import annotations
 
+import ast
+from pathlib import Path
+
 import duckdb
 import pandas as pd
 import pytest
 
+from meridian.adapters import alpaca as _alpaca
 from meridian.adapters import data as _data
 from meridian.adapters import massive as _massive
 from ops import bar_arsivle
@@ -425,3 +459,211 @@ def test_K12_ISTISNADA_da_DUYURULUR_ve_derinlik_SIFIRLANIR(sandbox_state, uyaril
     assert len(ozet) == 2, f"dekoratör yolu çöküşte duyurmadı: {ozet}"
     assert ozet[1]["dates"] == g2 and ozet[1]["rows"] == 1, ozet[1]
     assert _data._HACIM_TUR_DERINLIK == 0, "dekoratör istisnasında derinlik sızdı"
+
+
+# =============== K13 — SINIF ÇİVİSİ: yazım yollarını KAYNAKTAN türet (liste EZBERLEME) =========
+#
+# NEDEN STATİK ÇİVİ, NEDEN DAHA FAZLA DAVRANIŞ ÇİVİSİ DEĞİL (tur 4, 2026-09-16): tur 2, tur 3 ve
+# tur 4 aynı sınıf hatayı üretti — `_write_bars`e ulaşan yollar ELLE sayıldı ve her turda biri
+# atlandı (sırasıyla: tek başına `load_bars` + `barrepair` CLI'ı, sonra `sip_correct_provisional
+# → _apply_sip_correction → _overwrite_bar`). Her atlanan yol için bir davranış çivisi yazmak
+# GEÇMİŞİ kapatır, GELECEĞİ kapatmaz: yarın eklenen beşinci yol yine sessiz olur. O yüzden bu çivi
+# tek tek yolları değil KURALI ölçer ve yol listesini KAYNAK KODUNDAN (ast) türetir.
+#
+# TEK-KAYNAK YASASI: burada sabit bir "korunan fonksiyonlar" listesi YOKTUR. Aranan üç sembolün
+# adı bile canlı modül nesnelerinden alınır (`_data._write_bars.__name__` vb.) — biri yeniden
+# adlandırılırsa çivi SESSİZ kalmaz, AttributeError ile GÜRÜLTÜLÜ düşer.
+
+#: BEYANLI İSTİSNA — BOŞ BAŞLAR (tur 4, 2026-09-16) ve öyle kalması beklenir.
+#: Anahtar: "<depoya göre modül yolu>::<fonksiyon>"; değer: ≥20 karakter GEREKÇE (Yasa 4'ün
+#: `# sessiz-yutma:` kaçışıyla aynı disiplin). Kapsam dışında bırakılan bir yazım yolu ancak
+#: BURAYA yazılarak geçebilir; gerekçesiz istisna da, ARTIK İHLAL OLMAYAN ölü istisna da çiviyi
+#: kırar (istisna kümesi kendi kendini denetler — `pitlaw.BILINEN_IHLALLER` ile aynı desen).
+K13_BEYANLI_ISTISNA: dict[str, str] = {}
+
+
+def _sembol_adi(dugum) -> str | None:
+    """`f(...)` / `mod.f(...)` / `@mod.dek` biçimlerinde ÇAĞRILAN/UYGULANAN sembolün adı; yoksa None.
+    Modül öneki bilinçli olarak YOK SAYILIR: aynı fonksiyona `data._write_bars` ve `_write_bars`
+    diye iki ayrı yazım biçiminden ulaşılır (barrepair ↔ data) ve kural ikisinde de aynıdır."""
+    if isinstance(dugum, ast.Name):
+        return dugum.id
+    if isinstance(dugum, ast.Attribute):
+        return dugum.attr
+    return None
+
+
+def _gez(dugum, modul: str, fn: str, dekoratorlu: bool, kapsamda: bool,
+         cagrilar: list[dict], adlar: tuple[str, str, str]) -> None:
+    """Ağacı gezerek `yazim` çağrılarını bulur ve HER BİRİNİ iki soruyla etiketler: içinde
+    bulunduğu fonksiyon kapsam DEKORATÖRÜNÜ taşıyor mu, çağrı bir kapsam `with`inin İÇİNDE mi?"""
+    yazim, dekorator, uretici = adlar
+    for c in ast.iter_child_nodes(dugum):
+        if isinstance(c, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            # YENİ GÖVDE = YENİ KORUMA SORUSU: dıştaki `with` iç fonksiyonun ÇAĞRILDIĞI anda açık
+            # olmayabilir (fonksiyon bir geri-çağrı olarak saklanabilir). `kapsamda` DEVRALINMAZ.
+            _gez(c, modul, c.name if fn == _K13_MODUL_GOVDESI else f"{fn}.{c.name}",
+                 any(_sembol_adi(d) == dekorator for d in c.decorator_list), False, cagrilar, adlar)
+            continue
+        if isinstance(c, ast.Lambda):
+            # LAMBDA DA BİR SINIRDIR, aynı gerekçeyle (gövde tanımlandığında değil çağrıldığında koşar).
+            _gez(c, modul, f"{fn}.<lambda>", False, False, cagrilar, adlar)
+            continue
+        if isinstance(c, (ast.With, ast.AsyncWith)):
+            acar = any(isinstance(i.context_expr, ast.Call)
+                       and _sembol_adi(i.context_expr.func) == uretici for i in c.items)
+            _gez(c, modul, fn, dekoratorlu, kapsamda or acar, cagrilar, adlar)
+            continue
+        if isinstance(c, ast.Call) and _sembol_adi(c.func) == yazim:
+            cagrilar.append({"modul": modul, "fonksiyon": fn, "satir": c.lineno,
+                             "dekorator": dekoratorlu, "kapsam": kapsamda})
+        _gez(c, modul, fn, dekoratorlu, kapsamda, cagrilar, adlar)
+
+
+#: Bir fonksiyonun DIŞINDA (modül gövdesinde) duran çağrının "fonksiyon" adı — anahtar da bundan üretilir.
+_K13_MODUL_GOVDESI = "<modül gövdesi>"
+
+
+def _kapsam_taramasi(kokler: list[Path], depo: Path,
+                     adlar: tuple[str, str, str]) -> tuple[list[dict], int, int]:
+    """(çağrılar, taranan .py sayısı, tanım sayısı) — yazım boğazına yapılan TÜM çağrılar + çivinin
+    boşa dönmediğini kanıtlayan iki sayaç. Tanım sayısı 1 değilse sembol taşınmış/kopyalanmıştır
+    ve tarama artık ölçtüğünü sandığı şeyi ölçmüyordur."""
+    yazim = adlar[0]
+    cagrilar: list[dict] = []
+    taranan = tanim = 0
+    for kok in kokler:
+        for py in sorted(kok.rglob("*.py")):
+            taranan += 1
+            kaynak = py.read_text(encoding="utf-8")
+            if yazim not in kaynak:
+                continue                   # ucuz eleme: ast bedeli yalnız adı GEÇEN dosyaya ödenir
+            agac = ast.parse(kaynak, filename=str(py))
+            modul = py.resolve().relative_to(depo).as_posix()
+            tanim += sum(1 for n in ast.walk(agac)
+                         if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == yazim)
+            _gez(agac, modul, _K13_MODUL_GOVDESI, False, False, cagrilar, adlar)
+    return cagrilar, taranan, tanim
+
+
+def _k13_anahtar(c: dict) -> str:
+    return f"{c['modul']}::{c['fonksiyon']}"
+
+
+def test_K13_write_bars_cagiran_HER_uretim_YOLU_kapsamda_KAYNAKTAN_turetilir(sandbox_state):
+    """SÖZLEŞME TEK CÜMLE: `_write_bars`i çağıran her üretim fonksiyonu ya kapsam dekoratörünü
+    taşır ya da çağrısı bir kapsam bağlamının içindedir. Yol listesi ezberlenmez — `meridian/` ve
+    `ops/` ağaçları ast ile taranır; yarın eklenen yeni bir yazım yolu doğduğu gün bu çivi öter.
+
+    KAPSAM `_write_bars`IN KENDİSİNE KONMAZ: o zaman her yazımda derinlik sıfıra düşer, tur sonu
+    özeti satır satır dağılır ve tur 1'in gürültü seli (232 olay/koşum) geri gelir. Kural
+    ÇAĞIRANA bakar — bu çivinin ölçtüğü şey de budur."""
+    adlar = (_data._write_bars.__name__, _data._hacim_turu_kapsami.__name__,
+             _data._hacim_turu.__name__)
+    paket = Path(_data.__file__).resolve().parent.parent          # …/meridian
+    depo = paket.parent
+    kokler = [k for k in (paket, depo / "ops") if k.is_dir()]
+    assert len(kokler) == 2, f"üretim ağaçları bulunamadı (bulunan: {[str(k) for k in kokler]})"
+
+    cagrilar, taranan, tanim = _kapsam_taramasi(kokler, depo, adlar)
+
+    # BOŞA DÖNMEME KANITI: tarama bir şey bulmadıysa çivi "yeşil" değil KÖRdür.
+    assert taranan > 0, f"hiç .py taranmadı — ağaç yolu yanlış: {[str(k) for k in kokler]}"
+    assert tanim == 1, f"`{adlar[0]}` tanımı {tanim} yerde — yazım boğazı tekliğini kaybetti"
+    assert len(cagrilar) >= 2, \
+        f"`{adlar[0]}` çağrısı bulunamadı ({len(cagrilar)}) — tarayıcı sessizce körleşti"
+
+    ihlaller = [c for c in cagrilar if not (c["dekorator"] or c["kapsam"])]
+    acikta = [c for c in ihlaller if _k13_anahtar(c) not in K13_BEYANLI_ISTISNA]
+    assert not acikta, (
+        "KAPSAMSIZ YAZIM YOLU — ondalıklı hacim sayacı dolar ama duyuru DÜŞMEZ (kalıcı kayıp):\n"
+        + "\n".join(f"  {c['modul']}:{c['satir']} → {c['fonksiyon']}()" for c in acikta)
+        + f"\n  ÇÖZÜM: o fonksiyona `@{adlar[1]}` ekle ya da çağrıyı `with {adlar[2]}():` içine al "
+          f"(kapsam iç içe güvenlidir). Gerekçeli istisna: K13_BEYANLI_ISTISNA.")
+
+    # İSTİSNA KÜMESİ KENDİNİ DENETLER: gerekçesiz istisna da, ÖLÜ istisna da geçmez.
+    for anahtar, gerekce in K13_BEYANLI_ISTISNA.items():
+        assert len(str(gerekce).strip()) >= 20, f"gerekçesiz istisna: {anahtar!r} → {gerekce!r}"
+    olu = sorted(set(K13_BEYANLI_ISTISNA) - {_k13_anahtar(c) for c in ihlaller})
+    assert not olu, f"ÖLÜ istisna (artık ihlal değil, kaldırılmalı): {olu}"
+
+
+# =============== K14 — SIP DÜZELTME YOLU: duyurur, ama toplu turda TEK OLAY ====================
+
+def _sip_defterine_yaz(ticker: str, gunler: list[str], seans: str, kapanis: float) -> Path:
+    """Diskte TAM SAYI hacimli bir defter + defterde o seans için IEX damgası. Kurulum bilerek
+    `_write_bars` ile YAPILMAZ: o kapı kesri yuvarlar ve çivi ölçtüğünü sandığı şeyi ölçmezdi."""
+    cp = _data._cache_path(ticker)
+    cp.parent.mkdir(parents=True, exist_ok=True)
+    _cerceve(gunler, [3710592.0] * len(gunler)).to_csv(cp, index=False)
+    _data._note_provisional(ticker, {seans: {
+        "source": _data.ALPACA_SOURCE, "close": kapanis, "iex_volume": 5_000.0,
+        "volume": 3710592.0, "ratio": 20.0, "volume_scaled": True,
+        "at": "2026-07-29T20:20:00+00:00"}})
+    return cp
+
+
+def test_K14a_TEK_BASINA_overwrite_bar_da_DUYURUR(sandbox_state, uyarilar):
+    """SIRALAMAYA BAĞLI KAZA KAPANDI: `sip_correct_provisional → _apply_sip_correction →
+    _overwrite_bar` yolu tur 3'te kapsam DIŞINDAYDI ve duyuru yalnız zamanlayıcının hemen ardından
+    `repair_coverage` çağırması sayesinde düşüyordu. `_overwrite_bar` artık kendi kapsamını açar —
+    tek başına çağrıldığı HER bağlamda (test, yeniden oynatma, gelecekteki bir araç) duyurur."""
+    gunler = _seanslar("2024-01", 3)
+    seans, kapanis = gunler[1], 209.2                     # `_cerceve`nin i=1 satırındaki kapanış
+    cp = _data._cache_path("EA")
+    cp.parent.mkdir(parents=True, exist_ok=True)
+    _cerceve(gunler, [3710592.0, 4143546.0, 3900000.0]).to_csv(cp, index=False)
+
+    # YALNIZ HACİM DEĞİŞİR: fiyat sabit bırakılır ki ölçülen şey hacim kapısı olsun (fiyat sıçraması
+    # `sanitize_bars` karantinasını tetikleyip satırı düşürseydi çivi başka bir dalı ölçerdi).
+    assert _data._overwrite_bar("EA", {"date": seans, "close": kapanis,
+                                       "volume": EA_HAM_HACIM}) is True
+
+    assert list(pd.read_csv(cp)["volume"]) == [3710592.0, 3569440.0, 3900000.0], "ondalık diske indi"
+    ozet = _ozetler(uyarilar)
+    assert len(ozet) == 1, f"tek başına `_overwrite_bar` SESSİZ yuvarladı (olay: {len(ozet)})"
+    assert ozet[0]["rows"] == 1 and ozet[0]["tickers"] == 1 and ozet[0]["dates"] == seans, ozet[0]
+    assert f"EA@{seans}={EA_HAM_HACIM!r}" in ozet[0]["ornekler"], ozet[0]["ornekler"]
+    assert _data._HACIM_TUR_DERINLIK == 0, "kapsam kapanmadı — derinlik sızdı"
+
+
+def test_K14b_COK_SEMBOLLU_sip_turu_TEK_OLAY_basar(sandbox_state, uyarilar, monkeypatch):
+    """TOPLU GİRİŞ KAPSAMI: `sip_correct_provisional` sembol döngüsü taşır. İçerideki her
+    `_overwrite_bar` kendi kapsamını açar; dış kapsam olmasaydı N sembol N olay basardı (tur 2'nin
+    kapattığı gürültü seli). İkisi birlikte: tek başına yol da duyurur, toplu tur TEK olay basar."""
+    gunler = _seanslar("2024-01", 3)
+    seans, kapanis = gunler[1], 209.2
+    semboller = ["EA", "MSFT", "NVDA"]
+    for t in semboller:
+        _sip_defterine_yaz(t, gunler, seans, kapanis)
+
+    ic_olaylar: list[int] = []
+
+    def _sip_bars(syms, session, timeout=30.0):
+        # HER SEMBOL İÇİN AYNI SEANS: kesirli hacim üç defterin üçüne de girer. OHLC tutarlı
+        # (high ≥ close ≥ low) — bozuk bir bar `sanitize_bars` karantinasına düşer ve yazım
+        # REDDEDİLİRDİ; o zaman çivi kapsamı değil karantinayı ölçerdi.
+        return {t: {"open": kapanis, "high": kapanis + 0.2, "low": kapanis - 0.2,
+                    "close": kapanis + 0.05, "volume": EA_HAM_HACIM} for t in syms}
+
+    def _overwrite_izle(ticker, bar, _asil=_data._overwrite_bar):
+        # DÖNGÜ ORTASINDA OLAY SAYIMI: iç kapsam duyursaydı bu liste 0'da kalmazdı.
+        ic_olaylar.append(len(_ozetler(uyarilar)))
+        return _asil(ticker, bar)
+
+    monkeypatch.setattr(_alpaca, "data_available", lambda: True)
+    monkeypatch.setattr(_alpaca, "sip_allowed", lambda d: True)
+    monkeypatch.setattr(_alpaca, "sip_session_bars", _sip_bars)
+    monkeypatch.setattr(_data, "_overwrite_bar", _overwrite_izle)
+
+    rapor = _data.sip_correct_provisional()
+
+    assert rapor["targets"] == 3 and rapor["corrected"] == 3, f"sip yolu ölçülemedi: {rapor}"
+    assert ic_olaylar == [0, 0, 0], f"iç kapsam tur ortasında duyurdu: {ic_olaylar}"
+    ozet = _ozetler(uyarilar)
+    assert len(ozet) == 1, f"3 sembollük sip turu {len(ozet)} olay üretti — gürültü tavanı yok"
+    assert ozet[0]["rows"] == 3 and ozet[0]["tickers"] == 3 and ozet[0]["dates"] == seans, ozet[0]
+    for t in semboller:
+        assert list(pd.read_csv(_data._cache_path(t))["volume"])[1] == 3569440.0, \
+            f"{t}: sip düzeltmesi diske ondalık yazdı"
+    assert _data._HACIM_TUR_DERINLIK == 0, "kapsam kapanmadı — derinlik sızdı"
