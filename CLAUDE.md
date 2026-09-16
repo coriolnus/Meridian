@@ -113,6 +113,11 @@ Rol-1 sanıp otoriter suite/push başlatır.
 | Ölçüm kartına hüküm | ✔ | ✘ | ✘ |
 | `state/`'e yazmak | worker durmuşken | ✘ | ✘ |
 | pytest dışı, `obs`'a ulaşan koşum | bilinçli kuru koşum | ✘ | ✘ |
+| A1'de **durum değiştirmeyen** okuma (`status·show·list-units·journalctl·ls·cat·grep·curl healthz`) | ✔ | ✔ (2026-09-16) | ✘ |
+| A1'de **durum değiştiren** her komut (`start·stop·restart·yazma·silme·sudo değişiklik`) | ✔ | ✘ | ✘ |
+| Depo dosyasına yazmak (kod/belge) | ✔ | ✘ — istisna: operatörün DOĞRUDAN talimatı + Rol-1'e bildirim | ✔ (kendi worktree'sinde) |
+| Taslak üretimi (brief·rapor·inceleme·ölçüm tasarımı) — scratchpad'de | ✔ | ✔ (2026-09-16) | ✔ |
+| Dil sunucusu/editör yüzeyi (tanılama, sembol, arama, kod açıklama) | ✔ | ✔ | ✔ |
 
 **Ek iş nereye:** varsayılan ALT AJAN (bu turun işi — Rol-1'in ağacı, commit'i, suite'i).
 Worktree yalnız üç tetikle: iş bu turun kapsamı DIŞINDA · Rol-1'in ağacı donukken paralel
@@ -120,6 +125,23 @@ ilerlemeli · dağıtım kararı operatörün (chip). Worktree oturumu şeridind
 git yok (vaka 2026-08-30: şeritten çıkan oturum bayat merge + Rol-1 çekişmesi üretti).
 
 Yan/ajan tur sonu: kanıt (test çıktısı, diff özeti) + devir brief'i. Git yok, dağıtım önerisi yok.
+
+**YAN OTURUM YETKİ PAKETİ (operatör 2026-09-16 "faydalı yetkiler tanımlayalım").** Yan oturum bir
+GÖZ ve bir TASLAK TEZGÂHIDIR; eli Rol-1'indir. Dört sınıf AÇIK:
+1. **Editör-yerel iş** — dosya/sembol okuma, arama, dil sunucusu tanılamaları, kod açıklama, yerel
+   diff okuma. Risk yok, bildirim gerekmez.
+2. **Salt-okur canlı triyaj** — A1'de durum DEĞİŞTİRMEYEN komutlar. Alarmı erken yakalamak bu
+   paketin asıl gerekçesidir (vaka: `meridian-backup` 2026-09-15'ten beri kırıktı, tek işaret bir
+   systemd durumuydu). Bulgu AKSİYONA çevrilmez: ölçülür, Rol-1'e devredilir.
+3. **Taslak üretimi** — brief, inceleme raporu, ölçüm tasarımı, belge taslağı; hepsi scratchpad'de.
+   Depo dosyasına inmesi Rol-1'in kararıdır.
+4. **Kendi worktree'sinde kapsam testi** — ayrı `state/` taşıdığı için eşzamanlı koşabilir (2026-09-07).
+
+KAPALI kalanlar (gerekçe matriste): git yazma · dağıtım ve dağıtım önerisi · tam suite · A1'de durum
+değiştiren her komut · sır okuma/yazma · kart dosyası · `state/` · `ROADMAP.md`/`CLAUDE.md` yazımı.
+Operatör yan oturuma doğrudan bir depo düzenlemesi söylerse yapar, ama AYNI turda Rol-1'e bildirir —
+bildirmezse Rol-1 donmuş ağaç ve dağıtım kapılarında o değişikliği sürpriz olarak bulur (vaka
+2026-09-16: VS Code MCP ayarı).
 
 ---
 
