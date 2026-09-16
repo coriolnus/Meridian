@@ -40,6 +40,11 @@ NE ÇİVİLENİR:
      görüldü). Artık koşum sonunda `HACİM ONDALIK` özeti düşer (K4); temiz kaynakta hiç (K5).
   5. GÜRÜLTÜ TAVANI — 500 sembol TEK olay (K6) · yeni TARİH yeni özet, eski tarih tekrar
      duyurulmaz (K7) · örnek listesi TAVANLI, sayaç büyürken olay büyümez (K8).
+  6. KAPSAM, UÇ DEĞİL (tur 3, inceleme bulgusu 1) — duyuru `load_many`/`repair_coverage` uçlarına
+     bağlıyken sayacı dolduran yazım boğazına o ikisinin DIŞINDAN ulaşan yollar SESSİZDİ: tek
+     başına `load_bars` (ayrı süreçlerde koşan yollar; K9) ve `barrepair` CLI aracı (K11). Kapsam
+     İÇ İÇE açılır ve YALNIZ en dışta duyurur — K6'nın tavanı iç içe turda da korunur (K10) —
+     ve çöküşte de duyurur, elde olan sayım kaybolmasın (K12).
 
 MUTASYON KANITI (KOŞULDU 2026-09-16 tur 2; her mutasyondan sonra dosya YEDEK KOPYADAN geri
 alındı, sha256 kıyaslandı ve `__pycache__` silindi — bayat .pyc sahte yeşil üretir):
@@ -51,6 +56,15 @@ alındı, sha256 kıyaslandı ve `__pycache__` silindi — bayat .pyc sahte yeş
     "500 kesirli sembol 501 olay üretti (yazım anında 500) — gürültü tavanı yok"; K7 de KIRMIZI
     (aynı tarih sembol sembol tekrar duyuruldu). Gürültü tavanı GERÇEKTEN çivilenmiş.
   * D — `bar_arsivle._ondalik_hacim_bas` gövdesi erken `return`: YALNIZ K4 KIRMIZI, K5 yeşil.
+MUTASYON KANITI (KOŞULDU 2026-09-16 tur 3; her mutasyondan sonra geri alındı ve `__pycache__`
+silindi — bayat .pyc sahte yeşil üretir):
+  * M1 — kapsam kapanışındaki `_emit_hacim_round()` silindi: K9·K10·K11·K12 KIRMIZI ("olay: 0"),
+    eski dokuz çivi YEŞİL (onlar duyuruyu doğrudan çağırıyor — kapsam onların sorusu değil).
+  * M2 — derinlik kapısı kaldırıldı (her kapanış duyurur): YALNIZ K10 KIRMIZI, ölçüsüyle —
+    "iç kapsam olay bastı — tur ortasında duyuru: [0, 1, 1]".
+  * M3 — `load_bars`ın kapsam dekoratörü silindi (tur 2'nin tam hâli): YALNIZ K9 KIRMIZI.
+  * M4 — `barrepair.repair` kapsamı etkisiz bir bağlamla değiştirildi: YALNIZ K11 KIRMIZI.
+  * M5 — kapanışta istisna varken duyuru bastırıldı: YALNIZ K12 KIRMIZI ("çöküşte sayım kayboldu").
 GERÇEK DEFTERE DOKUNULMAZ: her çivi `sandbox_state` altında koşar; canlı `state/bars/` açılmaz.
 """
 
@@ -80,13 +94,16 @@ def _seanslar(ay: str, adet: int) -> list[str]:
 
 @pytest.fixture(autouse=True)
 def _hacim_defteri_temiz():
-    """Süreç-içi sayaç ve tarih-duyuru defteri testler arasında SIZMAZ: biri dolu kalsaydı bir
-    sonraki çivi kendi ölçtüğü turu değil, öncekinin kalıntısını okurdu."""
+    """Süreç-içi sayaç, tarih-duyuru defteri VE tur derinliği testler arasında SIZMAZ: biri dolu
+    kalsaydı bir sonraki çivi kendi ölçtüğü turu değil, öncekinin kalıntısını okurdu. Derinlik de
+    sıfırlanır — sızan bir derinlik, kapsamı 'hep iç kapsam' yapıp duyuruyu SESSİZCE yutardı."""
     _data._HACIM_ONDALIK.clear()
     _data._HACIM_ONDALIK_DUYURULDU.clear()
+    _data._HACIM_TUR_DERINLIK = 0
     yield
     _data._HACIM_ONDALIK.clear()
     _data._HACIM_ONDALIK_DUYURULDU.clear()
+    _data._HACIM_TUR_DERINLIK = 0
 
 
 @pytest.fixture
@@ -289,3 +306,122 @@ def test_K5_tam_sayi_kaynakta_arsiv_SUSAR(sandbox_state, tmp_path, capsys):
     yakalanan = capsys.readouterr()
     assert rc == 0, yakalanan.out + yakalanan.err
     assert "HACİM ONDALIK" not in yakalanan.err, yakalanan.err
+
+
+# ======================= K9/K10/K11/K12 — KAPSAM (uç değil) ====================================
+
+def _sahte_fetch(monkeypatch, cerceve: pd.DataFrame, kaynak: str = "cboe"):
+    """`load_bars`ın AĞ kolunu keser ve `cerceve`yi "çekilmiş" sayar (kaynak adı da yazılır —
+    `_LAST_SOURCE` boş kalsaydı yükleyicinin sahiplik/dikiş dalları ölçülen yolu değiştirirdi)."""
+    def _f(ticker, start, end, timeout=30.0, incremental_ok=False, **kw):
+        _data._LAST_SOURCE[str(ticker).upper()] = kaynak
+        return cerceve.copy()
+    monkeypatch.setattr(_data, "fetch", _f)
+
+
+def _hayalet_gun(baslangic: str) -> str:
+    """`baslangic`tan SONRAKİ ilk takvim-DIŞI gün. Tarih uydurulmaz, takvimden TÜRETİLİR:
+    kapının tek kaynağı `_sessions` ve hayalet satırın tanımı "o kaynakta olmayan gün"dür."""
+    ses = _data._sessions()
+    g = pd.Timestamp(baslangic)
+    for _ in range(14):
+        g += pd.Timedelta(days=1)
+        if g.strftime("%Y-%m-%d") not in ses:
+            return g.strftime("%Y-%m-%d")
+    pytest.skip("takvimde 14 gün içinde seans-dışı gün yok — hayalet satır kurgulanamaz")
+
+
+def test_K9_TEK_BASINA_load_bars_da_DUYURUR_load_many_CAGRILMADAN(sandbox_state, uyarilar, monkeypatch):
+    """KAPSAM UÇTA DEĞİL: `load_bars` ölçüm/api/veri-kümesi/yeniden-hesap yollarından TEK BAŞINA
+    çağrılır ve bunların bir kısmı AYRI süreçlerde koşar — o süreçte `load_many` hiç çalışmayabilir.
+    Duyuru uçlara bağlıyken bu yolda sayaç dolup olay HİÇ basılmıyordu (gecikme değil KAYIP)."""
+    gunler = _seanslar("2024-01", 3)
+    _sahte_fetch(monkeypatch, _cerceve(gunler, [3710592.0, EA_HAM_HACIM, 4143546.0]))
+
+    df = _data.load_bars("EA", gunler[0], gunler[-1], polite_delay=0.0)
+
+    assert len(df) == 3, f"yükleyici yolu ölçülemedi (dönen satır: {len(df)})"
+    assert list(pd.read_csv(_data._cache_path("EA"))["volume"]) == [3710592.0, 3569440.0, 4143546.0]
+    ozet = _ozetler(uyarilar)
+    assert len(ozet) == 1, f"tek başına `load_bars` turu duyurmadı (olay: {len(ozet)})"
+    assert ozet[0]["rows"] == 1 and ozet[0]["tickers"] == 1 and ozet[0]["dates"] == gunler[1]
+    assert f"EA@{gunler[1]}={EA_HAM_HACIM!r}" in ozet[0]["ornekler"], ozet[0]["ornekler"]
+    assert _data._HACIM_TUR_DERINLIK == 0, "kapsam kapanmadı — derinlik sızdı"
+
+
+def test_K10_IC_ICE_kapsam_TEK_OZET_verir_sayilar_TOPLAM(sandbox_state, uyarilar, monkeypatch):
+    """`load_many` içindeki her `load_bars` bir İÇ kapsamdır: olay YALNIZ en dışta basılır.
+    Bu çivi K6'nın (gürültü tavanı) iç içe hâlidir — kapsam uçlara değil derinliğe bağlı."""
+    g1, g2 = _seanslar("2024-01", 2)
+    ic_olaylar: list[int] = []
+
+    def _f(ticker, start, end, timeout=30.0, incremental_ok=False, **kw):
+        # HER SEMBOL ÇAĞRISINDA O ANA KADARKİ OLAY SAYISI: iç kapsam duyursaydı 0 kalmazdı.
+        ic_olaylar.append(len(_ozetler(uyarilar)))
+        _data._LAST_SOURCE[str(ticker).upper()] = "cboe"
+        return _cerceve([g1, g2], [1000000.25, 2000000.5])
+    monkeypatch.setattr(_data, "fetch", _f)
+
+    _data.load_many(["EA", "MSFT", "NVDA"], g1, g2, use_cache=False)
+
+    ozet = _ozetler(uyarilar)
+    assert ic_olaylar == [0, 0, 0], f"iç kapsam olay bastı — tur ortasında duyuru: {ic_olaylar}"
+    assert len(ozet) == 1, f"3 sembollük iç içe tur {len(ozet)} olay üretti — gürültü tavanı yok"
+    assert ozet[0]["rows"] == 6 and ozet[0]["tickers"] == 3 and ozet[0]["n_dates"] == 2, ozet[0]
+    assert ozet[0]["dates"] == f"{g1},{g2}", ozet[0]["dates"]
+    assert _data._HACIM_TUR_DERINLIK == 0, "kapsam kapanmadı — derinlik sızdı"
+
+
+def test_K11_barrepair_CLI_YOLU_da_DUYURUR(sandbox_state, uyarilar):
+    """`python -m meridian.barrepair` AYRI bir süreçtir: ne yükleyici turu ne onarım süpürmesi
+    koşar. Yazım `_write_bars`ten geçtiği için sayaç dolar — kapsam olmasaydı süreç biter ve olay
+    HİÇ basılmazdı. Hayalet tarafının `bar_ghost_repair_applied` güvencesinin hacim karşılığı."""
+    from meridian import barrepair
+
+    g1, g2 = _seanslar("2024-01", 2)
+    hayalet = _hayalet_gun(g2)
+    cp = _data._cache_path("EA")
+    cp.parent.mkdir(parents=True, exist_ok=True)
+    # KURULUM `_write_bars` İLE YAPILMAZ: o kapı kesri yuvarlar ve çivi, ölçtüğünü sandığı şeyi
+    # ölçmezdi (diskte ZATEN ondalıklı duran bir defteri onarım yolundan geçiriyoruz).
+    _cerceve([g1, g2, hayalet], [3710592.0, EA_HAM_HACIM, 4000000.0]).to_csv(cp, index=False)
+
+    rapor = barrepair.repair(["EA"], apply=True)
+
+    assert rapor["ghost_rows"] == 1, f"hayalet satır kurgulanamadı: {rapor}"
+    assert len(rapor["written"]) == 1, f"onarım yazmadı — çivi yolu ölçemedi: {rapor}"
+    assert list(pd.read_csv(cp)["volume"]) == [3710592.0, 3569440.0], "onarım ondalık bıraktı"
+    ozet = _ozetler(uyarilar)
+    assert len(ozet) == 1, f"CLI onarım yolu SESSİZ yuvarladı (olay: {len(ozet)})"
+    assert ozet[0]["dates"] == g2 and ozet[0]["rows"] == 1, ozet[0]
+    assert _data._HACIM_TUR_DERINLIK == 0, "kapsam kapanmadı — derinlik sızdı"
+
+
+def test_K12_ISTISNADA_da_DUYURULUR_ve_derinlik_SIFIRLANIR(sandbox_state, uyarilar):
+    """ÇÖKÜŞTE SUSMAK, SAYIMI KAYBETMEKTİR: `with` kapanışı istisnada da koşar ve elde olan özet
+    basılır. İki yarı ayrı ayrı ölçülür — çıplak kapsam VE dekoratörle sarılmış giriş."""
+    g1, g2 = _seanslar("2024-01", 2)
+
+    with pytest.raises(RuntimeError, match="tur ortasinda cokus"):
+        with _data._hacim_turu():
+            _data._write_bars(_cerceve([g1], [1000000.5]), _data._cache_path("EA"))
+            assert _ozetler(uyarilar) == [], "kapsam içinde erken duyuru — tur sonu deseni bozuldu"
+            raise RuntimeError("tur ortasinda cokus")
+
+    ozet = _ozetler(uyarilar)
+    assert len(ozet) == 1, f"çöküşte sayım kayboldu (olay: {len(ozet)})"
+    assert ozet[0]["dates"] == g1 and ozet[0]["rows"] == 1, ozet[0]
+    assert _data._HACIM_TUR_DERINLIK == 0, "istisnadan sonra derinlik sızdı — tur kalıcı sessizleşir"
+
+    @_data._hacim_turu_kapsami
+    def _coken_giris():
+        _data._write_bars(_cerceve([g2], [2000000.75]), _data._cache_path("MSFT"))
+        raise RuntimeError("dekorator turu coktu")
+
+    with pytest.raises(RuntimeError, match="dekorator turu coktu"):
+        _coken_giris()
+
+    ozet = _ozetler(uyarilar)
+    assert len(ozet) == 2, f"dekoratör yolu çöküşte duyurmadı: {ozet}"
+    assert ozet[1]["dates"] == g2 and ozet[1]["rows"] == 1, ozet[1]
+    assert _data._HACIM_TUR_DERINLIK == 0, "dekoratör istisnasında derinlik sızdı"

@@ -27,6 +27,7 @@ kaynaşır (körlemesine ezme yok, satır-kaybı reddi + kurumsal-aksiyon deneti
 bars_source.json (sahiplik), bar_source_seams.json, massive_crosscheck.json, symbol_no_data.json,
 bars_integrity.json (okur); bar geçmişi değişince wf_cache_rev.json revizyonu monoton artar."""
 from __future__ import annotations
+import functools
 import time
 from pathlib import Path
 import httpx
@@ -176,6 +177,7 @@ HACIM_ORNEK_SATIR = 5            # ÖZETE giren örnek satır sayısı — saya�
 # da aynı deseni kullanır (koşum sonu tek `HACİM ONDALIK` özeti): iki yerde iki tasarım kalmaz.
 _HACIM_ONDALIK: dict = {}        # {tarih: {rows, tickers:set, ornekler:[...], max_kesir, max_kesir_ticker}}
 _HACIM_ONDALIK_DUYURULDU: set = set()   # TARİH başına BİR özet — sembol başına DEĞİL (evren çapında)
+_HACIM_TUR_DERINLIK = 0          # AÇIK tur kapsamı sayısı; duyuru YALNIZ 0'a dönerken düşer
 
 
 def _not_hacim_ondalik(ticker: str, ciftler: list) -> None:
@@ -229,6 +231,71 @@ def _emit_hacim_round() -> None:
         # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci kanal yok ve bir telemetri denemesi
         # bar yazımını ASLA düşüremez; sayaç `_HACIM_ONDALIK`te durur ve olay bir kez görünür kalır.
         _bar_warn("hacim_ondalik_ozeti_dusti", e, dates=",".join(yeni))
+
+
+class _HacimTurCtx:
+    """Ondalıklı hacim TURUNUN kapsamı: duyuru tek tek uçlara değil BU KAPSAMA bağlıdır.
+
+    NEDEN KAPSAM, NEDEN UÇ DEĞİL (inceleme bulgusu, düzeltme turu 3, 2026-09-16): duyuru yalnız
+    `load_many` ve `repair_coverage` uçlarına bağlıyken, sayacı dolduran yazım boğazına
+    (`_write_bars`) o ikisinin DIŞINDAN ulaşan GERÇEK yollar vardı — tek başına çağrılan
+    `load_bars` (ölçüm/api/veri-kümesi/yeniden-hesap yolları; bir kısmı AYRI systemd
+    süreçlerinde koşar ve o sürecin ömrü boyunca `load_many` hiç çağrılmayabilir) ve ayrı bir CLI
+    olan `barrepair` aracı. O yollarda sayaç dolar, süreç biter ve olay HİÇ basılmazdı: bu
+    "gecikme" değil KALICI KAYIP — yaması tek yola bağlanan sinyalin bağlanmamış yolda sessiz
+    kalması bu depoda ölçülmüş bir sınıftır (Yasa 4).
+
+    İÇ İÇE AÇILIR, YALNIZ EN DIŞTA DUYURUR: `load_many` kendi içinde `load_bars` çağırır; her
+    çağrı kendi duyurusunu yapsaydı 500 sembollük bir tur 500 olay basardı — tur 2'nin kapattığı
+    gürültü seli geri gelirdi. Derinlik sayacının tek işi budur: rows/tickers TOPLAM kalır, olay
+    TEK kalır.
+
+    İSTİSNADA DA DUYURULUR: `with` kapanışı (`__exit__`) çöküşte de koşar ve duyuru BASTIRILMAZ —
+    elde olan sayım kaybolmasın diye. Eksik bir özet, hiç özetten iyidir: ölçülemeyen kayıp yok
+    sayılır.
+
+    SINIR YAZILI: derinlik de sayaç gibi SÜREÇ-İÇİ ve TEK İPLİKLİDİR. Havuz işçisi AYRI SÜREÇtir,
+    kendi sayacını ve kendi derinliğini taşır (bar yolunda iplik havuzu yok — yalnız süreç havuzu,
+    ölçüldü 2026-09-16). Yeniden başlatma derinliği de sayacı da sıfırlar ve aynı tarih yeni
+    süreçte yeniden duyurulur: `_HACIM_ONDALIK`in zaten belgeli sınırı, yeni bir sınır değil."""
+
+    def __enter__(self):
+        """Kapsamı açar (derinlik +1). Duyuru BURADA yapılmaz — tur daha başlamıştır."""
+        global _HACIM_TUR_DERINLIK
+        _HACIM_TUR_DERINLIK += 1
+        return self
+
+    def __exit__(self, *exc):
+        """Kapsamı kapatır (derinlik -1) ve EN DIŞ kapanışta duyuruyu boşaltır. Derinlik negatife
+        düşürülmez: dengesiz bir elle kapanış turu kalıcı olarak sessizleştirmesin. False döner —
+        istisna YUTULMAZ, yalnız duyuru garanti edilir."""
+        global _HACIM_TUR_DERINLIK
+        _HACIM_TUR_DERINLIK -= 1
+        if _HACIM_TUR_DERINLIK <= 0:
+            _HACIM_TUR_DERINLIK = 0
+            _emit_hacim_round()
+        return False
+
+
+def _hacim_turu():
+    """`with _hacim_turu():` — ondalıklı hacim turu kapsamını üretir (iç içe güvenli; gerekçe ve
+    sınırlar `_HacimTurCtx` docstring'inde). `live_session_leg` ile aynı desen: sınıf + üretici."""
+    return _HacimTurCtx()
+
+
+def _hacim_turu_kapsami(fn):
+    """Bir giriş noktasını ondalıklı hacim turunun kapsamına bağlayan dekoratör.
+
+    DEKORATÖR, ÇÜNKÜ SORU GÖVDE DEĞİL GİRİŞ: kapsanan üç fonksiyonun da birden çok `return`u var;
+    gövdeyi elle girintilemek her dönüş yolunda kapanışı yeniden doğrulamayı gerektirirdi ve bir
+    dönüş unutulduğunda arıza SESSİZ olurdu. Girişte açılan `with`, hem her `return`da hem de
+    istisnada kapanır. `functools.wraps` adı ve docstring'i korur: çağıranlar, turşulama (süreç
+    havuzu işçisi) ve testlerin yamaları fonksiyonu özgün adıyla görmeye devam eder."""
+    @functools.wraps(fn)
+    def _sarmal(*a, **kw):
+        with _hacim_turu():
+            return fn(*a, **kw)
+    return _sarmal
 
 
 def _hacim_tam_sayi(df: pd.DataFrame, ticker: str) -> pd.DataFrame:
@@ -1997,6 +2064,7 @@ def calibrate_volume(tickers: list[str] | None = None, days: int = VOLUME_CAL_DA
 
 
 # ---------------- onarım geçidi: son K seansın kapsaması ------------------------------------------
+@_hacim_turu_kapsami
 def repair_coverage(tickers: list[str] | None = None, sessions: int = REPAIR_LOOKBACK,
                     min_coverage: float = REPAIR_MIN_COVERAGE) -> dict:
     """Son K seansın kapsamasını DİSKTEN ölç; eksik seansı Massive grouped ile KAPAT.
@@ -2054,10 +2122,9 @@ def repair_coverage(tickers: list[str] | None = None, sessions: int = REPAIR_LOO
                         detail="onarım geçidi: eksik seans grouped anlık görüntüsünden kapatıldı")
             except Exception:  # sessiz-yutma: kayıt kanalı düştü; onarımın kendisi diske yazıldı
                 pass
-    # ONARIM DA BİR TURDUR: bu süpürme `load_many`den bağımsız çağrılır (scheduler) ve bar YAZAR.
-    # Özet burada atılmazsa onarımın yuvarladığı kesirler bir sonraki `load_many`ye kadar
-    # duyurulmadan kalırdı — "sonra duyururuz" ile "hiç duyurmayız" arasındaki fark bir çağrı.
-    _emit_hacim_round()
+    # ONARIM DA BİR TURDUR: bu süpürme `load_many`den bağımsız çağrılır (scheduler) ve bar YAZAR —
+    # bu yüzden kendi KAPSAMINI açar (dekoratör). Kapsam olmasaydı onarımın yuvarladığı kesirler
+    # bir sonraki `load_many`ye kadar duyurulmadan kalırdı; o tur hiç koşmazsa HİÇ duyurulmazdı.
     return out
 
 
@@ -2366,9 +2433,14 @@ def no_data_report() -> dict:
                     "retired = delist hükmü ZATEN verilmiş, bakım adayı DEĞİL"}
 
 
+@_hacim_turu_kapsami
 def load_bars(ticker: str, start: str, end: str, use_cache: bool = True, polite_delay: float = 0.1) -> pd.DataFrame:
     """Load daily bars for [start, end]. Uses the cache when fresh; otherwise fetches and MERGES with
-    the cache (union by date) rather than blindly overwriting."""
+    the cache (union by date) rather than blindly overwriting.
+
+    KAPSAM (TSK-192 tur 3): bu giriş TEK BAŞINA da çağrılıyor (ölçüm/api/veri-kümesi/yeniden-hesap
+    yolları, bir kısmı AYRI süreçlerde) — ondalıklı hacim duyurusu bu yüzden `load_many`nin değil
+    BURANIN kapsamına bağlıdır; `load_many` içinden gelen çağrılar İÇ kapsamdır ve olay basmaz."""
     cp = _cache_path(ticker)
     cached, cached_raw_rows, _gate_dropped = None, 0, 0
     if cp.exists():
@@ -2693,8 +2765,13 @@ def _window(df: pd.DataFrame, start: str, end: str) -> pd.DataFrame:
     return df.loc[m].reset_index(drop=True)
 
 
+@_hacim_turu_kapsami
 def load_many(tickers: list[str], start: str, end: str, use_cache: bool = True) -> dict[str, pd.DataFrame]:
-    """Load bars and DROP any ticker whose data fails the hard integrity gate (never trade on bad data)."""
+    """Load bars and DROP any ticker whose data fails the hard integrity gate (never trade on bad data).
+
+    KAPSAM (TSK-192 tur 3): tur burada AÇILIR ve burada KAPANIR; içerideki her `load_bars` çağrısı
+    İÇ kapsamdır (olay basmaz), böylece 500 sembollük tur hâlâ TEK özet üretir ve sayılar TOPLAM
+    kalır. Gerekçe `_HacimTurCtx`te."""
     out: dict[str, pd.DataFrame] = {}
     failed, quarantined = [], []
     _n_uni = len(tickers)
@@ -2728,7 +2805,8 @@ def load_many(tickers: list[str], start: str, end: str, use_cache: bool = True) 
     # son %10'u aksi hâlde yalnız bellekte kalırdı).
     flush_same_evening()
     _emit_ghost_round()               # hayalet/karantina toplamı: tur sonunda TEK satır
-    _emit_hacim_round()               # ondalıklı hacim toplamı: tarih başına TEK özet (aynı desen)
+    # ONDALIKLI HACİM ÖZETİ BURADA DEĞİL: duyuru `_hacim_turu_kapsami` dekoratörüne taşındı (tur 3).
+    # Elle çağrı bu fonksiyonu kapsardı ama `load_bars`ın TEK BAŞINA çağrıldığı yolları kapsamazdı.
     if failed or quarantined:
         try:
             from .. import obs
