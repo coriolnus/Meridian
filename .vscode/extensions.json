@@ -8,7 +8,8 @@
     "ms-python.debugpy",           // hata ayıklama
     "redhat.vscode-yaml",          // research/cards/*.yaml, deploy/**/*.yaml, sir_envanteri
     "redhat.ansible",              // deploy/ansible (site.yml, dagit.yml, roller) + ansible-lint
-    "hashicorp.terraform",         // altyapi/apisix (TSK-176 T1)
+    "hashicorp.terraform",         // altyapi/apisix (TSK-176 T1); CLI: brew hashicorp/tap/terraform
+    "ms-azuretools.vscode-containers", // Dockerfile + docker-compose.yml dil desteği (koşum YOK)
     "tamasfe.even-better-toml",    // pyproject.toml (pytest/import-linter/mutmut yapılandırması)
     "anthropic.claude-code"        // Rol-1 oturumu
   ],

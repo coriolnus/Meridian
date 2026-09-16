@@ -49,9 +49,20 @@
     "altyapi/apisix/import.tf": true
   },
 
-  // --- Ansible / YAML / Terraform --------------------------------------------------------------
+  // --- Ansible (redhat.ansible) ----------------------------------------------------------------
+  // Yorumlayıcı venv'e bağlanınca eklenti `.venv/bin`i PATH'in başına koyar: `ansible`,
+  // `ansible-playbook --syntax-check` ve `ansible-lint` depo pinli sürümlerle koşar (eklenti
+  // kaynağından ölçüldü, 2026-09-16). Yapılandırma kökteki `ansible.cfg` + `.ansible-lint`ten gelir
+  // (production profili); `ansible.posix` koleksiyonu `~/.ansible/collections`tadır.
+  // Execution environment KAPALI: konteyner motoru arar, bu makinede çalışan motor yok.
+  // Lightspeed KAPALI: oyun kitabı içeriğini dış bir LLM servisine gönderir (sır adları, envanter).
   "ansible.python.interpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "ansible.validation.enabled": true,
   "ansible.validation.lint.enabled": true,
+  "ansible.validation.lint.autoFixOnSave": false,
+  "ansible.executionEnvironment.enabled": false,
+  "ansible.lightspeed.enabled": false,
+  "ansible.lightspeed.suggestions.enabled": false,
   "files.associations": {
     "deploy/ansible/**/*.yml": "ansible",
     "research/cards/*.yaml": "yaml",
@@ -59,6 +70,35 @@
   },
   "yaml.format.enable": false,
   "redhat.telemetry.enabled": false,
+
+  // --- Terraform (hashicorp.terraform) ---------------------------------------------------------
+  // CLI `brew install hashicorp/tap/terraform` ile kurulu, A1 ile AYNI sürüm (1.16.2). Editörde
+  // biçimlendirme (`terraform fmt`) ve durağan doğrulama çalışır. `validateOnSave` KAPALI kalır:
+  // `terraform validate` önce `init` ister ve yerel `init` depo-izli `.terraform.lock.hcl`e macOS
+  // özetlerini ekler → kirli ağaç dağıtım kapısını durdurur. Plan/import yalnız A1'de
+  // (`altyapi/altyapi.sh`); durum dosyası `/opt/veri/altyapi/apisix/`tedir, yerelde YOK.
+  "terraform.languageServer.enable": true,
+  "terraform.validation.enableEnhancedValidation": true,
+  "terraform.experimentalFeatures.validateOnSave": false,
+  "terraform.languageServer.indexing.ignoreDirectoryNames": [
+    ".venv", "node_modules", "state", "backups", "research", ".claude"
+  ],
+  "[terraform]": {
+    "editor.defaultFormatter": "hashicorp.terraform",
+    "editor.formatOnSave": true
+  },
+  "[terraform-vars]": {
+    "editor.defaultFormatter": "hashicorp.terraform",
+    "editor.formatOnSave": true
+  },
+
+  // --- Docker (ms-azuretools.vscode-containers) ------------------------------------------------
+  // YALNIZ dil desteği: Dockerfile + docker-compose.yml tanılamaları/tamamlama. Konteyner KOŞMAZ:
+  // compose `worker` servisi kadansı başlatır (MERIDIAN_AUTOSTART_CYCLE=1) — yerelde koşması
+  // `./serve.sh` ile aynı çift-emir riskidir (CLAUDE.md §9). Compose A1'in kanonik yolu da değil
+  // (dosya şerhi: bayat, geri alınabilirlik için durur). `colima` kurulu ama bilerek kapalı.
+  "containers.enableComposeLanguageService": true,
+  "containers.images.checkForOutdatedImages": false,
 
   // --- Git / GitHub: UZAKTAN OKUMA otomatik, YAZMA ASLA -------------------------------------
   // `autofetch` yalnız `git fetch` koşar (yerel ağaca dokunmaz) — "GitHub'da ne değişti"
