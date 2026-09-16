@@ -74,3 +74,22 @@ notlar: >
   KULLANIR (ikinci bir istem kurucusu yazılmaz — tek-kaynak); kip seçimi ortam değişkeni `DENETIM_REASONING_ENV`
   üzerinden, canlıdaki GERİ ALIM yoluyla aynı. Ölçüm A1'de koşar (kapı yalnız orada erişilir); çıktı repo dışı değil
   research/olcumler/edg101_denetci_muhakeme/ altına, canlı defterlere DEĞİL. Implementer sevki ve koşum saati Rol-1 kararı.
+
+rol1_notu_2026_09_16: >
+  2026-09-16 23:50Z VERİ KAYNAĞI ÖLÇÜMÜ [Rol-1; ölçüm kodu YAZILMADAN, hiçbir koşum yapılmadan — eşikler ve
+  kill-list DEĞİŞMEDİ]. (1) Teslim edilmiş brifing METNİNİN A1'deki tek kalıcı kaydı systemd günlüğüdür
+  (`--- MESAJ` bloğu): 31 metin — meridian-bekci 17 · meridian-brifing (şef) 11 · meridian-karne 3;
+  2026-08-31T09:29Z → 2026-09-16T10:04Z; uzunluk 155/1540/3496 (min/medyan/max). Günlük 1017 MB ve en eski
+  kaydı 08-31 → dönme ile en eski metinler KAYBOLUR. (2) Denetçiye giden VERİ bloğu HİÇBİR YERDE
+  saklanmıyor: günlükte `<<<VERI` 0; olay defteri yalnız `brifing_ilk_satir`; hermes `sessions/` yalnız hata
+  dökümü; `notify_sent.json` yalnız alarm damgaları. (3) Bekçi VERİ'si `bekci_brifingi.topla` →
+  `manifest_tara` ile O ANKİ dosya durumundan üretilir → geçmiş bir an için YENİDEN KURULAMAZ (kod okuması).
+  SONUÇ: `olcum_plani` 1. madde (40 metin, her biri kendi VERİ'siyle) bugün KURULAMAZ.
+  KARAR: VERİ ile metin İLERİYE DÖNÜK birlikte yakalanır — üç botun ortak geçidi `soul_denetimi.gecir`
+  (`ilk_metin` + VERİ'yi taşıyan `ilk_istem`) tek yakalama noktasıdır; çıktı A1'de kalır (canlı `state/`
+  defteri DEĞİL), okuyucu bu karttır (Yasa 6). Hız 1,93 teslim/gün (16,0 günde 31) → 40 metin ≈ 21 gün.
+  Bedeli: TSK-200 hükmü en erken ~2026-10-07'ye kayar (yakalama dağıtıldığı günden sayılır). Reddedilen yol: VERİ'siz geçmiş metinler — canlı denetim yolu
+  VERİ'yi HER ZAMAN verir (TSK-138 D2), VERİ'siz koşum canlıyı ölçmez ve PK (2)'yi tasarımdan düşürür.
+  Metin anlık görüntüsü yerelde `research/olcumler/edg101_denetci_muhakeme/girdi/a1_journal_brifing_metinleri_2026-09-16.jsonl`
+  (31 satır, sha256 671a16079c3984d5…, `notify.scrub` 0 değişiklik) — DEPOYA GİRMEDİ: canlı kaynaklı içerikle
+  sonraki adım sınıflandırıcıda engellendi, depoya/GitHub'a girmesi operatör kararı.
