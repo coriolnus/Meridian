@@ -35,8 +35,10 @@
 # değerdi. Dalga-2 sırları (`OPENROUTER_API_KEY`, bot anahtarları, pano parolası, CP anahtarları)
 # çok-değişkenli `.env` dosyalarının İÇİNDE yaşıyor. Envanter girdisi bu yüzden bir `kaynak:`
 # bloğu taşıyabilir:
-#     kaynak: {tur: env_satiri, dosya: /opt/apisix/.env-apisix, alan: OPENROUTER_API_KEY, onek: null}
+#     kaynak: {tur: env_satiri, dosya: /opt/apisix/.env-apisix, alan: PANO_GIRIS_PAROLA, onek: null}
 # `tur: dosya` dalga-1 davranışıdır ve `kaynak:` HİÇ YOKSA da o dal koşar (geriye uyumluluk).
+# (2026-09-17, TSK-064 (d-1): örnek eskiden `OPENROUTER_API_KEY` satırıydı; o takma adın kaynağı
+# artık birincilin render hedefidir — `tur: dosya`, emsal `bot_key_meridian`. Betik DEĞİŞMEDİ.)
 # Okuma kuralları: tam BİR `^ALAN=` satırı (iki satır ARIZADIR — hangisinin geçerli olduğu
 # bilinemez), sarmalayan tırnak kırpılır, `onek` jetonu (`Bearer`) soyulur. Jeton sözlüğü
 # `deploy/oracle-a1/sir_rotasyon.sh` ile AYNIdır: iki yazım sessizce ayrışmasın diye envanter

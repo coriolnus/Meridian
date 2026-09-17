@@ -108,7 +108,10 @@ UYE_ALANLARI = tuple(f"HINDSIGHT_API_{yuzey}_LLM_{n}_API_KEY"
 #: `--apisix-admin` ile döndürülür ve İKİ kopyası var (`.env-apisix` satırı = kapının kendi
 #: kanalı · `/etc/meridian/apisix_admin_key` = `ops/apisix_uygula.py`nin credential kaynağı).
 #: `KAPI_APIKEY` ile KARIŞTIRILMAZ: o kapının TÜKETİCİ anahtarı, bu YÖNETİM anahtarıdır.
-KOPYA_SAYISI = 26
+#: 2026-09-17 (TSK-064 (d-1)): −1 = 25 — `dash … env /opt/meridian/.dash.env` satırı ÇIKTI. Dosya
+#: A1'de 2026-09-14 17:46Z operatör kararıyla SİLİNDİ; satır kalsaydı `--dash` "hedef dosya YOK" ile
+#: yarıda düşerdi. Sayı bu kez KÜÇÜLDÜ ve sebebi keşif değil ÖLÇÜM: Rol-1 `--envanter` `test -e` → YOK.
+KOPYA_SAYISI = 25
 
 
 # =================================================================================================
@@ -631,7 +634,12 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
     # geçişin UYGULANMADIĞI dünyayı da ölçer (dosyayı silerek) — ikisi ayrı gerçektir.
     (kok / "etc/meridian/apisix_admin_key").write_text(ESKI["admin"] + "\n")
     (kok / "etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY").write_text(ESKI["tenant"] + "\n")
-    (kok / "etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY").write_text(ESKI["llm"] + "\n")
+    # TSK-064 (d-1), 2026-09-17: bu dosya artık `OPENROUTER_API_KEY`in REFERANS kopyasıdır (Vault
+    # Agent render hedefi) ve canlıda öteki on iki kopyayla EŞİTTİR (Rol-1 `--envanter` ölçümü).
+    # Tohum eskiden burada ESKI["llm"] taşıyıp "gerçek ayrışma" sahnesini TOHUMA gömüyordu; referans
+    # ayrışık bir tohumda BÜTÜN kopyalar AYRI görünür ve sahne canlıdan kopardı. Ayrışma artık onu
+    # ölçen çivinin İÇİNDE kurulur (I1 · Q1 · P3) — tohum canlıya yaklaştı, hiçbir sahne kaybolmadı.
+    (kok / "etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY").write_text(ESKI["or"] + "\n")
     (kok / "etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL").write_text(DSN + "\n")
     (kok / "opt/hindsight/.key").write_text(ESKI["tenant"] + "\n")
     (kok / "opt/hindsight/.env-cp").write_text(
@@ -660,7 +668,9 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
         "NOUS_MODEL=sahte/model-mini\n"
         "NOUS_ENDPOINT=http://kapi/llm/v1\n"
         f"MERIDIAN_DASH_TOKEN={ESKI['dash']}\n")       # spec Bulgu-2: BEYAN DIŞI ikinci kopya
-    (kok / "opt/meridian/.dash.env").write_text(f'MERIDIAN_DASH_TOKEN="{ESKI["dash"]}"\n')
+    # `/opt/meridian/.dash.env` TOHUMDA YOK (TSK-064 (d-1), 2026-09-17): A1'de 2026-09-14'te silindi
+    # ve kopya tablosundan çıktı. Sahne canlıdan ayrışırsa ölçümler var olmayan bir dünyanın
+    # ölçümüdür (D7'nin dersi); geri doğma hâli v520 B7'de ayrıca ölçülür.
     for p in ("bekci", "karne", "sef"):
         (kok / f"home/ubuntu/.hermes/profiles/{p}/.env").write_text(
             f"HERMES_HOME=/home/ubuntu/.hermes/profiles/{p}\n"
@@ -825,7 +835,9 @@ def test_A5_ROTASYON_BLOGU_v439_un_dosyalar_blogunu_BOZMAZ():
     # D7 (YÜKSEK-3): 6 → 7. Faz-1A geçişi tamamlandığı için `/etc/hindsight/creds/<AD>` AYRI bir
     # dosya satırı oldu — "nerede YOK" ile "nerede VAR" iki ayrı gerçektir ve tek satırda
     # anlatılamaz. `/opt/hindsight/.key` HÂLÂ dışarıda (§2'nin donuk sözlüğünde sınıfı yok).
-    assert len(env["dosyalar"]) == 7, "v439 E2 spec §1 ile BİREBİR eşitlik istiyor"
+    # D9 (TSK-064 (d-1), 2026-09-17): 7 → 6. `/opt/meridian/.dash.env` A1'de 2026-09-14'te SİLİNDİ;
+    # spec §1 satırı ve envanter girdisi AYNI turda çıktı (v439 E0 aynı sayıyı elle taşır).
+    assert len(env["dosyalar"]) == 6, "v439 E2 spec §1 ile BİREBİR eşitlik istiyor"
     assert env["rotasyon_kopyalari"]["kaynak_betik"] == "deploy/oracle-a1/sir_rotasyon.sh"
     assert env["rotasyon_kopyalari"]["olcum"], "ölçüm tarihi yok — sayı taşıyan satır tarih taşır"
 
@@ -907,7 +919,9 @@ def test_C1_kuru_kosum_HICBIR_SEY_yazmaz(tmp_path):
     once = {p: p.read_bytes() for p in kok.rglob("*") if p.is_file()}
     r = _kos(BETIK, ortam, "--dash", "--kuru")
     assert r.returncode == 0, r.stdout + r.stderr
-    assert "/etc/meridian/dash_token" in r.stdout and "/opt/meridian/.dash.env" in r.stdout
+    # 2026-09-17 (TSK-064 (d-1)): `.dash.env` tablodan çıktı — kuru rapor onu ANMAMALI (silinmiş bir
+    # dosyayı "yazılacak" diye göstermek, gerçek koşumun düşeceği bir planı onaylatmaktır).
+    assert "/etc/meridian/dash_token" in r.stdout and "/opt/meridian/.dash.env" not in r.stdout
     assert "meridian.service" in r.stdout
     sonra = {p: p.read_bytes() for p in kok.rglob("*") if p.is_file()}
     degisen = {str(p) for p in set(once) | set(sonra) if once.get(p) != sonra.get(p)}
@@ -1107,15 +1121,17 @@ def test_F4_db_ESKI_parola_hala_gecerliyse_cikis_2(tmp_path):
 # G) --dash
 # =================================================================================================
 
-def test_G1_dash_credential_ve_dash_env_yazilir(tmp_path):
-    """İki kopya. `.dash.env` brifing/learn/sprint@ birimlerinin EnvironmentFile'ıdır: unutulursa
-    o birimler bir sonraki tetikte 401 alır ve arıza gece yarısı görünür."""
+def test_G1_dash_credential_yazilir_DASH_ENV_yokken_de_KOSAR(tmp_path):
+    """TEK kopya (2026-09-17, TSK-064 (d-1)). Eski biçimi İKİ kopyaydı ve `.dash.env`in yazıldığını
+    ölçüyordu; dosya A1'de 2026-09-14 17:46Z'de silindi ve tablodan çıktı. Koruma KAYBOLMADI, yer
+    değiştirdi: "unutulan kopya" sınıfının bu sırdaki tek adayı artık credential'dır ve o ölçülür;
+    silinmiş dosyanın rotasyonu DÜŞÜRMEDİĞİ ve GERİ DOĞURULMADIĞI ek olarak ölçülür (harita Risk B)."""
     kok, ortam = _sahte_ortam(tmp_path)
     r = _kos(BETIK, ortam, "--dash")
     assert r.returncode == 0, r.stdout + r.stderr
     yeni = (kok / "etc/meridian/dash_token").read_text().strip()
     assert len(yeni) == 48 and yeni != ESKI["dash"]
-    assert _env_alan(kok / "opt/meridian/.dash.env", "MERIDIAN_DASH_TOKEN") == f'"{yeni}"'
+    assert not (kok / "opt/meridian/.dash.env").exists(), "rotasyon silinmiş .dash.env'i geri yarattı"
 
 
 def test_G2_dash_kanit_yeni_200_eski_401(tmp_path):
@@ -1228,13 +1244,21 @@ def test_H6_openrouter_YEDEK_alir(tmp_path):
 # =================================================================================================
 
 def test_I1_envanter_ESIT_ve_AYRI_raporlar(tmp_path):
-    """Tohumda `.env-apisix`in OpenRouter satırları birbiriyle EŞİT ama hindsight'ın LLM
-    anahtarı AYRIDIR (gerçek bir ayrışma hâli). Rapor ikisini de göstermeli — yalnız "EŞİT"
-    basan bir envanter, ayrışmayı görmeyen bir envanterdir."""
-    _, ortam = _sahte_ortam(tmp_path)
+    """Kopyaların çoğu EŞİT ama biri AYRIDIR (gerçek bir ayrışma hâli). Rapor ikisini de göstermeli
+    — yalnız "EŞİT" basan bir envanter, ayrışmayı görmeyen bir envanterdir.
+
+    2026-09-17 (TSK-064 (d-1)): ayrışma eskiden TOHUMDAYDI (hindsight LLM credential'ı ayrı) ve o
+    dosya artık REFERANSTIR — referans ayrışık bir tohumda her kopya AYRI görünür, sahne anlamını
+    yitirirdi. Ayrışma burada, TSK-181'in gerçek kopyasında (GLOBAL hermes env) kurulur ve AYRI
+    hükmü ADIYLA o satırda aranır: "çıktıda bir yerde AYRI var"dan daha dar, yani daha sıkı."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    (kok / "home/ubuntu/.hermes/.env").write_text(
+        f"HERMES_HOME=/home/ubuntu/.hermes\nOPENROUTER_API_KEY={ESKI['llm']}\n", encoding="utf-8")
     r = _kos(BETIK, ortam, "--envanter")
     assert r.returncode == 0, r.stdout + r.stderr
     assert "EŞİT" in r.stdout and "AYRI" in r.stdout
+    ayri = [s for s in r.stdout.splitlines() if "/home/ubuntu/.hermes/.env [OPENROUTER_API_KEY]" in s]
+    assert ayri and ayri[0].rstrip().endswith("→ AYRI"), ayri
     assert "OKUNAMADI" in r.stdout, "api/sql kanalları beyanla OKUNAMADI demeli"
 
 
@@ -1913,10 +1937,13 @@ def test_K8b_MUT_ariza_yutulursa_cift_satir_YOK_gorunur(tmp_path):
         '        except OSError:\n            print("OKUNAMADI")\n            return',
         '        except (OSError, AlanArizasi):\n            print("OKUNAMADI")\n'
         '            return'),
+        # ÇAPA TAŞINDI (TSK-064 (d-1), 2026-09-17): `var` artık yokluğu `FileNotFoundError`
+        # kovasında "YOK", öteki `OSError`ları "OKUNAMADI" basar. Mutasyon AYNI dalı ısırır:
+        # çift satır arızası `OSError` kovasına yutulur ve "ÇİFT SATIR" kaybolur.
         ('        except AlanArizasi as ariza:\n'
          '            print(f"ÇİFT SATIR ({ariza.adet})" if ariza.adet > 1 else "ALAN YOK")\n'
-         '        except OSError:\n            print("YOK")',
-         '        except (OSError, AlanArizasi):\n            print("YOK")'))
+         '        except OSError:\n            print("OKUNAMADI")',
+         '        except (OSError, AlanArizasi):\n            print("OKUNAMADI")'))
     r = _kos(m, ortam, "--envanter")
     assert r.returncode == 0, r.stdout + r.stderr
     assert "ÇİFT SATIR" not in r.stdout, "arıza sınıfı mutasyonu K8a'yı kırmıyor"
@@ -2788,7 +2815,10 @@ def test_O7_SERHTEKI_KOPYA_SAYILARI_tablodan_OLCULUR():
     # tek satır oydu.
     sayim = {s: len([x for x in k if x["sir"] == s]) for s in {x["sir"] for x in k}}
     en_az, en_cok = min(sayim.values()), max(sayim.values())
-    assert (en_az, en_cok) == (2, 13), sayim      # 2026-09-13: OPENROUTER 13 (global hermes env)
+    # 2026-09-13: OPENROUTER 13 (global hermes env). 2026-09-17 (TSK-064 (d-1)): alt sınır 2 → 1 —
+    # MERIDIAN_DASH_TOKEN'ın `.dash.env` kopyası tablodan çıktı (dosya A1'de silindi); başlık şerhi de
+    # "1-13" dedi (başlık RUNBOOK'a üretilir: Rol-1 tur kapanışında `docs/RUNBOOK.md`i yeniden üretir).
+    assert (en_az, en_cok) == (1, 13), sayim
     assert f"her sırrın {en_az}-{en_cok} kopyası var" in metin, \
         "başlık şerhindeki kopya ARALIĞI tabloyla ayrıştı"
     assert f"OPENROUTER artık {or_kopya} kopya (NOUS {nous_kopya})." in metin, \
@@ -2945,6 +2975,11 @@ def test_P3_OPENROUTER_bacaginda_da_kurtarma_kosar(tmp_path):
     turundadır: `SAHTE_HEALTH_KOD` ile `SAHTE_HAZIR_N` AYRI dünyalardır (biri "cevap veriyor ama
     200 değil", öteki "ulaşılamıyor")."""
     kok, ortam = _sahte_ortam(tmp_path)
+    # AYIRT EDİCİ DEĞER SAHNEDE KURULUR (2026-09-17, TSK-064 (d-1)): tohum artık bu credential'ı
+    # öteki kopyalarla EŞİT taşır. Geri alma kontrolünün "kendi yedeğinden geri kondu" ile "başka bir
+    # kopyanın değeri kondu"yu ayırabilmesi için değer burada AYRI tutulur — tohumdaki eski biçimle
+    # aynı ölçüm gücü.
+    (kok / "etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY").write_text(ESKI["llm"] + "\n")
     ortam["SAHTE_HEALTH_KOD"] = "503"
     r = _kos(BETIK, ortam, "--openrouter", girdi=f"{YENI_NOUS}\n{YENI_OR}\n")
     assert r.returncode == 2, (r.returncode, r.stdout + r.stderr)
@@ -3291,7 +3326,9 @@ def test_P14_YEDEK_ALINAMAZSA_GERI_ALMA_RECETESI_BASILMAZ(tmp_path):
     assert not list((kok / "root").glob("sir-yedek-*")), "yedek dizini doğmamalıydı"
     assert "install -d -m 0700" in (kok / ".sahte/argv.log").read_text(encoding="utf-8")
     assert (kok / "etc/meridian/dash_token").read_text(encoding="utf-8") == ESKI["dash"] + "\n"
-    assert _env_alan(kok / "opt/meridian/.dash.env", "MERIDIAN_DASH_TOKEN") == f'"{ESKI["dash"]}"'
+    # `.dash.env` tablodan çıktı (TSK-064 (d-1), 2026-09-17): `--dash`in TEK kopyası credential'dır
+    # ve yukarıda ölçüldü; silinmiş dosyanın düşen koşumda da doğmadığı ayrıca ölçülür.
+    assert not (kok / "opt/meridian/.dash.env").exists()
     # Temizlik yine de KOŞTU: reçetenin susması, `_cikis`in ikinci ayağını rehin almamalı.
     assert "ÇALIŞMA DİZİNİ SİLİNEMEDİ" not in r.stderr, r.stderr
 
@@ -3336,10 +3373,13 @@ def test_P15_KURU_RAPOR_RESTART_CARPANINI_da_beyan_eder(tmp_path):
 # taşıyan hiçbir komut koşamaz (sınıflandırıcı, üç kez). Eşitleme değeri ne üretir, ne sorar, ne
 # basar: referans kopyadan (sırrın tablodaki İLK satırı) okur, AYRI olanlara yazar, envanteri
 # yeniden ölçer, `--openrouter`de kapı kanıtını alır. Restart YAPMAZ, tüketicileri BASAR.
-# Tohumun ölçülen ayrışma hâli: `/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY` = ESKI["llm"]
-# (I1'in "gerçek ayrışma" sahnesi) — eşitleme onu DA referansa çeker; Q1 bunu iki yazım sayar.
+# Tohumun ölçülen ayrışma hâli ESKİDEN `/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY` = ESKI["llm"]
+# idi ve eşitleme onu DA referansa çekiyordu. 2026-09-17 (TSK-064 (d-1)): o dosya artık REFERANSTIR
+# (Vault render hedefi) ve tohumda öteki kopyalarla EŞİTTİR. Q1'in "iki AYRI kopya" sahnesi bu yüzden
+# İKİNCİ ayrışmayı kendisi kurar (hafıza failover ÜYE satırı) — iki yazım, iki ayrı dosya, aynı güç.
 GLOBAL_HERMES = "home/ubuntu/.hermes/.env"
 BAYAT_OR = "SAHTE-BAYAT-OR-0000"
+UYE_1_DOSYA = "opt/hindsight/.env"
 
 
 def _global_ayir(kok: pathlib.Path) -> pathlib.Path:
@@ -3351,18 +3391,27 @@ def _global_ayir(kok: pathlib.Path) -> pathlib.Path:
 
 
 def _hepsi_esit(kok: pathlib.Path) -> None:
+    # 2026-09-17: tohum zaten bu hâli taşır (referans credential öteki kopyalarla EŞİT); yardımcı
+    # Q3'ün ön koşulunu AÇIKÇA söylemek için kalır — tohum bir gün değişirse Q3 kendi dünyasını kurar.
     (kok / "etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY").write_text(ESKI["or"] + "\n")
 
 
 def test_Q1_esitle_AYRI_kopyalari_referansa_yazar_ESIT_olanlara_DOKUNMAZ(tmp_path):
     kok, ortam = _sahte_ortam(tmp_path)
     yol = _global_ayir(kok)
+    uye = kok / UYE_1_DOSYA
+    uye.write_text(uye.read_text(encoding="utf-8").replace(
+        f"HINDSIGHT_API_REFLECT_LLM_1_API_KEY={ESKI['or']}\n",
+        f"HINDSIGHT_API_REFLECT_LLM_1_API_KEY={BAYAT_OR}\n"), encoding="utf-8")
+    assert _env_alan(uye, "HINDSIGHT_API_REFLECT_LLM_1_API_KEY") == BAYAT_OR, "sahne kurulamadı"
     sef = kok / "home/ubuntu/.hermes/profiles/sef/.env"
     sef_once = sef.read_text(encoding="utf-8")
     r = _kos(BETIK, ortam, "--openrouter", "--esitle")
     assert r.returncode == 0, r.stdout + r.stderr
     assert _env_alan(yol, "OPENROUTER_API_KEY") == ESKI["or"], "global hermes env referansa çekilmedi"
-    assert (kok / "etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY").read_text().strip() == ESKI["or"]
+    assert _env_alan(uye, "HINDSIGHT_API_REFLECT_LLM_1_API_KEY") == ESKI["or"], "üye satırı çekilmedi"
+    assert (kok / "etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY").read_text().strip() == ESKI["or"], \
+        "REFERANSA dokunuldu"
     assert "/home/ubuntu/.hermes/.env [OPENROUTER_API_KEY] → AYRI → YAZILACAK" in r.stdout
     assert r.stdout.count("yazıldı:") == 2, r.stdout          # YALNIZ iki AYRI kopya
     assert sef.read_text(encoding="utf-8") == sef_once, "EŞİT kopyaya dokunuldu"
@@ -3435,11 +3484,10 @@ def test_Q7_esitle_REFERANS_upstream_de_RET_ise_cikis_2_ve_geri_alma_recetesi(tm
     kok, ortam = _sahte_ortam(tmp_path)
     _global_ayir(kok)
     kotu = "sahte-gecersiz-or-2026"
-    (kok / "opt/apisix/.env-apisix").write_text(
-        (kok / "opt/apisix/.env-apisix").read_text(encoding="utf-8")
-        .replace(f'OPENROUTER_API_KEY="{ESKI["or"]}"', f'OPENROUTER_API_KEY="{kotu}"')
-        .replace(f'OPENROUTER_AUTH="Bearer {ESKI["or"]}"', f'OPENROUTER_AUTH="Bearer {kotu}"'),
-        encoding="utf-8")
+    # SAHNE REFERANSA TAŞINDI (TSK-064 (d-1), 2026-09-17): geçersiz değer REFERANS kopyaya konur —
+    # artık o Vault'un tekil render hedefidir (eskiden `.env-apisix` satırlarıydı). Eşitleme onu
+    # kapının `.env-apisix` satırlarına YAYAR ve kapı kanıtı RET görür: ölçülen dal aynı.
+    (kok / "etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY").write_text(kotu + "\n", encoding="utf-8")
     r = _kos(BETIK, ortam, "--openrouter", "--esitle")
     assert r.returncode == 2, r.stdout + r.stderr
     assert "RET" in r.stderr and ">> GERİ ALMA" in r.stderr
@@ -3477,9 +3525,12 @@ def test_Q9_MUT_esitle_yazimi_atlanirsa_Q1_kirmizi(tmp_path):
 #
 # İKİ KOPYA, İKİ FARKLI CİNS (bkz. `_kopyalar` altındaki referans-sırası şerhi):
 #   · `.env-apisix [APISIX_ADMIN_KEY]` — KAPININ KENDİ kanalı. Faz-1C'den SONRA da KALIR (docker
-#     `--env-file` → `config.yaml ${{APISIX_ADMIN_KEY}}`); silinirse kapı açılmaz. REFERANStır.
+#     `--env-file` → `config.yaml ${{APISIX_ADMIN_KEY}}`); silinirse kapı açılmaz. REFERANStı.
 #   · `/etc/meridian/apisix_admin_key` — `ops/apisix_uygula.py`nin Faz-1C credential kaynağı.
 #     Bir `LoadCredential` kaynağı DEĞİLDİR: okuyucusu bir birim değil, operatörün koştuğu araç.
+# 2026-09-17 (TSK-064 (d-1)): REFERANS credential dosyasına geçti — Faz-1C A1'de uygulandı
+# (2026-09-13) ve dosya Vault Agent render hedefi; kapının yürürlükteki değeri `.env-apisix.vault`
+# ikinci `--env-file`ından gelir. R9/R10/R11 yeni yönü ölçer; R7 (credential YOKKEN rotasyon) aynen.
 #
 # NEGATİF KONTROL YOK VE BU BİR EKSİKLİK DEĞİL: yüzey anahtarı İSTEKTE alır (`X-API-KEY`), yani
 # "eski değerle 401" DOĞRUDAN ölçülebilir. `--openrouter`de negatif kontrol vardı çünkü orada
@@ -3596,42 +3647,57 @@ def test_R8_apisix_admin_DEGER_hicbir_ciktiya_ve_ARGV_ye_girmez(tmp_path):
 
 
 def test_R9_envanter_apisix_admin_kopyalarini_ESIT_raporlar(tmp_path):
-    """I bölümünün emsali. İki kopya tohumda EŞİTtir (Faz-1C uygulanmış dünya) ve REFERANS
-    `.env-apisix` satırıdır — credential kaynağı ilk sıraya konsaydı, henüz yaratılmamış bir
-    dosya "referans kopya YOK" diye envanteri daha ilk satırda durdururdu."""
+    """I bölümünün emsali. İki kopya tohumda EŞİTtir (Faz-1C uygulanmış dünya).
+
+    2026-09-17 (TSK-064 (d-1)): REFERANS artık credential dosyasıdır (Vault render hedefi) ve
+    ilk satırda durur. Eski gerekçe ("henüz yaratılmamış dosya envanteri ilk satırda durdururdu")
+    Faz-1C A1'de uygulandığı gün (2026-09-13) bitti; o dünyada envanter artık DURMAZ, referans
+    satırına "YOK (referans kopya)" basar (v520 B3)."""
     _, ortam = _sahte_ortam(tmp_path)
     r = _kos(BETIK, ortam, "--envanter")
     assert r.returncode == 0, r.stdout + r.stderr
     satirlar = [s for s in r.stdout.splitlines() if "APISIX_ADMIN_KEY · " in s]
     assert len(satirlar) == 2, satirlar
-    assert "/opt/apisix/.env-apisix [APISIX_ADMIN_KEY]" in satirlar[0] \
+    assert "/etc/meridian/apisix_admin_key" in satirlar[0] \
         and "(referans kopya)" in satirlar[0], satirlar
-    assert "/etc/meridian/apisix_admin_key" in satirlar[1] and "EŞİT" in satirlar[1], satirlar
+    assert "/opt/apisix/.env-apisix [APISIX_ADMIN_KEY]" in satirlar[1] and "EŞİT" in satirlar[1], satirlar
     assert ESKI["admin"] not in (r.stdout + r.stderr), "envanter SIR DEĞERİ bastı"
 
 
 def test_R10_envanter_AYRI_dusen_credential_kaynagini_GORUR(tmp_path):
     """Envanterin GÖREVİ bu: bir kopya bayatlarsa (rotasyon yarım kaldı, ya da `--faz1-apisix`
-    hiç koşmadı) rapor AYRI demeli. "EŞİT" basan bir envanter, ayrışmayı görmeyen bir envanterdir."""
+    hiç koşmadı) rapor AYRI demeli. "EŞİT" basan bir envanter, ayrışmayı görmeyen bir envanterdir.
+
+    2026-09-17 (TSK-064 (d-1)): credential REFERANS olduğu için AYRI hükmü karşı satıra —
+    `.env-apisix [APISIX_ADMIN_KEY]` — basılır; ayrışmanın görülmesi (çivinin koruması) aynen."""
     kok, ortam = _sahte_ortam(tmp_path)
     (kok / "etc/meridian/apisix_admin_key").write_text("SAHTE-BAYAT-ADMIN-0003\n")
     r = _kos(BETIK, ortam, "--envanter")
     assert r.returncode == 0, r.stdout + r.stderr
-    satir = [s for s in r.stdout.splitlines() if "/etc/meridian/apisix_admin_key" in s]
-    assert satir and "AYRI" in satir[0], satir
+    satir = [s for s in r.stdout.splitlines() if "/opt/apisix/.env-apisix [APISIX_ADMIN_KEY]" in s]
+    assert satir and satir[0].rstrip().endswith("→ AYRI"), satir
 
 
-def test_R11_esitle_KAPININ_degerini_credential_kaynagina_tasir(tmp_path):
-    """`--apisix-admin --esitle` Faz-1C'nin elle adımının BETİKLEŞMİŞ hâlidir: değer üretilmez,
-    sorulmaz, basılmaz — kapının YÜRÜRLÜKTEKİ değeri (referans) bayat kaynağa yazılır. Q
-    bölümünün sözleşmesi bu alt komutta da geçerli olmalı, yoksa TSK-181 sınıfı bir "unutulan
-    kopya" burada elle düzeltilmeye kalınırdı (ve Rol-1 A1'de sır DEĞERİ taşıyan komut koşamaz)."""
+def test_R11_esitle_CREDENTIAL_degerini_kapinin_env_satirina_tasir(tmp_path):
+    """`--apisix-admin --esitle`: değer üretilmez, sorulmaz, basılmaz — REFERANS (credential =
+    Vault render hedefi) bayat kopyaya yazılır. Q bölümünün sözleşmesi bu alt komutta da geçerli
+    olmalı, yoksa TSK-181 sınıfı bir "unutulan kopya" burada elle düzeltilmeye kalınırdı (ve Rol-1
+    A1'de sır DEĞERİ taşıyan komut koşamaz).
+
+    YÖN DÖNDÜ (TSK-064 (d-1), 2026-09-17; eski ad `…_KAPININ_degerini_credential_kaynagina_tasir`):
+    Faz-1C döneminde yürürlükteki değer kapının `.env-apisix` satırıydı ve bayat olan credential'dı.
+    Bugün kapı değeri `.env-apisix.vault`tan alır ve credential o değerin Agent render'ıdır — bayat
+    olan `.env-apisix` satırıdır. Koruma aynı: bayat kopya referansa çekilir, referansa DOKUNULMAZ."""
     kok, ortam = _sahte_ortam(tmp_path)
-    (kok / "etc/meridian/apisix_admin_key").write_text("SAHTE-BAYAT-ADMIN-0004\n")
+    apisix = kok / "opt/apisix/.env-apisix"
+    apisix.write_text(apisix.read_text(encoding="utf-8").replace(
+        f"APISIX_ADMIN_KEY={ESKI['admin']}\n", "APISIX_ADMIN_KEY=SAHTE-BAYAT-ADMIN-0004\n"),
+        encoding="utf-8")
+    assert _env_alan(apisix, "APISIX_ADMIN_KEY") == "SAHTE-BAYAT-ADMIN-0004", "sahne kurulamadı"
     r = _kos(BETIK, ortam, "--apisix-admin", "--esitle")
     assert r.returncode == 0, r.stdout + r.stderr
-    assert (kok / "etc/meridian/apisix_admin_key").read_text().strip() == ESKI["admin"]
-    assert _env_alan(kok / "opt/apisix/.env-apisix", "APISIX_ADMIN_KEY") == ESKI["admin"], \
+    assert _env_alan(apisix, "APISIX_ADMIN_KEY") == ESKI["admin"], "bayat kopya referansa çekilmedi"
+    assert (kok / "etc/meridian/apisix_admin_key").read_text().strip() == ESKI["admin"], \
         "eşitleme REFERANSA dokundu"
     assert ESKI["admin"] not in (r.stdout + r.stderr), "eşitleme SIR DEĞERİ bastı"
     assert "yeniden başlatma YAPILMADI" in r.stdout
