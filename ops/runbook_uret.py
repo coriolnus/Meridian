@@ -331,7 +331,7 @@ def nabiz_yerleri() -> dict[str, list[str]]:
     for p in _py_dosyalari():
         try:
             agac = ast.parse(p.read_text(encoding="utf-8"))
-        except SyntaxError:
+        except SyntaxError:  # sessiz-yutma: ayrıştırılamayan meridian/ dosyasının nabız yerleri RUNBOOK'a girmez; aynı dosya `codelaw` taramasında UNSCANNED'e düşer ve report ok'u + v59 çivisini KIRAR — sinyal orada, burada değil (TSK-206)
             continue
         for d in ast.walk(agac):
             if (isinstance(d, ast.Call) and isinstance(d.func, ast.Attribute)

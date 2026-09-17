@@ -448,7 +448,10 @@ def test_codelaw_artefakt_grafi_ihlalsiz():
     import sys
     sys.path.insert(0, str(SRC))
     from meridian import codelaw
-    g = codelaw.artifact_graph("meridian")
+    # TSK-206 (2026-09-17): hüküm ÜRETİM KÖKLERİNDE (`codelaw.URETIM_KOKLERI` = meridian + ops) verilir.
+    # Yalnız "meridian" KISMİ görünümdür: dış okuyucusu yalnız ops/'ta olan bir artefakt
+    # (`monotonic_amnesty.json`) orada sahte "beyansız öksüz" görünür.
+    g = codelaw.artifact_graph()
     assert g["violations"] == [], f"beyansız öksüz artefakt: {g['violations']}"
     assert g["stale_sinks"] == [], f"beyanı bayatlamış sink: {g['stale_sinks']}"
     assert not codelaw.UNSCANNED, f"tarayıcı bazı dosyaları okuyamadı: {codelaw.UNSCANNED}"

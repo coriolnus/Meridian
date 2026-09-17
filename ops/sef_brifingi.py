@@ -389,7 +389,7 @@ def _ardisik_sessiz() -> int:
     tabanın kendi arızası teslimatı DÜŞÜREMEZ, yalnız tavanı geciktirir."""
     try:
         return int((store.read_json(DAMGA_DOSYA, {}) or {}).get(SESSIZ_SAYAC) or 0)
-    except Exception:  # sessiz-yutma DEĞİL: bozuk sayaç 0 sayılır ve tavan bir gün sonra ateşler; alternatif (patlamak) teslimatı düşürürdü ve taban teslimatı KORUMAK için var
+    except Exception:  # sessiz-yutma: bozuk sayaç 0 sayılır ve tavan bir gün sonra ateşler; alternatif (patlamak) teslimatı düşürürdü ve taban teslimatı KORUMAK için var
         return 0
 
 

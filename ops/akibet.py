@@ -183,7 +183,7 @@ def _ts_ayristir(ts) -> datetime | None:
         return None
     try:
         dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-    except ValueError:
+    except ValueError:  # sessiz-yutma: ayrıştırılamayan damga None döner (UYDURMA YASAĞI, yaş icat edilmez); çağıranlar None'ı ölçülemedi okur — `yas_gun` None, `simdi_ts` için ValueError
         return None
     return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
 
@@ -233,7 +233,7 @@ def _jsonl_satirlari(metin: str) -> list[dict]:
             continue
         try:
             ham = json.loads(satir)
-        except ValueError:
+        except ValueError:  # sessiz-yutma: çözülemeyen satır DÜŞÜRÜLMEZ, konumu koruyan `{}` yer tutucusu olur ve `akibet_turet` onu `olculemeyen` listesine SAYAR (v347 emsali)
             ham = {}
         satirlar.append(ham if isinstance(ham, dict) else {})
     return satirlar
@@ -552,7 +552,7 @@ def oneri_yazim_dogrulandi(cikti: str, kaynak: str, metin: str) -> tuple[bool, s
     son = satirlar[-1] if satirlar else ""
     try:
         row = json.loads(son)
-    except ValueError:
+    except ValueError:  # sessiz-yutma: hata DÜŞMEZ — ret nedeni geri okunan satırın kendisiyle ("JSON değil: <satır>") çağırana döner ve CLI onu basar
         return False, f"YAZIM DOĞRULANAMADI: geri okunan son satır JSON değil: {son!r}", None
     if not isinstance(row, dict):
         return False, f"YAZIM DOĞRULANAMADI: geri okunan satır sözlük değil: {son!r}", None

@@ -71,7 +71,7 @@ def _worker_running() -> bool:
     try:
         from meridian.sermaye import _worker_running as _wr
         return bool(_wr())
-    except Exception:            # YASA 4: sessiz-yutma DEĞİL — ölçülemedi, aşağıda ADIYLA basılır
+    except Exception:            # sessiz-yutma: docstring kararı — ithal/ölçüm düşerse worker "koşmuyor" sayılır (FAIL-OPEN: --uygula bu dalda REDDETMEZ ve hiçbir şey BASILMAZ; eski "aşağıda ADIYLA basılır" iddiası kodda YOKTU — TSK-206, karar Rol-1)
         return False
 
 
@@ -87,7 +87,7 @@ def duzeltilecek(row: dict) -> bool:
         return False
     try:
         return float(row.get("cost_usd", 0.0)) > 0.0
-    except (TypeError, ValueError):   # YASA 4: cost_usd okunamıyorsa ONARIM KAPSAMI DIŞIDIR —
+    except (TypeError, ValueError):   # sessiz-yutma: cost_usd okunamıyorsa ONARIM KAPSAMI DIŞIDIR —
         return False                  # bilinmeyen bir değeri 0'a çekmek ölçmeden yazmak olurdu
 
 
