@@ -7,7 +7,7 @@
 # bir sırrın KANALINI taşır (ortam → LoadCredential); bu betik kanala DOKUNMAZ, sırrın DEĞERİNİ
 # döndürür ve o değerin BÜTÜN KOPYALARINI aynı pencerede eşitler.
 #
-# NİYE BİR BETİK. 2026-09-07 gecesi dört sır A1'de ELLE döndürüldü: her sırrın 2-13 kopyası var ve
+# NİYE BİR BETİK. 2026-09-07 gecesi dört sır A1'de ELLE döndürüldü: her sırrın 1-13 kopyası var ve
 # kopyalar AYRI dosyalarda yaşıyor (credential kaynağı · `.env` satırı · docker env-file · bot
 # profili · LLM failover zincirinin ÜYE satırları). Elle rotasyonda kaçınılmaz tek hata "bir
 # kopyayı unutmak"tır ve o hata SESSİZDİR: yeniden başlatılan birim çalışır, unutulan kopyayı
@@ -260,6 +260,21 @@ adim()     { echo "-- $*"; }
 # envanterde olmak ZORUNDA. İki liste ayrışırsa rotasyon envanterin görmediği bir kopyayı yazar
 # ya da envanterdeki bir kopya rotasyonsuz bayatlar — tek-kaynak yasasının tam olarak yasakladığı
 # hâl. Ölçüm: 2026-09-07 22:0xZ, A1 (elle rotasyon penceresinde, yalnız AD ve YOL okundu).
+#
+# REFERANS KURALI — SIRA BİR SÜS DEĞİL, SÖZLEŞMEDİR. Bir sırrın tablodaki İLK satırı o sırrın
+# REFERANS kopyasıdır: `_envanter_esitlik` ötekileri ona kıyaslar, `esitle` değeri ondan okur
+# (ikisi de `[ "$sir" != "$onceki" ]` ile ilk görülen satırı seçer; aynı sırrın satırları bu
+# yüzden BİTİŞİK durur). Rotasyon yazımı (`_yaz`), yedek, negatif kontrol ve `--vault` render
+# ölçümü sıradan BAĞIMSIZDIR — hepsi pencere içinde, yeniden başlatmadan ÖNCE bütün satırları
+# yazar; sıra yalnız YARIDA düşen bir koşumda hangi dosyaların yazılmış olduğunu değiştirir.
+# TSK-064 (d-1), 2026-09-17 (Rol-1 A1 ölçümü `--envanter`: karşılaştırılabilen her kopya EŞİT):
+#   · `dash MERIDIAN_DASH_TOKEN env /opt/meridian/.dash.env …` satırı ÇIKTI — dosya A1'de 2026-09-14
+#     17:46Z operatör kararıyla SİLİNDİ (yedek /root/sir-yedek-20260914T174655Z-dash-env). Satır
+#     kalsaydı `--dash` yazım sırasında "hedef dosya YOK" ile yarıda düşerdi. Dosya TARAMADA kalır
+#     (`_taranan_dosyalar` şerhi): geri doğarsa rotasyonun yazmadığı bir kopyadır.
+#   · `OPENROUTER_API_KEY` ve `APISIX_ADMIN_KEY`in referansı Vault Agent'ın TEKİL render hedefine
+#     taşındı (aşağıdaki "REFERANS SIRASI" şerhi). `.env-apisix` satırları KOPYA olarak kalır.
+# Çivi: `tests/test_sir_referans_hizasi_v520.py`.
 _kopyalar() {
   cat <<'KOPYA_SON'
 kapi KAPI_APIKEY dosya /etc/meridian/kapi_apikey - 0400 root:root -
@@ -270,12 +285,11 @@ tenant HINDSIGHT_API_TENANT_API_KEY env /opt/hindsight/.env-cp HINDSIGHT_CP_DATA
 db HINDSIGHT_DB_PAROLA sql hindsight - - - -
 db HINDSIGHT_DB_PAROLA url /etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL - koru koru -
 dash MERIDIAN_DASH_TOKEN dosya /etc/meridian/dash_token - 0400 root:root -
-dash MERIDIAN_DASH_TOKEN env /opt/meridian/.dash.env MERIDIAN_DASH_TOKEN koru koru -
 openrouter NOUS_API_KEY dosya /etc/meridian/nous_api_key - 0400 root:root -
 openrouter NOUS_API_KEY api /api/secrets/NOUS_API_KEY - - - -
+openrouter OPENROUTER_API_KEY dosya /etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY - 0400 root:root -
 openrouter OPENROUTER_API_KEY env /opt/apisix/.env-apisix OPENROUTER_API_KEY koru koru -
 openrouter OPENROUTER_API_KEY env /opt/apisix/.env-apisix OPENROUTER_AUTH koru koru Bearer
-openrouter OPENROUTER_API_KEY dosya /etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY - 0400 root:root -
 openrouter OPENROUTER_API_KEY env /opt/hindsight/.env HINDSIGHT_API_REFLECT_LLM_1_API_KEY koru koru -
 openrouter OPENROUTER_API_KEY env /opt/hindsight/.env HINDSIGHT_API_REFLECT_LLM_2_API_KEY koru koru -
 openrouter OPENROUTER_API_KEY env /opt/hindsight/.env HINDSIGHT_API_REFLECT_LLM_3_API_KEY koru koru -
@@ -286,8 +300,8 @@ openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/profiles/bekci/.env OPENR
 openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/profiles/karne/.env OPENROUTER_API_KEY koru koru -
 openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/profiles/sef/.env OPENROUTER_API_KEY koru koru -
 openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/.env OPENROUTER_API_KEY koru koru -
-apisix-admin APISIX_ADMIN_KEY env /opt/apisix/.env-apisix APISIX_ADMIN_KEY koru koru -
 apisix-admin APISIX_ADMIN_KEY dosya /etc/meridian/apisix_admin_key - 0400 root:root -
+apisix-admin APISIX_ADMIN_KEY env /opt/apisix/.env-apisix APISIX_ADMIN_KEY koru koru -
 KOPYA_SON
 }
 
@@ -299,6 +313,24 @@ KOPYA_SON
 #: zaman vardır ve canlıda YÜRÜRLÜKTEKİ değeri taşır (konteyner onu `--env-file` ile okur), yani
 #: doğru referans odur. Yan kazanç: `--apisix-admin --esitle` tam olarak Faz-1C'nin elle adımını
 #: yapar — kapının değerini credential kaynağına taşır.
+#:
+#: 2026-09-17 GÜNCELLEME (TSK-064 (d-1)) — YUKARIDAKİ GEREKÇE BİTTİ, SIRA DÜZELDİ. İki öncülü de
+#: artık doğru değil: (1) credential kaynağı VAR — Faz-1C A1'de 2026-09-13 21:21Z'de uygulandı ve
+#: dosya 2026-09-14'ten beri Vault Agent'ın TEKİL render hedefidir (`vault_kv.apisix_admin_key`);
+#: (2) kapının YÜRÜRLÜKTEKİ değeri `.env-apisix`ten GELMİYOR — dalga-2 drop-in'i
+#: (`apisix.service.d/50-vault-yan-dosya.conf`) `.env-apisix.vault`ı İKİNCİ `--env-file` olarak
+#: verir ve docker aynı anahtarda SONRAKİNİ geçerli sayar. Aynı iki cümle `OPENROUTER_API_KEY` için
+#: de geçerlidir: kapı `OPENROUTER_*`ı `.env-apisix.vault`tan, hafıza üyeleri `.env.vault`tan alır ve
+#: `/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY` o değerin Agent render'ıdır (birincil kasa yolu,
+#: takma ad `openrouter_api_key` buraya çözülür). Bu yüzden İKİ sırrın referansı da tekil render
+#: hedefine taşındı; `.env-apisix` satırları tabloda KOPYA olarak kalır — (d-2) asıl dosyadan
+#: kaldırana kadar yaşarlar ve rotasyon onları da yazmak zorundadır.
+#: BEDEL (bedel yasası): `--apisix-admin --esitle` artık Faz-1C'nin elle adımını YAPAMAZ —
+#: credential kaynağı yoksa "referans kopya YOK" ile durur (o adım bir kez, 2026-09-13'te yapıldı;
+#: kaynağın bugünkü sahibi Agent'tır). Yön de döndü: ayrışmada BAYAT sayılan artık `.env-apisix`tir.
+#: Değerler EŞİTKEN (2026-09-17 ölçümü) davranış değişmez: eşitleme yazacak AYRI kopya bulmaz.
+#: `apisix_admin()` ESKİ değeri hâlâ `.env-apisix` YEDEĞİNDEN okur — bu satır referans kuralına
+#: bağlı değildir ve (d-2) satırı kaldırdığında AYRICA ele alınmalıdır (açık kalem, rapor).
 
 #: SIR → TÜKETİCİ BİRİMLER. Rotasyon bir sırrın DEĞERİNİ okuyan birimi yeniden başlatır; okumayanı
 #: DEĞİL. Ölçüm 2026-09-08 07:3xZ (A1): `--openrouter`in NOUS negatif kontrolü ÜÇ birimi birden
@@ -430,6 +462,11 @@ _oneshot_yazdir() {
 #: beyan gerçeği kendiliğinden doğrulamaz. `--envanter` bu dosyaların hepsinde döndürülen ADLARI
 #: arar ve tabloda OLMAYAN bir eşleşme bulursa bağırır: rotasyonun görmediği bir kopya, ilk
 #: rotasyondan sonra sessizce ESKİ değeri taşıyan bir kopyadır (spec Bulgu-2 sınıfı).
+#: `/opt/meridian/.dash.env` A1'de YOK (2026-09-14 17:46Z silindi) ve kopya tablosundan ÇIKTI
+#: (TSK-064 (d-1), 2026-09-17) — ama bu listede BİLEREK KALIR: yok olan dosya `test -f` ile atlanır
+#: (bedel sıfır; sözlük bedeli ölçümünün dosya kümesi değişmez), geri doğarsa içindeki pano jetonu
+#: artık rotasyonun YAZMADIĞI bir kopyadır ve envanter onu BEYAN DIŞI diye bağırmak zorundadır.
+#: Listeden çıkarmak o geri dönüşü SESSİZ yapardı (çivi: v520 B7/M6).
 _taranan_dosyalar() {
   cat <<'TARA_SON'
 /opt/meridian/.env
@@ -690,9 +727,17 @@ def main(argv: list[str]) -> None:
         tur, hedef, alan, onek, cikti = argv[2:7]
         _atomik_yaz(cikti, _cikar(tur, hedef, alan, onek) + "\n", "0600", "-")
     elif op == "esit":               # <tur1> <h1> <a1> <o1> <tur2> <h2> <a2> <o2>
+        # YOK ≠ OKUNAMADI (TSK-064 (d-1), 2026-09-17). İlk biçim her `OSError`u "OKUNAMADI"
+        # sayıyordu ve A1 envanteri silinmiş `.dash.env`i o kelimeyle raporladı: triyaj "izin mi
+        # bozuk?" diye yanlış soruyu sordu. Dosya YOKLUĞU (`FileNotFoundError`) ayrı bir kovadır,
+        # izin/dizin arızası "OKUNAMADI" kalır. Yokluk REFERANS tarafındaysa kopya satırına "YOK"
+        # basmak VAR olan kopyayı yok diye raporlamak olurdu — sebep ADIYLA söylenir.
         try:
             a = _cikar(*argv[2:6])
             b = _cikar(*argv[6:10])
+        except FileNotFoundError as yok:
+            print("REFERANS YOK" if yok.filename == argv[3] else "YOK")
+            return
         except AlanArizasi as ariza:
             # ÇİFT SATIR "OKUNAMADI" DEĞİLDİR: biri dosyanın yokluğu, öteki envanterin tam da
             # aramaya geldiği ayrışma hâli. İkisini aynı kelimeye toplamak bulguyu siler.
@@ -740,13 +785,18 @@ def main(argv: list[str]) -> None:
             sys.exit("parola SQL literaline uygun değil (yalnız [A-Za-z0-9_-]) — yazım YAPILMADI")
         _atomik_yaz(cikti, f"ALTER ROLE {rol} PASSWORD '{d}';\n", "0600", "-")
     elif op == "var":                # <tur> <hedef> <alan>
+        # `esit` ile AYNI ayrım (bkz. şerhi): ilk biçim her `OSError`u "YOK" sayıyordu, yani var
+        # ama okunamayan bir referans "dosya yok" diye raporlanıyordu — `esit`in tam tersi yönde
+        # aynı kovalama hatası. Yokluk "YOK", öteki `OSError`lar "OKUNAMADI".
         tur, hedef, alan = argv[2:5]
         try:
             print("VAR" if _cikar(tur, hedef, alan, "-") else "BOŞ")
+        except FileNotFoundError:
+            print("YOK")
         except AlanArizasi as ariza:
             print(f"ÇİFT SATIR ({ariza.adet})" if ariza.adet > 1 else "ALAN YOK")
         except OSError:
-            print("YOK")
+            print("OKUNAMADI")
     elif op == "bosalt":             # <hedef> <mod> <sahip> — negatif kontrolün BOŞ değeri
         # `yaz-dosya` boş değeri REDDEDER (`_deger_dosyadan`) ve haklıdır: boş bir credential
         # 2026-09-07'de bir birimi sessizce yetkisiz bıraktı. Ama NOUS'un negatif kontrolü tam da
@@ -1497,7 +1547,9 @@ dash() {
            "$API/api/secrets" "x-meridian-token" "-" "200" "401 403"
   echo "  · pano PAROLA oturumu ayrı bir sırdır ve ETKİLENMEDİ."
   echo "  · operatörün YEREL .env kopyası bu betiğin kapsamı DIŞINDA — Rol-1 ayrıca eşitler."
-  echo ">> geri alma: sudo cp -p $YEDEK/etc/meridian/dash_token /etc/meridian/dash_token (+ .dash.env) ve meridian.service yeniden başlat"
+  # TEK KOPYA (TSK-064 (d-1), 2026-09-17): `.dash.env` 2026-09-14'te silindi ve tablodan çıktı —
+  # reçete olmayan bir dosyayı geri koymayı önermez.
+  echo ">> geri alma: sudo cp -p $YEDEK/etc/meridian/dash_token /etc/meridian/dash_token ve meridian.service yeniden başlat"
 }
 
 # -------------------------------------------------------------------------------------------------

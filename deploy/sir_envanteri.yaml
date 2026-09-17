@@ -38,6 +38,7 @@ dosyalar:
   # `deploy/oracle-a1/meridian.service.d/53-nous-kapi-credential.conf`) 2026-09-07 gecesi
   # tamamlandı; `MERIDIAN_DASH_TOKEN` `.dash.env` + `/etc/meridian/dash_token` ikilisinde yaşıyor
   # (TSK-049 faz-1) ve spec Bulgu-2'nin istediği "motor `.env`teki kopya kalksın" olmuş durumda.
+  # (2026-09-17 notu: `.dash.env` 2026-09-14'te silindi — jeton artık YALNIZ `/etc/meridian/dash_token`.)
   # DOSYA SATIRI KALDI: dosya duruyor ve ÜÇ YAPILANDIRMA değişkeni taşıyor — "dosya yok" ile
   # "dosyada sır yok" iki ayrı gerçektir; faz-2'nin "sır dosyası ayrı, ayar dosyası ayrı" ayrımı
   # tam olarak bu hâlin ölçüsüdür. Sınıf "A" KALIR (tüketici systemd-doğal süreçtir), ama artık
@@ -57,19 +58,12 @@ dosyalar:
       - ad: MERIDIAN_FMP_BASE
         sir: false
 
-  # TSK-049'un faz-1'i BURADA canlı: `LoadCredential=dash_token:/etc/meridian/dash_token`
-  # (50-dash-credential.conf). Faz-2 (51-dash-env-kaldir.conf) boş `EnvironmentFile=` ile bu
-  # dosyanın okunmasını tümüyle keser — tek amaçlı dosya olduğu için satır silmek gerekmez.
-  - yol: "/opt/meridian/.dash.env"
-    mod: "600"
-    sahip: "ubuntu"
-    tuketici: "meridian.service"
-    sinif: "A"
-    kanal_bugun: "EnvironmentFile + LoadCredential (faz-1 paralel)"
-    kanal_hedef: "LoadCredential"
-    degiskenler:
-      - ad: MERIDIAN_DASH_TOKEN
-        sir: true
+  # `/opt/meridian/.dash.env` GİRDİSİ ÇIKTI (TSK-064 (d-1), 2026-09-17). Dosya A1'de 2026-09-14
+  # 17:46Z operatör kararıyla SİLİNDİ (yedek /root/sir-yedek-20260914T174655Z-dash-env); pano jetonu
+  # yalnız `LoadCredential=dash_token:/etc/meridian/dash_token` (50-dash-credential.conf) kanalındadır
+  # ve kaynak Vault Agent'ın render hedefidir. Bu blok "bugün hangi sır nerede yaşıyor" sorusunu
+  # yanıtlar — olmayan bir dosya orada durursa cevap yalandır. Kaynak belgenin §1 tablosu AYNI turda
+  # güncellendi (ölçüm güncellemesi madde 5; v439 E2/E3 iki listeyi birebir eşitler).
 
   # ---- HAFIZA (hindsight-api) --------------------------------------------------------------------
   # ÖLÇÜM GÜNCELLEMESİ 2026-09-08 (spec §1 "ÖLÇÜM GÜNCELLEMESİ" notu): bu dosyanın ÜÇ sırrı
@@ -292,14 +286,7 @@ rotasyon_kopyalari:
       mod: "400"
       sahip: "root"
       tuketici: "meridian.service (LoadCredential=dash_token)"
-    - alt_komut: dash
-      sir: MERIDIAN_DASH_TOKEN
-      tur: env
-      yol: "/opt/meridian/.dash.env"
-      alan: MERIDIAN_DASH_TOKEN
-      mod: null                # korunur
-      sahip: null
-      tuketici: "brifing/learn/sprint@ birimleri (EnvironmentFile, başlangıçta okunur)"
+      not: "TEK KOPYA (2026-09-17, TSK-064 (d-1)): `/opt/meridian/.dash.env` env satırı ÇIKTI — dosya A1'de 2026-09-14 17:46Z silindi (yedek /root/sir-yedek-20260914T174655Z-dash-env); satır kalsaydı `--dash` 'hedef dosya YOK' ile yarıda düşerdi"
 
     - alt_komut: openrouter
       sir: NOUS_API_KEY
@@ -317,6 +304,21 @@ rotasyon_kopyalari:
       mod: null
       sahip: null
       tuketici: "meridian yerel sır deposu"
+    # REFERANS SIRASI (TSK-064 (d-1), 2026-09-17): `OPENROUTER_API_KEY`in İLK satırı — yani
+    # `--envanter`in kıyas temeli ve `--esitle`nin kaynağı — Vault Agent'ın TEKİL render hedefidir
+    # (birincil kasa yolu `HINDSIGHT_API_LLM_API_KEY`; takma ad `openrouter_api_key` oraya çözülür).
+    # 3d0bae5'e kadar ilk satır `.env-apisix`ti; o dosyanın sır satırları (d-2)'de kalkacak ve kapı
+    # değeri zaten `.env-apisix.vault`tan alıyor. Sıra betikteki `_kopyalar()` ile AYNIDIR (v520 A3)
+    # — gerekçenin tamamı oradaki "REFERANS SIRASI" şerhinde.
+    - alt_komut: openrouter
+      sir: OPENROUTER_API_KEY
+      tur: dosya
+      yol: "/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY"
+      alan: null
+      mod: "400"
+      sahip: "root"
+      tuketici: "hindsight-api.service (LLM çağrıları)"
+      not: "REFERANS kopya (2026-09-17): Vault Agent render hedefi — kasadaki birincil değerin kanonik kopyası"
     - alt_komut: openrouter
       sir: OPENROUTER_API_KEY
       tur: env
@@ -325,6 +327,7 @@ rotasyon_kopyalari:
       mod: null                # korunur
       sahip: null
       tuketici: "apisix.service (upstream)"
+      not: "KOPYA (2026-09-17'ye kadar REFERANSTI); asıl dosyadaki satır (d-2)'ye kadar yaşar ve rotasyon onu da yazar"
     - alt_komut: openrouter
       sir: OPENROUTER_API_KEY
       tur: env
@@ -334,14 +337,6 @@ rotasyon_kopyalari:
       mod: null
       sahip: null
       tuketici: "apisix.service (upstream Authorization başlığı)"
-    - alt_komut: openrouter
-      sir: OPENROUTER_API_KEY
-      tur: dosya
-      yol: "/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY"
-      alan: null
-      mod: "400"
-      sahip: "root"
-      tuketici: "hindsight-api.service (LLM çağrıları)"
     # HAFIZA FAILOVER ZİNCİRİNİN ÜYE ANAHTARLARI — ölçüm 2026-09-08 08:0xZ (A1, yalnız AD okundu).
     # Zincir üyesi ana anahtarı DEVRALMAZ: her üye kendi `_API_KEY` satırını okur ve altısı da
     # OPENROUTER_API_KEY değerinin birebir kopyasıdır. Tabloda olmasalardı rotasyon creds
@@ -461,15 +456,15 @@ rotasyon_kopyalari:
     #     --faz1-apisix`, operatör/Rol-1 penceresi) ve `mod`/`sahip` alanları o günün ÖLÇÜMÜ değil
     #     betiğin YAZACAĞI değerdir. Aracın 0400 root bir kaynağı okuyabilmesi `sudo` ile koşmasına
     #     bağlıdır; kimlik kararı (0400 root:root ↔ 0440 root:ubuntu) Rol-1'dedir.
-    - alt_komut: apisix-admin
-      sir: APISIX_ADMIN_KEY
-      tur: env
-      yol: "/opt/apisix/.env-apisix"
-      alan: APISIX_ADMIN_KEY
-      mod: null                # korunur (dosya 640 → faz0_hedef_mod 600; `dosyalar:` bloğunda ölçülü)
-      sahip: null
-      tuketici: "apisix.service (docker --env-file; config.yaml ${{APISIX_ADMIN_KEY}} çözümü — RESTART gerekir, reload yetmez)"
-      not: "REFERANS kopya: kapının kendi kanalı, Faz-1C'den sonra da KALIR (silinirse kapı açılmaz)"
+    #
+    # 2026-09-17 GÜNCELLEME (TSK-064 (d-1)) — SIRA DÖNDÜ, İKİ SATIR DA KALDI. Yukarıdaki iki madde
+    # tarihçedir ve öncülleri bitti: (1) Faz-1C A1'de 2026-09-13 21:21Z'de UYGULANDI
+    # (`--faz1-apisix`; ROADMAP TSK-064 kaydı) ve dosya 2026-09-14'ten beri Vault Agent'ın TEKİL render
+    # hedefidir (`vault_kv.apisix_admin_key`); (2) kapının yürürlükteki değeri dalga-2 drop-in'i
+    # (`apisix.service.d/50-vault-yan-dosya.conf`) ile `.env-apisix.vault`tan gelir — docker aynı
+    # anahtarda İKİNCİ `--env-file`ı geçerli sayar. REFERANS bu yüzden artık `dosya` satırıdır ve
+    # tabloda ÖNCE gelir; `env` satırı KOPYA olarak kalır (asıl dosyadan kaldırılması (d-2)'nin ayrı,
+    # ölçülecek adımıdır — "silinirse kapı açılmaz" cümlesi yan dosya dönemi için ÖLÇÜLMEDİ).
     - alt_komut: apisix-admin
       sir: APISIX_ADMIN_KEY
       tur: dosya
@@ -478,7 +473,16 @@ rotasyon_kopyalari:
       mod: "400"
       sahip: "root"
       tuketici: "ops/apisix_uygula.py (operatör eliyle koşan ops aracı; birim DEĞİL, restart yok)"
-      not: "TSK-064 Faz-1C kaynağı — A1'de HENÜZ YOK (sir_credential_gecis.sh --faz1-apisix yaratır); LoadCredential kaynağı DEĞİL"
+      not: "REFERANS kopya (2026-09-17): TSK-064 Faz-1C kaynağı, A1'de 2026-09-13 21:21Z'den beri VAR ve Vault Agent render hedefi; LoadCredential kaynağı DEĞİL"
+    - alt_komut: apisix-admin
+      sir: APISIX_ADMIN_KEY
+      tur: env
+      yol: "/opt/apisix/.env-apisix"
+      alan: APISIX_ADMIN_KEY
+      mod: null                # korunur (dosya 640 → faz0_hedef_mod 600; `dosyalar:` bloğunda ölçülü)
+      sahip: null
+      tuketici: "apisix.service (docker --env-file; config.yaml ${{APISIX_ADMIN_KEY}} çözümü — RESTART gerekir, reload yetmez)"
+      not: "KOPYA (2026-09-17'ye kadar REFERANSTI): kapının asıl env-file satırı; yürürlükteki değer .env-apisix.vault ikinci --env-file'ından gelir"
 
 # =================================================================================================
 # VAULT KV DALGA-1 — TSK-064 Faz-2 (2026-09-14, repo tarafı; A1 kurulumu Rol-1'de)
@@ -636,10 +640,25 @@ vault_kv:
     ayni_deger: HINDSIGHT_API_LLM_API_KEY
     tuketici: "vault_dosyalar şablonları (apisix · hindsight ×2) + hermes ×4 ROTASYON KANALIYLA (sir_rotasyon --vault kasadan gelen değeri .env kopyalarına yazar; hermes-agent .env.vault OKUMAZ — ölçüldü 2026-09-15) — TAKMA AD: kasa yolu ve render kanıtı BİRİNCİLİNDİR (HINDSIGHT_API_LLM_API_KEY); kendi kasa yolu YOK, birim DEĞİL, systemd kaynağı DEĞİL"
     rotasyon_siri: OPENROUTER_API_KEY
-    kaynak: {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: OPENROUTER_API_KEY, onek: null}
+    # KAYNAK = BİRİNCİLİN RENDER HEDEFİ (TSK-064 (d-1), 2026-09-17; 3d0bae5'e kadar
+    # `.env-apisix [OPENROUTER_API_KEY]` satırıydı). Seçenekler ölçüldü (`vault_sir_koy.sh::_girdiler`):
+    #   · `kaynak`ı KALDIRIP varsayılana (hedefin kendisi) düşmek BU GİRDİDE MÜMKÜN DEĞİL — takma adın
+    #     kendi `hedef`i yoktur ve betik "takma ad kaynak blogu TASIMALI" ile DURUR (eşitlik kapısı
+    #     kaynaksız ölçemez). `apisix_admin_key` emsali (kaynaksız) bir dalga-1 BİRİNCİLİDİR, takma ad
+    #     değil; bu girdiye uymaz.
+    #   · `tur: dosya` betikte ZATEN destekli (dalga-1 dalı) ve takma ad emsali VAR: `bot_key_meridian`
+    #     ile `hindsight_cp_dataplane_api_key` kaynağı birincilin render edilmiş dosyasıdır. Bu girdi o
+    #     emsale hizalandı — betiğe tek satır eklenmedi.
+    # KAZANÇ: (d-2) `.env-apisix`ten satırı sildiğinde tohum/eşitlik kaynağı KAYBOLMAZ; takma adın
+    # eşitlik kapısı "kasadaki birincil ile Agent'ın render ettiği dosya aynı mı" sorusunu doğrudan
+    # sorar. SIRA rotasyon tablosuyla aynıdır: kaynak = referans (ilk satır), kopyalar = kalan satırlar
+    # (küme eşitliği v491 A5, kaynak = referans v520 A5). BEDEL: `.env-apisix` satırı hâlâ
+    # `kopya_kaynaklari`nda — (d-2) satırı silerken bu listeden ve rotasyon tablosundan AYNI turda
+    # düşürmezse eşitlik kapısı "kopya OKUNAMADI" ile durur (kasa etkilenmez).
+    kaynak: {tur: dosya, dosya: "/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY", alan: null, onek: null}
     kopya_kaynaklari:
+      - {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: OPENROUTER_API_KEY, onek: null}
       - {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: OPENROUTER_AUTH, onek: "Bearer"}
-      - {tur: dosya, dosya: "/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY", alan: null, onek: null}
       - {tur: env_satiri, dosya: "/opt/hindsight/.env", alan: HINDSIGHT_API_REFLECT_LLM_1_API_KEY, onek: null}
       - {tur: env_satiri, dosya: "/opt/hindsight/.env", alan: HINDSIGHT_API_REFLECT_LLM_2_API_KEY, onek: null}
       - {tur: env_satiri, dosya: "/opt/hindsight/.env", alan: HINDSIGHT_API_REFLECT_LLM_3_API_KEY, onek: null}

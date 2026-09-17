@@ -340,8 +340,12 @@ def test_E0_spec_ayristirici_POZITIF_KONTROL():
     # yalnız üç YAPILANDIRMA değişkeni taşıyor ("dosya yok" ≠ "dosyada sır yok").
     # `ayar` 29'da KALDI ve bu bir ölçüm DEĞİL bir BEYANDIR: 2026-09-08'de yalnız sır ADLARININ
     # varlığı ölçüldü, ayar satırları YENİDEN SAYILMADI (uydurma yasağı).
-    assert len(spec) == 7, spec
-    assert sum(len(v) for v in spec.values()) == 25
+    # D9 (TSK-064 (d-1), 2026-09-17 Rol-1 A1 ölçümü): 7 → 6 dosya, 25 → 24 ad. `/opt/meridian/.dash.env`
+    # A1'de 2026-09-14 17:46Z operatör kararıyla SİLİNDİ ve `--envanter`de `test -e` → YOK; spec §1
+    # satırı ve envanter girdisi AYNI turda çıktı ("dosya yok" — D8'in "dosyada sır yok"undan AYRI
+    # gerçek: orada dosya kaldı, burada satır çıktı). Çapa ELLE düşürüldü, türetilmedi (şerhin gerekçesi).
+    assert len(spec) == 6, spec
+    assert sum(len(v) for v in spec.values()) == 24
     assert ayar == 29 and siniflar == {"A", "B", "C", "D"}
     # SIR süzgecinin kendisi de pozitif kontrol ister: `sir` her yerde False dönseydi (regex
     # bozulsa) aşağıdaki "motor `.env`te sır YOK" ölçümü yanlış sebeple yeşil kalırdı.

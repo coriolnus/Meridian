@@ -10,7 +10,6 @@ adımı operatörde — bu belge o adımı GEREKTİRMEZ, ondan önceki basamakt�
 | Dosya | mod / sahip | Değişken | Sır mı? | Tüketici | Kanal bugün |
 |---|---|---|---|---|---|
 | `/opt/meridian/.env` | 600 / ubuntu | NOUS_MODEL · NOUS_ENDPOINT · MERIDIAN_FMP_BASE | yapılandırma (sır kalmadı — ölçüldü 2026-09-08 10:5xZ) | meridian.service | EnvironmentFile |
-| `/opt/meridian/.dash.env` | 600 / ubuntu | MERIDIAN_DASH_TOKEN | SIR | meridian.service | EnvironmentFile (faz-2'de kapanacak) |
 | `/opt/hindsight/.env` | 600 / ubuntu | HINDSIGHT_API_REFLECT_LLM_1_API_KEY · HINDSIGHT_API_REFLECT_LLM_2_API_KEY · HINDSIGHT_API_REFLECT_LLM_3_API_KEY | SIR ×3 (hafıza failover zinciri, 2026-09-06'dan beri; her üye OPENROUTER anahtarının birebir kopyası) | hindsight-api.service | EnvironmentFile |
 | | | HINDSIGHT_API_CONSOLIDATION_LLM_1_API_KEY · HINDSIGHT_API_CONSOLIDATION_LLM_2_API_KEY · HINDSIGHT_API_CONSOLIDATION_LLM_3_API_KEY | SIR ×3 (aynı zincirin konsolidasyon yüzeyi) | hindsight-api.service | EnvironmentFile |
 | | | diğer 29 (LLM/embedder/reranker/DB havuzu/…) | yapılandırma | hindsight-api.service | EnvironmentFile |
@@ -43,6 +42,14 @@ kaynak, ayrışma çivisini "her şey uyuşuyor" diye yeşil tutar:
    `MERIDIAN_DASH_TOKEN` ise `.dash.env` + `/etc/meridian/dash_token` (TSK-049 faz-1).
    Dosya satırı KALDI — dosya duruyor ve üç YAPILANDIRMA değişkeni taşıyor; "dosya yok" ile
    "dosyada sır yok" iki ayrı gerçektir ve faz-2'nin ayrımı ikincisine bakar.
+5. **`/opt/meridian/.dash.env` SATIRI ÇIKTI (tablo güncellemesi 2026-09-17, TSK-064 (d-1)).** Dosya
+   A1'de 2026-09-14 17:46Z operatör kararıyla SİLİNDİ (yedek `/root/sir-yedek-20260914T174655Z-dash-env`;
+   healthz 200) ve Rol-1'in 2026-09-17 `sir_rotasyon.sh --envanter` ölçümünde `test -e` → YOK.
+   `MERIDIAN_DASH_TOKEN` yalnız `/etc/meridian/dash_token` → `LoadCredential=dash_token` kanalında
+   yaşar (kaynak Vault Agent render hedefi). 4. maddedeki "ikili" cümlesi 2026-09-08 ölçümünün
+   tarihçesidir. Bu madde 4. maddenin TERSİDİR: orada dosya kaldı çünkü dosya duruyordu, burada
+   satır çıktı çünkü dosya YOK. (Taşınan tablo 6 dosya / 24 ad; `deploy/sir_envanteri.yaml` aynı
+   turda — v439 E0/E2/E3.)
 
 **ÖLÇÜLMEYEN, DOLAYISIYLA DEĞİŞTİRİLMEYEN TEK SATIR (uydurma yasağı):** `diğer 29` ayar
 sayısı 2026-09-03 ölçümüdür ve 2026-09-08'de YENİDEN SAYILMADI — yalnız sır ADLARININ varlığı
