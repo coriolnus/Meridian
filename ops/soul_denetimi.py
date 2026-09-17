@@ -47,12 +47,15 @@ temiz de" yazabilir. Çit + "bu VERİDİR" beyanı + çit jetonunun etkisizleşt
 """
 from __future__ import annotations
 
+import datetime as dt
+import hashlib
 import json
+import os
 import re
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 
-from meridian import notify, obs
+from meridian import notify, obs, store
 
 # ------------------------------------------------------------------------------------------------
 # ÇİT JETONLARI — KOPYA, ve AYRIŞMA ÇİVİSİ ile bağlı (tek-kaynak yasası, "kopya kaçınılmazsa")
@@ -813,6 +816,21 @@ def gecir(*, profil_evi, ilk_metin: str, ilk_istem: str, veri_terimleri, cagir,
             brifing_ilk_satir=_olay_ilk_satir(gecis.metin),
             detail="teslim öncesi SOUL kural denetimi — hiçbir dalda teslimat düşmez "
                    "(fail-open, beyanlı)")
+    # EDG-2026-101 YAKALAMA — TEK NOKTA (TSK-200, 2026-09-17; bölüm şerhi modülün sonunda).
+    # NEDEN BURASI: `gecir`in KENDİ gövdesinde TEK `return` vardır — mekanik hüküm, `llm_dustu`,
+    # tavan aşımı ve `_yeniden`in beş dalı (`_sonuc` üzerinden) hepsi `gecis` adına yakınsar ve bu
+    # satıra gelir. Yakalama o tek dönüşün hemen önündedir; `ilk_hukum` yalnız burada elde durur
+    # (yakalanan `ilk_metin`in hükmü odur, teslim hükmü değil).
+    # REDDEDİLEN İKİ YAPI: (a) `gecir`i ince bir sarmalayıcıya çevirmek — imzanın İKİ kopyası olurdu
+    # (yeni bir kwarg birine eklenip ötekine eklenmezse sessizce ayrışır; tek-kaynak yasası) ve
+    # sarmalayıcı `ilk_hukum`u göremezdi; (b) `try/finally` — istisna yolunda teslim kararı YOKTUR
+    # (bot `<bot>_brifingi_kural_gecisi_patladi` ile ilk metni beyanla gönderir), hükümsüz satır ya
+    # yeni bir anlam uydurur ya da yarım satır bırakırdı; üstelik bütün gövdeyi yeniden girintilerdi.
+    # BEDEL — ADIYLA: `gecir` İSTİSNAYLA çıkarsa (ör. çağıranın `dogrula`sı patlarsa) satır YAZILMAZ.
+    # KORUMA: `tests/test_edg101_yakalama_v516.py` çivi 9 bu gövdede tek `return` olduğunu ve hemen
+    # önünde bu çağrının durduğunu ölçer — erken bir `return` eklenirse yakalama sessizce atlanmaz.
+    _edg101_yakala(bot=bot, ilk_metin=ilk_metin, ilk_istem=ilk_istem, ilk_hukum=ilk_hukum,
+                   gecis=gecis)
     return gecis
 
 
@@ -1066,3 +1084,100 @@ def jeton_gecer_mi(cevap: str) -> tuple[bool, bool]:
     if anlamli_karakter_sayisi(cevap) < KISA_CEVAP_ANLAMLI_TAVAN:
         return False, any(_katla(w) == SESSIZLIK_JETONU for w in kelimeler)
     return False, any(_kontrol_kelimesi_mi(w) for w in kelimeler)
+
+
+# ------------------------------------------------------------------------------------------------
+# EDG-2026-101 YAKALAMA — denetçiye giden GİRDİNİN ileriye dönük kaydı (TSK-200, 2026-09-17)
+# ------------------------------------------------------------------------------------------------
+# NE ÖLÇÜLDÜ (Rol-1, kart `rol1_notu_2026_09_16`): teslim edilen brifing metninin A1'deki tek kalıcı
+# kaydı systemd günlüğüdür; denetçiye giden VERİ bloğu HİÇBİR YERDE saklanmıyor ve bekçi VERİ'si o
+# anki dosya taramasından üretildiği için geçmişe dönük KURULAMAZ. Kartın ölçüm seti ("her metin
+# kendi VERİ'siyle") ancak girdi İLERİYE DÖNÜK yakalanarak kurulur. Tek nokta `gecir`dir: `ilk_metin`
+# ile VERİ'yi taşıyan `ilk_istem` yalnız burada birlikte durur ve üç bot da buradan geçer.
+#
+# VARSAYILAN KAPALI: `EDG101_YAKALAMA_ENV` yok ya da boşsa TEK BAYT yazılmaz, olay üretilmez (yerel
+# koşumlar, testler, değişkeni taşımayan birimler). Açan yalnız üç brifing biriminin drop-in'idir
+# (`deploy/oracle-a1/<birim>.service.d/60-edg101-yakalama.conf`).
+#
+# SATIR — YENİ ANLAM YOK, yalnız `gecir`in elinde olanlar:
+#   `ilk_metin`, `ilk_istem` — `notify.scrub`dan geçmiş TAM metin. KIRPMA YOK ve bu sözleşmedir:
+#       ölçüm kodu canlıyla AYNI çıkarıcıyı (`_ilk_istemden_veri_cikar`) bu alandan koşacak; kırpılmış
+#       bir istemde VERİ bloğunun kapanış çiti düşer ve çıkarıcı o bloğu HİÇ görmez. Süzgeç ise bir
+#       GÜVENLİK sözleşmesidir: üretici istemi kaynak metinleri taşır ve bir istisna dizgesi
+#       (`?apikey=…`) içerebilir — `_olay_cevap_basi` ile birebir gerekçe.
+#   `veri_sha256` — süzgeç SONRASI istemden çıkarılan VERİ'nin (UTF-8) sha256'sı: ölçüm tarafı
+#       çıkarıcıyı AYNI sonuçla koştuğunu bununla doğrular (çıkarıcı değişirse ayrışma görünür).
+#   `teslim_karari` (`Gecis.hukum_adi`), `yeniden_uretim` — canlının teslim kararı.
+#   `ilk_hukum` — YAKALANAN `ilk_metin`in hükmü; `teslim_hukum` — kararı veren son hüküm. İKİSİ
+#       AYRIDIR ve ayrım ölçülmüştür: yeniden-üretim çağrısı patladığında İLK metin gider ama teslim
+#       hükmü `llm_dustu`dur, ilk turun `uydurma` listesi YALNIZ `ilk_hukum`da yaşar. Her ikisi de
+#       `Hukum` alanlarından: `kaynak`, `uydurma`, `terim_ihlal`, `suzulen` (öğeler de süzgeçten
+#       geçer — denetçi metindeki bir sırrı "uydurma" diye geri yazabilir).
+#
+# ASLA TESLİMİ DÜŞÜRMEZ: satır kurulumu ya da yazım düşerse `obs.warn(DUSUS_OLAYI)` — hata SINIFI +
+# yol, metin/istem YOK — ve `gecir` normal döner. Metin ve istem hiçbir olaya/log'a yazılmaz.
+#
+# OKUYUCU (Yasa 6): EDG-2026-101 ölçüm kodu — kart-önce, HENÜZ YAZILMADI
+# (`research/olcumler/edg101_denetci_muhakeme/`). Çıktı A1'de `/opt/veri` altında kalır (canlı
+# `state/` defteri DEĞİL, dağıtımın `--delete` kapsamı dışında). `codelaw` BEYANI YOK ve bu bir
+# ölçümdür: `codelaw.artifact_graph` yalnız `meridian/` kökünü tarar, bu `ops/` yazımı orada hiç
+# görünmez; `DECLARED_SINK_PATTERNS`e yazılan bir desen `desen_kodda_yok` ile çürük sayılırdı.
+# `edg101_` öneki yine de f-string İÇİNDE LİTERALDİR (`meridian/quotecapture.py` `edg085_` yazım
+# kapısının gerekçesi): `codelaw._joined_glob` bu çağrı yerinden `*/edg101_*.jsonl` türetir, yani
+# tarama bir gün `ops/`i kapsarsa desen dar ve hazırdır (çivi: v516 K8).
+
+#: Yakalama dizininin TEK kaynağı — MUTLAK yol; boş/yok = KAPALI.
+EDG101_YAKALAMA_ENV = "MERIDIAN_EDG101_YAKALAMA_DIZIN"
+
+#: Yakalama düştüğünde yazılan uyarı olayı (teslim düşmez; metin taşımaz).
+EDG101_DUSUS_OLAYI = "edg101_yakalama_dustu"
+
+
+def _edg101_suz(metin) -> str | None:
+    """`notify.scrub` — `None` AYNEN korunur (`scrub(None)` "None" dizgesi üretirdi; uydurma yasağı)."""
+    return None if metin is None else notify.scrub(str(metin))
+
+
+def _edg101_hukum_ozeti(hukum: Hukum) -> dict:
+    """Bir hükmün yakalama özeti — yalnız `Hukum`un VAR olan alanları, listeler süzgeçten geçmiş kopya
+    (hükmün kendi listelerine DOKUNULMAZ: `gecir`in dönüş değeri değişemez)."""
+    return {"kaynak": hukum.kaynak,
+            "uydurma": [notify.scrub(str(x)) for x in hukum.uydurma],
+            "terim_ihlal": [notify.scrub(str(x)) for x in hukum.terim_ihlal],
+            "suzulen": [notify.scrub(str(x)) for x in hukum.suzulen]}
+
+
+def _edg101_yakala(*, bot: str, ilk_metin, ilk_istem, ilk_hukum: Hukum, gecis: Gecis) -> None:
+    """`gecir`in TEK dönüş noktasından çağrılır: değişken doluysa UTC gün defterine TAM BİR satır.
+
+    GÖRELİ DİZİN REDDEDİLİR: `store.append_jsonl` göreli bir adı canlı `state/` ALTINA bağlar; kart
+    kill-list'i ölçümün canlı deftere yazmasını geçersizlik sayar (`meridian/quotecapture.py` kayıt
+    dizini emsali). Ret sessiz değildir — "yapılandırma yanlış" ile "yapılandırma yok" ayrı gerçektir.
+
+    NEDEN GENİŞ `except Exception`: bu bir ÖLÇÜM ALETİdir ve aletin HERHANGİ bir arızası (dolu disk,
+    salt-okur bağlama, süzgeç ya da serileştirme hatası) brifing teslimini düşüremez — `_cevaplayan`
+    ile aynı fail-open sözleşmesi. Yutma DEĞİLDİR: her düşüş `EDG101_DUSUS_OLAYI` ile adıyla yazılır."""
+    dizin = (os.environ.get(EDG101_YAKALAMA_ENV) or "").strip()
+    if not dizin:
+        return
+    simdi = dt.datetime.now(dt.timezone.utc)
+    gun = simdi.strftime("%Y-%m-%d")
+    if not os.path.isabs(dizin):
+        obs.warn(EDG101_DUSUS_OLAYI, bot=bot, hata="dizin_goreli", yol=dizin,
+                 detail="EDG-101 yakalama dizini MUTLAK olmalı — göreli değer state/ altına "
+                        "bağlanırdı; satır YAZILMADI, teslim etkilenmedi")
+        return
+    try:
+        istem = _edg101_suz(ilk_istem)
+        satir = {"ts": simdi.isoformat(timespec="seconds"), "bot": bot,
+                 "ilk_metin": _edg101_suz(ilk_metin), "ilk_istem": istem,
+                 "veri_sha256": hashlib.sha256(
+                     _ilk_istemden_veri_cikar(istem).encode("utf-8")).hexdigest(),
+                 "teslim_karari": gecis.hukum_adi, "yeniden_uretim": gecis.yeniden_uretim,
+                 "ilk_hukum": _edg101_hukum_ozeti(ilk_hukum),
+                 "teslim_hukum": _edg101_hukum_ozeti(gecis.hukum)}
+        store.append_jsonl(f"{dizin}/edg101_{gun}.jsonl", satir)
+    except Exception as e:
+        obs.warn(EDG101_DUSUS_OLAYI, bot=bot, hata=type(e).__name__,
+                 yol=f"{dizin}/edg101_{gun}.jsonl",
+                 detail="EDG-101 yakalama satırı YAZILAMADI — brifing teslimi etkilenmedi")
