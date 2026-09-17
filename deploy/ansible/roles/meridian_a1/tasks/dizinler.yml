@@ -32,6 +32,23 @@
     mode: "0700"
   loop: "{{ bot_adlari }}"
 
+# EDG-2026-101 yakalama dizini (TSK-200, 2026-09-17). Yazan: `ops/soul_denetimi.py` yakalama bölümü,
+# üç brifing biriminden (bekci · brifing · karne); yol `60-edg101-yakalama.conf` drop-in'lerindeki
+# `Environment=`/`ReadWritePaths=` ile AYNI olmak zorundadır — `tests/test_edg101_yakalama_v516.py`
+# çivi 7 ikisini kıyaslar. ROL KURAR, BİRİM KURAMAZ: birimler `ProtectSystem=strict` ile koşar ve
+# `/opt/veri` onlar için salt-okurdur; drop-in'deki `-` önekli izin dizin YOKSA boşa düşer (birim açılır,
+# yakalama `edg101_yakalama_dustu` ile düşer, brifing yine gider) — yani dizini canlıda birinin
+# yaratması ŞART. MOD 0700: içerik brifing metni + üretici istemi (VERİ blokları); A1 tek kullanıcı,
+# okuyan ölçüm kodu da aynı kullanıcıyla koşar. Yalnız YAPRAK dizin kurulur: `/opt/veri` ve
+# `/opt/veri/olcum` A1'de zaten `ubuntu:ubuntu 0755` (2026-09-16 ölçümü).
+- name: EDG-2026-101 brifing denetimi yakalama dizini (üç brifing biriminin drop-in'iyle aynı yol)
+  ansible.builtin.file:
+    path: /opt/veri/olcum/edg101/yakalama
+    state: directory
+    owner: "{{ meridian_kullanici }}"
+    group: "{{ meridian_kullanici }}"
+    mode: "0700"
+
 - name: Sır dizini /etc/meridian (DEĞER yazılmaz — yalnız dizin; A1 ölçümü root:root 0755)
   ansible.builtin.file:
     path: /etc/meridian
