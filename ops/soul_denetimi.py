@@ -205,7 +205,14 @@ def _dustu(gerekce: str, cevap_bas: str | None = None,
     `cevaplayan_model` de AYNI sözleşmededir (TSK-138 dilim-2): düşen bir çağrıda ölçüm YOKTUR.
     DÜŞEN ÇAĞRI DALI YİNE DEĞERİ GEÇER ve bu bir tutarsızlık değil ÖLÇÜMDÜR: kapı 200 dönüp
     gövdesi şemayı tutmadığında `model` alanı OKUNMUŞTUR ve "hangi model bozuk cevap yazdı"
-    sorusunun tek cevabı odur — dilim-1'in `cevap_bas` ile kapattığı boşluğun ikinci yarısı."""
+    sorusunun tek cevabı odur — dilim-1'in `cevap_bas` ile kapattığı boşluğun ikinci yarısı.
+
+    YALNIZ ÖLÇÜLMEMİŞ HÜKÜM İÇİNDİR — ÖLÇÜLMÜŞ BİR HÜKMÜN YERİNE KONMAZ (TSK-196, 2026-09-17).
+    Yeniden-üretim ÇAĞRISI düştüğünde `_yeniden` eskiden ilk turun ÖLÇÜLMÜŞ ihlalli hükmünü bununla
+    değiştiriyordu: ihlal listesi boşalıyor, beyan "kural denetimi yapılamadı" diyordu — oysa denetim
+    YAPILMIŞ ve ihlal BULMUŞTU (canlı: 2026-09-17T10:03Z bekçi, kapı 503). Denetimi yapılmış bir metni
+    yapılmamış gibi göstermek Yasa 6'nın okuyucu tarafını ve uydurma yasağını deler; o dal artık ilk
+    hükmü korur (`_yeniden` şerhi). Düşen şey DENETİM değil ÜRETİM çağrısıysa bu fonksiyon çağrılmaz."""
     return Hukum(sade_ozet=None, terim_ihlal=[], uydurma=[], cevrilen=[], kaynak="llm_dustu",
                  gerekce=gerekce, cevap_bas=cevap_bas, cevaplayan_model=cevaplayan_model)
 
@@ -627,20 +634,54 @@ class Gecis:
     hukum: Hukum
     cagri_n: int
     yeniden_uretim: bool
+    # TSK-196, 2026-09-17: yeniden-üretim (DÜZELTME) çağrısı İSTİSNAYLA düştüyse istisnanın kısa
+    # `repr`i (ilk 200 karakter). `None` = böyle bir düşüş YOK — yeniden-üretim hiç denenmedi ya da
+    # çağrı bir cevap döndürdü. VARSAYILAN `None`dır ve bu, `_yeniden`in istisna dalı DIŞINDAKİ bütün
+    # dalları eski davranışta bırakır. Tek okuyucusu `kayit()`in `gerekce` alanıdır: ilk hüküm
+    # korunduğu için düşüşün nedeni hükmün KENDİ gerekçesinde durmaz, olaya buradan eklenir.
+    duzeltme_dususu: str | None = None
 
     def kayit(self, bot: str) -> dict:
-        """Olay/damga kaydının TEK kaynağı — iki yerde ayrı ayrı kurulan bir sözlük ayrışırdı."""
+        """Olay/damga kaydının TEK kaynağı — iki yerde ayrı ayrı kurulan bir sözlük ayrışırdı.
+
+        `gerekce` BİÇİMİ (TSK-196, 2026-09-17): `duzeltme_dususu` yoksa hükmün gerekçesi AYNEN (eski
+        davranış). Varsa "<hükmün gerekçesi> · yeniden-üretim çağrısı düştü: <repr>"; hükmün gerekçesi
+        boşsa yalnız ikinci parça — iki gerçek de kayda girer, hiçbiri uydurulmaz. SIRA BİLİNÇLİDİR:
+        hüküm gerekçeleri sabit ve kısadır ("denetçi hükmü" · mekanik cümle), önde durunca 200'lük
+        kırpma onları DÜŞÜREMEZ. BEDEL — ADIYLA: kırpılan şey `repr`in kuyruğudur; eskiden aynı
+        kayıtta `repr`e 170 karakter kalıyordu, şimdi LLM hükmünde 154, mekanik hükümde 104. Ölçülen
+        canlı biçimde (2026-09-17 bekçi, kapı 503) istisna sınıfı + kod + rota ilk 56 karakterdedir,
+        yani sınıflamanın okuduğu baş iki durumda da sığar; `repr`in tam 200 karakteri gövde
+        beyanındadır. "yeniden-üretim çağrısı düştü:" öneki eski kayıtla AYNIDIR: `gerekce` metninden
+        sınıflayan okuma (TSK-196 kök neden sayımı böyle yapıldı) aynı vakayı yeni hükümde de bulur —
+        ama hüküm ADI artık `denetlenemedi` değildir, o ada süzen bir sayım bu vakayı görmez."""
+        gerekce = self.hukum.gerekce
+        if self.duzeltme_dususu is not None:
+            gerekce = " · ".join(p for p in (
+                gerekce, f"yeniden-üretim çağrısı düştü: {self.duzeltme_dususu}") if p)
         return {"bot": bot, "hukum": self.hukum_adi, "kaynak": self.hukum.kaynak,
                 "cagri_n": self.cagri_n, "yeniden_uretim": self.yeniden_uretim,
                 "ihlal": self.hukum.ihlaller[:IHLAL_TAVANI],
-                "gerekce": self.hukum.gerekce[:200]}
+                "gerekce": gerekce[:200]}
 
     @property
     def hukum_adi(self) -> str:
+        """Teslim kararının adı. SIRA SÖZLEŞMEDİR: ölçülmedi → ham → düzeltilemedi → düzeltildi/temiz.
+
+        `ihlal_duzeltilemedi` (TSK-196, 2026-09-17): hüküm ÖLÇÜLMÜŞ, metin GİDİYOR, yeniden-üretim
+        DENENDİ ve teslim edilen metnin hükmünde ölçülmüş ihlal HÂLÂ VAR — yani düzeltme başarısız.
+        Bugün bu dört koşulu yalnız `_yeniden`in yeniden-üretim çağrısı düştüğü dal üretir (ilk metin
+        ilk hükümle gider). Ayrım YENİ ALANDAN değil hükmün kendisinden türetilir: "düzeltildi" adı
+        teslim hükmü TEMİZSE doğrudur ve ihlalli bir hükümle yan yana YAPISAL olarak çıkamaz.
+        NEDEN AYRI AD: eskiden bu vaka "denetlenemedi" diye yazılıyordu ve denetimi YAPILMIŞ, ihlal
+        BULMUŞ bir koşumu yapılmamış gibi gösteriyordu (Yasa 6 okuyucu tarafı, uydurma yasağı);
+        "ihlal_duzeltildi" de olamazdı — metin düzeltilmedi."""
         if not self.hukum.olculdu:
             return "denetlenemedi"
         if self.metin is None:
             return "ham"
+        if self.yeniden_uretim and self.hukum.ihlal_var:
+            return "ihlal_duzeltilemedi"
         return "ihlal_duzeltildi" if self.yeniden_uretim else "temiz"
 
 
@@ -747,6 +788,10 @@ def gecir(*, profil_evi, ilk_metin: str, ilk_istem: str, veri_terimleri, cagir,
       temiz            → ilk metin gider, beyan yok.
       ihlal → düzeldi  → İKİNCİ metin gider, beyan yok.
       ihlal × 2        → `metin=None` (bot HAM'a düşer) + beyan.
+      ihlal → yeniden-üretim ÇAĞRISI düştü → İLK metin İLK (ölçülmüş, ihlalli) hükümle gider +
+        "kural denetimi: N ihlal bulundu, düzeltme çağrısı düştü (…) — ilk metin gitti" beyanı;
+        teslim kararı `ihlal_duzeltilemedi` (TSK-196, 2026-09-17 — eskiden `llm_dustu` dalına
+        katlanıyor ve bulunan ihlali "yapılamadı" diye gizliyordu).
       `llm_dustu`      → İLK metin gider + "kural denetimi yapılamadı: …" beyanı.
       tavan aşımı      → `llm_dustu` ile aynı dal (denetim YAPILMADI, teslimat gider).
       ihlal → yeniden-üretim DENETLENEMEDİ → İKİNCİ (düzeltilmiş ama DENETLENMEMİŞ) metin gider +
@@ -844,13 +889,25 @@ def _yeniden(*, profil_evi, ilk_metin, ilk_istem, hukum, cagir, dogrula, sayac, 
     try:
         yeni = cagir(ilk_istem + _ihlal_eki(hukum))
     except Exception as e:
-        # SESSİZ YUTMA DEĞİL: `llm_dustu` hükmü gerekçesiyle deftere ve gövdedeki beyan satırına
-        # düşer. İLK metin yine gider — yeniden-üretimin düşmesi teslimatı düşüremez.
-        # `cevaplayan_model` BURADA GEÇİLMEZ ve `None` kalır (TSK-138 dilim-2): bu çağrı bir
-        # DENETİM değil bir ÜRETİM çağrısıdır; ilk turun ölçtüğü modeli buraya taşımak, teslim
-        # edilen hükmün modeli SANILIRDI — oysa teslim edilen hüküm tam da ölçülemeyen budur.
-        return _sonuc(ilk_metin, _dustu(f"yeniden-üretim çağrısı düştü: {repr(e)[:200]}"),
-                      sayac + 1, False)
+        # SESSİZ YUTMA DEĞİL: düşüş nedeni gövdedeki beyan satırına ve olayın `gerekce`sine düşer.
+        # İLK metin yine gider — yeniden-üretimin düşmesi teslimatı düşüremez (geçici bir üst-akım
+        # arızası içeriği de düşürmesin; "reddedildi" dalı AYRI sınıftır: orada ikinci cevap GELDİ ve
+        # model kalitesi yüzünden reddedildi, o yüzden ham teslim kalır).
+        #
+        # HÜKÜM İLK HÜKÜMDÜR (TSK-196, 2026-09-17). Eskiden burada `_dustu` kuruluyordu ve ölçülmüş
+        # ihlal kayboluyordu: beyan "kural denetimi yapılamadı", olayda `ihlal` boş, `yeniden_uretim`
+        # False — oysa denetim YAPILMIŞ, ihlal BULUNMUŞ, düşen şey düzeltme çağrısıydı (canlı:
+        # 2026-09-17T10:03Z bekçi, kapı 503). `yeniden_uretim` True'dur çünkü yeniden-üretim
+        # DENENDİ; teslim kararı `ihlal_duzeltilemedi` (`Gecis.hukum_adi` şerhi).
+        #
+        # `cevaplayan_model` hükümle BİRLİKTE gelir ve İLK DENETİMİN ölçtüğü modeldir (TSK-138
+        # dilim-2): teslim edilen hüküm artık o denetimin hükmüdür, yani künye doğru hükmü anlatır.
+        # Düşen ÜRETİM çağrısından hiçbir model adı TAŞINMAZ — o çağrı bir hüküm üretmedi.
+        dusus = repr(e)[:200]
+        return _sonuc(ilk_metin, hukum, sayac + 1, True,
+                      beyan=(f"kural denetimi: {len(hukum.ihlaller)} ihlal bulundu, düzeltme "
+                             f"çağrısı düştü ({dusus}) — ilk metin gitti"),
+                      duzeltme_dususu=dusus)
     sayac += 1
     yeni = str(yeni or "").strip()
     neden = ("yeniden-üretim boş cevap verdi" if not yeni
@@ -875,14 +932,23 @@ def _yeniden(*, profil_evi, ilk_metin, ilk_istem, hukum, cagir, dogrula, sayac, 
     return _sonuc(yeni, hukum2, sayac, True)
 
 
-def _sonuc(metin, hukum: Hukum, sayac: int, yeniden: bool, beyan: str | None = None) -> Gecis:
+def _sonuc(metin, hukum: Hukum, sayac: int, yeniden: bool, beyan: str | None = None,
+           duzeltme_dususu: str | None = None) -> Gecis:
     """Beyan satırının TEK kaynağı. Beyan bir SÜS DEĞİL SÖZLEŞMEDİR: denetlenmemiş ya da
     reddedilmiş bir çıktıyı operatöre sessizce göndermek, denetimi hiç yapmamaktan beterdir —
-    operatör "denetlendi" sanır (Yasa 6'nın okuyucu tarafı)."""
+    operatör "denetlendi" sanır (Yasa 6'nın okuyucu tarafı).
+
+    TERSİ DE AYNI SINIFTIR (TSK-196, 2026-09-17): denetimi YAPILMIŞ bir metni "yapılamadı" diye
+    beyan etmek, operatöre denetlenmemiş sandırır ve bulunan ihlali gizler. Varsayılan "kural
+    denetimi yapılamadı" cümlesi bu yüzden YALNIZ hüküm GERÇEKTEN ölçülmemişse kurulur; ölçülmüş bir
+    hükmü bu cümleye düşürmek için `_dustu` ile değiştirmek yasaktır. Yeniden-üretim çağrısı düşen
+    dal ilk hükmü korur ve beyanını AÇIK `beyan=` ile verir; `duzeltme_dususu` o dalın düşüş
+    nedenidir ve yalnız o dal geçer (`Gecis.duzeltme_dususu` şerhi — varsayılan `None`)."""
     if beyan is None:
         beyan = ("" if hukum.olculdu
                  else f"kural denetimi yapılamadı: {hukum.gerekce}")
-    return Gecis(metin=metin, beyan=beyan, hukum=hukum, cagri_n=sayac, yeniden_uretim=yeniden)
+    return Gecis(metin=metin, beyan=beyan, hukum=hukum, cagri_n=sayac, yeniden_uretim=yeniden,
+                 duzeltme_dususu=duzeltme_dususu)
 
 
 # ------------------------------------------------------------------------------------------------
@@ -1107,12 +1173,14 @@ def jeton_gecer_mi(cevap: str) -> tuple[bool, bool]:
 #       (`?apikey=…`) içerebilir — `_olay_cevap_basi` ile birebir gerekçe.
 #   `veri_sha256` — süzgeç SONRASI istemden çıkarılan VERİ'nin (UTF-8) sha256'sı: ölçüm tarafı
 #       çıkarıcıyı AYNI sonuçla koştuğunu bununla doğrular (çıkarıcı değişirse ayrışma görünür).
-#   `teslim_karari` (`Gecis.hukum_adi`), `yeniden_uretim` — canlının teslim kararı.
+#   `teslim_karari` (`Gecis.hukum_adi`), `yeniden_uretim` — canlının teslim kararı. Yeniden-üretim
+#       çağrısı düşünce değer `ihlal_duzeltilemedi` (TSK-196, 2026-09-17; eskiden `denetlenemedi`).
 #   `ilk_hukum` — YAKALANAN `ilk_metin`in hükmü; `teslim_hukum` — kararı veren son hüküm. İKİSİ
-#       AYRIDIR ve ayrım ölçülmüştür: yeniden-üretim çağrısı patladığında İLK metin gider ama teslim
-#       hükmü `llm_dustu`dur, ilk turun `uydurma` listesi YALNIZ `ilk_hukum`da yaşar. Her ikisi de
-#       `Hukum` alanlarından: `kaynak`, `uydurma`, `terim_ihlal`, `suzulen` (öğeler de süzgeçten
-#       geçer — denetçi metindeki bir sırrı "uydurma" diye geri yazabilir).
+#       AYRIDIR ve ayrım ölçülmüştür: yeniden-üretim DENETLENEMEDİĞİNDE ikinci metin gider ve teslim
+#       hükmü `llm_dustu`dur, ilk turun `uydurma` listesi YALNIZ `ilk_hukum`da yaşar (yeniden-üretim
+#       ÇAĞRISI düşünce ise TSK-196'dan beri ikisi AYNI hükümdür: ilk metin ilk hükümle gider).
+#       Her ikisi de `Hukum` alanlarından: `kaynak`, `uydurma`, `terim_ihlal`, `suzulen` (öğeler de
+#       süzgeçten geçer — denetçi metindeki bir sırrı "uydurma" diye geri yazabilir).
 #
 # ASLA TESLİMİ DÜŞÜRMEZ: satır kurulumu ya da yazım düşerse `obs.warn(DUSUS_OLAYI)` — hata SINIFI +
 # yol, metin/istem YOK — ve `gecir` normal döner. Metin ve istem hiçbir olaya/log'a yazılmaz.
