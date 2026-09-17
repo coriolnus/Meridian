@@ -219,6 +219,11 @@ export VAULT_ADDR="${VAULT_ADDR:-http://127.0.0.1:8200}"
 #: Envanter — `vault_kv` ve `vault_dosyalar` bloklarının TEK kaynağı. Betik `deploy/oracle-a1/`
 #: altında yaşar, envanter bir üst dizinde (`deploy/`).
 VAULT_ENVANTER="${VAULT_ENVANTER:-$(cd "$(dirname "$0")" && pwd)/../sir_envanteri.yaml}"
+#: Agent'ın render ARALIĞI (`RENDER_ARALIGI`) bu üreticide TEK yerde yaşar ve üretilen `agent.hcl`in
+#: `static_secret_render_interval`ı oradan yazılır. Eski yolun Agent hedefi uyarısı sayıyı BURADAN
+#: okur (`_render_araligi_metni`) — uyarıya elle yazılmış bir "1 dk", kadans değişince sessizce yalan
+#: olurdu (TSK-064 takip (2), 2026-09-17). Ortamdan geçilebilir olması VAULT_ENVANTER ile aynı gerekçe.
+VAULT_POLITIKA_URETICI="${VAULT_POLITIKA_URETICI:-$(cd "$(dirname "$0")" && pwd)/../../ops/vault_politika_uret.py}"
 #: YAML okuyan python — `py()` yardımcısı stdlib'le yetinir (sudo python3), bu ise PyYAML ister.
 #: A1'de sistem python3'ü yeterlidir; ayrı bir kanca olması çivinin kendi yorumlayıcısını
 #: verebilmesi içindir (sanal ortam dışındaki python3'te PyYAML olmayabilir).
@@ -240,6 +245,12 @@ GERI_AL_LISTESI=""  # negatif kontrolün geri alacağı <yedek>|<hedef> çiftler
 #: birim değeri AÇILIŞTA okur (apisix `$env://` çözümünü yalnız açılışta yapar, systemd
 #: `LoadCredential`ı yalnız açılışta kopyalar). Trap bu kümeyi geri almadan SONRA yeniden başlatır.
 NK_BIRIMLER=""
+#: `_api_yaz` HATA METNİNİN BAĞLAMI (TSK-064 takip (5), 2026-09-17) — YALNIZ METNİ seçer; yazım,
+#: sıra ve çıkış kodu iki bağlamda da AYNIDIR. `eski`: `openrouter()` motor deposunu restart ve
+#: kanıttan SONRA yazar, yani hata anında rotasyon kanıtlanmıştır. `kasa`: `vault_rotasyon` aynı
+#: kopyayı eski kanal adımında, restart ve kanıttan ÖNCE yazar — orada "kanıtlandı" cümlesi YANLIŞ
+#: olurdu. Ortamdan GEÇİLEMEZ (burada atanır): bağlam bir kanca değil, koşan akışın kendisidir.
+YAZIM_AKISI="eski"
 
 die()      { echo "!! $*" >&2; exit 1; }
 olcum_yok(){ echo "!! ÖLÇÜLEMEDİ: $*" >&2; exit 2; }
@@ -1111,6 +1122,15 @@ _api_yaz() {
   py json-govde "$govde" value "$dgr"
   py kanit-cfg "$cfg" "$API$uc" "x-meridian-token" "-" "$tok" "$yanit" "$govde"
   kod="$(_curl_kod "$cfg")"
+  # KASA AKIŞI (`YAZIM_AKISI=kasa`, TSK-064 takip (5)): bu kopya restart ve kanıttan ÖNCE yazılır,
+  # yani aşağıdaki eski yol metninin "Rotasyon KANITLANDI" hükmü burada henüz DOĞRU DEĞİL. Aynı
+  # `die` (çıkış 1), aynı an; yalnız metin bağlama göre. Eski yolun metni AYNEN kalır.
+  [ "$kod" = "200" ] || [ "$YAZIM_AKISI" != "kasa" ] || die "motor API yazımı başarısız (HTTP $kod): $uc ($ad)
+     KASA AKIŞI: kasaya yazım ve Agent render'ı ÖLÇÜLDÜ (render hedefi kasadaki yeni değerde) —
+     ama tüketici YENİDEN BAŞLATMA ve uçtan uca kanıt HENÜZ KOŞMADI: koşum burada DURDU.
+     YAZILAMAYAN motorun kendi deposundaki kopya (\`secrets._fetch\`in ÜÇÜNCÜ basamağı).
+     Elle eşitle (pano → sır girişi, ya da $uc), sonra $(_sir_birimleri "$ad") yeniden başlat ve
+     kanıtı ölç — bu noktada rotasyon DOĞRULANMADI."
   [ "$kod" = "200" ] || die "motor API yazımı başarısız (HTTP $kod): $uc ($ad)
      Rotasyon KANITLANDI ve credential kanalı yeni değeri taşıyor; başarısız olan YALNIZ motorun
      kendi deposundaki kopya. O depo \`secrets._fetch\`in ÜÇÜNCÜ basamağıdır (credential ilk), yani
@@ -1437,6 +1457,9 @@ _kuru_rapor() {
 
 kapi() {
   echo "=== ROTASYON: KAPI_APIKEY (kapı tüketici anahtarı) ==="
+  # AGENT RENDER HEDEFİ UYARISI (TSK-064 takip (2)): kuru kapısının ÜSTÜNDE, yazımdan ÖNCE — `db()`
+  # şerhinin gerekçesi. Sır kasaya BAĞLIYSA uyarı doğru yolu (`--vault`) söyler. Kapı DEĞİL.
+  _agent_hedefi_uyarisi kapi
   [ "$KURU" = 0 ] || { _kuru_rapor kapi; return 0; }
   _yedek_al kapi
   py cikar dosya "$YEDEK/etc/meridian/kapi_apikey" - - "$ISLIK/eski"
@@ -1463,6 +1486,7 @@ kapi() {
 # Bir yüzey doğrudan ölçülebiliyorken bilerek bozuk değer yazmak, karşılıksız iki restart demektir.
 apisix_admin() {
   echo "=== ROTASYON: APISIX_ADMIN_KEY (kapı Admin API yönetim anahtarı) ==="
+  _agent_hedefi_uyarisi apisix-admin      # TSK-064 takip (2) — gerekçe `kapi()` şerhinde
   [ "$KURU" = 0 ] || { _kuru_rapor apisix-admin; return 0; }
   _yedek_al apisix-admin
   # ESKİ DEĞER YEDEKTEKİ `.env-apisix`TEN OKUNUR, credential kaynağından DEĞİL: Faz-1C elle
@@ -1492,6 +1516,7 @@ _birimsiz_tuketici_beyani() {
 
 tenant() {
   echo "=== ROTASYON: HINDSIGHT_API_TENANT_API_KEY ==="
+  _agent_hedefi_uyarisi tenant            # TSK-064 takip (2) — gerekçe `kapi()` şerhinde
   [ "$KURU" = 0 ] || { _kuru_rapor tenant; return 0; }
   _yedek_al tenant
   py cikar dosya "$YEDEK/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY" - - "$ISLIK/eski"
@@ -1556,6 +1581,7 @@ db() {
 
 dash() {
   echo "=== ROTASYON: MERIDIAN_DASH_TOKEN ==="
+  _agent_hedefi_uyarisi dash              # TSK-064 takip (2) — gerekçe `kapi()` şerhinde
   [ "$KURU" = 0 ] || { _kuru_rapor dash; return 0; }
   _yedek_al dash
   py cikar dosya "$YEDEK/etc/meridian/dash_token" - - "$ISLIK/eski"
@@ -1793,6 +1819,9 @@ _kapi_chat_hali() {
 
 openrouter() {
   echo "=== ROTASYON: OpenRouter anahtarları (operatör yapıştırır) ==="
+  # TSK-064 takip (2) — gerekçe `kapi()` şerhinde. `_oku_gizli` istemlerinin de ÜSTÜNDE: operatör
+  # anahtarı yapıştırmadan ÖNCE doğru yolu görür.
+  _agent_hedefi_uyarisi openrouter
   # KURU KAPISI `_oku_gizli` ÇAĞRILARININ ÜSTÜNDE. Altındayken `--openrouter --kuru` bir kuru
   # koşum DEĞİLDİ: iki gerçek anahtar istiyor, boş bırakılınca "yapacak iş yok" deyip çıkış 1
   # veriyordu — yani rotasyonun ÖN-BAKIŞI ancak taze anahtar yapıştırarak alınabiliyordu.
@@ -1972,59 +2001,111 @@ _vault_tuketici_birimleri() {
   echo "$birimler $tuk"
 }
 
-#: VAULT AGENT RENDER HEDEFİ — KASAYA BAĞLI OLMAYAN KOPYALAR (TSK-064, Rol-1 kararı 2026-09-17).
-#: `<sır>\t<kopya yolu>\t<kasa yolu>\t<vault_kv adı>`: alt komutun `dosya`/`url` kopyalarından yolu
-#: bir `vault_kv.hedef` OLAN ama sırrı hiçbir `rotasyon_siri` ile kasaya BAĞLI OLMAYANLAR.
-#: NİYE: Agent bu dosyaları `static_secret_render_interval` aralığıyla (bugün 1 dk) kasadan yeniden
-#: render eder; eski yolun oraya yazdığı değer kasadaki ESKİ değerle EZİLEBİLİR — rotasyon sessizce
-#: geri alınır (hipotez, A1'de ÖLÇÜLMEDİ; ROADMAP TSK-064 14:2xZ). Liste ENVANTERDEN türer: "hangi
-#: dosya render hedefi" gerçeği `vault_kv`de TEK yerde yaşar, burada ikinci bir liste YOKTUR.
-#: Bağlı sırlar listeye GİRMEZ: onların doğru yolu `--<alt> --vault`tır ve kapsam beyanında
-#: görünmezler. Bugün (bağdan sonra) tek satır `--db`nin url kopyasıdır.
-_bagsiz_agent_hedefleri() {
-  _kopyalar | awk -v a="$1" '$1==a && ($3=="dosya" || $3=="url") {print $2 "\t" $4}' \
+#: VAULT AGENT RENDER HEDEFİNE YAZAN KOPYALAR (TSK-064, Rol-1 kararı 2026-09-17; takip (2) aynı gün).
+#: `<sır>\t<kopya yolu>\t<kasa yolu>\t<vault_kv adı>\t<BAGLI|BAGSIZ>\t<alt komut>`: alt komutun
+#: `dosya`/`url` kopyalarından yolu bir `vault_kv.hedef` OLANLAR; beşinci sütun sırrın bir
+#: `rotasyon_siri` ile kasaya bağlı olup olmadığıdır (takma adın bağı da sayılır).
+#: NİYE: Agent bu dosyaları `static_secret_render_interval` aralığıyla kasadan yeniden render eder;
+#: eski yolun oraya yazdığı değer kasadaki ESKİ değerle EZİLEBİLİR — rotasyon sessizce geri alınır
+#: (hipotez, A1'de ÖLÇÜLMEDİ; ROADMAP TSK-064 14:2xZ). Liste ENVANTERDEN türer: "hangi dosya render
+#: hedefi" ve "hangi sır bağlı" gerçekleri `vault_kv`de TEK yerde yaşar, burada ikinci liste YOKTUR.
+#: TEK TESPİT YOLU: eski yolun uyarısı (`_agent_hedefi_uyarisi`, iki sınıf) ve kasa kipinin kapsam
+#: beyanı (`_bagsiz_agent_hedefleri`, yalnız BAGSIZ) bu tablodan okur. Bugün BAGSIZ tek satır
+#: `--db`nin url kopyasıdır; BAGLI satırlar `--kapi`/`--tenant`/`--dash`/`--openrouter`/
+#: `--apisix-admin`in credential kaynaklarıdır.
+_agent_hedefleri() {
+  _kopyalar | awk -v a="$1" '$1==a && ($3=="dosya" || $3=="url") {print $2 "\t" $4 "\t" $1}' \
     | "$PYTHON_BIN" -c '
 import sys, yaml
 kv = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))["vault_kv"]
 bagli = {g["rotasyon_siri"] for g in kv if g.get("rotasyon_siri")}
 hedefler = {g["hedef"]: g for g in kv if g.get("hedef")}
 for satir in sys.stdin:
-    sir, yol = satir.rstrip("\n").split("\t")
-    if sir in bagli or yol not in hedefler:
+    sir, yol, alt = satir.rstrip("\n").split("\t")
+    if yol not in hedefler:
         continue
-    print(sir, yol, hedefler[yol]["vault_yolu"], hedefler[yol]["ad"], sep="\t")
+    print(sir, yol, hedefler[yol]["vault_yolu"], hedefler[yol]["ad"],
+          "BAGLI" if sir in bagli else "BAGSIZ", alt, sep="\t")
 ' "$VAULT_ENVANTER"
 }
 
-#: `_agent_hedefi_bas <tablo> [sır]` — `_bagsiz_agent_hedefleri` satırlarını UYARI olarak basar
-#: (`$2` verilirse YALNIZ o sırrınkini). Metin TEK yerde: eski yol (`--db`) ve kasa kipinin kapsam
-#: beyanı aynı cümleyi söyler. "ÖNCE" DEĞİL "AYNI pencerede" yazar ve bu ölçülmüş bir düzeltmedir:
-#: eski yol değeri betik İÇİNDE üretir ve BASMAZ (`_uret`), yani kasa rotasyondan önce
-#: güncellenemez; yazım ↔ kasa ↔ render sırası bu betikte TASARLANMADI ve uyarı bunu da söyler.
+#: Kasa kipinin kapsam beyanı YALNIZ bağsız satırları okur: bağlı sırrın doğru yolu zaten
+#: `--<alt> --vault`tır ve beyanda görünmez. Süzgeç `_agent_hedefleri`nin üzerindedir — ikinci bir
+#: tarama yok (tek tespit yolu).
+_bagsiz_agent_hedefleri() {
+  local tablo
+  tablo="$(_agent_hedefleri "$1")" || return 1
+  printf '%s\n' "$tablo" | awk -F'\t' '$5=="BAGSIZ"'
+}
+
+#: Agent'ın STATİK sır render aralığı — `VAULT_POLITIKA_URETICI` içindeki `RENDER_ARALIGI` atamasının
+#: LİTERALİ okunur, UYDURULMAZ. Modül ÇALIŞTIRILMAZ (`ast`): ops aracının içe aktarımı yan etki ve
+#: bağımlılık (PyYAML) taşır, bir uyarı metni için gereksiz. Okunamazsa sayı yerine ÖLÇÜLEMEDİ yazılır
+#: — "1 dk" demek, okunmamış bir sayıyı okunmuş göstermek olurdu (uydurma yasağı).
+_render_araligi_metni() {
+  local aralik
+  # sessiz-yutma: python'un hata metni (dosya yok · atama biçimi değişti) hükme GİRMEZ — hüküm
+  # aralığın okunup okunamadığıdır ve else dalında "ÖLÇÜLEMEDİ" diye ADIYLA basılır.
+  if aralik="$("$PYTHON_BIN" -c '
+import ast, sys
+for d in ast.parse(open(sys.argv[1], encoding="utf-8").read()).body:
+    if (isinstance(d, ast.Assign) and len(d.targets) == 1
+            and getattr(d.targets[0], "id", None) == "RENDER_ARALIGI"
+            and isinstance(d.value, ast.Constant) and isinstance(d.value.value, str)):
+        print(d.value.value)
+        sys.exit(0)
+sys.exit(1)
+' "$VAULT_POLITIKA_URETICI" 2>/dev/null)" && [ -n "$aralik" ]; then
+    echo "$aralik (ops/vault_politika_uret.py::RENDER_ARALIGI → agent.hcl static_secret_render_interval)"
+  else
+    echo "ÖLÇÜLEMEDİ — RENDER_ARALIGI okunamadı: $VAULT_POLITIKA_URETICI (sayı uydurulmaz)"
+  fi
+}
+
+#: `_agent_hedefi_bas <tablo> [sır]` — `_agent_hedefleri` satırlarını UYARI olarak basar (`$2`
+#: verilirse YALNIZ o sırrınkini). Metin TEK yerde: başlık, kasa yolu ve "ezilebilir" cümlesi iki
+#: sınıfta ORTAK, yalnız çare satırları sınıfa göre ayrılır.
+#:   BAGSIZ (eski yol `--db` ve kasa kipinin kapsam beyanı): "ÖNCE" DEĞİL "AYNI pencerede" yazar ve bu
+#:     ölçülmüş bir düzeltmedir: eski yol değeri betik İÇİNDE üretir ve BASMAZ (`_uret`), yani kasa
+#:     rotasyondan önce güncellenemez; yazım ↔ kasa ↔ render sırası bu betikte TASARLANMADI.
+#:   BAGLI (eski yol, TSK-064 takip (2)): sır kasaya bağlı olduğu için çare TASARLANMIŞTIR — kasadan
+#:     rotasyon (`--<alt> --vault`). Render aralığı `_render_araligi_metni`nden okunur.
 _agent_hedefi_bas() {
-  local tablo="$1" secilen="${2:-}" sir yol kasa ad
-  while IFS=$'\t' read -r sir yol kasa ad; do
+  local tablo="$1" secilen="${2:-}" sir yol kasa ad bag alt aralik=""
+  while IFS=$'\t' read -r sir yol kasa ad bag alt; do
     [ -n "$sir" ] || continue
     [ -z "$secilen" ] || [ "$sir" = "$secilen" ] || continue
-    echo "  !! UYARI — VAULT AGENT RENDER HEDEFİ, kasaya BAĞLI DEĞİL: $sir → $yol"
+    if [ "$bag" = "BAGLI" ]; then
+      echo "  !! UYARI — VAULT AGENT RENDER HEDEFİ, sır kasaya BAĞLI (bu ESKİ yol): $sir → $yol"
+    else
+      echo "  !! UYARI — VAULT AGENT RENDER HEDEFİ, kasaya BAĞLI DEĞİL: $sir → $yol"
+    fi
     echo "     kasa yolu: $kasa (vault_kv.$ad)"
     echo "     Eski yolun yazımı kasadaki ESKİ değerle EZİLEBİLİR (Agent render aralığında; A1'de"
     echo "     ÖLÇÜLMEDİ). Eski yol YİNE DE KOŞAR — uyarı, kapı değil."
-    echo "     Kasadaki değer rotasyonla AYNI pencerede elle güncellenmeli (değer STDIN'den, BASILMADAN:"
-    echo "     vault kv put $kasa value=-) ve render ölçülmeli (dosya kasadaki yeni değere eşit mi)."
-    echo "     Sıra (yazım ↔ kasa ↔ render) bu betikte TASARLANMADI."
+    if [ "$bag" = "BAGLI" ]; then
+      [ -n "$aralik" ] || aralik="$(_render_araligi_metni)"
+      echo "     Vault Agent bu dosyayı kasadan render eder — aralık: $aralik"
+      echo "     Bu sır kasaya BAĞLI — kasa yolunu kullanın: sudo $0 --$alt --vault"
+    else
+      echo "     Kasadaki değer rotasyonla AYNI pencerede elle güncellenmeli (değer STDIN'den, BASILMADAN:"
+      echo "     vault kv put $kasa value=-) ve render ölçülmeli (dosya kasadaki yeni değere eşit mi)."
+      echo "     Sıra (yazım ↔ kasa ↔ render) bu betikte TASARLANMADI."
+    fi
   done <<< "$tablo"
   return 0
 }
 
-#: ESKİ YOLUN UYARISI (`db()`). Tarama YAPILAMAZSA (PyYAML yok · envanter yok) bu da ADIYLA söylenir
-#: ve koşum DURMAZ: uyarı eski yolu KESMEZ (Rol-1 kararı — tek rotasyon yolu kesilmez). Kasa kipi
-#: aynı taramada fail-closed'dır (`_vault_kapsam_beyani`): orada PyYAML zaten ön koşuldur.
+#: ESKİ YOLUN UYARISI — yazım yapan HER eski yol alt komutu (`db()` 2026-09-17; `kapi`/`tenant`/
+#: `dash`/`openrouter`/`apisix_admin` TSK-064 takip (2) aynı gün), kuru kapısının ÜSTÜNDE. Tarama
+#: YAPILAMAZSA (PyYAML yok · envanter yok) bu da ADIYLA söylenir ve koşum DURMAZ: uyarı eski yolu
+#: KESMEZ (Rol-1 kararı — tek rotasyon yolu kesilmez). Kasa kipi aynı taramada fail-closed'dır
+#: (`_vault_kapsam_beyani`): orada PyYAML zaten ön koşuldur.
 _agent_hedefi_uyarisi() {
   local alt="$1" tablo
   # sessiz-yutma: python'un hata metni (PyYAML yok · envanter okunamıyor) hükme GİRMEZ — hüküm
   # taramanın yapılıp yapılamadığıdır ve bir satır aşağıda "UYARI ÖLÇÜLEMEDİ" diye ADIYLA basılır.
-  if ! tablo="$(_bagsiz_agent_hedefleri "$alt" 2>/dev/null)"; then
+  if ! tablo="$(_agent_hedefleri "$alt" 2>/dev/null)"; then
     echo "  !! UYARI ÖLÇÜLEMEDİ — Vault Agent render hedefi taraması yapılamadı ($PYTHON_BIN + PyYAML · $VAULT_ENVANTER)."
     echo "     --$alt kopyalarından biri Agent'ın render hedefi OLABİLİR: eski yol yazımı kasadaki değerle ezilebilir."
     return 0
@@ -2052,6 +2133,20 @@ _vault_kapsam_beyani() {
   done
 }
 
+#: DEĞER KAYNAĞI BEYANI (TSK-064 takip (4), 2026-09-17). Kasa yolu yeni değeri operatörden İSTER; eski
+#: yol bu alt komutlarda değeri betik İÇİNDE üretir (`_uret`). Beyan olmasaydı eski yola alışmış
+#: operatör istemi "üretilecek değerin onayı" sanıp zayıf ya da boş bir değer girebilirdi. Değer de
+#: ÖRNEK değer de BASILMAZ. Liste eski yolun `_uret` çağıran alt komutlarıdır (`openrouter` YOK: eski
+#: yol da değeri operatörden alır); betiğin kendi fonksiyon gövdeleriyle AYRIŞMA ÇİVİSİ bağlar
+#: (v522 — `_uret` çağıran küme ↔ bu küme). Kuru rapor ve gerçek koşumun istem noktası aynı satırı basar.
+_deger_kaynagi_beyani() {
+  case "$1" in
+    kapi|tenant|db|dash|apisix-admin)
+      echo "  · DEĞER KAYNAĞI: bu yol değeri ÜRETMEZ, sizden İSTER — eski yol (sudo $0 --$1) değeri"
+      echo "    betik İÇİNDE üretir. Güçlü rastgele bir değer girin (ekrana yansımaz, hiçbir yere BASILMAZ)." ;;
+  esac
+}
+
 _vault_kuru_rapor() {
   local alt="$1" bagli="$2" ad yol hedef sir birincil yd yb hepsi=""
   echo "=== KURU KOŞUM: --$alt --vault (HİÇBİR ŞEY YAZILMADI, KASAYA DOKUNULMADI) ==="
@@ -2075,6 +2170,7 @@ _vault_kuru_rapor() {
   echo "  yeniden başlatılacak: $(_sirala $hepsi)   (değeri VERİLEN sırların tüketicileri — boş bırakılan sırrınki başlamaz)"
   _birimsiz_tuketici_beyani "$alt"
   echo "  değer: her kasa sırrı AYRI sorulur (ekrana yansımaz); boş bırakılan sır bu tur DÖNMEZ ve ADIYLA söylenir"
+  _deger_kaynagi_beyani "$alt"
   echo "  render bekleme tavanı: $VAULT_RENDER_TAVAN_S s (yoklama aralığı $VAULT_RENDER_ARALIK_S s; aşımda ÖLÇÜLEMEDİ, eski kanal YAZILMAZ)"
   echo "  ÖN KOŞUL: sudo systemctl stop meridian-tick-watchdog.timer (sonda geri aç)"
   echo "  ÖN KOŞUL: kasa AÇIK (mühürsüz) ve vault-agent AYAKTA olmalı — yoksa render gelmez"
@@ -2116,6 +2212,7 @@ vault_rotasyon() {
     # sırda "kasaya HİÇBİR ŞEY yazılmadı" YANLIŞ olurdu (ilk sır kasada), yalnız OPENROUTER'ı döndürmek
     # imkânsızlaşırdı ve `_oku_gizli`nin kendi istemi ("boş = bu bacağı atla") yalan söylerdi. Eski
     # yolun `openrouter()` sözleşmesiyle AYNI: her anahtar ayrı sorulur, hiçbiri verilmezse durulur.
+    _deger_kaynagi_beyani "$alt"          # istemden HEMEN önce (TSK-064 takip (4))
     if ! _oku_gizli "$sir (KASAYA konacak)" "$ISLIK/vault_yeni"; then
       echo "  · ATLANDI: $sir — değer boş; kasaya YAZILMADI ve bu tur DÖNMEDİ (yürürlükteki değer kalır)"
       continue
@@ -2156,6 +2253,9 @@ vault_rotasyon() {
     oldu "render ÖLÇÜLDÜ: $hedef ($gecen s) — kanonik kopya kasadaki değerle BİREBİR"
 
     adim "eski kanal (iki-kanal dönemi): kopyalar KASADAN gelen değerle yazılır"
+    # `api` kopyası (NOUS) burada restart ve kanıttan ÖNCE yazılır: `_api_yaz` hata metni bunu
+    # söylesin (TSK-064 takip (5)). Yalnız METİN bağlamıdır — yazım ve sıra aynen.
+    YAZIM_AKISI=kasa
     _yaz "$alt" "$sir" "$ISLIK/vault_render_kanon"
 
     # RESTART LİSTESİ KASA YOLUNDAN TOPLANIR, ADDAN DEĞİL: aynı yola çözülen her ad (birincil +
