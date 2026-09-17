@@ -333,7 +333,12 @@ def test_YENIDEN_URETIM_REDDEDILIRSE_HAM_TESLIM(sd, tmp_path, sandbox_state):
 
 
 def test_YENIDEN_URETIM_CAGRISI_PATLARSA_ILK_CIKTI_GIDER(sd, tmp_path, sandbox_state):
-    """Yeniden-üretimin düşmesi de teslimatı düşüremez — ilk çıktı BEYANLA gider."""
+    """Yeniden-üretimin düşmesi de teslimatı düşüremez — ilk çıktı BEYANLA gider.
+
+    BEYAN ÇİVİSİ GÜNCELLENDİ (TSK-196, 2026-09-17): bu çivi eskiden "yapılamadı" arıyordu, yani
+    ölçülmüş ihlali gizleyen eski beyanı SÖZLEŞME diye mühürlüyordu. Denetim bu dalda YAPILMIŞ ve
+    ihlal BULMUŞTUR; beyan artık bunu söyler. Dalın tam sözleşmesi
+    `tests/test_ihlal_duzeltilemedi_v519.py`dedir — burada yalnız fail-open yarısı kalır."""
     class _K:
         def __init__(self):
             self.n = 0
@@ -346,7 +351,8 @@ def test_YENIDEN_URETIM_CAGRISI_PATLARSA_ILK_CIKTI_GIDER(sd, tmp_path, sandbox_s
 
     g = sd.gecir(profil_evi=_profil_evi(tmp_path), ilk_metin="ilk metin", ilk_istem="İ",
                  veri_terimleri=[], cagir=_K(), bot="sef")
-    assert g.metin == "ilk metin" and "yapılamadı" in g.beyan, f"{g!r}"
+    assert g.metin == "ilk metin" and "düzeltme çağrısı düştü" in g.beyan, f"{g!r}"
+    assert "ikili yok" in g.beyan and "yapılamadı" not in g.beyan, f"{g!r}"
 
 
 # ================================================================================================

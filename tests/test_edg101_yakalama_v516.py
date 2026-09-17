@@ -246,13 +246,21 @@ def test_4_her_donus_dalinda_TAM_BIR_satir(sd, tmp_path, monkeypatch, sandbox_st
 
 def test_4b_ilk_hukum_YAKALANAN_METNIN_hukmudur_teslim_hukmu_degil(sd, tmp_path, monkeypatch,
                                                                     sandbox_state):
-    """Yeniden-üretim çağrısı patlayınca İLK metin gider ama teslim hükmü `llm_dustu`dur — ilk turun
+    """Yeniden-üretim DENETLENEMEYİNCE ikinci metin gider ve teslim hükmü `llm_dustu`dur — ilk turun
     `uydurma` listesi yalnız `ilk_hukum`da yaşar. Satır yalnız teslim hükmünü taşısaydı, ölçüm
-    canlının yakalanan metin hakkındaki gerçek hükmünü kaybederdi."""
+    canlının yakalanan metin hakkındaki gerçek hükmünü kaybederdi.
+
+    SENARYO DEĞİŞTİ (TSK-196, 2026-09-17): çivi eskiden yeniden-üretim ÇAĞRISININ patladığı dalı
+    sürüyordu; o dal artık ilk hükmü KORUR (teslim hükmü = ilk hüküm, `teslim_karari` =
+    `ihlal_duzeltilemedi` — `tests/test_ihlal_duzeltilemedi_v519.py` çivi 5) ve iki hükmü AYIRT
+    ETMEZ. Ayrımı ölçmeye devam etmek için iki hükmün hâlâ ayrıştığı dal sürülür: yeniden-DENETİM
+    patlar."""
     dizin = tmp_path / "yakalama"
     monkeypatch.setenv(sd.EDG101_YAKALAMA_ENV, str(dizin))
-    g = _gecir(sd, tmp_path, cagir=_PatlayanDenetci(_ihlalli_cevap(("tetti", "kritikisi"))))
-    assert g.hukum.kaynak == "llm_dustu" and g.metin == f"ilk metin {METIN_IZI}", f"ön koşul: {g!r}"
+    g = _gecir(sd, tmp_path, cagir=_PatlayanDenetci(_ihlalli_cevap(("tetti", "kritikisi")),
+                                                    "düzeltilmiş metin ve gerekçesi"))
+    assert g.hukum.kaynak == "llm_dustu" and g.metin == "düzeltilmiş metin ve gerekçesi", (
+        f"ön koşul: {g!r}")
     s = _satirlar(dizin)[0]
     assert s["ilk_hukum"] == {"kaynak": "llm", "uydurma": ["tetti", "kritikisi"],
                               "terim_ihlal": [], "suzulen": []}, s["ilk_hukum"]
