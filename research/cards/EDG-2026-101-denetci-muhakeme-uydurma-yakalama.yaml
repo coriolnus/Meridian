@@ -93,3 +93,12 @@ rol1_notu_2026_09_16: >
   Metin anlık görüntüsü yerelde `research/olcumler/edg101_denetci_muhakeme/girdi/a1_journal_brifing_metinleri_2026-09-16.jsonl`
   (31 satır, sha256 671a16079c3984d5…, `notify.scrub` 0 değişiklik) — DEPOYA GİRMEDİ: canlı kaynaklı içerikle
   sonraki adım sınıflandırıcıda engellendi, depoya/GitHub'a girmesi operatör kararı.
+
+rol1_notu_2026_09_17: >
+  2026-09-17 06:39Z YAKALAMA CANLI [Rol-1 doğruladı, salt-okur]: dağıtım #59 (kod 5b9bb83; `dagit --uygula`
+  sınıflandırıcıda engellendi, operatör koştu; worker 06:36:44Z) + A0 `site.yml` (Rol-1, failed=0). Üç brifing
+  biriminde `ReadWritePaths=-/opt/veri/olcum/edg101/yakalama` ve `MERIDIAN_EDG101_YAKALAMA_DIZIN` etkin, dizin
+  ubuntu 0700. PENCERE BAŞLANGICI bu andır: ölçüm seti yalnız 2026-09-17T06:36:44Z sonrası yakalanan satırlardan
+  kurulur. İlk beklenen satır bekçi 10:03Z. Günlük metin anlık görüntüsünün asıl kaydı A1'e taşındı
+  (`/opt/veri/olcum/edg101/journal_anlik/brifing_metinleri_2026-09-16.jsonl`, sha256 671a16079c3984d5…, 0700);
+  yerel kopya depo dışında (devir klasörü). Ölçüm kodu kart-önce, henüz yazılmadı.
