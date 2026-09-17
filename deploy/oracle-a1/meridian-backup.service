@@ -19,6 +19,33 @@
 #    başlarsa bu karar yeniden tartılır.
 #    H7 tatbikat beyanı buna göre güncellendi: "64/64 JSON sağlam" restore'u sprint alt-ağacını
 #    İÇEREN bir arşiv üzerinde yapılmıştı; bundan sonraki tatbikatlar sprint'siz arşivi doğrular.
+#  * 2026-09-17 TSK-197 — ELLE BIRAKILAN SIR YEDEĞİ KOPYALARI ARŞİVE ALINMAZ:
+#    `--exclude="state/secrets.json.bak-*"`. NEDEN (ölçüldü): TSK-189 sır rotasyonunda ELLE
+#    bırakılmış tek seferlik kopya `state/secrets.json.bak-20260915T073825Z-tsk189` root:root 0600
+#    (depoda bu adla dosya yazan kod YOK). Birim User=ubuntu → tar "Cannot open" → tar çıkışı 2 →
+#    `[ $rc -le 1 ]` kapısı düşer → birim 2026-09-15'ten beri HER GECE failed. Arşiv yine
+#    yazılıyordu (veri kaybı yok) ama ExecStartPost'un 7 günlük silmesi koşmuyordu (arşiv birikir)
+#    ve kalıcı kırmızı gerçek bir arızayı körleştiriyordu.
+#    Ölçüm (Rol-1, A1, 2026-09-17 07:3xZ, GNU tar 1.35, ubuntu olarak, diske arşiv yazılmadan
+#    `tar -cf - ... | wc -c`):
+#      bugünkü komut (--exclude=state/sprint)       → tar çıkışı 2 · "Cannot open" 1
+#      + --exclude="state/secrets.json.bak-*"       → tar çıkışı 0 · "Cannot open" 0
+#    state/ altında ubuntu için okunamayan TEK dosya bu kopyaydı (`find state ! -readable`).
+#    ÖLÇÜM TUZAĞI: `tar -cf /dev/null` GNU tar'da dosyaları AÇMAZ → okuma hatası üretmez → sahte
+#    rc=0. Doğrulama `-f -` + boru ile yapılır.
+#    TIRNAK BİLEREK: systemd dış tek tırnağı söker, sh `-c` dizgisini tırnaksız görür ve `*`lı
+#    çıplak kelimeye yol-adı genişletmesi UYGULAR (bugün eşleşme olmadığı için kelime aynen
+#    kalırdı — güvence bir tesadüfe dayanırdı). Çift tırnak genişletmeyi sh'ta kapatır, tar ölçülen
+#    argümanı birebir alır ve deseni KENDİ joker eşleşmesiyle uygular. Düz `"` systemd tek
+#    tırnağından sağlam geçer (python bacağı aynı biçimi taşıyor); yasak olan `\"`dir (aşağıda).
+#    BEDEL (bedel yasası): `state/secrets.json.bak-*` adlı kopyalar gece arşivinde YOKTUR. Sır
+#    yedeklerinin kanonik yeri /root/sir-yedek-* (deploy/oracle-a1/sir_rotasyon.sh); canlı
+#    state/secrets.json arşive girmeye DEVAM eder (yukarıdaki madde değişmedi). Desen DAR:
+#    state/meridian.db.yedek ve state/meridian.db.<damga>.bak (+ -wal/-shm) içeride kalır.
+#    REDDEDİLEN: `--ignore-failed-read` — okunamayan HER dosyayı sessizce atlar ve bu birimin H9
+#    vakasındaki "sessiz yedek kaybı" sınıfını geri getirir. Kapı sıkı kalır; dışlama ADIYLA, DAR.
+#    Mevcut kopyanın SİLİNMESİ operatör kararıdır (sır dosyası) — bu değişiklik ona dokunmaz.
+#    Çivi: tests/test_yedek_sir_kopyasi_disla_v517.py.
 [Unit]
 Description=Meridian state/ daily local backup (tar.gz, 7-day retention)
 
@@ -41,7 +68,7 @@ ExecStartPre=/bin/chmod 700 /home/ubuntu/backups
 # Çözüm iki bacaklı: (1) yol string-literal değil sys.argv[1] — dizgide İÇ TIRNAK KALMADI,
 # systemd'nin çözeceği kaçış yok; (2) `ok` bayrağı — python bacağı düşerse tar YİNE alınır
 # (bars değerlidir) ama birim BAŞARISIZ beyan eder; sessiz yedek kaybı bir daha yaşanmaz.
-ExecStart=/bin/sh -c 'ok=1; if [ -s /opt/meridian/state/meridian.db ]; then uv run python -c "import sys; from meridian import storage; storage.backup_to(sys.argv[1])" /opt/meridian/state/meridian.db.yedek || ok=0; fi; tar -czf /home/ubuntu/backups/state-$(date +%%F).tar.gz --exclude=state/sprint -C /opt/meridian state; rc=$$?; [ $$rc -le 1 ] && [ $$ok -eq 1 ]'
+ExecStart=/bin/sh -c 'ok=1; if [ -s /opt/meridian/state/meridian.db ]; then uv run python -c "import sys; from meridian import storage; storage.backup_to(sys.argv[1])" /opt/meridian/state/meridian.db.yedek || ok=0; fi; tar -czf /home/ubuntu/backups/state-$(date +%%F).tar.gz --exclude=state/sprint --exclude="state/secrets.json.bak-*" -C /opt/meridian state; rc=$$?; [ $$rc -le 1 ] && [ $$ok -eq 1 ]'
 ExecStartPost=/usr/bin/find /home/ubuntu/backups -maxdepth 1 -name state-*.tar.gz -mtime +7 -delete
 
 # ==================================================================================================
