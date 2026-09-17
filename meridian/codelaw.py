@@ -34,7 +34,8 @@ buldu ve bu modül ikisini de çalışma zamanına hiç dokunmadan, ast ile kayn
   ve `report()["ok"]`i ETKİLEMEZ — adıyla raporlanır, bekçiyi kırmızıya çekmez.
 
 Modül SAF DENETİMDİR: durum değiştirmez, karar vermez, diske yazmaz; yalnız kaynak ağacını
-(meridian/*.py, ui/src/*.ts[x], docs/*.md) okur. Toplu hüküm `report()` ile panoya ve bekçiye çıkar."""
+(`URETIM_KOKLERI` = meridian/*.py + ops/*.py, ui/src/*.ts[x], docs/*.md) okur. Toplu hüküm `report()`
+ile panoya ve bekçiye çıkar."""
 from __future__ import annotations
 
 import ast
@@ -64,6 +65,36 @@ SIGNAL_ATTRS = frozenset({
 SIGNAL_NAMES = frozenset({"print", "log", "warn", "alarm", "repr_exc"})
 
 _SKIP_DIRS = {"__pycache__", ".venv", "node_modules", ".git"}
+
+#: ÜRETİM KÖKLERİ — TEK KAYNAK (TSK-206, 2026-09-17). Yasa 4 (`silent_handlers`) ve Yasa 6
+#: (`artifact_graph`, `declared_claims`) tarayıcılarının VARSAYILAN kökü. `ops/` bu tarihe dek hiçbir
+#: tarayıcının kökünde değildi ve bu bilinçli bir dışlama değil bir SINIR BEYANIYDI
+#: (docs/ARTEFAKT-TARAMASI-2026-08-07 madde 2). ÖLÇÜLEN BEDELİ (2026-09-17): 44 dosyada 19 işaretsiz
+#: yakalayıcı görünmüyordu ve `DECLARED_SINKS`in 4 ops brifing damgası beyanı doğrulanamıyordu —
+#: "mekanik" etiketi `ops/` için doğru değildi (CLAUDE.md §4: zorlanamayan yasa zorlananla aynı güçte
+#: değildir). SIRA ANLAMLIDIR: `_global_consts` çakışan sabit adında ÖNCEKİ kökün kararını korur.
+#: MODÜL KİMLİĞİ TABAN ADIDIR (`f.name`): iki kökte aynı ad iki modülü tek modül sayar — bugün 0,
+#: `modul_adi_cakismalari` ölçer ve `report()["ok"]`i düşürür.
+URETIM_KOKLERI: tuple[str, ...] = ("meridian", "ops")
+
+
+def _kokler(root) -> tuple[str, ...]:
+    """Tek kök (`str`/yol) ya da kök demeti → SIRASI korunmuş, TEKİLLEŞTİRİLMİŞ dizge demeti.
+
+    TEKİLLEŞTİRME ZORUNLU: `ops` hem üretim kökünde hem `_EK_CAPA_KOKLERI`nde durur; iki kez
+    gezilen kök her dosyayı iki kez sayar ve çapa adres defterinde her adı `ikircikli` yapardı."""
+    if isinstance(root, (str, pathlib.PurePath)):
+        return (str(root),)
+    return tuple(dict.fromkeys(str(k) for k in root))
+
+
+def _uretim_agaci_mi(kokler: tuple[str, ...]) -> bool:
+    """`report()`un ÜRETİM AĞACI kapısı (TSK-206 öncesi `root == "meridian"` karşılaştırması).
+
+    Kökler üretim köklerinin alt kümesi VE `meridian`i içeriyor. `report("meridian")` GERİYE UYUMLU
+    olarak üretim sayılır (kısmi tarama, ek çapa kökleri + ui/src + docs açık); sentetik `tmp_path`
+    kökü sayılmaz — deponun `tests/`/`ui/src`/`docs/`i testin kendi ağacına karışmaz."""
+    return "meridian" in kokler and set(kokler) <= set(URETIM_KOKLERI)
 
 # Bu turda BAŞKA iş kollarına ait olduğu için düzenlenemeyen dosyalar. İhlalleri BEYAN EDİLİR ve
 # raporlanır — allowlist DEĞİL: yasa hepsini saymaya devam eder, yalnız "sıfır" iddiası düzenlenebilir
@@ -96,9 +127,10 @@ def _note_unscanned(path, exc: BaseException, phase: str) -> None:
         UNSCANNED.append(rec)
 
 
-def _py_files(root: str):
+def _py_files(root):
     """`root` altındaki `.py` dosyalarını ad sırasıyla üretir; `_SKIP_DIRS` (`__pycache__`,
-    `.venv`, `node_modules`, `.git`) altında kalan yollar atlanır.
+    `.venv`, `node_modules`, `.git`) altında kalan yollar atlanır. `root` tek kök ya da kök demeti
+    olabilir (TSK-206): demette kökler VERİLİŞ SIRASIYLA, her kök kendi içinde ad sırasıyla gezilir.
 
     ELEME KÖK ALTINDA YAPILIR, MUTLAK YOLDA DEĞİL. Eski hâl `f.parts` diyordu, yani yolun
     TÜM bileşenlerini — deponun KENDİSİ `.venv` (ya da `.git`, `node_modules`) adlı bir dizinin
@@ -106,11 +138,12 @@ def _py_files(root: str):
     Sıfır-ihlal, sıfır-tarama demekti: bekçinin kendi körlüğünü yeşil sanması. Eleme artık
     `f.relative_to(kok).parts` üzerindedir — karar deponun NEREYE kurulduğuna değil, kökün
     ALTINDAKİ yapıya bakar."""
-    kok = pathlib.Path(root)
-    for f in sorted(kok.rglob("*.py")):
-        if any(p in _SKIP_DIRS for p in f.relative_to(kok).parts):
-            continue
-        yield f
+    for k in _kokler(root):
+        kok = pathlib.Path(k)
+        for f in sorted(kok.rglob("*.py")):
+            if any(p in _SKIP_DIRS for p in f.relative_to(kok).parts):
+                continue
+            yield f
 
 
 # ---------------------------------------------------------------------------
@@ -297,9 +330,10 @@ def _scan_agac(tree: ast.Module, src: str, filename: str) -> list[dict]:
     return out
 
 
-def silent_handlers(root: str = "meridian", include_annotated: bool = False) -> list[dict]:
+def silent_handlers(root=URETIM_KOKLERI, include_annotated: bool = False) -> list[dict]:
     """Sinyal üretmeyen bütün `except` blokları. Varsayılan olarak yalnız İŞARETSİZ olanlar —
-    yani ihlaller — döner; `include_annotated=True` gerekçeli olanları da listeler (denetim için)."""
+    yani ihlaller — döner; `include_annotated=True` gerekçeli olanları da listeler (denetim için).
+    Varsayılan kök `URETIM_KOKLERI`dir (TSK-206: `ops/` dâhil); tek `str` kök eskisi gibi çalışır."""
     out: list[dict] = []
     for f in _py_files(root):
         try:
@@ -317,7 +351,7 @@ def silent_handlers(root: str = "meridian", include_annotated: bool = False) -> 
     return out
 
 
-def annotated_handlers(root: str = "meridian") -> list[dict]:
+def annotated_handlers(root=URETIM_KOKLERI) -> list[dict]:
     """Bilinçli olarak sessiz bırakılmış yakalayıcılar — gerekçeleriyle. Bu liste UZARSA yasa
     aşınıyor demektir; sayısı raporlanabilsin diye ayrı durur."""
     return [h for h in silent_handlers(root, include_annotated=True) if h["marker"]]
@@ -359,10 +393,16 @@ DECLARED_SINKS: dict[str, str] = {
     # `marketview.build` keşfedilen evreni bars'ta olmayan semboller için satır üretmekte
     # kullanıyor ve gerekçesini panonun Piyasa sekmesine taşıyor. Muafiyet işi bittikten sonra
     # da yerinde dursaydı liste "kimsenin bakmadığı çöplüğe" dönerdi (yukarıdaki kural).
-    "monotonic_amnesty.json": "watchdog.grant_amnesty yazar, watchdog._amnesty_index okur (aynı modül "
-                              "→ statik graf göremez). İçerik ÖLÜ DEĞİL: monotonicity_report onu "
-                              "'amnestied' alanıyla dışa verir ve pano gerekçesiyle birlikte gösterir. "
-                              "Meşru küçülmenin (re-seed) yazılı kaydı — bkz. 2026-07-22 trades 129→96",
+    # NOT: `monotonic_amnesty.json` buradan ÇIKARILDI (TSK-206, 2026-09-17). Eski beyan DOĞRUYDU:
+    # "watchdog.grant_amnesty yazar, watchdog._amnesty_index okur (aynı modül → statik graf göremez).
+    # İçerik ÖLÜ DEĞİL: monotonicity_report onu 'amnestied' alanıyla dışa verir ve pano gerekçesiyle
+    # birlikte gösterir. Meşru küçülmenin (re-seed) yazılı kaydı — bkz. 2026-07-22 trades 129→96".
+    # Kalkma sebebi artefaktın ölmesi DEĞİL, grafın genişlemesidir: üretim kökleri `ops/`u kapsayınca
+    # DIŞ bir okuyucu görünür oldu — `ops/sermaye_beyani_iade.py` operatör raporunun `peak_affi`
+    # alanını `store.read_json(watchdog.AMNESTY_FILE, …)` ile doğrudan okur. `unread` False'a döndü
+    # ve beyan yerinde kalsaydı `stale_sinks` ihlali olurdu (bu sözlüğün KENDİ kuralı). BEDEL: tek dış
+    # okuyucu insan-çağrılı bir onarım betiğidir; betik emekli edilirse artefakt yeniden `unread`
+    # olur ve beyan AYNI metinle geri gelmelidir (v59/v214 çivileri o gün öter).
     "search_progress.json": "canlı arama ilerlemesinin SÜREÇLER-ARASI nüshası (ROADMAP Ö-50). "
         "Yazan `hermes._progress_aynala`, okuyan `hermes.search_progress_oku` — ikisi de AYNI "
         "modülde, o yüzden statik graf dış okuyucu göremiyor. GERÇEK tüketiciler başka modüllerde "
@@ -429,8 +469,9 @@ DECLARED_SINKS: dict[str, str] = {
     "agent_traces.jsonl": "HAM AJAN İZİ (D3 modül 2, C2-2): çağrı başına tam stdout+stderr, "
                           "sır-maskeli, akış başına 8.000 karakter tavanlı ve 300 satırlık halkasal "
                           "budamalı. Tüketicisi `agent_telemetry.iz_oku()` (aynı modül → statik graf "
-                          "göremez) ve `ops/vaka_sabitle.py` (fikstür dondurucusu; `meridian/` "
-                          "DIŞINDA, tarama kapsamı dışı). HAM SATIRLAR PANOYA BİLEREK TAŞINMAZ: "
+                          "göremez) ve `ops/vaka_sabitle.py` (fikstür dondurucusu; TSK-206'dan beri "
+                          "taranır ama okuması ad PARAMETRESİYLE → `ad_cozulemedi` kovasında, dış "
+                          "okuyucu olarak görünmez). HAM SATIRLAR PANOYA BİLEREK TAŞINMAZ: "
                           "~5 MB'lık ham izi HTTP gövdesine koymak hem maliyet hem sızıntı "
                           "yüzeyidir; panoya çıkan şey defterin DOLULUĞUdur "
                           "(`agent_telemetry.ozet()['iz']` → hermes.integrations_status → "
@@ -621,25 +662,27 @@ DECLARED_SINKS: dict[str, str] = {
                   "tetikleyicisi `unread` bayrağıdır, tek `store` okuması aynı modülde olduğu için "
                   "`unread` True kalıyor ve muafiyet 'geçerli' görünüyordu",
     # --- TSK-178 (2026-09-12): bot damga dosyaları — yazar VE okuyucu aynı `ops/` modülünde ------
-    # `artifact_graph` yalnız `meridian/` kökünü tarar; `ops/<bot>_brifingi.py` içindeki
-    # `store.update_json(DAMGA_DOSYA, …)` yazımı ve `store.read_json(DAMGA_DOSYA, …)` okumaları
-    # (kadans/sessizlik sayacı/son brifing künyesi) statik grafta GÖRÜNMEZ — `pool_exhausted_seen`
-    # sınıfı. Bekçi 2026-08-31'den beri bu dördünü "üretilip tüketilmeyen kanıt" sayıyordu (alarm
+    # `ops/<bot>_brifingi.py` içindeki `store.update_json(DAMGA_DOSYA, …)` yazımı ve
+    # `store.read_json(DAMGA_DOSYA, …)` okumaları (kadans/sessizlik sayacı/son brifing künyesi) AYNI
+    # modüldedir → dış okuyucu yok, `unread` doğar — `pool_exhausted_seen` sınıfı. TSK-178'de
+    # `artifact_graph` yalnız `meridian/` kökünü taradığı için bu beyanların yazarı HİÇ görünmüyordu
+    # (sessiz beyan); TSK-206'dan (2026-09-17) beri `URETIM_KOKLERI` `ops/`u da tarar ve yazar grafta
+    # DOĞRULANIR. Bekçi 2026-08-31'den beri bu dördünü "üretilip tüketilmeyen kanıt" sayıyordu (alarm
     # gürültüde boğulur — VLO dersi). `oneri_akibet.jsonl` BURADA DEĞİL: motor okuyucusu var
     # (`mukerrerlik`), alarm da onu saymıyordu. Beyan ↔ kaynak örtüşmesi v463 çivisiyle ölçülür
     # (dosya adı sabiti, yazım, okuma); ops modülü okumayı bırakırsa çivi öter, beyan çürür.
     "bekci_brifingi_damga.json": "yazar ve okuyucu `ops/bekci_brifingi.py` (store.update_json ile "
-        "damgalar, store.read_json ile kalem defteri + sessizlik sayacını okur); `ops/` kökü statik "
-        "grafta taranmaz — okuyucu VAR, dış modül değil (TSK-178, v463)",
+        "damgalar, store.read_json ile kalem defteri + sessizlik sayacını okur); aynı modül → "
+        "`unread` doğar — okuyucu VAR, dış modül değil (TSK-178, v463; yazar TSK-206'dan beri grafta)",
     "karne_brifingi_damga.json": "yazar ve okuyucu `ops/karne_brifingi.py` (store.update_json / "
-        "store.read_json — haftalık karne damgası ve kadans); `ops/` kökü statik grafta taranmaz "
-        "(TSK-178, v463)",
+        "store.read_json — haftalık karne damgası ve kadans); aynı modül → `unread` doğar "
+        "(TSK-178, v463; yazar TSK-206'dan beri grafta)",
     "oneri_brifingi_damga.json": "yazar ve okuyucu `ops/oneri_brifingi.py` (store.update_json ile "
         "damgalar, store.read_json ile son damgayı okur — mükerrer öneri kapısı); `sef_brifingi` "
-        "adını yalnız şerhte anar; `ops/` kökü statik grafta taranmaz (TSK-178, v463)",
+        "adını yalnız şerhte anar; aynı modül → `unread` doğar (TSK-178, v463; TSK-206)",
     "sef_brifingi_damga.json": "yazar ve okuyucu `ops/sef_brifingi.py` (store.update_json ile "
         "damgalar; store.read_json ile son brifing, kural denetimi ve sessizlik sayacını okur); "
-        "`ops/` kökü statik grafta taranmaz (TSK-178, v463)",
+        "aynı modül → `unread` doğar (TSK-178, v463; yazar TSK-206'dan beri grafta)",
 }
 
 
@@ -698,7 +741,8 @@ DECLARED_SINK_PATTERNS: dict[str, dict[str, str]] = {
                    "defterinden kartın dört eksenini hesaplar. Pilot bitince bayrak KAPANIR "
                    "(kill#8) ve yazım durur.",
         "sinanamaz": "OKUYUCU MOTOR DIŞINDADIR: `artifact_graph` ve `declared_claims` yalnız "
-                     "`meridian` kökünü tarar, research/ altındaki aracı GÖREMEZ — iddia bugünkü "
+                     "`URETIM_KOKLERI`ni (meridian + ops) tarar, research/ altındaki aracı "
+                     "GÖREMEZ — iddia bugünkü "
                      "çağrı analiziyle sınanamaz ve bu yüzden `unverifiable_claims` kovasında "
                      "ADIYLA raporlanır. DESENİN GENİŞLİĞİ DE BEYANDIR (bedel yasası): "
                      "`edg085_` öneki anahtarı `*/*.jsonl`den `*/edg085_*.jsonl`e DARALTTI (dal "
@@ -709,6 +753,30 @@ DECLARED_SINK_PATTERNS: dict[str, dict[str, str]] = {
                      "quotecapture olduğunu ölçer ve ikinci yazar girdiği gün kırmızı olur. "
                      "DEVİR ŞARTI: kart EDG-2026-085 hükmü inip bayrak kapandığı gün BU SATIR "
                      "KALDIRILMALI (ya da hüküm kaydına atıfla yenilenmeli, Rol-1).",
+    },
+    "*/edg101_*.jsonl": {
+        "sinif": "dis_okuyucu_arastirma",
+        "gerekce": "EDG-2026-101 BRİFİNG DENETİMİ GİRDİSİNİN İLERİYE DÖNÜK YAKALANMASI (TSK-200). "
+                   "YAZAN: `soul_denetimi._edg101_yakala` — modüldeki TEK `store` yazımı, "
+                   "`store.append_jsonl` çağrısı; adı yakalama dizini + `edg101_` LİTERAL öneki + UTC "
+                   "gün defterinden kurulan bir f-string. Dizin YALNIZ MERIDIAN_EDG101_YAKALAMA_DIZIN "
+                   "ortam değişkeninden gelir, MUTLAK olmak zorundadır (göreli değer reddedilir ve "
+                   "`edg101_yakalama_dustu` uyarısıyla adıyla söylenir: `store` onu canlı state/ "
+                   "altına bağlardı) ve değişken boşsa TEK BAYT yazılmaz. Açan yalnız üç brifing "
+                   "biriminin `60-edg101-yakalama.conf` drop-in'idir; A1'de /opt/veri altında, "
+                   "dağıtımın --delete kapsamı dışında. OKUYAN: EDG-2026-101 ölçüm kodu "
+                   "(research/olcumler/edg101_denetci_muhakeme/) — KART-ÖNCE, HENÜZ YAZILMADI.",
+        "sinanamaz": "OKUYUCU HENÜZ YOK VE MOTOR DIŞINDA OLACAK: ölçüm kodu kart-önce yazılmadı ve "
+                     "yazıldığında research/ altında duracak — `artifact_graph` o kökü taramaz, "
+                     "iddia bugünkü çağrı analiziyle sınanamaz ve `unverifiable_claims` kovasında "
+                     "ADIYLA raporlanır. Beyan TSK-206'ya dek YAZILAMIYORDU: `ops/` taranmadığı için "
+                     "desen `desen_kodda_yok` ile çürük sayılırdı (sink/desen görünürlük asimetrisi). "
+                     "DESENİN GENİŞLİĞİ DE BEYANDIR (edg085 emsali): `edg101_` öneki daraltır ama "
+                     "dizin ve gün çözülemediği için iki `*` kalır; "
+                     "`tests/test_codelaw_ops_kapsami_v518.py` çivisi desenin çağrı yerlerinin YALNIZ "
+                     "soul_denetimi olduğunu ölçer. DEVİR ŞARTI: ölçüm kodu yazıldığında okuyucu "
+                     "adıyla güncellenir; kart hükmü inip drop-in'ler kalktığı gün BU SATIR "
+                     "KALDIRILMALI.",
     },
 }
 
@@ -738,6 +806,29 @@ HUMAN_INVOKED_SINKS: dict[str, dict[str, str]] = {
     },
 }
 
+#: SINANAMAYAN SINK BEYANI — BORÇ DEFTERİ (TSK-206, 2026-09-17). Bir `DECLARED_SINKS` beyanının
+#: taramadaki ÜÇ meşru hâli vardır: DOĞRULANIR (yazarı grafta görünür), BORÇ DEFTERİNDE nedeniyle
+#: durur (`unverifiable_claims`) ya da ÇÜRÜK sayılır (`stale_claims`). Hiçbiri olmayan beyan SESSİZ
+#: BEYANDIR ve `declared_claims` onu `sessiz_beyan:*` nedeniyle ÇÜRÜK sayar. ÖLÇÜLEN VAKA
+#: (2026-09-17): 44 beyanın 6'sının yazarı görünmüyordu ve altısı da NE borç defterinde NE çürüktü
+#: — oysa `DECLARED_SINK_PATTERNS` aynı durumu `desen_kodda_yok` ile KIRIYORDU (asimetri). Kök
+#: genişlemesi (`URETIM_KOKLERI`) 4 ops damgasını DOĞRULANIR yaptı; kalan ikisinin yazarı `store`
+#: DIŞINDAN yazar ve statik graf onu YAPISAL olarak göremez — buraya NEDENİYLE girer.
+#: ÇÜRÜME ŞARTI: yazarı grafta görünür olan bir ad burada kalırsa kayıt ÇÜRÜK sayılır
+#: (`sinanamaz_beyan_bayat:yazar_gorunur`) — borç, ödenince defterden düşer.
+UNVERIFIABLE_SINKS: dict[str, str] = {
+    "auth.json": "YAZAR STATİK GRAFTA YAPISAL OLARAK GÖRÜNMEZ: yazım `auth._write` içinde `store` "
+                 "DIŞI dosya erişimidir (0600 atomik yazım; yol `auth._auth_file`) ve `artifact_graph` "
+                 "yalnız `store` okuma/yazma çağrılarını sayar. Beyanın dayandığı zincir "
+                 "`DECLARED_SINKS` gerekçesinde ve `tests/test_beyan_bayatligi_v246.py` çivisinde "
+                 "ölçülür. DEVİR ŞARTI: yazım `store` kapısına taşınırsa BU SATIR KALDIRILMALI.",
+    "litestream.env": "YAZAR STATİK GRAFTA YAPISAL OLARAK GÖRÜNMEZ: `secrets.litestream_env_sync` env "
+                      "dosyasını `store` DIŞINDAN (0600 doğum) yazar; okuyucusu da bir modül değil "
+                      "systemd `EnvironmentFile=`dır. İki uç da `artifact_graph`ın gördüğü `store` "
+                      "çağrısı değildir. DEVİR ŞARTI: S3 replica emekli olursa `DECLARED_SINKS` "
+                      "satırıyla BİRLİKTE BU SATIR KALDIRILMALI.",
+}
+
 
 def _module_consts(tree: ast.Module) -> dict[str, str]:
     """Modül düzeyindeki string sabitleri (ledgers.declared_writers'daki çalışan öncül taklit
@@ -755,23 +846,37 @@ def _module_consts(tree: ast.Module) -> dict[str, str]:
     return consts
 
 
-def _global_consts(root: str) -> dict[str, str]:
+def _global_consts(root) -> dict[str, str]:
     """Modüller arası sabit tablosu: `from .obs import _EVENTS` gibi ödünç alınmış adlar için
     ikinci şans. Çakışan adlar (aynı ad, farklı değer) DÜŞÜRÜLÜR — yanlış çözmektense
-    `unresolved` demek dürüsttür."""
-    seen: dict[str, str | None] = {}
-    for f in _py_files(root):
-        try:
-            tree = _ast_oku(f)                   # memo: bu fonksiyon tur başına İKİ kez çağrılıyor
-        except (SyntaxError, OSError, ValueError) as e:   # ValueError: UnicodeDecodeError dâhil
-            _note_unscanned(f, e, "artifact_graph:consts")
-            continue
-        for k, v in _module_consts(tree).items():
-            if k in seen and seen[k] != v:
-                seen[k] = None
-            else:
-                seen.setdefault(k, v)
-    return {k: v for k, v in seen.items() if v}
+    `unresolved` demek dürüsttür.
+
+    ÇOK KÖK — ÖNCEKİ KÖKÜN KARARI KORUNUR (TSK-206, 2026-09-17). Tablo KÖK KÖK kurulur; bir kökün
+    içindeki çakışma kuralı yukarıdakiyle aynıdır. Kökler birleşirken ÖNCEKİ kökte geçen her ad —
+    çözülmüş de olsa, çakışıp DÜŞÜRÜLMÜŞ de olsa — sonraki kökün değeriyle ne EZİLİR ne yeniden
+    CANLANIR; sonraki kök yalnız önceki köklerde HİÇ geçmeyen adları ekler. NEDEN (ölçüldü
+    2026-09-17, meridian↔ops): ortak 7 addan 3'ü farklı değerliydi — `BELLEK_ENV_AD` düz birleşmede
+    düşer ve `meridian`de BUGÜN çözülen bir adı çözülemez yapardı (UYDURMA değil ama SESSİZ bir
+    körleşme); `BASE`/`DEFTER` zaten `meridian` içinde düşmüştü ve `ops` değeriyle canlanmamalı.
+    Bedeli: `ops` içinden, `meridian`de de tanımlı bir adı başka bir ops modülünden ödünç alan çağrı
+    meridian değeriyle çözülür — bugün 0 örnek (ops yerel sabiti `_module_consts` ile ÖNCE çözülür)."""
+    birlesik: dict[str, str | None] = {}
+    for kok in _kokler(root):
+        seen: dict[str, str | None] = {}
+        for f in _py_files(kok):
+            try:
+                tree = _ast_oku(f)               # memo: bu fonksiyon tur başına İKİ kez çağrılıyor
+            except (SyntaxError, OSError, ValueError) as e:   # ValueError: UnicodeDecodeError dâhil
+                _note_unscanned(f, e, "artifact_graph:consts")
+                continue
+            for k, v in _module_consts(tree).items():
+                if k in seen and seen[k] != v:
+                    seen[k] = None
+                else:
+                    seen.setdefault(k, v)
+        for k, v in seen.items():
+            birlesik.setdefault(k, v)            # önceki kökün kararı (değer YA DA düşürme) kalır
+    return {k: v for k, v in birlesik.items() if v}
 
 
 def _looks_like_artifact(s: str) -> bool:
@@ -956,17 +1061,27 @@ def _onbellege_yaz(cache: dict, key, res: Any, evreler: tuple[str, ...]) -> Any:
     return res
 
 
-def _src_stamp(root: str) -> tuple:
+def _src_stamp(root) -> tuple:
     """Kaynak ağacının parmak izi: dosya sayısı + en yeni değişiklik zamanı.
-    61 stat() çağrısı, mikrosaniyeler — ayrıştırmanın yanında ölçülemez."""
-    ps = sorted(pathlib.Path(root).rglob("*.py"))
-    return (len(ps), max((q.stat().st_mtime_ns for q in ps), default=0))
+    61 stat() çağrısı, mikrosaniyeler — ayrıştırmanın yanında ölçülemez.
+
+    Tek kök → `(sayı, en_yeni_mtime)` (eski şekil AYNEN). Kök demeti (TSK-206) → kök başına bu
+    çiftlerin demeti: bir dosyanın kökler arasında taşınması toplam sayıyı değiştirmese de kök
+    başına sayıyı değiştirir ve önbelleği düşürür."""
+    damgalar = []
+    for k in _kokler(root):
+        ps = sorted(pathlib.Path(k).rglob("*.py"))
+        damgalar.append((len(ps), max((q.stat().st_mtime_ns for q in ps), default=0)))
+    return damgalar[0] if len(damgalar) == 1 else tuple(damgalar)
 
 
-def artifact_graph(root: str = "meridian") -> dict:
+def artifact_graph(root=URETIM_KOKLERI) -> dict:
     """Her artefakt için: yazarlar, okuyucular ve BAŞKA hiçbir modül tarafından okunmuyorsa
     `unread` bayrağı. Çözülemeyen adlar (f-string, değişken, çağrı) sessizce yutulmaz —
-    `unresolved` listesine yazılır; tarayıcının kendi körlüğünü gizlemesi bu yasanın ihlali olurdu."""
+    `unresolved` listesine yazılır; tarayıcının kendi körlüğünü gizlemesi bu yasanın ihlali olurdu.
+
+    Varsayılan kök `URETIM_KOKLERI`dir (TSK-206: `ops/` betiklerinin `store` erişimleri de grafa
+    girer); modül kimliği TABAN ADIDIR ve kökler arası çakışması `modul_adi_cakismalari` ile ölçülür."""
     # ÖNBELLEK — KAYNAK MTIME'INA BAĞLI. Bu fonksiyon projenin TÜM Python
     # kaynağını ast ile ayrıştırır ve panonun /api/diagnostics ucundan HER Operasyon açılışında
     # iki kez çağrılıyordu. Ölçüm: uç 4,18 sn; 1,17 sn'i burası, 419 ast.parse + 614.836 ast.walk.
@@ -978,17 +1093,18 @@ def artifact_graph(root: str = "meridian") -> dict:
     # ağaçta ilk çağrı körlüğü kaydeder, `UNSCANNED.clear()` sonrası ikinci çağrı 0 kaydeder.
     # Bu, bu modülün kendi sözleşmesini (bekçi körlüğünü RAPOR eder) çürütüyordu. Çözüm: körlük
     # kayıtları sonuçla BİRLİKTE saklanır ve isabette İDEMPOTENT biçimde geri yazılır.
-    _key = (root, _src_stamp(root))
+    kokler = _kokler(root)
+    _key = (kokler, _src_stamp(kokler))
     _hit = _onbellek_oku(_GRAPH_CACHE, _key)
     if _hit is not _YOK:
         return _hit
 
-    gconsts = _global_consts(root)
+    gconsts = _global_consts(kokler)
     arts: dict[str, dict[str, Any]] = {}
     unresolved: list[dict] = []
     patterns: dict[str, int] = {}      # görülen HER `store` erişim deseninin sayımı
 
-    for f in _py_files(root):
+    for f in _py_files(kokler):
         try:
             src = _kaynak_oku(f)
             tree = _ast_oku(f)
@@ -1097,8 +1213,8 @@ def artifact_graph(root: str = "meridian") -> dict:
 #
 # KAPAMA (asgari, bilerek dar): beyan METNİNİN İDDİASI, FONKSİYON-ÇAĞRI düzeyinde doğrulanır.
 # Bir beyan "bu artefaktı üretim kodunda kimse okumuyor" diyorsa (aşağıdaki desenler), tarayıcı
-# okumayı İÇEREN fonksiyonu ve onu çağıran modül-içi sarmalayıcıyı bulur, sonra BAŞKA bir
-# `meridian/` modülünün o fonksiyonu çağırıp çağırmadığına bakar. Çağırıyorsa iddia ÇÜRÜKTÜR.
+# okumayı İÇEREN fonksiyonu ve onu çağıran modül-içi sarmalayıcıyı bulur, sonra üretim köklerindeki
+# BAŞKA bir modülün o fonksiyonu çağırıp çağırmadığına bakar. Çağırıyorsa iddia ÇÜRÜKTÜR.
 #
 # AŞIRIYA KAÇMAMA SINIRI — BİLİNÇLİ: bu TAM bir çağrı grafiği DEĞİLDİR. Modül içinde yalnız
 # `_HOP` (=1) sıçrama izlenir. Ölçüldü: 1 sıçrama `report()` → `stages()` zincirini yakalar;
@@ -1239,9 +1355,10 @@ def _reach_in_module(tree: ast.AST, artifact: str, consts: dict, gconsts: dict) 
 _CLAIMS_CACHE: dict = {}
 
 
-def declared_claims(root: str = "meridian", declared: dict[str, str] | None = None,
+def declared_claims(root=URETIM_KOKLERI, declared: dict[str, str] | None = None,
                     patterns: dict[str, dict] | None = None,
-                    human: dict[str, dict] | None = None) -> list[dict]:
+                    human: dict[str, dict] | None = None, *,
+                    sinanamaz: dict[str, str] | None = None) -> list[dict]:
     """ÜÇ beyan kaydının birlikte denetimi. Her kaydın İDDİASI farklıdır, dolayısıyla ÇÜRÜME
     ŞARTI da farklıdır — tek bir "bayat mı" sorusu üçünü birden ölçemez:
 
@@ -1255,32 +1372,43 @@ def declared_claims(root: str = "meridian", declared: dict[str, str] | None = No
       kind="human"   (`HUMAN_INVOKED_SINKS`)    iddia: "tek tüketici şu CLI bayrağı".
                      ÇÜRÜR: modül yoksa, bayrak argparse'ta yoksa, okuyucu `main`den
                      erişilemiyorsa, ya da artefaktın dış okuyucusu hiç yoksa (yanlış kayıt).
+
+    SESSİZ BEYAN (TSK-206, 2026-09-17) — sink ve human kayıtlarında ORTAK çürüme şartı. Beyan ya
+    DOĞRULANIR (artefaktın yazarı grafta görünür), ya BORÇ DEFTERİNDE nedeniyle durur
+    (`UNVERIFIABLE_SINKS` → `unverifiable` alanı → `unverifiable_claims`), ya da ÇÜRÜKTÜR. Yazarı
+    görünmeyen ve borç defterinde olmayan beyan `sessiz_beyan:yazar_gorunmuyor` nedeniyle ÇÜRÜK
+    sayılır; borç defterindeki bir adın yazarı görünür olursa kayıt `sinanamaz_beyan_bayat:
+    yazar_gorunur` ile ÇÜRÜR. Desen katmanının `desen_kodda_yok` kuralının sink/human karşılığıdır:
+    eskiden desen beyanı görünmeyen yazarı KIRIYOR, sink beyanı TOLERE ediyordu (EDG-101 vakası).
+    `sinanamaz` enjeksiyonu `declared`/`patterns`/`human` ile aynı YALITIM kuralına tabidir.
     """
-    # ENJEKSİYON = YALITIM. Üçünden BİRİ verildiyse diğerleri de BOŞ sayılır, canlı kayıtlara
+    # ENJEKSİYON = YALITIM. Dördünden BİRİ verildiyse diğerleri de BOŞ sayılır, canlı kayıtlara
     # düşmez. Aksi hâlde sentetik bir `root` ile tek kayıt sınanırken canlı desen/CLI beyanları
     # o ağaçta karşılıksız kalıp sahte "çürük" üretirdi — dedektörün kendi testini kirletmesi.
-    _canli = declared is None and patterns is None and human is None
+    _canli = declared is None and patterns is None and human is None and sinanamaz is None
     decl = DECLARED_SINKS if _canli else (declared or {})
     pats = DECLARED_SINK_PATTERNS if _canli else (patterns or {})
     hum = HUMAN_INVOKED_SINKS if _canli else (human or {})
+    borc = UNVERIFIABLE_SINKS if _canli else (sinanamaz or {})
+    kokler = _kokler(root)
     if _canli:
         # ÖNBELLEK + KÖRLÜK: bkz. `_onbellek_oku`. İsabet dalında `artifact_graph` HİÇ
         # çağrılmadığı için onun körlüğünü kendi önbelleği geri yazamaz — bu yüzden burada
         # saklanan evre kümesi grafiğinkini de KAPSAR.
-        _key = (root, _src_stamp(root))
+        _key = (kokler, _src_stamp(kokler))
         _hit = _onbellek_oku(_CLAIMS_CACHE, _key)
         if _hit is not _YOK:
             return _hit
 
-    gconsts = _global_consts(root)
+    gconsts = _global_consts(kokler)
     mods: dict[str, tuple] = {}
-    for f in _py_files(root):
+    for f in _py_files(kokler):
         try:
             mods[f.name] = (_ast_oku(f), f)
         except (SyntaxError, OSError, ValueError) as e:   # ValueError: UnicodeDecodeError dâhil
             _note_unscanned(f, e, "declared_claims")
 
-    graph = artifact_graph(root)
+    graph = artifact_graph(kokler)
     idx = _call_index(mods)
     out: list[dict] = []
     for art, gerekce in decl.items():
@@ -1305,15 +1433,20 @@ def declared_claims(root: str = "meridian", declared: dict[str, str] | None = No
                                 key=_site_key)
                 if yerler:
                     accessors[f"{stem}.{fn}"] = yerler
+        nedenler = ["okuyucu_yok_iddiasi_curutuldu"] if (claim and accessors) else []
+        nedenler += _sessiz_beyan_nedenleri(art, info, borc)
         out.append({"kind": "sink", "artifact": art, "claim_patterns": claim,
                     "claims_no_prod_reader": bool(claim),
-                    "host_modules": host_mods, "unverifiable": None,
+                    "host_modules": host_mods,
+                    # BORÇ DEFTERİ: yazarı YAPISAL olarak görünmeyen beyan nedeniyle raporlanır;
+                    # yazar görünür olduysa neden artık doğru DEĞİLDİR ve kayıt çürük sayılır.
+                    "unverifiable": borc.get(art) if not info.get("writers") else None,
                     "desen_yerleri": [],   # yalnız kind="pattern" doldurur — alan HER kayıtta VAR
                     # değer listeleri ÇAĞRI YERİ (`_site_key`); anahtarlar `modul.fn` adıdır ve
                     # ad sırası (düz `sorted`) onlar için doğrudur.
                     "external_accessors": {k: sorted(v, key=_site_key)
                                            for k, v in sorted(accessors.items())},
-                    "stale_claim": bool(claim) and bool(accessors)})
+                    "stale_reasons": nedenler, "stale_claim": bool(nedenler)})
 
     # --- kind="pattern": sınanabilirliğini SÖYLEMEYEN beyan çürüktür -----------------------
     kod_desenleri = graph["declared_patterns"]
@@ -1371,6 +1504,8 @@ def declared_claims(root: str = "meridian", declared: dict[str, str] | None = No
         if info and info.get("unread"):
             # dış okuyucusu YOK — bu kayda değil `DECLARED_SINKS`e ait (yanlış dosyalanmış beyan)
             nedenler.append("dis_okuyucu_yok_DECLARED_SINKS_e_ait")
+        # human kaydının borç defteri YOK (iddiası CLI düzeyinde SINANIR): yazar görünmüyorsa sessiz.
+        nedenler += _sessiz_beyan_nedenleri(art, info, {})
         out.append({"kind": "human", "artifact": art, "claim_patterns": [],
                     "claims_no_prod_reader": False, "host_modules": sorted(info.get("readers", [])),
                     "desen_yerleri": [],   # yalnız kind="pattern" doldurur — alan HER kayıtta VAR
@@ -1378,19 +1513,48 @@ def declared_claims(root: str = "meridian", declared: dict[str, str] | None = No
                     "stale_reasons": nedenler, "stale_claim": bool(nedenler)})
 
     if _canli:
-        return _onbellege_yaz(_CLAIMS_CACHE, (root, _src_stamp(root)), out,
+        return _onbellege_yaz(_CLAIMS_CACHE, (kokler, _src_stamp(kokler)), out,
                               ("declared_claims", "artifact_graph"))
     return copy.deepcopy(out)
 
 
-def stale_claims(root: str = "meridian", declared: dict[str, str] | None = None,
+def _sessiz_beyan_nedenleri(art: str, info: dict, borc: dict[str, str]) -> list[str]:
+    """Bir sink/human beyanının SESSİZ BEYAN nedenleri (bkz. `declared_claims` docstring'i).
+
+    Yazar grafta görünüyorsa beyan DOĞRULANIR — borç kaydı da varsa kayıt bayattır. Yazar
+    görünmüyorsa beyan ya borç defterinde nedeniyle durur ya da SESSİZDİR. Boş liste = sağlıklı."""
+    if info.get("writers"):
+        return ["sinanamaz_beyan_bayat:yazar_gorunur"] if art in borc else []
+    return [] if borc.get(art) else ["sessiz_beyan:yazar_gorunmuyor"]
+
+
+def stale_claims(root=URETIM_KOKLERI, declared: dict[str, str] | None = None,
                  patterns: dict[str, dict] | None = None,
-                 human: dict[str, dict] | None = None) -> list[dict]:
+                 human: dict[str, dict] | None = None, *,
+                 sinanamaz: dict[str, str] | None = None) -> list[dict]:
     """Yalnız ÇÜRÜTÜLMÜŞ beyanlar. Boş olmalı; dolu ise bir muafiyet gerçeği örtüyor demektir."""
-    return [c for c in declared_claims(root, declared, patterns, human) if c["stale_claim"]]
+    return [c for c in declared_claims(root, declared, patterns, human, sinanamaz=sinanamaz)
+            if c["stale_claim"]]
 
 
-def unverifiable_claims(root: str = "meridian") -> list[dict]:
+def modul_adi_cakismalari(root=URETIM_KOKLERI) -> dict[str, list[str]]:
+    """MODÜL KİMLİĞİ ÇAKIŞMASI (TSK-206). `artifact_graph`/`declared_claims` modülü TABAN ADIYLA
+    (`f.name`) tanır: iki kökte (ya da bir kökün iki alt dizininde) aynı adlı iki dosya, grafta TEK
+    modül sayılır — yazar/okuyucu listeleri sessizce birleşir, `declared_claims`in modül sözlüğünde
+    biri ötekini EZER. Modül kimliğini göreli yola çevirmek yazar/okuyucu adlarını bekleyen onlarca
+    çiviyi kırardı; onun yerine çakışma ÖLÇÜLÜR ve `report()["ok"]`i düşürür.
+
+    `__init__.py` DIŞARIDA: paket işaretçisidir ve meridian içinde bile tekil değildir (ölçüldü
+    2026-09-17: tek çakışma meridian içi `__init__.py`). Dönüş: `{taban_adı: [yol, yol, ...]}`."""
+    yollar: dict[str, list[str]] = {}
+    for f in _py_files(root):
+        if f.name == "__init__.py":
+            continue
+        yollar.setdefault(f.name, []).append(str(f))
+    return {ad: ys for ad, ys in sorted(yollar.items()) if len(ys) > 1}
+
+
+def unverifiable_claims(root=URETIM_KOKLERI) -> list[dict]:
     """SINANAMAYAN ama BEYAN EDİLMİŞ iddialar — gelecek-zamanlı tüketici sözleri. Bu liste bir
     muafiyet değil bir BORÇ DEFTERİDİR: her satır, bugün ölçülemeyen bir vaattir ve devir şartı
     kendi metninde yazılıdır. Boş olması gerekmez; GÖRÜNMEZ olması yasaktır."""
@@ -1495,9 +1659,12 @@ def _ts_files(root: str):
 
 def _capa_adres_defteri(kokler) -> dict[str, list[pathlib.Path]]:
     """Çapa hedeflerinin BASENAME → yollar defteri. Çapa metni `dosya.py:NNN` olduğu için defter
-    HER ZAMAN Python ağacından kurulur — çapayı yazan dosyanın dili ne olursa olsun."""
+    HER ZAMAN Python ağacından kurulur — çapayı yazan dosyanın dili ne olursa olsun.
+
+    Kökler TEKİLLEŞTİRİLİR (TSK-206): aynı kök iki kez gezilirse her dosya defterde iki yolla durur
+    ve tek adaylı her çapa `ikircikli` sayılırdı (`ops` hem üretim hem ek çapa kökündedir)."""
     adres: dict[str, list[pathlib.Path]] = {}
-    for k in kokler:
+    for k in _kokler(kokler):
         kok = pathlib.Path(k)
         if not kok.exists():
             continue
@@ -1808,6 +1975,8 @@ def _beyan_metinleri() -> list[tuple[str, str]]:
         ler.append((f"DECLARED_SINK_PATTERNS[{ad}]", " ".join(map(str, kayit.values()))))
     for ad, kayit in HUMAN_INVOKED_SINKS.items():
         ler.append((f"DECLARED_HUMAN[{ad}]", " ".join(map(str, kayit.values()))))
+    for ad, neden in UNVERIFIABLE_SINKS.items():            # TSK-206: borç defteri de beyan metnidir
+        ler.append((f"DECLARED_UNVERIFIABLE[{ad}]", neden))
     return ler
 
 
@@ -1952,7 +2121,7 @@ def _yorum_sembol_capalari(metin_kokler: tuple[str, ...] = ("meridian", "tests")
     return _onbellege_yaz(_YORUM_SEMBOL_CACHE, _key, sonuc, ("_yorum_metinleri", "capa_uyusmasi"))
 
 
-def stale_line_anchors(root: str = "meridian",
+def stale_line_anchors(root="meridian",
                        cozulemeyen_out: list | None = None,
                        ek_kokler: tuple[str, ...] = ()) -> list[dict]:
     """SATIR ÇAPASI YASASI: kaynaktaki her `dosya.py:NNN` çapasını ÖLÇER ve çürükleri döndürür.
@@ -1985,7 +2154,8 @@ def stale_line_anchors(root: str = "meridian",
     # TARANAN KÖKLER ve ADRES DEFTERİ AYNI KÜMEDEN kurulur: `tests/` içindeki bir çapa
     # `meridian/`deki bir dosyayı gösterebilir (ve çoğu öyle yapar), dolayısıyla adres defteri
     # tüm köklerden doğar — yoksa o çapalar "hedef_yok" diye ölçülemez sayılırdı.
-    kokler = [root, *ek_kokler]
+    # TEKİL (TSK-206): `root` artık bir demet olabilir ve `ops` hem üretim demetinde hem ek köklerdedir.
+    kokler = _kokler((*_kokler(root), *ek_kokler))
     dosyalar = (g for k in kokler if pathlib.Path(k).exists() for g in _py_files(k))
     return _capalari_olc(dosyalar, _capa_adres_defteri(kokler),
                          cozulemeyen_out, "stale_line_anchors")
@@ -2267,24 +2437,33 @@ def stale_text_anchors(root: str = DOCS_CAPA_KOKU,
     return curuk
 
 
-def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
+def report(root=URETIM_KOKLERI, tsx_kok: str | None = None) -> dict:
     """İki yasanın birlikte durumu — tek bakışta 'kaç ihlal' cevabı.
 
-    `tsx_kok` verilmezse tsx çapaları YALNIZ üretim ağacında (`root == "meridian"`) ölçülür;
-    sentetik bir kökle çağıran testler kendi ağacını ölçmek ister ve oraya deponun `ui/src`ini
-    karıştırmak testin ölçtüğü şeyi bozardı (`_EK_CAPA_KOKLERI` ile aynı disiplin)."""
-    sil = silent_handlers(root)
-    ann = annotated_handlers(root)
-    graph = artifact_graph(root)
-    curuk = stale_claims(root)
+    `tsx_kok` verilmezse tsx çapaları YALNIZ üretim ağacında (`_uretim_agaci_mi`; TSK-206 öncesi
+    `root == "meridian"`) ölçülür; sentetik bir kökle çağıran testler kendi ağacını ölçmek ister ve
+    oraya deponun `ui/src`ini karıştırmak testin ölçtüğü şeyi bozardı (`_EK_CAPA_KOKLERI` ile aynı
+    disiplin). Varsayılan kök `URETIM_KOKLERI`dir; `report("meridian")` geriye uyumlu KISMİ taramadır."""
+    kokler = _kokler(root)
+    uretim = _uretim_agaci_mi(kokler)
+    sil = silent_handlers(kokler)
+    ann = annotated_handlers(kokler)
+    graph = artifact_graph(kokler)
+    curuk = stale_claims(kokler)
+    cakisma = modul_adi_cakismalari(kokler)
     capa_kor: list[dict] = []
     # EK KÖKLER YALNIZ ÜRETİM AĞACINDA: sentetik bir `root` ile çağıran testler kendi tmp ağacını
     # ölçmek ister; oraya depo `tests/`ini karıştırmak testin ölçtüğü şeyi bozardı.
-    ek = _EK_CAPA_KOKLERI if root == "meridian" else ()
-    capalar = stale_line_anchors(root, cozulemeyen_out=capa_kor, ek_kokler=ek)
+    ek = _EK_CAPA_KOKLERI if uretim else ()
+    # ÇAPA DÜNYASININ PYTHON KÖKLERİ — TEKİL (TSK-206): `ops` hem üretim demetinde hem `ek`te durur;
+    # iki kez gezilseydi her ops çapası iki kez sayılır, adres defterinde her ops adı `ikircikli`
+    # olurdu. Küme TSK-206 öncesiyle AYNI (meridian + tests + ops), yalnız gezinme sırası
+    # (meridian, ops, tests) — sayım aynı kalır (çivi: v518 `test_9a`).
+    capa_kokleri = _kokler((*kokler, *ek))
+    capalar = stale_line_anchors(kokler, cozulemeyen_out=capa_kor, ek_kokler=ek)
     # TSX ÇAPALARI — ÖLÇÜLMEYEN None'DIR, BOŞ LİSTE DEĞİL (UYDURMA YASAĞI): boş liste "baktım,
     # temiz" der; sentetik kökte doğru cevap "bakmadım"dır.
-    tsx_hedef = tsx_kok if tsx_kok is not None else (TSX_CAPA_KOKU if root == "meridian" else None)
+    tsx_hedef = tsx_kok if tsx_kok is not None else (TSX_CAPA_KOKU if uretim else None)
     tsx_kor: list[dict] | None = None
     tsx_capalar: list[dict] | None = None
     tsx_nuks: bool | None = None
@@ -2293,7 +2472,7 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
         # ADRES DEFTERİ PY TARAMASIYLA AYNI KÖKLERDEN: tsx'teki çapa bir Python dosyasını gösterir,
         # dolayısıyla hedefleri raporun ölçtüğü Python ağacında aranmalı — sentetik kökle çağıran
         # test, deponun `meridian/`ini değil kendi ağacını ölçer.
-        tsx_capalar = stale_tsx_line_anchors(tsx_hedef, py_kokler=(root, *ek),
+        tsx_capalar = stale_tsx_line_anchors(tsx_hedef, py_kokler=capa_kokleri,
                                              cozulemeyen_out=tsx_kor)
         tsx_nuks = tsx_capa_nuksu(tsx_capalar)
     # DOCS ÇAPALARI — ÜÇÜNCÜ DÜNYA (TSK-080). tsx ile AYNI kapıya bağlı: sentetik kökle çağıran
@@ -2302,10 +2481,10 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
     docs_disla: list[str] | None = None
     docs_capalar: list[dict] | None = None
     docs_curuk_var: bool | None = None
-    if tsx_hedef is not None:                    # AYNI kapı: `root == "meridian"` (ya da beyanlı)
+    if tsx_hedef is not None:                    # AYNI kapı: `_uretim_agaci_mi` (ya da beyanlı)
         docs_kor = []
         docs_disla = []
-        docs_capalar = stale_docs_line_anchors(DOCS_CAPA_KOKU, py_kokler=(root, *ek),
+        docs_capalar = stale_docs_line_anchors(DOCS_CAPA_KOKU, py_kokler=capa_kokleri,
                                                cozulemeyen_out=docs_kor, disla_out=docs_disla)
         docs_curuk_var = bool(docs_capalar)
     # DÜZ-METİN/ÇAPRAZ-BİÇİM ÇAPASI — DÖRDÜNCÜ DÜNYA (TSK-080). `ok`u ETKİLEMEZ (docstringte
@@ -2323,8 +2502,8 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
         # İKİ BESLEME, TEK ÇEKİRDEK — ayrışan yalnız BİÇİM KAPSAMI: Python tarafı `modül.sembol`
         # de yazar, pano tarafı YALNIZ `dosya.py::sembol` (gerekçe `capa_uyusmasi` kapsam sınırı 1).
         beyan, tsx_met = _beyan_metinleri(), _tsx_metinleri(tsx_hedef)
-        s_beyan = capa_uyusmasi(beyan, py_kokler=(root, *ek), modul_bicimi=True)
-        s_tsx = capa_uyusmasi(tsx_met, py_kokler=(root, *ek))
+        s_beyan = capa_uyusmasi(beyan, py_kokler=capa_kokleri, modul_bicimi=True)
+        s_tsx = capa_uyusmasi(tsx_met, py_kokler=capa_kokleri)
         sembol = {k: [*s_beyan[k], *s_tsx[k]] for k in ("cozulen", "curuyen", "cozulemeyen")}
         sembol["besleme"] = {"beyan": len(beyan), "tsx": len(tsx_met)}
         sembol_curume = bool(sembol["curuyen"])
@@ -2350,11 +2529,13 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
         # "meridian") davranış AYNI kalır — varsayılan hâlâ ("meridian","tests"). Sentetik kökte
         # metin taraması SENTETİK köke iner: `root/"meridian"` ve `root/"tests"`ten VAR OLANLAR
         # taranır, yoksa () → 0 dosya (UYDURMA YASAĞI: sentetik ağaçta gerçek repo metni karışmaz).
-        metin_kokler = (("meridian", "tests") if root == "meridian" else
-                        tuple(str(p) for p in
-                              (pathlib.Path(root) / "meridian", pathlib.Path(root) / "tests")
+        # TSK-206: "gerçek ağaç" kararı `_uretim_agaci_mi`dir; metin kökü KAPSAMI DEĞİŞMEDİ (ops
+        # yorumları bu beslemeye bu kalemde ALINMADI — `_yorum_metinleri` docstring'indeki asimetri).
+        metin_kokler = (("meridian", "tests") if uretim else
+                        tuple(str(p) for k in kokler for p in
+                              (pathlib.Path(k) / "meridian", pathlib.Path(k) / "tests")
                               if p.exists()))
-        yorum_sembol = _yorum_sembol_capalari(metin_kokler=metin_kokler, py_kokler=(root, *ek))
+        yorum_sembol = _yorum_sembol_capalari(metin_kokler=metin_kokler, py_kokler=capa_kokleri)
         yorum_sembol_curume = bool(yorum_sembol["curuyen"])
     return {"silent_handlers": len(sil), "annotated_handlers": len(ann),
             "artifacts": len(graph["artifacts"]), "unread": graph["unread"],
@@ -2371,8 +2552,15 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
             # ÇÜRÜTÜLMÜŞ MUAFİYET BEYANLARI — `stale_sinks`in yapısal kör noktası.
             # Üç kaydı da kapsar: sink · pattern · human.
             "stale_claims": [c["artifact"] for c in curuk],
+            # SESSİZ BEYAN (TSK-206): `stale_claims`in `sessiz_beyan:*` nedenli alt kümesi — İKİNCİ
+            # bir hesap DEĞİL, aynı kayıtlardan TÜRETİLİR (ok'a `stale_claims` üzerinden bağlı).
+            "sessiz_beyanlar": [c["artifact"] for c in curuk
+                                if any(str(n).startswith("sessiz_beyan")
+                                       for n in c.get("stale_reasons") or [])],
+            # MODÜL KİMLİĞİ ÇAKIŞMASI (TSK-206): taban adı aynı iki dosya grafta TEK modül sayılır.
+            "modul_adi_cakismasi": cakisma,
             # SINANAMAYAN ama BEYANLI iddialar: muafiyet değil BORÇ defteri.
-            "unverifiable_claims": [u["artifact"] for u in unverifiable_claims(root)],
+            "unverifiable_claims": [u["artifact"] for u in unverifiable_claims(kokler)],
             "unscanned": list(UNSCANNED),          # tarayıcının göremedikleri — sıfır ihlal iddiasının şartı
             # ÇÜRÜK SATIR ÇAPALARI: beyanın METNİ ölçülür (stale_claims yalnız ULAŞILABİLİRLİĞİ
             # ölçer, bu onun yapısal kör noktasıydı). Elle süpürme sınıfı kapatmadı; yasa kapatır.
@@ -2424,5 +2612,6 @@ def report(root: str = "meridian", tsx_kok: str | None = None) -> dict:
             # `… is not True` AÇIK YAZILDI: `not x` deseydik ölçülmemiş (None) durum sessizce
             # "temiz" sayılırdı — hükmü olmayanı yeşile yazmak UYDURMA olurdu.
             "ok": not sil and not graph["violations"] and not curuk and not UNSCANNED
+                  and not cakisma
                   and not capalar and tsx_nuks is not True and docs_curuk_var is not True
                   and sembol_curume is not True and yorum_sembol_curume is not True}

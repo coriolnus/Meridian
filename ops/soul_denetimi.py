@@ -1119,12 +1119,12 @@ def jeton_gecer_mi(cevap: str) -> tuple[bool, bool]:
 #
 # OKUYUCU (Yasa 6): EDG-2026-101 ölçüm kodu — kart-önce, HENÜZ YAZILMADI
 # (`research/olcumler/edg101_denetci_muhakeme/`). Çıktı A1'de `/opt/veri` altında kalır (canlı
-# `state/` defteri DEĞİL, dağıtımın `--delete` kapsamı dışında). `codelaw` BEYANI YOK ve bu bir
-# ölçümdür: `codelaw.artifact_graph` yalnız `meridian/` kökünü tarar, bu `ops/` yazımı orada hiç
-# görünmez; `DECLARED_SINK_PATTERNS`e yazılan bir desen `desen_kodda_yok` ile çürük sayılırdı.
-# `edg101_` öneki yine de f-string İÇİNDE LİTERALDİR (`meridian/quotecapture.py` `edg085_` yazım
-# kapısının gerekçesi): `codelaw._joined_glob` bu çağrı yerinden `*/edg101_*.jsonl` türetir, yani
-# tarama bir gün `ops/`i kapsarsa desen dar ve hazırdır (çivi: v516 K8).
+# `state/` defteri DEĞİL, dağıtımın `--delete` kapsamı dışında). `codelaw` BEYANI VAR (TSK-206,
+# 2026-09-17): `codelaw.artifact_graph` artık `URETIM_KOKLERI`ni (meridian + ops) tarar, bu yazım
+# grafta görünür ve `DECLARED_SINK_PATTERNS` içindeki `*/edg101_*.jsonl` deseni onu `sinanamaz` ile sahiplenir.
+# `edg101_` öneki f-string İÇİNDE LİTERALDİR (`meridian/quotecapture.py` `edg085_` yazım
+# kapısının gerekçesi): `codelaw._joined_glob` bu çağrı yerinden `*/edg101_*.jsonl` türetir ve desen
+# dar kalır (çivi: v516 K8 şekli · v518 çağrı yerlerinin YALNIZ bu modül olduğunu ölçer).
 
 #: Yakalama dizininin TEK kaynağı — MUTLAK yol; boş/yok = KAPALI.
 EDG101_YAKALAMA_ENV = "MERIDIAN_EDG101_YAKALAMA_DIZIN"

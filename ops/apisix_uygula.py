@@ -83,9 +83,9 @@ def _kredensiyel_degeri(ham: str) -> str | None:
 def _kredensiyelden() -> str | None:
     try:
         ham = KRED_DOSYASI.read_text(encoding="utf-8")
-    # sessiz-yutma: credential kanalı İSTEĞE BAĞLIDIR (dosya A1'de elle kurulur) — dosya-yok,
-    # izin ya da kodlama hatasının tek doğru cevabı yedek kanala düşmektir; iki kanal da boşsa
-    # hüküm `anahtar()`ta verilir ve izin sınıfı orada ADIYLA anılır.
+    # credential kanalı İSTEĞE BAĞLIDIR (dosya A1'de elle kurulur) — dosya-yok, izin ya da kodlama
+    # hatasının tek doğru cevabı yedek kanala düşmektir; iki kanal da boşsa hüküm `anahtar()`ta
+    # sessiz-yutma: isteğe bağlı kanal okunamadı → yedeğe düşülür; hüküm ve izin sınıfı anahtar()ta ADIYLA
     except (OSError, ValueError):
         return None
     return _kredensiyel_degeri(ham)
@@ -100,9 +100,9 @@ def _env_dosyasindan() -> str | None:
     yanlış" derken hata soyma kodunda olurdu. Mevcut davranış aynen korunur (çivi: v476 A7)."""
     try:
         ham = ENV_DOSYASI.read_text(encoding="utf-8")
-    # sessiz-yutma: yedek kanal da isteğe bağlıdır (bu makinede dosya YOKTUR ve olmaması bir
-    # ihlal değil ölçüm sonucudur) — "okunamadı" ile "satır yok" aynı cevaba düşer ve iki kanal
-    # da boşken hükmü `anahtar()` verir
+    # yedek kanal da isteğe bağlıdır (bu makinede dosya YOKTUR ve olmaması bir ihlal değil ölçüm
+    # sonucudur) — "okunamadı" ile "satır yok" aynı cevaba düşer
+    # sessiz-yutma: isteğe bağlı yedek kanal okunamadı → None; iki kanal da boşken hükmü anahtar() verir
     except (OSError, ValueError):
         return None
     for satir in ham.splitlines():

@@ -101,7 +101,7 @@ def referans_sasi_yukle(yol, ad="edg032b_ref"):
     sys.argv = [str(yol)]
     try:
         exec(kod, mod.__dict__)
-    except SystemExit:            # `raise SystemExit(main())` — içe aktarmada BEKLENİR
+    except SystemExit:            # sessiz-yutma: şasi `raise SystemExit(main())` desenindedir — modül olarak yüklenirken bu çıkış BEKLENİR (on üç çağrı yerindeki dans birebir); çıkış KODU kaybolur (TSK-206)
         pass
     finally:
         sys.argv = eski_argv

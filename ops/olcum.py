@@ -318,7 +318,7 @@ def tara(kok: pathlib.Path = KOK) -> OlayTarama:
             try:
                 agac = ast.parse(kaynak, filename=str(yol))
             except SyntaxError:
-                # Tek dosyanın parse hatası tüm taramayı düşürmemeli — ama SESSİZCE ATLANAMAZ
+                # sessiz-yutma: tek dosyanın parse hatası tüm taramayı düşürmemeli — ama SESSİZCE ATLANAMAZ
                 # (fix round 5). Atlanan dosya `taranan_dosya`ya SAYILDI, yani kapsam satırı onu
                 # "taradım" diye beyan ediyor; içindeki çağrılar ise ne toplama ne çözülene
                 # giriyor — round-4'ün "hiçbir kovaya düşmeyen dosya" arızasının birebir aynısı,

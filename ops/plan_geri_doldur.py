@@ -72,7 +72,7 @@ def _jsonl_satirlari(p: Path) -> list[dict]:
             continue
         try:
             rows.append(json.loads(line))
-        except json.JSONDecodeError:
+        except json.JSONDecodeError:  # sessiz-yutma: bozuk satır SAYILIR ve döngü sonunda "UYARI: … çözümlenemeyen satır ATLANDI" olarak ADIYLA basılır
             bozuk += 1
     if bozuk:
         print(f"  UYARI: {p} içinde {bozuk} çözümlenemeyen satır ATLANDI (kaynak yarım olabilir)")
@@ -94,7 +94,7 @@ def _db_planlari(db: Path) -> list[dict]:
             if extra:
                 try:
                     d.update(json.loads(extra))   # storage sözleşmesi: okumada extra KAZANIR
-                except (TypeError, ValueError):
+                except (TypeError, ValueError):  # sessiz-yutma: storage okuma sözleşmesinin aynası — bozuk extra yalnız SERBEST alanları düşürür, tipli kolonlar kalır; sözleşmeli alan kaybı `olc`teki validate_row ile SAYILIR, serbest alan kaybı SAYILMAZ (TSK-206)
                     pass
             out.append(d)
         return out
@@ -124,7 +124,7 @@ def kaynak_planlari(yol: Path) -> list[dict]:
             for uye in (f"state/{PLANS}", "state/meridian.db"):
                 try:
                     tar.extract(uye, tmp)
-                except KeyError:
+                except KeyError:  # sessiz-yutma: arşivde bu aday üye yoksa sıradaki aday denenir; HİÇBİRİ yoksa hemen aşağıdaki FileNotFoundError iki adı da ADIYLA fırlatır
                     continue
                 return kaynak_planlari(Path(tmp) / uye)
         raise FileNotFoundError(f"{yol}: arşivde state/{PLANS} ya da state/meridian.db yok")

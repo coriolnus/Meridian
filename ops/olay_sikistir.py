@@ -233,7 +233,7 @@ def worker_aktif_mi() -> bool | None:
         r = subprocess.run([systemctl, "is-active", "meridian.service"],
                             capture_output=True, text=True, timeout=5)
     except (OSError, subprocess.SubprocessError):
-        return None  # sessiz-yutma DEĞİL: None zaten "ölçülemedi" hükmüdür, çağıran fail-safe okur
+        return None  # sessiz-yutma: None zaten "ölçülemedi" hükmüdür, çağıran fail-safe okur (None = aktif VARSAY)
     durum = r.stdout.strip()
     if durum == "active":
         return True

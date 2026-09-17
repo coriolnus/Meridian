@@ -210,7 +210,7 @@ def _sha_full(p: pathlib.Path) -> str | None:
     try:
         return hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest()
     except OSError:
-        return None    # ölçülemedi (dosya yok/okunamadı)
+        return None    # sessiz-yutma: ölçülemedi (dosya yok/okunamadı) — None sha hiçbir kapıda EŞİT sayılmaz (kapı KAPALI düşer), şasi kapısı nedenini `olculemedi_nedeni`ne yazar
 
 
 def motor_sha(motor_dizini: pathlib.Path | None = None) -> dict:

@@ -71,10 +71,11 @@ def _olculen_dokuz() -> list[tuple[str, int, str]]:
             for satir, rol, _ad in _store_cagri_yerleri(d)]
 
 
-def _desen_satiri(dosya: str) -> int:
+def _desen_satiri(dosya: str, kok: str = "meridian") -> int:
     """Bir modüldeki f-string adlı `append_jsonl` çağrısının satırı — TAZE ölçülür (satır çapası
-    donmaz). Tekil olmalı: iki desenli çağrı, desen katmanının tek-yazma-kapısı varsayımını kırar."""
-    src = (REPO / "meridian" / dosya).read_text()
+    donmaz). Tekil olmalı: iki desenli çağrı, desen katmanının tek-yazma-kapısı varsayımını kırar.
+    `kok` (TSK-206): desen yazımı artık `ops/` betiğinde de olabilir (EDG-101 yakalaması)."""
+    src = (REPO / kok / dosya).read_text()
     satirlar = [n.lineno for n in ast.walk(ast.parse(src))
                 if isinstance(n, ast.Call) and getattr(n.func, "attr", None) == "append_jsonl"
                 and n.args and isinstance(n.args[0], ast.JoinedStr)]
@@ -374,8 +375,13 @@ def test_intraday_bars_DECLARED_gorunuyor_desen_katmaninda():
     # `codelaw.DECLARED_SINK_PATTERNS` içinde gerekçesi + `sinanamaz` alanıyla duruyor ve o desenin
     # çağrı yerlerinin YALNIZ quotecapture olduğu `tests/test_quote_capture_v465.py` D3 çivisinde
     # ölçülüyor (geniş anahtarın bedeli sessiz kalmasın diye). Satırlar taze ölçülür.
+    # 2026-09-17 (TSK-206): ÜÇÜNCÜ desen beyanı — `ops/soul_denetimi.py` EDG-101 yakalaması. Bu
+    # beyan TSK-206'ya dek YAZILAMIYORDU (`ops/` taranmıyordu, desen `desen_kodda_yok` ile çürük
+    # sayılırdı); üretim kökleri `ops/`u kapsayınca çağrı yeri grafta görünür oldu. Çağrı yerlerinin
+    # YALNIZ soul_denetimi olduğu v518 çivisinde ölçülür.
     assert g["declared_patterns"] == {
         "*/edg085_*.jsonl": [f"quotecapture.py:{_desen_satiri('quotecapture.py')}"],
+        "*/edg101_*.jsonl": [f"soul_denetimi.py:{_desen_satiri('soul_denetimi.py', kok='ops')}"],
         "intraday_bars/*.jsonl": [f"bararchive.py:{_bararchive_desen_satiri()}"]}
     assert g["orphan_patterns"] == [], "kodda karşılığı olmayan desen beyanı: ölü muafiyet"
 
@@ -563,7 +569,7 @@ SINK_TABANI = frozenset({
     "composite_budget.json", "entity_damga.json", "fmp_usage.json", "hypothesis_id_hwm.json",
     "inc_cache.json", "insider_signals.json", "insider_trades.json",
     "integrity_audit_log.json", "massive_crosscheck.json", "massive_grouped_last.json",
-    "massive_verify.json", "monotonic_amnesty.json", "notify_sent.json", "oos_erosion.json",
+    "massive_verify.json", "notify_sent.json", "oos_erosion.json",
     "ownership_state.json", "pool_exhausted_seen.json", "probe_cache.json", "regime_trigger.json",
     "scan_debt.json",
     # 2026-08-17 EKLENDİ (ROADMAP Ö-50): `search_progress.json`. Yazan/okuyan aynı modülde
@@ -609,6 +615,12 @@ SINK_TABANI = frozenset({
     # pano `DurumSozlugu.tsx`. Çivi: tests/test_durum_sozlugu_aileler_v503.py (yüzey, kelime
     # türetimi ve uçtan uca kablolama). Muafiyet gerekçesi `codelaw.DECLARED_SINKS` içinde
     # kapanış notuyla korunuyor — neden kalktığı kayıtsız kalmıyor.
+    # v518'DE BEYANLI DÜŞÜRÜLDÜ (2026-09-17, TSK-206) — BİR muafiyet KAPANDI: `monotonic_amnesty.json`.
+    # Düşüşün sebebi yeni bir tüketici yazılması DEĞİL, grafın genişlemesidir: üretim kökleri
+    # (`codelaw.URETIM_KOKLERI`) `ops/`u kapsayınca `ops/sermaye_beyani_iade.py`nin
+    # `store.read_json(watchdog.AMNESTY_FILE, …)` okuması DIŞ okuyucu olarak görünür oldu, `unread`
+    # False'a döndü ve beyan kalsaydı `stale_sinks` ihlaliydi. Eski gerekçe `codelaw.DECLARED_SINKS`
+    # içinde kapanış notuyla korunuyor; betik emekli edilirse beyan AYNI metinle geri gelir.
 })
 
 
@@ -633,7 +645,11 @@ def test_ihlal_seti_GERILEMEDI():
     # 2026-09-13 (EDG-2026-085 tick pilotu): desen beyanı 1 → 2. Sayı BEYANLA yükseldi; ikinci
     # kayıt `quotecapture`in kayıt dizini yazımıdır ve devir şartı (pilot bitince bayrak kapanır,
     # satır kaldırılır) kendi `sinanamaz` alanında yazılıdır.
-    assert len(codelaw.DECLARED_SINK_PATTERNS) == 2 and len(codelaw.HUMAN_INVOKED_SINKS) == 1
+    # 2026-09-17 (TSK-206): desen beyanı 2 → 3, BEYANLA. Üçüncü kayıt `ops/soul_denetimi.py`nin
+    # EDG-101 yakalama yazımıdır (okuyucu kart-önce, HENÜZ YOK → `sinanamaz`); devir şartı kendi
+    # alanında. Aynı turda `UNVERIFIABLE_SINKS` borç defteri doğdu (2 kayıt: yazarı store DIŞI).
+    assert len(codelaw.DECLARED_SINK_PATTERNS) == 3 and len(codelaw.HUMAN_INVOKED_SINKS) == 1
+    assert set(codelaw.UNVERIFIABLE_SINKS) == {"auth.json", "litestream.env"}
     assert r["stale_claims"] == [] and r["orphan_patterns"] == []
     assert r["ok"] is True, r
 

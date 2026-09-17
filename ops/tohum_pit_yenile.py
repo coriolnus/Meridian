@@ -137,7 +137,7 @@ def _tarih(v) -> str | None:
     s = str(v)[:10]
     try:
         dt.date.fromisoformat(s)
-    except ValueError:  # sessiz-yutma DEĞİL: biçimsiz değer çağırana None döner ve sayaçlara `olculemedi` olarak girer
+    except ValueError:  # sessiz-yutma: biçimsiz değer çağırana None döner ve sayaçlara `olculemedi` olarak girer
         return None
     return s
 

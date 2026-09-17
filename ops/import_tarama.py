@@ -121,7 +121,7 @@ def dev_kumesi() -> tuple[set[str], str]:
                 kaldirilan.add(_dagitim_normal(m.group(1)))
         if kaldirilan:
             return kaldirilan, "ÖLÇÜLDÜ (uv sync --dry-run · geçişli)"
-    except (OSError, subprocess.SubprocessError):
+    except (OSError, subprocess.SubprocessError):  # sessiz-yutma: uv ölçümü düşerse doğrudan listeye inilir ve dönen kaynak etiketi "ÖLÇÜLEMEDİ … GEÇİŞLİ KAPANIŞ YOK" der; hata TÜRÜ etikete girmez (TSK-206)
         pass
     # ÖLÇÜM DÜŞTÜ → doğrudan listeye düşülür AMA etiketi bunu söyler; geçişli kapanış EKSİKTİR.
     veri = tomllib.loads((KOK / "pyproject.toml").read_text(encoding="utf-8"))
