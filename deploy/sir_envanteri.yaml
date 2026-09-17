@@ -518,6 +518,16 @@ rotasyon_kopyalari:
 # okuyor" sorusu envanterde yazılı DURUR ve yazıldığı gibi ölçülür.
 
 vault_kv:
+  # ---- DALGA-1 BAĞI (TSK-064, 2026-09-17; Rol-1 kararı Seçenek A) --------------------------------
+  # `dash_token` · `nous_api_key` · `apisix_admin_key` Agent'ın render hedefidir ama `rotasyon_siri`
+  # TAŞIMIYORDU: `sir_rotasyon.sh --dash/--apisix-admin --vault` "kasaya BAĞLI sırrı YOK" ile
+  # düşüyor, `--openrouter --vault` NOUS'u "eski yolla döner" diye beyan ediyordu — ve eski yol
+  # Agent'ın render ettiği dosyaya DOĞRUDAN yazar (hipotez, A1'de ÖLÇÜLMEDİ: Agent render aralığında
+  # kasadaki ESKİ değeri geri yazar, rotasyon sessizce geri alınır). Üçüne YALNIZ `rotasyon_siri`
+  # eklendi: bir BAĞ, şema gevşetmesi değil. `kaynak`/`kopya_kaynaklari` dalga-1'e GİREMEZ (taşıma
+  # kaynağı hedefin kendisidir; v485 E1 ölçer). Bağın tablo tutarlılığı: o sırrın rotasyon tablosundaki
+  # İLK satırı (REFERANS) bu girdinin `hedef`idir (v491 A5 dalga-1 dalı). Çivi: v521.
+  # `HINDSIGHT_API_DATABASE_URL` BU DİLİMDE BAĞLANMAZ — aşağıdaki şerh.
   # ---- MOTOR (meridian.service · LoadCredential) ------------------------------------------------
   - ad: dash_token
     vault_yolu: "secret/meridian/dash_token"
@@ -525,12 +535,14 @@ vault_kv:
     mod: "0400"
     sahip: "root"
     tuketici: "meridian.service (LoadCredential=dash_token)"
+    rotasyon_siri: MERIDIAN_DASH_TOKEN
   - ad: nous_api_key
     vault_yolu: "secret/meridian/nous_api_key"
     hedef: "/etc/meridian/nous_api_key"
     mod: "0400"
     sahip: "root"
     tuketici: "meridian.service (LoadCredential=NOUS_API_KEY)"
+    rotasyon_siri: NOUS_API_KEY
   - ad: kapi_apikey
     vault_yolu: "secret/meridian/kapi_apikey"
     hedef: "/etc/meridian/kapi_apikey"
@@ -549,11 +561,18 @@ vault_kv:
     mod: "0400"
     sahip: "root"
     tuketici: "ops/apisix_uygula.py (operatör eliyle koşan ops aracı; birim DEĞİL, restart yok)"
+    rotasyon_siri: APISIX_ADMIN_KEY
 
   # ---- HAFIZA (hindsight-api.service + meridian.service pano vekili · LoadCredential) -----------
   # Dosyanın ADI değişkenin ADIDIR (`LoadCredential=<kimlik>:<kaynak>` sözleşmesi, v439 I6/I9).
   # Bu yüzden `ad` alanı burada BÜYÜK HARFLİDİR ve motor tarafındaki küçük-harfli adlardan
   # ayrılır: ad bir üslup tercihi değil, systemd'nin okuduğu dosya adıdır.
+  # `HINDSIGHT_API_DATABASE_URL` `rotasyon_siri` TAŞIMAZ ve bu BİLİNÇLİDİR (Rol-1 kararı 2026-09-17,
+  # TSK-064): kasa TAM URL taşır, rotasyonun sırrı ise yalnız PAROLA alanıdır (`HINDSIGHT_DB_PAROLA`,
+  # `ALTER ROLE` + url kopyası) ve eski yol parolayı betik İÇİNDE üretip BASMAZ — yani kasayı
+  # rotasyondan ÖNCE güncellemek mümkün değildir; ALTER ROLE ↔ kasa ↔ render sırası ayrı tasarımdır.
+  # Bu arada `--db` ve `--db --vault` bu girdiden TÜRETİLEN bir Agent render hedefi UYARISI basar
+  # (`sir_rotasyon.sh::_bagsiz_agent_hedefleri`); eski yolun davranışı DEĞİŞMEZ. Çivi: v521 A2/E.
   - ad: HINDSIGHT_API_DATABASE_URL
     vault_yolu: "secret/meridian/HINDSIGHT_API_DATABASE_URL"
     hedef: "/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL"
@@ -605,6 +624,9 @@ vault_kv:
   # kopya listesi tutmak, tek-kaynak yasasının bu depoda en pahalıya mal olmuş ihlalidir. `null`
   # ise sır rotasyon tablosunda YOKTUR (bot anahtarları, pano parolası, CP erişim anahtarı için
   # bugün böyledir) ve kopya listesi ADIYLA beyanlıdır.
+  # 2026-09-17 (TSK-064): alan artık dalga-1'de de VAR (`dash_token` · `nous_api_key` ·
+  # `apisix_admin_key`) — orada kaynak/kopya listesi YOKTUR, bağın tablo tutarlılığı REFERANS
+  # satırıyla ölçülür (bloğun başındaki şerh).
   #
   # ===============================================================================================
   # `ayni_deger` — TAKMA AD (Rol-1 HÜKMÜ 2026-09-14, tur-2; tur-1'in AÇIK KALEMİ kapandı)
@@ -636,6 +658,10 @@ vault_kv:
   # `rotasyon_siri` TAKMA ADDA KALIR ve bu bilinçlidir: dalga-1 girdileri şemalarını GENİŞLETEMEZ
   # (v485 E1 onların alan kümesini BİREBİR dondurur) ve rotasyon tablosundaki kimlik zaten takma
   # adın kopya kümesiyle çivilidir (A5). Rotasyon satırı takma addan doğar, YOLU birincilden alır.
+  # 2026-09-17 (TSK-064) DÜZELTME: E1 dondurması tek bir alan için AÇILDI — dalga-1 girdisi YALNIZ
+  # `rotasyon_siri` taşıyabilir (takma adı OLMAYAN üç birincil için bağ oraya yazıldı). Bu üç takma
+  # adın bağı YERİNDE kalır: birincillerinin (`kapi_apikey` · `HINDSIGHT_API_LLM_API_KEY` ·
+  # `HINDSIGHT_API_TENANT_API_KEY`) bağı takma addan geçer ve iki yere yazmak bağı ikiye bölerdi.
   - ad: openrouter_api_key
     ayni_deger: HINDSIGHT_API_LLM_API_KEY
     tuketici: "vault_dosyalar şablonları (apisix · hindsight ×2) + hermes ×4 ROTASYON KANALIYLA (sir_rotasyon --vault kasadan gelen değeri .env kopyalarına yazar; hermes-agent .env.vault OKUMAZ — ölçüldü 2026-09-15) — TAKMA AD: kasa yolu ve render kanıtı BİRİNCİLİNDİR (HINDSIGHT_API_LLM_API_KEY); kendi kasa yolu YOK, birim DEĞİL, systemd kaynağı DEĞİL"
