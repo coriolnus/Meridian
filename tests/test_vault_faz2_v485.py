@@ -647,8 +647,16 @@ DALGA1_ADLARI = (
 DALGA1_SAYISI = len(DALGA1_ADLARI)
 
 #: Dalga-2 girdilerinin TAŞIYABİLECEĞİ ek alanlar (`vault_sir_koy.sh` kaynak sözleşmesi). Dalga-1
-#: girdileri bunları TAŞIMAZ: kaynakları hedefin KENDİSİDİR (dosya zaten dolu).
+#: girdileri `kaynak`/`kopya_kaynaklari` TAŞIMAZ: kaynakları hedefin KENDİSİDİR (dosya zaten dolu).
 DALGA2_EK_ALANLAR = {"kaynak", "kopya_kaynaklari", "rotasyon_siri"}
+
+#: DALGA-1'E İZİNLİ TEK EK ALAN — TSK-064, 2026-09-17 (Rol-1 kararı Seçenek A). Gerekçe: dalga-1
+#: girdileri Vault Agent RENDER HEDEFİDİR ama kasaya BAĞLI değildi (`rotasyon_siri` yok); eski yolun
+#: rotasyonu Agent'ın render ettiği dosyaya yazar ve render aralığında kasadaki ESKİ değerle
+#: sessizce geri alınabilir (A1'de ölçülmedi) → kasadan rotasyon yolu (`sir_rotasyon.sh --vault`)
+#: bağ ister. Bu bir BAĞDIR, şema gevşetmesi DEĞİL: taşıma sözleşmesinin alanları (`kaynak`,
+#: `kopya_kaynaklari`) dalga-1'e yine GİREMEZ ve aşağıdaki dar küme bunu ayrıca ölçer (v521 M1).
+DALGA1_IZINLI_BAG = {"rotasyon_siri"}
 
 #: TAKMA AD (Rol-1 hükmü 2026-09-14): aynı DEĞERİ taşıyan sırların TEK kasa yolu vardır. Takma ad
 #: girdisi `ayni_deger: <birincil ad>` taşır ve kendi `vault_yolu`sunu/`hedef`ini TAŞIMAZ — yol,
@@ -711,8 +719,11 @@ def test_E1_vault_kv_DALGA1_kumesini_tam_tasir():
         fazla = set(g) - zorunlu - DALGA2_EK_ALANLAR
         assert not fazla, f"{g.get('ad')}: tanınmayan alan: {sorted(fazla)}"
         if g["ad"] in DALGA1_ADLARI:
-            assert set(g) == zorunlu, (
-                f"{g['ad']}: dalga-1 girdisi dalga-2 alanı taşıyor: {sorted(set(g) - zorunlu)}")
+            # 2026-09-17 (TSK-064): `set(g) == zorunlu` → zorunlu + YALNIZ `rotasyon_siri`
+            # (`DALGA1_IZINLI_BAG` şerhi). `kaynak`/`kopya_kaynaklari` hâlâ KIRMIZI.
+            assert not (set(g) - zorunlu - DALGA1_IZINLI_BAG), (
+                f"{g['ad']}: dalga-1 girdisi dalga-2 alanı taşıyor: "
+                f"{sorted(set(g) - zorunlu - DALGA1_IZINLI_BAG)}")
 
 
 def test_E2_yol_ve_izin_semasi_TEK_BICIM():

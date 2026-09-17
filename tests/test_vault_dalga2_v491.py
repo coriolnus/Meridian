@@ -281,6 +281,21 @@ def test_A5_ROTASYON_SIRI_bagi_kopya_kumesiyle_BIREBIR():
         rot = g.get("rotasyon_siri")
         if not rot:
             continue
+        if "kaynak" not in g:
+            # DALGA-1 BAĞI (TSK-064, 2026-09-17; Rol-1 kararı Seçenek A): `dash_token` ·
+            # `nous_api_key` · `apisix_admin_key` YALNIZ `rotasyon_siri` taşır — `kaynak`/
+            # `kopya_kaynaklari` dalga-1'e GİREMEZ (v485 E1), taşıma kaynağı hedefin KENDİSİDİR
+            # (`vault_sir_koy.sh::_girdiler`). Kopya kümesi burada kıyaslanamaz (`apisix_admin_key`in
+            # `.env-apisix` kopyası taşıma kaynağı DEĞİL, rotasyonun eski kanal kopyasıdır). Bağın
+            # tabloyla tutarlılığı REFERANS ile ölçülür: sırrın tablodaki İLK satırı bu girdinin
+            # render hedefi olmalı — `--vault`ın son kanıtı (`_envanter_esitlik`) referansı ona
+            # kıyaslar; aksi hâlde "kopyalar kasadan render edilen değere eşit mi" SORULMAZ.
+            satirlar = [k for k in kopyalar if k["sir"] == rot]
+            assert satirlar, f"{g['ad']}: rotasyon_siri {rot!r} rotasyon tablosunda YOK (dangling bağ)"
+            assert (satirlar[0]["tur"], satirlar[0]["yol"]) == ("dosya", g["hedef"]), (
+                f"{g['ad']}: `rotasyon_kopyalari[{rot}]` REFERANSI render hedefi DEĞİL: "
+                f"{satirlar[0]['tur']} {satirlar[0]['yol']} ≠ dosya {g['hedef']}")
+            continue
         beklenen = {
             (tur_esleme[k["tur"]], k["yol"], k.get("alan"), k.get("onek"))
             for k in kopyalar if k["sir"] == rot and k["tur"] in tur_esleme
@@ -1224,6 +1239,14 @@ from tests.test_sir_rotasyon_v447 import ESKI, _kos, _sahte_ortam  # noqa: E402
 
 YENI_VAULT_DEGERI = "SAHTE-YENI-KASA-ANAHTARI-2026"
 
+#: `--openrouter --vault` GİRDİSİ — YALNIZ OPENROUTER (TSK-064, 2026-09-17). `nous_api_key` kasaya
+#: bağlandı ve `vault_kv` sırasıyla İLK sorulan sır NOUS'tur. Tek satırlık eski girdi o değeri
+#: NOUS'a verir, render ölçümü NOUS hedefinde bekler (bu şim yalnız LLM kanonik hedefini render
+#: eder) ve çivi OPENROUTER yolunu hiç ölçmeden çıkış 2'ye düşerdi. Boş ilk satır = NOUS bu tur
+#: DÖNMEZ (betiğin "boş = atla" sözleşmesi) — bu bölümün ölçtüğü OPENROUTER yolu AYNEN korunur.
+#: Tek yerde durur: v520 D3/M8 de buradan okur.
+GIRDI_YALNIZ_OR = f"\n{YENI_VAULT_DEGERI}\n"
+
 #: `--openrouter --vault` ARTIK BİRİNCİL YOLA YAZAR (Rol-1 hükmü, tur-2): `openrouter_api_key` bir
 #: TAKMA ADdır ve kasadaki yol `HINDSIGHT_API_LLM_API_KEY`inkidir. Render kanıtı da birincilin
 #: `hedef`idir — takma adın kendi kanonik kopyası YOKTUR (ikinci bir dosya, sırrın diskteki
@@ -1322,7 +1345,7 @@ def test_E3_vault_UYGULA_kasaya_KOYAR_render_OLCER_ESKI_KANALI_esitler(tmp_path)
     (iki-kanal dönemi); (4) tüketiciler yeniden başlar."""
     kok, ortam = _sahte_ortam(tmp_path)
     ortam, log = _vault_ortam(tmp_path, ortam, kok)
-    r = _kos(ROTASYON_SH, ortam, "--vault", "--openrouter", girdi=f"{YENI_VAULT_DEGERI}\n")
+    r = _kos(ROTASYON_SH, ortam, "--vault", "--openrouter", girdi=GIRDI_YALNIZ_OR)
     assert r.returncode == 0, f"uygula düştü:\n{r.stdout}\n{r.stderr}"
     argv = log.read_text(encoding="utf-8")
     assert f"kv put {KASA_YOLU_OR}" in argv, f"kasaya yazılmadı (BİRİNCİL yol):\n{argv}"
@@ -1349,7 +1372,7 @@ def test_E4_RENDER_GELMEZSE_TAVANDA_durur_ve_ESKI_KANAL_YAZILMAZ(tmp_path):
     kok, ortam = _sahte_ortam(tmp_path)
     ortam, _ = _vault_ortam(tmp_path, ortam, kok, render=False)
     onceki = (kok / "opt/apisix/.env-apisix").read_text(encoding="utf-8")
-    r = _kos(ROTASYON_SH, ortam, "--vault", "--openrouter", girdi=f"{YENI_VAULT_DEGERI}\n")
+    r = _kos(ROTASYON_SH, ortam, "--vault", "--openrouter", girdi=GIRDI_YALNIZ_OR)
     assert r.returncode == 2, f"render gelmeyince çıkış {r.returncode} (2 bekleniyordu):\n{r.stdout}\n{r.stderr}"
     assert (kok / "opt/apisix/.env-apisix").read_text(encoding="utf-8") == onceki, (
         "render ölçülemezken eski kanal YAZILDI — kasa kaynak sanılıp eski değer yayılırdı")
@@ -1367,7 +1390,7 @@ def test_E5_MUTASYON_render_olcumu_kaldirilirsa_E4_KIRMIZI(tmp_path):
     bozuk.chmod(0o755)
     kok, ortam = _sahte_ortam(tmp_path)
     ortam, _ = _vault_ortam(tmp_path, ortam, kok, render=False)
-    r = _kos(bozuk, ortam, "--vault", "--openrouter", girdi=f"{YENI_VAULT_DEGERI}\n")
+    r = _kos(bozuk, ortam, "--vault", "--openrouter", girdi=GIRDI_YALNIZ_OR)
     assert r.returncode != 2, (
         f"MUTASYON ISIRMADI: ölçüm kaldırılınca da 'ölçülemedi' dedi — E4 başka bir dalı "
         f"ölçüyor olabilir:\n{r.stdout}\n{r.stderr}")
@@ -1384,13 +1407,19 @@ def test_E6_vault_YALNIZ_rotasyon_alt_komutlariyla(tmp_path):
 
 
 def test_E7_vault_KAPSAM_BEYANI_kasaya_bagli_OLMAYAN_sirri_soyler(tmp_path):
-    """BEDEL YASASI. `--openrouter` İKİ anahtar döndürür (NOUS + OPENROUTER) ama kasaya bağlı
-    olan YALNIZ biridir. Kuru koşum bunu ADIYLA söylemeli: söylemezse operatör "OpenRouter
-    rotasyonu bitti" sanır ve motorun NOUS anahtarı sessizce eski değerde kalır."""
+    """BEDEL YASASI. `--openrouter` İKİ anahtar döndürür (NOUS + OPENROUTER). Kuru koşum İKİSİNİ
+    de ADIYLA söylemeli: söylemezse operatör "OpenRouter rotasyonu bitti" sanır ve motorun NOUS
+    anahtarı sessizce eski değerde kalır.
+
+    2026-09-17 (TSK-064): öncül değişti — `nous_api_key` kasaya BAĞLANDI, yani NOUS artık "KAPSAM
+    DIŞI" diye değil KASA SIRRI olarak (kendi kasa yoluyla) basılır. Bağsız sırrın kapsam beyanı
+    (iki dalı: Agent render hedefi uyarısı / "eski yolla döner") v521 E1/E5'te ölçülür."""
     kok, ortam = _sahte_ortam(tmp_path)
     ortam, _ = _vault_ortam(tmp_path, ortam, kok)
     r = _kos(ROTASYON_SH, ortam, "--vault", "--openrouter", "--kuru")
-    assert "NOUS_API_KEY" in r.stdout, f"kasa kapsamı dışındaki sır beyan edilmiyor:\n{r.stdout}"
+    assert "NOUS_API_KEY" in r.stdout, f"NOUS kuru koşumda ADIYLA basılmıyor:\n{r.stdout}"
+    assert "secret/meridian/nous_api_key" in r.stdout, (
+        f"NOUS kasa sırrı olarak (kasa yoluyla) planda değil:\n{r.stdout}")
 
 
 def test_E8_KURU_kosum_HERMES_env_KOPYALARINI_PLANDA_gosterir(tmp_path):

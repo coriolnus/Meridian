@@ -1817,7 +1817,11 @@ bekleme SINIRLI), eski kanal kopyalarını AYNI pencerede
 KASADAN gelen değerle yazar (iki-kanal dönemi), tüketicileri
 yeniden başlatır ve kanıtı ölçer. `--kuru` ile birleşir.
 KAPSAM: yalnız envanterde `rotasyon_siri` ile kasaya BAĞLI
-sırlar; bağlı olmayanlar ADIYLA beyan edilir ve eski yolla döner.
+sırlar; bağlı olmayanlar ADIYLA beyan edilir ve eski yolla döner
+— kopyası bir Agent RENDER HEDEFİYSE beyan bir UYARIDIR (eski
+yolun yazımı kasadaki değerle ezilebilir; bugün yalnız `--db`,
+TSK-064 2026-09-17). Her kasa sırrı AYRI sorulur; boş bırakılan
+o tur DÖNMEZ ve ADIYLA söylenir.
 TAKMA AD (`ayni_deger`, Rol-1 hükmü 2026-09-14): aynı değerin
 TEK kasa yolu vardır; rotasyon BİRİNCİL yola yapılır ve takma
 adlar onu otomatik izler. Restart listesi kasa YOLUNDAN toplanır

@@ -52,6 +52,7 @@ from tests.test_sir_rotasyon_v447 import (
     _sahte_ortam,
 )
 from tests.test_vault_dalga2_v491 import (
+    GIRDI_YALNIZ_OR,
     KANONIK_HEDEF,
     KOY_SH,
     YENI_VAULT_DEGERI,
@@ -509,7 +510,7 @@ def test_D3_VAULT_rotasyonu_ENVANTER_KANITININ_referansi_RENDER_hedefi(tmp_path)
     "kopyalar KASADAN render edilen değere eşit mi" sorusunu sorar — doğru yön."""
     kok, ortam = _canli_sahne(tmp_path)
     ortam, _ = _vault_ortam(tmp_path, ortam, kok)
-    r = _kos(BETIK, ortam, "--vault", "--openrouter", girdi=f"{YENI_VAULT_DEGERI}\n")
+    r = _kos(BETIK, ortam, "--vault", "--openrouter", girdi=GIRDI_YALNIZ_OR)
     assert r.returncode == 0, r.stdout + r.stderr
     kanit = r.stdout.split("kanıt: envanter eşitlik ölçümü")[1]
     satirlar = _envanter_satirlari(kanit, "OPENROUTER_API_KEY")
@@ -601,7 +602,7 @@ def test_M8_MUT_OPENROUTER_ESKI_SIRA_vault_kaniti_env_apisix_i_referans_sayar_D3
     m = _mutant(tmp_path, (YENI_OR_SIRASI, ESKI_OR_SIRASI))
     kok, ortam = _canli_sahne(tmp_path)
     ortam, _ = _vault_ortam(tmp_path, ortam, kok)
-    r = _kos(m, ortam, "--vault", "--openrouter", girdi=f"{YENI_VAULT_DEGERI}\n")
+    r = _kos(m, ortam, "--vault", "--openrouter", girdi=GIRDI_YALNIZ_OR)
     assert r.returncode == 0, r.stdout + r.stderr
     satirlar = _envanter_satirlari(r.stdout.split("kanıt: envanter eşitlik ölçümü")[1], "OPENROUTER_API_KEY")
     assert KANONIK_HEDEF not in satirlar[0] and APISIX_ENV in satirlar[0], f"MUTASYON ISIRMADI: {satirlar}"
