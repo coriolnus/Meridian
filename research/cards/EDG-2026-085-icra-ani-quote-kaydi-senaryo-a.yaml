@@ -159,3 +159,20 @@ rol1_notu_2026_09_16: >
   ders: hafıza kart-esigi-birimi-tolerans-tuzagi — EDG-094 ve EDG-096 tam bu sınıfta düşmüştü).
   Ölçüm SONRASI bu yorumu değiştirmek kill_list "eşik/pencere tanımı ölçüm sonrası değişirse →
   geçersiz" maddesine girer.
+
+rol1_notu_2026_09_18: >
+  2026-09-18 20:3xZ TABAN 5/5 DOLDU — SAYILAR KESİNLEŞTİ [Rol-1, A1 /opt/veri/olcum/edg085/taban.jsonl,
+  salt-okur]. Geçerli seanslar 09-14, 09-15, 09-16, 09-17, 09-18 — her biri 86/86 örnek, hepsinde
+  `cpu_kaynak` alanı dolu ve `cpu_pct_tek_cekirdek` > 0 (09-08..09-11 eski örnekleyiciyle 0,00 üretti ve
+  taban DIŞINDA; 09-12/13 hafta sonu). Toplam 430 geçerli örnek.
+  CPU (tek çekirdek %): medyan 0,170 · p95 13,94 · maks 28,59.
+  healthz_p50_ms: medyan 1,40 · p95 1,60. healthz_max_ms: p50 1,80 · P95 1,90 · maks 141,30 (tek uç
+  örnek; dağılım çarpık — saat kırılımı pilot raporunda).
+  "HEALTHZ P95" TANIMI DEĞİŞMEDİ (kartın (3) netleştirmesi): örnek-içi `healthz_max_ms` dağılımının
+  p95'i = 1,90 ms → pilot tavanı `healthz_p95_delta_ms_ust: 50` ile 51,90 ms. Ara tabanla (172/521
+  satır) hesaplanan değer de 1,90 idi; taban dolunca DEĞİŞMEDİ — eşik aynı sayıda kesinleşti.
+  PİLOT KAPISI AÇILDI ama BAYRAK AÇILMADI: kart ve `deploy/oracle-a1/meridian.service.d/55-edg085-quote.conf`
+  şerhi "pilot EN ERKEN 2026-09-21, CPU tabanı 5 seans" diyordu; ölçüm şartı bugün doldu. Bayrak
+  (`MERIDIAN_QUOTE_CAPTURE=0 → 1`) A0 rolüyle kurulur ve dağıtım ister — ayrı tur: kart kaydı + kuru
+  koşum + dağıtım + ilk pilot seansında CPU/healthz ölçümü. Taban timer'ı Pazartesi 13:00Z'de yine
+  koşar (taban dolu olduğu için pilotla çakışmaz).
