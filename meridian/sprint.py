@@ -3,7 +3,8 @@
 NE YAPAR. Canlı döngü işlem-kıtıdır: gemiye alınmış bir v2'nin min_sample işlem biriktirmesi canlı
 kâğıt defterde yıllar alır, yani yansıt→sonuç döngüsü hiç kapanmaz. Sprint o döngüyü tarihi İLERİ
 veri üzerinde DAKİKALARDA ve dürüstçe kapatır: `start()` canlı state'i `state/sprint/<sid>` altına
-kopyalar (`_kur_kum_havuzu`; SKIP_COPY barları/sırları/HALT'ı/SQLite artefaktını dışarıda tutar,
+kopyalar (`_kur_kum_havuzu`; SKIP_COPY + SKIP_COPY_PATTERNS barları/sırları ve SIR YEDEKLERİNİ/pano
+kimlik kaydını/HALT'ı/SQLite artefaktını dışarıda tutar — karar tek yerde, `_atlanir`;
 bars + skills symlink'lenir), defterleri düz kitaba sıfırlar ve `sprint_run` çocuğunu KENDİ
 MERIDIAN_ROOT'uyla ayrı süreçte doğurur — canlı defter, karne ve koşan zamanlayıcıya dokunulmaz.
 Koşum yolu önce ayrı systemd birimidir (`meridian-sprint@.service`; worker restart'ı sprinti
@@ -24,9 +25,11 @@ ASLA karışmaz; üretim kapısı bypass edilmez. `kum_havuzunda()` süreç-dı�
 
 OKUR: canlı `state/` (kopya kaynağı), `hermes.SEARCH_PROGRESS` (meşguliyet), `hypotheses.jsonl`
 (taze-aday tabanı), kum havuzlarındaki `sprint_runs.jsonl`. YAZAR: canlı `sprint_status.json`
-(etiketli okuma-modeli, öğrenme defteri DEĞİL) ve kum havuzu ağacı (kurulum/budama)."""
+(etiketli okuma-modeli, öğrenme defteri DEĞİL), kum havuzu ağacı (kurulum/budama) ve canlı olay
+defteri (`obs`; kurulumun desenle atladığı girdileri ADIYLA bildiren bilgi satırı dâhil)."""
 from __future__ import annotations
 import datetime as dt
+import fnmatch
 import json
 import os
 import shlex
@@ -75,8 +78,65 @@ STATUS_FILE = "sprint_status.json"    # written LIVE — a labeled read-model, N
 # ayrı anlarda okunur) — o risk de kapanır. Sınıf: (kopyalanan HALT tüm sandbox
 # girişlerini bastırır) ikinci kuşağı, artı "SKIP_COPY denylist'i state'e yeni gelen artefaktları
 # sessizce kaçırır" (hemen üstteki bars_intraday vakasıyla aynı sınıf).
+# PANO KİMLİK KAYDI DA ATLANIR (TSK-208, 2026-09-21) — sınıf: İZOLASYON (HALT/secrets ailesi), BOYUT
+# değil. `state/auth.json` panonun scrypt parola tuzu+özeti ile oturum İMZA ANAHTARINI taşır
+# (`meridian.auth`; 0600 atomik yazım, yol `auth._auth_file`). Sözleşme "sırlar kum havuzuna girmez"
+# diyordu ve bu kayıt sözleşmeye GİRER; bugüne kadar her kum havuzu ağacına kopyalanıyordu, yani imza
+# anahtarı `state/sprint/<sid>/state/` altında SANDBOX_KEEP kadar çoğalıyordu. ÖLÇÜM (grep + import
+# kapanışı, 2026-09-21): `state/auth.json`ı okuyan TEK modül `meridian.auth`tır; onu import eden
+# yalnız `meridian.auth_cli` (kabuk aracı) ve `meridian.api` (pano sunucusu). `sprint_run`dan
+# başlayan meridian-içi import kapanışı 75 modüldür (sprint_run dâhil) ve içinde NE `auth` NE `api` vardır; kapanıştaki
+# dinamik importların (`importlib`/`__import__`) hiçbiri de bu ikisini adlandırmaz. SPRINT ÇOCUĞUNUN
+# YOLUNDA OKUYUCUSU YOK — kopya yalnız sır yüzeyini genişletiyordu. Çivi: v523 çivi 6.
 SKIP_COPY = {"bars", "bars_intraday", "intraday_bars", "sprint", "secrets.json", "HALT",
-             "meridian.db", "meridian.db-wal", "meridian.db-shm"}
+             "auth.json", "meridian.db", "meridian.db-wal", "meridian.db-shm"}
+
+# TAM AD KÜMESİNİN TUTAMADIĞI SÖZLEŞME — DESEN AİLESİ (TSK-208, canlı arıza 2026-09-18).
+# `SKIP_COPY` TAM AD kümesidir. `"secrets.json"` üyeydi, ama canlıda TSK-189 sır rotasyonundan ELLE
+# kalmış `secrets.json.bak-20260915T073825Z-tsk189` (root:root 0600) DEĞİLDİ. Servis `User=ubuntu`
+# → `shutil.copy2` `PermissionError` yükseltti → kurulum tamamen düştü. ÖLÇÜM (Rol-1, A1 salt-okur,
+# 2026-09-21): `sprint_cadence_failed` 283 kez, ilk 2026-09-18T22:13:07Z, son 2026-09-21T05:56Z;
+# journal 2026-07-30'a kadar gidiyor, yani 283 olay tarihçenin TAMAMI. Son BAŞARILI
+# `sprint_cadence_start` 2026-09-11T22:09:43Z — öğrenme antrenmanı 09-18'den beri HİÇ başlamadı.
+# Dosya 09-08'den beri oradaydı; arıza DOSYANIN DOĞUŞUYLA değil haftalık TETİĞİN DOLMASIYLA görünür
+# oldu (09-18T22:03Z `sprint_cadence_skip · tetik_yok(gun=6<7)` → 22:13'te ilk deneme, ilk denemede
+# düşüş). Yani tam-ad eşleşmesi sözleşmenin ("sırlar kopyalanmaz") kendisini tutmuyordu: sır
+# dosyasının YEDEĞİ de sırdır, ve adı önceden bilinemez.
+# SINIFIN ÜÇÜNCÜ TEKRARI: yukarıdaki şerh "denylist state'e yeni gelen artefaktları sessizce
+# kaçırır" sınıfını zaten iki kez adlandırıyor (bars_intraday, meridian.db). Farkı bu kez SESSİZ
+# DEĞİL GÜRÜLTÜLÜ düşmesidir — Yasa 4 çalıştı, `sprint_cadence_failed` 3 gün bağırdı.
+# DÜZELTME BİÇİMİ DEPODA ZATEN VARDI: TSK-197 (2026-09-17) AYNI dosya ailesinin gece yedeğinin
+# `tar`ını kırmasını `--exclude="state/secrets.json.bak-*"` DESENİYLE çözmüştü
+# (`deploy/oracle-a1/meridian-backup.service`); sprint tarafı ondan habersizdi. İki yüzey artık
+# ayrışma çivisiyle bağlı (v523 çivi 7) — biri değişip diğeri değişmezse kırmızı.
+# DESEN DAR TUTULUR: yalnız `secrets.json` ve ondan türeyen adlar (`.bak-*`, `.tmp`, `.new`).
+# GENİŞ desen (`*secret*`, `*.bak*`) hiçbir testi kırmadan kum havuzunu EKSİK doğururdu ve sprint
+# sessizce yanlış ölçerdi — HALT vakasının sınıfı (v523 çivi 5/5b bu yönü ölçer).
+SKIP_COPY_PATTERNS = ("secrets.json*",)
+
+
+def _desen_atlar(ad: str) -> bool:
+    """`_atlanir`ın DESEN BACAĞI — ad `SKIP_COPY_PATTERNS`ten biriyle eşleşiyor mu?
+
+    AYRI FONKSİYON OLMASININ SEBEBİ İKİ TÜKETİCİDİR ve ikisi de üretimdedir: kararın kendisi
+    (`_atlanir`) ve kurulumun BEDEL BİLDİRİMİ (`_kur_kum_havuzu` sonundaki `obs` satırı, hangi
+    girdilerin DESENLE atlandığını adıyla söyler). İkisi ayrı ayrı yazılsaydı ikinci bir eşleşme
+    kopyası doğardı ve kopyalar sessizce ayrışır (tek-kaynak yasası).
+
+    `fnmatchcase` — `fnmatch` DEĞİL: `fnmatch` `os.path.normcase` uygular, yani macOS'ta (geliştirme)
+    büyük/küçük harf duyarsız, Linux'ta (A1, canlı) duyarlı olurdu. Aynı adın iki makinede iki farklı
+    hüküm alması bu kapıda kabul edilemez; davranış her yerde Linux'unkidir."""
+    return any(fnmatch.fnmatchcase(ad, desen) for desen in SKIP_COPY_PATTERNS)
+
+
+def _atlanir(ad: str) -> bool:
+    """Kum havuzu kopyasının TEK atlama kararı: tam ad kümesi VEYA desen ailesi.
+
+    NEDEN TEK YERDE: `_kur_kum_havuzu` bu kararı kendi döngüsünde satır içi verirse çivi ancak
+    dosya sistemi kurarak ölçebilir, ve ikinci bir çağıran doğduğu gün karar ÇATALLANIR. Burası
+    kararın sorulabilir hâlidir — çivi (v523) doğrudan bunu çağırır, ayrışma çivisi de
+    (`meridian-backup.service` ↔ sprint) buradan ölçer."""
+    return ad in SKIP_COPY or _desen_atlar(ad)
 
 
 def _now() -> str:
@@ -251,7 +311,11 @@ def _kur_kum_havuzu(sid: str) -> Path:
     sözleşmesini sınayan test YASANIN KENDİSİNİ çağırabilmelidir. Sırayı (kopya, bağlar, sıfırlama)
     teste yeniden yazmak bu depoda tekrar tekrar yaşanan "aynı yasanın iki uygulaması" hatasıdır —
     testteki kopya yeşil kalırken üretim yolu sessizce ayrışır ve dedektör hiçbir şey ölçmez.
-    Fonksiyon SAFtır: yalnız diski kurar, süreç doğurmaz, durum dosyası yazmaz."""
+
+    YAN ETKİ SÖZLEŞMESİ (TSK-208'de DARALDI, gevşemedi): süreç doğurmaz, `sprint_status.json`
+    yazmaz. TEK yan etkisi, DESENLE (`SKIP_COPY_PATTERNS`) atlanan girdi olduğunda kurulum sonunda
+    yazılan BİR `sprint_kum_havuzu_atlandi` bilgi satırıdır — "saf" iddiasını korumak için o satırı
+    yazmamak, kopyalanmayan dosyayı izsiz bırakırdı (bedel yasası)."""
     # SBROOT KANONİK YOLA DAMGALANIR. `state/sprint_status.json` hâlâ
     # `/Users/erdemozturk/Documents/Claude/AI-Trading/...` yolunu taşıyor — 2026-07-22 sprintinden
     # kalma bir damga, ve o yol 07-23 taşımasından beri gerçek depoya SYMLINK. Sembolik yolu
@@ -265,8 +329,16 @@ def _kur_kum_havuzu(sid: str) -> Path:
     sbstate.mkdir(parents=True, exist_ok=True)
     live = config.STATE
     # copy live state into the sandbox EXCEPT the big/irrelevant/secret items
+    desenle_atlanan: list[str] = []
     for item in live.iterdir():
-        if item.name in SKIP_COPY:
+        if _atlanir(item.name):
+            # TAM-AD kümesiyle atlananlar BEYANLI TASARIMDIR (adları kodda yazılı, gerekçeleri
+            # `SKIP_COPY`nin üstünde) — onlar için yeni bir olay satırı gürültüdür. DESENLE
+            # atlananların adı ise ÖNCEDEN BİLİNEMEZ; bildirilmezse kopyalanmayan dosya hiçbir iz
+            # bırakmadan yok olur ve desen bir gün yanlışlıkla bir defteri yakalarsa körlük sessiz
+            # kalır (bedel yasası). Ayrım bu yüzden burada.
+            if _desen_atlar(item.name):
+                desenle_atlanan.append(item.name)
             continue
         dest = sbstate / item.name
         if item.is_dir():
@@ -289,6 +361,13 @@ def _kur_kum_havuzu(sid: str) -> Path:
     except (OSError, NotImplementedError):  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
         pass
     _reset_sandbox_state(sbstate)
+    if desenle_atlanan:
+        # YALNIZ AD — içerik/değer/hash YAZILMAZ: olay defteri panoya ve `ops/` sorgularına açıktır,
+        # bir sır dosyasının içeriği oraya sızmamalıdır. Boşken satır YAZILMAZ: atlanacak şey yoksa
+        # kaybedilen görünürlük de yoktur, her kurulumda boş bir satır ise gürültüdür.
+        from . import obs
+        obs.log("sprint_kum_havuzu_atlandi", sid=sid, adet=len(desenle_atlanan),
+                adlar=sorted(desenle_atlanan), kural="SKIP_COPY_PATTERNS")
     return sbroot
 
 
