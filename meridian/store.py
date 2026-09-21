@@ -521,10 +521,13 @@ def write_text(name: str, text: str) -> Path:
         (`state/history/scoreboard-*.json` arşivi). Düz yazım dosyayı önce KIRPAR: okuyucu tam o
         anda gelirse yarım — hatta BOŞ — bir defter görür ve bu sessizce "ders yok" diye okunur.
       * ATOMİK ama HER YERDE YENİDEN YAZILMIŞ kalıp — `config.dump_yaml`, `earnings.py` (×2),
-        `sprint_run._write_live_status`, `adapters/data._write_bars`, `auth._write`. Beşi de
+        `sprint_run._write_live_status`, `adapters/data._write_bars` — ve BİR ZAMANLAR `auth._write`.
+        TARİHÇE, HÜKÜM DEĞİL (TSK-209 ölçümü, 2026-09-21): `auth._write` bugün `store.write_text`
+        çağırır (mkstemp + fsync + os.replace + flock bu kapıdan gelir); "sabit `.json.tmp` tmp adı"
+        iddiası eski sürüme aitti, o adı bugün hiçbir kod yolu üretmez. Kalan dört kopya
         mkstemp+replace'i elle kurar; hiçbirinde `fsync` YOKTUR (B1'in kapattığı sıfır-baytlık
-        dosya sınıfı bu kopyalarda hâlâ açık) ve hiçbiri flock ALMAZ. `auth._write` ayrıca SABİT
-        bir tmp adı (`.json.tmp`) kullanır: iki süreç aynı anda yazarsa aynı geçici dosyaya
+        dosya sınıfı bu kopyalarda hâlâ açık) ve hiçbiri flock ALMAZ. Eski `auth` kopyası SABİT
+        bir tmp adı kullanırdı: iki süreç aynı anda yazarsa aynı geçici dosyaya
         yazarlar ve atomiklik iddiası orada biter.
 
     Kapıyı JSON'a özgü bırakmak, "tek kapı" iddiasını dosya UZANTISINA bağlamak olurdu; oysa
