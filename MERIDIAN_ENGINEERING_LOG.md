@@ -3526,3 +3526,76 @@ birleşmiyor), 15'i kontrol EDİLMEDİ — ve elle tarama bu sınıfın cevabı 
 - **EDG-085 pilot bayrağı BİR GÜN ERTELENDİ** (kapı ölçümle açıktı, bugün en erken tarihti):
   aynı akşama bir motor düzeltmesiyle koymak, pilotun eşiğinin (51,90 ms) ölçüleceği pencereye iki
   değişken sokardı. TSK-208'in gece kanıtı görülünce açılacak; 20 seanslık pencere zarar görmez.
+
+### 2026-09-21 sabah-öğle (Rol-1, Fable 5.1'e geçiş 09:0xZ; operatör "sana verdiğim bütün kurallara %100 uyarak full otonom devam et") — dağıtım #62, TSK-209 sır sızıntısı, TSK-207a sensör etiketi, iki yeni kalem
+
+### 10. DAĞITIM #62 — OPERATÖR KOŞTU, DÜZELTME HENÜZ KANITLANMADI
+`./dagit.sh --uygula` sınıflandırıcı [Production Deploy] ile kesildi; izin kuralı
+`Bash(./dagit.sh --uygula)` settings'te ZATEN VARDI → engel izin katmanından değil otomatik-kip
+sınıflandırıcısından. Aşılmadı; bakım penceresi (tick-watchdog timer) hemen geri açıldı, canlıda
+hiçbir şey yarım kalmadı. Operatör tek komutla koştu: sha b9c4807, 08:18:35Z, kirli-geç yok,
+`SİLİNECEK: []`. Doğrulama: kod diskte, servisler aktif, healthz 200, yeni hatalı birim yok.
+**KONTROL ÖLÇÜMÜ DAĞITIMI AKLAMADI:** son arıza 05:56:16Z, dağıtımdan önceki 2 saatte hiç sprint
+olayı yok — kadans yalnız gecelik pencerede değerlendiriliyor (22:00→05:00 ~12/saat, 07:00–21:00
+sıfır). Arıza pencere kapandığı için durdu. Kanıt penceresi bu gece 22:00Z (kabul ölçütü ROADMAP
+TSK-208'de). Sprint elle tetiklenmedi: 13:00Z EDG-085 işlemci taban ölçümü kirlenirdi.
+
+### 11. TSK-209 — "GELECEKTEKİ RİSK" DEĞİL, BUGÜNKÜ SIZINTI
+`api_debug_export` `.json/.jsonl/.yaml/.csv` uzantılı her state kök dosyasını zip'e yazıyor,
+dışlama `skip={"secrets.json"}` TAM AD. `auth.json` (scrypt parola özeti + oturum çerezinin HMAC
+İMZA ANAHTARI — `auth.py::set_password`, KODDAN okundu) uzantısı `.json`, kümede DEĞİL → her
+pakete giriyordu. Docstring "anahtar sızdırmayan, paylaşilabilir teşhis paketi" diyordu. Uç
+`_auth` korumalı → uzaktan anonim sömürülemez; risk paketin PAYLAŞILMASIDIR.
+Düzeltme: tek kaynak `config.sir_dosyasi_mi` (`secrets.py` DEĞİL — erişim kapısını sprint import
+kapanışına sokmamak için); sır kararı uzantı süzgecinden ÖNCE; okunamayan dosya 500 üretmez;
+manifest yalnız ad taşır. Rol-1 predicate'i canlı kökün 145 gerçek adına karşı ölçtü: 3 sır, 0
+meşru defter. Tur 2: `auth.json*` ailesi (bizi ısıran sınıf ELLE ALINMIŞ SIR YEDEĞİYDİ).
+İki inceleme (Rol-1 + Sonnet) MERGE HAZIR; birleştirme aa0ff87. OPERATÖRE: paket daha önce
+paylaşıldıysa `auth.rotate_key()`.
+İmplementer bulguları: M9 — sözleşme doğru ama GÖRÜNMEZDİ (çivi yanlış sebeple yeşil), `test_7c`
+ile görünür kılındı; harness dördüncü kez "exit 0" derken dosya PYTEST_EXIT=1 (ajan da yakaladı).
+
+### 12. TSK-207 (a) — ÖLÇÜM DOĞRU, SINIF YANLIŞTI
+Sensör CAG/ENPH/MTCH/VFC için her gece "delist adayı olabilir" diyordu; dördü
+`data.ENDEKS_CIKISI_BEYANLI`da gerekçeli (S&P 500 çıkışı, aktif), canlı evrende değil — bar
+akışının durması BEKLENEN. Yeni kova `endeks_cikisi`; beyanlı çıkış warn üretmez (emsal
+`hic_uye_canlida`), günde 1 bilgi satırı; `endeks_cikisi ∩ açık pozisyon` WARN (TSK-207 (b)'nin
+risk sınıfı — YALNIZ ölçüm, davranış değişmedi, karar operatörün). Uydurma yasağı: portföy
+okunamazsa `None`+neden, `positions` varlığı `in` ile. 12/12 mutasyon öttü.
+
+### 13. İKİ YENİ KALEM
+- **TSK-210** takvim bombası dedektörü (v477 vakası).
+- **TSK-211** çapa dedektörü `state/` dosya adlarını sembol sanıyor (`auth.json.tmp`,
+  `secrets.bak.json` iki turda iki kez) — implementer beyanı, mekanizma yeniden üretilmedi.
+
+### 14. KENDİ HATALARIM (öğleden sonra)
+1. zsh'te tırnaksız `$BEKLENEN` kelimelere AYRILMAZ → commit kapım 5 beklenen yolu "beklenmeyen"
+   saydı. Zarar yok (kapı erken durdu). Ders: dizi kullan (`YOLLAR=(...)`, `"${YOLLAR[@]}"`).
+2. Brief'i yasadan SIKI yazdım ("pytest dışı hiçbir betik") → incelemeci stdlib doğrulaması koşup
+   itiraf etti. Gerekçeyi yaz, yasağı değil (§5).
+
+### 15. OPERATÖR KARARI — İZİN KİPİ KALIYOR (09:3xZ)
+Operatör "komutu neden ben koşuyorum … bu ne saçmalık" / "biz daha ürünü oluşturma aşamasındayız,
+productionda değiliz". Açıklandı: engel izin kuralından değil otomatik-kip sınıflandırıcısından
+(kural VAR, 09-17'de aynı komut iki kez geçti, bugün kesildi; kuru koşum geçer); sınıflandırıcı
+kâğıt/gerçek ayrımını görmez. Kalıcı çözüm (oturum kipini otomatikten çıkarmak) bir güvenlik ayarı
+olarak operatöre soruldu — **"Hayır, kip kalsın."** Düzen: kesilirse tek komutluk blok operatöre,
+doğrulama + kayıt Rol-1'de. Yeniden önerilmez.
+
+### 16. SUITE #3 (6ff6c88, donmuş ağaç, -n 4 worksteal): 1 failed / 13701 passed / 20 skipped — BİLİNEN YÜK-FLAKE, REGRESYON DEĞİL
+Kırmızı: `tests/test_golge_planli_kol_v217.py::test_p95_dongu_suresi_kart_tavanini_ASMIYOR` — oran 1,193×
+(tavan 1,10), p95 kapalı 9,65 ms / açık 11,51 ms, aletin negatif kontrolü %0,7 (sıkı). Aynı test
+#13/#17/#26/#27'de ve 2026-08-29 birleştirme koşumunda aynı biçimde düştü (günlük: "ölçüm bunun
+regresyon olmadığını gösterdi"). BU KOŞUMUN BAĞLAMI: süre 29 dk (öncekiler 13–14), makine yük
+ortalaması 5 dk 17,4 / 15 dk 25,5 (8 çekirdek; WindowServer %40 + uygulama pencereleri — dış yük),
+p95 mutlak değerleri suite içinde tek-başına koşumun ~10 KATI. TEK BAŞINA SERİ TEKRAR (aynı HEAD):
+1 passed, oran 1,052×, p95 1,06/1,12 ms, kontrol %0,8 — üçlü hüküm yeşil.
+HÜKÜM: yük-flake (memory `tam-suite-esli-ajan-yuk-flake` sınıfı, bu kez eşli ajan değil dış yük);
+diff (api/config/sprint/watchdog) gölge planlı kolun sıcak yoluna dokunmuyor. 13701 yeşil + bu tek
+istisna BEYANLA — suite yeniden koşulmadı (aynı dış yükte aynı flake ya da 30 dk; kazanç yok).
+YENİ GREP DESENİ İLK KOŞUMUNDA İŞE YARADI: `[0-9]+ failed` kırmızıyı 1. ayakta yakaladı (suite #71'de
+`FAILED|ERROR` boş dönmüştü).
+AÇIK KALEM: bu çivi dış yük altında sistematik kırmızı; kartın kill#1'i doğru ama ölçüm aleti suite
+içinde çözünürlüğünü kaybediyor (negatif kontrol o anda sıkı çıksa bile mutlak p95 10× şişiyor).
+Yeniden koşum/tek-başına-onay disiplini günlükte tekrarlanıyor — mekanik hâle getirilmeli (aday: suite
+içinde `-p no:xdist` işaretli seri yeniden deneme ya da yük ölçümü ≥ eşik ise "ölçülemedi" beyanı).
