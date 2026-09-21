@@ -21,7 +21,10 @@ dönülür). `live_enabled()` — canlı yol iki elle-kurulan bayrak ister. `dum
 `store.write_text` tek kapısından geçirir (atomik + fsync + flock). `sir_dosyasi_mi()` —
 `state/` kökündeki bir adın SIR olup olmadığına dair TEK yüklem (TSK-209); iki üretim yüzeyi
 (`sprint` kum havuzu kopyası, `api` teşhis paketi) aynı soruyu ayrı listelerle cevaplayıp
-ayrışmıştı. Sır DEĞERİNE erişim burada YOKTUR — burası bir SINIFLANDIRMA, erişim `meridian.secrets`.
+ayrışmıştı. `gecici_artik_mi()` — atomik yazımın yarım kalmış kalıntısı (TSK-209b): sır DEĞİL,
+ama kopyalanmaz. `kopyalanmaz_mi()` — iki bacağın BİLEŞİMİ ve üretim yüzeylerinin çağırdığı karar;
+raporlama iki sınıfı ayrı tutar. Sır DEĞERİNE erişim burada YOKTUR — burası bir SINIFLANDIRMA,
+erişim `meridian.secrets`.
 
 DEĞİŞMEZLER. VALID_REGIMES regime.py'nin yaydığı etiketlerle birebir aynıdır — ayrışırsa gerçek
 rejim knob'u "bilinmeyen" diye reddedilir, hayalet rejim knob'u sessizce ölü kalır.
@@ -98,7 +101,40 @@ SIR_TAM_ADLAR: frozenset[str] = frozenset({
 # `auth.json*` DAR TUTULDU ve daraltmanın yönü ölçüldü: `auth_x.json`, `authz.json`, `auth.yaml`
 # eşleşMEZ (çivi: v524 8b). BEDEL: yerel `state/` kökünün 93 girdisinde `auth` ile başlayan TEK ad
 # `auth.json`dır (A1 canlı kökünde de ölçüldü, Rol-1 tur 2: 145 addan yalnız üç sır yakalanıyor).
-SIR_DESENLERI: tuple[str, ...] = ("secrets.json*", "secrets.*.json", "auth.json*")
+#   * `.secrets_*.tmp` — TSK-209b (2026-09-21). `meridian/secrets.py` kendi atomik yazımını kurar
+#     (`store`u BİLEREK kullanmaz: 0600 + telemetriye/loga hiç dokunmama) ve geçici dosyayı
+#     `prefix=".secrets_"`, `suffix=".tmp"` ile açar. `write` ile yer değiştirme ARASINDA bir çökme
+#     bu dosyayı bırakır ve İÇERİĞİ OPERATÖR ANAHTAR DEPOSUDUR — ama adı NOKTA ile başladığı için
+#     `secrets.json*` ailesinin hiçbir üyesine benzemez. Canlıda bugün böyle bir artık YOKTUR
+#     (A1 `state/` kökü + 1. seviye, 2026-09-21 18:25Z: `tmp*`/`.tmp` artığı 0) — desen bugünkü bir
+#     dosyayı değil, temizliğin atladığı bir PENCEREYİ kapatır (hata dalı `except Exception:`tir,
+#     yani `KeyboardInterrupt` ile kesilen yazım artığı geride bırakır).
+SIR_DESENLERI: tuple[str, ...] = ("secrets.json*", "secrets.*.json", "auth.json*",
+                                  ".secrets_*.tmp")
+
+# --- GEÇİCİ ARTIK: SIR DEĞİL, AMA KOPYALANMAZ --------------------------------------------------
+# (TSK-209b, 2026-09-21) `store._atomic_write` geçici dosyayı `tempfile.mkstemp(dir=..., suffix=
+# ".tmp")` ile açar → ad `tmpXXXXXXXX.tmp`, konum `state/` KÖKÜ. `auth._write` H9'dan beri
+# `store.write_text`e devrettiği için pano oturum imza anahtarının yazımı da bu yoldan geçer: artık
+# kalırsa İÇERİĞİ yazılan defterin içeriğidir.
+#
+# NEDEN AYRI SABİT, NEDEN `SIR_DESENLERI`ye EKLENMEDİ: bu ad bir sır SINIFI değildir. Artığın
+# içeriği `auth.json` da olabilir, `portfolio.json` da — ad hangisi olduğunu SÖYLEMEZ. Sır
+# desenine eklemek her artığı "dışarıda bırakılan sır" diye saydırırdı ve teşhis paketinin
+# manifestindeki sır sayımı sessizce şişerdi (uydurma yasağı: bilinmeyen bir içeriği sır İLAN
+# ETMEK de bir uydurmadır). Karar iki bacaklıdır ve bileşimi `kopyalanmaz_mi`dır.
+#
+# DESEN İKİ UCA BİRDEN BAĞLI — DARALTMA ÖLÇÜLDÜ: `tmp` ÖNEKİ **ve** `.tmp` UZANTISI. Eşleşmeyen
+# adlar ve HER BİRİNİN NEDENİ ayrı ayrı ölçüldü (mutasyon bataryası, 2026-09-21):
+#   * `tmp_notlar.md` — önek VAR, uzantı YOK. Deseni `tmp*` diye tek uca indiren mutasyon (M2)
+#     tam olarak bu adı düşürdü: tek uçlu desen meşru bir not defterini kum havuzundan atardı.
+#   * `x.tmp` — uzantı VAR, önek YOK. `*.tmp` mutasyonu (M3) bu adı düşürdü.
+#   * `template.json` — İKİ ucu da tutturmaz ve BU BİR NEAR-MISS ÖLÇÜSÜDÜR: göz "temp"i "tmp"
+#     diye okur, desen okumaz (`tem`≠`tmp`). M2 bu adı ISIRMADI ve ısırmaması DOĞRUDUR — kayıt
+#     buraya düşülüyor ki bir sonraki okuyucu onu "önek var" sanıp deseni gevşetmesin.
+# Tek uçlu bir desen hiçbir testi kırmadan kum havuzunu EKSİK doğururdu ve sprint sessizce yanlış
+# ölçerdi — HALT vakasının sınıfı (bedel yasası). Çivi: `tests/test_gecici_artik_v530.py` çivi 4.
+GECICI_ARTIK_DESENLERI: tuple[str, ...] = ("tmp*.tmp",)
 
 
 def sir_dosyasi_mi(ad: str, *, tam_adlar: "frozenset[str] | set[str] | None" = None,
@@ -117,17 +153,20 @@ def sir_dosyasi_mi(ad: str, *, tam_adlar: "frozenset[str] | set[str] | None" = N
     `monkeypatch` ile oynatınca iki yüzey de birlikte oynamalı — tek kaynak olmanın ölçülebilir
     tanımı budur (çivi: `tests/test_debug_export_sir_v524.py` çivi 7b).
 
-    KAPSAM DIŞI — BEYANLI BOŞLUK (TSK-209 tur 2, AD-TABANLI SINIFLANDIRMANIN TAVANI). Bu yüklem
-    yalnız ADA bakar, dolayısıyla AD TAŞIMAYAN bir sır kopyasını göremez. Ölçülen yol: `store`ın
-    atomik yazımı geçici dosyayı `tempfile.mkstemp(dir=path.parent, suffix=".tmp")` ile açar, yani
-    ad `tmpXXXXXX.tmp`tır ve `auth.json`/`secrets.json` yazımı da (`auth._write` H9'dan beri
-    `store.write_text`e devreder) bu yoldan geçer. `write`+`os.replace` ARASINDA bir çökme artık
-    bırakırsa o artık sır İÇERİĞİ taşır ama hiçbir desenle eşleşmez: teşhis paketine girmez
-    (`.tmp` izinli uzantı değil — YİNE SÜZGEÇ TESADÜFÜ, dışlama değil), kum havuzuna KOPYALANIR.
-    BUGÜN CANLIDA BÖYLE BİR ARTIK VAR MI BİLİNMİYOR — ölçülmedi, ve "ölçülmedi" ile "yok" aynı
-    şey değildir (uydurma yasağı). Bu dilimde KAPATILMADI: doğru yeri `store`ın kendi artık
-    temizliğidir (ayrı kalem), çünkü burada kapatmak `tmp*` gibi GENİŞ bir desen gerektirirdi ve
-    o desen meşru defterleri de düşürürdü (bedel yasası).
+    ESKİ KAPSAM BOŞLUĞU — 2026-09-21 KAPANDI (TSK-209b). TSK-209 tur 2'de burada BEYANLI bir
+    boşluk duruyordu: yüklem yalnız ADA bakar, dolayısıyla atomik yazımın AD TAŞIMAYAN geçici
+    kopyasını göremiyordu. Ölçülen iki yol: `store._atomic_write` (`suffix=".tmp"` → `tmp` önekli,
+    `.tmp` uzantılı ad; `auth._write` H9'dan beri `store.write_text`e devrettiği için pano
+    oturum imza anahtarının yazımı da buradan geçer) ve `secrets._write_file` (`prefix=".secrets_"`
+    → nokta önekli, sır içerikli ad). İkisi de hiçbir desenle eşleşmiyordu: teşhis paketine
+    girmemeleri DIŞLAMA DEĞİL SÜZGEÇ TESADÜFÜYDÜ (`.tmp` izinli uzantı değil), kum havuzuna ise
+    KOPYALANIYORLARDI.
+    BOŞLUK İKİ SABİTLE KAPANDI, BİRİYLE DEĞİL: `.secrets_*.tmp` bu ailenin SIR bacağına
+    (yukarıda, `SIR_DESENLERI`) girdi; `tmp` önekli genel artık ise sır DEĞİLDİR ve ayrı bir
+    bacakta (`GECICI_ARTIK_DESENLERI` + `gecici_artik_mi`) durur — içeriği herhangi bir defter
+    olabilir ve adı hangisi olduğunu söylemez. Atlama kararını veren BİLEŞİK yüklem
+    `kopyalanmaz_mi`dır; bu fonksiyon yalnız SIR sorusunu cevaplamaya devam eder. Çivi:
+    `tests/test_gecici_artik_v530.py`.
 
     `fnmatchcase` — `fnmatch` DEĞİL. Gerekçe TSK-208'de ölçüldü (`sprint._desen_atlar` docstring'i):
     `fnmatch` `os.path.normcase`e uğrar ve `normcase`i küçülten bir platformda (Windows/`ntpath`)
@@ -136,6 +175,47 @@ def sir_dosyasi_mi(ad: str, *, tam_adlar: "frozenset[str] | set[str] | None" = N
     adlar = SIR_TAM_ADLAR if tam_adlar is None else tam_adlar
     desen_ailesi = SIR_DESENLERI if desenler is None else desenler
     return ad in adlar or any(fnmatch.fnmatchcase(ad, d) for d in desen_ailesi)
+
+
+def gecici_artik_mi(ad: str, *, desenler: "tuple[str, ...] | None" = None) -> bool:
+    """`state/` kökündeki bir TABAN AD atomik yazımın GEÇİCİ ARTIĞI mı? (TSK-209b)
+
+    SIR YÜKLEMİNDEN AYRI DURMASININ SEBEBİ SINIFIN KENDİSİDİR: bu ad bir sır DEĞİLDİR, "yarım
+    kalmış bir yazımın kalıntısı"dır. İçeriği `auth.json` da olabilir `portfolio.json` da — ad
+    hangisi olduğunu söylemez. Karıştırmanın ölçülen bedeli teşhis paketinin manifestindedir:
+    artık "dışarıda bırakılan sır" diye sayılırsa operatörün gördüğü sır sayısı her artıkta
+    sessizce şişer (uydurma yasağı bilinmeyen bir içeriği sır İLAN ETMEYİ de kapsar).
+
+    TAM AD BACAĞI YOKTUR ve olamaz: `mkstemp` adı rastgele üretir, yani bu ailenin hiçbir üyesi
+    önceden bilinemez. Tam da bu yüzden `sprint._yalniz_desenle_atlanir` bildiriminin ASIL
+    müşterisidir — adı kodda yazılı olmayan bir girdi bildirilmezse izsiz yok olur (bedel yasası).
+
+    `desenler` PARAMETRESİ BİR KAÇIŞ KAPISI DEĞİL ÖLÇÜM YÜZEYİDİR (`sir_dosyasi_mi` ile aynı
+    gerekçe) ve varsayılan ÇAĞRI ANINDA okunur: tek kaynağı oynatan bir çivi iki üretim yüzeyini
+    de birlikte oynatabilmelidir. `fnmatchcase` — `fnmatch` DEĞİL; gerekçe `sir_dosyasi_mi`da
+    yazılıdır ve aynı platform bağımsızlığı burada da geçerlidir."""
+    return any(fnmatch.fnmatchcase(ad, d)
+               for d in (GECICI_ARTIK_DESENLERI if desenler is None else desenler))
+
+
+def kopyalanmaz_mi(ad: str, *, tam_adlar: "frozenset[str] | set[str] | None" = None,
+                   desenler: "tuple[str, ...] | None" = None,
+                   artik_desenleri: "tuple[str, ...] | None" = None) -> bool:
+    """BİLEŞİK KARAR: bu ad `state/` KÖKÜNDEN TÜRETİLEN bir ağaca (kum havuzu, teşhis paketi)
+    kopyalanır mı? — "sır mı" VEYA "geçici artık mı".
+
+    NEDEN BİLEŞİK BİR YÜKLEM VAR, NEDEN İKİ ÇAĞRI DEĞİL: iki üretim yüzeyi (`sprint._desen_atlar`
+    ve `api.api_debug_export`) aynı soruyu soruyor ve TSK-209'da ölçülen ayrışma tam olarak
+    "iki yüzey iki liste tuttu" yüzünden doğmuştu. Kararı burada toplamak, yeni bir sınıf
+    (bugün geçici artık, yarın başka bir aile) eklendiğinde İKİ yüzeyin birden öğrenmesini
+    YAPISAL kılar — biri öğrenip diğeri öğrenemez.
+
+    RAPORLAMA BİRLEŞMEZ, KARAR BİRLEŞİR: çağıran hangi bacağın tuttuğunu `sir_dosyasi_mi` ile
+    AYRICA sorar ve iki sınıfı ayrı alanlarda raporlar (`api` manifestinde
+    `disarida_birakilan_sirlar` ↔ `disarida_birakilan_gecici`). Tek alana yığmak yukarıdaki
+    sayım şişmesini geri getirirdi."""
+    return (sir_dosyasi_mi(ad, tam_adlar=tam_adlar, desenler=desenler)
+            or gecici_artik_mi(ad, desenler=artik_desenleri))
 
 
 def live_enabled() -> bool:

@@ -3269,6 +3269,16 @@ def api_debug_export(request: Request):
     Sınıflandırma artık `config.sir_dosyasi_mi` TEK kaynağındadır — `sprint._desen_atlar` (kum
     havuzu kopyası, TSK-208) aynı yüklemi çağırır, iki liste bir daha ayrışamaz.
 
+    ÜÇÜNCÜ AİLE: ATOMİK YAZIMIN GEÇİCİ ARTIKLARI (TSK-209b, 2026-09-21). `store._atomic_write` ve
+    `secrets._write_file` geçici dosyalarını `mkstemp` ile `state/` KÖKÜNDE açar; yazım ile yer
+    değiştirme arasında bir çökme artık bırakır ve o artığın İÇERİĞİ yazılan defterin içeriğidir
+    (pano oturum imza anahtarı dâhil). Bu adlar bugüne kadar hiçbir sır desenine uymuyordu ve
+    pakete girmemeleri yine SÜZGEÇ TESADÜFÜYDÜ (`.tmp` izinli uzantı değil) — aynı artık izinli bir
+    uzantıyla doğsaydı İÇERİ GİRERDİ. Karar artık `config.kopyalanmaz_mi` bileşiğinden gelir ve
+    uzantı süzgecinden ÖNCEDİR. Manifest iki sınıfı AYRI alanlarda taşır: `.secrets_` önekli artık
+    GERÇEK sırdır, genel `mkstemp` artığı ise sır DEĞİL "geçici artık"tır — ikisini tek alana
+    yığmak operatörün gördüğü sır sayısını sessizce şişirirdi.
+
     OKUNAMAYAN DOSYA UCU DÜŞÜRMEZ. `z.write` bir `OSError` yükseltirse (canlıda ölçülmüş hâl:
     `root:root 0600` bir artık, servis `User=ubuntu`) eskiden İSTEK 500 dönerdi — teşhis paketi
     tam da teşhis gereken anda kaybolurdu. Artık o dosya pakete girmez ve `manifest.json`a ADIYLA
@@ -3282,14 +3292,22 @@ def api_debug_export(request: Request):
     import io, zipfile, datetime as _dt
     buf = io.BytesIO()
     disarida_birakilan_sirlar: list[str] = []
+    disarida_birakilan_gecici: list[str] = []
     okunamayan_dosyalar: list[dict] = []
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
         for f in sorted(config.STATE.iterdir()):
             if not f.is_file():
                 continue
-            # SIR KAPISI ÖNCE: izinli uzantı taşıyan bir sır dosyası da girmez.
-            if config.sir_dosyasi_mi(f.name):
-                disarida_birakilan_sirlar.append(f.name)
+            # KOPYALANMAZ KAPISI ÖNCE: izinli uzantı taşıyan bir sır dosyası da girmez.
+            # KARAR BİLEŞİK, RAPOR AYRIK (TSK-209b): atlama kararını `kopyalanmaz_mi` verir (aynı
+            # yüklemi `sprint._desen_atlar` de çağırır — iki liste bir daha ayrışamaz), ama hangi
+            # BACAĞIN tuttuğu ayrıca sorulur. Geçici artığı sır saymak manifestin sır sayımını her
+            # artıkta şişirirdi ve "kaç sır dışarıda kaldı" sorusu cevapsız kalırdı.
+            if config.kopyalanmaz_mi(f.name):
+                if config.sir_dosyasi_mi(f.name):
+                    disarida_birakilan_sirlar.append(f.name)
+                else:
+                    disarida_birakilan_gecici.append(f.name)
                 continue
             if f.suffix not in (".json", ".jsonl", ".yaml", ".csv"):
                 continue
@@ -3311,9 +3329,11 @@ def api_debug_export(request: Request):
             "exported_at": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
             "mode": config.MODE, "broker": config.BROKER,
             "disarida_birakilan_sirlar": disarida_birakilan_sirlar,
+            "disarida_birakilan_gecici": disarida_birakilan_gecici,
             "okunamayan_dosyalar": okunamayan_dosyalar,
-            "note": "sır dosyaları (config.sir_dosyasi_mi) ve dizinler — bars/ dâhil — HARİÇ; "
-                    "dışarıda kalanlar yalnız ADLARIYLA listelenir, içerik/hash yazılmaz"},
+            "note": "sır dosyaları (config.sir_dosyasi_mi), atomik yazımın geçici artıkları "
+                    "(config.gecici_artik_mi) ve dizinler — bars/ dâhil — HARİÇ; dışarıda "
+                    "kalanlar yalnız ADLARIYLA listelenir, içerik/hash yazılmaz"},
             indent=2))
     from fastapi.responses import Response
     return Response(buf.getvalue(), media_type="application/zip",

@@ -259,7 +259,21 @@ def _write_file(data: dict) -> None:
     dosya bırakıyordu (o modülün başlık notu) ve burada aynı kesinti SIRLARI siler: ajan sessizce
     deterministik moda düşer ve bu, yukarıdaki `secrets_file_unreadable` notunun anlattığı tam
     sınıftır. Bu modül `store`u BİLEREK kullanmaz (0600 + telemetriye/loga hiç dokunmama), o
-    yüzden dayanıklılık burada ELDE tekrarlanır — kopyalanan şey davranış, kod değil."""
+    yüzden dayanıklılık burada ELDE tekrarlanır — kopyalanan şey davranış, kod değil.
+
+    TEMİZLİK DALI `store` İLE HİZALANDI (TSK-209b tur 2, 2026-09-21). Buradaki dal
+    `except Exception:` idi; `store._atomic_write` ise `except BaseException:` yazıyor ve iki yol
+    ancak BUGÜN yan yana ölçüldüğünde ayrıştıkları görüldü. Bedel `Exception`ın kapsamındadır:
+    `KeyboardInterrupt` onun ALTINDA DEĞİLDİR, yani operatörün Ctrl-C'si ya da bir durdurma
+    penceresi yazımı `write` ile yer değiştirme ARASINDA kestiğinde temizlik HİÇ KOŞMUYORDU ve
+    geride SIR İÇERİKLİ bir geçici dosya kalıyordu. Ad `mkstemp` ürünüdür (nokta önekli, gizli),
+    dolayısıyla kimse onu aramazdı. Sınıflandırma tarafı (`config.SIR_DESENLERI`) o artığı aynı
+    turda SIR saymaya başladı — bu İKİNCİ savunma hattıdır (kum havuzuna kopyalanmaz, teşhis
+    paketine girmez); bu hizalama BİRİNCİSİDİR: artık hiç doğmaz.
+    DAL SESSİZ DEĞİLDİR ve `# sessiz-yutma` işareti GEREKTİRMEZ: `os.unlink`ten sonra çıplak
+    `raise` istisnayı (kesinti dâhil) yukarı taşır — yutulan tek şey, temizliğin KENDİ
+    `OSError`ıdır ve o işaretlidir. Çivi: `tests/test_gecici_artik_v530.py` çivi 2b/2c;
+    2c iki yolu AYRIŞMA ÇİVİSİYLE bağlar (tek gövde mümkün değil, kopya kaçınılmaz)."""
     path = _path()
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=str(path.parent), prefix=".secrets_", suffix=".tmp")
@@ -281,7 +295,7 @@ def _write_file(data: dict) -> None:
                 os.close(dfd)
         except OSError:  # sessiz-yutma: dizin fsync'i EN İYİ ÇABA; dosya zaten yerine konmuş ve içeriği fsync'lenmiştir, bu adımın düşmesi yazımı geçersiz kılmaz (store._atomic_write ile aynı hüküm)
             pass
-    except Exception:
+    except BaseException:
         try:
             os.unlink(tmp)
         except OSError:  # sessiz-yutma: en iyi çaba temizlik/kilit bırakma; hedef zaten yoksa yapacak bir şey yok ve asıl iş yolu bundan ötürü durduramaz
