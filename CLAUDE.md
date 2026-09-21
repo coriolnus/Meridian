@@ -219,9 +219,11 @@ Zorlanma katmanı dürüstçe etiketlidir — zorlanamayan yasa, zorlananla ayn�
 - **Donmuş ağaç:** suite koşarken dal değiştirilmez, dosya düzenlenmez. Başlarken HEAD'i çıktı
   dosyasına yaz; biterken karşılaştır — eşit değilse yeşil, tepenin ölçümü DEĞİLDİR: deltanın
   etkilenen kümesini ayrıca koş (vaka: paralel oturum, 2026-08-30).
-- **Hüküm ÜÇLÜDÜR, üçü birden:** `grep -E "FAILED|ERROR" out.log` boş + "N passed" özet satırı
-  VAR + dosyadaki `PYTEST_EXIT=0`. Harness'in "completed (exit 0)" bildirimi pytest'in hükmü
-  DEĞİLDİR — iki kez gerçekte kırmızıyken "exit 0" dedi (vaka 2026-08-29/30).
+- **Hüküm ÜÇLÜDÜR, üçü birden:** `grep -E "FAILED|ERROR|[0-9]+ failed" out.log` boş + "N passed"
+  özet satırı VAR + dosyadaki `PYTEST_EXIT=0`. Harness'in "completed (exit 0)" bildirimi pytest'in
+  hükmü DEĞİLDİR — üç kez gerçekte kırmızıyken "exit 0" dedi (vaka 2026-08-29/30, 2026-09-21).
+  `FAILED` jetonu TEK BAŞINA YETMEZ: addopts `-q` kırmızıyı o jetonla basmayabilir — suite #71'de
+  `1 failed` iken `FAILED|ERROR` grep'i BOŞ döndü, kurtaran `PYTEST_EXIT` oldu (vaka 2026-09-21).
 - Koşum her yerde `.venv/bin/python -m pytest` — worktree'lerde venv yok, sistem python'u pytest
   içermez; "koşamıyorum" ile "kırmızı" karışır.
 - Ajanlar eşzamanlı pytest koşmaz: `state/` paylaşımlı, fixture'lar çakışır. Dosya-ayrıklığı yetmez.
