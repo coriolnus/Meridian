@@ -32,6 +32,7 @@ YÖNTEM: ağ yok, canlı `state/` yok — her test `sandbox_state` altında kend
 """
 from __future__ import annotations
 
+import datetime as dt
 import pathlib
 
 from meridian import analytics as an
@@ -43,7 +44,21 @@ PANO_KART = (pathlib.Path(__file__).resolve().parents[1]
 PANO_YUZEY = (pathlib.Path(__file__).resolve().parents[1]
               / "ui" / "src" / "pano" / "yuzeyler" / "PortfoyYuzey.tsx")
 
-GUN = "2026-09-13"
+# GÜN, LİTERAL OLAMAZ — TAKVİMLE ÇÜRÜR (ölçüldü 2026-09-21, suite #71).
+# Bu sabit `"2026-09-13"` literaliydi ve testler `an.entry_execution_summary()`in VARSAYILAN
+# 7 GÜNLÜK penceresini sınıyor. Pencere `analytics._entry_rows` içinde
+# `cutoff = date.today() - days` ile hesaplanır ve satırlar `date >= cutoff` ile süzülür — ÜST
+# SINIR YOKTUR. Yani literal, yazıldığı günden 7 gün sonra pencereden DÜŞER: test 09-13→09-20 arası
+# yeşil kaldı, 09-21'de (8. gün) `test_a5_kova_ozetin_penceresini_kullanir` `assert (0 == 1)` ile
+# kırmızıya döndü. Kod DEĞİŞMEDİ, yalnız takvim ilerledi — yani yeşili hiçbir şey kanıtlamıyordu
+# ve kırmızısı da bir regresyon değil. Bu, `sprint.py`nin şerhinde adlandırılan "SAAT BAĞIMLI bir
+# suite, geçtiğinde hiçbir şey kanıtlamaz" sınıfının TAKVİM kardeşidir.
+# ÇÖZÜM: üretim kapısının kullandığı SAATİN AYNISINDAN türet (`dt.date.today()` — `_entry_rows` de
+# `dt.date.today()` çağırır), böylece satır her koşumda pencerenin İÇİNDE doğar. Yarış yok: suite
+# yerel gece yarısını geçse bile `cutoff = today-7` geriye kayar, bu gün ondan büyük kalır.
+# Pencere DIŞI kalması gereken satır ("P_eski") literal `2020-01-01` taşımaya devam eder — o
+# literal ÇÜRÜMEZ, çünkü iddiası "çok eski" olmaktır ve zamanla ancak güçlenir.
+GUN = dt.date.today().isoformat()
 
 
 def _ayna_satiri(pid: str, sinif: str, *, date: str = GUN, ts: str | None = None) -> dict:
