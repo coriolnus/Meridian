@@ -1,6 +1,6 @@
 """test_quote_capture_v465.py — EDG-2026-085 Senaryo-A: icra-anı quote kaydı (halka · pencere ·
 abone · yazıcı · marketstream q yolu · mirror kancası). Kart:
-research/cards/EDG-2026-085-icra-ani-quote-kaydi.yaml.
+research/cards/EDG-2026-085-icra-ani-quote-kaydi-senaryo-a.yaml.
 
 BÖLÜMLER: A) `quotecapture` birimi · B) marketstream `q` yolu + `quotes` aboneliği · C) mirror
 kancası · D) yapısal sınırlar (marketstream disk yolu yok, codelaw desen beyanı).
@@ -549,15 +549,107 @@ def test_C4_bayat_terminal_olay_da_ILETILMEZ(kayit, monkeypatch, sandbox_state):
     assert sayac == ["fill"]
 
 
-def test_D4_dagitim_dropini_bayragi_VARSAYILAN_KAPALI(sandbox_state):
-    """Pilot bayrağı canlıya KAPALI iner (kart adim_0_kaydi_2026_09_13: pilot en erken 09-21).
-    Kayıt dizini repo ve state/ DIŞIDIR (kill#4) — drop-in bunu da taşır."""
+# --- EDG-085 pilot bayrağı ↔ kart fazı (tek-kaynak) ----------------------------------------------
+#: TEK KAYNAK kartın `status` alanıdır; dağıtım drop-in'indeki pilot bayrağı ondan TÜREYEN değerdir.
+#: Sözlük bilerek DARDIR — EDG-085'in yaşam döngüsünde beklenen üç faz. Kart başka bir faza geçerse
+#: çivi öter ve "o fazda yazım açık mı" kararı bu sözlükte AÇIKÇA verilir; sessizce varsayılmaz.
+_FAZ_BAYRAK = {
+    "registered": "0",    # ön-kayıt: pilot penceresi açılmadı → yazım KAPALI
+    "measuring": "1",     # pilot penceresi açık → yazım AÇIK
+    "measured": "0",      # ölçüm kapandı → yazım durur (disk/CPU bedeli sürmesin)
+}
+
+#: Kart dosyasının adı (ölçüldü: `research/cards` altında 085 ile eşleşen TEK dosya).
+KART_ADI = "EDG-2026-085-icra-ani-quote-kaydi-senaryo-a.yaml"
+
+
+def _beklenen_bayrak(status: str) -> str:
+    """Kart fazından beklenen bayrak değerini TÜRETİR — saf fonksiyon, dosya okumaz."""
+    if status not in _FAZ_BAYRAK:
+        pytest.fail(
+            f"kartın status sözlüğü dışı: {status!r} — bilinen fazlar {sorted(_FAZ_BAYRAK)}. "
+            "Yeni bir faz eklendiyse o fazda pilot yazımının açık mı kapalı mı olduğuna KARAR "
+            "VER ve eşlemeyi bu sözlüğe yaz; sessiz geçme yok.")
+    return _FAZ_BAYRAK[status]
+
+
+def _kart_statusu(metin: str) -> str:
+    """Kart YAML'ındaki `status:` alanı — tam olarak BİR satır (satır sonu `#` yorumu değere girmez)."""
+    import re
+    bulunan = re.findall(r"(?m)^status:\s*(\S+)", metin)
+    assert len(bulunan) == 1, f"kartta tekil kök `status:` satırı yok: {bulunan}"
+    return bulunan[0]
+
+
+def _conf_bayragi(metin: str) -> str:
+    """Drop-in'deki `Environment=<AKTIF_ENV>=<x>` değeri — tam olarak BİR satır."""
+    bulunan = [s.split("=", 2)[2].strip() for s in metin.splitlines()
+               if s.startswith(f"Environment={qc.AKTIF_ENV}=")]
+    assert len(bulunan) == 1, f"drop-in'de tekil pilot bayrağı satırı yok: {bulunan}"
+    return bulunan[0]
+
+
+def test_D4_dagitim_dropini_bayragi_KARTIN_FAZINDAN_TURER(sandbox_state):
+    """Pilot bayrağı KARTIN FAZINDAN TÜRER — iki dosya sessizce ayrışamaz.
+
+    ESKİ AD: `test_D4_dagitim_dropini_bayragi_VARSAYILAN_KAPALI`. O çivi drop-in'de sabit
+    `Environment=MERIDIAN_QUOTE_CAPTURE=0` dizgesini zorluyordu ve "kod bayrak-KAPALI iner"
+    fazı içindi (kart `adim_0_kaydi_2026_09_13`). 2026-09-21'de CPU tabanı 5/5 doldu; pilot
+    açılışında (TSK-013 / EDG-2026-085) Rol-1 kartı `registered → measuring` yapıp bayrağı
+    `0 → 1` çevirir — sabit dizge o anda kırılırdı. Ama çivinin KORUDUĞU gerçek değişmedi:
+    pilot açılmadan yazım açılmaz, pilot kapanınca yazım durur. Bu yüzden çivi silinmedi,
+    TEK KAYNAĞA (kartın `status` alanı) bağlandı: biri değişip öteki değişmezse çivi öter.
+
+    Kayıt dizini repo ve state/ DIŞIDIR (kill#4) — drop-in bunu da taşır; o iki iddia aynen kaldı.
+    """
     import pathlib
-    p = (pathlib.Path(__file__).resolve().parents[1] / "deploy" / "oracle-a1" /
-         "meridian.service.d" / "55-edg085-quote.conf")
+    kok = pathlib.Path(__file__).resolve().parents[1]
+    kart_yolu = kok / "research" / "cards" / KART_ADI
+    p = kok / "deploy" / "oracle-a1" / "meridian.service.d" / "55-edg085-quote.conf"
+    assert kart_yolu.exists(), f"kart taşındı/yeniden adlandırıldı, çivi kör kaldı: {KART_ADI}"
+
+    status = _kart_statusu(kart_yolu.read_text(encoding="utf-8"))
     metin = p.read_text(encoding="utf-8")
-    assert f"Environment={qc.AKTIF_ENV}=0" in metin, "pilot bayrağı KAPALI inmeli"
+    beklenen, gorulen = _beklenen_bayrak(status), _conf_bayragi(metin)
+    assert gorulen == beklenen, (
+        f"kart fazı {status!r} bayrağın {beklenen!r} olmasını ister, drop-in {gorulen!r} diyor — "
+        "kart ve drop-in AYRIŞTI; ikisi AYNI turda birlikte değişir")
+
     dizin = [s.split("=", 2)[2].strip() for s in metin.splitlines()
              if s.startswith(f"Environment={qc.DIZIN_ENV}=")]
     assert len(dizin) == 1 and dizin[0].startswith("/opt/veri/"), dizin
     assert "/state" not in dizin[0] and "AI-Trading" not in dizin[0]
+
+
+@pytest.mark.parametrize("status, bayrak", [
+    ("registered", "0"),
+    ("measuring", "1"),
+    ("measured", "0"),
+])
+def test_D5_faz_bayrak_sozlugu_de_CIVILI(status, bayrak):
+    """Eşlemenin kendisi çivilidir: saf fonksiyon, kart da conf da OKUNMAZ. Sözlük sessizce
+    kayarsa (ör. pilot fazı `0`a döndürülürse) ana çivi yanlış gerçeği korumaya başlardı."""
+    assert _beklenen_bayrak(status) == bayrak
+
+
+def test_D5b_sozluk_disi_faz_SESSIZ_GECMEZ():
+    """Bilinmeyen faz bir varsayıma değil, açık bir karara zorlar (uydurma yasağı)."""
+    with pytest.raises(pytest.fail.Exception, match="status sözlüğü dışı"):
+        _beklenen_bayrak("archived")
+
+
+@pytest.mark.parametrize("status, conf_degeri, tutarli", [
+    ("registered", "0", True),     # bugünkü depo hâli
+    ("measuring", "1", True),      # pilot açılışı — kart ve drop-in BİRLİKTE değişti
+    ("measured", "0", True),       # ölçüm kapandı, yazım durdu
+    ("measuring", "0", False),     # kart açıldı, bayrak unutuldu → pilot sessizce ÖLÇMEZ
+    ("registered", "1", False),    # bayrak açıldı, kart açılmadı → kartsız canlı yazım
+])
+def test_D6_sahte_cift_AYRISMA_yakalanir(status, conf_degeri, tutarli):
+    """Ayrışmanın iki yönü de yakalanmalı. Sahte metinlerle ölçülür — gerçek kart ve drop-in
+    Rol-1'indir, bu çivi onlara DOKUNMADAN eşleşme kuralını sınar."""
+    kart = f"card_id: EDG-2026-085\nstatus: {status}   # sahte kart metni\n"
+    conf = ("[Service]\n"
+            f"Environment={qc.AKTIF_ENV}={conf_degeri}\n"
+            f"Environment={qc.DIZIN_ENV}=/opt/veri/olcum/edg085/kayit\n")
+    assert (_conf_bayragi(conf) == _beklenen_bayrak(_kart_statusu(kart))) is tutarli
