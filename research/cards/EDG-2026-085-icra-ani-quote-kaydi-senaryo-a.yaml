@@ -10,7 +10,7 @@
 # websocket ile sormadı; KALDI/NO-GO selef yok, ilişkiler `ref` ve aşağıdaki AYRIŞMA notunda.
 
 card_id: EDG-2026-085
-status: registered   # 2026-09-07 Rol-1 — ön-kayıt (operatör K8); kod kart-önce, pilot S5 + haftalık pencereler sonrası
+status: measuring    # 2026-09-21 23:19Z Rol-1 — PİLOT BAYRAĞI AÇILDI (pilot_kaydi_2026_09_22); önceki: registered 2026-09-07 (ön-kayıt, operatör K8); kod kart-önce, pilot S5 + haftalık pencereler sonrası
 family: icra_ani_quote_kaydi
 on_kayit: 2026-09-07
 selef: null
@@ -176,3 +176,23 @@ rol1_notu_2026_09_18: >
   (`MERIDIAN_QUOTE_CAPTURE=0 → 1`) A0 rolüyle kurulur ve dağıtım ister — ayrı tur: kart kaydı + kuru
   koşum + dağıtım + ilk pilot seansında CPU/healthz ölçümü. Taban timer'ı Pazartesi 13:00Z'de yine
   koşar (taban dolu olduğu için pilotla çakışmaz).
+
+pilot_kaydi_2026_09_22: >
+  PİLOT BAYRAĞI AÇILDI (Rol-1, 2026-09-21 23:19Z, kart-önce). Ön şart doldu: TSK-208 gece kanıtı 22:00:44Z
+  (sprint_kum_havuzu_atlandi adet=1, sprint_cadence_failed 0, antrenman koşuyor) — pencereye ikinci değişken
+  sokulmadı. Değişen tek şey: deploy/oracle-a1/meridian.service.d/55-edg085-quote.conf
+  MERIDIAN_QUOTE_CAPTURE=0 → 1 (bu kaydı taşıyan commit). Bayrak canlıya A0 rolü (site.yml, daemon-reload) +
+  worker restart (dağıtım #63, operatör, 2026-09-22 08:00–09:50Z penceresi) ile iner; dağıtım sha'sı ŞU AN
+  BİLİNMİYOR (None) — dağıtım sonrası kayda eklenir. TAVAN (taban dolu, eşik değişmez): healthz_max p95
+  1,90 + 50 = 51,90 ms; CPU +5pp (taban CPU medyan 0,170 · p95 13,94 tek-çekirdek %). Taban: 5 geçerli seans
+  09-14..09-18 (430 geçerli örnek) + fazladan gün 09-21 (85 örnek, sayıma girmez; healthz_max p95 1,98 ms —
+  tabanla tutarlı); taban dosyası A1 /opt/veri/olcum/edg085/taban.jsonl 865 satır (geçersiz eski örnekleyici
+  satırları dahil). Açılış anı canlı bağlam (A1 meridian.db salt-okur, 2026-09-21 23:0xZ): açık pozisyon TMO
+  (13 adet, 09-18 açıldı); son plan seansı 2026-09-21: AMD (GO), META (REVIEW), WBD (REVIEW). İLK PİLOT SEANSI
+  = restart sonrası ilk açık seans (2026-09-22 13:30Z); o günün plan sembolleri pre-market çevriminde üretilir
+  (şu an None) ve ilk seans kaydında yazılır. Doğrulama sırası: (1) A1 dosya içeriği =1 ve `systemctl show
+  meridian.service -p Environment` (restart sonrası); (2) ilk seansta quotecapture olayları + kayıt dizini
+  /opt/veri/olcum/edg085/kayit; (3) seans sonu healthz_max p95 ≤ 51,90 ms ve CPU Δ ≤ 5pp (taban aracıyla aynı
+  yol), sayılar karta; aşılırsa pilot DURUR, bayrak 0'a döner (kill-list). Pencere: n_uygun (30 dolum ∧ 10
+  seans) dolana kadar, en çok 20 seans. Kaynak: kart adim_0_kaydi_2026_09_13 + rol1_notu_2026_09_18 (tavan);
+  hafıza: memory `operator-para-kararlari` (para yok, pilot ücretsiz), `dagit-dropin-kurmaz-a0-rolu-kurar`.
