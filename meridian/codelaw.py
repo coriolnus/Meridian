@@ -1810,6 +1810,36 @@ _CAPA_UZANTILARI = frozenset((
     "service", "timer", "socket", "png", "svg", "xml", "db", "gz", "zip"))
 
 
+def _dosya_adi_kuyrugu_mu(sembol: str) -> bool:
+    """`modül.sembol` eşleşmesinin sembol parçası aslında bir DOSYA ADI KUYRUĞU mu?
+
+    VAKA (TSK-211, ölçüldü 2026-09-21): 2026-09-02'deki muafiyet kuyruğun yalnız TEK parçalı
+    hâlini tanıyordu (`secrets.json` → `json` ∈ küme). İKİ parçalı kuyrukta ise desen — sembol
+    parçasını `Sinif.metot` çapaları için NOKTALI okumak ZORUNDA olduğundan — ilk parçayı
+    "modül", KALANINI "sembol" sayıyor: `auth.json.tmp` → modül `auth`, sembol `json.tmp`;
+    `secrets.bak.json` → modül `secrets`, sembol `bak.json`. Her iki modül de depoda TEK `.py`
+    olarak çözüldüğü için kapsam sınırı (2) de geçiliyor ve hedef modülün AST adları arasında
+    böyle bir ad bulunmadığı için hüküm `curuyen`/`sembol_yok` oluyordu.
+
+    BEDELİ ÖLÇÜLDÜ, ve ödeyen YAZARDI: TSK-209'un İKİ AYRI TURUNDA iki ayrı implementer yedek ve
+    geçici dosya adlarını düzyazıya yazınca bu tarama kırmızı verdi (tur 1'de 4 kayıt); ikisi de
+    adları yol önekli biçime (`state/auth.json`) çevirerek geçti. Yani dedektör, yazarı KENDİ
+    METNİNİ EĞMEYE zorladı. Yanlış alarm yasanın en pahalı arızasıdır — susturulan bekçi,
+    olmayan bekçiden beterdir; ama yazarına düzyazısını çarpıttıran bekçi de aynı sınıftandır:
+    ikisi de yasayı ölçmeye değil, etrafından dolaşmaya öğretir.
+
+    KURAL: kuyruk parçalarından HERHANGİ biri bir uzantıysa eşleşme dosya adıdır, çapa değildir.
+    Tek parçalı hâl bunun ÖZEL DURUMUDUR (tek parça = tek kontrol), yani 2026-09-02 davranışı
+    AYNEN korunur — ayrı bir dal eklenmedi (tek-kaynak yasası).
+
+    KASTEN DAR: "noktalı kuyruk = dosya adı" diye yazılsaydı `mod.Sinif.olmayan_metot` gibi
+    GERÇEK ve çürük bir çapa sessizce affedilirdi; hiçbir parçası uzantı olmayan kuyruk çapadır
+    ve hüküm DEĞİŞMEDEN kurulur. Bedel canlı ağaçta ölçüldü (2026-09-21, 703 metin dosyası,
+    3017 çözülen · 0 çürüyen): yeni muafiyetin yutacağı çapa sayısı SIFIR — yani kazanç
+    (iki sahte pozitif sınıfı) körlük ödemeden alınır."""
+    return any(parca in _CAPA_UZANTILARI for parca in sembol.split("."))
+
+
 def _atama_adlari(hedef: ast.expr):
     """Bir atama HEDEFİNDEN ad(lar)ı çıkarır — düz `ad = ...` bir `ast.Name`dir, demet/liste-çöz
     `AKTIF, ARSIV = "aktif", "arsiv"` ise `ast.Tuple`/`ast.List` İÇİNDEKİ her ad (TSK-120,
@@ -1896,7 +1926,10 @@ def capa_uyusmasi(metinler, py_kokler: tuple[str, ...] | None = None,
       2. Backtick ZORUNLU ve modül adres defterinde ÇÖZÜLMELİ. Türkçe düzyazı `r.json()` ·
          `self.ALAN` gibi yüzlerce `x.y` belirteci taşır; hepsini çapa saymak `cozulemeyen`
          kovasını gürültüye çevirir ve "kaç çapayı ölçemedim" sorusunu okunamaz yapardı.
-      3. Sembol parçası bir DOSYA UZANTISI olamaz (`_CAPA_UZANTILARI`).
+      3. Sembol parçası bir DOSYA ADI KUYRUĞU olamaz (`_dosya_adi_kuyrugu_mu`): kuyruk
+         parçalarından HERHANGİ biri `_CAPA_UZANTILARI`ndaysa eşleşme dosya adıdır. Tek parçalı
+         uzantı (2026-09-02, 11 yanlış çürüme) bunun özel durumudur; iki parçalı kuyruk TSK-211'de
+         (2026-09-21) eklendi — yardımcının docstring'i vakayı ve ölçülen bedeli taşır.
 
     KAYIP AÇIK: modül adı YANLIŞ YAZILMIŞ bir `modül.sembol` çapası burada prozadan ayırt
     edilemez, yani görünmez. Kayıp `dosya.py::sembol` biçiminde kapalıdır — orada `.py::`
@@ -1959,7 +1992,7 @@ def capa_uyusmasi(metinler, py_kokler: tuple[str, ...] | None = None,
                 hedef_ad = f"{m.group(1)}.py"
                 if len(adres.get(hedef_ad, [])) != 1:
                     continue                  # KAPSAM SINIRI (2)
-                if m.group(2) in _CAPA_UZANTILARI:
+                if _dosya_adi_kuyrugu_mu(m.group(2)):
                     continue                  # KAPSAM SINIRI (3) — dosya adı, sembol değil
                 _hukum(kaynak, m.group(0).lstrip("`"), "", hedef_ad, m.group(2))
     return out
