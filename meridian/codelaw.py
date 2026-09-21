@@ -1836,7 +1836,35 @@ def _dosya_adi_kuyrugu_mu(sembol: str) -> bool:
     GERÇEK ve çürük bir çapa sessizce affedilirdi; hiçbir parçası uzantı olmayan kuyruk çapadır
     ve hüküm DEĞİŞMEDEN kurulur. Bedel canlı ağaçta ölçüldü (2026-09-21, 703 metin dosyası,
     3017 çözülen · 0 çürüyen): yeni muafiyetin yutacağı çapa sayısı SIFIR — yani kazanç
-    (iki sahte pozitif sınıfı) körlük ödemeden alınır."""
+    (iki sahte pozitif sınıfı) körlük ödemeden alınır.
+
+    KAYIP AÇIK (inceleme bulgusu, düzeltme turu 1, 2026-09-21): bu kural bir DİZGE eşleşmesidir,
+    dosya adıyla nitelikli sembolü AYIRT EDEMEZ. Kuyruğun herhangi bir parçası `_CAPA_UZANTILARI`
+    jetonlarından biriyle TESADÜFEN çakışırsa, GERÇEK ve nitelikli bir çapa da (`store.Store.db`,
+    `guard.Kapi.log` biçimi) `_hukum`e hiç girmeden atlanır: ne `cozulen`e ne `curuyen`e ne de
+    `cozulemeyen`e yazılır, HİÇBİR kovada görünmez — yani çürüse bile sessiz çürür. Bu, 2026-09-02
+    muafiyetine göre BİLEREK ödenen bir genişlemedir: o muafiyet sembolün TAMAMINI tek bir jetona
+    eşitlediği için nitelikli bir kuyruğa hiç dokunamıyordu; "herhangi bir parça" kuralı ise
+    M4/M5 mutasyonlarının gösterdiği gibi ZORUNLUDUR (yalnız son parçaya bakan kural birinci
+    vakayı, yalnız ilk parçaya bakan kural ikinci vakayı kaçırır) ve bedeli bu paragraftır.
+
+    BUGÜN ÖLÇÜLEN (2026-09-21, canlı ağaç, `_yorum_metinleri` + `_capa_adres_defteri`): çok
+    parçalı kuyruk taşıyan 165 eşleşmenin 15'ini bu kural affediyor; bunların SIFIRI sınıf
+    biçimli (büyük harfle başlayan parça taşıyan) bir addır ve modül parçası depoda tek `.py`ye
+    çözülen yalnız 4'ü vardır — dördü de TSK-211'in KENDİ belgelediği iki dosya adıdır (bu
+    docstring ve çivi dosyasının başlığı). Yani amaçlanan dışında kaybedilen gerçek çapa: 0.
+    Sınıfın kuramsal olmadığı da ölçüldü: `socket.socket.connect` bugün ağaçta gerçek bir sembol
+    atfı olarak geçiyor ve `socket` bir `.socket` birim uzantısı olduğu için bu kural onu
+    affediyor — bugün zararsızdır ÇÜNKÜ `socket.py` depoda yok ve kapsam sınırı (2) onu zaten
+    eliyor; `socket.py` doğduğu gün o atıf sessizleşir.
+
+    NE ZAMAN YENİDEN ÖLÇÜLMELİ: `_CAPA_UZANTILARI`na her yeni jeton eklendiğinde bu sınıf
+    büyür — jetonla çakışan her sınıf/metot adı o gün kör olur; ekleme yapan tur yukarıdaki üç
+    sayıyı (affedilen · sınıf biçimli · modülü çözülen) yeniden ölçmeli. Kör kalan bir çapanın
+    BAŞKA bir çivi tarafından yakalanıp yakalanmayacağı ÖLÇÜLMEDİ — "yakalanır" varsayılmaz.
+    Çapa YAZARI için kural sadedir: nitelikli bir çapada sınıf ya da metot adı bir dosya uzantısı
+    jetonuyla çakışıyorsa o çapa `dosya.py::Sinif.metot` biçiminde yazılır — o biçim bu
+    muafiyetten geçmez ve hüküm adıyla kurulur."""
     return any(parca in _CAPA_UZANTILARI for parca in sembol.split("."))
 
 
