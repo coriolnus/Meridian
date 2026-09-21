@@ -224,6 +224,9 @@ Zorlanma katmanı dürüstçe etiketlidir — zorlanamayan yasa, zorlananla ayn�
   hükmü DEĞİLDİR — üç kez gerçekte kırmızıyken "exit 0" dedi (vaka 2026-08-29/30, 2026-09-21).
   `FAILED` jetonu TEK BAŞINA YETMEZ: addopts `-q` kırmızıyı o jetonla basmayabilir — suite #71'de
   `1 failed` iken `FAILED|ERROR` grep'i BOŞ döndü, kurtaran `PYTEST_EXIT` oldu (vaka 2026-09-21).
+  Ters yön de var: TEST ADI grep'i kirletir — adında `FAILED`/`ERROR` geçen bir test, durations
+  bölümü düğüm kimliğini bastığı için YEŞİL koşumda 1. ayağı DOLU gösterir (vaka 2026-09-21, v527:
+  dört çivi `DUSTU`/`BASARILI` diye yeniden adlandırıldı). Test adına bu jetonları yazma.
 - Koşum her yerde `.venv/bin/python -m pytest` — worktree'lerde venv yok, sistem python'u pytest
   içermez; "koşamıyorum" ile "kırmızı" karışır.
 - Ajanlar eşzamanlı pytest koşmaz: `state/` paylaşımlı, fixture'lar çakışır. Dosya-ayrıklığı yetmez.
