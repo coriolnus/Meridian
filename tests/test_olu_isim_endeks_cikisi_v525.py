@@ -320,6 +320,92 @@ def test_bos_positions_olculmus_sayilir(takvim, monkeypatch, warnlar, loglar):
     assert rep2["acik_pozisyon_kesisim"] is None and rep2["acik_pozisyon_neden"]
 
 
+# ---- (5e) ÜÇ MANDAL AYNI ÇAĞRIDA: aday + beyanlı çıkış + açık pozisyon kesişimi ---------------
+
+def test_aday_cikis_ve_pozisyon_ucu_birlikte(takvim, monkeypatch, warnlar, loglar):
+    """ÜÇLÜ SENARYO (TSK-207a inceleme notu, 2026-09-21): mevcut çiviler üç mandalı İKİŞER
+    ölçüyordu — (4) aday+çıkış, (5a) çıkış+pozisyon. Üçünün AYNI çağrıda birlikte olduğu hâl
+    ÖLÇÜLMEMİŞTİ, yani "iki satır mı, üç satır mı" sorusunun cevabı koddan OKUNUYORDU,
+    çividen değil.
+
+    DONDURULAN SÖZLEŞME — İKİ WARN, SIFIR BİLGİ SATIRI:
+      * `at_aday`  → `SEMBOL_OLU_ADAY` WARN atılır; çıkış VE kesişim bu satırda AYRI ALANLAR
+        olarak taşınır (tek satır, iki alan tasarımı — (4)'ün kuralı kesişim eklenince de
+        BOZULMAZ),
+      * `at_cikis` → aday VARKEN False: `SEMBOL_ENDEKS_CIKISI` BİLGİ satırı ATILMAZ ve mandalı
+        HİÇ AÇILMAZ (kısa devre — `(not rep["adaylar"])` koşulu `_mandal`a ulaşmadan keser;
+        satır açılsaydı o gün gerçekten yalnız-çıkış hâli doğduğunda bilgi satırı SESSİZCE
+        bastırılırdı, yani körlük bir sonraki güne taşınırdı),
+      * `at_poz`   → `SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON` WARN'ı AYRICA atılır: aday satırındaki
+        ALAN, kendi başına bir RİSK SATIRI değildir (TSK-207 (b) sınıfı), ikisi birbirini
+        YUTMAZ.
+
+    Ve üç mandal BİRBİRİNDEN BAĞIMSIZDIR: ikinci çağrıda açılmış İKİSİ bastırılır, açılmamış
+    olan hâlâ açılmaz."""
+    from meridian.adapters import data
+    _beyanli_kur(monkeypatch, {"CIK": CIKIS_BEYAN, "CIK2": CIKIS_BEYAN})
+    monkeypatch.setattr(data, "LIVE_UNIVERSE", ["DUZ"])
+    monkeypatch.setattr(data, "REPLAY_UNIVERSE", ["DUZ"])
+    _arsiv_yaz("DUZ", "2026-08-20")
+    _arsiv_yaz("CIK", "2026-08-19")           # ÇIKIŞ daha eski — `en_eski` sıralamasına sızarsa yakalanır
+    _arsiv_yaz("CIK2", "2026-08-20")          # çıkış VAR ama pozisyonsuz — kesişim daraltması ölçülür
+    store.write_json("portfolio.json", {"last_date": "2026-09-01",
+                                        "positions": {"CIK": {"qty": 7}, "BASKA": {"qty": 3}}})
+    _bugun_ayarla(monkeypatch, "2026-09-01")
+
+    rep = watchdog.check_olu_isim_and_alarm()
+
+    # --- sınıflama: üç kova da dolu/doğru
+    assert _ad(rep["adaylar"]) == {"DUZ"}
+    assert _ad(rep["endeks_cikisi"]) == {"CIK", "CIK2"}
+    assert rep["acik_pozisyon_kesisim"] == ["CIK"] and rep["acik_pozisyon_neden"] is None
+
+    # --- İKİ warn, bu sırayla; BİLGİ satırı YOK
+    assert [w["event"] for w in warnlar] == [
+        "SEMBOL_OLU_ADAY", "SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON"], \
+        "üçlü hâlde İKİ warn beklenir — aday satırı kesişim satırını YUTMAZ, tersi de olmaz"
+    assert [g["event"] for g in loglar] == [], \
+        "aday VARKEN bilgi satırı atılmaz (tek satır, iki alan) — (4) kuralı kesişimle bozulmaz"
+
+    # --- aday satırı: çıkış ve kesişim AYRI ALANLAR, metne SIZMAZ
+    aday = warnlar[0]
+    assert aday["semboller"] == ["DUZ"] and aday["n"] == 1
+    assert aday["en_eski"]["ticker"] == "DUZ", "en_eski GERÇEK adaylar arasından seçilir"
+    assert aday["endeks_cikisi"] == ["CIK", "CIK2"]
+    assert aday["acik_pozisyon_kesisim"] == ["CIK"]
+    assert aday["acik_pozisyon_neden"] is None
+    assert "CIK" not in aday["detail"], "çıkış/kesişim adları 'delist adayı' metnine SIZMAMALI"
+
+    # --- kesişim satırı: yalnız KESİŞEN sembol, beyanı da yalnız onun
+    poz = warnlar[1]
+    assert poz["semboller"] == ["CIK"] and poz["n"] == 1
+    assert poz["beyanlar"] == {"CIK": CIKIS_BEYAN}, "pozisyonsuz CIK2 bu satıra girmez"
+    assert "BASKA" not in str(poz), "pozisyon defterinin tamamı satıra dökülmez"
+
+    # --- defter: İKİ mekanizma ilerledi, ÜÇÜNCÜSÜ HİÇ AÇILMADI
+    mek = store.read_json(watchdog.ALARM_GUNLUK_FILE, {})["mekanizmalar"]
+    assert mek[watchdog._OLU_ISIM_MEK_ADI]["alarm"] == 1
+    assert mek[watchdog._OLU_ISIM_MEK_ADI]["son_semboller"] == ["DUZ"]
+    assert mek[watchdog._OLU_ISIM_ENDEKS_POZ_MEK_ADI]["alarm"] == 1
+    assert mek[watchdog._OLU_ISIM_ENDEKS_POZ_MEK_ADI]["son_semboller"] == ["CIK"]
+    assert watchdog._OLU_ISIM_ENDEKS_MEK_ADI not in mek, \
+        "aday varken çıkış mandalı HİÇ AÇILMAMALI — açılırsa yalnız-çıkış gününün BİLGİ satırı " \
+        "sessizce bastırılır (günlük tavan tükenmiş olur)"
+
+    # --- ikinci çağrı: açılan iki mandal bastırır, üçüncüsü hâlâ kapalı
+    watchdog.check_olu_isim_and_alarm()
+
+    assert [w["event"] for w in warnlar] == [
+        "SEMBOL_OLU_ADAY", "SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON"], \
+        "AYNI gün ikinci çağrı yeni satır ÜRETMEMELİ (üç mandal da günlük tavana tabidir)"
+    assert [g["event"] for g in loglar] == []
+    mek2 = store.read_json(watchdog.ALARM_GUNLUK_FILE, {})["mekanizmalar"]
+    assert mek2[watchdog._OLU_ISIM_MEK_ADI]["bastirilan"] == 1, \
+        "bastırılan satır SESSİZ DEĞİL, sayaçta GÖRÜNÜR (YASA 6)"
+    assert mek2[watchdog._OLU_ISIM_ENDEKS_POZ_MEK_ADI]["bastirilan"] == 1
+    assert watchdog._OLU_ISIM_ENDEKS_MEK_ADI not in mek2
+
+
 # ---- (6) çıkış YOKKEN kesişim portföyden BAĞIMSIZ olarak ölçülüdür ---------------------------
 
 def test_cikis_yokken_kesisim_portfoysuz_da_olculur(takvim, monkeypatch):
