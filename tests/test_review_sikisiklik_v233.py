@@ -147,13 +147,19 @@ def test_s1e_parse_yollari_da_deftere_islenir(hazir, monkeypatch):
 
 
 def test_s1f_kaynak_kilidi_her_kayitsiz_donus_olay_makinesinden_gecer():
-    """Yapısal çivi: `review_candidates`ta 5 kayıtsız dönüş var ve TOPLAMI olay/defter makinesine
-    bağlı (3 × `_review_atla` + 2 parse yolu × `_review_deneme_isle`). Olaysız bir 6. `return None`
-    eklenirse bu sayılar ayrışır ve kilit düşer — v168 h6'nın v233 genişlemesi."""
+    """Yapısal çivi: `review_candidates`ta 6 kayıtsız dönüş var ve TOPLAMI olay/defter makinesine
+    bağlı (4 × `_review_atla` + 2 parse yolu × `_review_deneme_isle`). Olaysız bir 7. `return None`
+    eklenirse bu sayılar ayrışır ve kilit düşer — v168 h6'nın v233 genişlemesi.
+
+    SAYILAR NEDEN DEĞİŞTİ (2026-09-22, TSK-212): kum havuzu kapısı 6. kayıtsız dönüşü ekledi
+    (`kum_havuzu_llm_kapali`) ve onu da `_review_atla`ya bağladı — yani kilit gevşemedi, KAPSAMI
+    büyüdü. Kilidin ölçtüğü şey sayının KENDİSİ değil 'her dönüş olay makinesinden geçiyor mu'
+    eşitliğidir; sayı ancak yeni dönüş de deftere bağlanınca artar. Kapının kendi sözleşmesi
+    `tests/test_kum_havuzu_review_kapisi_v532.py`da."""
     import inspect
     src = inspect.getsource(hermes.review_candidates)
-    assert src.count("return None") == 5
-    assert src.count("_review_atla(") == 3
+    assert src.count("return None") == 6
+    assert src.count("_review_atla(") == 4
     assert src.count("_review_deneme_isle(") == 2
     assert src.count("_warn_review_empty(") == 2         # v168 sözleşmesi bozulmadı
 

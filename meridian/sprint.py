@@ -526,9 +526,10 @@ def _kur_kum_havuzu(sid: str) -> Path:
 def kum_havuzunda() -> bool:
     """Bu SÜREÇ bir sprint kum havuzunda mı koşuyor? PAYLAŞIMLI bir kaynağa yazmadan önce sorulur.
 
-    Kum havuzunun KENDİ dosyalarına yazmak serbesttir (zaten tüm amacı budur); bu kapı yalnız
-    süreç dışındaki, canlıyla ORTAK kaynaklar içindir — bugünkü tek örneği ajanın
-    `~/.hermes/skills` dizini (`hermes.sync_agent_skills`)."""
+    Kum havuzunun KENDİ dosyalarına yazmak serbesttir (zaten tüm amacı budur); bu kapı süreç
+    dışındaki, canlıyla ORTAK kaynaklar ve canlıya ait yan etkiler içindir. Bugünkü tüketicileri
+    (2026-09-21): `hermes.sync_agent_skills` (paylaşımlı `~/.hermes/skills` dizini, v242) ve
+    `hermes.review_candidates` (LLM görüşü kum havuzunda kapıdan döner, TSK-212)."""
     try:
         st = Path(config.STATE).resolve()
     except OSError:  # sessiz-yutma: yol çözümü düştü (kopmuş symlink/izin) — kapı KAPALI tarafa değil AÇIK tarafa düşer; bu bir teşhis yolu değil, canlı senkronun kendisidir ve yanlış "kum havuzundayım" cevabı canlı onarımı durdururdu
@@ -875,8 +876,14 @@ def start(cfg: dict | None = None) -> dict:
 SPRINT_HOURS = (22, 6)          # [22:00, 06:00) yerel — gece dilimi
 SPRINT_STALE_DAYS = 7           # haftalık taban tetik
 SPRINT_MIN_NEW_HYP = 5          # VEYA: son sprintten beri bu kadar taze hipotez birikti
-# BÜTÇE ÖZ-AYARI — ÇEKİRDEK SAYISINDAN TÜRER, KOTADAN DEĞİL. Sprint LLM ÇAĞIRMAZ: `sprint_run`
-# yalnız `reflect.search_and_submit` koşturur (deterministik koordinat inişi). Ajan kotasını bu
+# BÜTÇE ÖZ-AYARI — ÇEKİRDEK SAYISINDAN TÜRER, KOTADAN DEĞİL. Sprint LLM ÇAĞIRMAZ — ama bu cümle
+# 2026-09-21'e kadar YANLIŞ GEREKÇEYLE doğruydu ve ölçümle düzeltildi (TSK-212). Eski şerh "`sprint_run`
+# yalnız `reflect.search_and_submit` koşturur" diyordu; ÖLÇÜM tersini gösterdi: `sprint_run` A fazında
+# `loop.daily_cycle` de koşturur ve o yol scheduler üzerinden `hermes.review_candidates`a ULAŞIR.
+# 2026-08-21→09-21 arası bu çağrı kum havuzunda gerçekten yapılıyordu (268 çağrı, 268 boş, 0 görüş:
+# salt-okunur HOME'da hermes CLI kendi log dosyasını açamıyordu). Bugün cümle YİNE doğrudur, çünkü
+# `review_candidates` kum havuzunda `kum_havuzu_llm_kapali` sebebiyle KAPIDAN döner — ajan katmanına
+# hiç girilmez. Ajan kotasını bu
 # yüzden bütçeye BAĞLAMADIM — bağlasaydım ölçülmeyen bir ilişki uydurmuş olurdum. Kota yine de
 # ROL oynar ama TERS yönde ve yalnız değer olarak: beyin zinciri soğumadayken hipotez üreten tek
 # mekanizma deterministik aramadır, yani sprint o gece DAHA değerlidir — bu bir kapı değil, bir not.

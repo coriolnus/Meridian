@@ -4035,6 +4035,31 @@ def review_candidates(dstr: str | None = None) -> dict | None:
     import subprocess
     plans = store.read_jsonl("trade_plans.jsonl")
     day = dstr or max([p.get("date") for p in plans if p.get("date")], default=None)
+    # KUM HAVUZU KAPISI (TSK-212) — DANIŞMA KATMANI SPRINT KUM HAVUZUNDA BİLEREK SESSİZDİR.
+    # SIRA GEREKÇESİ. Kapı `_hermes_bin()`den ÖNCEDİR: kum havuzunda "yerel CLI kurulu mu" sorusu
+    # anlamsızdır (ikili canlı makinede kurulu, ama ev salt-okunur) ve `ikili_yok`un önerdiği onarım
+    # — kurulum/symlink — yanlış işi işaret ederdi. `plan_yok`tan da ÖNCEDİR: kum havuzunda inceleme
+    # makinesine HİÇ girilmez, yani planı olmayan günler de bu sebeple raporlanır (bilinçli: tek
+    # sebep tek gerçeği söyler, sebep karışımı triyajı böler). `_agent_model_sifirla` da bu kapının
+    # ALTINDA kalır — çağrı yapılmayacaksa künye kutusuna dokunmanın okuyucusu yoktur.
+    # ÖLÇÜM (A1, 2026-08-21→2026-09-21): bu kapı yokken sprint çocuğu `loop.daily_cycle` üzerinden
+    # buraya ulaşıyor, hermes CLI salt-okunur HOME'da `~/.hermes/logs`a yazamayıp `returncode=1` ile
+    # boş dönüyordu — 268 çağrı, 268 boş, 0 görüş. Kum havuzunda sağlayıcı anahtarı da yok (v242
+    # `agent_skills_sync_atlandi_kum_havuzu` beyanının kardeşi), yani izin genişletilseydi bile görüş
+    # üretilmezdi: kapının KAYBETTİRDİĞİ görüş 0, kazandırdığı 268 boş alt süreç + stderr gürültüsü +
+    # kum havuzunun kendi RPD sayacından 268 düşüm.
+    # Tembel import, KURULU DESEN (`sync_agent_skills`). Ölçüm 2026-09-21: `sprint` modül düzeyinde
+    # `hermes`i import ETMİYOR (tek atıf fonksiyon içi), yani bugün çevrim yok; tembellik desen
+    # birliği içindir — ileride `sprint` modül düzeyinde `hermes` çekerse burası kırılmaz.
+    from . import sprint as _sp
+    if _sp.kum_havuzunda():
+        _review_atla(day, "kum_havuzu_llm_kapali", uyari=False, kum_havuzu=True,
+                     detail="sprint kum havuzunda LLM görüşü BİLEREK kapalı (TSK-212): birim HOME'u "
+                            "salt-okunur tutar ve kum havuzunda sağlayıcı anahtarı yoktur — çağrı "
+                            "yapılsaydı hermes CLI ~/.hermes/logs'a yazamayıp boş dönerdi "
+                            "(2026-08-21→09-21: 0/268 görüş). Kapı deterministik kapıyı DEĞİŞTİRMEZ; "
+                            "yalnız danışma katmanı bu kum havuzunda sessizdir ve bunu ADIYLA söyler.")
+        return None
     todays = [p for p in plans if p.get("date") == day]
     bin_ = _hermes_bin()
     if not bin_:
