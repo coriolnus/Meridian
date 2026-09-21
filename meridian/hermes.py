@@ -4048,7 +4048,10 @@ def review_candidates(dstr: str | None = None) -> dict | None:
     # `agent_skills_sync_atlandi_kum_havuzu` beyanının kardeşi), yani izin genişletilseydi bile görüş
     # üretilmezdi: kapının KAYBETTİRDİĞİ görüş 0, kazandırdığı 268 boş alt süreç + stderr gürültüsü +
     # kum havuzunun kendi RPD sayacından 268 düşüm.
-    from . import sprint as _sp        # tembel: `sync_agent_skills` ile aynı gerekçe (döngüsel import)
+    # Tembel import, KURULU DESEN (`sync_agent_skills`). Ölçüm 2026-09-21: `sprint` modül düzeyinde
+    # `hermes`i import ETMİYOR (tek atıf fonksiyon içi), yani bugün çevrim yok; tembellik desen
+    # birliği içindir — ileride `sprint` modül düzeyinde `hermes` çekerse burası kırılmaz.
+    from . import sprint as _sp
     if _sp.kum_havuzunda():
         _review_atla(day, "kum_havuzu_llm_kapali", uyari=False, kum_havuzu=True,
                      detail="sprint kum havuzunda LLM görüşü BİLEREK kapalı (TSK-212): birim HOME'u "

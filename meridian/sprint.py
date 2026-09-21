@@ -526,9 +526,10 @@ def _kur_kum_havuzu(sid: str) -> Path:
 def kum_havuzunda() -> bool:
     """Bu SÜREÇ bir sprint kum havuzunda mı koşuyor? PAYLAŞIMLI bir kaynağa yazmadan önce sorulur.
 
-    Kum havuzunun KENDİ dosyalarına yazmak serbesttir (zaten tüm amacı budur); bu kapı yalnız
-    süreç dışındaki, canlıyla ORTAK kaynaklar içindir — bugünkü tek örneği ajanın
-    `~/.hermes/skills` dizini (`hermes.sync_agent_skills`)."""
+    Kum havuzunun KENDİ dosyalarına yazmak serbesttir (zaten tüm amacı budur); bu kapı süreç
+    dışındaki, canlıyla ORTAK kaynaklar ve canlıya ait yan etkiler içindir. Bugünkü tüketicileri
+    (2026-09-21): `hermes.sync_agent_skills` (paylaşımlı `~/.hermes/skills` dizini, v242) ve
+    `hermes.review_candidates` (LLM görüşü kum havuzunda kapıdan döner, TSK-212)."""
     try:
         st = Path(config.STATE).resolve()
     except OSError:  # sessiz-yutma: yol çözümü düştü (kopmuş symlink/izin) — kapı KAPALI tarafa değil AÇIK tarafa düşer; bu bir teşhis yolu değil, canlı senkronun kendisidir ve yanlış "kum havuzundayım" cevabı canlı onarımı durdururdu
