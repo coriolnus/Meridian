@@ -3710,3 +3710,32 @@ doğrudan kayıt yok; ROADMAP'te benzer madde yok. Kalem QUEUED, öneri: kum hav
 **Kapanış sonrası uyarı triyajı (21:21Z, önceki günlerle kıyas):** `bars_integrity_period_excluded` ×58 (her iş
 günü 58) · `shadowlaw_variance_drift` ×1 (08/14/21 Eylül haftalık; ROADMAP `MONEY_GATE_MARGIN` sorusu zaten
 kayıtlı) · `nous_chain_empty` ×1 (7 günde ilk, üst-akım boş cevap, tek olay — izlemede). Yeni sınıf yok.
+
+### 22. TSK-212 — KUM HAVUZUNDA ADAY İNCELEMESİ KAPIDAN DÖNER (22:3xZ→23:xxZ, gece dilimi)
+**Neden bu gece:** TSK-208 kanıt okumasında yan bulgu (§21). Hafıza kontrolü: A1 recall 10 sonuç, doğrudan kayıt
+yok; ROADMAP'te benzer madde yok; memory `yorum-tarihce-kod-hukum` aynı sınıf. Karar Rol-1'de: yol (a) —
+kum havuzunda LLM görüşünü BİLEREK ve ADIYLA kapatmak; yol (b) (HOME'a yazma izni + anahtar) reddedildi: kum
+havuzunda anahtar yok, kotayı replay'e harcamak operatör kararı.
+**Dilim (Opus, worktree `tsk212`):** `hermes.review_candidates` başına kapı — `day` hesabından sonra,
+`_hermes_bin`/`_agent_model_sifirla`dan önce — `_review_atla(day, "kum_havuzu_llm_kapali", uyari=False,
+kum_havuzu=True)`; sebep `_REVIEW_LLM_ASAMALARI`na eklenmedi (`n_llm` artmaz, gün `gecersiz` olmaz; backlog
+geri-çekilmesi sıkı döngüyü keser). Birim ve sprint.py şerhleri ölçümle: "sprint LLM çağırmaz" cümlesi 08-21'den
+beri yanlış gerekçeyle doğruydu — `sprint_run` A fazı `loop.daily_cycle` koşturur, o yol `review_candidates`a
+ulaşır; şerhin öngördüğü arıza şekli (`phase=error`) de yanlıştı, gerçek şekil `agent_bos` sebepli
+`candidate_review_skipped` idi. Yönerge satırları değişmedi (dagit [1c] etkilenmez, F9 yalnız raporlar).
+v532 altı çivi; 5/5 mutasyon ısırdı; T3 (canlı yol değişmez) hiçbir mutasyonda kırmızı olmadı — uygulayıcı bunu
+kendisi beyan etti, incelemeci "regresyon çivisi, kabul" dedi; ben de kabul ediyorum: T3'e özgü kanıt ancak
+`kum_havuzunda` yükleminin mutasyonuyla alınır (v242'nin alanı, orada çivili). **Uygulayıcı dürüstlük kaydı:**
+M4 ilk denemesi kirliydi (kapıyı taşırken metni de değiştirmiş, T1 yanlış sebeple ötmüş); saf yer değiştirme
+olarak yeniden kurdu, hedef çivi (T5) ısırdı. "Çivi kırmızı oldu" ile "hedeflediği dalı ısırdı" ayrımı — bu
+depoda tekrar tekrar ödenen ders, bu kez ajan kendisi yakaladı. Brief listesi dışı zorunlu dokunuş: v233 yapısal
+sayım kilidi 5/3→6/4 (kapsam büyüdü; gevşemedi — incelemeci satır sayımıyla doğruladı).
+**Bedel (bedel yasası):** doğrudan kayıp 0 görüş (0/268); kaybedilen görünürlük: kum havuzu artık `agent_bos`
+basmıyor — yol sessizleşmedi, adı değişti (`kum_havuzu_llm_kapali`, her seansta info); asıl risk `kum_havuzunda`
+yanlış-pozitifi → canlıda danışma katmanı susar; çivi: v532 T3 + v242 yapısal ölçüt çivileri (mevcut).
+**İnceleme (Sonnet, salt-okur):** MERGE HAZIR / 0 engelleyici; iki küçük şerh bulgusu (tembel import gerekçesi
+doğrulanmamış çevrim; `kum_havuzunda` docstring'i "tek örnek" diyordu) → tur 2'de Rol-1 düzeltti (şerh = belge
+işi). Yan bulgu: birim dosyasında ön-mevcut `reflect.py:1049` satır çapası — `deploy/` altını çapa tarayıcısı
+görmüyor (TSK-211 ailesi, küçük; ROADMAP TSK-212 notunda).
+**Birleştirme 7053c4d0 (`--no-ff`), ROADMAP 73100bda. Suite #7 (73100bda, donmuş ağaç): 1 failed / 13800 passed / 20 skipped, 14:01, yük 2,27 — kırmızı olan yine v217 KILL#1 p95 (1,235×; kapalı kol p95 2,07 ms), seri tekrar 1,033× YEŞİL (24 passed, exit 0) → bilinen işçi-çekişmesi flake'i, beyanlı (bugün 2/7; TSK-213 açıldı); harness "exit 0" yalanı 4. kez, PYTEST_EXIT=1 kurtardı. Push 73100bda, CI okunuyor.**
+Canlıya #63 ile iner (komut aynı, HEAD yeni); kanıt: ilk sprintte `kum_havuzu_llm_kapali` >0, `agent_bos` 0.
