@@ -3685,3 +3685,28 @@ healthz_max p50 1,70 / p95 1,98 / maks 10,8 ms — tavan 51,90'ın çok altında
 tutarlı. ROADMAP TSK-013.
 **Suite #6 (51d05b7a):** 13795 passed / 0 failed / 20 skipped, 12:59 — üçlü hüküm yeşil. Gün toplamı: 9 dilim,
 6 tam suite (biri yük-flake ile beyanlı), 8 dar inceleme, 0 açık engelleyici. Dağıtım #63 hâlâ operatörde.
+
+### 21. TSK-208 CANLI KANIT TAM — KAPANDI (22:22Z) + yan bulgu TSK-212
+**Kanıt (A1 journalctl, 22:22:13Z ölçüldü).** Gece penceresi açılır açılmaz 22:00:44Z `sprint_cadence_start`
+(sebep=haftalik_taban, budget 6, k_max 2). Aynı saniyede `sprint_kum_havuzu_atlandi` adet=1
+adlar=[secrets.json.bak-20260915T073825Z-tsk189] kural=SKIP_COPY_PATTERNS — dün gece yazdığım tahminle birebir
+(b9c4807'de `alt_dizin_atlanan` alanı yok, beklenmedi). 22:00Z sonrası `sprint_cadence_failed` 0.
+`mechanism_recovered sprint_cadence`: sessizlik 863.760 s = 10,0 gün (alarm metnindeki 777.714 s İLK TESPİTti).
+Yeni kum havuzu `state/sprint/20260921-220044/state/`: auth.json/secrets.json* 0; portfolio.json · trades.jsonl ·
+strategy.yaml · goal.yaml · bounds.yaml · history 6/6 var. Birim `meridian-sprint@20260921-220044.service`
+active 21 dk (566 MB, 7 görev), günlük çevrim 2024-08-07→08-12 yürüyor. Canlı `state/` sırları yerinde,
+dokunulmadı. 22:05Z iki `sprint_cadence_skip`: biri özet satırı (08:20–21:55 `saat_dilimi_disinda` ×153 — pencere
+ÖNCESİNİN özeti, beklenen), biri `zaten_kosuyor` (doğru). ROADMAP TSK-208 `DONE(2026-09-21·b9c4807)` + §8.H.2.
+Sınıf dersi (memory `sinif-bir-ornekle-kapanmaz`) yerinde duruyor: bu kanıt yalnız kök yüzeyi kapatır; alt dizin
+süzgeci (TSK-209c) ve yedek birimi dışlamaları #63'le iner, kanıtları ayrı.
+**Yan bulgu — TSK-212 (yeni sınıf DEĞİL, 2026-08-21'den beri).** Kum havuzu içinde 21 dakikada 23 `agent_call
+kind=review`, 23'ü boş: hermes `~/.hermes/logs/agent.log` açamıyor — `[Errno 30] Read-only file system`. Birim
+`ProtectHome=read-only` + `ReadWritePaths=/opt/meridian`; birim şerhi "~/.hermes YOK çünkü sprint LLM ÇAĞIRMAZ"
+diyor, davranış tersi (şerh tarihçe, kod hüküm — memory `yorum-tarihce-kod-hukum`). Ölçüm: journal'da ilk
+2026-08-21T22:09Z, 08-20'den beri 1.126 satır; 09-01..09-10 sprintlerinde 268/268 aynı imza, `empty: false` 0.
+Sprint bundan çökmüyor (`candidate_review_skipped asama=agent_bos`, deterministik yol). Hafıza: A1 recall 10 sonuç,
+doğrudan kayıt yok; ROADMAP'te benzer madde yok. Kalem QUEUED, öneri: kum havuzunda LLM görüşünü BİLEREK kapatmak
+(ayrı sebep dizgesi, hermes hiç çağrılmaz, şerh doğrulanır); HOME'a yazma izni + anahtar yolu operatör kotasıdır.
+**Kapanış sonrası uyarı triyajı (21:21Z, önceki günlerle kıyas):** `bars_integrity_period_excluded` ×58 (her iş
+günü 58) · `shadowlaw_variance_drift` ×1 (08/14/21 Eylül haftalık; ROADMAP `MONEY_GATE_MARGIN` sorusu zaten
+kayıtlı) · `nous_chain_empty` ×1 (7 günde ilk, üst-akım boş cevap, tek olay — izlemede). Yeni sınıf yok.
