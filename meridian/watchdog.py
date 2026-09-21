@@ -4268,17 +4268,34 @@ def check_veri_disk_and_alarm() -> dict:
 # noktayı (yarın biri REPLAY_UNIVERSE'den çıkarılıp beyanlı listede YALNIZ kalırsa bile taranmaya
 # devam etmesi) yapısal olarak garantiler.
 #
-# İKİ AYRI SINIF, İKİ AYRI MUAMELE (`no_data_report`ın `retired` ayrımıyla AYNI disiplin):
-#   `adaylar`   — YENİ bulgu, operatörün BAKMASI gerekir (RETIRED_SYMBOLS'ta OLMAYAN, eşiği aşan
-#                 her sembol — LIVE/REPLAY/EVREN_DISI_BEYANLI farketmez, hepsi bu sınıfa girebilir;
-#                 kör nokta tam burada kapanıyor).
+# ÜÇ AYRI SINIF, ÜÇ AYRI MUAMELE (`no_data_report`ın `retired` ayrımıyla AYNI disiplin):
+#   `adaylar`   — YENİ bulgu, operatörün BAKMASI gerekir (RETIRED_SYMBOLS'ta ve BEYANLI ENDEKS
+#                 ÇIKIŞINDA olmayan, eşiği aşan her sembol — LIVE/REPLAY/HIC_UYE_BEYANLI
+#                 farketmez, hepsi bu sınıfa girebilir; kör nokta tam burada kapanıyor).
+#   `endeks_cikisi` — BEYANLI S&P 500 çıkışı (`data.is_index_exited`, TSK-207 (a) 2026-09-21).
+#                 Şirket AKTİF, delist DEĞİL; canlı evren endeks ÜYELİĞİNE bağlı olduğu için bar
+#                 akışının durması BEKLENEN sonuçtur. Ölçüm doğruydu, SINIF yanlıştı: sensör
+#                 2026-09-17'den beri her gece CAG/ENPH/MTCH/VFC için "delist adayı olabilir"
+#                 diyordu. WARN ÜRETMEZ (emsal: `constituents.universe_drift` şerhindeki
+#                 `hic_uye_canlida` — beyanlı sapma alarm üretmez ama GÖRÜNÜR kalır), yerine
+#                 günde bir BİLGİ satırı (`SEMBOL_ENDEKS_CIKISI`) + gerçek aday warn'ında AYRI
+#                 ALAN. `HIC_UYE_BEYANLI` altısı bu sınıfa GİRMEZ (`is_index_exited` onlara
+#                 kapalıdır, canlı taranırlar) — onların barı durursa GERÇEK delist adayıdır.
 #   `zaten_emekli` — RETIRED_SYMBOLS'ta ZATEN hüküm görmüş sembol; eşiği aşması BEKLENEN sonuçtur
 #                 (CSV'ler bilerek silinmez, son bar donuk kalır) — `no_data_report.retired` gibi
 #                 SESSİZCE ATILMAZ (taranmadığı sanılmasın) ama `adaylar`a da KARIŞMAZ (aksi hâlde
 #                 aynı 11 sembol HER GÜN "yeni bulgu" gibi tekrar ederdi — MECHANISM_STALE'in
 #                 çırpınma dersiyle AYNI sınıf gürültü).
-# `zaten_emekli` WARN'I TETİKLEMEZ (`check_olu_isim_and_alarm` yalnız `adaylar`a bakar) — yalnız
+# `zaten_emekli` WARN'I TETİKLEMEZ (`check_olu_isim_and_alarm` onu hiç okumaz) — yalnız
 # `olu_isim_adaylari()` çıktısında GÖRÜNÜR kalır (YASA 6: taranan hiçbir sembol sessizce kaybolmaz).
+#
+# AÇIK POZİSYON KESİŞİMİ (TSK-207 (a)): beyanlı çıkış AÇIK bir pozisyonla kesişiyorsa bu artık
+# sessiz bir "beklenen davranış" DEĞİLDİR — bar akışı duran sembolde fiyat güncellenmez ve çıkış
+# mantığı KÖR kalabilir; o kesişim günde bir kez `SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON` WARN'ı
+# üretir. KAPSAM SINIRI BİLİNÇLİDİR: bu tur YALNIZ ÖLÇER VE HABER VERİR — çıkış mantığına, bar
+# çekimine ve evren tanımına DOKUNULMADI (TSK-207 (b), operatör kararı).
+# Kesişim ÖLÇÜLEMEZSE (defter yok/bozuk ya da `positions` alanı yok) hüküm `None` + nedendir
+# (UYDURMA YASAĞI) ve SESSİZ GEÇMEZ: neden o günün bildirim satırında alan olarak görünür.
 #
 # ÖLÇÜLEMEYEN SEMBOL UYARI ÜRETMEZ (UYDURMA YASAĞI): arşiv yok/boş/okunamaz ya da takvim
 # okunamazsa (`_sessions()` boş frozenset) o sembol `olculemedi` listesine `neden` ile düşer —
@@ -4319,6 +4336,17 @@ OLU_ISIM_SEANS_ESIGI = 5   # 5 geçerli (XNYS) seans ard arda YENİ bar yok → 
 
 _OLU_ISIM_MEK_ADI = "olu_isim_adayi"
 
+# TSK-207 (a), 2026-09-21 — BEYANLI ENDEKS-ÇIKIŞI AYRI SINIFTIR, AYRI MANDALI VARDIR.
+# İki yeni mekanizma satırı MEVCUT deftere (`ALARM_GUNLUK_FILE`) açılır: yeni dosya YOK ve şema
+# AYNI (`alarm`/`bastirilan`/`son_semboller`), böylece defterin DIŞ okuyucusu (`api._alarm_gunluk`,
+# mekanizma adına göre GENEL) yeni satırları EK KOD OLMADAN panoya taşır (YASA 6).
+# BEDEL BEYANI: bilgi satırının sayacı da `alarm` anahtarında durur, yani panodaki `n_alarm`
+# toplamına GİRER. Bu YENİ bir körlük değil MEVCUT emsalin aynısıdır (`SEMBOL_OLU_ADAY` ve
+# `DISK_ESIK` de WARN'dır ve aynı anahtarda sayılır); üçüncü bir anahtar açmak defterin şemasını
+# ikiye bölerdi ve genel okuyucu yeni yarıyı GÖRMEZDİ — ölçülmüş bedel, ölçülmemiş körlükten iyidir.
+_OLU_ISIM_ENDEKS_MEK_ADI = "olu_isim_endeks_cikisi"
+_OLU_ISIM_ENDEKS_POZ_MEK_ADI = "olu_isim_endeks_cikisi_acik_pozisyon"
+
 
 def _son_bar_tarihi(ticker: str) -> tuple[str | None, str | None]:
     """Sembolün YEREL bar arşivindeki (`data._cache_path`) EN SON tarih (`YYYY-MM-DD`) + varsa
@@ -4352,11 +4380,43 @@ def _seans_farki(sirali_seanslar: list[str], son_bar: str, bugun: str) -> int:
     return max(0, hi - lo)
 
 
+def _acik_pozisyon_kesisimi(cikislar: list[str]) -> tuple[list[str] | None, str | None]:
+    """Beyanlı endeks-çıkışları ∩ AÇIK POZİSYONLAR — `(kesisim, None)` ya da UYDURMA YASAĞI
+    gereği `(None, neden)`. Defter `store.read_json` ile okunur (DB-destekli ad; HAM dosya
+    okunmaz — canlıda `state/portfolio.json` dosya olarak YOKTUR).
+
+    `cikislar` BOŞSA portföy HİÇ OKUNMAZ ve hüküm `[]`dir: boş kümenin kesişimi deftere BAĞLI
+    DEĞİLDİR. Aksi hâlde defteri olmayan her koşum sahte bir "ölçülemedi" üretir, gerçek
+    hükümsüzlük de o gürültünün içinde görünmez olurdu.
+
+    ALAN VARLIĞI `in` İLE ÖLÇÜLÜR, `.get(...) or {}` İLE DEĞİL: `positions: {}` bir ÖLÇÜMDÜR
+    ("açık pozisyon yok"), alanın YOKLUĞU ise bir HÜKÜMSÜZLÜKTÜR — ikisini tek değere çökerten
+    desen, tam da bu sensörün düzelttiği sınıf hatasının bir başka örneğidir."""
+    if not cikislar:
+        return [], None
+    pf = store.read_json("portfolio.json", {})
+    if not isinstance(pf, dict) or "positions" not in pf:
+        return None, ("portfolio.json okunamadı ya da `positions` alanı YOK — açık pozisyon "
+                      "kesişimi ÖLÇÜLEMEDİ ('kesişim yok' DEĞİL)")
+    poz = pf["positions"]
+    if not isinstance(poz, dict):
+        return None, (f"portfolio.json `positions` alanı sözlük değil ({type(poz).__name__}) — "
+                      "açık pozisyon kesişimi ÖLÇÜLEMEDİ")
+    return sorted(set(cikislar) & {str(t).upper() for t in poz}), None
+
+
 def olu_isim_adaylari() -> dict:
-    """`{adaylar, zaten_emekli, olculemedi, esik, n_tarandi, bugun, takvim_var}` — bölüm başlığının
-    tam sözleşmesi. `adaylar`/`zaten_emekli` elemanı: `{ticker, son_bar, seans_farki}`;
-    `olculemedi` elemanı: `{ticker, neden}` (UYDURMA YASAĞI — ölçülemeyen sembol hakkında hüküm
-    YOK, ne aday ne temiz).
+    """`{adaylar, endeks_cikisi, zaten_emekli, olculemedi, esik, n_tarandi, bugun, takvim_var,
+    acik_pozisyon_kesisim, acik_pozisyon_neden}` — bölüm başlığının tam sözleşmesi.
+    `adaylar`/`zaten_emekli` elemanı: `{ticker, son_bar, seans_farki}`; `endeks_cikisi` elemanı
+    AYRICA `beyan` taşır (gerekçe metni `ENDEKS_CIKISI_BEYANLI` sözlüğünden gelir — kapı ile
+    gerekçe AYNI kaynaktır, ayrışamazlar); `olculemedi` elemanı: `{ticker, neden}` (UYDURMA
+    YASAĞI — ölçülemeyen sembol hakkında hüküm YOK, ne aday ne temiz).
+
+    SINIFLAMA SIRASI DONUKTUR (TSK-207 (a)): `RETIRED_SYMBOLS` → `zaten_emekli`;
+    `data.is_index_exited` → `endeks_cikisi`; kalanı `adaylar`. `HIC_UYE_BEYANLI` üyeleri
+    `adaylar`da KALIR — `is_index_exited` onlara KAPALIDIR ve canlı evrende taranırlar, yani
+    barları durursa GERÇEKTEN delist adayıdırlar. Ayrım bir SUSTURMA değil SINIF düzeltmesidir.
 
     TAKVİM OKUNAMAZSA (`_sessions()` boş frozenset — `_CAL_FAILED`, bkz. `data.py` fail-open
     şerhi): HİÇBİR sembol için seans farkı hesaplanamaz, hepsi `olculemedi`ye düşer ve
@@ -4368,7 +4428,7 @@ def olu_isim_adaylari() -> dict:
                    | set(_data.RETIRED_SYMBOLS) | set(_data.EVREN_DISI_BEYANLI))
     ses = _data._sessions()
     sirali_seanslar = sorted(ses) if ses else []
-    adaylar, zaten_emekli, olculemedi = [], [], []
+    adaylar, endeks_cikisi, zaten_emekli, olculemedi = [], [], [], []
     for t in evren:
         son, neden = _son_bar_tarihi(t)
         if son is None:
@@ -4383,43 +4443,104 @@ def olu_isim_adaylari() -> dict:
         if gap < OLU_ISIM_SEANS_ESIGI:
             continue
         satir = {"ticker": t, "son_bar": son, "seans_farki": gap}
-        (zaten_emekli if t in _data.RETIRED_SYMBOLS else adaylar).append(satir)
-    adaylar.sort(key=lambda x: -x["seans_farki"])
-    zaten_emekli.sort(key=lambda x: -x["seans_farki"])
-    return {"adaylar": adaylar, "zaten_emekli": zaten_emekli, "olculemedi": olculemedi,
-            "esik": OLU_ISIM_SEANS_ESIGI, "n_tarandi": len(evren), "bugun": bugun,
-            "takvim_var": bool(sirali_seanslar)}
+        if t in _data.RETIRED_SYMBOLS:
+            zaten_emekli.append(satir)
+        elif _data.is_index_exited(t):
+            endeks_cikisi.append({**satir,
+                                  "beyan": _data.ENDEKS_CIKISI_BEYANLI.get(str(t).upper())})
+        else:
+            adaylar.append(satir)
+    for liste in (adaylar, endeks_cikisi, zaten_emekli):
+        liste.sort(key=lambda x: -x["seans_farki"])
+    kesisim, kesisim_neden = _acik_pozisyon_kesisimi([c["ticker"] for c in endeks_cikisi])
+    return {"adaylar": adaylar, "endeks_cikisi": endeks_cikisi, "zaten_emekli": zaten_emekli,
+            "olculemedi": olculemedi, "esik": OLU_ISIM_SEANS_ESIGI, "n_tarandi": len(evren),
+            "bugun": bugun, "takvim_var": bool(sirali_seanslar),
+            "acik_pozisyon_kesisim": kesisim, "acik_pozisyon_neden": kesisim_neden}
 
 
 def check_olu_isim_and_alarm() -> dict:
-    """Günde EN ÇOK `GUNLUK_ALARM_TAVANI` (=1) kez `SEMBOL_OLU_ADAY` WARN'ı (ALARM DEĞİL —
-    emeklilik kararı operatörün, `RETIRED_SYMBOLS` emsali). `ALARM_GUNLUK_FILE`ı `veri_disk_esigi`
-    ile PAYLAŞIR (tek kaynak — yeni dosya açılmadı). `adaylar` boşsa (yeni bulgu yok — hepsi
-    ölçülemedi/zaten emekli/eşik altı) warn YOK."""
+    """ÜÇ AYRI SATIR, ÜÇÜ DE günde EN ÇOK `GUNLUK_ALARM_TAVANI` (=1) kez, hepsi AYNI defteri
+    (`ALARM_GUNLUK_FILE`, `veri_disk_esigi` ile paylaşılan tek kaynak) kullanır:
+
+      1. `SEMBOL_OLU_ADAY` WARN — GERÇEK adaylar varken (ALARM DEĞİL; emeklilik kararı
+         operatörün, `RETIRED_SYMBOLS` emsali). Metni DEĞİŞMEDİ: "delist adayı olabilir" o sınıf
+         için DOĞRUDUR. Beyanlı çıkışlar bu satıra AYRI ALANLA girer — `semboller` alanına da
+         `detail` metnine de KARIŞMAZ (yanlış sınıfın metne sızması TSK-207'nin ta kendisiydi).
+      2. `SEMBOL_ENDEKS_CIKISI` BİLGİ satırı (`obs.log`, warn DEĞİL) — YALNIZ beyanlı çıkış
+         varken. Emsal `constituents.universe_drift` şerhindeki `hic_uye_canlida`: beyanlı sapma
+         ALARM ÜRETMEZ ama GÖRÜNÜR kalır. BEDEL YASASI bu satırdır — uyarıyı kaldırmanın
+         bedeli körlük olmasın diye kayıt yerinde durur.
+      3. `SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON` WARN — beyanlı çıkış AÇIK POZİSYONLA kesişiyorsa.
+         TSK-207 (b)'nin adlandırdığı risk sınıfı budur (bar akışı duran sembolde çıkış mantığı
+         kör kalabilir). BU TUR YALNIZ ÖLÇER VE HABER VERİR: çıkış mantığı, bar çekimi ve evren
+         tanımı DEĞİŞMEDİ (operatör kararı).
+
+    Hiç aday ve hiç beyanlı çıkış yoksa defter AÇILMAZ (ölçülemedi/zaten emekli/eşik altı bir
+    "bulgu" değildir)."""
     from . import obs
     rep = olu_isim_adaylari()
-    if not rep["adaylar"]:
+    cikislar = [c["ticker"] for c in rep["endeks_cikisi"]]
+    kesisim, kesisim_neden = rep["acik_pozisyon_kesisim"], rep["acik_pozisyon_neden"]
+    if not rep["adaylar"] and not cikislar:
         return rep
     doc = _gunluk_oku()
     mek = doc["mekanizmalar"]
-    satir = mek.get(_OLU_ISIM_MEK_ADI)
-    if not isinstance(satir, dict):
-        satir = {}
-        mek[_OLU_ISIM_MEK_ADI] = satir
-    if int(satir.get("alarm") or 0) >= GUNLUK_ALARM_TAVANI:
-        satir["bastirilan"] = int(satir.get("bastirilan") or 0) + 1
-        store.write_json(ALARM_GUNLUK_FILE, doc)
-        return rep
-    satir["alarm"] = int(satir.get("alarm") or 0) + 1
-    satir["son_semboller"] = [a["ticker"] for a in rep["adaylar"]]
+
+    def _mandal(ad: str, semboller: list[str]) -> bool:
+        """Mekanizma satırını bul/aç, günlük tavanı uygula; `True` = satır ATILSIN. Bastırılan
+        satır SESSİZ DEĞİL: `bastirilan` sayacı defterin dış okuyucusunda GÖRÜNÜR (YASA 6).
+        Üç satır AYRI mandal taşır — biri tavanı doldurunca diğerini SUSTURMAZ."""
+        satir = mek.get(ad)
+        if not isinstance(satir, dict):
+            satir = {}
+            mek[ad] = satir
+        if int(satir.get("alarm") or 0) >= GUNLUK_ALARM_TAVANI:
+            satir["bastirilan"] = int(satir.get("bastirilan") or 0) + 1
+            return False
+        satir["alarm"] = int(satir.get("alarm") or 0) + 1
+        satir["son_semboller"] = list(semboller)
+        return True
+
+    at_aday = bool(rep["adaylar"]) and _mandal(_OLU_ISIM_MEK_ADI,
+                                               [a["ticker"] for a in rep["adaylar"]])
+    at_cikis = (not rep["adaylar"]) and bool(cikislar) \
+        and _mandal(_OLU_ISIM_ENDEKS_MEK_ADI, cikislar)
+    at_poz = bool(kesisim) and _mandal(_OLU_ISIM_ENDEKS_POZ_MEK_ADI, kesisim)
     store.write_json(ALARM_GUNLUK_FILE, doc)
-    en_eski = rep["adaylar"][0]     # `adaylar` seans_farki'na göre AZALAN sıralı — ilk eleman EN UZUN süredir bar almayan (dolayısıyla EN ESKİ/en olgun) aday
-    obs.warn("SEMBOL_OLU_ADAY",
-             semboller=[a["ticker"] for a in rep["adaylar"]],
-             en_eski={"ticker": en_eski["ticker"], "son_bar": en_eski["son_bar"],
-                      "seans_farki": en_eski["seans_farki"]},
-             esik=OLU_ISIM_SEANS_ESIGI, n=len(rep["adaylar"]),
-             detail=f"{len(rep['adaylar'])} sembol ≥{OLU_ISIM_SEANS_ESIGI} geçerli seans boyunca "
-                    "yeni bar almadı — delist adayı olabilir; emeklilik hükmü (RETIRED_SYMBOLS) "
-                    "operatörün ELLE bakımı gerektirir, bu satır yalnız haber verir")
+
+    if at_aday:
+        en_eski = rep["adaylar"][0]     # `adaylar` seans_farki'na göre AZALAN sıralı — ilk eleman EN UZUN süredir bar almayan (dolayısıyla EN ESKİ/en olgun) aday
+        obs.warn("SEMBOL_OLU_ADAY",
+                 semboller=[a["ticker"] for a in rep["adaylar"]],
+                 en_eski={"ticker": en_eski["ticker"], "son_bar": en_eski["son_bar"],
+                          "seans_farki": en_eski["seans_farki"]},
+                 esik=OLU_ISIM_SEANS_ESIGI, n=len(rep["adaylar"]),
+                 endeks_cikisi=cikislar, acik_pozisyon_kesisim=kesisim,
+                 acik_pozisyon_neden=kesisim_neden,
+                 detail=f"{len(rep['adaylar'])} sembol ≥{OLU_ISIM_SEANS_ESIGI} geçerli seans boyunca "
+                        "yeni bar almadı — delist adayı olabilir; emeklilik hükmü (RETIRED_SYMBOLS) "
+                        "operatörün ELLE bakımı gerektirir, bu satır yalnız haber verir")
+    if at_cikis:
+        en_eski = rep["endeks_cikisi"][0]
+        obs.log("SEMBOL_ENDEKS_CIKISI",
+                semboller=cikislar, n=len(cikislar), esik=OLU_ISIM_SEANS_ESIGI,
+                beyanlar={c["ticker"]: c["beyan"] for c in rep["endeks_cikisi"]},
+                en_eski={"ticker": en_eski["ticker"], "son_bar": en_eski["son_bar"],
+                         "seans_farki": en_eski["seans_farki"]},
+                acik_pozisyon_kesisim=kesisim, acik_pozisyon_neden=kesisim_neden,
+                detail=f"{len(cikislar)} sembol ≥{OLU_ISIM_SEANS_ESIGI} geçerli seans boyunca yeni "
+                       "bar almadı, ama hepsi beyanlı endeks çıkışıdır (şirketler aktif): bar "
+                       "akışının durması beklenen davranıştır, evren endeks üyeliğine bağlıdır. "
+                       "Bu bir uyarı değil KAYITTIR — beyan kalkarsa sembol kendiliğinden ölü-isim "
+                       "aday sınıfına geri döner")
+    if at_poz:
+        obs.warn("SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON",
+                 semboller=kesisim, n=len(kesisim), esik=OLU_ISIM_SEANS_ESIGI,
+                 beyanlar={c["ticker"]: c["beyan"] for c in rep["endeks_cikisi"]
+                           if c["ticker"] in set(kesisim)},
+                 detail=f"{len(kesisim)} AÇIK POZİSYONLU sembol beyanlı endeks çıkışıdır: bar "
+                        "akışı durdu, yani fiyat güncellenmiyor ve çıkış mantığı bu sembolde KÖR "
+                        "kalabilir. DAVRANIŞ DEĞİŞMEDİ — bu satır yalnız ölçer ve haber verir; "
+                        "çıkış mantığı/bar çekimi/evren kararı operatörün (TSK-207 (b))")
     return rep
