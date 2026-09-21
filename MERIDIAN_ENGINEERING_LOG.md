@@ -3599,3 +3599,45 @@ AÇIK KALEM: bu çivi dış yük altında sistematik kırmızı; kartın kill#1'
 içinde çözünürlüğünü kaybediyor (negatif kontrol o anda sıkı çıksa bile mutlak p95 10× şişiyor).
 Yeniden koşum/tek-başına-onay disiplini günlükte tekrarlanıyor — mekanik hâle getirilmeli (aday: suite
 içinde `-p no:xdist` işaretli seri yeniden deneme ya da yük ölçümü ≥ eşik ise "ölçülemedi" beyanı).
+
+### 17. ÖĞLEDEN SONRA — "ÇOK AZ İŞ YAPMIŞSIN" (operatör 16:4xZ) → ÜÇ PARALEL DİLİM
+13:15–16:19Z arası yalnız saatlik bakış yaptım: akşam penceresini ve gece kanıtını beklemek, yol
+haritasını beklemek anlamına gelmiyordu. Operatör haklıydı. Üç bağımsız kalem üç worktree'de
+paralel açıldı (Opus ≤10 eşzamanlı tavanının içinde, dosyalar ayrık), her biri Sonnet dar
+incelemesinden geçti, hepsi ana dala girdi; tek tam suite (#4, c1ac629) hepsini birden ölçüyor.
+
+**TSK-210 (v526) — takvim bombası dedektörü.** Sınıf: literal tarih sabiti ∧ aynı dosyada bugüne-göreli
+pencere TÜKETİMİ; üretim listesi elle değil kökten AST ile ölçülüyor (23 çift), ayrışma çivisi var.
+Tarihsel pozitif kontrol: v477'nin eski metni dedektörden KIRMIZI — bomba var olma sebebini doğduğu
+gün yakalardı. 29 dosya / 0 ihlal. **BENİM HATAM:** brief'e "19 dosya" yazmıştım; dar desenle eksik
+ölçümdü (rakamlı adlar, 2026 dışı yıllar) — implementer ölçerek 29 buldu. `kalemin-isi-de-olcumden`
+dersinin aynısı: brief'e yazılan sayı ölçülmüş olmalı, "kabaca" olmaz. Hüküm: v483 `_dun()`
+`date.today()` çağırır ama pencere tüketmez → yeşil (karar 5 karar 2'nin lafzını yener).
+Tur 2: iki kör nokta (relativedelta 0; aynı-modül kapanış boşluğunda 7 fonksiyon/9 kenar, canlı
+bedel 0) ve elenen alternatiflerin ölçümü (1731 ad / 100+ sahte kırmızı) dosyanın docstring'inde.
+
+**TSK-211 (v528) — çapa dedektörü kuyruk muafiyeti.** İlk iş yeniden üretmekti; üretildi ve BRİEF'İMİN
+VARSAYIMI DÜZELTİLDİ: kapsam sınırı (2) sağdaki `json.py`'ye değil SOLDAKİ modül adına bakıyor —
+`auth.json.tmp` → modül `auth`, sembol `json.tmp`, hedef `meridian/auth.py`. Sahte pozitif yazarın
+seçtiği ada bağlıydı. Düzeltme 2 işlevsel satır; bedel canlı ağaçta 0 (3017 çözülen / 0 çürüyen
+önce=sonra). Dar inceleme 1 belgeleme engelleyicisi (yapısal körlük beyansız) → tur 2'de ölçümle
+yazıldı: 165 çok parçalı eşleşmenin 15'i affediliyor, 0'ı sınıf biçimli; `socket.socket.connect`
+gerçek örnek, `socket.py` yokken zararsız. Docstring-only düzeltmeyi kendim okuyup kabul ettim,
+ayrı yeniden inceleme istemedim (oransız).
+
+**EDG-089 sayım aracı (v527).** K1 artık TESLİMİ değil SONUCU ölçüyor (op completed ∧ banka artışı).
+Aracı A1'de salt-okur koştum (tasarlandığı yol, ssh stdin): 5/7 — 09-16 op düştü, 09-18 banka
+büyümedi — sabahki elle hükümle BİREBİR; yeni SQL gerçek Postgres'te çalışıyor. İncelemecinin
+"gerçek DB'ye karşı koşmadı" açık kalemi böylece kapandı. Implementer yeni bir tuzak buldu: test
+ADI `FAILED` içerince yeşil koşumda üçlü hükmün 1. ayağı dolu döner (durations düğüm kimliğini
+basar) → CLAUDE.md §6'ya eklendi.
+
+**Diğer:** `store.py` bayat H9 şerhi (auth._write) düzeltildi (yorum). Yarınki EDG-085 pilot planı
+ölçümle kuruldu: A0 rolü drop-in'i kurup yalnız daemon-reload yapıyor, restart ETMİYOR (tasarım) —
+bayrak ancak işçi yeniden başlatmasıyla iner; sıra kart → conf 0→1 → site.yml → dagit (operatör).
+Dağıtım #63 akşam penceresine kaldı (12:50Z geçti, operatör koşmadı).
+
+### 18. SUITE #4 (c1ac629, donmuş ağaç, -n 4 worksteal): 13753 passed / 0 failed / 20 skipped — 12:40, yük 2,7
+Dış yük yokken süre normale döndü (#3: 29 dk, yük 25). v217 p95 çivisi bu kez YEŞİL — #3'teki
+kırmızının yük-flake hükmü doğrulandı. Gönderim: e84aa51 → bu commit (13 commit: 3 birleştirme,
+3 tur-2 docstring, 2 CLAUDE.md/store yorum, 3 ROADMAP, 1 günlük).
