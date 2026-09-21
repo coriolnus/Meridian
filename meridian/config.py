@@ -18,13 +18,17 @@ REGIME_EXIT_KEYS'te ADIYLA izinli bir çıkış anahtarını ezebilir, knob İCA
 `live_expectancy_rule()` — canlı-beklenti tavanı; her değerin KAYNAĞI (goal.yaml | kod
 varsayılanı) beyan edilir, geçersiz/tutarsız değer sessizce kabul edilmez (uyarılır, varsayılana
 dönülür). `live_enabled()` — canlı yol iki elle-kurulan bayrak ister. `dump_yaml()` YAML yazımını
-`store.write_text` tek kapısından geçirir (atomik + fsync + flock).
+`store.write_text` tek kapısından geçirir (atomik + fsync + flock). `sir_dosyasi_mi()` —
+`state/` kökündeki bir adın SIR olup olmadığına dair TEK yüklem (TSK-209); iki üretim yüzeyi
+(`sprint` kum havuzu kopyası, `api` teşhis paketi) aynı soruyu ayrı listelerle cevaplayıp
+ayrışmıştı. Sır DEĞERİNE erişim burada YOKTUR — burası bir SINIFLANDIRMA, erişim `meridian.secrets`.
 
 DEĞİŞMEZLER. VALID_REGIMES regime.py'nin yaydığı etiketlerle birebir aynıdır — ayrışırsa gerçek
 rejim knob'u "bilinmeyen" diye reddedilir, hayalet rejim knob'u sessizce ölü kalır.
 Okur: state/ altındaki üç YAML; tek yazım yolu `dump_yaml` (çağıran adına).
 """
 from __future__ import annotations
+import fnmatch
 import os
 from pathlib import Path
 from functools import lru_cache
@@ -45,6 +49,94 @@ I_ACCEPT_RISK = os.environ.get("MERIDIAN_I_ACCEPT_RISK", "false").lower() == "tr
 # money): "internal" = the in-process simulator (default); "alpaca_paper" = mirror the agent's decisions
 # to your Alpaca PAPER account. This is INDEPENDENT of MODE/I_ACCEPT_RISK (those gate REAL money only).
 BROKER = os.environ.get("MERIDIAN_BROKER", "internal").lower()
+
+# --- SIR DOSYASI SINIFLANDIRMASI: `state/` KÖKÜNÜN TEK KAYNAĞI ---------------------------------
+# (TSK-209, 2026-09-21) İKİ YÜZEY AYNI SORUYU AYRI AYRI CEVAPLIYORDU ve ayrışmıştı:
+#   * `sprint._atlanir` — kum havuzuna hangi dosya KOPYALANMAZ (TSK-208, canlı arıza 2026-09-18:
+#     elle kalmış bir sır yedeği `PermissionError` ile 283 kurulumu düşürdü);
+#   * `api.api_debug_export` — paylaşılabilir teşhis zip'ine hangi dosya GİRMEZ. Orada küme TEK
+#     ADDI (`{"secrets.json"}`) ve `state/auth.json` içinde DEĞİLDİ, yani pano oturum İMZA
+#     ANAHTARI her pakete giriyordu. Ucun kendi docstring'i "anahtar sızdırmayan" diyordu:
+#     vaat ile mekanizma ayrışmıştı ve ayrışmayı hiçbir çivi ölçmüyordu.
+# Kopyanın bedeli ölçülmüştür (tek-kaynak yasası): iki liste birbirinden habersiz büyüdü, biri
+# `auth.json`ı öğrendi, diğeri öğrenmedi.
+#
+# NEDEN `config.py`, `secrets.py` DEĞİL: `meridian.secrets` sır ERİŞİM kapısıdır; onu `sprint.py`ye
+# import etmek sprint ÇOCUĞUNUN import kapanışını sır-erişim yoluna doğru genişletirdi — oysa
+# TSK-208'de o kapanışın (75 modül) NE `auth` NE `api` içermediği özellikle ölçülmüştü. Aranan şey
+# bir erişim yolu değil bir SINIFLANDIRMA SABİTİDİR. `config` zaten her iki tarafın da import
+# ettiği modüldür, dolayısıyla kapanış genişlemez.
+#
+# BU KÜME `sprint.SKIP_COPY` DEĞİLDİR ve olmamalıdır: orada `bars`/`meridian.db`/`HALT` gibi
+# İZOLASYON ve BOYUT gerekçeli adlar da vardır (gerekçeleri `sprint.SKIP_COPY`nin üstünde). Burası
+# yalnız "bu dosya bir SIR mı" sorusunu cevaplar; sprint kendi kümesini bunun ÜSTÜNE ekler.
+SIR_TAM_ADLAR: frozenset[str] = frozenset({
+    "secrets.json",   # operatör anahtar deposu (`meridian.secrets`; 0600)
+    "auth.json",      # pano scrypt parola özeti + oturum HMAC imza anahtarı (`meridian.auth`; 0600)
+})
+
+# DESEN AİLESİ — tam ad kümesinin tutamadığı şey: bir sır dosyasının YEDEĞİ/geçici kopyası da
+# sırdır ve adı önceden BİLİNEMEZ (TSK-208 canlı arızası tam olarak buydu).
+# İKİ DESEN, İKİSİ DE ÖLÇÜLMÜŞ BİR ADDAN DOĞAR — hiçbiri "olur da" diye eklenmedi:
+#   * `secrets.json*` — canlıda ölçülen `secrets.json.bak-20260915T073825Z-tsk189` ailesi (TSK-189
+#     rotasyonundan elle kalmış) + `.tmp`/`.new` atomik yazım artıkları. `deploy/oracle-a1/
+#     meridian-backup.service` ExecStart'ı da aynı aileyi `--exclude` ile tanır (TSK-197).
+#   * `secrets.*.json` — TSK-209'da ölçülen DELİK: `api_debug_export` sır kararını `Path.suffix`
+#     süzgecine bırakmıştı, yani bir sır yedeği izinli uzantıyla (`state/secrets.bak.json`) adlandırıldığı
+#     an pakete GİRİYORDU. Bu ad bugün canlıda YOKTUR (ölçüldü: `state/` kökünde `secrets` ile
+#     başlayan tek ad `secrets.json`) — desen bugünkü bir dosyayı değil, süzgecin TESADÜFEN
+#     tuttuğu bir sınıfı kapatır.
+#   * `auth.json*` — TSK-209 tur 2. TAM AD kümesi `auth.json`ı tutuyordu ama YEDEĞİNİ tutmuyordu
+#     (ölçüldü: `sir_dosyasi_mi("auth.json.bak") → False`), ve bu TAM OLARAK bizi ısıran sınıftır:
+#     `secrets.json.bak-20260915T073825Z-tsk189` ELLE alınmış bir yedekti ve 283 sprint kurulumunu
+#     düşürdü. Aynı el `auth.json` için bir yedek aldığı gün OTURUM İMZA ANAHTARI kum havuzuna
+#     kopyalanırdı. Teşhis paketine bugün girmemesi yine DIŞLAMA DEĞİL TESADÜFTÜR (`.bak` izinli
+#     uzantı değil) — bu deponun üç kez ölçtüğü tesadüf sınıfının dördüncüsü.
+# GENİŞ DESEN YAZILMADI (`*secret*`, `*.bak*`, `secrets*`, `auth*`): geniş bir desen hiçbir testi
+# kırmadan kum havuzunu EKSİK doğurur ve sprint sessizce yanlış ölçer; teşhis paketi tarafında da
+# operatör arızayı yerel defterde arayamaz hâle gelirdi (HALT vakasının sınıfı; bedel yasası).
+# `auth.json*` DAR TUTULDU ve daraltmanın yönü ölçüldü: `auth_x.json`, `authz.json`, `auth.yaml`
+# eşleşMEZ (çivi: v524 8b). BEDEL: yerel `state/` kökünün 93 girdisinde `auth` ile başlayan TEK ad
+# `auth.json`dır (A1 canlı kökünde de ölçüldü, Rol-1 tur 2: 145 addan yalnız üç sır yakalanıyor).
+SIR_DESENLERI: tuple[str, ...] = ("secrets.json*", "secrets.*.json", "auth.json*")
+
+
+def sir_dosyasi_mi(ad: str, *, tam_adlar: "frozenset[str] | set[str] | None" = None,
+                   desenler: "tuple[str, ...] | None" = None) -> bool:
+    """`state/` kökündeki bir TABAN ADIN sır olup olmadığına dair TEK YÜKLEM.
+
+    İki çağıran da üretimdedir ve ikisi de buraya bağlanır: `sprint._desen_atlar` (kum havuzu
+    kopyası) ve `api.api_debug_export` (teşhis paketi). Karar burada tek yerde durmasa, TSK-209'da
+    ölçülen ayrışma (bir liste `auth.json`ı öğrendi, diğeri öğrenmedi) yeniden doğardı.
+
+    PARAMETRELER BİR KAÇIŞ KAPISI DEĞİL, ÖLÇÜM YÜZEYİDİR. `sprint` kendi DESEN BACAĞINI ayrı
+    sorabilmek zorundadır (`_yalniz_desenle_atlanir` bildirimi tam-ad bacağını DIŞARIDA bırakır)
+    ve v523 çivi 4 `sprint.SKIP_COPY_PATTERNS`i boşaltarak deseni ısırır — sabitler bu fonksiyonun
+    GÖVDESİNE kapatılsaydı o ısırık sessizce ölürdü ve çivi yanlış sebeple yeşil kalırdı.
+    Varsayılanlar ÇAĞRI ANINDA okunur (modül düzeyinde dondurulmaz): testler tek kaynağı
+    `monkeypatch` ile oynatınca iki yüzey de birlikte oynamalı — tek kaynak olmanın ölçülebilir
+    tanımı budur (çivi: `tests/test_debug_export_sir_v524.py` çivi 7b).
+
+    KAPSAM DIŞI — BEYANLI BOŞLUK (TSK-209 tur 2, AD-TABANLI SINIFLANDIRMANIN TAVANI). Bu yüklem
+    yalnız ADA bakar, dolayısıyla AD TAŞIMAYAN bir sır kopyasını göremez. Ölçülen yol: `store`ın
+    atomik yazımı geçici dosyayı `tempfile.mkstemp(dir=path.parent, suffix=".tmp")` ile açar, yani
+    ad `tmpXXXXXX.tmp`tır ve `auth.json`/`secrets.json` yazımı da (`auth._write` H9'dan beri
+    `store.write_text`e devreder) bu yoldan geçer. `write`+`os.replace` ARASINDA bir çökme artık
+    bırakırsa o artık sır İÇERİĞİ taşır ama hiçbir desenle eşleşmez: teşhis paketine girmez
+    (`.tmp` izinli uzantı değil — YİNE SÜZGEÇ TESADÜFÜ, dışlama değil), kum havuzuna KOPYALANIR.
+    BUGÜN CANLIDA BÖYLE BİR ARTIK VAR MI BİLİNMİYOR — ölçülmedi, ve "ölçülmedi" ile "yok" aynı
+    şey değildir (uydurma yasağı). Bu dilimde KAPATILMADI: doğru yeri `store`ın kendi artık
+    temizliğidir (ayrı kalem), çünkü burada kapatmak `tmp*` gibi GENİŞ bir desen gerektirirdi ve
+    o desen meşru defterleri de düşürürdü (bedel yasası).
+
+    `fnmatchcase` — `fnmatch` DEĞİL. Gerekçe TSK-208'de ölçüldü (`sprint._desen_atlar` docstring'i):
+    `fnmatch` `os.path.normcase`e uğrar ve `normcase`i küçülten bir platformda (Windows/`ntpath`)
+    hüküm harf-DUYARSIZ olurdu. `fnmatchcase` `normcase`i hiç çağırmaz, yani bu kapının hükmü
+    taşınmayla değişmez. Çivi: `tests/test_sprint_sir_yedegi_v523.py` çivi 11."""
+    adlar = SIR_TAM_ADLAR if tam_adlar is None else tam_adlar
+    desen_ailesi = SIR_DESENLERI if desenler is None else desenler
+    return ad in adlar or any(fnmatch.fnmatchcase(ad, d) for d in desen_ailesi)
+
 
 def live_enabled() -> bool:
     """Live trading is gated behind two hand-set env flags AND autonomy_level>=1 in goal.yaml.

@@ -3254,26 +3254,67 @@ def api_control_cancel_open(request: Request):
 
 @app.get("/api/debug_export")
 def api_debug_export(request: Request):
-    """Faz 3 — Debug Export: state kök dosyaları (json/jsonl/yaml) + son olaylar tek zip.
-    secrets.json ve bars/ KESİNLİKLE dışarıda: anahtar sızdırmayan, paylaşilabilir teşhis paketi."""
+    """Faz 3 — Debug Export: state kök dosyaları (json/jsonl/yaml/csv) + son olaylar tek zip.
+
+    SIR KARARI UZANTI SÜZGECİNDEN ÖNCE VE ONDAN BAĞIMSIZ VERİLİR (TSK-209, 2026-09-21). Eskiden
+    küme TEK ADDI (`{"secrets.json"}`) ve süzgeç `f.name in skip or f.suffix not in (...)` diye
+    TEK satırda kuruluydu; iki sessiz sonucu vardı:
+      * `state/auth.json` uzantısı `.json` ve kümede DEĞİLDİ → pano scrypt parola özeti ile oturum
+        çerezinin HMAC İMZA ANAHTARI (`meridian.auth`: `salt`/`hash`/`key`) HER pakete giriyordu.
+        Paketi eline geçiren GEÇERLİ OTURUM ÇEREZİ üretebilir; bu docstring ise "anahtar
+        sızdırmayan, paylaşılabilir" diyordu. Vaat ile mekanizma ayrışmıştı.
+      * `secrets.json.bak-…` pakete girmiyordu ama sebebi DIŞLAMA DEĞİL TESADÜFTÜ: `Path.suffix`
+        o adda izinli kümede olmayan bir şey (`.bak-…`) veriyordu. Aynı dosya `state/secrets.bak.json`
+        adlandırılsaydı İÇERİ GİRERDİ.
+    Sınıflandırma artık `config.sir_dosyasi_mi` TEK kaynağındadır — `sprint._desen_atlar` (kum
+    havuzu kopyası, TSK-208) aynı yüklemi çağırır, iki liste bir daha ayrışamaz.
+
+    OKUNAMAYAN DOSYA UCU DÜŞÜRMEZ. `z.write` bir `OSError` yükseltirse (canlıda ölçülmüş hâl:
+    `root:root 0600` bir artık, servis `User=ubuntu`) eskiden İSTEK 500 dönerdi — teşhis paketi
+    tam da teşhis gereken anda kaybolurdu. Artık o dosya pakete girmez ve `manifest.json`a ADIYLA
+    + nedeniyle yazılır (Yasa 4: sessiz atlama yok, BEYANLI atlama var).
+
+    MANİFEST YALNIZ AD TAŞIR: dışarıda bırakılan sır dosyalarının İÇERİĞİ, değeri ya da hash'i
+    ASLA yazılmaz — adları zaten kodda yazılıdır, değerleri yazmak ucun var olma sebebini
+    manifestin içinde yeniden delerdi. `bars/` ve diğer dizinler `is_file()` ile dışarıda kalır.
+    Çivi: `tests/test_debug_export_sir_v524.py`."""
     _auth(request)
     import io, zipfile, datetime as _dt
     buf = io.BytesIO()
-    skip = {"secrets.json"}
+    disarida_birakilan_sirlar: list[str] = []
+    okunamayan_dosyalar: list[dict] = []
     with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
         for f in sorted(config.STATE.iterdir()):
-            if not f.is_file() or f.name in skip or f.suffix not in (".json", ".jsonl", ".yaml", ".csv"):
+            if not f.is_file():
                 continue
-            if f.stat().st_size > 5_000_000:           # dev dosya (ör. tam events) → kuyruğu al
-                with f.open("rb") as fh:
-                    fh.seek(-2_000_000, 2)
-                    z.writestr(f"state/{f.name}.tail", fh.read())
-            else:
-                z.write(f, f"state/{f.name}")
+            # SIR KAPISI ÖNCE: izinli uzantı taşıyan bir sır dosyası da girmez.
+            if config.sir_dosyasi_mi(f.name):
+                disarida_birakilan_sirlar.append(f.name)
+                continue
+            if f.suffix not in (".json", ".jsonl", ".yaml", ".csv"):
+                continue
+            try:
+                if f.stat().st_size > 5_000_000:       # dev dosya (ör. tam events) → kuyruğu al
+                    with f.open("rb") as fh:
+                        fh.seek(-2_000_000, 2)
+                        z.writestr(f"state/{f.name}.tail", fh.read())
+                else:
+                    z.write(f, f"state/{f.name}")
+            except OSError as e:
+                # BEYANLI ATLAMA (Yasa 4 — sessiz DEĞİL): tek bir okunamayan/yarışan dosya bütün
+                # teşhis paketini düşüremez. `PermissionError` ve `FileNotFoundError` (döngü
+                # sırasında dönen bir defter) `OSError` altındadır. Atlama manifest'e ADIYLA ve
+                # NEDENİYLE geçer; sebep TİP ADIDIR, işletim sistemi metni DEĞİL — o metin dosya
+                # YOLUNU taşır ve manifest paylaşılan bir artefakttır.
+                okunamayan_dosyalar.append({"ad": f.name, "sebep": type(e).__name__})
         z.writestr("manifest.json", json.dumps({
             "exported_at": _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds"),
             "mode": config.MODE, "broker": config.BROKER,
-            "note": "secrets.json ve bars/ bilinçli olarak HARİÇ"}, indent=2))
+            "disarida_birakilan_sirlar": disarida_birakilan_sirlar,
+            "okunamayan_dosyalar": okunamayan_dosyalar,
+            "note": "sır dosyaları (config.sir_dosyasi_mi) ve dizinler — bars/ dâhil — HARİÇ; "
+                    "dışarıda kalanlar yalnız ADLARIYLA listelenir, içerik/hash yazılmaz"},
+            indent=2))
     from fastapi.responses import Response
     return Response(buf.getvalue(), media_type="application/zip",
                     headers={"Content-Disposition":
