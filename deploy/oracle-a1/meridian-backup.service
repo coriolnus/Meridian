@@ -46,6 +46,31 @@
 #    vakasındaki "sessiz yedek kaybı" sınıfını geri getirir. Kapı sıkı kalır; dışlama ADIYLA, DAR.
 #    Mevcut kopyanın SİLİNMESİ operatör kararıdır (sır dosyası) — bu değişiklik ona dokunmaz.
 #    Çivi: tests/test_yedek_sir_kopyasi_disla_v517.py.
+#  * 2026-09-21 TSK-209c — ATOMİK YAZIMIN GEÇİCİ ARTIKLARI ARŞİVE ALINMAZ:
+#    `--exclude="state/.secrets_*.tmp"` ve `--exclude="state/tmp*.tmp"`. NEDEN: `state/` kökünde
+#    iki atomik yazım yolu vardır ve ikisi de `tempfile.mkstemp(dir=<state kökü>, suffix=".tmp")`
+#    kullanır — `meridian/store.py::_atomic_write` (`tmpXXXXXXXX.tmp`; `auth.json` yazımı H9'dan
+#    beri buradan geçer) ve `meridian/secrets.py::_write_file` (`prefix=".secrets_"` →
+#    `.secrets_XXXXXX.tmp`). `write`+`fsync` ile `os.replace` ARASINDA bir çökme bu dosyayı diskte
+#    bırakır ve İÇERİĞİ yazılan defterin kendisidir: operatör anahtar deposu ya da pano oturum imza
+#    anahtarı. Gece arşivi PAYLAŞILABİLİR bir artefakttır (restore tatbikatı, teşhis paketi), yani
+#    sınıf BOYUT değil MARUZİYETTİR — artık bir sır kopyasıdır ve adı hiçbir eski desene benzemez.
+#    TEK KAYNAK: aile `meridian/config.py`de tanımlıdır (`SIR_DESENLERI` sır bacağı +
+#    `GECICI_ARTIK_DESENLERI` artık bacağı, TSK-209b) ve buradaki iki desen ondan TÜRETİLİR. Ayrışma
+#    çivisi örnek adları o sabitlerden üretip bu ExecStart'a sorar: aileye bir üye eklenirse bu satır
+#    da öğrenmek zorundadır (v523 çivi 7'nin TERS yönü — orada yedeğin bildiği aileyi sprint'e,
+#    burada sprint'in bildiği aileyi yedeğe sorar).
+#    ÇAPA `state/` ÖNEKİDİR, VE DARALTMA ÖLÇÜLDÜ: iki artık da `state/` KÖKÜNDE doğar (mkstemp'e
+#    verilen `dir=` state kökünün kendisidir), alt dizinlerde değil. Çapasız bir desen tüm ağaçta
+#    eşleşirdi; ölçülmüş bir ihtiyaç yokken genişletmek yedeği sessizce EKSİK doğurma sınıfına sokar.
+#    BEDEL (bedel yasası): bu iki desenin dışında arşivden hiçbir şey ÇIKMAZ. `state/secrets.json`
+#    ve `state/auth.json` arşive girmeye DEVAM eder (yedeğin işi sırları KURTARMAKTIR — kum havuzunun
+#    işiyle bilerek ayrışır), `state/meridian.db*` yedekleri de içeride kalır. Kaybedilen tek şey,
+#    yarım kalmış bir yazımın çöp kalıntısıdır; o kalıntının restore değeri YOKTUR (içeriği hangi
+#    deftere aitse o defterin kendisi zaten arşivdedir).
+#    TIRNAK: joker taşıyan desen sh katmanında ÇİFT TIRNAKLIDIR (gerekçe bir üstteki TSK-197
+#    maddesinde; `\"` biçimi YASAKTIR).
+#    Çivi: tests/test_gecici_artik_kabuk_copytree_v531.py.
 [Unit]
 Description=Meridian state/ daily local backup (tar.gz, 7-day retention)
 
@@ -68,7 +93,7 @@ ExecStartPre=/bin/chmod 700 /home/ubuntu/backups
 # Çözüm iki bacaklı: (1) yol string-literal değil sys.argv[1] — dizgide İÇ TIRNAK KALMADI,
 # systemd'nin çözeceği kaçış yok; (2) `ok` bayrağı — python bacağı düşerse tar YİNE alınır
 # (bars değerlidir) ama birim BAŞARISIZ beyan eder; sessiz yedek kaybı bir daha yaşanmaz.
-ExecStart=/bin/sh -c 'ok=1; if [ -s /opt/meridian/state/meridian.db ]; then uv run python -c "import sys; from meridian import storage; storage.backup_to(sys.argv[1])" /opt/meridian/state/meridian.db.yedek || ok=0; fi; tar -czf /home/ubuntu/backups/state-$(date +%%F).tar.gz --exclude=state/sprint --exclude="state/secrets.json.bak-*" -C /opt/meridian state; rc=$$?; [ $$rc -le 1 ] && [ $$ok -eq 1 ]'
+ExecStart=/bin/sh -c 'ok=1; if [ -s /opt/meridian/state/meridian.db ]; then uv run python -c "import sys; from meridian import storage; storage.backup_to(sys.argv[1])" /opt/meridian/state/meridian.db.yedek || ok=0; fi; tar -czf /home/ubuntu/backups/state-$(date +%%F).tar.gz --exclude=state/sprint --exclude="state/secrets.json.bak-*" --exclude="state/.secrets_*.tmp" --exclude="state/tmp*.tmp" -C /opt/meridian state; rc=$$?; [ $$rc -le 1 ] && [ $$ok -eq 1 ]'
 ExecStartPost=/usr/bin/find /home/ubuntu/backups -maxdepth 1 -name state-*.tar.gz -mtime +7 -delete
 
 # ==================================================================================================

@@ -200,6 +200,59 @@ def _yalniz_desenle_atlanir(ad: str) -> bool:
     return ad not in SKIP_COPY and _desen_atlar(ad)
 
 
+def _alt_dizin_suzgeci(live: Path, atlanan: list[str]):
+    """`shutil.copytree(..., ignore=…)` süzgeci: ALT DİZİNLERDEKİ kopyalanmaz DOSYA adlarını eler.
+
+    NEDEN ÜÇÜNCÜ BİR KAPI VAR (TSK-209c, 2026-09-21). `_atlanir` KÖK girdilerinin kapısıdır ve
+    `_kur_kum_havuzu` onu yalnız kök döngüsünde sorar; bir kök girdisi DİZİNSE `shutil.copytree`
+    alt ağacı İÇİ SÜZÜLMEDEN kopyalıyordu. Yani kökteki bir geçici artık atlanırken aynı adın alt
+    dizindeki kardeşi kum havuzuna giriyordu — TSK-209b'nin kendi beyanındaki boşluk. Ailenin alt
+    dizinde GERÇEKTEN doğduğu ÖLÇÜLDÜ (Rol-1, A1 salt-okur, 2026-09-21 19:3xZ): canlı `state/` alt
+    dizinlerinde (derinlik 2–3, sprint ve bars hariç) eşleşen TEK ad `.locks/auth.json.lock`tur.
+
+    O ADIN ATLANMASI ZARARSIZDIR VE BU DA ÖLÇÜLDÜ, VARSAYILMADI: `store` kilit nesnesi kilit
+    DİZİNİNİ `mkdir` ile, kilit DOSYASINI `O_CREAT` bayrağıyla yokluğunda KENDİSİ yaratır — kum
+    havuzu çocuğu kendi kilidini açar. Ölçüm değişirse `.locks/` bu süzgeçten MUAF tutulmalıdır;
+    çivi (v531) o günü yakalamak için kaynağı ve davranışı ayrı ayrı ölçer.
+
+    KARAR TEK YERDEDİR: gövde `config.kopyalanmaz_mi`ye devreder, yani kök bacağı, teşhis paketi ve
+    bu üçüncü yüzey AYNI yüklemi çağırır. TSK-209'da ölçülen ayrışmanın sebebi tam olarak "iki
+    yüzey iki liste tuttu"ydu; üçüncü yüzeyin kendi eşleştiricisini kurması aynı sınıfı geri
+    getirirdi (çivi: v531 çivi 6 davranıştan, çivi 7 kaynaktan ölçer).
+
+    `SKIP_COPY` BİLEREK SORULMAZ VE BU BİR DARALTMA KAÇINMASIDIR. O küme KÖK sözleşmesidir ve
+    içinde KONUMA bağlı adlar vardır (`bars`, `sprint`, `HALT`, `meridian.db` — gerekçeleri boyut
+    ve izolasyon, kümenin üstünde yazılı). Aynı adın bir alt dizinde geçmesi ÖLÇÜLMEMİŞ bir
+    durumdur ve orada atlamak ölçülmemiş bir kayıptır. `config.kopyalanmaz_mi` ise ADIN SINIFINI
+    sorar (sır ya da geçici artık) ve bu soru derinlikten bağımsızdır.
+
+    YALNIZ DOSYA ADLARI ELENİR. Desene uyan bir DİZİN atlanırsa ALT AĞACIN TAMAMI sessizce düşer;
+    böyle bir dizin canlıda ölçülmedi, yani kazanç VARSAYIM, kayıp GERÇEK olurdu (bedel yasası).
+
+    ATLANAN HER AD `atlanan` LİSTESİNE YAZILIR ve çağıran onu olay satırına koyar. Kök bacağındaki
+    "adı kodda yazılı olanı bildirme" ayrımı (`_yalniz_desenle_atlanir`) BURADA UYGULANMAZ, ve
+    uygulanmaması bilinçlidir: kökte `secrets.json` BEKLENEN bir girdidir ve adı kodda yazılıdır,
+    ama alt dizinde aynı adı taşıyan bir yol bu depoda hiçbir yerde yazılı DEĞİLDİR — derinlikteki
+    her eşleşme SÜRPRİZDİR ve bildirilmeyen sürpriz izsiz yok olur.
+
+    KAYIT TABAN AD DEĞİL GÖRELİ YOLDUR (aynı gerekçe conftest'teki `_CanliYazimKaydi` bekçisinde de
+    ölçülmüştü): `bars` ile `bars_intraday` aynı adlı dosyalar barındırır, yani salt taban ad
+    operatöre "hangi dizinden düştü" sorusunu cevaplamaz."""
+    def _suzgec(dizin, adlar) -> set[str]:
+        d = Path(os.fspath(dizin))
+        atla: set[str] = set()
+        for ad in adlar:
+            if not config.kopyalanmaz_mi(ad):
+                continue
+            yol = d / ad
+            if yol.is_dir():
+                continue
+            atla.add(ad)
+            atlanan.append(yol.relative_to(live).as_posix() if yol.is_relative_to(live) else ad)
+        return atla
+    return _suzgec
+
+
 def _now() -> str:
     """Şu anki UTC zamanını saniye çözünürlüklü ISO-8601 metni olarak verir."""
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
@@ -374,9 +427,11 @@ def _kur_kum_havuzu(sid: str) -> Path:
     testteki kopya yeşil kalırken üretim yolu sessizce ayrışır ve dedektör hiçbir şey ölçmez.
 
     YAN ETKİ SÖZLEŞMESİ (TSK-208'de DARALDI, gevşemedi): süreç doğurmaz, `sprint_status.json`
-    yazmaz. TEK yan etkisi, DESENLE (`SKIP_COPY_PATTERNS`) atlanan girdi olduğunda kurulum sonunda
-    yazılan BİR `sprint_kum_havuzu_atlandi` bilgi satırıdır — "saf" iddiasını korumak için o satırı
-    yazmamak, kopyalanmayan dosyayı izsiz bırakırdı (bedel yasası)."""
+    yazmaz. TEK yan etkisi, DESENLE atlanan girdi olduğunda kurulum sonunda yazılan BİR
+    `sprint_kum_havuzu_atlandi` bilgi satırıdır — "saf" iddiasını korumak için o satırı yazmamak,
+    kopyalanmayan dosyayı izsiz bırakırdı (bedel yasası). TSK-209c'den beri o satır İKİ bacak
+    taşır: kökte `SKIP_COPY_PATTERNS` ile yalnız desenle yakalananlar (`adlar`) ve alt dizinlerde
+    `_alt_dizin_suzgeci` ile elenenler (`alt_dizin_atlanan`, göreli yol)."""
     # SBROOT KANONİK YOLA DAMGALANIR. `state/sprint_status.json` hâlâ
     # `/Users/erdemozturk/Documents/Claude/AI-Trading/...` yolunu taşıyor — 2026-07-22 sprintinden
     # kalma bir damga, ve o yol 07-23 taşımasından beri gerçek depoya SYMLINK. Sembolik yolu
@@ -391,6 +446,11 @@ def _kur_kum_havuzu(sid: str) -> Path:
     live = config.STATE
     # copy live state into the sandbox EXCEPT the big/irrelevant/secret items
     yalniz_desenle_atlanan: list[str] = []
+    # ALT DİZİN BACAĞI (TSK-209c): kök döngüsü `_atlanir`ı sorar, alt ağaçlar `copytree`in
+    # `ignore` kancasından geçer. İKİ SÜZGEÇ DEĞİL, İKİ KONUM — kök girdileri kancaya hiç
+    # uğramaz (kanca yalnız kopyalanmaya BAŞLANAN bir dizinin İÇİ için çağrılır).
+    alt_dizin_atlanan: list[str] = []
+    alt_dizin_suzgeci = _alt_dizin_suzgeci(live, alt_dizin_atlanan)
     for item in live.iterdir():
         if _atlanir(item.name):
             # TAM-AD kümesiyle atlananlar BEYANLI TASARIMDIR (adları kodda yazılı, gerekçeleri
@@ -404,7 +464,7 @@ def _kur_kum_havuzu(sid: str) -> Path:
             continue
         dest = sbstate / item.name
         if item.is_dir():
-            shutil.copytree(item, dest, dirs_exist_ok=True)
+            shutil.copytree(item, dest, dirs_exist_ok=True, ignore=alt_dizin_suzgeci)
         else:
             shutil.copy2(item, dest)
     # symlink bars -> live cache (reuse; never refetch)
@@ -423,13 +483,19 @@ def _kur_kum_havuzu(sid: str) -> Path:
     except (OSError, NotImplementedError):  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
         pass
     _reset_sandbox_state(sbstate)
-    if yalniz_desenle_atlanan:
+    if yalniz_desenle_atlanan or alt_dizin_atlanan:
         # YALNIZ AD — içerik/değer/hash YAZILMAZ: olay defteri panoya ve `ops/` sorgularına açıktır,
         # bir sır dosyasının içeriği oraya sızmamalıdır. Boşken satır YAZILMAZ: atlanacak şey yoksa
         # kaybedilen görünürlük de yoktur, her kurulumda boş bir satır ise gürültüdür.
+        # İKİ BACAK TEK SATIRDA (TSK-209c): `adlar` KÖKTE yalnız desenle yakalananları,
+        # `alt_dizin_atlanan` ALT DİZİNLERDE elenenleri (göreli YOL olarak) taşır. Ayrı bir olay
+        # satırı açmak aynı kurulumun iki bacağını iki zaman damgasına dağıtırdı ve "bu kurulumda
+        # ne atlandı" sorusu iki kaydın birleştirilmesini gerektirirdi. Alan, bacak boşken de
+        # YAZILIR: alanın YOKLUĞU ile "alt dizin ölçülmedi" birbirine karışmasın (bedel yasası).
         from . import obs
         obs.log("sprint_kum_havuzu_atlandi", sid=sid, adet=len(yalniz_desenle_atlanan),
-                adlar=sorted(yalniz_desenle_atlanan), kural="SKIP_COPY_PATTERNS")
+                adlar=sorted(yalniz_desenle_atlanan), kural="SKIP_COPY_PATTERNS",
+                alt_dizin_atlanan=sorted(alt_dizin_atlanan))
     return sbroot
 
 
