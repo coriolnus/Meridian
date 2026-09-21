@@ -1810,6 +1810,64 @@ _CAPA_UZANTILARI = frozenset((
     "service", "timer", "socket", "png", "svg", "xml", "db", "gz", "zip"))
 
 
+def _dosya_adi_kuyrugu_mu(sembol: str) -> bool:
+    """`modül.sembol` eşleşmesinin sembol parçası aslında bir DOSYA ADI KUYRUĞU mu?
+
+    VAKA (TSK-211, ölçüldü 2026-09-21): 2026-09-02'deki muafiyet kuyruğun yalnız TEK parçalı
+    hâlini tanıyordu (`secrets.json` → `json` ∈ küme). İKİ parçalı kuyrukta ise desen — sembol
+    parçasını `Sinif.metot` çapaları için NOKTALI okumak ZORUNDA olduğundan — ilk parçayı
+    "modül", KALANINI "sembol" sayıyor: `auth.json.tmp` → modül `auth`, sembol `json.tmp`;
+    `secrets.bak.json` → modül `secrets`, sembol `bak.json`. Her iki modül de depoda TEK `.py`
+    olarak çözüldüğü için kapsam sınırı (2) de geçiliyor ve hedef modülün AST adları arasında
+    böyle bir ad bulunmadığı için hüküm `curuyen`/`sembol_yok` oluyordu.
+
+    BEDELİ ÖLÇÜLDÜ, ve ödeyen YAZARDI: TSK-209'un İKİ AYRI TURUNDA iki ayrı implementer yedek ve
+    geçici dosya adlarını düzyazıya yazınca bu tarama kırmızı verdi (tur 1'de 4 kayıt); ikisi de
+    adları yol önekli biçime (`state/auth.json`) çevirerek geçti. Yani dedektör, yazarı KENDİ
+    METNİNİ EĞMEYE zorladı. Yanlış alarm yasanın en pahalı arızasıdır — susturulan bekçi,
+    olmayan bekçiden beterdir; ama yazarına düzyazısını çarpıttıran bekçi de aynı sınıftandır:
+    ikisi de yasayı ölçmeye değil, etrafından dolaşmaya öğretir.
+
+    KURAL: kuyruk parçalarından HERHANGİ biri bir uzantıysa eşleşme dosya adıdır, çapa değildir.
+    Tek parçalı hâl bunun ÖZEL DURUMUDUR (tek parça = tek kontrol), yani 2026-09-02 davranışı
+    AYNEN korunur — ayrı bir dal eklenmedi (tek-kaynak yasası).
+
+    KASTEN DAR: "noktalı kuyruk = dosya adı" diye yazılsaydı `mod.Sinif.olmayan_metot` gibi
+    GERÇEK ve çürük bir çapa sessizce affedilirdi; hiçbir parçası uzantı olmayan kuyruk çapadır
+    ve hüküm DEĞİŞMEDEN kurulur. Bedel canlı ağaçta ölçüldü (2026-09-21, 703 metin dosyası,
+    3017 çözülen · 0 çürüyen): yeni muafiyetin yutacağı çapa sayısı SIFIR — yani kazanç
+    (iki sahte pozitif sınıfı) körlük ödemeden alınır.
+
+    KAYIP AÇIK (inceleme bulgusu, düzeltme turu 1, 2026-09-21): bu kural bir DİZGE eşleşmesidir,
+    dosya adıyla nitelikli sembolü AYIRT EDEMEZ. Kuyruğun herhangi bir parçası `_CAPA_UZANTILARI`
+    jetonlarından biriyle TESADÜFEN çakışırsa, GERÇEK ve nitelikli bir çapa da (`store.Store.db`,
+    `guard.Kapi.log` biçimi) `_hukum`e hiç girmeden atlanır: ne `cozulen`e ne `curuyen`e ne de
+    `cozulemeyen`e yazılır, HİÇBİR kovada görünmez — yani çürüse bile sessiz çürür. Bu, 2026-09-02
+    muafiyetine göre BİLEREK ödenen bir genişlemedir: o muafiyet sembolün TAMAMINI tek bir jetona
+    eşitlediği için nitelikli bir kuyruğa hiç dokunamıyordu; "herhangi bir parça" kuralı ise
+    M4/M5 mutasyonlarının gösterdiği gibi ZORUNLUDUR (yalnız son parçaya bakan kural birinci
+    vakayı, yalnız ilk parçaya bakan kural ikinci vakayı kaçırır) ve bedeli bu paragraftır.
+
+    BUGÜN ÖLÇÜLEN (2026-09-21, canlı ağaç, `_yorum_metinleri` + `_capa_adres_defteri`): çok
+    parçalı kuyruk taşıyan 165 eşleşmenin 15'ini bu kural affediyor; bunların SIFIRI sınıf
+    biçimli (büyük harfle başlayan parça taşıyan) bir addır ve modül parçası depoda tek `.py`ye
+    çözülen yalnız 4'ü vardır — dördü de TSK-211'in KENDİ belgelediği iki dosya adıdır (bu
+    docstring ve çivi dosyasının başlığı). Yani amaçlanan dışında kaybedilen gerçek çapa: 0.
+    Sınıfın kuramsal olmadığı da ölçüldü: `socket.socket.connect` bugün ağaçta gerçek bir sembol
+    atfı olarak geçiyor ve `socket` bir `.socket` birim uzantısı olduğu için bu kural onu
+    affediyor — bugün zararsızdır ÇÜNKÜ `socket.py` depoda yok ve kapsam sınırı (2) onu zaten
+    eliyor; `socket.py` doğduğu gün o atıf sessizleşir.
+
+    NE ZAMAN YENİDEN ÖLÇÜLMELİ: `_CAPA_UZANTILARI`na her yeni jeton eklendiğinde bu sınıf
+    büyür — jetonla çakışan her sınıf/metot adı o gün kör olur; ekleme yapan tur yukarıdaki üç
+    sayıyı (affedilen · sınıf biçimli · modülü çözülen) yeniden ölçmeli. Kör kalan bir çapanın
+    BAŞKA bir çivi tarafından yakalanıp yakalanmayacağı ÖLÇÜLMEDİ — "yakalanır" varsayılmaz.
+    Çapa YAZARI için kural sadedir: nitelikli bir çapada sınıf ya da metot adı bir dosya uzantısı
+    jetonuyla çakışıyorsa o çapa `dosya.py::Sinif.metot` biçiminde yazılır — o biçim bu
+    muafiyetten geçmez ve hüküm adıyla kurulur."""
+    return any(parca in _CAPA_UZANTILARI for parca in sembol.split("."))
+
+
 def _atama_adlari(hedef: ast.expr):
     """Bir atama HEDEFİNDEN ad(lar)ı çıkarır — düz `ad = ...` bir `ast.Name`dir, demet/liste-çöz
     `AKTIF, ARSIV = "aktif", "arsiv"` ise `ast.Tuple`/`ast.List` İÇİNDEKİ her ad (TSK-120,
@@ -1896,7 +1954,10 @@ def capa_uyusmasi(metinler, py_kokler: tuple[str, ...] | None = None,
       2. Backtick ZORUNLU ve modül adres defterinde ÇÖZÜLMELİ. Türkçe düzyazı `r.json()` ·
          `self.ALAN` gibi yüzlerce `x.y` belirteci taşır; hepsini çapa saymak `cozulemeyen`
          kovasını gürültüye çevirir ve "kaç çapayı ölçemedim" sorusunu okunamaz yapardı.
-      3. Sembol parçası bir DOSYA UZANTISI olamaz (`_CAPA_UZANTILARI`).
+      3. Sembol parçası bir DOSYA ADI KUYRUĞU olamaz (`_dosya_adi_kuyrugu_mu`): kuyruk
+         parçalarından HERHANGİ biri `_CAPA_UZANTILARI`ndaysa eşleşme dosya adıdır. Tek parçalı
+         uzantı (2026-09-02, 11 yanlış çürüme) bunun özel durumudur; iki parçalı kuyruk TSK-211'de
+         (2026-09-21) eklendi — yardımcının docstring'i vakayı ve ölçülen bedeli taşır.
 
     KAYIP AÇIK: modül adı YANLIŞ YAZILMIŞ bir `modül.sembol` çapası burada prozadan ayırt
     edilemez, yani görünmez. Kayıp `dosya.py::sembol` biçiminde kapalıdır — orada `.py::`
@@ -1959,7 +2020,7 @@ def capa_uyusmasi(metinler, py_kokler: tuple[str, ...] | None = None,
                 hedef_ad = f"{m.group(1)}.py"
                 if len(adres.get(hedef_ad, [])) != 1:
                     continue                  # KAPSAM SINIRI (2)
-                if m.group(2) in _CAPA_UZANTILARI:
+                if _dosya_adi_kuyrugu_mu(m.group(2)):
                     continue                  # KAPSAM SINIRI (3) — dosya adı, sembol değil
                 _hukum(kaynak, m.group(0).lstrip("`"), "", hedef_ad, m.group(2))
     return out
