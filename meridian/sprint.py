@@ -81,8 +81,12 @@ STATUS_FILE = "sprint_status.json"    # written LIVE — a labeled read-model, N
 # PANO KİMLİK KAYDI DA ATLANIR (TSK-208, 2026-09-21) — sınıf: İZOLASYON (HALT/secrets ailesi), BOYUT
 # değil. `state/auth.json` panonun scrypt parola tuzu+özeti ile oturum İMZA ANAHTARINI taşır
 # (`meridian.auth`; 0600 atomik yazım, yol `auth._auth_file`). Sözleşme "sırlar kum havuzuna girmez"
-# diyordu ve bu kayıt sözleşmeye GİRER; bugüne kadar her kum havuzu ağacına kopyalanıyordu, yani imza
-# anahtarı `state/sprint/<sid>/state/` altında SANDBOX_KEEP kadar çoğalıyordu. ÖLÇÜM (grep + import
+# diyordu ve bu kayıt sözleşmeye GİRER. TARİHSEL YAYILIM BİR ÇIKARIMDIR, ÖLÇÜM DEĞİL (uydurma
+# yasağı): kod yoluna göre dosya `SKIP_COPY`de olmadığı için her kurulumda kopyalanırdı, yani imza
+# anahtarı `state/sprint/<sid>/state/` altında SANDBOX_KEEP kadar çoğalırdı — ama bunun CANLI KANITI
+# bugün ölçülemez. A1'de `state/sprint/*/state/auth.json` → 0 dosya (Rol-1, 2026-09-21); bu iddiayı
+# çürütmez de, çünkü mevcut dört kum havuzu 09-21 05:41–05:56 arası DÜŞEN koşumların yarım
+# ağaçlarıdır (kopya `PermissionError` ile kesilmiş, `auth.json`a sıra gelmemiş). ÖLÇÜM (grep + import
 # kapanışı, 2026-09-21): `state/auth.json`ı okuyan TEK modül `meridian.auth`tır; onu import eden
 # yalnız `meridian.auth_cli` (kabuk aracı) ve `meridian.api` (pano sunucusu). `sprint_run`dan
 # başlayan meridian-içi import kapanışı 75 modüldür (sprint_run dâhil) ve içinde NE `auth` NE `api` vardır; kapanıştaki
@@ -118,14 +122,19 @@ SKIP_COPY_PATTERNS = ("secrets.json*",)
 def _desen_atlar(ad: str) -> bool:
     """`_atlanir`ın DESEN BACAĞI — ad `SKIP_COPY_PATTERNS`ten biriyle eşleşiyor mu?
 
-    AYRI FONKSİYON OLMASININ SEBEBİ İKİ TÜKETİCİDİR ve ikisi de üretimdedir: kararın kendisi
-    (`_atlanir`) ve kurulumun BEDEL BİLDİRİMİ (`_kur_kum_havuzu` sonundaki `obs` satırı, hangi
-    girdilerin DESENLE atlandığını adıyla söyler). İkisi ayrı ayrı yazılsaydı ikinci bir eşleşme
-    kopyası doğardı ve kopyalar sessizce ayrışır (tek-kaynak yasası).
+    AYRI FONKSİYON OLMASININ SEBEBİ İKİ TÜKETİCİDİR ve ikisi de üretimdedir: atlama kararı
+    (`_atlanir`) ve bildirim kararı (`_yalniz_desenle_atlanir`). İkisi ayrı ayrı yazılsaydı ikinci
+    bir eşleşme kopyası doğardı ve kopyalar sessizce ayrışır (tek-kaynak yasası).
 
-    `fnmatchcase` — `fnmatch` DEĞİL: `fnmatch` `os.path.normcase` uygular, yani macOS'ta (geliştirme)
-    büyük/küçük harf duyarsız, Linux'ta (A1, canlı) duyarlı olurdu. Aynı adın iki makinede iki farklı
-    hüküm alması bu kapıda kabul edilemez; davranış her yerde Linux'unkidir."""
+    `fnmatchcase` — `fnmatch` DEĞİL. GEREKÇE ÖLÇÜLDÜ (Rol-1, yerel `.venv`, 2026-09-21), çünkü ilk
+    yazılan gerekçe YANLIŞTI ve düzeltildi: "`fnmatch` macOS'ta harf-duyarsızdır" DOĞRU DEĞİL —
+    macOS'ta `os.path` `posixpath`tır ve `posixpath.normcase` KİMLİK fonksiyonudur
+    (`normcase("Secrets.JSON") → 'Secrets.JSON'`), yani `fnmatch` bu makinede de harf-DUYARLIDIR.
+    Bugün POSIX'te (macOS geliştirme + A1 canlı) ikisi AYNI sonucu verir; ayrışma yalnız
+    `normcase`i küçülten bir platformda (Windows/`ntpath`) doğar. Seçim bu yüzden BUGÜNKÜ bir
+    ayrışmayı değil, GELECEKTEKİ bir platform bağımlılığını kapatır: `fnmatchcase` `normcase`i hiç
+    çağırmaz, dolayısıyla bu kapının hükmü koşulsuz harf-duyarlıdır ve taşınmayla değişmez.
+    Çivi (iddianın iki parçası da ölçülür): `tests/test_sprint_sir_yedegi_v523.py` çivi 11."""
     return any(fnmatch.fnmatchcase(ad, desen) for desen in SKIP_COPY_PATTERNS)
 
 
@@ -135,8 +144,30 @@ def _atlanir(ad: str) -> bool:
     NEDEN TEK YERDE: `_kur_kum_havuzu` bu kararı kendi döngüsünde satır içi verirse çivi ancak
     dosya sistemi kurarak ölçebilir, ve ikinci bir çağıran doğduğu gün karar ÇATALLANIR. Burası
     kararın sorulabilir hâlidir — çivi (v523) doğrudan bunu çağırır, ayrışma çivisi de
-    (`meridian-backup.service` ↔ sprint) buradan ölçer."""
+    (`meridian-backup.service` ↔ sprint) buradan ölçer.
+
+    İKİ BACAK BİLEREK ÖRTÜŞÜR: `"secrets.json"` hem kümenin üyesidir hem de `"secrets.json*"`
+    deseniyle eşleşir (`*` BOŞ diziyi de eşler). Örtüşme bir SAVUNMA KATMANIDIR — biri kanonik adı
+    kümeden düşürse bile dosya atlanmaya devam eder. Örtüşmenin BİLDİRİME sızmaması ayrı bir
+    karardır: `_yalniz_desenle_atlanir`."""
     return ad in SKIP_COPY or _desen_atlar(ad)
+
+
+def _yalniz_desenle_atlanir(ad: str) -> bool:
+    """BİLDİRİLECEK atlama: adı ÖNCEDEN BİLİNMEYEN, yalnız desenle yakalanan girdi.
+
+    NEDEN `_desen_atlar`TAN AYRI (TSK-208 tur 2, Rol-1 bulgusu B3 — ÖLÇÜLDÜ). Bildirim bacağı
+    doğrudan `_desen_atlar` olunca kod KENDİ BEYANIYLA ÇELİŞİYORDU: `_kur_kum_havuzu`nun şerhi
+    "tam-ad kümesiyle atlananlar için olay satırı GÜRÜLTÜDÜR, çünkü adları kodda yazılı" diyor, ama
+    `"secrets.json"` (küme üyesi) deseni de tutturduğu için HER kurulumda olayın `adlar` alanına
+    giriyordu. Canlı `state/` kökünde `secrets.json*` ailesi 2 dosyadır (A1 ölçümü, 2026-09-21),
+    yani olay `adet=2` basacak ve "adı önceden bilinmeyen kaç girdi atlandı" sorusu cevapsız
+    kalacaktı — bildirimin ayırt etme gücü, şerhin vaat ettiği şey, yok oluyordu.
+
+    ATLAMA DARALTILMADI, YALNIZ BİLDİRİM: `_atlanir` örtüşen adı atmaya devam eder (yukarıdaki
+    savunma katmanı korunur); burada eksilen tek şey, adı zaten kodda yazılı olan bir girdinin
+    rapora ikinci kez girmesidir. Çivi: v523 çivi 10a (saf yüzey) + 10b (üretim yolu, olay kaydı)."""
+    return ad not in SKIP_COPY and _desen_atlar(ad)
 
 
 def _now() -> str:
@@ -329,16 +360,17 @@ def _kur_kum_havuzu(sid: str) -> Path:
     sbstate.mkdir(parents=True, exist_ok=True)
     live = config.STATE
     # copy live state into the sandbox EXCEPT the big/irrelevant/secret items
-    desenle_atlanan: list[str] = []
+    yalniz_desenle_atlanan: list[str] = []
     for item in live.iterdir():
         if _atlanir(item.name):
             # TAM-AD kümesiyle atlananlar BEYANLI TASARIMDIR (adları kodda yazılı, gerekçeleri
-            # `SKIP_COPY`nin üstünde) — onlar için yeni bir olay satırı gürültüdür. DESENLE
-            # atlananların adı ise ÖNCEDEN BİLİNEMEZ; bildirilmezse kopyalanmayan dosya hiçbir iz
+            # `SKIP_COPY`nin üstünde) — onlar için yeni bir olay satırı gürültüdür. YALNIZ DESENLE
+            # yakalananların adı ise ÖNCEDEN BİLİNEMEZ; bildirilmezse kopyalanmayan dosya hiçbir iz
             # bırakmadan yok olur ve desen bir gün yanlışlıkla bir defteri yakalarsa körlük sessiz
-            # kalır (bedel yasası). Ayrım bu yüzden burada.
-            if _desen_atlar(item.name):
-                desenle_atlanan.append(item.name)
+            # kalır (bedel yasası). "YALNIZ" sözcüğü taşıyıcıdır: iki bacak örtüşür ve örtüşen ad
+            # bu sayıya karışırsa bildirim ayırt etme gücünü kaybeder (`_yalniz_desenle_atlanir`).
+            if _yalniz_desenle_atlanir(item.name):
+                yalniz_desenle_atlanan.append(item.name)
             continue
         dest = sbstate / item.name
         if item.is_dir():
@@ -361,13 +393,13 @@ def _kur_kum_havuzu(sid: str) -> Path:
     except (OSError, NotImplementedError):  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
         pass
     _reset_sandbox_state(sbstate)
-    if desenle_atlanan:
+    if yalniz_desenle_atlanan:
         # YALNIZ AD — içerik/değer/hash YAZILMAZ: olay defteri panoya ve `ops/` sorgularına açıktır,
         # bir sır dosyasının içeriği oraya sızmamalıdır. Boşken satır YAZILMAZ: atlanacak şey yoksa
         # kaybedilen görünürlük de yoktur, her kurulumda boş bir satır ise gürültüdür.
         from . import obs
-        obs.log("sprint_kum_havuzu_atlandi", sid=sid, adet=len(desenle_atlanan),
-                adlar=sorted(desenle_atlanan), kural="SKIP_COPY_PATTERNS")
+        obs.log("sprint_kum_havuzu_atlandi", sid=sid, adet=len(yalniz_desenle_atlanan),
+                adlar=sorted(yalniz_desenle_atlanan), kural="SKIP_COPY_PATTERNS")
     return sbroot
 
 

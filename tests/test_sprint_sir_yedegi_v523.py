@@ -44,6 +44,7 @@ CANLIYA DOKUNMAZ: her şey `sandbox_state` altında tmp'de kurulur; `monkeypatch
 """
 from __future__ import annotations
 
+import fnmatch
 import os
 import warnings
 
@@ -273,3 +274,90 @@ def test_9_desenle_atlanan_girdi_obs_ile_ADIYLA_bildirilir(sandbox_state):
     dizge = str(kayit)
     for sizinti in ("sahte-bak", "sahte-tmp", "sahte-new", "ALPACA_KEY"):
         assert sizinti not in dizge, f"olay kaydı dosya İÇERİĞİ taşıyor ({sizinti}): {kayit!r}"
+
+
+# ==================================================================================================
+# 10 — BİLDİRİM KENDİ BEYANIYLA TUTARLI (Rol-1 bulgusu B3, tur 2)
+# ==================================================================================================
+def test_10a_bildirim_yalniz_ADI_ONCEDEN_BILINMEYENI_tasir():
+    """SAF YÜZEY ÖLÇÜMÜ — dosya sistemi yok, kararın kendisi ölçülür.
+
+    TUR 1'DEKİ ÇELİŞKİ (Rol-1 ölçtü): bildirim bacağı `_desen_atlar` idi ve o, adın tam ad
+    kümesinde OLUP OLMADIĞINA bakmıyordu. `"secrets.json"` hem `SKIP_COPY` üyesi hem de
+    `"secrets.json*"` deseniyle eşleşiyor (`*` BOŞ diziyi de eşler) — yani her kurulumda olay
+    `adlar` alanına giriyordu. Oysa kodun kendi şerhi "tam-ad kümesiyle atlananlar için olay satırı
+    GÜRÜLTÜDÜR, çünkü adları kodda yazılı" diyordu: beyan ile kod AYNI ŞEYİ söylemiyordu.
+
+    DESEN BİLEREK ÖRTÜŞÜR, DARALTILMADI: `"secrets.json*"` kanonik adı da yakalamaya devam eder ve
+    bu bir SAVUNMA KATMANIDIR — biri `"secrets.json"`u `SKIP_COPY`den düşürse bile dosya yine
+    atlanır. Düzeltilen şey ATLAMA değil BİLDİRİMDİR: `_yalniz_desenle_atlanir` örtüşen adı
+    rapordan çıkarır, `_atlanir` onu atlamaya devam eder."""
+    for ad in ("secrets.json", "auth.json", "HALT", "meridian.db", "bars"):
+        assert sprint._atlanir(ad), f"kurulum çipası: `{ad}` zaten atlanmıyor"
+        assert not sprint._yalniz_desenle_atlanir(ad), (
+            f"`{ad}` TAM AD kümesinde — adı kodda YAZILI, bildirimde yeri yok; sayıya karışırsa "
+            f"'adı önceden bilinmeyen kaç girdi atlandı' sorusu cevapsız kalır")
+    for ad in (SIR_YEDEGI, "secrets.json.tmp", "secrets.json.new"):
+        assert sprint._yalniz_desenle_atlanir(ad), (
+            f"`{ad}` YALNIZ desenle yakalanıyor (tam ad kümesinde yok) — bildirilmezse izsiz yok olur")
+    for ad in ("portfolio.json", "trades.jsonl", "goal.yaml"):
+        assert not sprint._yalniz_desenle_atlanir(ad) and not sprint._atlanir(ad), (
+            f"`{ad}` atlanıyor/bildiriliyor — düzeltme kopyalamayı daralttı")
+
+
+def test_10b_olayda_secrets_json_GORUNMEZ_yedegi_GORUNUR(sandbox_state):
+    """10a'nın DAVRANIŞ kardeşi: aynı iddia üretim yolundan, gerçek olay kaydından ölçülür.
+
+    Sentetik ağaçta `secrets.json*` ailesi DÖRT dosyadır (`secrets.json` + `.tmp` + `.new` +
+    canlıda ölçülen `.bak-…`). Bunlardan biri tam ad kümesinde olduğu için olay ÜÇ ad taşımalıdır.
+    Liste BİREBİR karşılaştırılır: `adet` tek başına ölçülseydi "hangi üç" sorusu açık kalırdı."""
+    _canli_state_kur()
+    _kum_havuzu()
+    kayit = [e for e in store.read_jsonl("events.jsonl")
+             if e.get("event") == "sprint_kum_havuzu_atlandi"][0]
+    adlar = kayit.get("adlar", [])
+    assert "secrets.json" not in adlar, (
+        f"`secrets.json` olayda — TAM AD kümesinde, adı kodda yazılı; beyan 'gürültüdür' diyor "
+        f"ama kod bildiriyor (Rol-1 bulgusu B3): {kayit!r}")
+    assert sorted(adlar) == sorted([SIR_YEDEGI, "secrets.json.new", "secrets.json.tmp"]), (
+        f"olay 'adı önceden bilinmeyen' kümesini birebir taşımıyor: {kayit!r}")
+    assert kayit.get("adet") == 3, f"adet ↔ adlar ayrışık: {kayit!r}"
+
+
+# ==================================================================================================
+# 11 — `fnmatchcase` seçiminin GEREKÇESİ ölçülür (Rol-1 bulgusu B1, tur 2)
+# ==================================================================================================
+def test_11_desen_eslesmesi_KOSULSUZ_harf_duyarlidir_ve_normcase_bagimsizdir():
+    """TUR 1'DE GEREKÇE ÖLÇÜLMEDEN YAZILMIŞTI. Şerh "`fnmatch` macOS'ta harf-duyarsızdır, A1'de
+    duyarlı — iki makinede iki hüküm" diyordu. ÖLÇÜM (Rol-1, yerel `.venv`, 2026-09-21): macOS'ta
+    `os.path` `posixpath`tır ve `posixpath.normcase` KİMLİK fonksiyonudur, yani `fnmatch` orada da
+    harf-DUYARLIDIR; iddia edilen fark YOKTUR. `normcase` yalnız Windows'ta (`ntpath`) küçültür.
+
+    Motor dosyasındaki şerh bu depoda KANIT muamelesi görür, dolayısıyla yanlış gerekçe yanlış
+    koddan farksızdır (uydurma yasağı). Şerh düzeltildi; bu çivi düzeltilmiş hâlini ÖLÇER, böylece
+    gerekçe bir daha iddia olarak kalmaz.
+
+    İDDİA İKİ PARÇALIDIR ve ikisi de burada:
+      (a) TAŞIYICI, HER PLATFORMDA: `_desen_atlar` koşulsuz harf-duyarlıdır — `fnmatchcase`
+          `normcase`i HİÇ çağırmaz, dolayısıyla hüküm platforma bağlı değildir.
+      (b) BUGÜNKÜ DURUM: bu makinede `normcase` kimliktir, yani `fnmatch` ile `fnmatchcase` AYNI
+          sonucu verir — seçim bugünkü bir ayrışmayı DEĞİL, `normcase`i küçülten bir platforma
+          taşınma ihtimalini kapatır. Platform değişirse bu kol kendiliğinden öbür dala geçer."""
+    # (a) — platformdan bağımsız taşıyıcı iddia
+    assert sprint._desen_atlar("secrets.json.bak-1"), "kurulum çipası: küçük harfli ad eşleşmiyor"
+    assert not sprint._desen_atlar("SECRETS.json.bak-1"), (
+        "desen eşleşmesi harf-duyarsız — `fnmatchcase` yerine `normcase`e bağımlı bir eşleştirici "
+        "kullanılmış olmalı; aynı ad platforma göre farklı hüküm alır")
+    assert not sprint._desen_atlar("Secrets.JSON"), "desen eşleşmesi harf-duyarsız"
+
+    # (b) — bugünkü platformun ÖLÇÜLMÜŞ hâli; iddia değil, dallanan bir ölçüm
+    kimlik = os.path.normcase("Secrets.JSON") == "Secrets.JSON"
+    ornek, desen = "SECRETS.json.bak-1", sprint.SKIP_COPY_PATTERNS[0]
+    if kimlik:
+        assert fnmatch.fnmatch(ornek, desen) == fnmatch.fnmatchcase(ornek, desen), (
+            "`normcase` kimlik olmasına rağmen `fnmatch` ile `fnmatchcase` ayrışıyor — şerhin "
+            "'bugün POSIX'te aynı sonucu verir' cümlesi artık yanlış")
+    else:
+        assert fnmatch.fnmatch(ornek, desen) and not fnmatch.fnmatchcase(ornek, desen), (
+            "`normcase` küçültüyor ama `fnmatch` yine de eşleşmedi — şerhin 'fark yalnız normcase'i "
+            "küçülten platformlarda doğar' cümlesi ölçümle uyuşmuyor")
