@@ -3666,3 +3666,22 @@ içeriyordu; çivi kodu değil düzyazıyı ölçüyordu → AST'ye taşındı (
 **Suite #5 (10c4363c):** 13776 passed / 0 failed / 20 skipped, 13:27, yük 3,0 — üçlü hüküm yeşil.
 Bugün ana dala giren dilimler: TSK-208 · TSK-209 · TSK-207a · EDG-089 aracı · TSK-210 · TSK-211 ·
 TSK-211b · TSK-209b (8 dilim, 5 tam suite, 6 dar inceleme, 0 engelleyici kalan).
+
+### 20. TSK-209c + SUITE #6 + EDG-085 FAZLADAN GÜN (20:0xZ)
+**TSK-209c (v531; yedek birimi + sprint copytree).** Gece yedeği ExecStart'ına `--exclude="state/.secrets_*.tmp"`
++ `--exclude="state/tmp*.tmp"` (secrets.json/auth.json arşivde KALIR — yedek amacı, bedel çivisi); v531 v523
+çivi 7'nin tek yönlü bıraktığı yönü kapatır (örnek adlar config desenlerinden türer). `_kur_kum_havuzu`
+`copytree(ignore=_alt_dizin_suzgeci)`: `config.kopyalanmaz_mi` yalnız dosya adlarına, dizinler muaf, olayda
+`alt_dizin_atlanan` göreli yol. Canlı ölçüm: alt dizinlerde tek eşleşme `.locks/auth.json.lock`;
+`store._FileLock.acquire` kilidi yokluğunda yaratıyor → atlama zararsız (AST + davranış çivili).
+**BRİEF HATAM:** negatif çiviyi `history/` altına istemiştim; `_reset_sandbox_state` `history`yi rmtree'liyor —
+çivi süzgeci değil sıfırlamayı ölçecekti (sahte yeşil). Implementer yakaladı, `quarantine/`/`.locks/`a taşıdı.
+Ders: bir çivinin ölçtüğü yüzey, aynı akıştaki başka bir adımın sildiği yer olamaz — brief'e "hangi adım hangi
+dizini siliyor" ölçümü yazılmalı. İnceleme MERGE HAZIR / 0. Birleştirme b792d52. Birim CANLIYA İNMEDİ (A0
+site.yml + dağıtım).
+**EDG-085 fazladan taban günü** (kartın 5/5'i dolu, bu gün sayıma girmez, eşik değişmez): 85 örnek
+13:00:19→20:00:19Z; cpu medyan %1,43 · p95 %3,61 · maks %27,69; healthz_p50 medyan 1,40 / p95 1,60 ms;
+healthz_max p50 1,70 / p95 1,98 / maks 10,8 ms — tavan 51,90'ın çok altında, 5 seanslık tabanla (p95 1,90)
+tutarlı. ROADMAP TSK-013.
+**Suite #6 (51d05b7a):** 13795 passed / 0 failed / 20 skipped, 12:59 — üçlü hüküm yeşil. Gün toplamı: 9 dilim,
+6 tam suite (biri yük-flake ile beyanlı), 8 dar inceleme, 0 açık engelleyici. Dağıtım #63 hâlâ operatörde.
