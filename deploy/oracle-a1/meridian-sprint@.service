@@ -213,11 +213,18 @@ ProtectHome=read-only
 # --- AYRIŞMA 1/2 — ReadWritePaths BURADA DAHA DAR: ne `~/.hermes` ne `~/.cache`. ÖLÇÜM (yazan
 #     yollar tarandı): çocuk (a) kum havuzuna (state/sprint/<sid>/…), (b) canlı
 #     `state/sprint_status.json`a, (c) import anında `__pycache__`e yazar — üçü de /opt/meridian
-#     altındadır. `~/.hermes` YOK çünkü sprint LLM ÇAĞIRMAZ (sprint.py: "Sprint LLM ÇAĞIRMAZ:
-#     sprint_run yalnız reflect.search_and_submit koşturur"). `~/.cache` YOK çünkü ExecStart `uv`
-#     DEĞİL, doğrudan `.venv/bin/python`dır — uv önbelleği bu yolda hiç açılmaz.
-#     İLK KOŞUMDA JOURNAL İZLENİR: beklenmedik bir HOME yazımı çıkarsa arıza şekli EACCES/EROFS'tur
-#     ve `phase=error` ile `sprint_status.json`a düşer; onarımı `-/home/ubuntu/.cache` eklemektir.
+#     altındadır. `~/.hermes` YOK: sprint'in `daily_cycle` yolu `hermes.review_candidates`a ULAŞIR
+#     ama kum havuzunda KAPIDAN döner (TSK-212, sebep `kum_havuzu_llm_kapali`). Eski gerekçe
+#     ("sprint LLM ÇAĞIRMAZ") 2026-08-21→09-21 arası YANLIŞTI ve bedeli ölçüldü: kapı yokken hermes
+#     CLI salt-okunur HOME'da EROFS ile boş dönüyordu (268 çağrı, 268 boş, 0 görüş). Şerhin ÖNGÖRDÜĞÜ
+#     ARIZA ŞEKLİ DE YANLIŞTI: `phase=error` DEĞİL, `agent_bos` sebepli `candidate_review_skipped`
+#     satırları biçimindeydi — 1.126 satır, hiçbiri `sprint_status.json`a düşmedi. `~/.cache` YOK
+#     çünkü ExecStart `uv` DEĞİL, doğrudan `.venv/bin/python`dır — uv önbelleği bu yolda hiç açılmaz.
+#     YOL (b) REDDEDİLDİ: kum havuzuna HOME yazma izni + sağlayıcı anahtarı vermek, LLM kotasını
+#     antrenman replay'ine harcamak demektir — operatör kararıdır ve verilmemiştir. Çözüm kapıdır,
+#     izin genişletmesi değil; aşağıdaki yönerge DEĞİŞMEZ (çivi: test_kum_havuzu_review_kapisi_v532).
+#     İLK KOŞUMDA JOURNAL İZLENİR: beklenmedik bir HOME yazımı EACCES/EROFS verir; ARANACAK YER
+#     `phase=error` DEĞİL journal'ın kendisi + `candidate_review_skipped` ailesidir (yukarıdaki ders).
 ReadWritePaths=/opt/meridian
 PrivateTmp=true
 ProtectKernelTunables=true
