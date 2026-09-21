@@ -4,7 +4,8 @@ NE YAPAR. Canlı döngü işlem-kıtıdır: gemiye alınmış bir v2'nin min_sam
 kâğıt defterde yıllar alır, yani yansıt→sonuç döngüsü hiç kapanmaz. Sprint o döngüyü tarihi İLERİ
 veri üzerinde DAKİKALARDA ve dürüstçe kapatır: `start()` canlı state'i `state/sprint/<sid>` altına
 kopyalar (`_kur_kum_havuzu`; SKIP_COPY + SKIP_COPY_PATTERNS barları/sırları ve SIR YEDEKLERİNİ/pano
-kimlik kaydını/HALT'ı/SQLite artefaktını dışarıda tutar — karar tek yerde, `_atlanir`;
+kimlik kaydını/HALT'ı/SQLite artefaktını, TSK-209b'den beri atomik yazımın GEÇİCİ ARTIKLARINI da
+dışarıda tutar — karar tek yerde, `_atlanir`;
 bars + skills symlink'lenir), defterleri düz kitaba sıfırlar ve `sprint_run` çocuğunu KENDİ
 MERIDIAN_ROOT'uyla ayrı süreçte doğurur — canlı defter, karne ve koşan zamanlayıcıya dokunulmaz.
 Koşum yolu önce ayrı systemd birimidir (`meridian-sprint@.service`; worker restart'ı sprinti
@@ -129,13 +130,14 @@ SKIP_COPY_PATTERNS = config.SIR_DESENLERI
 
 
 def _desen_atlar(ad: str) -> bool:
-    """`_atlanir`ın DESEN BACAĞI — ad `SKIP_COPY_PATTERNS`ten biriyle eşleşiyor mu?
+    """`_atlanir`ın DESEN BACAĞI — ad bir SIR deseniyle (`SKIP_COPY_PATTERNS`) ya da bir GEÇİCİ
+    ARTIK deseniyle (`config.GECICI_ARTIK_DESENLERI`) eşleşiyor mu?
 
     AYRI FONKSİYON OLMASININ SEBEBİ İKİ TÜKETİCİDİR ve ikisi de üretimdedir: atlama kararı
     (`_atlanir`) ve bildirim kararı (`_yalniz_desenle_atlanir`). İkisi ayrı ayrı yazılsaydı ikinci
     bir eşleşme kopyası doğardı ve kopyalar sessizce ayrışır (tek-kaynak yasası).
 
-    EŞLEŞTİRMENİN KENDİSİ DE TEK YERDEDİR (TSK-209): gövde `config.sir_dosyasi_mi`ye devreder,
+    EŞLEŞTİRMENİN KENDİSİ DE TEK YERDEDİR (TSK-209): gövde `config.kopyalanmaz_mi`ye devreder,
     yani `api.api_debug_export` ile BU kapı aynı yüklemi çağırır. TAM AD BACAĞI BİLEREK BOŞ
     GEÇİLİR (`tam_adlar=frozenset()`): burası sözleşmesi gereği YALNIZ desen bacağıdır ve
     `_yalniz_desenle_atlanir` tam olarak "tam ad kümesinde OLMAYIP desenle yakalanan" ayrımına
@@ -151,8 +153,19 @@ def _desen_atlar(ad: str) -> bool:
     ayrışmayı değil, GELECEKTEKİ bir platform bağımlılığını kapatır: `fnmatchcase` `normcase`i hiç
     çağırmaz, dolayısıyla bu kapının hükmü koşulsuz harf-duyarlıdır ve taşınmayla değişmez.
     Eşleştirici artık `config.sir_dosyasi_mi` içindedir; seçim ORADA da aynı gerekçeyle yazılıdır.
-    Çivi (iddianın iki parçası da ölçülür): `tests/test_sprint_sir_yedegi_v523.py` çivi 11."""
-    return config.sir_dosyasi_mi(ad, tam_adlar=frozenset(), desenler=SKIP_COPY_PATTERNS)
+    Çivi (iddianın iki parçası da ölçülür): `tests/test_sprint_sir_yedegi_v523.py` çivi 11.
+
+    GEÇİCİ ARTIK İKİNCİ BİR DESEN BACAĞIDIR (TSK-209b, 2026-09-21) ve bu kapıya `config`in BİLEŞİK
+    yükleminden gelir. Ölçülen boşluk: atomik yazım yarıda kalırsa `state/` kökünde `mkstemp`
+    üretimi bir geçici dosya kalır, içeriği yazılan defterin içeriğidir (pano oturum imza anahtarı
+    dâhil) ve adı hiçbir SIR desenine benzemez — yani kum havuzuna KOPYALANIRDI.
+
+    ARTIK DESENLERİ İÇİN BURADA MODÜL GLOBALİ AÇILMADI, ve bu bir eksiklik değil KARARDIR.
+    `SKIP_COPY_PATTERNS` tarihî bir ÇİVİ YÜZEYİDİR (v523 çivi 4 onu boşaltarak ısırır); ikinci bir
+    yerel alias açmak, tek kaynağı (`config.GECICI_ARTIK_DESENLERI`) oynatan bir çivinin BU yüzeyi
+    oynatmamasına yol açardı — yani "tek kaynak" iddiası ölçülemez hâle gelirdi. Varsayılan
+    `config` içinde ÇAĞRI ANINDA okunur; çivi: `tests/test_gecici_artik_v530.py` çivi 5b."""
+    return config.kopyalanmaz_mi(ad, tam_adlar=frozenset(), desenler=SKIP_COPY_PATTERNS)
 
 
 def _atlanir(ad: str) -> bool:
