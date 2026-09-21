@@ -8,7 +8,7 @@
 # tool_calls'ı yapısal üreten modellerle kurulur (bugün ling-3.0-flash ailesi); (iii) recall arama katmanı değildir — arama sqlite-vec (TSK-167).
 
 card_id: EDG-2026-089
-status: measuring   # 2026-09-13 10:3xZ Rol-1 — kurulum canlı (dağıtım #40, timer 21:30Z etkin), PK(2) GERÇEK yeşil, PENCERE AÇIK 2026-09-13T10:23:08Z → hüküm 2026-09-20
+status: measured   # 2026-09-21 07:0xZ Rol-1 — KALDI (hukum_2026_09_21): K1 KALDI (retain başarı 6/7, banka artışı 5/7; eşik 7/7) · K2 GEÇTİ (otomatik delta tazeleme, EDG-080 K2'yi tersine çevirdi) · K3 KALDI (gerçek kullanım 0 sayfa, eşik ≥2); sökme/sürdürme kararı OPERATÖRDE (TSK-060, kolon kolon)
 family: hindsight_hafiza
 on_kayit: 2026-09-13
 selef: EDG-2026-083
@@ -92,3 +92,51 @@ gun_1_sayimi_2026_09_13: >
   DOLU sayılır); memory_units 17.259 (pencere öncesi 17.243, +16). K2: `refresh_mental_model` async işlemi 09-13'te
   11 completed (10:30Z bakım turu 11 sayfayı tazeledi; 09-07'den beri süren 'up-to-date' kilidi bir belgeyle açıldı).
   Gün-1 iki kolda DOLU. Araç her gün aynı tabloyu basar; hüküm 2026-09-20'de basari_tanimi ile (sayı = sayım, hüküm değil).
+
+hukum_2026_09_21: >
+  KALDI (Rol-1, 2026-09-21 06:3x–07:0xZ, A1 salt-okur). PENCERE 2026-09-13T10:23:08Z → 2026-09-20T10:23:08Z KAPANDI.
+  HÜKÜM BİR GÜN GEÇ VERİLDİ (kart günü 09-20; oturum 09-19 00:43Z'den 09-21 06:2xZ'ye kadar durdu — itiraf). Gecikme
+  pencereyi UZATMADI ve hiçbir eşiği değiştirmedi: bütün sayılar pencerenin KENDİ sınırlarıyla ölçüldü.
+  .
+  K1 — RETAIN KADANSI: KALDI. `async_operations` (kartın ölçüm_planındaki kaynak): pencere günlerinde retain op
+  status başarılı 6/7 — 2026-09-16 21:30:31Z `retain` + `batch_retain` FAILED, hata birebir: "RuntimeError: Fact
+  extraction failed: 1/1 chunks failed … NotFoundError: Error code: 404 … Function id '948fe171-…' version…"
+  (üst-akım sağlayıcı 404'ü, akışın kendi kodu değil). `memory_units` günlük artış ≥1: 5/7 — 09-16: 0 (düşen op);
+  09-18: op COMPLETED ama `unit_ids_count: 0`, `facts_committed: 0`, `extraction_errors_count: 0` → başarı ama
+  SIFIR ÇIKTI (belge retain edildi, bankadan hiç olgu çıkmadı). Günlük yeni olgu: 09-13:16 · 09-14:18 · 09-15:18 ·
+  09-16:0 · 09-17:10 · 09-18:0 · 09-19:13. memory_units 17.243 (pencere öncesi) → 17.329 (2026-09-21 ölçümü).
+  Eşik k1_retain_gun=7 (7/7) → KALDI. kill_list gereği dolmayan gün pencereyi UZATMAZ.
+  .
+  K2 — OTOMATİK ZİHİN-MODELİ TAZELEMESİ: GEÇTİ. `refresh_mental_model` completed: 09-13:11 · 09-14:11 · 09-15:11 ·
+  09-16:7 · 09-17:11 · 09-19:11; 09-18 ve 09-20 sıfır. Kartın cron tanımıyla (09-14…09-20) 5/7, pencerenin açıldığı
+  günden (09-13…09-19) 6/7 — İKİSİ DE eşik k2_otomatik_refresh_alt=5'i karşılar, yani sayım sınırı hükmü
+  değiştirmiyor. failed (429-dışı) = 0 ≤ 1 GEÇTİ. effective_mode=delta: completed opların HEPSİ `delta_ops_applied`
+  taşıyor (örn. 11 ve 3) → delta ≥5/7 GEÇTİ. Kill-list koşulu tuttu: her op `task_payload._automatic: true` —
+  sayıma HİÇBİR elle tazeleme girmedi.
+  BU KOL EDG-2026-080 K2'nin KALDI hükmünü TERSİNE ÇEVİRDİ: "sayfalar ancak banka BÜYÜRKEN tazelenir" teşhisi
+  doğruymuş; girdi akışı kurulunca 7 gecede 1 olan otomatik tazeleme 7 gecede 6'ya çıktı.
+  .
+  K3 — UYDURMA + GERÇEK KULLANIM: KALDI. Gerçek kullanım 0 sayfa (eşik k3_gercek_kullanim_sayfa_alt=2): pencere
+  içinde hiçbir karara `kaynak: zihin modeli <ad> v<n>` atfı yazılmadı; depodaki tek atıf 2026-09-06 tarihli
+  (EDG-083'ün S2 sayfası), pencere DIŞI. Uydurma oranı kolu YENİDEN ÖLÇÜLMEDİ — gerekçe: K3 bir konjonksiyondur ve
+  kullanım kolu düştüğü için oran hükmü değiştiremez; anlık görüntü + uydurma_say.py hattını koşmanın karar değeri
+  yok. Sayı UYDURULMADI, ölçülmedi olarak beyan edildi (uydurma yasağı).
+  .
+  ARAÇ KUSURU (bulgu, hükme dahil değil ama halef kartı bağlar): `research/olcumler/edg089_retain_akisi/sayim.py`
+  K1'i "betik `defter_ozeti_retain` olayında sonuc∈{retain, zaten_var} bastı mı" diye ölçüyor — yani TESLİMİ
+  (submission), kartın ölçüm_planı ise `async_operations` retain STATUS'ünü + banka artışını istiyor. 09-16'da ikisi
+  ÇELİŞTİ: araç `k1_dolu_gun: 7` (7/7 DOLU) derken banka o günü FAILED gösteriyor. Hüküm KARTA göre verildi (eşik
+  sonradan değişmez). Aracın K1 kolu eşiği HAK ETMEDEN GEÇME yönünde yanlı; halef kart kullanmadan önce düzeltilmeli.
+  .
+  İKİ HÜKÜM CÜMLESİ (basari_tanimi "kolon kolon" şartı):
+  (1) AKIŞ: retain akışı kuruldu ve 7 günün 6'sında çalıştı; tek düşüşün sınıfı ÜST-AKIM SAĞLAYICI ARIZASI (404),
+      akışın kendi kodu değil. Eşik 7/7 olduğu için K1 KALDI, ama "akış çalışmıyor" DEĞİL "akış üst-akıma kırılgan".
+      Akışın sökülmesi bu ölçümden ÇIKMAZ.
+  (2) SAYFALAR/KULLANIM: sayfalar artık gerçekten tazeleniyor (K2 GEÇTİ) ama kararlara HÂLÂ girmiyor (K3 kullanım 0).
+      Bu üst üste ÜÇÜNCÜ aynı sonuç (EDG-083 KALDI · EDG-084 KALDI · EDG-089 KALDI): içerik doğru, karara girmiyor.
+  .
+  K defteri: EDG-089-retain-kadans = KALDI · EDG-089-k2-otomatik-tazeleme = GEÇTİ · EDG-089-sayfa-uydurma-kullanim
+  = KALDI (K=3 harcandı, kayıt k_registry trial_ids ile birebir).
+  SONUÇ: kart KALDI → dokuz kapılı kalem (TSK-161/163/164/165/166/169/170 + TSK-142 + TSK-168 kapanışı) AÇILMAZ;
+  tetik "EDG-089 hükmü GEÇTİ" ateşlemedi. TSK-060 sökme/sürdürme kararı OPERATÖRDE ve kolon kolon (yukarıdaki iki
+  cümle). hafıza: recall koşuldu (2026-09-21, bu tur); kart_benzer selef/ref zaten kayıtlı.

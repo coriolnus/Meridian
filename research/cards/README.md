@@ -54,7 +54,7 @@ Toplam **115** kart.
   · HÜKÜM: ön-kayıt 2026-08-31; uygulama kart-önce kuralıyla sonra
   · kart: `EXE-2026-010-hakem-ts-anahtari.yaml`
 
-### Ölçümde (8)
+### Ölçümde (7)
 
 - **EDG-2026-042** (`measuring`) — Sistemin EN KARAR-KRİTİK bilinmeyen sayısı artık gerçek icra friksiyonunun SEVİYESİ.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı, İLK (betimleyici) ara-koşum yapıldı.
@@ -74,14 +74,11 @@ Toplam **115** kart.
 - **EDG-2026-088** (`measuring`) — 
   · HÜKÜM: 2026-09-13 Rol-1: pencere B1 dağıtımıyla (#37 dce388c, 2026-09-12T22:08:34Z) AÇIK — `pencere_kaydi_2026_09_12`; önceki: registered (2026-09-08 ön-kayıt; gölge defteri…
   · kart: `EDG-2026-088-uyuyan-kurulum-golge-pilot.yaml`
-- **EDG-2026-089** (`measuring`) — 
-  · HÜKÜM: 2026-09-13 10:3xZ Rol-1 — kurulum canlı (dağıtım #40, timer 21:30Z etkin), PK(2) GERÇEK yeşil, PENCERE AÇIK 2026-09-13T10:23:08Z → hüküm 2026-09-20
-  · kart: `EDG-2026-089-hindsight-retain-akisi-yeni-pencere.yaml`
 - **EXE-2026-003** (`measuring`) — 4b gölge katmanı yalnız SİLAHLANMIŞ planların dakika-hassas dolumunu yazıyor (6 seansta 4 satır).
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`
 
-### Ölçüldü (67)
+### Ölçüldü (68)
 
 - **BASE-2026-001** (`measured`) — Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net −5.542 USD).
   · HÜKÜM: 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1): CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146 seans, bugünkü motor+canlı v3…
@@ -227,6 +224,9 @@ Toplam **115** kart.
 - **EDG-2026-084** (`measured`) — 
   · HÜKÜM: 2026-09-14 05:19Z hüküm `hukum_2026_09_14` — KALDI (gerçek kullanım 0/5 sayfa; içerik 5/5 ve uydurma %95.4 GEÇTİ); ÖNCEKİ: measuring # 2026-09-07 01:1xZ — beş sayfa…
   · kart: `EDG-2026-084-zihin-modeli-ek-sayfalar-ii-uretici-okuyucu-acik-sorular.yaml`
+- **EDG-2026-089** (`measured`) — 
+  · HÜKÜM: 2026-09-21 07:0xZ Rol-1 — KALDI (hukum_2026_09_21): K1 KALDI (retain başarı 6/7, banka artışı 5/7; eşik 7/7) · K2 GEÇTİ (otomatik delta tazeleme, EDG-080 K2'yi tersine…
+  · kart: `EDG-2026-089-hindsight-retain-akisi-yeni-pencere.yaml`
 - **EDG-2026-090** (`measured`) — 
   · HÜKÜM: 2026-09-13 19:30Z hüküm `hukum_2026_09_13` — HİPOTEZ TUTMADI (A/B/C katkısız, birleşik 0,2466 > 0,05); kalan fark R PAYDASI → ardıl EDG-2026-091; ÖNCEKİ: registered —…
   · kart: `EDG-2026-090-golge-gercek-ayrisma-teshisi.yaml`
