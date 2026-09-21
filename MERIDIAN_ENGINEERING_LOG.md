@@ -3641,3 +3641,28 @@ Dağıtım #63 akşam penceresine kaldı (12:50Z geçti, operatör koşmadı).
 Dış yük yokken süre normale döndü (#3: 29 dk, yük 25). v217 p95 çivisi bu kez YEŞİL — #3'teki
 kırmızının yük-flake hükmü doğrulandı. Gönderim: e84aa51 → bu commit (13 commit: 3 birleştirme,
 3 tur-2 docstring, 2 CLAUDE.md/store yorum, 3 ROADMAP, 1 günlük).
+
+### 19. AKŞAM İKİNCİ DALGA — TSK-211b + TSK-209b (iki paralel worktree, iki Sonnet incelemesi, suite #5)
+**TSK-211b (v529 + v525 ek + codelaw docstring).** Körlüğü DONDURAN beyan çivisi: sentetik `store.py` +
+`store.Depo.db` → üç kovada da yok = BORÇ; sağlam çapa `cozulen`e, jetonsuz nitelikli çapa `curuyen`e
+(vakum-yeşil ve pozitif kontrol); canlı borç defteri iki ad. **Implementer bulgusu:** öğlen kabul ettiğim
+codelaw docstring'inin "sınıf biçimli affedilen = 0" sayısı BAYATTI — KAYIP AÇIK fıkrasının KENDİ örnekleri
+ağaca yazılınca 2 oldu (kendine referanslı bayatlama; sayı fıkra eklenmeden önce ölçülmüştü). Gerçek
+tarayıcıyla yeniden: 171 çok parçalı · 20 affedilen · 8 modülü çözülen · 2 sınıf biçimli; kendine-referans
+cümlesi bilerek backtick'siz yazıldı (yoksa sayı 2→4 olur, cümle kendini yanlışlardı). TSK-207a üçlü
+senaryo (aday + çıkış + kesişim) v525'e eklendi — kodun beklentisi sapmasız, kod değişmedi. İnceleme
+MERGE HAZIR / 0. Birleştirme a0bf67d.
+**TSK-209b (v530; config/secrets/api/sprint).** Atomik yazım geçici artıkları: `store.write_text` →
+`tmpXXXX.tmp` (state kökü, yazılan içerik), `secrets._write_file` → `.secrets_XXXX.tmp` (sır içerikli,
+gizli ad); hiçbir desen tanımıyordu. Canlıda 18:25Z'de artık 0 — sınıf yapısal. Tur 1: iki yolda
+hata-dalı unlink ZATEN VARDI (brief varsayımım düştü; ajan doğru davranıp dokunmadı). Sınıflandırma:
+`.secrets_*.tmp` sır, `tmp*.tmp` geçici (`GECICI_ARTIK_DESENLERI`), bileşik `kopyalanmaz_mi` iki yüzeyde;
+near-miss `temp≠tmp`. Tur 2 (Rol-1 kararı): `secrets._write_file` `except Exception → BaseException`
+(unlink + çıplak raise; store ile birebir) — KeyboardInterrupt sır artığı bırakmaz; SIGTERM bacağı
+ÖLÇÜLMEDİ (SystemExit doğurmaz). **Ajan sahte yeşil yakaladı:** dizge-çivisi `inspect.getsource`
+METNİNDE `except BaseException:` arıyordu ve mutasyonu ısırmadı — çünkü docstring o dizgeyi zaten
+içeriyordu; çivi kodu değil düzyazıyı ölçüyordu → AST'ye taşındı (`ast.ExceptHandler.type`), ısırdı.
+İnceleme MERGE HAZIR / 0. Birleştirme 1a401a56. Beyanlı boşluk: alt dizin artıkları (`copytree`).
+**Suite #5 (10c4363c):** 13776 passed / 0 failed / 20 skipped, 13:27, yük 3,0 — üçlü hüküm yeşil.
+Bugün ana dala giren dilimler: TSK-208 · TSK-209 · TSK-207a · EDG-089 aracı · TSK-210 · TSK-211 ·
+TSK-211b · TSK-209b (8 dilim, 5 tam suite, 6 dar inceleme, 0 engelleyici kalan).
