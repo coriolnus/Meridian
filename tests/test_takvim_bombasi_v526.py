@@ -64,6 +64,46 @@ AÇIK KALAN (Rol-1'e): Rol-1 kararı 2 b-kolunu "doğrudan `date.today()`/`datet
 çağrısı" diye de okumaya açıktı; kararı 5 ise tarih üreten yardımcıların kırmızı olmamasını
 şart koşuyordu. İkisi `test_geridolum_ileri_dolum_v483.py`te ÇARPIŞIYOR. Bu dosya kararı 5'i
 (daha özel şartı) uyguladı ve gevşek kolun farkını ölçülü bıraktı; hüküm Rol-1'indir.
+
+KAYIP AÇIK — BU ÇİVİNİN BİLİNÇLİ KÖR NOKTALARI (Rol-1 direktifi, tur 2, 2026-09-21). Beyan
+BURADA yaşar, devir raporunda DEĞİL: rapor scratchpad'dedir ve kaybolduğu gün beyan da
+kaybolurdu. Bir tarayıcının ne GÖRMEDİĞİ, ne gördüğü kadar sözleşmedir.
+
+KÖR NOKTA 1 — TOHUM DESENİ BİÇİME BAĞLI. `_pencere_ifadesi` yalnız `<bugün> - <süre>`
+çıkarmasını tanır. Pencereyi BAŞKA türlü hesaplayan bir üretim fonksiyonu (`relativedelta`,
+ay/çeyrek aritmetiği, gün alanını değiştirerek ay başına inen biçimler) tohum listesine GİRMEZ
+ve yasa o yüzeyde KÖRDÜR — çivi, bilinen vokabülerle konuşulmadığında ÖTMEZ.
+  BEDEL ÖLÇÜLDÜ (2026-09-21): `meridian/` altında `relativedelta` kullanımı 0, `monthrange` ve
+  gün/ay alanını değiştiren biçim 0. Kör nokta bugün BOŞ — ama bu "yok" değil "HENÜZ DOĞMADI"
+  demektir; boşluk bir güvence değil, bir sayaç durumudur.
+  YENİDEN ÖLÇÜM TETİĞİ: `meridian/` altında ilk `relativedelta` (ya da ay/çeyrek aritmetiğiyle
+  pencere kuran ilk fonksiyon) doğduğu GÜN tohum deseni genişletilir ve bu iki sayı yeniden
+  ölçülür. Genişletmeden ÖNCE `test_5d`/`test_5f`in koruduğu çıkarma ve yön şartlarının ne
+  kaybettiği de sayılır — gevşeyen desen yanlış alarm üretir (bedel yasası, iki yönlü).
+
+KÖR NOKTA 2 — KAPANIŞ AYNI MODÜLLE SINIRLI. `_uretim_ciftleri` tohumu yalnız AYNI dosyadaki
+çağıranlara yayar; BAŞKA bir modüldeki sarmalayıcı listeye girmez.
+  BEDEL ÖLÇÜLDÜ (2026-09-21): bugün YEDİ üretim fonksiyonu bu boşlukta duruyor (dokuz çağrı
+  kenarı) — `analytics.coverage_breakage_counters`, `api.api_diagnostics`, `api.api_selfreview`,
+  `api.summary`, `hermes.integrations_status`, `loop.daily_cycle`, `scheduler.advance_once`.
+  CANLI BEDELİ SIFIR: literal taşıyan 29 dosyanın HİÇBİRİ bu yedi yüzeyden birini çağırmıyor,
+  yani boşluk bugün hiçbir bombayı gizlemiyor.
+  NEDEN GENİŞLETİLMEDİ — TERCİH DEĞİL, ÖLÇÜM: isim-tabanlı geçişli kapanış bu turda denendi ve
+  1731 ADA PATLADI; takma ad çözümü olmayan çıplak ad eşleşmesi (`main`/`fetch`/`build`/`ozet`
+  gibi adlar yüzünden) 100'DEN FAZLA test dosyasını sahte kırmızı yaptı. İki alternatif de
+  ölçülerek reddedildi.
+  YENİDEN ÖLÇÜM TETİĞİ: yukarıdaki yedi yüzeyden biri literal taşıyan bir test dosyasından
+  çağrıldığı gün (ya da liste büyüdüğünde). O zaman yazılacak şey NİTELİKLİ modüller-arası
+  kapanıştır — import çözümüyle, İSİMLE DEĞİL — ve patlama sayısı yeniden ölçülür.
+
+ÖLÇÜLMEDİ (dürüst boşluk, uydurma yasağı): `meridian/` DIŞINDAKİ pencere üreticileri. `ops/`
+ve `deploy/` altındaki sürücüler HİÇ taranmıyor; bir test dosyası oradan pencere tüketirse bu
+çivi GÖRMEZ. Kaç böyle yüzey olduğu bu turda ölçülmedi — kapsam genişletmesi ayrı bir turun işi.
+
+SAYI DÜZELTMESİ (Rol-1'in hatası, tur 1'de ölçülerek bulundu): brief "`tests/` altında 19 dosya
+modül düzeyi literal taşıyor" diyordu. O sayı `^[A-Z_]+ = "2026-…"` DAR deseniyle ölçülmüştü ve
+ad içinde RAKAM taşıyan sabitleri (`D0`/`D1`) ile 2026 dışı yılları kaçırıyordu. Bu dosyanın
+sevk edilen deseniyle gerçek sayı 29'dur (2026 taşıyan 21). Hüküm değişmedi: 29'un da hepsi yeşil.
 """
 from __future__ import annotations
 
