@@ -3356,3 +3356,173 @@ BİTTİ: pending 0, failed 0, gözlem 5996 (EDG-081 zinciri m2.7 426/426). r4: 7
 - **TSK-064 (Vault) — üç adım:** (a) `--envanter` (izinli): karşılaştırılabilen tüm kopyalar EŞİT; `.dash.env` OKUNAMADI çünkü A1'de YOK (operatör 09-14 17:46Z sildi) ama rotasyon tablosu taşıyordu; beyan dışı `GEMINI_API_KEY` kopyası. (b) Salt-okur tüketici haritası: apisix/hindsight yan dosyadan almaya devam eder, hermes HAYIR (kalıcı iki-kanal); OpenRouter/APISIX referansı silinecek asıl dosyanın kendisi → d-1 (v520): `.dash.env` tablodan, referanslar Vault tekil hedefine, envanter YOK≠OKUNAMADI; RUNBOOK Rol-1 yeniden üretti; suite #67 13564/0 (26 dk — yük ortalaması ~20, Copilot/fsmonitor). (c) Yapısal açık: dash/apisix-admin/nous/db-url Agent render hedefi (1 dk) ama kasaya bağlı değildi → eski yol rotasyonu sessizce geri alınabilir (A1'de ölçülmedi) → Karar A: dalga-1'e yalnız `rotasyon_siri` (v485 dar gevşeme), `--openrouter --vault` iki sırlı tur (boş sır ADIYLA atlanır), `--db` uyarı (v521); suite #68 13606/0. Dağıtım #61 20:05Z sonrası.
 - **EDG-085** CPU tabanı 3/5 (09-16 geçerli). **EDG-089** ara durum: K1 retain 4/7; K3 gerçek-kullanım atfı 0 → hüküm günü 09-20'de KALDI riski (EDG-083/084 ile aynı sınıf). Bağlı yedi kalemdeki "~09-28" tahmini karttaki 09-20 ile düzeltildi.
 - **Kendi hatalarım:** (1) TSK-197 brief'inde systemd tırnak sökmesini yanlış anlattım; (2) TSK-206 brief'inde `unverifiable_claims` SAYISINI adları okumadan iki sırla eşleştirdim (yanlıştı, hafıza `kalemin-isi-de-olcumden` EK); (3) tar/PIPESTATUS ölçüm tuzağına iki kez düştüm; (4) iki `v209` dosyasını komut ikamesiyle verdim (pytest çıkış 4); (5) `grep -c` 0 eşleşmesinin çıkış kodu bir `&&` zincirini kesti; (6) gece özetinde bağlı kalemlerin tarihi olarak eski "~28 Eylül"ü operatöre aktardım.
+
+### 2026-09-21 sabah (Rol-1, operatör "devam et") — iki gün duran oturum, üç günlük canlı fonksiyon kaybı, gecikmiş bir kart hükmü, bir takvim bombası
+
+
+**Bağlam.** Oturum 2026-09-19T00:43Z'de (470f086, EDG-085 tabanı) durdu ve 09-21T06:2xZ'de
+sürdü — ~53 saat. Bu sürede iki tetik penceresi geçti: 09-20 EDG-2026-089 hükmü (kaçırıldı,
+aynı gün telafi edildi) ve 09-18 gecesi başlayan bir canlı arıza (kimse bakmadığı için 3 gün
+bağırdı).
+
+### 1. CANLI ARIZA — öğrenme antrenmanı 3 gündür hiç başlamıyor (TSK-208)
+Oturum-başı triyajda `meridian.service` olay sınıflandırması: 48 saatte **261 uyarı**, hepsi
+tek sınıf `sprint_cadence_failed`. Önceki gece özeti (09-18 05:53Z) "son 6 saatte 2 uyarı"
+demişti — yani sınıf O ÖZETTEN SONRA doğdu.
+
+ÖLÇÜM (A1 salt-okur): 283 olay, ilk 2026-09-18T22:13:07Z, son 09-21T05:56Z; journal 2026-07-30'a
+kadar gidiyor → bu 283 olay TARİHÇENİN TAMAMI, retention kesmesi değil. Son başarılı
+`sprint_cadence_start` **2026-09-11T22:09:43Z**.
+
+Hata birebir: `PermissionError: [Errno 13] … '/opt/meridian/state/secrets.json.bak-20260915T073825Z-tsk189'`.
+
+KÖK NEDEN: `meridian/sprint.py::_kur_kum_havuzu` canlı `state/` kökünü gezip `item.name in SKIP_COPY`
+dışındaki her şeyi kopyalar; `SKIP_COPY` TAM AD kümesidir. `secrets.json` üye, `secrets.json.bak-…`
+değil. Canlıda `state/` kökünde `ubuntu`nun okuyamadığı TEK girdi o dosyadır (root:root 0600; servis
+`User=ubuntu`).
+
+NEDEN TAM O AN: dosya 09-08'den beri oradaydı. 09-18T22:03Z kaydı `sprint_cadence_skip ·
+sebep="tetik_yok(gun=6<7, taze=0<5)"` — haftalık tetik 7. günde doldu, ilk gerçek başlatma denemesi
+22:13'te oldu ve İLK denemede düştü. **Arıza dosyanın doğuşuyla değil TETİĞİN DOLMASIYLA göründü**;
+aradaki 10 gün sessiz bir kuluçkaydı.
+
+SINIF — ÜÇÜNCÜ TEKRAR: `SKIP_COPY`nin kendi şerhi sınıfı iki kez adlandırmış ("denylist state'e yeni
+gelen artefaktları sessizce kaçırır": `bars_intraday`, sonra `meridian.db`). Farkı bu kez SESSİZ değil
+GÜRÜLTÜLÜ düşmesiydi — Yasa 4 çalıştı, üç gün bağırdı, dinleyen olmadı.
+
+**ÇÖZÜM BİÇİMİ DEPODA ZATEN VARDI:** TSK-197 (09-17) AYNI dosya ailesinin gece yedeği `tar`ını
+kırmasını `--exclude="state/secrets.json.bak-*"` DESENİYLE çözmüştü. Sprint tarafı ondan habersizdi.
+İki yüzey artık ayrışma çivisiyle bağlandı.
+
+**KENDİ HATAM — operatöre yanlış güvence:** 09-18 gece özetinde "o sır yedeği dosyası artık zarar
+vermiyor, silmek isteğe bağlı" yazmıştım. Yedekleme tarafını düzeltmiştim ve DÜZELTTİĞİM YERİ
+SINIFIN TAMAMI SANDIM. Aynı dosya o cümleyi yazdığım gece ikinci bir yerden sistemi kırdı. Ders:
+bir sınıfın bir örneğini kapatmak sınıfı kapatmaz — "artık zarar vermiyor" demek, sınıfın DİĞER
+yüzeylerini aramadan verilebilecek bir güvence değildir.
+
+### 2. AYNI SINIFIN İKİNCİ YÜZEYİ (TSK-209)
+Sınıf taraması yaptım: `state/` kökünü gezen üç yer daha var.
+- `meridian/api.py::api_debug_export` — `skip = {"secrets.json"}` TAM AD, ve state kökündeki
+  `.json/.jsonl/.yaml/.csv` uzantılı HER dosyayı paylaşılabilir zip'e yazar. Bugünkü sır yedeğini
+  pakette tutan şey sır dışlaması DEĞİL, dosyanın uzantısının (`.bak-2026…`) izinli listede
+  olmaması. `secrets.bak.json` olsaydı suffix `.json` olur ve ANAHTARLARLA pakete girerdi.
+  Docstring "anahtar sızdırmayan, paylaşilabilir teşhis paketi" diyor → vaat ile mekanizma ayrışmış.
+- `meridian/recompute.py` yetim taraması aynı dosyayı `*.json*` ile GÖRÜR ama yalnız `stat()` çağırır
+  (okuma yok) → çökmez; bedeli yalnız yetim listesinde yanlış-pozitif. Ayrı kalem açılmadı, Ref'e yazıldı.
+
+### 3. EDG-2026-089 HÜKMÜ — KALDI (bir gün geç)
+Hüküm günü 09-20'ydi, 09-21'de verildi (oturum durmuştu). Pencere UZATILMADI, eşik DEĞİŞMEDİ,
+bütün sayılar pencerenin kendi sınırlarıyla ölçüldü.
+- **K1 KALDI:** `async_operations` retain başarı **6/7** (09-16 21:30:31Z üst-akım sağlayıcı 404'ü:
+  "Fact extraction failed: 1/1 chunks"), `memory_units` günlük artış **5/7** (09-16: 0 düşen op;
+  09-18: op COMPLETED ama `unit_ids_count: 0`/`facts_committed: 0` → **başarı ama sıfır çıktı**).
+- **K2 GEÇTİ:** otomatik `refresh_mental_model` 6/7 gece (kart cron tanımıyla 5/7 — ikisi de eşik
+  ≥5'i karşılar), failed 0, hepsi delta, hepsi `task_payload._automatic: true`. Bu kol
+  **EDG-2026-080 K2'nin KALDI hükmünü TERSİNE ÇEVİRDİ**: "sayfalar ancak banka büyürken tazelenir"
+  teşhisi doğruymuş; girdi akışı kurulunca 7 gecede 1 olan tazeleme 7 gecede 6'ya çıktı.
+- **K3 KALDI:** gerçek kullanım 0 sayfa (eşik ≥2). Uydurma oranı kolu konjonksiyon düştüğü için
+  yeniden ÖLÇÜLMEDİ — sayı uydurulmadı, beyan edildi.
+
+**ARAÇ KUSURU (ölçüm aletinin kendisi):** `research/olcumler/edg089_retain_akisi/sayim.py` K1'i
+"betik `defter_ozeti_retain` olayında `sonuc∈{retain, zaten_var}` bastı mı" diye ölçüyor — yani
+TESLİMİ. Kartın `olcum_plani`'si ise `async_operations` retain **STATUS**'ünü + banka artışını
+istiyor. 09-16'da ikisi ÇELİŞTİ: araç `k1_dolu_gun: 7` (7/7 DOLU) derken banka FAILED gösteriyordu.
+Hüküm KARTA göre verildi. Aracın K1 kolu **eşiği hak etmeden geçme yönünde yanlı** (CLAUDE.md §5'in
+adlandırdığı yanlılığın ta kendisi) ve halef kart kullanmadan önce düzeltilmeli.
+
+**ÇELİŞKİ SESSİZCE ÇÖZÜLMEDİ:** TSK-142'nin KENDİ tetiği "EDG-089 hükmü (K2 kolu) GEÇTİ" idi ve K2
+kolu gerçekten geçti; ama kartın `basari_tanimi`'si dokuz kapılı kalemi yalnız kart GENELİ geçerse
+açıyor. İki kural zıt yönü gösterdi. Kart kapısı üst kural → kalem açılmadı, ama madde `OPERATOR`e
+alındı ve çelişki metne yazıldı. Diğer yedi kalemin tetiği "TSK-060 operatör kararı"na çevrildi.
+
+### 4. KENDİ HATALARIM (bu turda)
+1. **Yanlış güvence** — §1'deki "artık zarar vermiyor" cümlesi (sınıfın bir örneğini kapatıp sınıfı
+   kapandı saymak).
+2. **Yanlış port** — canlı sağlık kontrolünü 8000'den sordum (gerçek: 8080), bir tur "000" okudum.
+   Hafızadan port yazdım, ölçmedim.
+3. **ROADMAP regex'i** — 7 maddenin `status:` alanını `GATED\([^)]*\)` ile değiştirdim; eski metinde
+   "operatör **(b)** melez+retain" geçtiği için regex ilk `)` ile kapandı ve 7 madde bozuldu.
+   v351 çivisi yakaladı (35 ihlal). Alan sınırını (` · born: `) kullanarak yeniden yazdım. Ders:
+   serbest metinde parantez sayan regex yazma, ALAN SINIRINI kullan.
+4. **Brief'te iki uydurma dosya adı** — kapsam listesine `test_sprint_kadans_v186.py` ve
+   `test_integrity_registry_v152.py` yazdım; ikisi de YOK, o numaralar başka dosyalara ait.
+   Implementer yakaladı. Listedeki her adı `ls` ile ölçmeliydim.
+
+### 5. İNCELEME AJANININ İTİRAFI — Rol-1 hükmü: KABUL, temiz tekrar İSTENMEDİ
+Dar inceleme ajanı raporunun başında itiraf etti: `fnmatch` davranışını doğrulamak için iki kez
+stdlib-only `python3 -c` koştu (meridian import edilmedi, `state/`e temas yok) — brief'imdeki
+"pytest dışında hiçbir betik koşma" MUTLAK kısıtını harfen ihlal etti ve "Rol-1 temiz bir tekrar
+isteyebilir" dedi.
+
+**Hüküm: kabul, tekrar yok.** Gerekçe: CLAUDE.md §2'nin gerçek kuralı MUTLAK DEĞİL KOŞULLUDUR —
+"pytest DIŞI bir betik/komut koşmak → `meridian.obs`'a ulaşabilir mi? Ulaşıyorsa canlı yerel deftere
+YAZAR". Stdlib `fnmatch` kontrolü obs'a ulaşamaz, `state/`e yazamaz; kuralın koruduğu zarar yolu
+kapalı. Üstelik o koşum, benim bağımsız olarak aynı sonuca vardığım bir ölçümü DOĞRULADI; temiz
+tekrar istemek doğru bir sonucu atıp jeton yakmak olurdu.
+
+**ASIL HATA BENDE — brief yasadan DAHA SIKI yazılmıştı.** "Hiçbir betik koşma" dedim; yasa
+"obs'a ulaşan betik koşma" diyor. Aşırı-sıkı kısıt iki kötü sonuçtan birini üretir: ajan ya
+ölçmeden konuşur (uydurma) ya da ölçer ve ihlal itiraf eder (bu tur). Ders: brief'e YASAĞI değil
+yasağın GEREKÇESİNİ yaz — "obs'a ulaşan / `state/`e yazan / ops aracı olan hiçbir şeyi koşma;
+stdlib-only doğrulama serbest ve TERCİH EDİLİR".
+
+### 6. TSK-208 inceleme sonucu
+- Dar inceleme (Sonnet): **MERGE HAZIR, 0 engelleyici**. Bağımsız olarak doğruladı: daraltma riski
+  yok, SR4 ailesi bozulmuyor, `obs` olayı yalnız ad taşıyor ve yazımı kurulumu düşürmüyor,
+  `auth.json` okuyucu ölçümü yeniden üretildi, ayrışma çivisi v517'den İTHAL (kopya değil),
+  yedek birim dosyası dokunulmamış, M1/M3 mutasyonları log'larla birebir eşleşti.
+- **Rol-1'in kendi incelemesi 3 kalem buldu** (ikisi engelleyici) — inceleme ajanı bunlardan yalnız
+  birini (B1) yakaladı:
+  - **B1** `_desen_atlar` şerhindeki `fnmatch`/`normcase` gerekçesi ölçümle yanlış (seçim doğru).
+  - **B3** bildirim kodun kendi beyanıyla çelişiyor: `secrets.json` tam ad kümesinde üye OLDUĞU
+    HÂLDE desen bacağından geçip olaya giriyor; canlıda `adet=1` değil `adet=2` basacaktı ve
+    bildirimin ayırt etme gücü (adı önceden bilinmeyen kaç girdi atlandı) yok oluyordu.
+  - **B4** `auth.json` şerhindeki "bugüne kadar her kum havuzuna kopyalanıyordu" iddiası ölçülmemiş;
+    A1'de bugün 0 kopya var ama bu da çürütmüyor — mevcut dört ağaç DÜŞEN koşumların yarımları.
+    Şerh "kod yolundan çıkarım, canlı kanıt bugün ölçülemez" demeli.
+
+### 7. SUITE #71 — HARNESS ÜÇÜNCÜ KEZ YALAN SÖYLEDİ, VE GREP AYAĞI DA YANILTTI
+Tam suite (donmuş ağaç, `-n 4 --dist worksteal -rs`) bitti; harness bildirimi **"completed (exit
+code 0)"** dedi. DOSYA ise `1 failed, 13674 passed, 20 skipped` ve **`PYTEST_EXIT=1`** diyordu.
+CLAUDE.md §6'nın "harness bildirimi pytest'in hükmü DEĞİLDİR" maddesinin ÜÇÜNCÜ vakası (önceki
+ikisi 2026-08-29/30).
+
+**YENİ BULGU — üçlünün İLK ayağı da yanıltıcıydı:** `grep -E "FAILED|ERROR" out.log` **BOŞ** döndü
+hâlde suite kırmızıydı. Sebep: `pyproject` addopts'ta `-q` var, kırmızı satır `FAILED` jetonuyla
+basılmıyor (short summary bastırılmış). Yani üçlü hükmün iki ayağı (harness bildirimi + FAILED
+grep'i) aynı anda yeşil derken hüküm KIRMIZIYDI; kurtaran tek şey ÜÇÜNCÜ ayak (`PYTEST_EXIT`) ve
+özet satırındaki `1 failed` oldu.
+**Ders (CLAUDE.md §6 için aday):** grep deseni `FAILED|ERROR` yetmez, `[0-9]+ failed` de aranmalı —
+ya da özet satırı `passed` VE `failed` için birlikte okunmalı. Tek jetona bağlı bir dedektör,
+çıktı biçimi değiştiği gün sessizce kör olur.
+
+### 8. KIRMIZININ KÖK NEDENİ: TAKVİM BOMBASI (TSK-210)
+`tests/test_e2_seyrelme_kovasi_v477.py::test_a5_kova_ozetin_penceresini_kullanir` →
+`assert (0 == 1)`. TSK-208 ile İLGİSİ YOK.
+Kök neden: `GUN = "2026-09-13"` literali, `analytics.entry_execution_summary()`in VARSAYILAN 7
+GÜNLÜK penceresiyle sınanıyordu. Pencere `analytics._entry_rows`ta `cutoff = date.today() - days`
+ile hesaplanır ve `date >= cutoff` ile süzülür, ÜST SINIR YOKTUR. Test 09-13→09-20 arası yeşil
+kaldı, **09-21'de 8. günde** kendiliğinden kırmızıya döndü. Kod değişmedi, takvim ilerledi.
+Yani o testin bir haftalık yeşili hiçbir şey kanıtlamıyordu; kırmızısı da bir regresyon değildi.
+Sınıf: `sprint.py` şerhinin adlandırdığı "SAAT BAĞIMLI bir suite, geçtiğinde hiçbir şey
+kanıtlamaz" vakasının TAKVİM kardeşi.
+Düzeltme: sabit üretim kapısının çağırdığı saatin AYNISINDAN türetildi (`dt.date.today()`).
+Pencere DIŞI kalması gereken `2020-01-01` literali DURUYOR — "çok eski olmak" iddiası çürümez,
+zamanla güçlenir. Sınıfın mekanik dedektörü **TSK-210** olarak açıldı; `tests/` altında 19 dosyada
+modül düzeyi literal tarih var, ELLE yalnız 4'üne bakıldı (hiçbiri bugüne-göreli pencereyle
+birleşmiyor), 15'i kontrol EDİLMEDİ — ve elle tarama bu sınıfın cevabı değildir.
+
+### 9. TUR KAPANIŞI
+- Suite #72 (donmuş ağaç, HEAD başta/sonda `89138db`): **13675 passed · 20 skipped · PYTEST_EXIT=0**,
+  `FAILED|ERROR|N failed` BOŞ → üçlü hüküm YEŞİL.
+- Push `a70af70..89138db` (6 commit). RUNBOOK `--kontrol` GÜNCEL (üretim gerekmedi).
+- Worktree `tsk208-sprint` kaldırıldı.
+- **DAĞITIM YAPILMADI** — akşam seansı kapanışından sonra, sprint kadans kapısından (22:00Z) önce.
+  Plan ve canlı kabul ölçütleri: `scratchpad/aksam-dagitim-plani-2026-09-21.md`.
+  Canlı kabul ölçütü (kuru koşum yeşili yerine GEÇMEZ): `sprint_cadence_failed` durur ·
+  `sprint_kum_havuzu_atlandi` olayı **`adet=1`**, `adlar=["secrets.json.bak-20260915T073825Z-tsk189"]`
+  (dağıtımdan ÖNCE yerelde gerçek adlarla ölçüldü) · kum havuzunda `auth.json`/`secrets.json*` YOK,
+  `portfolio.json`/`trades.jsonl`/`strategy.yaml`/`goal.yaml`/`bounds.yaml`/`history` VAR.
+- **EDG-085 pilot bayrağı BİR GÜN ERTELENDİ** (kapı ölçümle açıktı, bugün en erken tarihti):
+  aynı akşama bir motor düzeltmesiyle koymak, pilotun eşiğinin (51,90 ms) ölçüleceği pencereye iki
+  değişken sokardı. TSK-208'in gece kanıtı görülünce açılacak; 20 seanslık pencere zarar görmez.
