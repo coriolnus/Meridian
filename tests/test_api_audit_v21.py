@@ -190,8 +190,32 @@ def test_p2c_local_scraper_unchanged(client, monkeypatch):
 
 # ---------- P3: teşhis paketi anahtar taşımaz ----------
 def test_p3_debug_export_excludes_secrets():
+    """TSK-209 (2026-09-21): bu çivi eskiden `skip = {"secrets.json"}` LİTERALİNİ arıyordu.
+
+    LİTERAL, MEKANİZMAYI ÖLÇMEZ. Aranan dizge oradaydı ve çivi yeşildi, ama küme `auth.json`ı
+    KAÇIRIYORDU — pano scrypt parola özeti ve oturum HMAC imza anahtarı (`meridian.auth`) her
+    teşhis paketine giriyordu. Yani bu test, tam olarak ölçmeye çalıştığı şeyin ("teşhis paketi
+    anahtar taşımaz") ihlal edildiği üç ay boyunca yeşil kaldı: bir dizge çivisi, dizgeyi
+    yazanın niyetini değil yalnız varlığını ölçer.
+
+    Yerine İKİ YAPISAL İDDİA ölçülür:
+      (a) sır kararı TEK KAYNAKTAN sorulur (`config.sir_dosyasi_mi`) ve yerel bir küme YOKTUR —
+          ikinci bir tanım doğduğu gün listeler yine ayrışırdı;
+      (b) karar UZANTI SÜZGECİNDEN ÖNCE gelir. SIRA TAŞIYICIDIR: sonra gelseydi izinli uzantı
+          taşıyan bir sır adı (`state/secrets.bak.json` biçimi) süzgeçten geçip pakete girerdi —
+          bugünkü davranışın "doğru" görünmesi de zaten bu tesadüfe bağlıydı.
+    DAVRANIŞ BACAĞI AYRI DOSYADADIR (`tests/test_debug_export_sir_v524.py`): burası kaynak
+    denetimidir, orada uç gerçekten çağrılır ve zip'in içine bakılır."""
     blk = next(b for b in re.split(r"\n(?=@app\.)", SRC) if '"/api/debug_export"' in b)
-    assert 'skip = {"secrets.json"}' in blk and "secrets.json" in blk
+    assert "config.sir_dosyasi_mi(" in blk, (
+        "sır kararı tek kaynaktan (`config.sir_dosyasi_mi`) sorulmuyor")
+    assert "skip = {" not in blk, (
+        "uçta yerel bir sır kümesi var — tek kaynak ikiye ayrılmış, TSK-209'daki ayrışma geri geldi")
+    sir_konumu = blk.index("config.sir_dosyasi_mi(")
+    uzanti_konumu = blk.index('f.suffix not in (".json"')
+    assert sir_konumu < uzanti_konumu, (
+        "sır kapısı uzantı süzgecinden SONRA geliyor — izinli uzantı taşıyan bir sır dosyası "
+        "(ör. `secrets` ailesinin `.json` uzantılı bir yedeği) pakete girer")
 
 
 def test_p3b_no_route_returns_a_raw_secret_value():

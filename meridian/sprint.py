@@ -29,7 +29,6 @@ OKUR: canlı `state/` (kopya kaynağı), `hermes.SEARCH_PROGRESS` (meşguliyet),
 defteri (`obs`; kurulumun desenle atladığı girdileri ADIYLA bildiren bilgi satırı dâhil)."""
 from __future__ import annotations
 import datetime as dt
-import fnmatch
 import json
 import os
 import shlex
@@ -92,8 +91,14 @@ STATUS_FILE = "sprint_status.json"    # written LIVE — a labeled read-model, N
 # başlayan meridian-içi import kapanışı 75 modüldür (sprint_run dâhil) ve içinde NE `auth` NE `api` vardır; kapanıştaki
 # dinamik importların (`importlib`/`__import__`) hiçbiri de bu ikisini adlandırmaz. SPRINT ÇOCUĞUNUN
 # YOLUNDA OKUYUCUSU YOK — kopya yalnız sır yüzeyini genişletiyordu. Çivi: v523 çivi 6.
-SKIP_COPY = {"bars", "bars_intraday", "intraday_bars", "sprint", "secrets.json", "HALT",
-             "auth.json", "meridian.db", "meridian.db-wal", "meridian.db-shm"}
+# SIR ADLARI ARTIK BURADA TANIMLI DEĞİL, TÜRETİLİR (TSK-209, 2026-09-21). `"secrets.json"` ve
+# `"auth.json"` literal olarak buradaydı ve AYNI soruyu `api.api_debug_export` kendi kümesiyle
+# ayrıca cevaplıyordu — o küme `auth.json`ı öğrenmemişti ve pano oturum imza anahtarı her teşhis
+# paketine giriyordu. Kopya ayrıştı, tek kaynak `config.SIR_TAM_ADLAR`a taşındı. Buradaki geri
+# kalan adlar SIR DEĞİLDİR: gerekçeleri İZOLASYON (`HALT`, `meridian.db*`) ve BOYUT
+# (`bars*`, `intraday_bars`) — yukarıdaki şerhlerde ayrı ayrı ölçülmüştür, o yüzden burada kalır.
+SKIP_COPY = {"bars", "bars_intraday", "intraday_bars", "sprint", "HALT",
+             "meridian.db", "meridian.db-wal", "meridian.db-shm"} | set(config.SIR_TAM_ADLAR)
 
 # TAM AD KÜMESİNİN TUTAMADIĞI SÖZLEŞME — DESEN AİLESİ (TSK-208, canlı arıza 2026-09-18).
 # `SKIP_COPY` TAM AD kümesidir. `"secrets.json"` üyeydi, ama canlıda TSK-189 sır rotasyonundan ELLE
@@ -113,10 +118,14 @@ SKIP_COPY = {"bars", "bars_intraday", "intraday_bars", "sprint", "secrets.json",
 # `tar`ını kırmasını `--exclude="state/secrets.json.bak-*"` DESENİYLE çözmüştü
 # (`deploy/oracle-a1/meridian-backup.service`); sprint tarafı ondan habersizdi. İki yüzey artık
 # ayrışma çivisiyle bağlı (v523 çivi 7) — biri değişip diğeri değişmezse kırmızı.
-# DESEN DAR TUTULUR: yalnız `secrets.json` ve ondan türeyen adlar (`.bak-*`, `.tmp`, `.new`).
-# GENİŞ desen (`*secret*`, `*.bak*`) hiçbir testi kırmadan kum havuzunu EKSİK doğururdu ve sprint
-# sessizce yanlış ölçerdi — HALT vakasının sınıfı (v523 çivi 5/5b bu yönü ölçer).
-SKIP_COPY_PATTERNS = ("secrets.json*",)
+# DESEN DAR TUTULUR: yalnız `secrets.json` ve ondan türeyen adlar (`.bak-*`, `.tmp`, `.new`,
+# `secrets.<x>.json`). GENİŞ desen (`*secret*`, `*.bak*`) hiçbir testi kırmadan kum havuzunu EKSİK
+# doğururdu ve sprint sessizce yanlış ölçerdi — HALT vakasının sınıfı (v523 çivi 5/5b bu yönü ölçer).
+# LİSTE ARTIK BURADA TANIMLI DEĞİL (TSK-209): aynı aileyi `api.api_debug_export` de tanımak
+# zorunda ve iki liste tutulamaz — tek kaynak `config.SIR_DESENLERI`. AD BURADA KALIR çünkü
+# `SKIP_COPY_PATTERNS` bir ÇİVİ YÜZEYİDİR: v523 çivi 4 bunu boşaltarak desenin taşıyıcı olduğunu
+# ısırır, çivi 11 ilk desenini okur.
+SKIP_COPY_PATTERNS = config.SIR_DESENLERI
 
 
 def _desen_atlar(ad: str) -> bool:
@@ -126,6 +135,13 @@ def _desen_atlar(ad: str) -> bool:
     (`_atlanir`) ve bildirim kararı (`_yalniz_desenle_atlanir`). İkisi ayrı ayrı yazılsaydı ikinci
     bir eşleşme kopyası doğardı ve kopyalar sessizce ayrışır (tek-kaynak yasası).
 
+    EŞLEŞTİRMENİN KENDİSİ DE TEK YERDEDİR (TSK-209): gövde `config.sir_dosyasi_mi`ye devreder,
+    yani `api.api_debug_export` ile BU kapı aynı yüklemi çağırır. TAM AD BACAĞI BİLEREK BOŞ
+    GEÇİLİR (`tam_adlar=frozenset()`): burası sözleşmesi gereği YALNIZ desen bacağıdır ve
+    `_yalniz_desenle_atlanir` tam olarak "tam ad kümesinde OLMAYIP desenle yakalanan" ayrımına
+    dayanır; buraya tam adları da katmak o ayrımı sessizce yok ederdi (v523 çivi 5b/10a ölçer).
+    `SKIP_COPY_PATTERNS` modül GLOBALİ olarak okunur — v523 çivi 4'ün ısırığı buna bağlıdır.
+
     `fnmatchcase` — `fnmatch` DEĞİL. GEREKÇE ÖLÇÜLDÜ (Rol-1, yerel `.venv`, 2026-09-21), çünkü ilk
     yazılan gerekçe YANLIŞTI ve düzeltildi: "`fnmatch` macOS'ta harf-duyarsızdır" DOĞRU DEĞİL —
     macOS'ta `os.path` `posixpath`tır ve `posixpath.normcase` KİMLİK fonksiyonudur
@@ -134,8 +150,9 @@ def _desen_atlar(ad: str) -> bool:
     `normcase`i küçülten bir platformda (Windows/`ntpath`) doğar. Seçim bu yüzden BUGÜNKÜ bir
     ayrışmayı değil, GELECEKTEKİ bir platform bağımlılığını kapatır: `fnmatchcase` `normcase`i hiç
     çağırmaz, dolayısıyla bu kapının hükmü koşulsuz harf-duyarlıdır ve taşınmayla değişmez.
+    Eşleştirici artık `config.sir_dosyasi_mi` içindedir; seçim ORADA da aynı gerekçeyle yazılıdır.
     Çivi (iddianın iki parçası da ölçülür): `tests/test_sprint_sir_yedegi_v523.py` çivi 11."""
-    return any(fnmatch.fnmatchcase(ad, desen) for desen in SKIP_COPY_PATTERNS)
+    return config.sir_dosyasi_mi(ad, tam_adlar=frozenset(), desenler=SKIP_COPY_PATTERNS)
 
 
 def _atlanir(ad: str) -> bool:
