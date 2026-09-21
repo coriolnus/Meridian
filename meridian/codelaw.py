@@ -1848,11 +1848,33 @@ def _dosya_adi_kuyrugu_mu(sembol: str) -> bool:
     M4/M5 mutasyonlarının gösterdiği gibi ZORUNLUDUR (yalnız son parçaya bakan kural birinci
     vakayı, yalnız ilk parçaya bakan kural ikinci vakayı kaçırır) ve bedeli bu paragraftır.
 
-    BUGÜN ÖLÇÜLEN (2026-09-21, canlı ağaç, `_yorum_metinleri` + `_capa_adres_defteri`): çok
-    parçalı kuyruk taşıyan 165 eşleşmenin 15'ini bu kural affediyor; bunların SIFIRI sınıf
-    biçimli (büyük harfle başlayan parça taşıyan) bir addır ve modül parçası depoda tek `.py`ye
-    çözülen yalnız 4'ü vardır — dördü de TSK-211'in KENDİ belgelediği iki dosya adıdır (bu
-    docstring ve çivi dosyasının başlığı). Yani amaçlanan dışında kaybedilen gerçek çapa: 0.
+    BUGÜN ÖLÇÜLEN (2026-09-21 TUR 2, canlı ağaç, `_yorum_metinleri` + `_capa_adres_defteri` —
+    yani bu yasanın KENDİ tarayıcısıyla, replikayla değil): çok parçalı kuyruk taşıyan 171
+    eşleşmenin 20'sini bu kural affediyor. Affedilenlerin modül parçası depoda tek `.py`ye
+    çözülen 8'i var — ALTISI TSK-211'in KENDİ belgelediği iki dosya adının üç yerdeki tekrarı
+    (bu docstring + iki çivi dosyasının başlığı), İKİSİ ise SINIF BİÇİMLİ (büyük harfle başlayan
+    parça taşıyan) eşleşmedir; ağaçtaki sınıf biçimli affedilen eşleşmelerin TAMAMI bu ikisidir
+    (2 eşleşme, 2 ayrı ad).
+
+    VE O İKİ SINIF BİÇİMLİ EŞLEŞME BU PARAGRAFIN KENDİ ÖRNEKLERİDİR: yukarıdaki "KAYIP AÇIK"
+    fıkrasının yazdığı store.Store.db ve guard.Kapi.log. (Burada BİLEREK backtick'siz yazıldılar
+    — backtick'li her tekrar sayımı kendi kendine büyütürdü; emsal `capa_uyusmasi` docstring'inin
+    TSK-120 notudur: "örnekler burada backtick'SİZ tırnaklı yazılır".) Yani körlüğü ANLATAN metin,
+    yazıldığı anda o körlüğün iki yeni örneğini üretti — v528'in dersinin yansımalı ikinci hâli.
+    `tests/test_capa_korluk_beyani_v529.py` bölüm (e) bu iki adı BORÇ DEFTERİ olarak DONDURUR:
+    örnek adları değişirse ya da üç kovadan birine düşerlerse o çivi öter ve buradaki sayılar
+    YENİDEN ÖLÇÜLÜR. Kırılganlık kasıtlıdır (Rol-1 kararı, tur 2) — beyanı koddan ayrı bırakmanın
+    bedeli, bu paragrafın tur 1'de başına gelen şeydir.
+
+    TARİHÇE — ESKİ "sınıf biçimli SIFIR, modülü çözülen 4" İDDİASI NEDEN YANLIŞTI (silinmedi,
+    düzeltildi): o ölçüm ÖLÇÜM OLARAK doğruydu, ama "KAYIP AÇIK" fıkrası bu docstring'e
+    EKLENMEDEN ÖNCE alınmıştı; fıkra kendi iki örneğini ağaca yazınca sayım geçersizleşti ve sayı
+    öyle kaldı. Ders sayının kendisinde değil: ÖLÇÜLEN AĞACI DEĞİŞTİREN bir düzenleme, aynı turda
+    ölçümü de yeniler.
+
+    Yani amaçlanan DIŞINDA kaybedilen gerçek çapa hâlâ 0: affedilen 20 eşleşmenin altısı dosya
+    adı, ikisi bu paragrafın kendi anlatım örneği, kalanı modülü depoda çözülmeyen addır —
+    hiçbiri ölçülmesi İSTENEN bir sembol atfı değildir.
     Sınıfın kuramsal olmadığı da ölçüldü: `socket.socket.connect` bugün ağaçta gerçek bir sembol
     atfı olarak geçiyor ve `socket` bir `.socket` birim uzantısı olduğu için bu kural onu
     affediyor — bugün zararsızdır ÇÜNKÜ `socket.py` depoda yok ve kapsam sınırı (2) onu zaten
