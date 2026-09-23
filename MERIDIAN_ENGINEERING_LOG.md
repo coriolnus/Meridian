@@ -3740,7 +3740,7 @@ görmüyor (TSK-211 ailesi, küçük; ROADMAP TSK-212 notunda).
 **Birleştirme 7053c4d0 (`--no-ff`), ROADMAP 73100bda. Suite #7 (73100bda, donmuş ağaç): 1 failed / 13800 passed / 20 skipped, 14:01, yük 2,27 — kırmızı olan yine v217 KILL#1 p95 (1,235×; kapalı kol p95 2,07 ms), seri tekrar 1,033× YEŞİL (24 passed, exit 0) → bilinen işçi-çekişmesi flake'i, beyanlı (bugün 2/7; TSK-213 açıldı); harness "exit 0" yalanı 4. kez, PYTEST_EXIT=1 kurtardı. Push 73100bda, CI okunuyor.**
 Canlıya #63 ile iner (komut aynı, HEAD yeni); kanıt: ilk sprintte `kum_havuzu_llm_kapali` >0, `agent_bos` 0.
 
-### 23. EDG-085 PİLOT BAYRAĞI AÇILDI (repo) + v465 TEK-KAYNAK ÇİVİSİ + A0 UYGULAMASI SINIFLANDIRICIDA (09:13Z)
+### 23. EDG-085 PİLOT BAYRAĞI AÇILDI (repo) + v465 TEK-KAYNAK ÇİVİSİ + A0 UYGULAMASI SINIFLANDIRICIDA (olaylar 2026-09-21 23:2xZ; YAZIM 2026-09-23 09:13Z — oturum ~34 saat askıda kaldı, bkz. §24)
 **Ön şart doldu:** TSK-208 gece kanıtı (§21) — pencereye ikinci değişken sokulmadı, plan (`scratchpad/edg085-pilot-plani-2026-09-22.md`) aynen.
 **Bulgu (kart-önce sırasında):** `tests/test_quote_capture_v465.py::test_D4…` bayrağın `=0` DİZGESİNİ zorluyordu ("kod bayrak-kapalı
 iner" fazı). Bayrağı çevirmek çiviyi kırardı; çivinin koruduğu gerçek ("bayrak kartın fazıyla tutarlı") hâlâ doğru → çivi silinmedi,
@@ -3758,3 +3758,28 @@ UYGULAMA sınıflandırıcıya takıldı ([Protected-Scope IaC Apply]); aynı pa
 gürültü). Operatör kararı (§15) gereği dolanmadım: site.yml + watchdog dur + dagit + watchdog başlat TEK BLOK olarak sabah penceresine
 (`scratchpad/sabah-operator-blogu-2026-09-22.md`). Bu gece 23:32Z yedeği ESKİ birimle koşar (dışlamalar yarın iner).
 **Suite #7 flake hükmü** §22'de; TSK-213 açıldı (2/7).
+
+### 24. OTURUM 34 SAAT ASKIDA KALDI — 2026-09-23 09:14Z ÖLÇÜLDÜ; DAĞITIM #63 HÂLÂ İNMEDİ; ÜÇÜNCÜ SIR-YEDEĞİ YÜZEYİ
+**Zaman:** son ölçümüm 2026-09-21 23:25:57Z (site.yml kuru koşumu); site.yml uygulaması sınıflandırıcıda kesildi; sonraki
+komutum gerçekte 2026-09-23 09:13Z'de koştu (`git log` damgaları: 5cf40560 09-22 02:23+03 = 09-21 23:23Z; 2a0df6ba 09-23 12:13+03).
+Saatlik uyanış (23:37Z) ateşlemedi — oturum/uygulama askıdaydı (memory `oturum-cron-guvenilmez`e eklendi). §23'ün başlığı
+"09:13Z" diyordu, tarihsiz — düzeltildi (olaylar 09-21 gecesi, yazım 09-23 sabahı). Ders: her uyanışta İLK komut `date -u`.
+**Kaçırılan:** dağıtım #63 penceresi 09-22 08:00–09:50Z (operatör koşmadı, mesaj yok); 09-22 seansı eski kodla (b9c4807) geçti —
+teşhis paketi sızıntısı, ölü-isim sensörü, kum havuzu review kapısı, EDG-085 bayrağı canlıda YOK. Bugün 09-23 sabah penceresi
+09:50Z'de kapanıyor; blok (site.yml → watchdog dur → dagit → watchdog başlat) operatöre push + sohbet; olmazsa akşam 20:15–21:45Z.
+**Dagit kuru koşumu (09:2xZ):** `a1: failed=1` — [1c] birim kapısı: canlıdaki `meridian-backup.service` ExecStart'ı depodaki TSK-209c
+dışlamalarını taşımıyor (site.yml inmedi) → dagit site.yml'den ÖNCE geçmez; bloğun sırası doğru. `DAGIT_EXIT=2` bu düşüşün kodu.
+SİLİNECEK: `logs/composite-prescreen.log` + `logs/` (canlı-yalnız dizin).
+**34 saatlik triyaj (A1):** sağlık 200; 09-22 warn sınıfları — `massive_yetki_reddi` 403 grouped (7 günde 11, bilinen plan sınırı,
+yedek zincire düşüyor), `massive_corp_action_escalated` GE (bölünme şüphesi → tam çekim, tasarım gereği), `adet_benimsendi` META 7→6 ×3
+(ayna adedi, bilinen), `bar_ghost_round_summary` ×2 (bilinen), `candidate_review_failed` ×1 (hermes chat TimeoutExpired 300 s, 7 günde
+ilk, geçici), finviz/fmp/marketstream bilinen; 09-23 `korumasiz_motor_disi_pozisyon` NVDA (7 günde 21, A3 sahiplik sınırı, görünürlük).
+Yeni sınıf yok. 09-22 gecesi sprint tetiği yok (haftalık taban 09-21'de koştu — doğru); 09-21 sprinti `phase=done` 06:26Z (8,5 saat),
+`finished_at`/`result` None (damga boşluğu, ayrı not — TSK-060 ailesi). Yedek 09-22 23:32Z başarılı (eski birim). Brifing 09-22 22:00
+başarılı, bekçi 10:04 başarılı. 6 failed birim eski altı.
+**ÜÇÜNCÜ YÜZEY (TSK-214/215):** silinecek log dosyası bir traceback taşıyordu — C00005 bileşik ön-elemesi (W39, haftanın tek kalemi)
+09-21 20:39Z'de `prescreen._sandbox` `shutil.copytree(live, hedef)` ile `secrets.json.bak-20260915T073825Z-tsk189`e takılıp öldü;
+worker'a hiç olay düşmedi (`composite_prescreen_spawned`den sonra sessizlik), bütçe tüketildi, ölçüm yok. Aynı dosya: sprint (TSK-208),
+teşhis paketi/yedek (TSK-209), şimdi ön-eleme. 09-21'de "üç yer" derken `grep -rn copytree` yapmamıştım — memory
+`sinif-bir-ornekle-kapanmaz` üçüncü örnek. Kanıt kopyası scratchpad'de; #63 dosyayı silecek (bilerek). Kalemler: TSK-214 (kopya tek
+kaynağa, ACTIVE, Opus dilimi bu tur), TSK-215 (çocuk çıkışı gözlemi + log dizini /opt/veri, QUEUED).
