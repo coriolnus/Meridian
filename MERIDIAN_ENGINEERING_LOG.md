@@ -3783,3 +3783,7 @@ worker'a hiç olay düşmedi (`composite_prescreen_spawned`den sonra sessizlik),
 teşhis paketi/yedek (TSK-209), şimdi ön-eleme. 09-21'de "üç yer" derken `grep -rn copytree` yapmamıştım — memory
 `sinif-bir-ornekle-kapanmaz` üçüncü örnek. Kanıt kopyası scratchpad'de; #63 dosyayı silecek (bilerek). Kalemler: TSK-214 (kopya tek
 kaynağa, ACTIVE, Opus dilimi bu tur), TSK-215 (çocuk çıkışı gözlemi + log dizini /opt/veri, QUEUED).
+**§24 düzeltme (10:0xZ):** "kimse bilmedi" eksikti — C00005 kuyruk satırı çocuğun geri yazımıyla `measure_failed` + sebep taşıyor
+(`nous_eval._akibet` okur); olay defterinde `composite_measure_failed` 0 (reap yalnız ölü pid'de basar, çocuk kendi yazınca reap hiç görmez).
+Doğrusu: VERİ var, OLAY yok. TSK-215 kapsamı buna göre daraldı (olay `mark`ta, `logs/` rsync dışlaması). Ders: "hiçbir yüzey
+söylemedi" hükmü journal'dan değil, o yüzeyin kendi defterinden ölçülür.
