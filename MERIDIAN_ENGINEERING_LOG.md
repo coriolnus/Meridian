@@ -3739,3 +3739,22 @@ işi). Yan bulgu: birim dosyasında ön-mevcut `reflect.py:1049` satır çapası
 görmüyor (TSK-211 ailesi, küçük; ROADMAP TSK-212 notunda).
 **Birleştirme 7053c4d0 (`--no-ff`), ROADMAP 73100bda. Suite #7 (73100bda, donmuş ağaç): 1 failed / 13800 passed / 20 skipped, 14:01, yük 2,27 — kırmızı olan yine v217 KILL#1 p95 (1,235×; kapalı kol p95 2,07 ms), seri tekrar 1,033× YEŞİL (24 passed, exit 0) → bilinen işçi-çekişmesi flake'i, beyanlı (bugün 2/7; TSK-213 açıldı); harness "exit 0" yalanı 4. kez, PYTEST_EXIT=1 kurtardı. Push 73100bda, CI okunuyor.**
 Canlıya #63 ile iner (komut aynı, HEAD yeni); kanıt: ilk sprintte `kum_havuzu_llm_kapali` >0, `agent_bos` 0.
+
+### 23. EDG-085 PİLOT BAYRAĞI AÇILDI (repo) + v465 TEK-KAYNAK ÇİVİSİ + A0 UYGULAMASI SINIFLANDIRICIDA (09:13Z)
+**Ön şart doldu:** TSK-208 gece kanıtı (§21) — pencereye ikinci değişken sokulmadı, plan (`scratchpad/edg085-pilot-plani-2026-09-22.md`) aynen.
+**Bulgu (kart-önce sırasında):** `tests/test_quote_capture_v465.py::test_D4…` bayrağın `=0` DİZGESİNİ zorluyordu ("kod bayrak-kapalı
+iner" fazı). Bayrağı çevirmek çiviyi kırardı; çivinin koruduğu gerçek ("bayrak kartın fazıyla tutarlı") hâlâ doğru → çivi silinmedi,
+tek kaynağa bağlandı: beklenen bayrak kartın `status`undan türer (registered→0, measuring→1, measured→0, sözlük dışı → fail), sözlük
+eşlemesi ve iki yönlü ayrışma (kart/conf tek taraflı değişirse kırmızı) ayrıca çivili. Opus dilimi (worktree `edg085civi`, 5383d343),
+Sonnet dar inceleme MERGE HAZIR / 0 (küçük: regex-vs-YAML gerekçesi docstring'de yok — kabul, not). Birleştirme 71cc6aec.
+**Pilot açılışı 5cf40560 (tek commit, çivi her commit'te tutarlı):** kart `status: registered → measuring` + `pilot_kaydi_2026_09_22`
+(tavan 51,90 ms / CPU +5pp; taban 430+85 örnek; açılış bağlamı TMO açık, 09-21 planları AMD GO / META, WBD REVIEW — canlı DB salt-okur
+okundu: `state/` kökünde `portfolio.json`/`trade_plans.jsonl` DOSYA OLARAK YOK, depo katmanı `meridian.db`; kum havuzu düz dosya
+taşıyor); `55-edg085-quote.conf` 0→1; ROADMAP TSK-013. Çiviler 178 passed / 0 / exit 0 (v465 · v466 · v425 · v351 · v458 · v266).
+Motor dosyası yok → tam suite yok (§6 orantılılık), CI okunuyor.
+**A0 rolü (site.yml):** kuru koşum `--check --diff` failed=0, changed=4 — sprint birimi (şerh, TSK-212), yedek birimi (TSK-209c
+dışlamaları), `55-edg085-quote.conf` (=1), `51-dash-env-kaldir.conf` (14 Eylül şerh güncellemesi canlıya hiç inmemiş; yönerge aynı).
+UYGULAMA sınıflandırıcıya takıldı ([Protected-Scope IaC Apply]); aynı pakette salt-okur `gh run list` de takıldı ([Production Deploy],
+gürültü). Operatör kararı (§15) gereği dolanmadım: site.yml + watchdog dur + dagit + watchdog başlat TEK BLOK olarak sabah penceresine
+(`scratchpad/sabah-operator-blogu-2026-09-22.md`). Bu gece 23:32Z yedeği ESKİ birimle koşar (dışlamalar yarın iner).
+**Suite #7 flake hükmü** §22'de; TSK-213 açıldı (2/7).
