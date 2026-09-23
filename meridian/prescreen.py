@@ -154,16 +154,53 @@ def live_fingerprint(live: pathlib.Path) -> dict:
     return out
 
 
-def _sandbox(workdir: pathlib.Path, live: pathlib.Path) -> pathlib.Path:
+def _sandbox(workdir: pathlib.Path, live: pathlib.Path, log=print) -> pathlib.Path:
     """Çalışma dizinindeki state kopyası (varsa YENİDEN KULLANILIR).
 
     Yeniden kullanım `--resume`un ön şartıdır: yeni bir kopya, önceki koşunun `inc_cache.json`ını
-    da silerdi ve "atlanan" adaylar aslında yeniden ölçülürdü."""
+    da silerdi ve "atlanan" adaylar aslında yeniden ölçülürdü.
+
+    SIR/GEÇİCİ ARTIK SÜZÜLÜR (TSK-214, ölçülmüş vaka A1 2026-09-21 20:39:43Z). Süzgeçsiz kopya
+    haftanın TEK bileşik kalemini ölçmeden düşürdü: `shutil.copytree` root sahipli (0600) bir sır
+    YEDEĞİNDE (`state/secrets.json.bak-<damga>`) `[Errno 13] Permission denied` topladı ve
+    `shutil.Error` fırlattı — worker `ubuntu`, dosya root. İki ayrı zarar vardır ve aynı süzgeç
+    ikisini de kapatır: ARIZA (okunamayan dosya kurulumu çökertir) ve MARUZİYET (okunabilseydi
+    operatör anahtar deposu kum havuzuna girerdi).
+
+    KARAR TEK YERDEDİR — BU YÜZEY KENDİ EŞLEŞTİRİCİSİNİ KURMAZ. Aynı dosya aynı sınıfla iki yüzeyi
+    daha vurmuştu (sprint kum havuzu TSK-208, teşhis paketi/yedek TSK-209) ve oralarda çözüm tek
+    kaynak oldu: `config.SIR_TAM_ADLAR`/`SIR_DESENLERI`/`GECICI_ARTIK_DESENLERI` + bileşik yüklem
+    `kopyalanmaz_mi`. Dördüncü bir liste yazmak TSK-209'da ÖLÇÜLEN ayrışmayı ("iki yüzey iki liste
+    tuttu") geri getirirdi, o yüzden süzgeç `sprint._alt_dizin_suzgeci`in KENDİSİDİR — kopyası
+    değil. Import ölçüldü (TSK-214): `sprint` bu depoda `prescreen`e hiçbir atıf yapmaz (döngü
+    yok) ve modül düzeyinde yalnız `config` + `store` çeker; `store` zaten `run()`un birkaç satır
+    altında `reflect` üzerinden yüklenir, yani marjinal ağırlık TEK modüldür. Import BURADA
+    (gövdede) durur: `python -m meridian.prescreen --help` gibi yollar numpy'a kadar inen kapanışı
+    ödemesin — dosyanın geri kalanı da (`config`, `backtest`, `obs`) aynı deseni kullanır.
+
+    `SKIP_COPY` BİLEREK SORULMAZ VE BU BİR DARALTMA KAÇINMASIDIR. O küme KÖK sözleşmesidir, içinde
+    KONUMA bağlı adlar vardır (`bars`, `sprint`, `HALT`, `meridian.db`) ve gerekçeleri BOYUT ile
+    İZOLASYONDUR — ön-eleme için ÖLÇÜLMEDİ. Burada kapanan yalnız SINIF sorusudur (sır + geçici
+    artık); boyut/izolasyon ayrı bir kalemdir ve ölçülmeden atlamak ölçülmemiş bir kayıptır.
+
+    `obs` KULLANILMAZ, SATIR `log`a GİDER: bu fonksiyon çağrıldığında `config.STATE` HENÜZ CANLI
+    state'tir (`run()` içindeki `config.STATE = state` ataması BUNDAN SONRA gelir), yani `obs.log`
+    canlı deftere yazardı. `log` stdout'a gider = `logs/composite-prescreen.log`. Yasa 6 okuyanı:
+    çivi `tests/test_prescreen_kum_havuzu_sir_v533.py` (T1) bugün, TSK-215 yarın.
+
+    `symlinks=False` KORUNUR (mevcut davranış, bu turda ölçülmedi): `bars` gibi symlink'ler içerik
+    olarak kopyalanır."""
     hedef = workdir / "state"
     if hedef.exists():
         return hedef
     workdir.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(live, hedef, symlinks=False)
+    from . import sprint
+    atlanan: list[str] = []
+    shutil.copytree(live, hedef, symlinks=False,
+                    ignore=sprint._alt_dizin_suzgeci(live, atlanan))
+    if atlanan:
+        log(f"[sandbox] kopyalanmayan (sır/geçici artık, TSK-214): {len(atlanan)} — "
+            + ", ".join(sorted(atlanan)))
     return hedef
 
 
@@ -192,7 +229,7 @@ def run(candidates: list[tuple[str, object]], workdir: pathlib.Path,
     # zaten yeniden kurulabildiği için ikinci bir bitiş damgası yazılmaz.
     uretim_zamani = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
     before = live_fingerprint(live)
-    state = _sandbox(workdir, live)
+    state = _sandbox(workdir, live, log=log)
     (workdir / FINGERPRINT_DOSYA).write_text(json.dumps({"before": before}))
     log(f"[sandbox] state kopyası: {state}")
 
