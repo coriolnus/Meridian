@@ -13,7 +13,7 @@ Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenm
 
 Toplam **115** kart.
 
-### Kayıtlı — ölçüm bekliyor (14)
+### Kayıtlı — ölçüm bekliyor (13)
 
 - **EDG-2026-053** (`registered`) — 15d-A2 (taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md K2'den AYNEN): İLK-İFŞA filtreli çeyrek gelir (Revenues) YoY büyümesi ve İVMESİ…
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt (ölçüm 050/051'den biri inince sırada)
@@ -35,9 +35,6 @@ Toplam **115** kart.
 - **EDG-2026-068** (`registered`) — KART-ÖNCE ÖN-KAYDI (EXE-2026-009 emsali; bu kart bir replay taraması değil, kod-değişikliği sözleşmesidir).
   · HÜKÜM: 2026-09-02 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce, TSK-011)
   · kart: `EDG-2026-068-cf-kuyruk-tarihli.yaml`
-- **EDG-2026-085** (`registered`) — 
-  · HÜKÜM: 2026-09-07 Rol-1 — ön-kayıt (operatör K8); kod kart-önce, pilot S5 + haftalık pencereler sonrası
-  · kart: `EDG-2026-085-icra-ani-quote-kaydi-senaryo-a.yaml`
 - **EDG-2026-086** (`registered`) — 
   · HÜKÜM: 2026-09-07 Rol-1 — ön-kayıt; B1 backend + B2 UI bu karttan sonra; ölçüm penceresi B2 dağıtımından itibaren
   · kart: `EDG-2026-086-pano-sohbet-kalite.yaml`
@@ -54,7 +51,7 @@ Toplam **115** kart.
   · HÜKÜM: ön-kayıt 2026-08-31; uygulama kart-önce kuralıyla sonra
   · kart: `EXE-2026-010-hakem-ts-anahtari.yaml`
 
-### Ölçümde (7)
+### Ölçümde (8)
 
 - **EDG-2026-042** (`measuring`) — Sistemin EN KARAR-KRİTİK bilinmeyen sayısı artık gerçek icra friksiyonunun SEVİYESİ.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı, İLK (betimleyici) ara-koşum yapıldı.
@@ -71,6 +68,9 @@ Toplam **115** kart.
 - **EDG-2026-081** (`measuring`) — 
   · HÜKÜM: 2026-09-06 değerlendirme: adım-1/2 canlı, gün-1 ölçümü var; pencere ~2026-09-20 # 2026-09-06 Rol-1 — ön-kayıt; adım-1 köprü (m2.7) bugün, adım-2 router zinciri biçim…
   · kart: `EDG-2026-081-hindsight-konsolidasyon-llm-zinciri.yaml`
+- **EDG-2026-085** (`measuring`) — 
+  · HÜKÜM: 2026-09-21 23:19Z Rol-1 — PİLOT BAYRAĞI AÇILDI (pilot_kaydi_2026_09_22); önceki: registered 2026-09-07 (ön-kayıt, operatör K8); kod kart-önce, pilot S5 + haftalık…
+  · kart: `EDG-2026-085-icra-ani-quote-kaydi-senaryo-a.yaml`
 - **EDG-2026-088** (`measuring`) — 
   · HÜKÜM: 2026-09-13 Rol-1: pencere B1 dağıtımıyla (#37 dce388c, 2026-09-12T22:08:34Z) AÇIK — `pencere_kaydi_2026_09_12`; önceki: registered (2026-09-08 ön-kayıt; gölge defteri…
   · kart: `EDG-2026-088-uyuyan-kurulum-golge-pilot.yaml`

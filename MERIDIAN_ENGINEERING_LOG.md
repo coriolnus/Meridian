@@ -3787,3 +3787,28 @@ kaynağa, ACTIVE, Opus dilimi bu tur), TSK-215 (çocuk çıkışı gözlemi + lo
 (`nous_eval._akibet` okur); olay defterinde `composite_measure_failed` 0 (reap yalnız ölü pid'de basar, çocuk kendi yazınca reap hiç görmez).
 Doğrusu: VERİ var, OLAY yok. TSK-215 kapsamı buna göre daraldı (olay `mark`ta, `logs/` rsync dışlaması). Ders: "hiçbir yüzey
 söylemedi" hükmü journal'dan değil, o yüzeyin kendi defterinden ölçülür.
+
+### 25. TSK-214 ANA DALDA + TSK-215 İŞ KAYBI VE KURTARMA + KÖK NEDEN: MAC UYKUSU + SUITE #8 (2026-09-23 21:56Z)
+**TSK-214 (prescreen kum havuzu süzgeci):** Opus dilimi (a) yolu —  doğrudan (ölçüm:  modül düzeyinde
+yalnız /; çevrim yok); yalnız dosya adları elenir, atlananlar a ( değil:  o an canlı), 
+korunur. v533 7 çivi (chmod 000 vaka yeniden üretimi +  negatif kontrolü testin içinde), 6/6 mutasyon. Kapsam 407 passed.
+Sonnet inceleme MERGE HAZIR / 0; küçük bulgu: raporun bedel tablosu "grep 0" demişti, gerçek 1 (docstring; kod 0) — ROADMAP'e düzeltildi.
+Birleştirme 4e8446cf, ROADMAP 0005705f/0510b606.
+**TSK-215 iş kaybı:** tur-1 ajanı pytest'i arka plana atıp durdu; tur-2 ajanı codelaw kırmızısı için "bisect" yaparken dört dosyayı
+ana dal sürümüne çevirdi (worktree BOŞ göründü) ve yine arka plana takıldı; sürdürme (SendMessage) "600 s ilerleme yok" ile düştü. Kurtarma:
+ kopyaları (hc.cur · yml.cur · v452.cur · v534.cur) sha256 ile ana daldan farklı ve TSK izli →  ile geri kondu.
+Tur-2 ajanı sonra kendiliğinden canlanıp v452 şerhindeki kısaltılmış  çapasını (codelaw çürük çapa → v214 "ok yalnız çürük
+çapayla düşmeli") düzeltti ve yeni kapsam koşumu başlattı; yükü ve worktree'yi korumak için durduruldu (TaskStop), dört dosya 
+olarak yeniden yedeklendi. Tur 3 taze ajanla (brief : dosya yerinden kaldırma yok, arka plan yok, timeout 600 s).
+**KÖK NEDEN — MAC UYKUSU:** incelemeci "computer went to sleep mid-response" ile düştü; 09-21 23:26Z → 09-23 09:14Z boşluğu, ajanların
+2–3 saatlik süreleri, "stalled" hataları ve suite #8'in 16:42 pytest süresine karşılık 4,5 saatlik duvar saati (16:49→21:18Z) aynı sebep.
+Ajan ön plan koşumları yük 48 altında 120 s'yi aşınca harness arka plana alıyor, ajan bildirim bekleyip takılıyor. Önlem:
+`request_keep_awake` (session_idle) açıldı — yalnız boşta uykuyu önler, kapalı kapak uyur (memory `ajan-bisect-is-kaybi-ve-uyku`).
+**Suite #8 (0510b606, -n 4 worksteal):** 2 failed / 13814 passed / 21 skipped. (1) `test_kart_hijyeni_v279::test_readme_endeksi_kartlarla_senkron`
+— EDG-085 durumunu `measuring` yaptığımda üretilmiş `research/cards/README.md` endeksi bayatladı (5cf40560 push'landı, CI dumanı bu
+çiviyi koşmuyor); `ops/kart_endeksi_uret.py` ile yeniden üretildi (obs'a ulaşmıyor, ölçüldü), seri 17 passed. Ders: kart status'u
+değişince endeks AYNI commit'te yeniden üretilir (üretilmiş belge zinciri). (2) `test_sir_rotasyon_v447::test_M2_CANLI_VAKA_openrouter_ARTIK_gecer`
+— 20 s hazırlık beklemesi yük altında HTTP 000; seri 1 passed → beyanlı yük-flake, TSK-213'e ikinci çivi olarak eklendi. Hüküm: ağaç
+beyanlı yeşil, push.
+**Canlı:** #63 hâlâ inmedi (akşam penceresi de geçti; sabah 08:00–09:50Z, blok aynı). Sağlık 200, warn sınıfı yok, failed 6 eski.
+09-21 antrenmanı: 6 aday / 0 geçti (incumbent OOS 0,42; "bu dilimde v1 yerel-optimal"), n_v1 584, `loop_closed` False.
