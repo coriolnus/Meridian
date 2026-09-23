@@ -3796,10 +3796,10 @@ Sonnet inceleme MERGE HAZIR / 0; küçük bulgu: raporun bedel tablosu "grep 0" 
 Birleştirme 4e8446cf, ROADMAP 0005705f/0510b606.
 **TSK-215 iş kaybı:** tur-1 ajanı pytest'i arka plana atıp durdu; tur-2 ajanı codelaw kırmızısı için "bisect" yaparken dört dosyayı
 ana dal sürümüne çevirdi (worktree BOŞ göründü) ve yine arka plana takıldı; sürdürme (SendMessage) "600 s ilerleme yok" ile düştü. Kurtarma:
- kopyaları (hc.cur · yml.cur · v452.cur · v534.cur) sha256 ile ana daldan farklı ve TSK izli →  ile geri kondu.
-Tur-2 ajanı sonra kendiliğinden canlanıp v452 şerhindeki kısaltılmış  çapasını (codelaw çürük çapa → v214 "ok yalnız çürük
-çapayla düşmeli") düzeltti ve yeni kapsam koşumu başlattı; yükü ve worktree'yi korumak için durduruldu (TaskStop), dört dosya 
-olarak yeniden yedeklendi. Tur 3 taze ajanla (brief : dosya yerinden kaldırma yok, arka plan yok, timeout 600 s).
+ kopyaları (hc.cur · yml.cur · v452.cur · v534.cur) sha256 ile ana daldan farklı ve TSK izli → `cp` ile geri kondu.
+Tur-2 ajanı sonra kendiliğinden canlanıp v452 şerhindeki kısaltılmış `…::test_T5…` çapasını (codelaw çürük çapa → v214 "ok yalnız çürük
+çapayla düşmeli") düzeltti ve yeni kapsam koşumu başlattı; yükü ve worktree'yi korumak için durduruldu (TaskStop), dört dosya `*.tur3`
+olarak yeniden yedeklendi. Tur 3 taze ajanla (brief `tsk215-tur3-brief.md`: dosya yerinden kaldırma yok, arka plan yok, timeout 600 s).
 **KÖK NEDEN — MAC UYKUSU:** incelemeci "computer went to sleep mid-response" ile düştü; 09-21 23:26Z → 09-23 09:14Z boşluğu, ajanların
 2–3 saatlik süreleri, "stalled" hataları ve suite #8'in 16:42 pytest süresine karşılık 4,5 saatlik duvar saati (16:49→21:18Z) aynı sebep.
 Ajan ön plan koşumları yük 48 altında 120 s'yi aşınca harness arka plana alıyor, ajan bildirim bekleyip takılıyor. Önlem:
