@@ -14,6 +14,9 @@
     örnek değer basmadan.
 (5) NOUS `api` KOPYASI. Kasa akışı motor deposunu restart ve kanıttan ÖNCE yazar; `_api_yaz`ın hata
     metni ("Rotasyon KANITLANDI") orada YANLIŞTI. Metin artık akışa göre; eski yolunki AYNEN.
+2026-09-24 (TSK-064 `--db --vault`, v538): DB parolası da BAĞLANDI → `--db` BAGLI_HEDEFLER'e girdi,
+    A4 (bağsız blok AYNEN) bağlı sınıfa, A7 süzgecin pozitif kontrolü sahte (bağsız) envantere, M3'ün
+    db dalı "bağsız blok GERİ GELİR"e çekildi. Eski `--db` yolunun DAVRANIŞI v538 Ç7'de altın izle ölçülür.
 
 BÖLÜMLER
   A  (2) eski yol uyarısı — bağlı sırlar · render aralığı tek kaynaktan · `--db` aynen
@@ -51,6 +54,10 @@ BAGLI_HEDEFLER = {
     "apisix-admin": {("APISIX_ADMIN_KEY", "/etc/meridian/apisix_admin_key")},
     "openrouter": {("NOUS_API_KEY", "/etc/meridian/nous_api_key"),
                    ("OPENROUTER_API_KEY", "/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY")},
+    #: 2026-09-24 (TSK-064 `--db --vault`, v538): DB parolası BAĞLANDI → eski `--db` yolunun uyarısı
+    #: bağsız sınıftan (A4'ün eski pini, `DB_BLOK`) bağlı sınıfa geçti ve `--db --vault`u gösterir.
+    #: Render hedefi `url` kopyasıdır (DSN'in TAMAMI render edilir, sır onun parola alanı).
+    "db": {("HINDSIGHT_DB_PAROLA", "/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL")},
 }
 #: Eski yolun değeri betik İÇİNDE ürettiği alt komutlar (`_uret`) — ELLE. B3 bu kümeyi betiğin
 #: fonksiyon gövdelerinden ve `_deger_kaynagi_beyani`nin ölçülen davranışından AYRICA türetir.
@@ -63,6 +70,9 @@ BASLIK_RE = re.compile(r"^  !! UYARI — VAULT AGENT RENDER HEDEFİ, (?P<sinif>.
 DEGER_KAYNAGI = "DEĞER KAYNAĞI: bu yol değeri ÜRETMEZ, sizden İSTER"
 
 #: `--db --kuru` uyarısı — bu dilimden ÖNCEKİ çıktının BİREBİR kopyası (brief madde 3: "aynen").
+#: 2026-09-24 (TSK-064, v538): DB bağlandı ve bu BAĞSIZ blok eski yoldan ÇIKTI (A4 artık onun
+#: YOKLUĞUNU ölçer). Metin burada kalır: bağ sınıflaması ters dönerse (M3) aynen GERİ GELİR — o
+#: dönüşün tanığıdır. "TASARLANMADI" cümlesi bağ sonrası YANLIŞ olurdu (sıra v538'de tasarlandı).
 DB_BLOK = (
     "  !! UYARI — VAULT AGENT RENDER HEDEFİ, kasaya BAĞLI DEĞİL: HINDSIGHT_DB_PAROLA → "
     "/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL\n"
@@ -230,16 +240,19 @@ def test_A3_ESKI_YOL_GERCEK_kosum_uyari_YAZIMDAN_ONCE_ve_eski_yol_KESILMEZ(tmp_p
     v521._deger_basilmaz(r, kok)
 
 
-def test_A4_DB_KURU_mevcut_uyari_AYNEN(tmp_path):
-    """Brief 3 (regresyon): `--db`nin bağsız uyarısı bayt bayt önceki metin, başlığın hemen ardında,
-    planın hemen önünde; bağlı sınıfın hiçbir satırı sızmaz."""
+def test_A4_DB_KURU_uyari_BAGLI_sinifta_ve_BAGSIZ_blok_YOK(tmp_path):
+    """Brief 3'ün pini (bağsız blok AYNEN) 2026-09-24'te TSK-064 `--db --vault` (v538) ile emekli oldu:
+    DB bağlandı ve bağsız metnin "kasa elle güncellenmeli · sıra TASARLANMADI" cümleleri artık
+    YANLIŞ olurdu. Yeni pin: TEK uyarı, bağlı sınıfta, başlığın hemen ardında, planın önünde; bağsız
+    bloğun hiçbir satırı sızmaz. Uyarının içeriği A1'in `db` parametresinde ölçülür."""
     _, ortam, _ = _ortam(tmp_path)
     r = _kos(BETIK, ortam, "--db", "--kuru")
     assert r.returncode == 0, f"{r.stdout}\n{r.stderr}"
-    assert ("=== ROTASYON: Postgres 'hindsight' rol parolası ===\n" + DB_BLOK
-            + "=== KURU KOŞUM: --db ") in r.stdout, r.stdout
-    assert len(_uyarilar(r.stdout)) == 1, r.stdout
-    assert "aralık:" not in r.stdout and "kasa yolunu kullanın" not in r.stdout, r.stdout
+    uy = _uyarilar(r.stdout)
+    assert [(u["sinif"], u["sir"]) for u in uy] == [(BAGLI_SINIF, "HINDSIGHT_DB_PAROLA")], r.stdout
+    assert r.stdout.startswith("=== ROTASYON: Postgres 'hindsight' rol parolası ===\n  !! UYARI"), r.stdout
+    assert DB_BLOK not in r.stdout and "TASARLANMADI" not in r.stdout, r.stdout
+    assert "vault kv put secret/meridian/HINDSIGHT_API_DATABASE_URL value=-" not in r.stdout, r.stdout
 
 
 def test_A5_RENDER_ARALIGI_UYDURULMAZ_ureticiden_okunur_okunamazsa_OLCULEMEDI(tmp_path):
@@ -273,21 +286,26 @@ def test_A6_TARAMA_YAPILAMAZSA_bagli_alt_komutta_da_OLCULEMEDI_eski_yol_KESILMEZ
     assert "yeniden başlatılacak: meridian.service" in r.stdout, r.stdout
 
 
-def _bagsiz_kes(betik: pathlib.Path, alt: str) -> subprocess.CompletedProcess:
+def _bagsiz_kes(betik: pathlib.Path, alt: str,
+                envanter: pathlib.Path = ENVANTER) -> subprocess.CompletedProcess:
     kod = (_fonksiyon("_kopyalar", betik) + _fonksiyon("_agent_hedefleri", betik)
            + _fonksiyon("_bagsiz_agent_hedefleri", betik)
            + 'set -euo pipefail\n_bagsiz_agent_hedefleri "$1"\n')
     return subprocess.run(["bash", "-c", kod, "_", alt], capture_output=True, text=True,
                           env={"PATH": "/usr/bin:/bin", "PYTHON_BIN": sys.executable,
-                               "VAULT_ENVANTER": str(ENVANTER)})
+                               "VAULT_ENVANTER": str(envanter)})
 
 
-def test_A7_KAPSAM_BEYANI_suzgeci_YALNIZ_BAGSIZ_satiri_verir():
+def test_A7_KAPSAM_BEYANI_suzgeci_YALNIZ_BAGSIZ_satiri_verir(tmp_path):
     """Tek tespit yolu: kasa kipinin kapsam beyanı `_agent_hedefleri`nin BAGSIZ süzgecidir — bağlı
-    `--dash` boş, bağsız `--db` tek satır."""
-    r = _bagsiz_kes(BETIK, "dash")
-    assert r.returncode == 0 and r.stdout == "", (r.stdout, r.stderr)
-    r = _bagsiz_kes(BETIK, "db")
+    `--dash` boş. 2026-09-24 (TSK-064, v538): `--db` de BAĞLI → gerçek envanterde boş; süzgecin
+    pozitif kontrolü DB bağı sökülmüş SAHTE envanterdir (bağsız `--db` tek satır — eski pin aynen)."""
+    for alt in ("dash", "db"):
+        r = _bagsiz_kes(BETIK, alt)
+        assert r.returncode == 0 and r.stdout == "", (alt, r.stdout, r.stderr)
+    def sok(veri):
+        next(g for g in veri["vault_kv"] if g["ad"] == "HINDSIGHT_API_DATABASE_URL").pop("rotasyon_siri")
+    r = _bagsiz_kes(BETIK, "db", v521._sahte_envanter(tmp_path, "db_bagsiz", sok))
     assert r.returncode == 0, r.stderr
     assert r.stdout.splitlines() == [
         "HINDSIGHT_DB_PAROLA\t/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL\t"
@@ -512,7 +530,8 @@ def test_M3_MUT_bag_siniflamasi_TERS_donerse_A4_ve_A1_KIRMIZI(tmp_path):
                            '"BAGLI" if sir not in bagli else "BAGSIZ"'), ad="m3.sh")
     _, ortam, _ = _ortam(tmp_path, uretici=URETICI)
     r = _kos(m, ortam, "--db", "--kuru")
-    assert DB_BLOK not in r.stdout, f"MUTASYON ISIRMADI (db):\n{r.stdout}"
+    # 2026-09-24: DB BAĞLI → ters sınıflama bağ ÖNCESİ bağsız bloğu AYNEN geri getirir (A4 öter).
+    assert DB_BLOK in r.stdout, f"MUTASYON ISIRMADI (db):\n{r.stdout}"
     r = _kos(m, ortam, "--dash", "--kuru")
     assert [u["sinif"] for u in _uyarilar(r.stdout)] == [BAGSIZ_SINIF], f"MUTASYON ISIRMADI (dash):\n{r.stdout}"
 

@@ -527,7 +527,8 @@ vault_kv:
   # eklendi: bir BAĞ, şema gevşetmesi değil. `kaynak`/`kopya_kaynaklari` dalga-1'e GİREMEZ (taşıma
   # kaynağı hedefin kendisidir; v485 E1 ölçer). Bağın tablo tutarlılığı: o sırrın rotasyon tablosundaki
   # İLK satırı (REFERANS) bu girdinin `hedef`idir (v491 A5 dalga-1 dalı). Çivi: v521.
-  # `HINDSIGHT_API_DATABASE_URL` BU DİLİMDE BAĞLANMAZ — aşağıdaki şerh.
+  # `HINDSIGHT_API_DATABASE_URL` o dilimde BAĞLANMADI; 2026-09-24'te bağlandı (TSK-064 `--db --vault`) —
+  # aşağıdaki şerh.
   # ---- MOTOR (meridian.service · LoadCredential) ------------------------------------------------
   - ad: dash_token
     vault_yolu: "secret/meridian/dash_token"
@@ -567,18 +568,23 @@ vault_kv:
   # Dosyanın ADI değişkenin ADIDIR (`LoadCredential=<kimlik>:<kaynak>` sözleşmesi, v439 I6/I9).
   # Bu yüzden `ad` alanı burada BÜYÜK HARFLİDİR ve motor tarafındaki küçük-harfli adlardan
   # ayrılır: ad bir üslup tercihi değil, systemd'nin okuduğu dosya adıdır.
-  # `HINDSIGHT_API_DATABASE_URL` `rotasyon_siri` TAŞIMAZ ve bu BİLİNÇLİDİR (Rol-1 kararı 2026-09-17,
-  # TSK-064): kasa TAM URL taşır, rotasyonun sırrı ise yalnız PAROLA alanıdır (`HINDSIGHT_DB_PAROLA`,
-  # `ALTER ROLE` + url kopyası) ve eski yol parolayı betik İÇİNDE üretip BASMAZ — yani kasayı
-  # rotasyondan ÖNCE güncellemek mümkün değildir; ALTER ROLE ↔ kasa ↔ render sırası ayrı tasarımdır.
-  # Bu arada `--db` ve `--db --vault` bu girdiden TÜRETİLEN bir Agent render hedefi UYARISI basar
-  # (`sir_rotasyon.sh::_bagsiz_agent_hedefleri`); eski yolun davranışı DEĞİŞMEZ. Çivi: v521 A2/E.
+  # `HINDSIGHT_API_DATABASE_URL` → `rotasyon_siri: HINDSIGHT_DB_PAROLA` (TSK-064, 2026-09-24; tasarım
+  # `docs/TASARIM-SIR-DB-KASA-2026-09-21.md`). 2026-09-17'de BİLEREK bağsız bırakılmıştı: kasa TAM URL
+  # taşır, rotasyonun sırrı yalnız PAROLA alanıdır ve eski yol parolayı betik İÇİNDE üretip BASMAZ —
+  # ALTER ROLE ↔ kasa ↔ render sırası tasarlanmamıştı. Sıra artık TASARLANDI (B: kasa → render kanıtı
+  # → ALTER ROLE → restart → kanıt; `sir_rotasyon.sh::vault_db_rotasyon`) ve bağ o yolu açar. Kasa TAM
+  # DSN taşımaya DEVAM EDER; `--db --vault` eski DSN'i kasadan okur, YALNIZ parola alanını değiştirir.
+  # `rotasyon_kopyalari`nın iki `db` satırı (sql + url) AYNEN kalır: kasa yolu url kopyasını Agent'a
+  # bırakır, sql kopyasını kendisi koşar. Bağın tablo hizası: sırrın OKUNABİLEN ilk satırı (`sql`
+  # okunamaz kanaldır) bu girdinin `hedef`idir (v491 A5). Eski `--db` yolu DEĞİŞMEDİ; uyarısı artık
+  # bağlı sınıftadır ve `--db --vault`u gösterir. Çivi: v538 (Ç6) · v521 A2/A3/B3.
   - ad: HINDSIGHT_API_DATABASE_URL
     vault_yolu: "secret/meridian/HINDSIGHT_API_DATABASE_URL"
     hedef: "/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL"
     mod: "0400"
     sahip: "root"
     tuketici: "hindsight-api.service (LoadCredential=HINDSIGHT_API_DATABASE_URL)"
+    rotasyon_siri: HINDSIGHT_DB_PAROLA
   - ad: HINDSIGHT_API_LLM_API_KEY
     vault_yolu: "secret/meridian/HINDSIGHT_API_LLM_API_KEY"
     hedef: "/etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY"
@@ -625,8 +631,8 @@ vault_kv:
   # ise sır rotasyon tablosunda YOKTUR (bot anahtarları, pano parolası, CP erişim anahtarı için
   # bugün böyledir) ve kopya listesi ADIYLA beyanlıdır.
   # 2026-09-17 (TSK-064): alan artık dalga-1'de de VAR (`dash_token` · `nous_api_key` ·
-  # `apisix_admin_key`) — orada kaynak/kopya listesi YOKTUR, bağın tablo tutarlılığı REFERANS
-  # satırıyla ölçülür (bloğun başındaki şerh).
+  # `apisix_admin_key`; 2026-09-24 `HINDSIGHT_API_DATABASE_URL`) — orada kaynak/kopya listesi YOKTUR,
+  # bağın tablo tutarlılığı REFERANS satırıyla ölçülür (bloğun başındaki şerh).
   #
   # ===============================================================================================
   # `ayni_deger` — TAKMA AD (Rol-1 HÜKMÜ 2026-09-14, tur-2; tur-1'in AÇIK KALEMİ kapandı)

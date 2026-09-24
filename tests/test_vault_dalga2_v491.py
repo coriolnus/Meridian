@@ -290,11 +290,19 @@ def test_A5_ROTASYON_SIRI_bagi_kopya_kumesiyle_BIREBIR():
             # tabloyla tutarlılığı REFERANS ile ölçülür: sırrın tablodaki İLK satırı bu girdinin
             # render hedefi olmalı — `--vault`ın son kanıtı (`_envanter_esitlik`) referansı ona
             # kıyaslar; aksi hâlde "kopyalar kasadan render edilen değere eşit mi" SORULMAZ.
+            # REFERANS = OKUNABİLEN İLK SATIR (TSK-064 `--db --vault`, 2026-09-24): `sql`/`api`
+            # kanalları okunamaz ve `_envanter_esitlik` onları referans SEÇMEDEN atlar — `--db`nin ilk
+            # satırı `sql`dir (ALTER ROLE), referansı ikinci satırdaki `url` kopyasıdır ve o dosya
+            # `HINDSIGHT_API_DATABASE_URL`in render hedefidir. Tür `dosya` ya da `url` (DSN'in TAMAMI
+            # render edilir; rotasyonun sırrı onun parola alanıdır). Dar: env satırı referans OLAMAZ.
             satirlar = [k for k in kopyalar if k["sir"] == rot]
             assert satirlar, f"{g['ad']}: rotasyon_siri {rot!r} rotasyon tablosunda YOK (dangling bağ)"
-            assert (satirlar[0]["tur"], satirlar[0]["yol"]) == ("dosya", g["hedef"]), (
+            okunur = [k for k in satirlar if k["tur"] not in ("sql", "api")]
+            assert okunur, f"{g['ad']}: `rotasyon_kopyalari[{rot}]` OKUNABİLEN satır taşımıyor"
+            ref = okunur[0]
+            assert ref["tur"] in ("dosya", "url") and ref["yol"] == g["hedef"], (
                 f"{g['ad']}: `rotasyon_kopyalari[{rot}]` REFERANSI render hedefi DEĞİL: "
-                f"{satirlar[0]['tur']} {satirlar[0]['yol']} ≠ dosya {g['hedef']}")
+                f"{ref['tur']} {ref['yol']} ≠ dosya|url {g['hedef']}")
             continue
         beklenen = {
             (tur_esleme[k["tur"]], k["yol"], k.get("alan"), k.get("onek"))
@@ -1383,7 +1391,9 @@ def test_E5_MUTASYON_render_olcumu_kaldirilirsa_E4_KIRMIZI(tmp_path):
     """Çivi yeşili kanıt değildir: render karşılaştırması kaldırılırsa betik HİÇBİR ŞEY render
     edilmemişken de ilerlemeli (yani E4 gerçekten o dalı ölçüyor)."""
     ham = ROTASYON_SH.read_text(encoding="utf-8")
-    capa = 'if sudo cmp -s "$ISLIK/vault_yeni_kanon" "$ISLIK/vault_render_kanon"; then'
+    # Çapa 2026-09-24'te `_render_bekle`e taşındı (TSK-064 `--db --vault`: render beklemesi TEK yer);
+    # mutasyon AYNI kıyası kırar, genel döngü onu `vault_yeni_kanon` ile çağırır.
+    capa = 'if sudo cmp -s "$beklenen" "$ISLIK/vault_render_kanon"; then'
     assert capa in ham, f"mutasyon çapası kaynakta yok (çivi bayatlamış): {capa!r}"
     bozuk = tmp_path / "sir_rotasyon_bozuk.sh"
     bozuk.write_text(ham.replace(capa, "if true; then", 1), encoding="utf-8")

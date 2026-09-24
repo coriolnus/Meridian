@@ -56,9 +56,15 @@
 #                                           KAPSAM: yalnız envanterde `rotasyon_siri` ile kasaya BAĞLI
 #                                           sırlar; bağlı olmayanlar ADIYLA beyan edilir ve eski yolla döner
 #                                           — kopyası bir Agent RENDER HEDEFİYSE beyan bir UYARIDIR (eski
-#                                           yolun yazımı kasadaki değerle ezilebilir; bugün yalnız `--db`,
-#                                           TSK-064 2026-09-17). Her kasa sırrı AYRI sorulur; boş bırakılan
-#                                           o tur DÖNMEZ ve ADIYLA söylenir.
+#                                           yolun yazımı kasadaki değerle ezilebilir; 2026-09-17'de yalnız
+#                                           `--db`ydi, 2026-09-24'ten beri böyle bir sır YOK). Her kasa sırrı
+#                                           AYRI sorulur; boş bırakılan o tur DÖNMEZ ve ADIYLA söylenir.
+#   sudo ./sir_rotasyon.sh --db --vault   → KASADAN DB PAROLASI (TSK-064, 2026-09-24) — genel döngü DEĞİL,
+#                                           kendi dalı (`vault_db_rotasyon`): kasa TAM DSN taşır, sır yalnız
+#                                           PAROLA alanıdır ve ikinci hakikat noktası GERİ ALINAMAZ (`ALTER
+#                                           ROLE`). Sıra: kasa → render kanıtı → ALTER ROLE → restart → kanıt;
+#                                           ALTER'dan önceki her düşüş kasayı KV v2 sürümüyle geri alır.
+#                                           Tasarım: docs/TASARIM-SIR-DB-KASA-2026-09-21.md. `--kuru` ile birleşir.
 #                                           TAKMA AD (`ayni_deger`, Rol-1 hükmü 2026-09-14): aynı değerin
 #                                           TEK kasa yolu vardır; rotasyon BİRİNCİL yola yapılır ve takma
 #                                           adlar onu otomatik izler. Restart listesi kasa YOLUNDAN toplanır
@@ -251,6 +257,18 @@ NK_BIRIMLER=""
 #: kopyayı eski kanal adımında, restart ve kanıttan ÖNCE yazar — orada "kanıtlandı" cümlesi YANLIŞ
 #: olurdu. Ortamdan GEÇİLEMEZ (burada atanır): bağlam bir kanca değil, koşan akışın kendisidir.
 YAZIM_AKISI="eski"
+#: KASA YOLU `--db --vault` EVRESİ (TSK-064, 2026-09-24) — `_geri_alma_recetesi` buna bakarak DOSYA
+#: kopyası reçetesi yerine kasa yolunun reçetesini basar (`_db_kasa_recetesi`): o yolda render hedefi
+#: Agent'ındır, dosyayı yedekten geri koymak bir sonraki render'da EZİLİR. Boş = bu koşum o yol değil.
+#: Sıra: `yedek` (yedek alındı, kasaya yazılmadı) → `kasa` (kv put denendi, ALTER yok) → `geri` (kasa
+#: ESKİ DSN'e geri alındı ve ÖLÇÜLDÜ) ya da `alter` (ALTER ROLE UYGULANDI — geri alınamaz kanal).
+DB_KASA_EVRE=""
+DB_KASA_SURUM=""     # kv put ÖNCESİ current_version — geri almanın hedef sürümü
+DB_KASA_YOL=""       # kasa yolu (envanterden)
+DB_KASA_HEDEF=""     # Agent render hedefi (envanterden)
+DB_ROL=""            # Postgres rolü (kopya tablosunun `sql` satırından)
+DB_GERI_YONTEM=""    # kasa geri alma yolu: rollback ya da (düşerse) eski DSN kv put
+RENDER_GECEN=""      # `_render_bekle`nin ölçtüğü süre (s) — çağıran basar
 
 die()      { echo "!! $*" >&2; exit 1; }
 olcum_yok(){ echo "!! ÖLÇÜLEMEDİ: $*" >&2; exit 2; }
@@ -896,6 +914,8 @@ _temizle() {
 # olmayan bir yedeği göstermek, olmayan bir güvence vermek olurdu.
 _geri_alma_recetesi() {
   [ -n "$YEDEK" ] || return 0
+  # KASA YOLU `--db` (TSK-064): reçete evreye göredir ve dosya kopyası ÖNERMEZ — bkz. `_db_kasa_recetesi`.
+  if [ -n "$DB_KASA_EVRE" ]; then _db_kasa_recetesi; return 0; fi
   local birimler
   # sessiz-yutma: `_birimler` bilinmeyen bir alt komutta `die` eder ve o hata METNİ burada hükme
   # GİRMEZ — burası çıkış YOLUDUR, hüküm çoktan verilmiştir ve reçetenin susması, hükümden daha
@@ -1101,14 +1121,29 @@ _yaz() {
 # yönlendirmeyi ZATEN okuyabilen root kabuğu açar, postgres yalnız hazır bir fd görür (`-f -`).
 # `chown` da böylece gereksizleşir — onunla birlikte gerekçeli `|| true` kaçışı da kalkar.
 # `-q`: `ALTER ROLE` çıktısı zaten karar taşımaz, `>/dev/null` ile birlikte gürültü sıfırlanır.
-_sql_uygula() {
-  local rol="$1" dgr="$2" sql="$ISLIK/rol.sql"
-  py sql-uret "$sql" "$rol" "$dgr"
-  sudo -u postgres psql -v ON_ERROR_STOP=1 -q -f - < "$sql" >/dev/null \
-    || die "ALTER ROLE başarısız — parola DEĞİŞMEDİ (SQL dosyası siliniyor)"
+#
+# ÜÇ PARÇA, İKİ ÇAĞIRAN (TSK-064 `--db --vault`, 2026-09-24): eski yol (`_sql_uygula`) üret → koş → sil
+# sırasını tek nefeste yapar ve düşüşte `die` eder; kasa yolu (`vault_db_rotasyon`) ÜRETİMİ öne alır
+# (operatörün parolası SQL alfabesine uymuyorsa kasaya HİÇBİR ŞEY yazılmadan durulur) ve KOŞUMUN
+# düşüşünü kendisi karşılar (kasayı geri alır). Komut satırı TEK yerde (`_sql_kos`): iki kopya ALTER
+# çağrısı sessizce ayrışırdı (tek-kaynak yasası). Eski yolun komut dizisi bayt bayt aynıdır (v538 Ç7).
+_sql_kos() {
+  local sql="$1"
+  sudo -u postgres psql -v ON_ERROR_STOP=1 -q -f - < "$sql" >/dev/null
+}
+
+_sql_sil() {
+  local rol="$1" sql="$2"
   sudo rm -f "$sql"
   sudo test ! -e "$sql" || die "SQL dosyası SİLİNEMEDİ: $sql"
   oldu "ALTER ROLE $rol uygulandı · SQL dosyası silindi (parola argv'ye girmedi)"
+}
+
+_sql_uygula() {
+  local rol="$1" dgr="$2" sql="$ISLIK/rol.sql"
+  py sql-uret "$sql" "$rol" "$dgr"
+  _sql_kos "$sql" || die "ALTER ROLE başarısız — parola DEĞİŞMEDİ (SQL dosyası siliniyor)"
+  _sql_sil "$rol" "$sql"
 }
 
 # Motorun kendi ucu: değer `curl -K` + `--data-binary @dosya` ile gider, argv'ye GİRMEZ.
@@ -1532,8 +1567,9 @@ tenant() {
 db() {
   echo "=== ROTASYON: Postgres 'hindsight' rol parolası ==="
   # AGENT RENDER HEDEFİ UYARISI (TSK-064, Rol-1 kararı 2026-09-17): url kopyası Vault Agent'ın
-  # render hedefidir ve sır kasaya BAĞLI DEĞİLDİR. Uyarı kuru kapısının ÜSTÜNDE: kuru koşum
-  # operatörün ilk komutudur. Uyarı bir KAPI DEĞİL — eski yol aynen koşar (tek rotasyon yolu kesilmez).
+  # render hedefidir. 2026-09-17'de sır kasaya BAĞLI DEĞİLDİ; 2026-09-24'ten beri BAĞLI ve uyarı
+  # doğru yolu (`--db --vault`) gösterir. Uyarı kuru kapısının ÜSTÜNDE: kuru koşum operatörün ilk
+  # komutudur. Uyarı bir KAPI DEĞİL — eski yol aynen koşar (tek rotasyon yolu kesilmez; v538 Ç7).
   _agent_hedefi_uyarisi db
   [ "$KURU" = 0 ] || { _kuru_rapor db; return 0; }
   _yedek_al db
@@ -1541,6 +1577,16 @@ db() {
   _uret b64
   _yaz db
   _yeniden_baslat db
+  _db_kanit "$ISLIK/eski_url"
+  echo ">> geri alma: eski parolayı ALTER ROLE ile geri koy + $YEDEK altındaki DSN'i geri yaz"
+}
+
+# `--db` KANITI — eski yol (`db`) ve kasa yolu (`vault_db_rotasyon`, TSK-064 2026-09-24) AYNI ölçümü
+# koşar (tasarım §3.8 "mevcut --db kanıtı aynen"); gövde TEK yerde. `$1` = ESKİ DSN dosyası (negatif
+# kontrolün girdisi): eski yolda yedekten, kasa yolunda KASADAN okunan DSN. Pozitif ölçüm her iki yolda
+# render hedefindeki (üretim yolu) DSN'e bağlanır.
+_db_kanit() {
+  local eski_url="$1"
   # KANIT DSN'İN KENDİSİNE BAĞLANIR. İlk tur `psql -U hindsight -d hindsight` yazıyordu: ne host
   # ne port DSN'den geliyordu, yani libpq yerel UNIX soketine düşüyor ve ölçüm rotasyonun YAZDIĞI
   # bağlantıyı değil, tesadüfen erişilebilen BAŞKA bir yolu sınıyordu. Bağlantı parametreleri
@@ -1567,7 +1613,7 @@ db() {
     || olcum_yok "yeni parola ile 'select 1' TAM olarak 1 döndürmedi — rotasyon doğrulanamadı"
   oldu "yeni parola: select 1 → 1"
   # NEGATİF: eski URL ile bağlantı FATAL vermeli. Vermezse parola gerçekten değişmemiştir.
-  py pgpass "$ISLIK/pgpass_eski" "$ISLIK/eski_url"
+  py pgpass "$ISLIK/pgpass_eski" "$eski_url"
   # sessiz-yutma: burada BAŞARISIZLIK BEKLENEN sonuçtur (eski parola artık geçmemeli) — çıkış
   # kodu değil, aşağıda ölçülen HATA METNİ hükümdür; `|| true` olmadan `set -e` ölçümü keserdi.
   cikti="$(PGPASSFILE="$ISLIK/pgpass_eski" psql -w -tAX -h "$host" -p "$port" -U "$kuser" \
@@ -1576,7 +1622,6 @@ db() {
     *FATAL*|*fatal*|*authentication*) oldu "eski parola: FATAL (kanıt parolaya BAĞLI)" ;;
     *) olcum_yok "ESKİ parola hâlâ bağlanıyor — ALTER ROLE etkisiz ya da kimlik doğrulama kapalı" ;;
   esac
-  echo ">> geri alma: eski parolayı ALTER ROLE ile geri koy + $YEDEK altındaki DSN'i geri yaz"
 }
 
 dash() {
@@ -2010,9 +2055,10 @@ _vault_tuketici_birimleri() {
 #: (hipotez, A1'de ÖLÇÜLMEDİ; ROADMAP TSK-064 14:2xZ). Liste ENVANTERDEN türer: "hangi dosya render
 #: hedefi" ve "hangi sır bağlı" gerçekleri `vault_kv`de TEK yerde yaşar, burada ikinci liste YOKTUR.
 #: TEK TESPİT YOLU: eski yolun uyarısı (`_agent_hedefi_uyarisi`, iki sınıf) ve kasa kipinin kapsam
-#: beyanı (`_bagsiz_agent_hedefleri`, yalnız BAGSIZ) bu tablodan okur. Bugün BAGSIZ tek satır
-#: `--db`nin url kopyasıdır; BAGLI satırlar `--kapi`/`--tenant`/`--dash`/`--openrouter`/
-#: `--apisix-admin`in credential kaynaklarıdır.
+#: beyanı (`_bagsiz_agent_hedefleri`, yalnız BAGSIZ) bu tablodan okur. 2026-09-17'de BAGSIZ tek satır
+#: `--db`nin url kopyasıydı; 2026-09-24'ten (TSK-064 `--db --vault`) beri BAGSIZ satır YOK — BAGLI
+#: satırlar `--kapi`/`--tenant`/`--dash`/`--openrouter`/`--apisix-admin`in credential kaynakları ve
+#: `--db`nin url kopyasıdır. BAGSIZ dalı ileride bağsız bir sır için DURUR (v522 A7 sahte envanterle ölçer).
 _agent_hedefleri() {
   _kopyalar | awk -v a="$1" '$1==a && ($3=="dosya" || $3=="url") {print $2 "\t" $4 "\t" $1}' \
     | "$PYTHON_BIN" -c '
@@ -2065,7 +2111,7 @@ sys.exit(1)
 #: `_agent_hedefi_bas <tablo> [sır]` — `_agent_hedefleri` satırlarını UYARI olarak basar (`$2`
 #: verilirse YALNIZ o sırrınkini). Metin TEK yerde: başlık, kasa yolu ve "ezilebilir" cümlesi iki
 #: sınıfta ORTAK, yalnız çare satırları sınıfa göre ayrılır.
-#:   BAGSIZ (eski yol `--db` ve kasa kipinin kapsam beyanı): "ÖNCE" DEĞİL "AYNI pencerede" yazar ve bu
+#:   BAGSIZ (2026-09-24'e kadar eski yol `--db`; kasa kipinin kapsam beyanı): "ÖNCE" DEĞİL "AYNI pencerede" yazar ve bu
 #:     ölçülmüş bir düzeltmedir: eski yol değeri betik İÇİNDE üretir ve BASMAZ (`_uret`), yani kasa
 #:     rotasyondan önce güncellenemez; yazım ↔ kasa ↔ render sırası bu betikte TASARLANMADI.
 #:   BAGLI (eski yol, TSK-064 takip (2)): sır kasaya bağlı olduğu için çare TASARLANMIŞTIR — kasadan
@@ -2177,13 +2223,47 @@ _vault_kuru_rapor() {
   echo "  yedek dizini: $KOK/root/sir-yedek-<UTC ts>-$alt"
 }
 
+#: KASA OTURUMU — genel döngü ve `--db` dalı AYNI kapıdan geçer (tek-kaynak). Jeton STDIN'den
+#: (`login -no-print -`), `VAULT_TOKEN=` YOK; oturum yardımcısı `$ISLIK`e düşer (bkz. `_vault`).
+_vault_oturum() {
+  [ -s "$VAULT_JETON_DOSYASI" ] || die "yönetici jetonu yok/boş: $VAULT_JETON_DOSYASI
+     (vault_kur.sh adım 10 yazar) — kasaya HİÇBİR ŞEY yazılmadı"
+  _vault login -no-print - < "$VAULT_JETON_DOSYASI" >/dev/null \
+    || die "yönetici jetonuyla oturum açılamadı ($VAULT_JETON_DOSYASI)"
+}
+
+#: RENDER BEKLEME — TEK YER (TSK-064 `--db --vault` ile genel döngüden ÇIKARILDI, 2026-09-24: DB dalı
+#: render'ı İKİ kez bekler — yeni DSN, ve ALTER düşerse geri alınan ESKİ DSN). `_render_bekle <hedef>
+#: <beklenen kanon dosyası>`: hedefin kanonik kopyası beklenene BİREBİR (sha DEĞİL, `cmp`) eşit olana
+#: kadar yoklar, tavan `VAULT_RENDER_TAVAN_S`. 0 = ölçüldü (süre `RENDER_GECEN`de), 1 = tavan aşıldı —
+#: HÜKMÜ ÇAĞIRAN verir (genel döngü `olcum_yok`, DB dalı önce kasayı geri alır).
+#: `py cikar` düşüşü AÇIKÇA `die`dır: fonksiyon `if !` içinden çağrılır ve orada `set -e` SUSAR — satır
+#: içeride kalsaydı okunamayan hedef sessizce "henüz render yok" sayılıp tavana kadar yoklanırdı
+#: (döngü genel akışın içindeyken aynı düşüş çıkış 1 veriyordu; davranış korunur).
+_render_bekle() {
+  local hedef="$1" beklenen="$2" bas
+  bas="$(date +%s)"
+  while :; do
+    if sudo test -s "$KOK$hedef"; then
+      py cikar dosya "$KOK$hedef" - - "$ISLIK/vault_render_kanon" \
+        || die "render hedefi OKUNAMADI: $hedef (kanonik kopya çıkarılamadı) — render ölçülemez"
+      if sudo cmp -s "$beklenen" "$ISLIK/vault_render_kanon"; then break; fi
+    fi
+    RENDER_GECEN=$(( $(date +%s) - bas ))
+    [ "$RENDER_GECEN" -lt "$VAULT_RENDER_TAVAN_S" ] || return 1
+    sleep "$VAULT_RENDER_ARALIK_S"
+  done
+  RENDER_GECEN=$(( $(date +%s) - bas ))
+}
+
 vault_rotasyon() {
-  local alt="$1" bagli ad yol hedef sir birincil bas gecen poz="" donen=""
+  local alt="$1" bagli ad yol hedef sir birincil poz="" donen=""
   echo "=== ROTASYON (KASADAN): --$alt --vault ==="
   bagli="$(_vault_kv_satirlari $(_alt_sirlari "$alt"))"
-  # BAĞSIZ ALT KOMUT (bugün yalnız `--db`): düz "eski yolla döndür" cümlesi, kopya bir Agent render
-  # hedefiyse YANLIŞ bir güvencedir (TSK-064, 2026-09-17). Kapsam beyanı ÖNCE basılır (uyarı ya da
-  # eski metin, sırra göre), sonra durulur — kasaya HİÇBİR ŞEY yazılmaz.
+  # BAĞSIZ ALT KOMUT (TSK-064, 2026-09-17; `--db` 2026-09-24'ten beri BAĞLI — bugün böyle bir alt
+  # komut YOK): düz "eski yolla döndür" cümlesi, kopya bir Agent render hedefiyse YANLIŞ bir
+  # güvencedir. Kapsam beyanı ÖNCE basılır (uyarı ya da eski metin, sırra göre), sonra durulur —
+  # kasaya HİÇBİR ŞEY yazılmaz.
   if [ -z "$bagli" ]; then
     _vault_kapsam_beyani "$alt" ""
     die "--vault: --$alt alt komutunun kasaya BAĞLI sırrı YOK
@@ -2191,13 +2271,14 @@ vault_rotasyon() {
      Eski yol: sudo $0 --$alt — önce yukarıdaki kapsam beyanını oku (UYARI varsa kasa AYNI
      pencerede elle güncellenir). Kasaya HİÇBİR ŞEY yazılmadı."
   fi
+  # `--db` AYRI DALDIR (TSK-064, tasarım §3): kasa TAM DSN taşır ama rotasyonun sırrı yalnız PAROLA
+  # alanıdır ve parolanın ikinci hakikat noktası GERİ ALINAMAZ bir kanaldır (`ALTER ROLE`). Genel
+  # döngünün "değeri kasaya koy → render → eski kanalı yaz" sırası orada YANLIŞ olurdu.
+  if [ "$alt" = db ]; then vault_db_rotasyon "$bagli"; return 0; fi
   [ "$KURU" = 0 ] || { _vault_kuru_rapor "$alt" "$bagli"; return 0; }
   _vault_kapsam_beyani "$alt" "$bagli"
 
-  [ -s "$VAULT_JETON_DOSYASI" ] || die "yönetici jetonu yok/boş: $VAULT_JETON_DOSYASI
-     (vault_kur.sh adım 10 yazar) — kasaya HİÇBİR ŞEY yazılmadı"
-  _vault login -no-print - < "$VAULT_JETON_DOSYASI" >/dev/null \
-    || die "yönetici jetonuyla oturum açılamadı ($VAULT_JETON_DOSYASI)"
+  _vault_oturum
 
   # SATIRLAR DOSYADAN, fd 3 ÜZERİNDEN okunur: `_oku_gizli` STDIN'den `read -rs` yapar ve döngüyü
   # bir süreç ikamesine bağlasaydık operatörün yapıştırdığı değer değil TABLO okunurdu.
@@ -2228,29 +2309,19 @@ vault_rotasyon() {
     oldu "kasaya yazıldı: $yol (DEĞER BASILMAZ)"
 
     adim "render bekle: $hedef (tavan $VAULT_RENDER_TAVAN_S s)"
-    bas="$(date +%s)"
-    while :; do
-      if sudo test -s "$KOK$hedef"; then
-        py cikar dosya "$KOK$hedef" - - "$ISLIK/vault_render_kanon"
-        if sudo cmp -s "$ISLIK/vault_yeni_kanon" "$ISLIK/vault_render_kanon"; then break; fi
-      fi
-      gecen=$(( $(date +%s) - bas ))
-      if [ "$gecen" -ge "$VAULT_RENDER_TAVAN_S" ]; then
-        # İKİ SIRLI TUR (TSK-064, 2026-09-17): bu sırdan ÖNCE dönen sır kasada ve eski kanalda YENİ
-        # değerdedir ama tüketicisi YENİDEN BAŞLATILMADI (restart döngüden sonra gelir). Sessiz
-        # kalsaydı operatör "hiçbir şey olmadı" sanardı; hâl ADIYLA basılır, geri alma yedektedir.
-        [ "$donen" = " $sir" ] || echo "!! BU TURDA ÖNCE DÖNEN SIR:${donen% "$sir"}— kasada ve eski kanalda YENİ değerde;
+    if ! _render_bekle "$hedef" "$ISLIK/vault_yeni_kanon"; then
+      # İKİ SIRLI TUR (TSK-064, 2026-09-17): bu sırdan ÖNCE dönen sır kasada ve eski kanalda YENİ
+      # değerdedir ama tüketicisi YENİDEN BAŞLATILMADI (restart döngüden sonra gelir). Sessiz
+      # kalsaydı operatör "hiçbir şey olmadı" sanardı; hâl ADIYLA basılır, geri alma yedektedir.
+      [ "$donen" = " $sir" ] || echo "!! BU TURDA ÖNCE DÖNEN SIR:${donen% "$sir"}— kasada ve eski kanalda YENİ değerde;
      tüketicileri YENİDEN BAŞLATILMADI (yedek: $YEDEK)." >&2
-        olcum_yok "render bekleme aşıldı: $hedef ($VAULT_RENDER_TAVAN_S s içinde kasadaki yeni
+      olcum_yok "render bekleme aşıldı: $hedef ($VAULT_RENDER_TAVAN_S s içinde kasadaki yeni
      değere eşitlenmedi). Agent render ETMİYOR olabilir: kasa mühürlü · politika eksik · birim
      düşmüş. ESKİ KANAL YAZILMADI — kasadan gelmeyen bir değeri yaymak, kasayı kaynak sanıp ESKİ
      değeri bütün tüketicilere dağıtmak olurdu.
      Bak: systemctl status vault-agent · journalctl -u vault-agent -n 50 --no-pager"
-      fi
-      sleep "$VAULT_RENDER_ARALIK_S"
-    done
-    gecen=$(( $(date +%s) - bas ))
-    oldu "render ÖLÇÜLDÜ: $hedef ($gecen s) — kanonik kopya kasadaki değerle BİREBİR"
+    fi
+    oldu "render ÖLÇÜLDÜ: $hedef ($RENDER_GECEN s) — kanonik kopya kasadaki değerle BİREBİR"
 
     adim "eski kanal (iki-kanal dönemi): kopyalar KASADAN gelen değerle yazılır"
     # `api` kopyası (NOUS) burada restart ve kanıttan ÖNCE yazılır: `_api_yaz` hata metni bunu
@@ -2301,6 +2372,243 @@ vault_rotasyon() {
   _envanter_esitlik "$alt"
   echo ">> İKİ KANAL AÇIK: asıl dosyalardaki sır satırları DOKUNULMADAN duruyor. Kapatma AYRI bir"
   echo "   adımdır (≥2 gece sonra, yedekli) — geri alım: systemctl stop vault-agent + drop-in kaldır."
+}
+
+# =================================================================================================
+# KASADAN DB PAROLASI — `--db --vault` (TSK-064; tasarım docs/TASARIM-SIR-DB-KASA-2026-09-21.md)
+# =================================================================================================
+# NİYE AYRI DAL. Kasa TAM DSN taşır (`secret/meridian/HINDSIGHT_API_DATABASE_URL` → Agent render'ı →
+# hindsight-api `LoadCredential`), rotasyonun sırrı ise yalnız PAROLA alanıdır (`HINDSIGHT_DB_PAROLA`)
+# ve parolanın İKİNCİ hakikat noktası Postgres rolüdür (`ALTER ROLE` — GERİ ALINAMAZ). İkisi aynı anda
+# değişemez; aradaki pencerenin YÖNÜ sonucu belirler (tasarım §2):
+#   A) ALTER önce, kasa sonra → render bitene kadar dosyada ESKİ, DB'de YENİ parola; pencere ≥ render
+#      aralığıdır ve betiğin kontrolünde DEĞİLDİR. REDDEDİLDİ.
+#   B) kasa → render KANITI → ALTER → restart → kanıt. Pencere (dosya YENİ, DB ESKİ) render kanıtı ile
+#      ALTER arasındadır ve betiğin kendi kontrolündedir. SEÇİLDİ (Rol-1, değişmez).
+# ALTER'dan ÖNCEKİ her adım KV v2 sürümüyle GERİ ALINIR; ALTER restart'ın hemen önündedir. Eski yolun
+# (`db`) iki kopyası AYNEN kalır: `url` kopyasını bu yolda Agent yazar (render hedefine elle yazmak
+# Agent'la yarışmaktır), `sql` kopyasını betik koşar (`_sql_kos`).
+#
+# GERİ ALMA YÖNTEMİ — `vault kv rollback -version=<kv put ÖNCESİ current_version>`. Seçim politikadan
+# OKUNDU (depodaki üretilmiş `deploy/vault/policies/meridian-admin.hcl`, 2026-09-24; A1'de ÖLÇÜLMEDİ):
+# `secret/data/meridian/*` create/read/update + `secret/metadata/meridian/*` read. `rollback` ayrı bir
+# yetenek değil, bu üçünün BİLEŞİMİDİR (meta oku → eski sürümü oku → yeni sürüm olarak yaz). Canlıda
+# düşerse (politika farklı · sürüm silinmiş) YEDEK YOL ESKİ DSN'i STDIN'den `kv put` eder — tasarım
+# §5'in "izin yoksa" yolu: aynı etki, sürüm +1. Hangisi koştuysa ADIYLA basılır; ikisi de düşerse betik
+# BAĞIRIR (kasa YENİ, DB ESKİ: hindsight-api bir sonraki restart'ta bağlanamaz).
+# "GERİ ALINDI" BEYANI ÖLÇÜLMEDEN BASILMAZ: geri almadan sonra kasadaki değer okunur ve ESKİ DSN'e
+# BİREBİR kıyaslanır.
+#
+# ÖLÇÜLMEYENLER (tasarım §5 — uydurma yasağı): pencere B'nin süresi (koşumda BASILIR, ilk canlı koşum
+# belgeye yazar) · hindsight-api havuzunun parola değişince davranışı (bu yüzden restart ZORUNLU).
+
+#: Kasayı ESKİ DSN'e döndürür ve ÖLÇER. 0 = kasadaki değer ESKİ DSN'e BİREBİR (evre `geri`); 1 = iki
+#: yol da düştü ya da ölçüm tutmadı — çağıran BAĞIRIR ve evre `kasa` kalır (reçete o hâli anlatır).
+_db_kasa_geri_al() {
+  if _vault kv rollback -version="$DB_KASA_SURUM" "$DB_KASA_YOL" >/dev/null; then
+    DB_GERI_YONTEM="vault kv rollback -version=$DB_KASA_SURUM"
+  else
+    echo "!! kv rollback DÜŞTÜ ($DB_KASA_YOL -version=$DB_KASA_SURUM) — YEDEK YOL: ESKİ DSN STDIN'le kv put" >&2
+    tr -d '\r\n' < "$ISLIK/db_eski_dsn" | _vault kv put "$DB_KASA_YOL" value=- >/dev/null || return 1
+    DB_GERI_YONTEM="ESKİ DSN kv put — rollback düştü"
+  fi
+  ( umask 077; _vault kv get -field=value "$DB_KASA_YOL" > "$ISLIK/db_kasa_simdi" ) || return 1
+  py cikar dosya "$ISLIK/db_kasa_simdi" - - "$ISLIK/db_kasa_simdi_kanon" || return 1
+  sudo cmp -s "$ISLIK/db_eski_dsn" "$ISLIK/db_kasa_simdi_kanon" || return 1
+  DB_KASA_EVRE=geri
+  oldu "kasa ESKİ DSN'e geri alındı ($DB_GERI_YONTEM) — kasadaki değer ölçüldü, ESKİ DSN'e BİREBİR"
+}
+
+#: Render hedefi ŞU AN beklenen kanona BİREBİR mi — TEK ölçüm, bekleme YOK (geri almadan sonra
+#: "dosya hangi DSN'de" sorusunun cevabı; beklemek Agent düşükken tavanı ikinci kez ödemek olurdu).
+_render_simdi_esit() {
+  sudo test -s "$KOK$1" || return 1
+  py cikar dosya "$KOK$1" - - "$ISLIK/vault_render_kanon" || return 1
+  sudo cmp -s "$2" "$ISLIK/vault_render_kanon"
+}
+
+#: GERİ ALMA REÇETESİ — kasa yolu `--db` (TSK-064). `_geri_alma_recetesi` evre boş değilse BUNU basar:
+#: render hedefi Agent'ındır, "yedekten dosyayı geri koy" bir sonraki render'da EZİLİR ve DB rolünü de
+#: geri almaz. Adımlar ileri yolun AYNI sırasıdır (kasa → render → ALTER → restart); değer BASILMAZ.
+_db_kasa_recetesi() {
+  local birim; birim="$(_sir_birimleri HINDSIGHT_DB_PAROLA || echo '(birim listesi ölçülemedi)')"
+  case "$DB_KASA_EVRE" in
+    yedek)
+      echo ">> GERİ ALMA (--db --vault): GEREKMEZ — kasaya YAZILMADI, ALTER ROLE KOŞMADI (yedek: $YEDEK)." >&2 ;;
+    kasa)
+      echo ">> GERİ ALMA (--db --vault): kasaya YENİ DSN yazıldı ya da yazımı DENENDİ; ALTER ROLE KOŞMADI — DB ESKİ parolada.
+     1) kasa: vault kv rollback -version=$DB_KASA_SURUM $DB_KASA_YOL   (yönetici jetonuyla)
+        düşerse ESKİ DSN yedekte: $YEDEK/vault/$DB_KASA_YOL — STDIN'le: vault kv put $DB_KASA_YOL value=-
+     2) render hedefi ($DB_KASA_HEDEF) ESKİ DSN'e dönene kadar $birim YENİDEN BAŞLATILMAMALI (dosya YENİ, DB ESKİ)." >&2 ;;
+    geri)
+      echo ">> GERİ ALMA (--db --vault): kasa ESKİ DSN'e GERİ ALINDI ($DB_GERI_YONTEM; kasadaki değer ölçüldü) ve
+     ALTER ROLE UYGULANMADI — DB ESKİ parolada. Ek adım GEREKMEZ; $birim ancak render hedefi
+     ($DB_KASA_HEDEF) ESKİ DSN'de iken yeniden başlatılır (yedek: $YEDEK)." >&2 ;;
+    alter)
+      echo ">> GERİ ALMA (--db --vault — ALTER ROLE UYGULANDI; başarıda da arızada da geçerli; sıra ileri yolun AYNISI):
+     1) kasa: vault kv rollback -version=$DB_KASA_SURUM $DB_KASA_YOL   (yönetici jetonuyla)
+        düşerse ESKİ DSN yedekte: $YEDEK/vault/$DB_KASA_YOL — STDIN'le: vault kv put $DB_KASA_YOL value=-
+     2) render: $DB_KASA_HEDEF kasadaki ESKİ DSN'e BİREBİR olana kadar bekle
+     3) ALTER ROLE $DB_ROL PASSWORD <yedekteki ESKİ DSN'in parolası> — SQL dosyası 0600 + psql -f - (parola argv'ye GİRMEZ)
+     4) sudo systemctl restart $birim" >&2 ;;
+  esac
+  return 0
+}
+
+_vault_db_kuru_rapor() {
+  local ad="$1" sir="$2" birimler="$3" b satir uc kabul hazirlik=""
+  for b in $birimler; do
+    if satir="$(_hazir_uc "$b")"; then
+      uc="${satir%% *}"; satir="${satir#* }"; kabul="${satir%% *}"
+      hazirlik="$hazirlik · hazırlık ${b%.service}: $uc kabul $(_kabul_metni "$kabul"), tavan $(_hazir_tavan "$b") s"
+    else
+      hazirlik="$hazirlik · ${b%.service}: sağlık ucu YOK, beklenmez"
+    fi
+  done
+  echo "=== KURU KOŞUM: --db --vault (HİÇBİR ŞEY YAZILMADI, KASAYA DOKUNULMADI, ALTER ROLE KOŞMADI) ==="
+  echo "  SIRA (tasarım B): kasa → render kanıtı → ALTER ROLE → restart → kanıt — geri alınamayan ALTER restart'ın hemen önünde"
+  echo "  1. ön kontrol: kasa oturumu; ESKİ DSN KASADAN okunur (render dosyasından DEĞİL): $DB_KASA_YOL"
+  echo "  2. yeni parola: $sir operatörden (ekrana yansımaz; yalnız [A-Za-z0-9_-], ESKİ parolayla AYNI olamaz); boş → bu tur DÖNMEZ, yapacak iş yok → durur"
+  _deger_kaynagi_beyani db
+  echo "  3. yeni DSN: ESKİ DSN'in YALNIZ parola alanı değişir (kullanıcı/host/port/db/query korunur); ESKİ DSN yedeğe 0600: $KOK/root/sir-yedek-<UTC ts>-db/vault/$DB_KASA_YOL"
+  echo "  4. kasaya yazılacak: $DB_KASA_YOL ($sir → $ad); ÖNCE current_version kaydedilir — geri alma: vault kv rollback -version=<o sürüm> (düşerse ESKİ DSN kv put)"
+  echo "  5. render kanıtı: $DB_KASA_HEDEF kanonik kopyası kasadaki YENİ DSN'e BİREBİR (tavan $VAULT_RENDER_TAVAN_S s, aralık $VAULT_RENDER_ARALIK_S s) — aşımda ALTER ROLE KOŞMAZ, kasa geri alınır, ÖLÇÜLEMEDİ"
+  echo "  6. ALTER ROLE $DB_ROL PASSWORD (SQL dosyası 0600, psql -f -, sonra silinir; parola argv'ye girmez) — düşerse kasa geri alınır, ESKİ DSN render'ı beklenir, durur"
+  # shellcheck disable=SC2086
+  echo "  7. yeniden başlatılacak: $(_sirala $birimler) — credential doluluğu$hazirlik"
+  echo "  8. kanıt: yeni parola select 1 → 1 (uç DSN'den türetilir, PGPASSFILE) · ESKİ parola FATAL (negatif kontrol); düşerse kasa yolunun geri alma reçetesi basılır"
+  echo "  ÖN KOŞUL: sudo systemctl stop meridian-tick-watchdog.timer (sonda geri aç)"
+  echo "  ÖN KOŞUL: kasa AÇIK (mühürsüz) ve vault-agent AYAKTA olmalı — yoksa render gelmez"
+  echo "  yedek dizini: $KOK/root/sir-yedek-<UTC ts>-db"
+}
+
+vault_db_rotasyon() {
+  local bagli="$1" ad yol hedef sir birincil url_yol birimler uc t_kanit sql="$ISLIK/rol.sql"
+  IFS=$'\t' read -r ad yol hedef sir birincil <<< "$bagli"
+  # HİZA KAPISI (fail-closed): bağ TEK satır ve takma adsız; kopya tablosunun `url` satırı render
+  # hedefinin KENDİSİ; `sql` satırı rolü taşır. v538 Ç6 bunu statik ölçer — burada tekrar, çünkü
+  # ayrışma kasaya yazılmış bir DSN'in YANLIŞ dosyada beklenmesi demektir.
+  DB_ROL="$(_kopyalar | awk '$1=="db" && $3=="sql" {print $4}')"
+  url_yol="$(_kopyalar | awk '$1=="db" && $3=="url" {print $4}')"
+  { [ "$(printf '%s\n' "$bagli" | awk 'NF' | wc -l | tr -d ' ')" = 1 ] && [ "$birincil" = "-" ] \
+      && [ -n "$DB_ROL" ] && [ "$url_yol" = "$hedef" ]; } \
+    || die "--db --vault: envanter ↔ kopya tablosu AYRIŞTI (bağ TEK satır ve takma adsız olmalı; sql rolü
+     '$DB_ROL' · url kopyası '$url_yol' · render hedefi '$hedef') — kasaya HİÇBİR ŞEY yazılmadı"
+  DB_KASA_YOL="$yol"; DB_KASA_HEDEF="$hedef"
+  # Restart listesi gerçek koşum ile kuru planda AYNI yardımcıdan (genel döngüyle tek kaynak).
+  birimler="$(_vault_tuketici_birimleri "$yol" "$sir")"
+  [ "$KURU" = 0 ] || { _vault_db_kuru_rapor "$ad" "$sir" "$birimler"; return 0; }
+
+  # ---- 1. ÖN KONTROL ----------------------------------------------------------------------------
+  adim "1/8 ön kontrol: kasa oturumu + ESKİ DSN KASADAN ($yol — render dosyasından DEĞİL)"
+  _vault_oturum
+  ( umask 077; _vault kv get -field=value "$yol" > "$ISLIK/db_eski_ham" ) \
+    || die "ESKİ DSN kasadan okunamadı: $yol (kasa mühürlü? yol yok?) — kasaya HİÇBİR ŞEY yazılmadı"
+  py cikar dosya "$ISLIK/db_eski_ham" - - "$ISLIK/db_eski_dsn"
+  uc="$(py dsn-uc "$ISLIK/db_eski_dsn")" \
+    || die "kasadaki DSN çözümlenemedi (host/kullanıcı/db) — kasaya HİÇBİR ŞEY yazılmadı"
+  oldu "ESKİ DSN kasadan okundu (DEĞER BASILMAZ)"
+  # BİLGİ, KAPI DEĞİL: hedef kasadaki DSN'den ayrışıksa Agent kasayı izlemiyor ya da hedef elle yazılmış.
+  # Koşum sürer (render adım 5'te ÖLÇÜLÜR) — ama bedel ADIYLA: negatif kontrolün "eski parola FATAL"
+  # hükmü bu hâlde ESKİ DSN'in ZATEN geçersiz olmasından da gelebilir.
+  if _render_simdi_esit "$hedef" "$ISLIK/db_eski_dsn"; then
+    oldu "render hedefi kasadaki ESKİ DSN'e EŞİT: $hedef"
+  else
+    echo "  !! render hedefi kasadaki ESKİ DSN'e EŞİT DEĞİL (ya da yok): $hedef — Agent kasayı izlemiyor olabilir.
+     Devam edilir (render adım 5'te ÖLÇÜLÜR); negatif kontrol ('eski parola FATAL') bu koşumda ZAYIFTIR."
+  fi
+
+  # ---- 2. YENİ PAROLA (operatörden — bu yol değeri ÜRETMEZ) ------------------------------------
+  adim "2/8 yeni parola: operatörden ($sir)"
+  _deger_kaynagi_beyani db
+  if ! _oku_gizli "$sir (yeni Postgres parolası — KASADAKİ DSN'e konacak)" "$ISLIK/db_parola"; then
+    echo "  · ATLANDI: $sir — değer boş; kasaya YAZILMADI ve bu tur DÖNMEDİ (yürürlükteki parola kalır)"
+    die "değer boş — yapacak iş yok (kasaya HİÇBİR ŞEY yazılmadı)"
+  fi
+  # SQL literali ÖNCE üretilir: alfabe dışı bir parola kasaya yazıldıktan SONRA ALTER'da düşseydi
+  # koşum geri alma yoluna girerdi — kapı yazımın ÖNÜNDE.
+  py sql-uret "$sql" "$DB_ROL" "$ISLIK/db_parola" \
+    || die "yeni parola SQL literaline uygun değil (yalnız [A-Za-z0-9_-]) — kasaya HİÇBİR ŞEY yazılmadı"
+  [ "$(py esit url "$ISLIK/db_eski_dsn" - - dosya "$ISLIK/db_parola" - -)" = "AYRI" ] \
+    || die "yeni parola ESKİ parolayla AYNI (ya da kıyaslanamadı) — rotasyon değil ve negatif kontrol
+     ('eski parola FATAL') ölçülemezdi; kasaya HİÇBİR ŞEY yazılmadı."
+
+  # ---- 3. YENİ DSN + YEDEK -------------------------------------------------------------------------
+  adim "3/8 yeni DSN: ESKİ DSN'in YALNIZ parola alanı değişir; ESKİ DSN yedeğe"
+  # Evre yedekten ÖNCE: `_yedek_al` yarıda düşerse reçete dosya kopyası değil "GEREKMEZ" der (hiçbir
+  # şey yazılmadı); YEDEK atanmadan düşerse reçete zaten basılmaz (`_geri_alma_recetesi` kapısı).
+  DB_KASA_EVRE=yedek
+  _yedek_al db
+  sudo install -d -m 0700 -o root -g root "$YEDEK/vault/$(dirname "$yol")"
+  py cikar dosya "$ISLIK/db_eski_dsn" - - "$YEDEK/vault/$yol"
+  oldu "yedek: ESKİ DSN (KASADAN) → $YEDEK/vault/$yol (0600 — geri almanın girdisi)"
+  py cikar dosya "$ISLIK/db_eski_dsn" - - "$ISLIK/db_yeni_dsn"
+  py yaz-url "$ISLIK/db_yeni_dsn" "$ISLIK/db_parola" 0600 -
+  [ "$(py dsn-uc "$ISLIK/db_yeni_dsn")" = "$uc" ] \
+    || die "yeni DSN'in host/port/kullanıcı/db alanı ESKİ DSN'den AYRIŞTI — kasaya HİÇBİR ŞEY yazılmadı"
+  oldu "yeni DSN kuruldu: YALNIZ parola alanı değişti (kullanıcı/host/port/db/query korundu; DEĞER BASILMAZ)"
+
+  # ---- 4. KASA (ÖNCE sürüm kaydı — geri almanın hedefi) -------------------------------------------
+  adim "4/8 kasaya yaz: $yol"
+  DB_KASA_SURUM="$(_vault kv metadata get -format=json "$yol" \
+    | "$PYTHON_BIN" -c 'import json, sys; print(int(json.load(sys.stdin)["data"]["current_version"]))')" \
+    || die "kasa sürümü okunamadı ($yol) — geri alma hedefi bilinmeden kasaya YAZILMAZ (HİÇBİR ŞEY yazılmadı)"
+  case "$DB_KASA_SURUM" in
+    ''|*[!0-9]*|0) die "kasa sürümü geçersiz: '$DB_KASA_SURUM' ($yol) — kasaya HİÇBİR ŞEY yazılmadı" ;;
+  esac
+  oldu "kasa sürümü (yazım ÖNCESİ): $DB_KASA_SURUM — geri alma: vault kv rollback -version=$DB_KASA_SURUM"
+  # Evre yazımdan ÖNCE `kasa`: put düşse bile kasaya ulaşmış OLABİLİR; reçete bu belirsizliği söyler.
+  DB_KASA_EVRE=kasa
+  tr -d '\r\n' < "$ISLIK/db_yeni_dsn" | _vault kv put "$yol" value=- >/dev/null \
+    || die "kasaya yazılamadı: $yol — ALTER ROLE KOŞMADI, DB'ye DOKUNULMADI (reçete aşağıda)"
+  oldu "kasaya yazıldı: $yol (yeni sürüm; DEĞER BASILMAZ)"
+
+  # ---- 5. RENDER KANITI — ALTER bu ölçümden ÖNCE KOŞAMAZ -------------------------------------------
+  adim "5/8 render kanıtı: $hedef kasadaki YENİ DSN'e BİREBİR (tavan $VAULT_RENDER_TAVAN_S s)"
+  if ! _render_bekle "$hedef" "$ISLIK/db_yeni_dsn"; then
+    echo "!! render bekleme aşıldı ($VAULT_RENDER_TAVAN_S s) — ALTER ROLE KOŞMADI; kasa ESKİ DSN'e geri alınıyor" >&2
+    _db_kasa_geri_al || die "KASA GERİ ALINAMADI: $yol YENİ DSN'de kaldı (rollback ve yedek yol düştü ya da
+     ölçüm tutmadı). ALTER ROLE KOŞMADI — DB ESKİ parolada. Render gelirse dosya YENİ, DB ESKİ olur:
+     $(_sir_birimleri "$sir") YENİDEN BAŞLATILMAMALI. Reçete aşağıda."
+    _render_simdi_esit "$hedef" "$ISLIK/db_eski_dsn" \
+      || echo "!! render hedefi ŞU AN ESKİ DSN'e EŞİT DEĞİL ($hedef) — Agent geri render edene kadar
+     $(_sir_birimleri "$sir") YENİDEN BAŞLATILMAMALI (dosya YENİ, DB ESKİ)." >&2
+    olcum_yok "render bekleme aşıldı: $hedef ($VAULT_RENDER_TAVAN_S s içinde kasadaki YENİ DSN'e
+     eşitlenmedi). ALTER ROLE KOŞMADI — DB'ye DOKUNULMADI; kasa ESKİ DSN'e geri alındı ($DB_GERI_YONTEM).
+     Agent render ETMİYOR olabilir: kasa mühürlü · politika eksik · birim düşmüş.
+     Bak: systemctl status vault-agent · journalctl -u vault-agent -n 50 --no-pager"
+  fi
+  t_kanit="$(date +%s)"
+  oldu "render ÖLÇÜLDÜ: $hedef ($RENDER_GECEN s) — kanonik kopya kasadaki YENİ DSN'le BİREBİR"
+
+  # ---- 6. ALTER ROLE — GERİ ALINAMAZ KANAL, restart'ın hemen önünde -------------------------------
+  adim "6/8 ALTER ROLE $DB_ROL (geri alınamaz kanal — restart'ın hemen önünde)"
+  if ! _sql_kos "$sql"; then
+    sudo rm -f "$sql"
+    _db_kasa_geri_al || die "ALTER ROLE başarısız — parola DEĞİŞMEDİ; KASA GERİ ALINAMADI: $yol YENİ DSN'de
+     kaldı (rollback ve yedek yol düştü ya da ölçüm tutmadı). Render gelirse dosya YENİ, DB ESKİ olur:
+     $(_sir_birimleri "$sir") YENİDEN BAŞLATILMAMALI. Reçete aşağıda."
+    if _render_bekle "$hedef" "$ISLIK/db_eski_dsn"; then
+      oldu "render ESKİ DSN'e döndü: $hedef ($RENDER_GECEN s)"
+    else
+      echo "!! render hedefi $VAULT_RENDER_TAVAN_S s içinde ESKİ DSN'e DÖNMEDİ ($hedef) — Agent geri render
+     edene kadar $(_sir_birimleri "$sir") YENİDEN BAŞLATILMAMALI (dosya YENİ, DB ESKİ)." >&2
+    fi
+    die "ALTER ROLE başarısız — parola DEĞİŞMEDİ, kasa geri alındı ($DB_GERI_YONTEM)"
+  fi
+  DB_KASA_EVRE=alter
+  _sql_sil "$DB_ROL" "$sql"
+  oldu "pencere B (render kanıtı → ALTER ROLE): $(( $(date +%s) - t_kanit )) s — ÖLÇÜLDÜ (tasarım §5; ilk canlı koşum belgeye yazar)"
+
+  # ---- 7. RESTART (ZORUNLU — havuzun parola değişimine davranışı ÖLÇÜLMEDİ) ------------------------
+  adim "7/8 tüketici yeniden başlat"
+  # shellcheck disable=SC2086
+  _yeniden_baslat db $(_sirala $birimler)
+
+  # ---- 8. KANIT (eski `--db` kanıtı AYNEN; negatif kontrolün girdisi KASADAN okunan ESKİ DSN) ------
+  adim "8/8 kanıt: yeni parola bağlanır · ESKİ parola bağlanAMAZ"
+  _db_kanit "$ISLIK/db_eski_dsn"
+  oldu "--db --vault: kasa · render · ALTER ROLE · restart · kanıt — beşi de ÖLÇÜLDÜ"
 }
 
 # =================================================================================================
