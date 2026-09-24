@@ -313,6 +313,12 @@ class _SeciciGZipYanitlayici(GZipResponder):
        aralık birleştirmede gzip ile düz baytlar karışabilir. 304 yolu DEĞİŞMEZ: `_inm_eslesir` zayıf
        karşılaştırma yapar (`W/` öneki atılır), yani tarayıcının geri yolladığı `W/"…"` yine 304 alır.
     3. `Accept-Ranges` DÜŞER: anında üretilen gzip temsili bayt aralığı sunamaz.
+    4. HEAD = GET TEMSİLİ (TSK-219 tur 2, RFC 9110 §9.3.2): HEAD gövdesi boştur, yani Starlette'in
+       boy eşiği HEAD'de hiç tetiklenmez ve başlıklar GET'inkiyle ÇELİŞİRDİ (güçlü↔`W/` ETag,
+       `Accept-Ranges`, `Content-Encoding`). Gövdesiz HEAD'de karar GÖVDEDEN değil BAŞLIKTAN verilir
+       (`_head_temsili`); gövdeli HEAD (Starlette `Response` HEAD'de de tam gövde yollar) zaten GET
+       yolundan geçer. Bugün HEAD kabul eden TEK rota `/runbook`tur — öteki bütün rotalar `APIRoute`
+       olduğu için HEAD'e 405 (`Allow: GET`) döner; kural, bir rotaya HEAD eklendiği gün de doğru kalsın diye genel.
     Uygulamanın KENDİSİ `Content-Encoding` yazdıysa (bugün hiçbir uç yazmıyor) Starlette sıkıştırmaz
     ve burada etikete de dokunulmaz — o etiket zaten o kodlamanın etiketidir."""
 
@@ -321,6 +327,7 @@ class _SeciciGZipYanitlayici(GZipResponder):
         super().__init__(app, minimum_size, compresslevel=compresslevel)
         self._dokunma = False          # bu yanıt olduğu gibi mi geçiyor (tür / 206)
         self._onceden_kodlu = False    # uygulama yanıtı zaten `Content-Encoding` taşıyor mu
+        self._head = False             # istek HEAD mi (kural 4)
 
     async def __call__(self, scope, receive, send):
         """`send`i, gzip'in NİHAİ başlık listesine ETag/`Accept-Ranges` kuralını uygulayan sarıcıyla verir."""
@@ -337,6 +344,7 @@ class _SeciciGZipYanitlayici(GZipResponder):
                     mesaj["headers"] = h.raw
             await send(mesaj)
 
+        self._head = scope.get("method") == "HEAD"
         await super().__call__(scope, receive, _nihai)
 
     async def send_with_compression(self, message) -> None:
@@ -349,7 +357,38 @@ class _SeciciGZipYanitlayici(GZipResponder):
         if self._dokunma:
             await self.send(message)
             return
+        if (self._head and message["type"] == "http.response.body" and not self.started
+                and not message.get("body", b"") and not message.get("more_body", False)):
+            self.started = True
+            self._head_temsili()
+            await self.send(self.initial_message)
+            await self.send(message)
+            return
         await super().send_with_compression(message)
+
+    def _head_temsili(self) -> None:
+        """Gövdesiz HEAD yanıtına, aynı istekle GET'in alacağı TEMSİL başlıklarını yazar (kural 4).
+
+        Boy işareti `Content-Length`tir: `FileResponse` HEAD'de dosyanın GERÇEK boyunu yazar, yani
+        karar GET'inkiyle aynıdır. Eşik altındaysa GET de sıkıştırılmaz → dokunulmaz (Vary de yok).
+        Aksi hâlde `Vary` + `Content-Encoding` yazılır ve `Content-Length` SİLİNİR: sıkıştırılmış boy
+        gövde üretilmeden bilinemez — RFC 9110 §9.3.2 bu başlığın HEAD'de atlanmasına izin verir,
+        §8.6 GET'inkinden farklı bir değeri YASAKLAR. `Content-Length` HİÇ YOKSA (boyu hesaplanmamış
+        gövdesiz HEAD — bugün yalnız `runbook`; GET gövdesi kabuk yüzünden hep eşiğin üstünde, çivi
+        v543) GET'in sıkıştırılacağı varsayılır. ETag zayıflatma ve `Accept-Ranges` silme, GET'te
+        olduğu gibi `__call__`daki `_nihai` sarıcısında olur (o, `Content-Encoding`e bakar)."""
+        mesaj = self.initial_message
+        durum = mesaj["status"]
+        if durum < 200 or durum in (204, 304) or self._onceden_kodlu:
+            return
+        h = MutableHeaders(raw=list(mesaj["headers"]))
+        boy = (h.get("content-length") or "").strip()
+        if boy.isdigit() and int(boy) < self.minimum_size:
+            return
+        h.add_vary_header("Accept-Encoding")
+        h["content-encoding"] = self.content_encoding
+        del h["content-length"]
+        mesaj["headers"] = h.raw
 
 
 class SeciciGZipMiddleware(GZipMiddleware):
@@ -1338,8 +1377,10 @@ def runbook(request: Request):
     dönmesi, sistemin iç haritasının orada durduğunu yetkisiz çağırana doğrulamak olurdu) ve iki
     hata yolu da (yer tutucu kaybı 500 · belge yok 503) HEAD'de aynen işler. Tek fark GÖVDEDİR:
     markdown HEAD'de HİÇ render EDİLMEZ — yoklamanın tüm anlamı o hesabı ödememektir. Bu yüzden
-    `Content-Length` 0'dır, GET'in uzunluğu değil; RFC 9110 içerik üretilirken belirlenen
-    başlıkların HEAD yanıtında atlanmasına izin verir."""
+    `Content-Length` HEAD'de YAZILMAZ: RFC 9110 §9.3.2 içerik üretilirken belirlenen başlığın
+    atlanmasına izin verir, §8.6 GET'inkinden farklı bir değeri yasaklar (TSK-219 tur 2'ye dek
+    `0` yazılıyordu — atlama değil yanlış değerdi; gzip katmanı HEAD kararını bu başlıktan verdiği
+    için `0` onu "GET eşik altında" diye yanıltır, HEAD'e GET'ten farklı temsil başlıkları bastırırdı)."""
     _auth(request)
     kabuk = (WEB / "runbook.html").read_text(encoding="utf-8")
     for yt in _RUNBOOK_YER_TUTUCU:
@@ -1354,7 +1395,9 @@ def runbook(request: Request):
         # Durum SORULARININ tamamı yukarıda cevaplandı; geriye yalnız gövde kalıyordu ve yoklayan
         # onu istemiyor. Erken dönüş buradan ÖNCEYE alınamaz: alınsaydı HEAD "açık" derken GET
         # 503 verirdi ve raf, üretilmemiş bir belgeyi yeşil gösterirdi.
-        return HTMLResponse("", headers=_NOCACHE)
+        yoklama = HTMLResponse("", headers=_NOCACHE)
+        del yoklama.headers["content-length"]
+        return yoklama
     govde, toc = _md_render(RUNBOOK_MD.read_text(encoding="utf-8"))
     sayfa = kabuk.replace(_RUNBOOK_YER_TUTUCU[0], govde).replace(_RUNBOOK_YER_TUTUCU[1], toc)
     return HTMLResponse(sayfa, headers=_NOCACHE)
