@@ -23,7 +23,10 @@ DÖRT ALAN, İKİ AİLE — ADLAR KODDAN TÜRETİLDİ, UYDURULMADI:
     (`loop.ENTRY_LEDGER`, `loop._patch_entry_slippage`: orada ad `fill`, zaman alanı yine
     `dolum_ts`). O adları buraya taşımak iki defterde aynı ada iki AYRI anlam verirdi
     (`dolum_ts` burada ÇIKIŞ'tır), `fill` ise `trades` satırında hiç yaşamaz. Bu yüzden giriş
-    ailesi AYRIK ve KENDİNİ ANLATAN adlar alır.
+    ailesi AYRIK ve KENDİNİ ANLATAN adlar alır. TSK-218'den (2026-09-25) beri motor da yeni
+    kapanışlara bu aileyi yazar (`loop._giris_dolum_yamasi`, aynı okuma kuralı, yalnız boş alan);
+    bu araç o yamanın göremediği satırlar içindir (parent emri motorun penceresinden düşmüş eski
+    kapanışlar). Adların tek kaynağı artık motordadır — aşağıdaki ALAN SÖZLEŞMESİ onları ithal eder.
   · AS-OF damgası → `dolum_kaynak` = `alpaca_orders_geri_dolum_<utc-iso>`. Satırda ZATEN varsa
     KORUNUR (`ledgerstamp.stamp`in "var olan damga ezilmez" yasasıyla aynı sınıf: ilk geri
     dolumun kanıtı sonraki bir koşum tarafından silinmez).
@@ -81,6 +84,7 @@ from pathlib import Path
 
 from meridian import obs
 from meridian.adapters import alpaca
+from meridian import loop as _motor
 from meridian.loop import _EMIR_PENCERESI_SAYFA_TAVANI, _entry_fill_price
 
 BETIK_ADI = "ops/dolum_geri_dolum.py"
@@ -94,18 +98,21 @@ motor_emri_mi = alpaca.is_engine_order       # coid sahiplik süzgeci
 SAYFA_TAVANI = _EMIR_PENCERESI_SAYFA_TAVANI  # kaç sayfa geriye sayfalanır (tavan aşımı BEYANLI)
 
 # ---- ALAN SÖZLEŞMESİ --------------------------------------------------------------------------
-ALAN_CIKIS_TS = "dolum_ts"            # motorun yazdığı ad (`loop._exit_fill_yamasi` yaması)
-ALAN_CIKIS_FIYAT = "alpaca_fill_price"
-ALAN_GIRIS_TS = "giris_dolum_ts"      # `trades` satırında giriş ailesi için kanonik ad YOKTU
-ALAN_GIRIS_FIYAT = "giris_dolum_fiyat"
-ALAN_DAMGA = "dolum_kaynak"
+# TEK KAYNAK MOTORDA (TSK-218, 2026-09-25): adlar bu araçta doğdu, motor yeni kapanışlara aynılarını
+# yazmaya başlayınca sözleşme `meridian/loop.py`deki bloğa taşındı ve buradan İTHAL edilir — iki
+# kopya sessizce ayrışırdı (çivi `tests/test_giris_dolum_ailesi_v541.py` G4).
+ALAN_CIKIS_TS = _motor.DOLUM_ALAN_CIKIS_TS        # motorun yazdığı ad (`loop._exit_fill_yamasi` yaması)
+ALAN_CIKIS_FIYAT = _motor.DOLUM_ALAN_CIKIS_FIYAT
+ALAN_GIRIS_TS = _motor.DOLUM_ALAN_GIRIS_TS        # motor da yazar: `loop._giris_dolum_yamasi`
+ALAN_GIRIS_FIYAT = _motor.DOLUM_ALAN_GIRIS_FIYAT
+ALAN_DAMGA = _motor.DOLUM_ALAN_DAMGA              # yalnız BU araç basar; motor yazmaz, ezmez
 ALAN_KAPATMA_EMRI = "close_order_id"  # varsa çıkış "karar" kolundan okunur
 HEDEF_ALANLAR = (ALAN_GIRIS_TS, ALAN_GIRIS_FIYAT, ALAN_CIKIS_TS, ALAN_CIKIS_FIYAT)
 DAMGA_ONEKI = "alpaca_orders_geri_dolum_"
 
 KAYNAK_KOLONU = "kaynak"              # = ledgerstamp.FIELD — DOKUNULMAZ
 CANLI_DAMGA = "live_paper"            # = ledgerstamp.LIVE_PAPER
-FIYAT_ONDALIK = 4                     # motor yamasının yuvarlaması ile AYNI
+FIYAT_ONDALIK = _motor.DOLUM_FIYAT_ONDALIK  # motor yamasının yuvarlaması (tek kaynak)
 
 
 class BrokerErisilemez(RuntimeError):
