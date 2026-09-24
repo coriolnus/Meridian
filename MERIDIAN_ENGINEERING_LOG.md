@@ -3812,3 +3812,22 @@ değişince endeks AYNI commit'te yeniden üretilir (üretilmiş belge zinciri).
 beyanlı yeşil, push.
 **Canlı:** #63 hâlâ inmedi (akşam penceresi de geçti; sabah 08:00–09:50Z, blok aynı). Sağlık 200, warn sınıfı yok, failed 6 eski.
 09-21 antrenmanı: 6 aday / 0 geçti (incumbent OOS 0,42; "bu dilimde v1 yerel-optimal"), n_v1 584, `loop_closed` False.
+
+### 26. TSK-215 ANA DALDA — ÜÇ AJAN TURU, ROL-1 DOĞRULAMASI, SUITE #9 (2026-09-24 09:56Z)
+**Dilim:** `hermes_composite.mark` uç durum geçişinde olay basar (`measure_failed` → warn, `measured` → log; yalnız yazılmış geçiş; `neden` ≤ 200 ya da
+None), `reap_measuring`teki kopya kaldırıldı (tek kaynak: geçiş nerede yazılıyorsa olay orada); `dagit_vars.yml::rsync_disla` += "/logs" (kök-çapalı;
+v452 donmuş sözleşme 31→32). v534 11 çivi. Çocuk defteri: `prescreen.kuyruk_geri_yaz` `mark`tan önce `config.STATE`i canlıya alır — olay canlı
+deftere düşer (kod okuma; çivisiz, beyanlı).
+**Ajan turları (ders):** üç Opus turu raporu bitiremedi — hepsi aynı mekanizma: yük altında (Spotlight %83 CPU + 8 GB bellek baskısı + Mac uykusu)
+ön plan pytest 120 s'yi aşıyor, harness komutu arka plana alıyor, ajan "bildirim bekliyorum" deyip duruyor (bildirim alt ajana gelmez). Tur 2 ayrıca
+"bisect" için dört dosyayı ana dal sürümüne çevirdi → worktree boş göründü; `scratchpad/yedek/` kopyaları sha256 ile ana daldan farklı ve TSK izli
+çıktı, `cp` ile geri kondu. Tur 2'nin değerli katkısı korundu: v452 şerhindeki kısaltılmış `…::test_T5…` çapası codelaw'da ÇÜRÜK sayılıyordu
+(v214 "ok yalnız çürük çapayla düşmeli" kırmızısı), düz metne çevrildi. Tur 3 kendiliğinden canlanan tur 2 ile çakışmasın diye tur 2 TaskStop.
+Sonnet inceleme ŞARTLI-GO (kod temiz; tek engel mutasyon kanıtı). **Rol-1 doğrulaması** (`scratchpad/tsk215-rol1-dogrulama.md`): kapsam 591 passed /
+0 / exit 0 (seri, worktree, PYTHONPATH); mutasyon M1 (`measure_failed` dalı ölü → T1/T1b/T3 kırmızı) ve M3 (`/logs` silinir → T5 kırmızı) ısırdı; geri alım
+yedekten sha-eşit. Ölçüm = doğrulama, uygulama değil — Fable kod yazmadı, ölçtü. Birleştirme fde5e6af, ROADMAP 614c052e.
+**Kendi hatam (tekrar):** zsh tırnaksız değişken (`$K`) tek argüman oldu, pytest çıkış 4 — memory `zsh-tirnaksiz-degisken-ayrilmaz` üçüncü kez;
+diziyle düzeltildi. Ve tırnaksız heredoc backtick ikamesi (§25 onarımı) — memory `commit-mesaji-backtick-zsh`e eklendi.
+**Suite #9 (614c052e):** 1 failed / 13826 passed / 21 skipped, pytest 13:39 ama duvar 02:52→08:20Z (askı). Kırmızı: v447 M2 (son healthz hazırlık beklemesi 'aşıldı'); SERİ tekrar da kırmızı (11–12 s) → flake beyanı için ÖLÇÜM: 12 s'lik sınırlı sonda, duvar saati 62,8 s / monotonik 13,1 s, iki sıçrama ~25 s (Δmonotonik 0,17 s) — süreç askıya alınıyor (Mac uyku/askı), betiğin `date +%s` tabanlı 20 s tavanı bu yüzden aşılıyor; TSK-215 v447 yüzeyine dokunmadı (diff ölçüldü). Hüküm: ortam kaynaklı, ağaç beyanlı yeşil, push 614c052e. TSK-213'e üçüncü not (askı sınıfı)
+**Canlı (02:35Z):** sağlık 200, 5 saatte yalnız `finviz_unavailable` ×1, failed 6 eski, gece sprint tetiği yok (haftalık taban 09-21'de koştu). #63 inmedi;
+sabah 08:00–09:50Z penceresi için blok 07:30Z mesajında.
