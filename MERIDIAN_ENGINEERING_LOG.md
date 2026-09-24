@@ -3856,3 +3856,21 @@ görünen adını (sayılı mesaj, `(toplu)` son eki) birebir arıyordu. Düzelt
 tanımlayıcı), çakışmada tam ad. İnceleme tur 1 engelleyici buldu (MECHANISM_STALE'in 'mekanizma gecikti' dışı kalıplarında jeton
 ayırt edici değildi → çakışma) → tur 2'de konu deseni + çakışma güvencesi; v536 13 çivi, 8/8 mutasyon.
 **Makine:** keep_awake açık; 18:2x→19:20Z arası askı gözlenmedi (komutlar normal sürede döndü). #63 hâlâ operatörde.
+
+### 28. PARALEL TUR: TSK-064 + TSK-218 + TSK-213 ANA DALDA, EDG-042 TELAFİSİ, SUITE KIRMIZISININ KÖKÜ (2026-09-24 20:55→22:15Z, model Opus 5.5)
+**Operatör (20:5xZ):** "paralelde yapabileceğin başka task yokmu" → dört paralel dilim (üç Opus/Sonnet ajanı + Rol-1 A1 ölçümleri).
+**Tetik taraması iki kırık sayaç buldu:** (1) `edg042-friksiyon-haftalik` 09-12'de kullanım limitine takıldı, 09-19'da Mac uykusunda
+öldü ama görev listesi "succeeded" dedi — iki hafta ölçüm yok. Telafi #5 (Sonnet, worktree): dört kova eşik altında; giris_1345 n 8→18
+seans eşiği doldu, cikis_hedef n 6→14 eşiğe en yakın (1+1); hakem ilk kez değerlendirildi, tetiklenmedi (4039290d). (2) TSK-066'nın
+EDG-069 n_uygun tetiği A1'de 22/30 ölçüldü ve 09-13'ten beri kapanan 4 işlemin 4'ü de `giris_dolum_ts` taşımıyordu: alanı yalnız tek
+seferlik geri dolum (TSK-182) yazmıştı, motor hiç yazmıyordu — "~2–4 hafta" tahmini yanlıştı, kapı hiç dolmayacaktı → TSK-218.
+**TSK-218 (00479840):** motor `_giris_dolum_yamasi` reconcile'ın emir listesinden, yalnız boş alana; alan adları motorda tek kaynak;
+v541 20 çivi, 16/16 mutasyon, 935 kapsam yeşil; Sonnet 0 engelleyici. Açık: pencere dışı parent (CRM 24 gün) ilk turda dolmayabilir.
+**TSK-064 (e1b6d560):** `sir_rotasyon.sh --db --vault`; Sonnet 0 engelleyici, 3 KÜÇÜK → tur 2 Rol-1 (Ç2b + şerh). Kendi hatam:
+ROADMAP notuna "dağıtım gerekmez" yazdım — betik A1'de sudo ile koşuyor; aynı turda düzeltildi.
+**TSK-213 v217 (d7bf8ac7):** negatif kontrol üç bileşen (224 koşumda sahte KIRMIZI 21→2). Ajanın "sınırda payı" RULING ile reddedildi
+(eşiği geçme yönünde esnetirdi — memory olcum-aleti-esikten-sapar). Bedel testte kalıcı; CLAUDE.md §6 3. katmana seri tek-çivi adımı.
+**Suite (00479840): 13.918 passed / 2 failed — harness "exit 0" dedi, PYTEST_EXIT=1.** Kökler: v154 — TSK-064 betik başlığı, RUNBOOK
+üretilmemişti; v287 — "özet < tam/2" vekili, oran 09-23 0,4980 → cephe katmanı 4ef8372b 0,5008 (benim bugünkü ROADMAP işim; kapsamına
+v287 girmemişti, main push'lanmış hâliyle kırmızıydı). v287 bileşimden bağımsız ölçüye çevrildi (3/3 mutasyon), boyut sorusu TSK-219.
+Delta küme 2.751 yeşil → push 2af3d9f7. #63 dağıtımı hâlâ operatörde; artık TSK-218 + yeni rotasyon betiğini de taşıyor.
