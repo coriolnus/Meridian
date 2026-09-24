@@ -429,8 +429,11 @@ def test_ETag_ve_304_pazarligi_AYNEN_calisir(istemci, yol):
     NEDEN GERÇEK BİR RİSK: `@app.middleware("http")` (BaseHTTPMiddleware) yanıtı bir
     `StreamingResponse`a sarar; bu dosyanın statik yolu ise tam olarak gövde-akışı
     (`FileResponse`, app.js 518 KB) ve GÖVDESİZLİK (`Response(status_code=304)`) üzerine kurulu.
-    Bu yüzden saf ASGI sarıcısı seçildi — ve o seçimin doğrulaması burada ölçülüyor."""
-    r1 = istemci.get(yol)
+    Bu yüzden saf ASGI sarıcısı seçildi — ve o seçimin doğrulaması burada ölçülüyor.
+
+    SIKIŞTIRMASIZ TEMSİL ölçülür (TSK-219): gzip isteyen istemcinin temsili RFC 9110 §8.8.3 gereği
+    ZAYIF etiket taşır — o bacak ve 304'ü `tests/test_pano_gzip_v543.py`de çivili."""
+    r1 = istemci.get(yol, headers={"Accept-Encoding": "identity"})
     assert r1.status_code == 200
     etag = r1.headers.get("etag")
     assert etag and not etag.startswith("W/"), f"{yol}: güçlü ETag kayboldu ({etag!r})"

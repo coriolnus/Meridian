@@ -395,7 +395,9 @@ def test_5a_iki_uretim_yuzeyi_de_BILESIK_yuklemi_cagirir():
         "`sprint._desen_atlar` bileşik yüklemi çağırmıyor — kum havuzu geçici artığı kopyalar")
 
     api_kaynak = inspect.getsource(api)
-    blk = next(b for b in re.split(r"\n(?=@app\.)", api_kaynak) if '"/api/debug_export"' in b)
+    # Seçici dekoratördür (TSK-219): yol literali `GZIP_HARIC_YOLLAR`da da geçer (v21 p3 notu).
+    blk = next(b for b in re.split(r"\n(?=@app\.)", api_kaynak)
+               if '@app.get("/api/debug_export")' in b)
     assert "config.kopyalanmaz_mi(" in blk, (
         "`api.api_debug_export` bileşik yüklemi çağırmıyor — teşhis paketi kararı yalnız sır "
         "bacağını soruyor")

@@ -40,6 +40,8 @@ from fastapi import FastAPI, Request, HTTPException, Query
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, PlainTextResponse, Response
 from fastapi.routing import APIRoute
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.datastructures import Headers, MutableHeaders
+from starlette.middleware.gzip import GZipMiddleware, GZipResponder, IdentityResponder
 
 from . import auth
 
@@ -244,6 +246,134 @@ def _read_dash_token() -> str | None:
 
 DASH_TOKEN = _read_dash_token()  # required to reach the API over a network origin
 
+
+# ---- YANIT SIKIŞTIRMA — SEÇİCİ GZIP (TSK-219, 2026-09-25) -----------------------------------
+# ÖLÇÜLEN BOŞLUK (Rol-1, 2026-09-24): APISIX → uvicorn zincirinin HİÇBİR katmanında sıkıştırma
+# yoktu; `/api/roadmap` 774 KB, `pano-*.js` 2,14 MB telden ham geçiyordu. Yer uygulama katmanı —
+# APISIX gzip eklentisi reddedildi (`plugins:` listesi varsayılanı ezer, doğrulaması yalnız canlıda).
+#
+# YIĞINDAKİ YERİ: EN İÇ. Bu blok CORS'tan, güvenlik başlıklarından ve kayan oturumdan ÖNCE eklenir;
+# Starlette `add_middleware`i listenin BAŞINA ekler, yani ilk eklenen en içte kalır. Gerekçe: gzip
+# GÖVDEYİ dönüştürür, öteki üçü yalnız BAŞLIK yazar — gövde en içte dönüşünce başlık yazanların
+# hepsi NİHAİ yanıtı görür: `GuvenlikBasliklariMiddleware` SET'ini sıkıştırılmış yanıtın listesine
+# yapar, `KayanOturumMiddleware`in "çerez zaten yazılmış mı" sorusu nihai listeye sorulur, CORS'un
+# `Vary: Origin`i gzip'in `Vary: Accept-Encoding`ine EKLENİR. Çerçevenin kendi 500'ü
+# (`ServerErrorMiddleware`, kullanıcı yığınının dışı) sıkıştırılmaz — sabit kısa metin, kayıp yok.
+# Çivi: `tests/test_pano_gzip_v543.py` (konum dahil).
+#
+# SEVİYE 6, Starlette varsayılanı 9 DEĞİL. Ölçüm (bu Mac, arm64, zlib 1.2.12, 2026-09-25): gerçek
+# `/api/roadmap` gövdesi 774.473 B → lv6 190.856 B / 11,0 ms · lv9 189.725 B / 13,5 ms; `pano-*.js`
+# 2.144.073 B → lv6 605.981 B / 36,1 ms · lv9 604.431 B / 42,1 ms. Yani 9, %0,3–0,6 küçük çıktı için
+# %17–23 fazla CPU yakar — ve sıkıştırma İSTEK BAŞINADIR (önbelleklenmez). A1'de (4 OCPU ARM)
+# ÖLÇÜLMEDİ: mutlak süre iddia edilmez, yalnız seviyeler arası oran raporlanır.
+GZIP_SEVIYE = 6
+# ASGARİ 500 B — Starlette varsayılanıyla AYNI ama AÇIK yazılır ki çerçeve yükseltmesiyle sessizce
+# değişmesin. Ölçüm (lv6, JSON öneki): 500 B → 337 B (−163 B, ~14 µs); 200 B → 200 B (kazanç yok).
+GZIP_ASGARI_BAYT = 500
+# BREACH HARİÇ TUTMASI (yol + alt yolları). Saldırının dört ön koşulu: sıkıştırılmış gövde · gövdede
+# sır · aynı gövdede saldırganın yansıttığı girdi · kurbanın tarayıcısına KİMLİKLİ istek attırmak.
+# Sonuncusu bu yüzeyde YAPISAL olarak kapalı: oturum çerezi `SameSite=Strict` (siteler-arası isteğe
+# eklenmez), betik yolu özel başlık (`x-meridian-token` — siteler-arası ancak CORS ön-uçuşuyla, CORS
+# varsayılan kapalı). Yani sır taşıyan kimlikli yanıtı saldırgan TETİKLEYEMEZ. Liste yine de
+# DERİNLEMESİNE savunmadır — bedeli ~sıfır (gövdeler küçük ya da ikili):
+#   kimlik ailesi   — `/api/login` · `/api/logout` · `/api/session` · `/api/setup-password`: oturum
+#                     çerezini VEREN/SİLEN uçlar; gövdeleri bugün sabit ve <100 B (jeton başlıkta) —
+#                     hariç tutma, gövdeye bir gün jeton girerse diye.
+#   `/api/secrets`  — maskeli ipucu anahtarın SON 4 karakteridir (sırdan türemiş); POST izinli adı
+#                     yansıtır, `/test/{provider}` sağlayıcının hata metnini döner.
+#   `/api/debug_export` — state dökümü; sır dışlaması bir RET LİSTESİdir (`config.kopyalanmaz_mi`) ve
+#                     TSK-209'da o liste pakete oturum imza anahtarını sızdırmıştı. (Tür de zip.)
+#   `/api/hermes/pool_key` — istek gövdesi anahtar taşır; yanıt CLI stderr kuyruğunu yansıtır.
+# `/api/state/snapshot` listede DEĞİL: kabul listesiyle (`keep`) kurulur, sır dosyası taşımaz; türü
+# (`application/gzip`) zaten aşağıdaki süzgece takılır.
+GZIP_HARIC_YOLLAR: tuple[str, ...] = (
+    "/api/login", "/api/logout", "/api/session", "/api/setup-password",
+    "/api/secrets", "/api/debug_export", "/api/hermes/pool_key",
+)
+# ZATEN SIKIŞTIRILMIŞ TÜRLER — yeniden sıkıştırmak CPU israfıdır (Starlette yalnız
+# `text/event-stream`i atlar). `image/` ÖNEKTİR; `image/svg+xml` metin olduğu hâlde bilerek içeride:
+# tek SVG `favicon.svg` (1,5 KB, ~0,6 KB kazanç, sonrası 304) — istisna kuralı bedeline değmez.
+GZIP_ATLANAN_TURLER: tuple[str, ...] = ("application/zip", "application/gzip", "font/woff2", "image/")
+
+
+def _gzip_haric_yol(yol: str) -> bool:
+    """Yol BREACH hariç kümesinde mi — ya kendisi ya da `/` ile ayrılmış bir alt yolu."""
+    return any(yol == onek or yol.startswith(onek + "/") for onek in GZIP_HARIC_YOLLAR)
+
+
+class _SeciciGZipYanitlayici(GZipResponder):
+    """Starlette `GZipResponder`ı + üç kural (nginx gzip süzgeci de ETag'i zayıflatır, `Accept-Ranges`i
+    siler ve 206'yı sıkıştırmaz — kaynak bilgisi, bu depoda ölçülmedi):
+
+    1. DOKUNULMAZ YANIT: türü `GZIP_ATLANAN_TURLER`de olan ya da 206/`Content-Range` taşıyan yanıt
+       olduğu gibi geçer. 206'nın `Content-Range`i SIKIŞTIRMASIZ baytları sayar; parçayı gzip'lemek
+       aralığı yalan yapar (Starlette bunu ayırt etmez — `FileResponse` aralık isteğine 206 döner).
+    2. ZAYIF ETag: SIKIŞTIRILAN yanıtın güçlü etiketi `W/` ile zayıflatılır. RFC 9110 §8.8.3: farklı
+       içerik kodlaması farklı temsildir ve güçlü etiket temsiller arasında paylaşılamaz — paylaşılırsa
+       aralık birleştirmede gzip ile düz baytlar karışabilir. 304 yolu DEĞİŞMEZ: `_inm_eslesir` zayıf
+       karşılaştırma yapar (`W/` öneki atılır), yani tarayıcının geri yolladığı `W/"…"` yine 304 alır.
+    3. `Accept-Ranges` DÜŞER: anında üretilen gzip temsili bayt aralığı sunamaz.
+    Uygulamanın KENDİSİ `Content-Encoding` yazdıysa (bugün hiçbir uç yazmıyor) Starlette sıkıştırmaz
+    ve burada etikete de dokunulmaz — o etiket zaten o kodlamanın etiketidir."""
+
+    def __init__(self, app, minimum_size: int, compresslevel: int) -> None:
+        """Üst sınıfı kurar; yanıt başına iki bayrak başlangıçta kapalıdır."""
+        super().__init__(app, minimum_size, compresslevel=compresslevel)
+        self._dokunma = False          # bu yanıt olduğu gibi mi geçiyor (tür / 206)
+        self._onceden_kodlu = False    # uygulama yanıtı zaten `Content-Encoding` taşıyor mu
+
+    async def __call__(self, scope, receive, send):
+        """`send`i, gzip'in NİHAİ başlık listesine ETag/`Accept-Ranges` kuralını uygulayan sarıcıyla verir."""
+        async def _nihai(mesaj):
+            """Yalnız BİZİM sıkıştırdığımız yanıtın başlangıç mesajında etiketi zayıflatır."""
+            if (mesaj["type"] == "http.response.start"
+                    and not self._dokunma and not self._onceden_kodlu):
+                h = MutableHeaders(raw=list(mesaj["headers"]))
+                if h.get("content-encoding") == self.content_encoding:
+                    etiket = h.get("etag")
+                    if etiket and not etiket.startswith("W/"):
+                        h["etag"] = "W/" + etiket
+                    del h["accept-ranges"]
+                    mesaj["headers"] = h.raw
+            await send(mesaj)
+
+        await super().__call__(scope, receive, _nihai)
+
+    async def send_with_compression(self, message) -> None:
+        """Başlangıç mesajında dokunulmazlık kararını verir; dokunulmaz yanıtı aynen iletir."""
+        if message["type"] == "http.response.start":
+            h = Headers(raw=message["headers"])
+            self._onceden_kodlu = "content-encoding" in h
+            self._dokunma = (message["status"] == 206 or "content-range" in h
+                             or h.get("content-type", "").lower().startswith(GZIP_ATLANAN_TURLER))
+        if self._dokunma:
+            await self.send(message)
+            return
+        await super().send_with_compression(message)
+
+
+class SeciciGZipMiddleware(GZipMiddleware):
+    """Starlette `GZipMiddleware`ı + BREACH yol hariç tutması + `_SeciciGZipYanitlayici`.
+
+    Hariç yolda istek sıkıştırma katmanına HİÇ girmez (o yanıt `Accept-Encoding`e göre değişmediği
+    için `Vary` de yazılmaz). Yanıtlayıcı seçimi üst sınıfın `__call__`ının AYNISIDIR — üst sınıf
+    `GZipResponder`ı adıyla kurduğu için alt sınıfı ancak bu dört satırı yeniden yazarak takabiliriz;
+    `gzip` alt-dizge denetimi (q-değerlerine bakmaz) bilerek Starlette'inkiyle aynı bırakıldı."""
+
+    async def __call__(self, scope, receive, send):
+        """HTTP dışı kapsam ve hariç yol aynen geçer; kalanında gzip ya da kimlik yanıtlayıcısı."""
+        if scope["type"] != "http" or _gzip_haric_yol(scope.get("path", "")):
+            await self.app(scope, receive, send)
+            return
+        if "gzip" in Headers(scope=scope).get("accept-encoding", ""):
+            yanitlayici = _SeciciGZipYanitlayici(self.app, self.minimum_size, self.compresslevel)
+        else:
+            yanitlayici = IdentityResponder(self.app, self.minimum_size)
+        await yanitlayici(scope, receive, send)
+
+
+app.add_middleware(SeciciGZipMiddleware, minimum_size=GZIP_ASGARI_BAYT, compresslevel=GZIP_SEVIYE)
+
 # Cross-origin access — OFF unless MERIDIAN_CORS_ORIGINS is set (comma-separated origins, or "*"). Lets a
 # frontend on ANOTHER origin (e.g. a local dashboard) call this agent's API. Only meaningful with a token.
 _CORS = [o.strip() for o in os.environ.get("MERIDIAN_CORS_ORIGINS", "").split(",") if o.strip()]
@@ -408,6 +538,9 @@ class GuvenlikBasliklariMiddleware:
 # listeyi ters kurar). Sonuç: CORS'un kendi kısa-devre yaptığı preflight yanıtları da başlığı alır.
 app.add_middleware(GuvenlikBasliklariMiddleware)
 
+# SIKIŞTIRMA (`SeciciGZipMiddleware`, TSK-219) CORS'tan da ÖNCE eklenir → yığının EN İÇİNDEDİR;
+# gerekçesi `GZIP_SEVIYE` üstündeki blokta.
+#
 # ÜÇÜNCÜ BİR MIDDLEWARE DAHA VAR ve bilerek BURADA DEĞİL: `KayanOturumMiddleware` (oturum çerezini
 # kullanımla tazeler) kimlik uçlarının — `/api/login`, `/api/logout`, `/api/setup-password` —
 # HEMEN YANINDA durur. Gerekçe orada yazılı: çerezi YAZAN dört yol (giriş · ilk kurulum · çıkış ·
@@ -10959,8 +11092,8 @@ def _roadmap_ozetle(bolumler: list) -> list:
     """Gövdeleri SÖKER, yapıyı ve durumu bırakır. Kopya üretir — önbellekteki ağaca DOKUNMAZ
     (yerinde budasaydık ikinci istek gövdesiz bir tahta görür ve `?ozet=0` sessizce yalan olurdu).
 
-    NİYE VAR: tam gövde ÖLÇÜLDÜ — 383 KB (2026-08-25). Uygulamada gzip ara katmanı YOK, yani o
-    383 KB telden ham geçiyor. Tahtayı çizmek için madde gövdesi gerekmez; başlık + durum yeter.
+    NİYE VAR: tam gövde ÖLÇÜLDÜ — 383 KB (2026-08-25; o gün gzip YOKTU, TSK-219'dan beri gzip isteyene
+    `SeciciGZipMiddleware` sıkıştırır). Tahtayı çizmek için madde gövdesi gerekmez; başlık + durum yeter.
     Ayrıntı `?bolum=§N` ile tek bölüm olarak istenir."""
     def _b(b: dict) -> dict:
         return {**b,
@@ -11045,7 +11178,7 @@ def api_roadmap(request: Request, bolum: str | None = None, tam: int = 0, ozet: 
     `?bolum=§3` tek bölüme daraltır · `?tam=1` madde gövdelerinin kırpılmasını kapatır
     (kırpılmışsa gövde bunu `ham_kirpildi` + `ham_uzunluk` ile SÖYLER — kırpılmış metni tam
     sanmak yalandır) · `?ozet=1` madde/hücre gövdelerini söker, yapı + başlık + durum bırakır
-    (tam gövde ÖLÇÜLDÜ: 383 KB, uygulamada gzip ara katmanı yok).
+    (tam gövde ÖLÇÜLDÜ: 383 KB, 2026-08-25 — gzip'siz; TSK-219'dan beri `SeciciGZipMiddleware`).
 
     MADDE LİSTELERİ VE TABLOLAR AYRI SAYILIR. Bu dosyanın asıl tahtası (§2) bir TABLODUR; yalnız
     `- ` maddelerini ayrıştıran bir uç `bloke: 0` derdi — ölçmediğini "yok" diye bildirmek. İki
