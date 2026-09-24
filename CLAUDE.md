@@ -213,6 +213,9 @@ Zorlanma katmanı dürüstçe etiketlidir — zorlanamayan yasa, zorlananla ayn�
      Bu katman EDİTÖR KULLANICISININDIR — hızlı geri besleme içindir, hüküm üretmez.
   2. **Merge öncesi hedefli kapsam + tarama çivileri → terminal, SERİ** (1–3 dk).
   3. **Motor push öncesi tam suite → Rol-1, ARKA PLAN, `-n 4 --dist worksteal`** (~13 dk).
+     Ardından SERİ tek çivi: `tests/test_golge_planli_kol_v217.py::test_p95_dongu_suresi_kart_tavanini_ASMIYOR`
+     (~2 s) — `-n 4` altında 24 koşumun 17'sinde ÖLÇÜLEMEDİ döner, kart EXE-2026-003 KILL#1'in fiilî
+     ölçümü bu seri adımdır; skip nedeni okunur (TSK-213, 2026-09-24).
   4. **Her push → CI duman** (~2 dk). Tam suite CI'a TAŞINMAZ: temiz klonda ~65 state-bağımlı
      kırmızı + 2 vCPU + dakika kotası.
   Rol-1 ve ajanlar 1. katmanı KULLANMAZ, terminalde koşar. Nedeni araç tercihi değil ÖLÇÜM:
