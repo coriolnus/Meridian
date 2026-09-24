@@ -173,6 +173,27 @@ EXIT_FILL_KEY = "exit_fill_pending"
 EXIT_FILL_MAX_TRIES = 5     # tur; sınırlı pencere — sonsuz retry yeni bir sessizlik sınıfı olurdu
 EXIT_FILL_CAP = 80          # kuyruk tavanı (kapanış debisi küçük; taşma patolojiktir ve OLAYLIdır)
 
+# ==================================================================================================
+# TRADES SATIRI DOLUM ALAN SÖZLEŞMESİ — TEK KAYNAK (TSK-218, 2026-09-25)
+# ==================================================================================================
+# İki aile, bir damga. Adlar TSK-182 geri dolum aracında (`ops/dolum_geri_dolum.py`) doğdu ve canlı
+# defterde 22 satırda o adlarla yaşıyor; motor yeni kapanışlara AYNI adları yazar ki geri
+# doldurulmuş satırlarla yeni satırlar TEK defter oluştursun. Araç bu sabitleri buradan İTHAL eder
+# (iki kopya sessizce ayrışır — çivi v541 G4).
+#   ÇIKIŞ → `dolum_ts` + `alpaca_fill_price`: `_exit_fill_yamasi`nın yazdığı anahtarlar.
+#   GİRİŞ → `giris_dolum_ts` + `giris_dolum_fiyat`: bracket PARENT'ının KENDİ dolumu
+#           (`_entry_fill_price` + parent `filled_at`); yazan `_giris_dolum_yamasi`. E2
+#           defterindeki `fill`/`dolum_ts` adları buraya TAŞINMADI: `dolum_ts` bu satırda ÇIKIŞ'tır.
+#   DAMGA → `dolum_kaynak`: RETROAKTİF geri dolumun as-of kanıtı (`alpaca_orders_geri_dolum_<iso>`).
+#           Motor bu alanı YAZMAZ ve EZMEZ — yokluğu "motorun canlı yaması" demektir (çıkış
+#           ailesinin motor-yazımı satırları da onu hiç taşımadı).
+DOLUM_ALAN_CIKIS_TS = "dolum_ts"
+DOLUM_ALAN_CIKIS_FIYAT = "alpaca_fill_price"
+DOLUM_ALAN_GIRIS_TS = "giris_dolum_ts"
+DOLUM_ALAN_GIRIS_FIYAT = "giris_dolum_fiyat"
+DOLUM_ALAN_DAMGA = "dolum_kaynak"
+DOLUM_FIYAT_ONDALIK = 4     # çıkış yamasının `round(af, 4)`ü ile AYNI yuvarlama
+
 
 def _exit_fill_kaydet(meta: dict, plan_id, ticker, *, kaynak: str, dstr: str,
                       order_id=None, order_id_neden=None, reason=None) -> None:
@@ -3834,6 +3855,83 @@ def _defter_teyit_yamasi(by_coid: dict, pencere: dict, out: dict, dstr: str) -> 
     out["defter_teyit"] = dict(sayaç, tarih=dstr, pencere_kapsandi=kapsandi)
 
 
+def _giris_dolum_yamasi(by_coid: dict, out: dict, dstr: str) -> None:
+    """`live_paper` satırlarının BOŞ giriş dolum alanlarını bracket parent'ının KENDİ dolumundan
+    yazar — TSK-218 (kart EDG-2026-069 ADIM-0'ın `giris_dolum_ts` ailesi).
+
+    NEDEN: giriş dolumu motorda VARDI (parent gövdesi; E2 defteri de taşır) ama `trades` satırına
+    hiç akmıyordu — yalnız TSK-182'nin TEK SEFERLİK geri dolumu yazmıştı. Ölçüldü (A1, 2026-09-24):
+    geri dolumdan sonra kapanan 4 işlemin hiçbiri aileyi taşımıyor; kapının `n_uygun`u canlı
+    birikimle HİÇ dolmazdı, eksik oranı her kapanışla büyürdü.
+
+    SEMANTİK geri dolum aracıyla (`ops/dolum_geri_dolum.py` `dolum_oku`) BİREBİR: eşleşme
+    plan_id == client_order_id; fiyat `_entry_fill_price(parent)` (DOLUMUN TEK OKUMA KURALI,
+    `DOLUM_FIYAT_ONDALIK` yuvarlaması), zaman parent'ın `filled_at`i (broker olgusu). Alanlar
+    BAĞIMSIZ yazılır (fiyat var zaman yoksa fiyat yazılır).
+
+    ÜÇ YASA: (1) YALNIZ BOŞ ALAN — dolu alan ezilmez, broker farklı dese bile (ayrışma teşhisi
+    geri dolum aracının raporundadır); (2) UYDURMA YOK — okunamayan değerin anahtarı AÇILMAZ
+    (`None` yazmak "taşıyan" sayımında sahte doluluk olurdu), nedeni tur özetinde ADIYLA sayılır;
+    (3) `dolum_kaynak` damgası YAZILMAZ ve dokunulmaz (sözleşme bloğu `DOLUM_ALAN_DAMGA`).
+
+    KENDİ KENDİNİ İYİLEŞTİRİR (`_defter_teyit_yamasi` emsali): çıkış kuyruğuna BAĞLI DEĞİL — her
+    tur boş aileli her canlı satır yeniden denenir; koruma-dolumu kapanışı, çıkış vazgeçişi ya da
+    kapanış turundaki broker arızası aileyi kaybettirmez. Parent pencereden düşmüş eski satır
+    (`pencerede_yok`) "dolmadı" DEĞİLDİR, yalnız bu turda ölçülemedi — alarm üretmez, sayılır.
+
+    BEDEL: EK AĞ ÇAĞRISI YOK — reconcile'ın zaten çektiği `by_coid`i okur. Tek ek iş, `trades`
+    defterinin kilitli bir okunuşudur (yazım yalnız alan açıldığında)."""
+    from . import ledgerstamp as _ls
+    sayaç = {"yazilan": 0, "n_alan": 0, "pencerede_yok": 0, "fiyat_okunamadi": 0, "zaman_bos": 0}
+    yazilanlar: list = []
+
+    def _yama(rows):
+        hit = False
+        for r in rows:
+            if _ls.kaynak_of(r) != _ls.LIVE_PAPER or not r.get("plan_id"):
+                continue
+            bos = [a for a in (DOLUM_ALAN_GIRIS_FIYAT, DOLUM_ALAN_GIRIS_TS)
+                   if r.get(a) in (None, "")]
+            if not bos:
+                continue
+            parent = by_coid.get(r.get("plan_id"))
+            if parent is None:
+                sayaç["pencerede_yok"] += 1
+                continue
+            yeni: dict = {}
+            if DOLUM_ALAN_GIRIS_FIYAT in bos:
+                af = _entry_fill_price(parent)
+                if af is None:
+                    sayaç["fiyat_okunamadi"] += 1
+                else:
+                    yeni[DOLUM_ALAN_GIRIS_FIYAT] = round(af, DOLUM_FIYAT_ONDALIK)
+            if DOLUM_ALAN_GIRIS_TS in bos:
+                ts = parent.get("filled_at")
+                if ts:
+                    yeni[DOLUM_ALAN_GIRIS_TS] = str(ts)
+                else:
+                    sayaç["zaman_bos"] += 1
+            if yeni:
+                r.update(yeni)
+                sayaç["yazilan"] += 1
+                sayaç["n_alan"] += len(yeni)
+                yazilanlar.append({"plan_id": r.get("plan_id"), "ticker": r.get("ticker"), **yeni})
+                hit = True
+        return hit
+
+    try:
+        store.update_jsonl("trades.jsonl", _yama)   # kilitli oku-değiştir-yaz (teyit yamasıyla aynı yol)
+    except Exception as e:  # sessiz-yutma: defter yazımı düşerse reconcile'ın kalanı (pozisyon/koruma/çıkış yaması) ayakta kalmalı; boş alanlar sonraki turda yeniden denenir ve düşüş olayla sesli
+        obs.warn("giris_dolum_yamasi_dustu", hata=f"{type(e).__name__}: {e}"[:160],
+                 detail="giriş dolum ailesi bu tur yazılamadı — sonraki reconcile yeniden dener")
+        return
+    for y in yazilanlar:
+        obs.log("giris_dolum_yamalandi", **y,
+                detail="canlı işlemin GİRİŞ dolumu parent emrin kendi gövdesinden satıra yazıldı "
+                       "(yalnız boş alan; TSK-218)")
+    out["giris_dolum"] = dict(sayaç, tarih=dstr)
+
+
 def _koruma_dolumu_bul(all_orders: list, sym: str) -> dict | None:
     """Sembolün korumasında DOLMUŞ bacak ara. İlk dolum döner; yoksa None.
 
@@ -4070,6 +4168,9 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
     by_id = {str(o.get("id")): o for o in (all_orders or []) if o.get("id")}   # kapatma emri kimlikle
     # Ö-52: damgasız canlı satırlara broker-teyit damgası (kendi kendini iyileştiren tur).
     _defter_teyit_yamasi(by_coid, out.get("emir_penceresi") or {}, out, dstr)
+    # TSK-218: canlı satırların BOŞ giriş dolum ailesi — aynı emir penceresinden, ek ağ çağrısı yok.
+    # Pozisyon okumasından ÖNCE: tek girdisi emir penceresidir, pozisyon arızası onu düşürmesin.
+    _giris_dolum_yamasi(by_coid, out, dstr)
     DEAD = {"rejected", "canceled", "cancelled", "expired", "done_for_day"}
 
     # (1.1) E2 — GİRİŞ SLİPAJ DEFTERİNİN DOLUM YARISI. Emirler ZATEN okundu; ikinci bir çağrı yok.
@@ -4345,5 +4446,7 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
         "entry_slippage": out.get("entry_slippage"),
         "exit_fill": out.get("exit_fill"),
         "emir_penceresi": out.get("emir_penceresi"),
+        #   giris_dolum     — TSK-218 giriş dolum yamasının tur özeti (yazılan + ADLI eksik nedenleri).
+        "giris_dolum": out.get("giris_dolum"),
         "updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")})
     return out
