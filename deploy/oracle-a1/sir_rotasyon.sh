@@ -2538,6 +2538,10 @@ vault_db_rotasyon() {
   # Evre yedekten ÖNCE: `_yedek_al` yarıda düşerse reçete dosya kopyası değil "GEREKMEZ" der (hiçbir
   # şey yazılmadı); YEDEK atanmadan düşerse reçete zaten basılmaz (`_geri_alma_recetesi` kapısı).
   DB_KASA_EVRE=yedek
+  # `_yedek_al db` yedek dizinini ($YEDEK) kurar ve render hedefinin DİSK kopyasını da alır. Geri
+  # almanın girdisi O DEĞİL, aşağıdaki KASA kopyasıdır ($YEDEK/vault/…): Agent geride kaldıysa (adım 1
+  # bilgi dalı) ikisi AYRIŞIR ve doğru olan kasa kopyasıdır. Disk kopyası yalnız operatörün elle
+  # incelemesi içindir — "Agent o an ne render etmişti" sorusunun kanıtı (inceleme 2026-09-24 KÜÇÜK-1).
   _yedek_al db
   sudo install -d -m 0700 -o root -g root "$YEDEK/vault/$(dirname "$yol")"
   py cikar dosya "$ISLIK/db_eski_dsn" - - "$YEDEK/vault/$yol"

@@ -406,6 +406,24 @@ def test_C2_GERCEK_akis_kv_put_RENDER_ALTER_restart_SIRASI_ve_ALTER_render_kanit
     _sir_yok(r, kok, log)
 
 
+def test_C2b_RENDER_hedefi_ESKI_DSNden_AYRISIKSA_BILGI_uyarisi_basilir_ve_akis_SURER(tmp_path):
+    """Adım 1'in bilgi dalı (inceleme 2026-09-24 KÜÇÜK-2): hedef kasadaki ESKİ DSN'den ayrışıksa
+    Agent kasayı izlemiyor olabilir — koşum DURMAZ (render adım 5'te ölçülür) ama negatif kontrolün
+    zayıfladığı ADIYLA basılır. Bu dal başka hiçbir çivide tetiklenmiyordu: metni bozulsa ya da dal
+    silinse sessiz kalırdı."""
+    kok, ortam, log, durum = _db_ortami(tmp_path)
+    hedef = kok / DB_HEDEF.lstrip("/")
+    hedef.write_text(_dsn(ONCEKI_PG[0]) + "\n", encoding="utf-8")   # Agent'ın geride kaldığı hâl
+    r = _kos(BETIK, ortam, "--db", "--vault", girdi=f"{YENI_PG}\n")
+    assert r.returncode == 0, f"{r.stdout}\n{r.stderr}"
+    assert "render hedefi kasadaki ESKİ DSN'e EŞİT DEĞİL" in r.stdout, r.stdout
+    assert "negatif kontrol ('eski parola FATAL') bu koşumda ZAYIFTIR" in r.stdout, r.stdout
+    assert "render hedefi kasadaki ESKİ DSN'e EŞİT:" not in r.stdout, r.stdout
+    # Akış sürdü: kasa, render, rol yeni değerde.
+    assert _kasa(durum)[-1] == YENI_DSN and _render(kok) == YENI_DSN and _pg(kok) == YENI_PG
+    _sir_yok(r, kok, log)
+
+
 # =================================================================================================
 # Ç3 — RENDER TAVANI
 # =================================================================================================
