@@ -309,7 +309,8 @@ def test_A1b_rsync_disla_SINIF_KURUCULARI_hala_listede():
         assert kurucu in vars_kume, f"`rsync_disla`da sınıf kurucusu eksik: {kurucu!r}"
 
 
-#: `rsync_disla`nın DONMUŞ SÖZLEŞMESİ — 31 dışlama sınıfı (28 + 2 Terraform artefaktı + `.vscode`, 2026-09-16).
+#: `rsync_disla`nın DONMUŞ SÖZLEŞMESİ — 32 dışlama sınıfı (28 + 2 Terraform artefaktı +
+#: `.vscode` 2026-09-16 + `/logs` 2026-09-23).
 #: TEK-KAYNAK YASASI (CLAUDE.md §4): "aynı gerçeğin iki kopyası sessizce ayrışır — sayı/liste/kural
 #: TEK kaynaktan türetilir; kopya kaçınılmazsa TÜRETME + AYRIŞMA ÇİVİSİ". Task 3'e kadar kıyasın
 #: öteki ucu dagit.sh'ın `RSYNC_EXC` dizisiydi ve küme eşitliği iki yönlü ölçülüyordu; o dizi
@@ -359,6 +360,17 @@ RSYNC_DISLA_SOZLESMESI = (
     # BİLEREK dışlanmadı: sürüm pinini o kilitler ve DEPODAN gider (tek kaynak).
     '.terraform',
     '/altyapi/apisix/uretilen.tf',
+    # TSK-215 (BEYAN 2026-09-23): canlı-yalnız çocuk süreç logu. `hermes_composite` modülünün
+    # `SPAWN_LOG` sabiti (`logs/composite-prescreen.log`) bileşik ön-elemeyi koşan alt sürecin
+    # stdout/stderr'idir; dizini ÇOCUK yaratır (A1, 2026-09-21 20:39Z) ve depoda YOKTUR —
+    # `--delete` onu silerdi. 2026-09-23 kuru koşumu `logs/composite-prescreen.log` ile `logs/`ü
+    # silinecekler arasında saydı ve o dosya C00005 çökmesinin TEK kanıtıydı. Tek-kaynaklılığı
+    # ayrıca `tests/test_composite_uc_durum_olayi_v534.py` dosyasının T5 çivisi ölçer: dışlama
+    # SPAWN_LOG'un kök dizininden TÜRETİLEREK sınanır, log yolu taşınırsa çivi kırılır.
+    # ÇAPA YASAĞI: buraya kısaltılmış bir `dosya.py::sembol` çapası YAZILMAZ — ölçüldü
+    # (2026-09-23): kısaltılmış sembol `codelaw`in yorum-sembol taramasında ÇÜRÜK sayılır ve
+    # `report()["ok"]`i False'a çeker (v214 iki çivisi kırmızıya döndü).
+    '/logs',
 )
 
 

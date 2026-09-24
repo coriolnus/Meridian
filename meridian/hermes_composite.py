@@ -10,7 +10,11 @@ kuyruk `prescreen --composite` resmî ölçüm yolunun girdisidir. Gece döngüs
 haftalık yoklama bütçesi içinde prescreen'i ayrı bir arka plan sürecine başlatır (gece döngüsü
 bloklanmaz); alt süreç `--queue-id` taşır ve ölçüm bitişinde aynı satıra `mark(id, "measured")`
 yazılır. `reap_measuring` ölmüş ölçüm süreçlerini yoklayıp `measure_failed` damgalar — sessiz
-asılı satır yoktur, ne damgalanan ne damgalanamayan hâl sessizdir. `week_key` hafta damgasının
+asılı satır yoktur, ne damgalanan ne damgalanamayan hâl sessizdir. UÇ DURUM GEÇİŞİ OLAY BASAR ve
+olayı damgayı YAZAN yer basar (`mark`): `measure_failed` → `composite_measure_failed` (warn),
+`measured` → `composite_measured` (log); ara geçişler sessizdir. Kural bir vakadan doğdu (TSK-215,
+2026-09-21): olay yalnız `reap_measuring`in ölü-pid dalında basılıyordu, çocuk süreç damgayı
+kendisi attığı için reap onu HİÇ görmedi ve arıza olay defterinde 0 göründü. `week_key` hafta damgasının
 tek kaynağıdır: bütçeyi sayan modül damgayı da tanımlar, ikinci bir biçim sessizce ayrışırdı.
 
 Değişmezler: bu modül KARAR VERMEZ — `passes` semantiğine, tek-değişken yasasına ve kapı
@@ -191,18 +195,73 @@ def _budget_take(hafta: str | None = None) -> bool:
     return not bool((out or {}).get("_denied"))
 
 
+# OLAY `neden` ALANININ TAVANI. Kuyruk satırının `neden`i ile AYNI tavandır (`prescreen.
+# kuyruk_geri_yaz` gönderdiği metni zaten 200'e kırpar) — olay defteri bir TRİYAJ yüzeyidir, bir
+# traceback arşivi değil: tam metin kuyruk satırında ve `--workdir` raporunda durur. Kırpma burada
+# da YAPILIR çünkü `mark` çağıranı prescreen olmak zorunda değildir (reap ve testler doğrudan
+# çağırır) ve tavanı yalnız çağırana bırakmak, tek bir uzun `neden`in defteri kilitlemesi demekti.
+NEDEN_TAVANI = 200
+
+
 def mark(row_id: str, status: str, **fields) -> None:
-    """Kuyruk satırının durumunu güncelle (JSONL yeniden yazımı — kuyruk küçük ve tavanlı)."""
+    """Kuyruk satırının durumunu güncelle (JSONL yeniden yazımı — kuyruk küçük ve tavanlı).
+
+    UÇ DURUM GEÇİŞİ OLAY BASAR — GEÇİŞ NEREDE YAZILIYORSA OLAY ORADA (TSK-215, vaka 2026-09-21).
+    C00005 bileşik ön-elemesi çocuk süreçte düştü; çocuk `prescreen.kuyruk_geri_yaz` ile BU
+    fonksiyonu çağırıp satırı `measure_failed` damgaladı ve damga kuyrukta DOĞRU duruyordu — ama
+    `events.jsonl`da `composite_measure_failed` TÜM DEFTERDE 0'dı: o olayı yalnız
+    `reap_measuring`in ölü-pid dalı basıyordu ve satır hiçbir zaman "measuring + ölü pid" hâline
+    gelmedi (çocuk damgayı kendisi attı). Arıza bir DURUM defterinde vardı, bir OLAY defterinde
+    yoktu; brifing/bekçi triyajı ve `obs.recent` okuyucuları onu göremezdi. Olay bu yüzden damgayı
+    YAZAN yere taşındı: hangi yoldan gelinirse gelinsin (çocuk geri-yazımı, ölü süreç toplama,
+    guard'ın hepsini reddetmesi) geçiş tek bir kapıdan geçer ve tek bir olay üretir. `reap_measuring`
+    kendi kopyasını TAŞIMAZ — iki üretici, aynı olgunun iki sayımı demekti (tek-kaynak yasası).
+
+    HANGİ GEÇİŞLER: yalnız UÇ DURUMLAR — `measure_failed` (warn) ve `measured` (log). `measuring`/
+    `pending` SESSİZDİR: başlangıcı `spawn_pending` zaten `composite_prescreen_spawned` ile
+    duyuruyor ve ikinci bir satır yalnız gürültü olurdu (bedel yasası ters yönü: gürültü,
+    okuyucunun uç durumları görmesini zorlaştırır).
+
+    OLAY = YAZILMIŞ GEÇİŞ: kuyrukta karşılığı olmayan bir kimlik için hiçbir satır yazılmaz, o
+    yüzden olay da basılmaz — olmamış bir düşüşü haber vermek uydurma yasağının olay-defteri
+    hâli olurdu. İmza ve dönüş DEĞİŞMEDİ (None); olay yazımdan SONRA basılır."""
+    vurulan: list[str] = []
+
     def _f(rows):
         """`store.update_jsonl` mutasyonu: kimliği tutan satır(lar)ın durumunu, ek alanlarını ve
-        `status_ts` damgasını yerinde günceller."""
+        `status_ts` damgasını yerinde günceller; eşleşen kimlikleri `vurulan`a yazar (olay, YAZILMIŞ
+        geçişin habercisidir — eşleşme yoksa olay da yoktur)."""
         for r in rows:
             if r.get("id") == row_id:
                 r["status"] = status
                 r.update(fields)
                 r["status_ts"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+                vurulan.append(row_id)
         return rows
     store.update_jsonl(QUEUE_FILE, _f)
+    if not vurulan:
+        return
+    if status == "measure_failed":
+        neden = fields.get("neden")
+        obs.warn("composite_measure_failed", id=row_id,
+                 # ÖLÇÜLEMEYEN DEĞER None KALIR: `neden` verilmemişse boş dizge yazmak
+                 # "gerekçe yok"u "gerekçe boş"a çevirirdi (uydurma yasağı).
+                 neden=(str(neden)[:NEDEN_TAVANI] if neden is not None else None),
+                 pid=fields.get("pid"), kaynak="mark",
+                 # BÜTÇE CÜMLESİ REAP'TEN BURAYA TAŞINDI (bilgi kaybı yok): `_budget_take`
+                 # spawn'dan ÖNCE çağrılır ve o yoklama GERÇEKTEN harcandı — başarısızlığı bahane
+                 # edip sayacı geri almak, DENEME sayan bütçeyi "başarılı ölçüm sayacı"na çevirirdi.
+                 detail="bileşik ölçüm SONUÇSUZ bitti (süreç öldü · guard hepsini reddetti · "
+                        "ölçüm patladı — ayrımı `neden` taşır); satır measure_failed damgalandı, "
+                        "haftalık yoklama bütçesi HARCANDI ve iade edilmez")
+    elif status == "measured":
+        # ÖZETTEN OKUNUR, HESAPLANMAZ: `result` `prescreen.kuyruk_ozeti` çıktısıdır; özet yoksa ya
+        # da alan yoksa None kalır — "hiç aday yoktu" ile "kaç aday olduğunu bilmiyorum" ayrı
+        # cümlelerdir. Olay triyajın ihtiyacı kadarını taşır, tam özet kuyruk satırında durur.
+        ozet = fields.get("result")
+        ozet = ozet if isinstance(ozet, dict) else {}
+        obs.log("composite_measured", id=row_id, n_aday=ozet.get("n_aday"),
+                sure_s=ozet.get("sure_s"), kaynak="mark")
 
 
 # ---- Gece döngüsünün kancası -------------------------------------------------------------------
@@ -276,13 +335,16 @@ def reap_measuring(rows: list | None = None) -> dict:
                             "ÖLÇÜLEMEDİ, bu yüzden damga basılmadı (uydurma yasağı); satır "
                             "kuyruk durumunda n_olculuyor içinde görünür")
             continue
+        # OLAYI `mark` BASAR, BURASI DEĞİL (TSK-215): damgayı yazan tek kapı `mark`tır ve olay
+        # orada doğar — ikinci bir üretici aynı olguyu defterde iki kez saydırırdı. Bu dal bir
+        # zamanlar olayın TEK üreticisiydi ve tam da bu yüzden kördü: çocuk süreç damgayı kendisi
+        # attığında satır hiç "measuring + ölü pid" olmuyor, reap hiçbir şey görmüyordu (C00005,
+        # 2026-09-21: kuyrukta damga VAR, olay defterinde 0). Bütçe cümlesi `mark`ın detayına
+        # taşındı — bilgi düşmedi, yeri değişti.
         mark(rid, "measure_failed", pid=r.get("pid"),
              neden="ölçüm süreci ÖLÜ (pid yoklaması ESRCH) — sonuç geri yazılmadan sonlandı",
              result=None)
         out["olu"].append(rid)
-        obs.warn("composite_measure_failed", id=rid, pid=r.get("pid"),
-                 detail="bileşik ölçüm süreci sonuç yazmadan öldü — satır measure_failed "
-                        "damgalandı; haftalık yoklama bütçesi HARCANDI ve iade edilmez")
     return out
 
 
