@@ -731,7 +731,31 @@ def test_roadmap_ozet_govdeleri_soker_ama_onbellegi_kirletmez(sandbox_state):
     o = c.get("/api/roadmap?ozet=1")
     ozet = o.json()
     assert ozet["suzgec"]["ozet"] is True and ozet["ozet_beyani"].strip()
-    assert len(o.content) < len(c.get("/api/roadmap").content) // 2, "özet gövdeyi küçültmedi"
+    # GÖVDE HER YERDE SÖKÜLDÜ MÜ — belgenin bileşiminden BAĞIMSIZ ölçü (2026-09-24). Buradaki eski
+    # ölçü `len(özet) < len(tam) // 2` idi: özetin taşıdığı başlık+şema payı belge büyüdükçe arttı
+    # (oran 09-23 0,4980 → cephe katmanı 4ef8372b 0,5008) ve çivi, özet gövdeyi hâlâ söktüğü hâlde
+    # kırmızıya döndü — ölçtüğü şey sökümün kendisi değil belgenin başlık/gövde oranıydı.
+    # Şimdi: (1) hiçbir maddede `ham`, hiçbir tablo satırında `hucreler` kalmaz; (2) kazanç en az
+    # sökülen madde gövdelerinin bayt toplamı kadardır (özete başka bir kapıdan gövde-boyu yük
+    # eklenirse düşer). Bedel: mutlak boyut sinyali yok — özet bugün ~387 KB (tasarımdaki tam
+    # gövde 383 KB idi); boyut sorusu ROADMAP TSK-219'da, bu çivinin işi değil.
+    tam = c.get("/api/roadmap")
+
+    def _gez(bolumler):
+        for b in bolumler:
+            yield from ((m, None) for m in b["maddeler"])
+            yield from ((None, r) for t in b["tablolar"] for r in t["satirlar"])
+            yield from _gez(b["alt_bolumler"])
+
+    kalan = [(m or r)["satir"] for m, r in _gez(ozet["bolumler"])
+             if (m is not None and "ham" in m) or (r is not None and "hucreler" in r)]
+    assert not kalan, f"özet şu satırlarda gövde taşıyor: {kalan[:10]}"
+    govde_bayt = sum(len(json.dumps(m["ham"], ensure_ascii=False).encode())
+                     for m, _ in _gez(tam.json()["bolumler"]) if m is not None)
+    assert govde_bayt > 0
+    assert len(tam.content) - len(o.content) >= govde_bayt, (
+        f"özet {len(o.content)} B, tam {len(tam.content)} B: kazanç sökülen gövdeden "
+        f"({govde_bayt} B) az — özete gövde-boyu yük geri girmiş")
     m = ozet["bolumler"][1]["maddeler"][0]
     assert "ham" not in m and m["durum"] and m["ham_uzunluk"] > 0
     tam_sonra = c.get("/api/roadmap").json()
