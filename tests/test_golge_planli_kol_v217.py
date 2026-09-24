@@ -579,10 +579,12 @@ def _kill1_olcum(turlar: list[dict]) -> dict:
                             Havuzlanmış p95 fiilen en gürültülü segmenti okur; turlar kendi aralarında
                             %10'dan fazla çelişiyorsa havuz oranı tek turun gürültüsünü taşıyabilir.
 
-    Üçlü hüküm: sapma ≥ %10 → `olculemedi` · oran ≤ tavan → `yesil` · oran > tavan + sapma →
-    `kirmizi` · arada (tavanı aşıyor ama aşım aletin kendi sapmasından küçük) → `olculemedi`
-    (sınırda). Eşik YERİNDE durur; KIRMIZI için aşımın gürültüden büyük olması istenir, çünkü
-    gürültü içindeki bir aşım ölçülmemiş bir şeyi ihlal saymaktır (UYDURMA YASAĞI)."""
+    Üçlü hüküm: sapma ≥ %10 → `olculemedi` · oran ≤ tavan → `yesil` · aksi → `kirmizi`.
+    Alet SIKIYKEN (sapma < %10) tavan AYNEN uygulanır — tavanın üstüne "aletin sapması kadar" pay
+    EKLENMEZ. Ajan teslimi (TSK-213) böyle bir "sınırda" payı önermişti; Rol-1 REDDETTİ (2026-09-24):
+    pay, kartın eşiğini aracın gürültüsü kadar GEÇME yönünde esnetir (sınıf: ölçüm aleti eşikten
+    sapar, sapma hep geçme yönünde yanlıdır). Bedeli ölçüldü: 224 koşumda 2 sahte KIRMIZI (ikisi de
+    tavana yakın) — eski kapının 21'ine karşı."""
     esik = P95_TAVAN - 1.0
     havuz: dict = {False: [], True: []}
     for tur in turlar:
@@ -610,14 +612,8 @@ def _kill1_olcum(turlar: list[dict]) -> dict:
                  f"Ölçülen oran {oran:.3f} bu koşumda HÜKÜM DEĞİLDİR.")
     elif oran <= P95_TAVAN:
         hukum, neden = "yesil", None
-    elif oran > P95_TAVAN + sapma:
-        hukum, neden = "kirmizi", None
     else:
-        hukum = "olculemedi"
-        neden = (f"sınırda: oran {oran:.3f} tavanı ({P95_TAVAN}) {oran - P95_TAVAN:.3f} aşıyor ama "
-                 f"aşım aletin bu koşumdaki sapmasından ({ad}: {sapma:.3f}) küçük — KIRMIZI için "
-                 f"oran > {P95_TAVAN + sapma:.3f} gerekirdi. Tavan 1,10 yerinde; bu koşum onu "
-                 f"ne doğrulayabilir ne çürütebilir.")
+        hukum, neden = "kirmizi", None
     return {"hukum": hukum, "neden": neden,
             "oran_havuzlanmis": round(oran, 4), "tavan": P95_TAVAN,
             "alet_sapmasi": round(sapma, 4), "alet_sapmasi_kaynagi": kaynak,
@@ -677,14 +673,15 @@ def test_p95_dongu_suresi_kart_tavanini_ASMIYOR(sandbox_state, monkeypatch):
     # A/A PLASEBO kanıtı: İKİ kol da kapalı koşturulduğunda (aynı kod) 8×`yes` yükü altında eski
     # kapı 54 koşumda 6 KIRMIZI verdi — kırmızı kolun maliyeti değil aletin gürültüsüydü. Eski
     # kapı toplam: boşta seri 56 koşumda 3, yük altında 168 koşumda 18 sahte KIRMIZI. Yeni kapı
-    # (`_kill1_olcum`, üç bileşen + sınırda payı) aynı 224 koşumda 0. Bedel ve duyarlılık TSK-213
-    # raporunda: boşta sahte-kırmızı yerine koşumların ~%20–50'si ÖLÇÜLEMEDİ der; açık kola
-    # eklenen gerçek bir %25'lik gecikmede hüküm hiçbir koşumda YEŞİL olmadı.
+    # (`_kill1_olcum`, üç bileşen) aynı 224 koşumda 2 (ikisi de tavana yakın; ajanın önerdiği
+    # "sınırda payı" bu ikisini de ÖLÇÜLEMEDİ'ye çevirirdi — Rol-1 reddetti, gerekçe `_kill1_olcum`
+    # docstring'inde). Bedel ve duyarlılık TSK-213 raporunda: boşta koşumların bir kısmı ÖLÇÜLEMEDİ
+    # der; açık kola eklenen gerçek bir %25'lik gecikmede hüküm hiçbir koşumda YEŞİL olmadı.
     #
     # EŞİĞE DOKUNULMADI (CLAUDE.md kural 3 — kill-list dokunulmaz): `P95_TAVAN` hâlâ 1,10 ve
     # alet SIKI olduğunda aynen uygulanır. Planli kolun sıcak yoluna eklenen ~60 µs/sembol
     # meşgul-bekleme (oran ~1,29) boşta seri 8 koşumun 8'inde KIRMIZI düştü (TSK-213 mutasyonu,
-    # 2026-09-25). Tavana çok yakın (+%10–15) bir etki bu koşumun gürültüsü içinde kalırsa hüküm
+    # 2026-09-25). Alet sıkıyken tavanın HER aşımı KIRMIZIdır; alet gevşekse (bir bileşen ≥ %10) hüküm
     # ÖLÇÜLEMEDİ olur — YEŞİL değil. Eklenen tek şey ÜÇÜNCÜ bir hüküm: "ölçemedim" — ve o hüküm
     # ADIYLA, sayısıyla görünür.
     if olcum["hukum"] == "olculemedi":
@@ -692,7 +689,7 @@ def test_p95_dongu_suresi_kart_tavanini_ASMIYOR(sandbox_state, monkeypatch):
     assert olcum["hukum"] == "yesil", (
         f"planli kol p95 döngü süresini {olcum['oran_havuzlanmis']:.3f}× yaptı (tavan "
         f"{P95_TAVAN}) — kart kill#1: kol kapatılır (alet sapması {olcum['alet_sapmasi']:.3f} = "
-        f"SIKI ve aşım bu sapmadan büyük, yani alet bu etkiyi çözebiliyor). Ölçüm: {olcum}")
+        f"SIKI, yani alet bu etkiyi çözebiliyor). Ölçüm: {olcum}")
 
 
 # ---- KILL#1 HÜKÜM MANTIĞI — deterministik sentetik girdiyle (TSK-213, 2026-09-25) -------------
@@ -729,7 +726,7 @@ def test_kill1_hukum_GERCEK_regresyon_KIRMIZI_kalir():
     bileşenlerinin hiçbiri onu yutmamalı; alet sıkıyken hüküm KIRMIZI."""
     o = _kill1_olcum(_turlar([1.0] * 4, [1.25] * 4))
     assert o["alet_sapmasi"] < P95_TAVAN - 1.0
-    assert o["hukum"] == "kirmizi" and o["oran_havuzlanmis"] > P95_TAVAN + o["alet_sapmasi"]
+    assert o["hukum"] == "kirmizi" and o["oran_havuzlanmis"] > P95_TAVAN
 
 
 def test_kill1_hukum_ACIK_KOLA_dusen_gurultu_OLCULEMEDI():
@@ -755,14 +752,14 @@ def test_kill1_hukum_TURLAR_celisirse_OLCULEMEDI():
     assert o["hukum"] == "olculemedi" and o["alet_sapmasi_kaynagi"] == "tur_oranlari_yayilimi"
 
 
-def test_kill1_hukum_SINIRDA_asim_gurultu_icindeyse_OLCULEMEDI():
-    """Üç bileşen de %10'un altında ama oran tavanı aletin kendi sapmasından AZ aşıyor: "tavanı
-    aştı" hükmü ölçülmemiş bir şeyi ihlal saymak olur (UYDURMA YASAĞI). Eşik 1,10 YERİNDE durur;
-    KIRMIZI yalnız aşım gürültüden büyükse verilir."""
+def test_kill1_hukum_SINIRDA_asim_alet_SIKIYKEN_KIRMIZI_pay_YOK():
+    """Rol-1 ruling 2026-09-24 (TSK-213): üç bileşen de %10'un altındayken (alet SIKI) tavanın küçük
+    bir aşımı da KIRMIZIdır — tavanın üstüne aletin sapması kadar "sınırda payı" EKLENMEZ. Pay,
+    kartın eşiğini geçme yönünde esnetirdi; bu çivi o payın geri gelmesini yakalar."""
     o = _kill1_olcum(_turlar([1.0] * 4, [1.02, 1.12, 1.02, 1.12]))
     assert o["alet_sapmasi"] < P95_TAVAN - 1.0 and _eski_kapi(o) == "kirmizi"
     assert P95_TAVAN < o["oran_havuzlanmis"] <= P95_TAVAN + o["alet_sapmasi"]
-    assert o["hukum"] == "olculemedi" and "sınırda" in o["neden"]
+    assert o["hukum"] == "kirmizi" and o["neden"] is None
 
 
 def test_kill1_hukum_KAPALI_kol_kontrolu_YERINDE():
