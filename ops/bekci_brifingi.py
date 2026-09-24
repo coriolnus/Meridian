@@ -102,6 +102,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import re
 import signal
 import subprocess
 import sys
@@ -597,6 +598,53 @@ def _olculemeyenler(ham: dict) -> list[dict]:
     return [b for b in ham["bildirilecek"] if b["sinif"] == "olculemedi"]
 
 
+#: Kalem kanıtındaki olay adının baştaki tanımlayıcısı (`session_deferred_for_coverage`,
+#: `reconcile_atlandi`, `MECHANISM_STALE` …) ve mekanizma gecikmesi satırındaki mekanizma adı.
+_TANIMLAYICI_DESENI = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+_MEKANIZMA_DESENI = re.compile(r"mekanizma gecikti: ([A-Za-z0-9_.-]+)")
+
+
+def _korunacak_terim(b: dict) -> str:
+    """Susturulamaz bir ölçülemedi kaleminin KISA, KARARLI adı — terim korunumu bunu arar.
+
+    NEDEN TAM AD DEĞİL (TSK-138, ölçüldü 2026-09-24): korunmalı terim eskiden kalemin tam
+    görünen adıydı ve `soul_denetimi.terim_ihlali` birebir alt-dize arar. Ad çoğu zaman sayı
+    taşıyan bir mesajdır (`MECHANISM_STALE mekanizma gecikti: hermes_poll — 0.6 sa (pencere 0.5
+    sa) (kadans_olculemedi)`) ya da tarayıcının eklediği `… (toplu)` son ekini taşır; model
+    kalemi ADIYLA ansa bile bir kelimeyi değiştirdiğinde "eksik" sayılıyor ve brifing HAM
+    teslim ediliyordu — A1'de 09-17→09-24 bekçi koşumlarının 6'sının 5'i ham; 09-21/22/24 üçü
+    bu mekanik ihlalle. Korunumun AMACI susturulamaz kalemin ANILMASIDIR, cümlenin birebir
+    kopyası değil: jeton o amacı taşır, biçime tolerans verir.
+
+    SEÇİM SIRASI: toplu kalem → nedeni (`kadans_olculemedi`); mekanizma gecikmesi → mekanizma
+    adı (`hermes_poll`); olay adı → baştaki tanımlayıcı (`session_deferred_for_coverage`).
+    Hiçbiri yoksa ya da jeton görünen adda GEÇMİYORSA tam ada dönülür: model yalnız gördüğünü
+    koruyabilir, görmediği bir terim için cezalandırılmaz.
+
+    BEDEL (beyanlı): korunum artık uzun satırdaki SAYILARIN değişip değişmediğini ölçmez.
+    Değer doğruluğu kaybolmaz: ölçülen liste model metninin ALTINDA aynen gider (modül başlığı),
+    yani sayıyı operatör yine ham listeden okur."""
+    ad = str(b.get("ad") or "")
+    kanit = (b.get("kalem") or {}).get("kanit") or {}
+    aday = None
+    if kanit.get("toplu") and kanit.get("neden"):
+        aday = str(kanit["neden"])
+    else:
+        olay = str(kanit.get("olay") or "")
+        m = _MEKANIZMA_DESENI.search(olay)
+        if m:
+            aday = m.group(1)
+        else:
+            m = _TANIMLAYICI_DESENI.match(olay)
+            aday = m.group(0) if m else None
+    return aday if aday and aday in ad else ad
+
+
+def _korunacak_terimler(ham: dict) -> list[str]:
+    """Ölçülemedi kalemlerinin kısa kararlı adları, sırası korunarak tekilleştirilmiş."""
+    return list(dict.fromkeys(_korunacak_terim(b) for b in _olculemeyenler(ham)))
+
+
 # ================================================================================================
 # METİN
 # ================================================================================================
@@ -1059,6 +1107,8 @@ def _kural_gecisi(cevap: str, istem: str, ham: dict) -> tuple[str, str]:
     jetonlarını "korunmalı" saymak HER koşumda ihlal üretir ve sıralama katmanını sessizce
     kapatırdı. Listeye yalnız promptun ZATEN "susturamazsın" dediği ölçülemeyen kalem adları
     girer.
+    Ad olarak TAM görünen ad değil kalemin kısa kararlı adı geçer (`_korunacak_terim`, TSK-138):
+    tam ad sayı taşıyan bir mesajdı ve her yeniden ifade ham teslime düşüyordu.
 
     KATMANIN KENDİSİ TESLİMATI DÜŞÜREMEZ (inceleme K-1, 2026-09-03). TSK-014'ten ÖNCE mutlu yol
     (`return cevap, "llm"`) SIFIR yeni düşme yüzeyi taşıyordu; şimdi her başarılı koşum bir
@@ -1069,7 +1119,7 @@ def _kural_gecisi(cevap: str, istem: str, ham: dict) -> tuple[str, str]:
     ancak burada MEKANİKLEŞİR."""
     try:
         g = soul_denetimi.gecir(profil_evi=HERMES_PROFIL_HOME, ilk_metin=cevap, ilk_istem=istem,
-                                veri_terimleri=[b["ad"] for b in _olculemeyenler(ham)],
+                                veri_terimleri=_korunacak_terimler(ham),
                                 cagir=_ROTA.cagir, dogrula=lambda c: _cevap_makul(c, ham),
                                 bot=PROFIL_ADI,
                                 model_kimligi=denetci_rota.profil_model_kimligi(HERMES_PROFIL_HOME, "bekci_brifingi"),
