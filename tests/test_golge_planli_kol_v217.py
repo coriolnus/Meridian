@@ -565,6 +565,76 @@ def _dongu_olc(monkeypatch, sandbox_state, *, planli_acik: bool) -> list[float]:
     return sureler
 
 
+def _kill1_olcum(turlar: list[dict]) -> dict:
+    """KILL#1 hükmü: `turlar[t] = {False: kapalı kolun olay süreleri, True: açık kolunki}`.
+
+    Hüküm istatistiği DEĞİŞMEDİ: havuzlanmış p95 oranı, tavan `P95_TAVAN`. Değişen, "alet bu
+    koşumda %10'u çözebiliyor mu" sorusunu soran NEGATİF KONTROLDÜR — üç bileşen, en büyüğü kapı:
+
+      kapali_kol_yarilari   kapalı kolun ikinci yarısı / ilk yarısı (2026-08-16'dan beri)
+      acik_kol_yarilari     AYNI ölçü açık kolda. Eski kontrol yalnız kapalı kola bakıyordu; gürültü
+                            açık kolun bir segmentine düştüğünde kontrol SIKI görünürken oran tavanı
+                            aşıyordu — suite #3/#7'nin ve TSK-213 ölçümündeki sahte kırmızıların sınıfı.
+      tur_oranlari_yayilimi dört turun dört bağımsız A/K oranının yarı-açıklığı ((max−min)/2).
+                            Havuzlanmış p95 fiilen en gürültülü segmenti okur; turlar kendi aralarında
+                            %10'dan fazla çelişiyorsa havuz oranı tek turun gürültüsünü taşıyabilir.
+
+    Üçlü hüküm: sapma ≥ %10 → `olculemedi` · oran ≤ tavan → `yesil` · oran > tavan + sapma →
+    `kirmizi` · arada (tavanı aşıyor ama aşım aletin kendi sapmasından küçük) → `olculemedi`
+    (sınırda). Eşik YERİNDE durur; KIRMIZI için aşımın gürültüden büyük olması istenir, çünkü
+    gürültü içindeki bir aşım ölçülmemiş bir şeyi ihlal saymaktır (UYDURMA YASAĞI)."""
+    esik = P95_TAVAN - 1.0
+    havuz: dict = {False: [], True: []}
+    for tur in turlar:
+        for acik_mi in (False, True):
+            havuz[acik_mi] += tur[acik_mi]
+    oran = _p95(havuz[True]) / _p95(havuz[False])
+    yari = len(havuz[False]) // 2
+    kontrol = _p95(havuz[False][yari:]) / _p95(havuz[False][:yari])
+    kontrol_acik = _p95(havuz[True][yari:]) / _p95(havuz[True][:yari])
+    tur_oranlari = [_p95(t[True]) / _p95(t[False]) for t in turlar]
+    tur_yayilimi = (max(tur_oranlari) - min(tur_oranlari)) / 2
+    bilesen = {"kapali_kol_yarilari": abs(kontrol - 1.0),
+               "acik_kol_yarilari": abs(kontrol_acik - 1.0),
+               "tur_oranlari_yayilimi": tur_yayilimi}
+    kaynak = max(bilesen, key=bilesen.get)
+    sapma = bilesen[kaynak]
+    ad = {"kapali_kol_yarilari": "kapalı kolun iki yarısı", "acik_kol_yarilari":
+          "açık kolun iki yarısı", "tur_oranlari_yayilimi": "tur oranlarının yayılımı"}[kaynak]
+    if sapma >= esik:
+        hukum = "olculemedi"
+        neden = (f"alet %{esik * 100:.0f}'luk etkiyi çözemiyor: negatif kontrolün en büyük bileşeni "
+                 f"{ad} {sapma:.1%} sapıyor (kapalı kol yarıları {kontrol:.3f}×, açık kol yarıları "
+                 f"{kontrol_acik:.3f}×, tur oranları "
+                 f"{', '.join(f'{r:.3f}' for r in tur_oranlari)} → yayılım ±{tur_yayilimi:.1%}). "
+                 f"Ölçülen oran {oran:.3f} bu koşumda HÜKÜM DEĞİLDİR.")
+    elif oran <= P95_TAVAN:
+        hukum, neden = "yesil", None
+    elif oran > P95_TAVAN + sapma:
+        hukum, neden = "kirmizi", None
+    else:
+        hukum = "olculemedi"
+        neden = (f"sınırda: oran {oran:.3f} tavanı ({P95_TAVAN}) {oran - P95_TAVAN:.3f} aşıyor ama "
+                 f"aşım aletin bu koşumdaki sapmasından ({ad}: {sapma:.3f}) küçük — KIRMIZI için "
+                 f"oran > {P95_TAVAN + sapma:.3f} gerekirdi. Tavan 1,10 yerinde; bu koşum onu "
+                 f"ne doğrulayabilir ne çürütebilir.")
+    return {"hukum": hukum, "neden": neden,
+            "oran_havuzlanmis": round(oran, 4), "tavan": P95_TAVAN,
+            "alet_sapmasi": round(sapma, 4), "alet_sapmasi_kaynagi": kaynak,
+            "kontrol_orani": round(kontrol, 4), "kontrol_sapmasi": round(abs(kontrol - 1.0), 4),
+            "kontrol_orani_acik": round(kontrol_acik, 4),
+            "tur_yayilimi": round(tur_yayilimi, 4),
+            "p95_kapali_ms": round(_p95(havuz[False]), 4),
+            "p95_acik_ms": round(_p95(havuz[True]), 4),
+            "olay_n": len(havuz[True]), "sembol_n": _SEMBOL_N,
+            "en_kotu_olay_ms": {"kapali": round(max(havuz[False]), 4),
+                                "acik": round(max(havuz[True]), 4)},
+            "turlar": [{"sira": "kapali→acik" if i % 2 == 0 else "acik→kapali",
+                        "p95_kapali_ms": round(_p95(t[False]), 4),
+                        "p95_acik_ms": round(_p95(t[True]), 4),
+                        "oran": round(r, 4)} for i, (t, r) in enumerate(zip(turlar, tur_oranlari))]}
+
+
 def test_p95_dongu_suresi_kart_tavanini_ASMIYOR(sandbox_state, monkeypatch):
     """KILL#1: "gözlem, icrayı yavaşlatamaz — p95 döngü süresi +%10'dan fazla artarsa kol kapatılır".
 
@@ -578,32 +648,16 @@ def test_p95_dongu_suresi_kart_tavanini_ASMIYOR(sandbox_state, monkeypatch):
     Taban kol `PLANLI_ENABLED=False`tur: "değişiklikten önceki kod"a en yakın hâl (fark, kapalı
     bir bayrağın okunmasıdır).
     """
-    havuz: dict = {False: [], True: []}
-    kayit = []
+    turlar = []
     for tur in range(_TUR):
         # SIRA HER TURDA TERSLENİR. Sabit sırada (hep önce kapalı, sonra açık) makinenin tur
         # boyunca ARTAN yükü sistematik olarak AÇIK kola yazılırdı — yani ölçüm, kolun maliyeti
         # yerine ölçüm sırasını ölçerdi. Ters çevirme bu kaymayı birinci mertebeden götürür.
+        olcum_turu = {}
         for acik_mi in ((False, True) if tur % 2 == 0 else (True, False)):
-            havuz[acik_mi] += _dongu_olc(monkeypatch, sandbox_state, planli_acik=acik_mi)
-        kayit.append({"sira": "kapali→acik" if tur % 2 == 0 else "acik→kapali",
-                      "p95_kapali_ms": round(_p95(havuz[False][-_OLAY_N:]), 4),
-                      "p95_acik_ms": round(_p95(havuz[True][-_OLAY_N:]), 4)})
-    oran = _p95(havuz[True]) / _p95(havuz[False])
-    # NEGATİF KONTROL — ALETİN ÇÖZÜNÜRLÜĞÜ (2026-08-16). Kapalı kolun kendi iki yarısı
-    # birbirine bölünür: aynı kod, aynı yük, tek fark makinenin o anki gürültüsü. Bu oranın
-    # 1,0'dan sapması, bu koşumda %10'luk bir etkiyi ÖLÇEBİLİR miyiz sorusunun cevabıdır.
-    yari = len(havuz[False]) // 2
-    kontrol = _p95(havuz[False][yari:]) / _p95(havuz[False][:yari])
-    kontrol_sapma = abs(kontrol - 1.0)
-    olcum = {"oran_havuzlanmis": round(oran, 4), "tavan": P95_TAVAN,
-             "kontrol_orani": round(kontrol, 4), "kontrol_sapmasi": round(kontrol_sapma, 4),
-             "p95_kapali_ms": round(_p95(havuz[False]), 4),
-             "p95_acik_ms": round(_p95(havuz[True]), 4),
-             "olay_n": len(havuz[True]), "sembol_n": _SEMBOL_N,
-             "en_kotu_olay_ms": {"kapali": round(max(havuz[False]), 4),
-                                 "acik": round(max(havuz[True]), 4)},
-             "turlar": kayit}
+            olcum_turu[acik_mi] = _dongu_olc(monkeypatch, sandbox_state, planli_acik=acik_mi)
+        turlar.append(olcum_turu)
+    olcum = _kill1_olcum(turlar)
     print("\nKILL#1 p95 ÖLÇÜMÜ:", json.dumps(olcum, ensure_ascii=False))
     # ÖLÇÜLEMEDİ ≠ KILL. Aletin kendi gürültüsü aradığımız etkiden BÜYÜKSE, "kol yavaşlattı"
     # hükmü kurulamaz — kurulursa ölçülmemiş bir şey ihlal sayılır (UYDURMA YASAĞI).
@@ -616,18 +670,106 @@ def test_p95_dongu_suresi_kart_tavanini_ASMIYOR(sandbox_state, monkeypatch):
     # değil, ALETİN ÇÖZÜNÜRLÜĞÜNÜ raporluyordu. Sabit sıra kayması testin kendi A/B/B/A
     # serpiştirmesiyle zaten götürülmüştü; kalan şey konteynerin dakikalık yük varyansıdır.
     #
+    # KONTROL NEDEN GÜÇLENDİ — TSK-213 (2026-09-24/25, M3 8 GB, 224 koşumluk ham segment verisi):
+    # eski kontrol yalnız KAPALI kolun iki yarısına bakıyordu. Gürültü açık kolun bir segmentine
+    # düştüğünde kontrol sıkı görünürken oran tavanı aşıyordu (suite #3 1,193× / kontrol 1,007;
+    # suite #7 1,235× / kontrol 0,926 — iki koşumda da tur oranları 0,95…2,04 arası çelişiyordu).
+    # A/A PLASEBO kanıtı: İKİ kol da kapalı koşturulduğunda (aynı kod) 8×`yes` yükü altında eski
+    # kapı 54 koşumda 6 KIRMIZI verdi — kırmızı kolun maliyeti değil aletin gürültüsüydü. Eski
+    # kapı toplam: boşta seri 56 koşumda 3, yük altında 168 koşumda 18 sahte KIRMIZI. Yeni kapı
+    # (`_kill1_olcum`, üç bileşen + sınırda payı) aynı 224 koşumda 0. Bedel ve duyarlılık TSK-213
+    # raporunda: boşta sahte-kırmızı yerine koşumların ~%20–50'si ÖLÇÜLEMEDİ der; açık kola
+    # eklenen gerçek bir %25'lik gecikmede hüküm hiçbir koşumda YEŞİL olmadı.
+    #
     # EŞİĞE DOKUNULMADI (CLAUDE.md kural 3 — kill-list dokunulmaz): `P95_TAVAN` hâlâ 1,10 ve
-    # kontrol SIKI olduğunda aynen uygulanır; gerçek bir %10 regresyon bu makinede de düşer.
-    # Eklenen tek şey ÜÇÜNCÜ bir hüküm: "ölçemedim" — ve o hüküm ADIYLA, sayısıyla görünür.
-    if kontrol_sapma >= (P95_TAVAN - 1.0):
-        pytest.skip(
-            f"ÖLÇÜLEMEDİ — alet %10'luk etkiyi çözemiyor: negatif kontrol (kapalı kol ↔ kendisi) "
-            f"{kontrol:.3f}× yani {kontrol_sapma:.1%} saparken aranan etki %{(P95_TAVAN-1)*100:.0f}. "
-            f"Ölçülen oran {oran:.3f} bu koşumda HÜKÜM DEĞİLDİR. Ölçüm: {olcum}")
-    assert oran <= P95_TAVAN, (
-        f"planli kol p95 döngü süresini {oran:.3f}× yaptı (tavan {P95_TAVAN}) — kart kill#1: "
-        f"kol kapatılır (negatif kontrol {kontrol:.3f}× = SIKI, yani alet bu etkiyi çözebiliyor). "
-        f"Ölçüm: {olcum}")
+    # alet SIKI olduğunda aynen uygulanır. Planli kolun sıcak yoluna eklenen ~60 µs/sembol
+    # meşgul-bekleme (oran ~1,29) boşta seri 8 koşumun 8'inde KIRMIZI düştü (TSK-213 mutasyonu,
+    # 2026-09-25). Tavana çok yakın (+%10–15) bir etki bu koşumun gürültüsü içinde kalırsa hüküm
+    # ÖLÇÜLEMEDİ olur — YEŞİL değil. Eklenen tek şey ÜÇÜNCÜ bir hüküm: "ölçemedim" — ve o hüküm
+    # ADIYLA, sayısıyla görünür.
+    if olcum["hukum"] == "olculemedi":
+        pytest.skip(f"ÖLÇÜLEMEDİ — {olcum['neden']} Ölçüm: {olcum}")
+    assert olcum["hukum"] == "yesil", (
+        f"planli kol p95 döngü süresini {olcum['oran_havuzlanmis']:.3f}× yaptı (tavan "
+        f"{P95_TAVAN}) — kart kill#1: kol kapatılır (alet sapması {olcum['alet_sapmasi']:.3f} = "
+        f"SIKI ve aşım bu sapmadan büyük, yani alet bu etkiyi çözebiliyor). Ölçüm: {olcum}")
+
+
+# ---- KILL#1 HÜKÜM MANTIĞI — deterministik sentetik girdiyle (TSK-213, 2026-09-25) -------------
+# Ölçüm düzeneği gürültülüdür; HÜKÜM MANTIĞI gürültülü olmamalı. Aşağıdaki çiviler `_kill1_olcum`u
+# makineden bağımsız, elle kurulmuş tur verisiyle sınar: her negatif-kontrol bileşeni TEK BAŞINA
+# ateşlediğinde ne dediği ve ESKİ kapının (yalnız kapalı kolun yarıları, paysız tavan) aynı girdiye
+# ne diyeceği yan yana. Eski kapının "KIRMIZI" dediği her girdi, ölçülmüş bir sahte-kırmızı
+# sınıfının küçültülmüş kopyasıdır (sayılar `_kill1_olcum` yorumunda).
+def _rampa(olcek: float = 1.0) -> list[float]:
+    """Bir segmentin sentetik olay süreleri: 1,000…1,149 × ölçek (p95 = 1,142 × ölçek)."""
+    return [olcek * (1.0 + 0.001 * i) for i in range(_OLAY_N)]
+
+
+def _turlar(kapali: list[float], acik: list[float]) -> list[dict]:
+    """Tur başına ölçek listelerinden `_kill1_olcum` girdisi: turlar[t] = {False: …, True: …}."""
+    return [{False: _rampa(k), True: _rampa(a)} for k, a in zip(kapali, acik)]
+
+
+def _eski_kapi(o: dict) -> str:
+    """TSK-213 ÖNCESİ hüküm: yalnız kapalı kolun iki yarısı, tavanda pay yok."""
+    if o["kontrol_sapmasi"] >= P95_TAVAN - 1.0:
+        return "olculemedi"
+    return "kirmizi" if o["oran_havuzlanmis"] > P95_TAVAN else "yesil"
+
+
+def test_kill1_hukum_TEMIZ_olcumde_tavan_altinda_YESIL():
+    o = _kill1_olcum(_turlar([1.0] * 4, [1.03] * 4))
+    assert o["hukum"] == "yesil" and o["neden"] is None
+    assert o["oran_havuzlanmis"] == pytest.approx(1.03, abs=1e-3)
+
+
+def test_kill1_hukum_GERCEK_regresyon_KIRMIZI_kalir():
+    """Kabul ölçütü: sabit %25'lik bir yavaşlama (her turda aynı) gürültü DEĞİLDİR — yeni kontrol
+    bileşenlerinin hiçbiri onu yutmamalı; alet sıkıyken hüküm KIRMIZI."""
+    o = _kill1_olcum(_turlar([1.0] * 4, [1.25] * 4))
+    assert o["alet_sapmasi"] < P95_TAVAN - 1.0
+    assert o["hukum"] == "kirmizi" and o["oran_havuzlanmis"] > P95_TAVAN + o["alet_sapmasi"]
+
+
+def test_kill1_hukum_ACIK_KOLA_dusen_gurultu_OLCULEMEDI():
+    """ÖLÇÜLMÜŞ SINIF (TSK-213): gürültü yalnız AÇIK kolun bir segmentine düşer; kapalı kolun
+    yarıları sıkı kalır, eski kapı KIRMIZI der. Yeni bileşen: açık kolun KENDİ iki yarısı."""
+    o = _kill1_olcum(_turlar([1.0, 1.0, 1.07, 1.0], [1.05, 1.05, 1.25, 1.05]))
+    assert o["oran_havuzlanmis"] > P95_TAVAN and _eski_kapi(o) == "kirmizi"
+    assert o["kontrol_sapmasi"] < P95_TAVAN - 1.0 and o["tur_yayilimi"] < P95_TAVAN - 1.0
+    assert abs(o["kontrol_orani_acik"] - 1.0) >= P95_TAVAN - 1.0
+    assert o["hukum"] == "olculemedi" and o["alet_sapmasi_kaynagi"] == "acik_kol_yarilari"
+    assert "açık kol" in o["neden"]
+
+
+def test_kill1_hukum_TURLAR_celisirse_OLCULEMEDI():
+    """Dört tur dört bağımsız A/K kıyasıdır; birbirleriyle %10'dan fazla çelişiyorlarsa havuzlanmış
+    oran tek bir turun gürültüsünü taşıyor olabilir. İki kolun yarıları sıkı (bileşim aynı), eski
+    kapı KIRMIZI der."""
+    o = _kill1_olcum(_turlar([1.2, 1.0, 1.2, 1.0], [1.12, 1.344, 1.12, 1.344]))
+    assert o["oran_havuzlanmis"] > P95_TAVAN and _eski_kapi(o) == "kirmizi"
+    assert o["kontrol_sapmasi"] < P95_TAVAN - 1.0
+    assert abs(o["kontrol_orani_acik"] - 1.0) < P95_TAVAN - 1.0
+    assert o["tur_yayilimi"] >= P95_TAVAN - 1.0
+    assert o["hukum"] == "olculemedi" and o["alet_sapmasi_kaynagi"] == "tur_oranlari_yayilimi"
+
+
+def test_kill1_hukum_SINIRDA_asim_gurultu_icindeyse_OLCULEMEDI():
+    """Üç bileşen de %10'un altında ama oran tavanı aletin kendi sapmasından AZ aşıyor: "tavanı
+    aştı" hükmü ölçülmemiş bir şeyi ihlal saymak olur (UYDURMA YASAĞI). Eşik 1,10 YERİNDE durur;
+    KIRMIZI yalnız aşım gürültüden büyükse verilir."""
+    o = _kill1_olcum(_turlar([1.0] * 4, [1.02, 1.12, 1.02, 1.12]))
+    assert o["alet_sapmasi"] < P95_TAVAN - 1.0 and _eski_kapi(o) == "kirmizi"
+    assert P95_TAVAN < o["oran_havuzlanmis"] <= P95_TAVAN + o["alet_sapmasi"]
+    assert o["hukum"] == "olculemedi" and "sınırda" in o["neden"]
+
+
+def test_kill1_hukum_KAPALI_kol_kontrolu_YERINDE():
+    """2026-08-16'dan beri var olan bileşen korunur: kapalı kolun yarıları ayrışırsa ölçülemedi."""
+    o = _kill1_olcum(_turlar([1.0, 1.0, 1.2, 1.2], [1.0] * 4))
+    assert o["kontrol_sapmasi"] >= P95_TAVAN - 1.0
+    assert o["hukum"] == "olculemedi" and o["alet_sapmasi_kaynagi"] == "kapali_kol_yarilari"
 
 
 # =================================================================================================
