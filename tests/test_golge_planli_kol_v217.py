@@ -675,8 +675,19 @@ def test_p95_dongu_suresi_kart_tavanini_ASMIYOR(sandbox_state, monkeypatch):
     # kapı toplam: boşta seri 56 koşumda 3, yük altında 168 koşumda 18 sahte KIRMIZI. Yeni kapı
     # (`_kill1_olcum`, üç bileşen) aynı 224 koşumda 2 (ikisi de tavana yakın; ajanın önerdiği
     # "sınırda payı" bu ikisini de ÖLÇÜLEMEDİ'ye çevirirdi — Rol-1 reddetti, gerekçe `_kill1_olcum`
-    # docstring'inde). Bedel ve duyarlılık TSK-213 raporunda: boşta koşumların bir kısmı ÖLÇÜLEMEDİ
-    # der; açık kola eklenen gerçek bir %25'lik gecikmede hüküm hiçbir koşumda YEŞİL olmadı.
+    # docstring'inde).
+    # BEDEL — ÖLÇÜLDÜ (TSK-213, 2026-09-24/25; açık kolun her olayına kapalı p95'in %X'i eklenerek,
+    # boşta seri 32'şer koşum, hücreler YEŞİL / ÖLÇÜLEMEDİ / KIRMIZI):
+    #     etki   eski kapı    yeni kapı (üç bileşen, sınırda payı YOK öncesi ölçüm)
+    #     +%10   7 / 1 / 24   6 / 21 / 5
+    #     +%15   0 / 1 / 31   0 / 14 / 18
+    #     +%25   0 / 1 / 31   0 / 6 / 26
+    # Yani yeni kapı tavana yakın (+%10–15) gerçek bir regresyonda tek koşumda çoğunlukla KIRMIZI
+    # yerine ÖLÇÜLEMEDİ der; +%15 ve üstünde hiçbir koşumda YEŞİL demedi (kayıp yönü sessiz körlük
+    # değil, görünür skip). Turdan tura büyüklüğü DEĞİŞEN gerçek bir etki (ör. %5/%30/%5/%30) tur
+    # yayılımı bileşeninde gürültüden ayırt edilemez → ÖLÇÜLEMEDİ (inceleme 2026-09-24). `-n 4` suite
+    # koşumunda çivi 24 koşumun 17'sinde ÖLÇÜLEMEDİ döndü (eski kapı 14/24): kill#1'in FİİLÎ ölçümü
+    # suite değil, bu testin SERİ koşumudur — CLAUDE.md §6 3. katman.
     #
     # EŞİĞE DOKUNULMADI (CLAUDE.md kural 3 — kill-list dokunulmaz): `P95_TAVAN` hâlâ 1,10 ve
     # alet SIKI olduğunda aynen uygulanır. Planli kolun sıcak yoluna eklenen ~60 µs/sembol
@@ -737,7 +748,7 @@ def test_kill1_hukum_ACIK_KOLA_dusen_gurultu_OLCULEMEDI():
     assert o["kontrol_sapmasi"] < P95_TAVAN - 1.0 and o["tur_yayilimi"] < P95_TAVAN - 1.0
     assert abs(o["kontrol_orani_acik"] - 1.0) >= P95_TAVAN - 1.0
     assert o["hukum"] == "olculemedi" and o["alet_sapmasi_kaynagi"] == "acik_kol_yarilari"
-    assert "açık kol" in o["neden"]
+    assert "en büyük bileşeni açık kolun iki yarısı" in o["neden"], o["neden"]
 
 
 def test_kill1_hukum_TURLAR_celisirse_OLCULEMEDI():
