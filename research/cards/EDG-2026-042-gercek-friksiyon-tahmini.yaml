@@ -471,3 +471,34 @@ hafta_kosum_4_2026_09_05: >
   seçmez). Etki beyanı: tekilleştirilseydi n=8→7, eşik hükmü değişmezdi. Kural EŞİK DOLMADAN
   konmalıdır ya da hiç konmamalıdır — P-3'ün aynı gerekçesi. OPERATÖR KALEMİ.
   (Rol-1 işledi 18:48Z; DEVIR.md ölçüm oturumundan aynen; status measuring KALIR; sıradaki koşum 2026-09-12.)
+hafta_kosum_5_2026_09_24_telafi: >
+  HAFTALIK KOŞUM #5 — TELAFİ (zamanlanmış görev `edg042-friksiyon-haftalik`, ölçüm oturumu/ajan;
+  Rol-1 işledi 2026-09-24 21:2xZ). NEDEN TELAFİ: görev iki hafta üst üste ölçüm üretemedi — 09-12 haftalık kullanım
+  limitine takıldı, 09-19 Mac uykuya geçince yanıt ortasında öldü (görev listesi succeeded dedi,
+  dizin YOK). Kıyas tabanı #4 (2026-09-05) — DEĞİŞİM ÜÇ HAFTALIK, haftalık değil.
+  Artefakt: research/olcumler/edg042_kosum_2026-09-24/ (snapshot sha 3cc2bfe1…, çekim
+  2026-09-24T21:00:05Z, goal.slippage_bps=5 künyeli). Reçete R3/AYRIK (kart işaretçisi), betikler
+  bayt-özdeş (a846449e… / 1787a9ff…). Salt-okunur; canlıya ve state/'e tek bayt yazılmadı.
+  SONUÇ — DÖRT KOVA DA EŞİK ALTINDA, BETİMLEYİCİ, CI yok, karar kuralı uygulanmadı, status
+  measuring:
+    giris_once  n=15 / 5 seans  · medyan +16,131 · seans payı %33,3 (KALICI TABAN — #4'e göre
+                BİREBİR sabit, üçüncü ardışık doğrulama)
+    giris_1345  n=18 / 12 seans · medyan +22,473 · p25/p75 −22,438/+170,91 · seans payı %16,7 ·
+                SEANS EŞİĞİ (10) BU KOŞUMDA DOLDU, n bağlayıcı (12 dolum eksik)
+    cikis_hedef n=14 / 5 seans  · medyan −4,21 (yuvarlama tesadüfü #4 ile — elle doğrulandı) ·
+                seans payı %35,7 (kill#7 şerhi artık GEREKMİYOR, #4'te %66,7 idi) · EŞİĞE EN
+                YAKIN kova: 1 dolum + 1 seans eksik
+    cikis_stop  n=11 / 8 seans  · medyan +2,496 (birebir #4 ile) · seans payı %27,3 · seans
+                eşiği zaten doluydu, n bağlayıcı (4 dolum eksik)
+    olculemedi 0 (üç kovada da) · kill denetimi sekizde sekiz temiz (KOMUT.txt [4]).
+  EK hakem (EXE-2026-009, H2/ts) — İLK KEZ HER İKİ KOL DA n≥10, öneri tetiği GERÇEKTEN
+  DEĞERLENDİRİLDİ (önceki dört koşumda hep orneklem_birikimde idi): giris_once n=15 CI
+  [−43,038 ; +80,699] · giris_1345 n=18 CI [−38,455 ; +175,107] · damga↔ts ayrışan 0 ·
+  oneri_tetigi = tetiklenmedi (CI'lar yüksek yönde ayrık değil, geniş örtüşüyor) ·
+  geri_al_onerisi YOK.
+  TAŞINAN AÇIK KALEM (P-3 kardeşi, değişmedi): giris_1345'te 2026-09-02 VRTX iki satırla temsil
+  ediliyor (temel + pead, aynı fill/bps) — kova İÇİ bağımlı gözlem kuralı kartta YOK, sayı
+  düzeltilmedi, tekilleştirilseydi n=18→17 (eşik hükmü değişmez). OPERATÖR KALEMİ.
+  YENİ KAYIT (kalıcı emeklilik DEĞİL): bu koşumda [6] doğrulama adımı (kapsam testleri +
+  codelaw) brief kararıyla ATLANDI (telafi, kod/kart değişmedi) — sıradaki normal haftalık koşum
+  bunu normal şekilde çalıştırmalı.

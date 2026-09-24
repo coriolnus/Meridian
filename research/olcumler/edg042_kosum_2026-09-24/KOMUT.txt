@@ -1,0 +1,100 @@
+EDG-2026-042 — OTOMATİK HAFTALIK KOŞUM #5 — TELAFİ (09-12 limit, 09-19 uyku; Rol-1 ajanı, 2026-09-24)
+Ajan briefi: /private/tmp/claude-501/-Users-erdemozturk-AI-Trading/5d930189-5c34-4b27-b4af-e164e6111e42/scratchpad/edg042-brief.md
+Çalışma dizini: /Users/erdemozturk/AI-Trading/.claude/worktrees/edg042 (ana checkout DEĞİL; aynı HEAD: main 101fa435)
+Oturum: ÖLÇÜM OTURUMU / AJAN (Rol-1 DEĞİL). Git YOK (salt-okur dahil), karta/ROADMAP'e yazım yok,
+dağıtım yok, alt ajan yok. Hüküm işleme ve commit Rol-1'e devredilir → DEVIR.md.
+NEDEN TELAFİ: zamanlanmış görev iki haftadır ölçüm üretmedi — 09-12 haftalık kullanım limitine
+takıldı (10 s'de düştü), 09-19 Mac uykuya geçince yanıt ortasında öldü (görev listesi "succeeded"
+diyor ama research/olcumler/ altında 09-19 dizini YOK). Son gerçek koşum #4 (2026-09-05). Kıyas
+tabanı bu koşumda #4'tür — DEĞİŞİM HAFTALIK DEĞİL, ÜÇ HAFTALIK'tır (09-05 → 09-24, 19 takvim günü).
+
+[0] BİTİŞ KONTROLÜ (görev [1], revize 2026-08-31)
+    Eşiğe ULAŞABİLEN üç kova (giris_1345 · cikis_hedef · cikis_stop) hükümlü verdict taşıyor mu?
+    HAYIR — üçü de eşik altında (aşağıda [3]). Görev KAPANMAZ, koşum yapıldı.
+
+[1] REÇETE İŞARETÇİSİ — KARTTAN OKUNDU (görev metni işaretçi TAŞIMAZ)
+    Kart bloğu: `p3_karar_ayrik_ts_2026_08_31` → GÜNCEL DONUK REÇETE =
+    research/olcumler/edg042_recete_ayrik_2026-08-31/  (R3 / P-3 AYRIK, anahtar `ts`)
+    Bayt-özdeş kopya bu dizinde; sha256 kartın künyesiyle BİREBİR (yerel shasum ile doğrulandı):
+      canli_cek.py  a846449eaa7fdfa8a4e47db648e5c27703be8f59747e0a1a649a74fd77e6cfa2  (kart: a846449e…) ✓
+      olcum.py      1787a9ffe6b477484fba096ebcaf553899cf560f3b700057d985318204a1f317  (kart: 1787a9ff…) ✓
+    İçe aktarma listeleri koşmadan ÖNCE kontrol edildi: olcum.py {datetime,hashlib,json,random,
+    statistics,pathlib} — YALNIZ stdlib, meridian.obs'a HİÇ uzanmaz. canli_cek.py {datetime,json}
+    + meridian.store/meridian.config (A1 tarafında, uzaktan koşar — yerel ajan süreci import etmez).
+
+[2] KOŞUM (salt-okunur; canlıya ve ana checkout state/'ine TEK BAYT yazılmadı)
+    ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'cd /opt/meridian && ./.venv/bin/python -' \
+        < canli_cek.py > canli_ham.json          → RC=0
+    PYTHONDONTWRITEBYTECODE=1 python3 olcum.py    → sonuc.json, RC=0
+    canli_ham.json sha256 = 3cc2bfe1bc224b71b38ef171a75723b1e111d735bfba85c197dc9f96a0a1fe12
+    cekim_zamani = 2026-09-24T21:00:05+00:00 · makine A1 (canlı) · goal.slippage_bps = 5
+    (olcum.py meridian.obs'a HİÇ uzanmaz: import listesi datetime/hashlib/json/random/statistics/pathlib)
+
+[3] EŞİK KONTROLÜ — DÖRT KOVA DA EŞİK ALTINDA
+    HÜKÜMLÜ KOŞUM TETİKLENMEDİ · CI HESAPLANMADI · KARAR KURALI UYGULANMADI · status `measuring` kalır.
+      giris_once  n=15 / 5 seans    (eşik 30/10) — KALICI TABAN, eşik BEKLEMEZ (P-3 hükmü); #4'e göre BİREBİR sabit
+      giris_1345  n=18 / 12 seans   (eşik 30/10) — seans eşiği DOLDU (12≥10), n bağlayıcı (12 dolum eksik)
+      cikis_hedef n=14 / 5 seans    (eşik 15/6)  — n'e 1 dolum, seans'a 1 seans eksik (EN YAKIN kova)
+      cikis_stop  n=11 / 8 seans    (eşik 15/6)  — seans eşiği DOLDU (8≥6), n bağlayıcı (4 dolum eksik)
+      olculemedi  0 (üç kovada da; giris_ortak.olculemedi n=0, cikis_hedef/cikis_stop.olculemedi n=0)
+
+[4] KİLL DENETİMİ (kartın sekizi, tek tek — sonuc.json'dan)
+    #1 kanonik ölçüt: E2'de KAYITLI `fill_vs_resmi_acilis_bps` kullanıldı; koşum günü tarihçe
+       YENİDEN ÇEKİLMEDİ, payda türetilmedi. ✓
+    #2 boş alan tahminle doldurulmadı: e2_toplam=76, ayna_submitted=33, ayna_submitted_fill_bos=0,
+       olculemedi=0. ✓
+    #3 teyitsiz live_paper çıkışı kovaya girmedi: live_paper=28, afp boş=3 → afp-dolu=25;
+       ölçülen 25 satırın (14+11) 25'i broker_teyit=teyitli; olculemedi 0 (K2/K3 ikisinde de). ✓
+    #4 replay_seed 843 satır kıyas dışı (kaynak_disi_replay_seed). ✓
+    #5 kovalar birleştirilmedi; havuzlanmış `giris` anahtarı R3'te zaten üretilmiyor. ✓
+    #6 alpaca_fill_beyan (n=1) ölçüm yerine geçmedi, yalnız sayıldı. ✓
+    #7 tek seans > %40: giris_once %33,3 · giris_1345 %16,7 · cikis_hedef %35,7 · cikis_stop %27,3
+       → DÖRDÜ DE %40'IN ALTINDA, ŞERH GEREKMİYOR (cikis_hedef #4'te %66,7 ile şerh zorunluydu —
+       örneklem büyüyünce yoğunlaşma dağıldı, bu bir hüküm değil betimleyici gözlem). ✓
+    #8 salt-okunur: canlıya ve ana checkout state/'ine yazım YOK; çıktı yalnız bu dizine. ✓
+
+[5] EK — PENCERE HAKEM KATMANI (EXE-2026-009)
+    İşaretçi KARTTAN okundu (`GÜNCEL DONUK HAKEM İŞARETÇİSİ`, EXE-009 bloğu `p2_kapanis_2026_09_01`):
+      research/olcumler/edg042_hakem_2026-09-01/ (H2, ts anahtarlı)
+    Diskteki betikler işaretçi sha256'larıyla KIYASLANDI — AYRIŞMA YOK, koşuldu:
+      pencere_cek.py     9ad462a56e40ae585ce8268b94fca4488fb7751a24666cf728f74632b360690b ✓
+      pencere_altbant.py 3d8eda316d15dd3b7fb14154f2dc9bd2fe213d63414b9972d9f5861b1b72cf02 ✓
+    Bayt-özdeş kopyayla bu dizinde koşuldu (donuk hakem dizinine tek bayt yazılmadı).
+    pencere_ham.json cekim_zamani = 2026-09-24T21:01:00+00:00 · RC=0 · entry n=76 ·
+    yururluk_rejimi=1345 (canlı barclock, salt-okuma).
+    SONUÇ — İLK KEZ HER İKİ KOL DA n≥10 (alt_bant_n_esik=10), öneri tetiği GERÇEKTEN
+    DEĞERLENDİRİLEBİLDİ (önceki dört koşumun hepsinde "orneklem_birikimde" idi, tetik hiç
+    çalışmamıştı):
+      giris_once  n=15 CI [−43,038 ; +80,699] (B=5000, seed=20260812, seans-kümeli)
+      giris_1345  n=18 CI [−38,455 ; +175,107]
+      damga↔ts çapraz: kıyaslanan 20 · damgasız 13 · damga_bilinmeyen 0 · AYRIŞAN 0
+      olculemedi 0
+    oneri_tetigi.sonuc = "tetiklenmedi" — iki kolun CI'ları yüksek yönde AYRIK değil (kesişiyorlar:
+    giris_1345 alt sınırı −38,455, giris_once üst sınırı +80,699 — geniş örtüşme). Kartın kuralı
+    (`alt_giris_1345 > ust_giris_once` kesişimsiz) DOLMADI. `geri_al_onerisi` beyanı YOKTUR.
+
+[6] DOĞRULAMA + KAYIT — BU KOŞUMDA ATLANDI (brief farkı #3, edg042-brief.md)
+    Brief gerekçesi: bu telafi koşumunda kod/kart değişmiyor; kapsam testleri (test_kart_kimlik_v219,
+    test_kart_hukum_damgasi_v251, test_nous_eval_v131, test_wpm_sasi_v173) ve codelaw kontrolü
+    KOŞULMADI (`from meridian import …` pytest dışında canlı yerel deftere yazabilir — CLAUDE.md
+    §2). DOGRULAMA.txt bu koşumda ÜRETİLMEDİ — eksikliği açık kalem olarak raporlanır (aşağıda [7]).
+    GİT YOK: commit/push atılmadı (ajan konumu, salt-okur dahil git yasak). Commit'i ve kart/
+    ROADMAP işlemesini Rol-1 atar.
+
+[7] AÇIK KALEMLER — BU KOŞUMDA TAŞINAN/DOĞAN (kart bunları KONUŞMUYOR/karar VERMİYOR; ölçüm
+    oturumu karar vermez)
+    (a) TAŞINAN (koşum #4'ten, henüz operatör kararı yok): giris_1345 kovasında 2026-09-02 VRTX
+        İKİ satırla temsil ediliyor (P-2026-09-02-VRTX / P-2026-09-02-VRTX-pead, aynı fill=556,94,
+        aynı bps=−38,455) — TEKİL pozisyon, ÇİFT gönderim izi. Kartın kill#5'i yalnız kovalar
+        ARASI birleştirmeyi yasaklar, kova İÇİ bağımlı gözlemin kuralı YOKTUR. Reçete AYNEN
+        koşuldu, sayı DÜZELTİLMEDİ. Etki (beyan, hüküm değil): tekilleştirilseydi giris_1345
+        n=18→17; eşik hükmü DEĞİŞMEZ (17 de 30'un altında).
+    (b) YENİ — [6] atlandığı için bu koşumda DOGRULAMA.txt YOK: kapsam testleri ve codelaw raporu
+        üretilmedi. Kart/kod bu koşumda değişmediği için beklenen bir boşluktur (brief kararı),
+        ama sıradaki NORMAL haftalık koşum (kod değişmiyorsa dahi) [6]'yı atlamamalı — bu telafi
+        koşumuna ÖZGÜ bir istisnadır, kalıcı değildir. Operatör/Rol-1 kararı gerekmiyor, yalnız
+        kayıt.
+    (c) NOT (uydurma değil, doğrulanmış aritmetik): cikis_hedef medyanı #4'te −4,21 idi, bu koşumda
+        da −4,21 — YUVARLAMA TESADÜFÜ, kopyalama hatası DEĞİL. n=6→14 satırla sıralı listede 7. ve
+        8. sıradaki değerler HÂLÂ aynı iki gözlem (−4,728 ve −3,691); ortanca ikisinin ortalaması
+        (−4,2095→−4,21) değişmedi. Elle doğrulandı: sort(satir_dokumu) → medyan hesap.
