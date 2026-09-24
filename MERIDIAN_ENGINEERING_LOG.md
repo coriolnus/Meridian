@@ -3832,3 +3832,27 @@ diziyle düzeltildi. Ve tırnaksız heredoc backtick ikamesi (§25 onarımı) �
 **Canlı (02:35Z):** sağlık 200, 5 saatte yalnız `finviz_unavailable` ×1, failed 6 eski, gece sprint tetiği yok (haftalık taban 09-21'de koştu). #63 inmedi;
 sabah 08:00–09:50Z penceresi için blok 07:30Z mesajında.
 **§26 ek (10:1xZ):** M2 üçüncü seri tekrar (`suite-9-m2-seri-3.log`): 1 passed, pytest 21,8 s — duvar 09:37:14→09:55:44Z (18,5 dk; askı). Askı olmayınca geçiyor; hüküm değişmedi. CI ea3864c6 yeşil (614c052e koşusu üst commit'le iptal). Canlı 10:17Z: sağlık 200, 3 saatte uyarı yok, #63 inmedi (bayrak canlıda 0 — pilot ölçümü yok), failed 6 eski.
+
+### 27. YOL HARİTASI CEPHE KATMANI + GECİKMİŞ ÖLÇÜMLER + TSK-138/196 DÜZELTMELERİ (2026-09-24 18:2x→19:20Z, model Opus 5.5)
+**Operatör (18:2xZ):** "daha fazla kalem olmalıydı roadmapte" → "sadece tsk'lar değil prg'lar da olmalı" → "full otonom yapabildiklerine devam et".
+**Kendi hatam (ölçüldü):** ilk durum özetim açık kalemi 43 saydı — yalnız başlık biçimli TSK'ları; §2 tahtasındaki 12 tablo satırını ve
+PRG cephe katmanını hiç göstermedi. Gerçek: 55 açık kalem, 43'ü hiçbir cepheye bağlı değil (2026-09-01 madde standardı TSK'ya cephe
+alanı koymamıştı), §3 cephe tablosu 2026-08-13'ten beri elle tutuluyordu, iki rozet yanlıştı (PRG-02 'kapalı' iken TSK-205 koruma
+boşluğu açık; PRG-06 'neredeyse kapalı' iken 7 açık kalem).
+**TSK-216 (kapandı 4ef8372b):** belge dilimi — her açık kalemin `Ref:`i `PRG-NN ·` ile başlar; PRG-12 Bot Filosu (WP12 terfi) · PRG-13
+Kalıcı Hafıza · PRG-14 Altyapı ve Sır · PRG-15 Mikro-yapı ve Tick; PRG-02 yeniden açık, PRG-06 aktif; v351 R14 "tam 11 cephe" ölçüsü
+"PRG-01'den kesintisiz dizi" oldu (2 mutasyon). Kod dilimi — `ops/roadmap_cephe_ozeti.py` §3 CEPHE ÖZETİ bloğunu kalemlerden üretir;
+v535 10 çivi (9/9 mutasyon); CLAUDE.md §2 + madde standardı eki. Tahta başlıklarındaki elle sayılar kaldırıldı (her kapanışta bayatlıyordu).
+**Gecikmiş ölçümler (hepsi günlerce bekliyordu):** TSK-162 hafıza sorgusu sayımı (09-21'de yapılmalıydı) → triyajda kullanım 0/17 gün,
+karar öncesi 9 çağrı/4 katkılı → DROPPED; ayrıca kendi eksiğim: 09-16→09-24 ~15 karardan yalnız 1'ine hafıza atfı düşmüştüm, bugün
+her kararda sorgu koşuldu. TSK-074 hayalet-düğme süzgeci iki haftalık okuması (09-18'de yapılmalıydı) → süzgeç kablolandığından beri
+canlıda HİÇ KOŞMADI (tek boğazı öğrenme biriminde, `meridian-learn` kapalı) → GATED. TSK-070 pano durum sözlüğü 09-15'te canlıya inmiş,
+9 gün 'ACTIVE' kalmış → kapandı. Kapı sayaçları: EDG-101 8/40 (≈10-22), seyrelme 8/20, EDG-088 işlenen 9.
+**TSK-196 tetiği ateşlemişti (fark edilmemiş):** üst-akım olayı 7 / 5 koşum ≥ 5 → ACTIVE. Tasarım + uygulama: aşırı yük (502/503)
+beklemesi 5→30 s, ikinci düşüşte TEK yedek çağrı danışma rotasına; bütçe 660 s tavanında ≈604 s en kötü (pay dar, şerhte).
+Birleştirme b76915f8: v537 7 çivi + v486 dört çivi yeni sözleşmeye, 7/7 mutasyon; inceleme tur 1'de `_ustakim_olayi` şerhinin modül başlığıyla ayrıştığını yakaladı ('üçüncüsü yok') → tur 2. Canlı etki dağıtımla.
+**TSK-138 kök neden + düzeltme (990898d2):** bekçi brifingi 09-17'den beri 6 koşumun 5'inde ham teslim — terim korunumu kalemin TAM
+görünen adını (sayılı mesaj, `(toplu)` son eki) birebir arıyordu. Düzeltme: kısa kararlı jeton (toplu → neden, alarm → konu, olay →
+tanımlayıcı), çakışmada tam ad. İnceleme tur 1 engelleyici buldu (MECHANISM_STALE'in 'mekanizma gecikti' dışı kalıplarında jeton
+ayırt edici değildi → çakışma) → tur 2'de konu deseni + çakışma güvencesi; v536 13 çivi, 8/8 mutasyon.
+**Makine:** keep_awake açık; 18:2x→19:20Z arası askı gözlenmedi (komutlar normal sürede döndü). #63 hâlâ operatörde.
