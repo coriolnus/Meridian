@@ -419,3 +419,14 @@ def test_i_HEAD_esik_altindaki_dosyada_GET_gibi_KODLAMASIZ(tmp_path):
     for ad in TEMSIL:
         assert h.headers.get(ad) == g.headers.get(ad), f"HEAD {ad}={h.headers.get(ad)!r} ≠ GET {g.headers.get(ad)!r}"
     assert h.headers.get("content-length") == g.headers.get("content-length")
+
+
+def test_i_HEAD_KABUL_EDEN_ROTALAR_sabit_ve_BILINCLI():
+    """Rol-1 ruling 2026-09-24 (TSK-219 tur 2 kaygı-2): gövdesiz HEAD'de gzip kararı `Content-Length`ten
+    verilir; boyunu BİLDİRMEYEN bir HEAD rotasında GET'in sıkıştırılacağı VARSAYILIR (bugün tek örnek
+    `/runbook`, kabuğu eşiğin çok üstünde). HEAD kabul eden yeni bir rota bu varsayımı sessizce yanlış
+    yapabilir — küçük gövdeli bir rota HEAD'de gzip bildirirdi. Liste bu yüzden SABİTTİR: yeni HEAD rotası
+    eklemek bu çiviyi kırar ve varsayımın o rotada doğru olup olmadığı bilinçli olarak sorulur."""
+    head_rotalari = sorted(getattr(r, "path", "?") for r in api.app.routes
+                           if "HEAD" in (getattr(r, "methods", None) or set()))
+    assert head_rotalari == ["/runbook"], head_rotalari
