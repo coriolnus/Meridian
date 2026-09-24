@@ -140,3 +140,42 @@ def test_T10_kural_gecisi_kisa_jeton_listesini_gecir_e_verir(bekci, monkeypatch,
     metin, dal = bekci._kural_gecisi("cevap", "istem", ham)
     assert (metin, dal) == ("tamam", "llm")
     assert yakalanan["veri_terimleri"] == ["hermes_poll", "kadans_olculemedi"]
+
+
+# ---------------------------------------------------------------------------------------------
+# TUR 2 (inceleme engelleyicisi): alarm kalıpları + çakışma güvencesi
+# ---------------------------------------------------------------------------------------------
+
+#: A1'de ölçülen `MECHANISM_STALE <ETİKET>: <konu> — …` kalıpları (2026-09-24, events.jsonl).
+A1_TUREV_SR = _b("MECHANISM_STALE BAYAT TÜREV: self_review.json kaynağından 3 sa geri (kadans_olculemedi)",
+                 olay="MECHANISM_STALE BAYAT TÜREV: self_review.json kaynağından 3 sa geri")
+A1_TUREV_EQ = _b("MECHANISM_STALE BAYAT TÜREV: equity_curve.json kaynağından 5 sa geri (kadans_olculemedi)",
+                 olay="MECHANISM_STALE BAYAT TÜREV: equity_curve.json kaynağından 5 sa geri")
+A1_MAKUL = _b("MECHANISM_STALE MAKULLÜK: event_ledger_domination — son 2 günün %80'i (kadans_olculemedi)",
+              olay="MECHANISM_STALE MAKULLÜK: event_ledger_domination — son 2 günün %80'i")
+A1_NABIZ = _b("MECHANISM_STALE mekanizma gecikti: hermes_poll — nabız 1 sa 5 dk sessiz (kadans_olculemedi)",
+              olay="MECHANISM_STALE mekanizma gecikti: hermes_poll — nabız 1 sa 5 dk sessiz")
+
+
+def test_T11_alarm_kaliplarinda_jeton_KONUDUR_etiket_degil(bekci):
+    assert bekci._korunacak_terim(A1_TUREV_SR) == "self_review.json"
+    assert bekci._korunacak_terim(A1_TUREV_EQ) == "equity_curve.json"
+    assert bekci._korunacak_terim(A1_MAKUL) == "event_ledger_domination"
+    assert "MECHANISM_STALE" not in bekci._korunacak_terimler(_ham(A1_TUREV_SR, A1_TUREV_EQ, A1_MAKUL))
+
+
+def test_T12_iki_farkli_kalem_ayni_jetona_duserse_ikisi_de_TAM_ADA_doner(bekci):
+    """İnceleme engelleyicisi: aynı konulu iki alarm tek jetona inerse model birini susturup
+    ötekini ansa kontrol geçerdi. Çakışan kalemler tam adla korunur."""
+    ham = _ham(A1_MEKANIZMA, A1_NABIZ, A1_ERTELEME)
+    assert bekci._korunacak_terimler(ham) == [A1_MEKANIZMA["ad"], A1_NABIZ["ad"], "session_deferred_for_coverage"]
+    metin = "hermes_poll gecikti; session_deferred_for_coverage ölçülemedi."
+    assert len(soul_denetimi.terim_ihlali(metin, bekci._korunacak_terimler(ham))) == 2
+
+
+def test_T13_ayni_kalemin_tekrari_cakisma_sayilmaz(bekci):
+    """Aynı tam adı taşıyan iki AYRI kayıt (aynı olay iki kez listelenmiş) çakışma değildir —
+    sahiplik NESNE kimliğinden değil ADDAN ölçülür (kopya kayıt ayrı bir sözlüktür)."""
+    kopya = {**A1_MEKANIZMA, "kalem": dict(A1_MEKANIZMA["kalem"])}
+    assert kopya is not A1_MEKANIZMA
+    assert bekci._korunacak_terimler(_ham(A1_MEKANIZMA, kopya)) == ["hermes_poll"]

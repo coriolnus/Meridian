@@ -599,9 +599,13 @@ def _olculemeyenler(ham: dict) -> list[dict]:
 
 
 #: Kalem kanıtındaki olay adının baştaki tanımlayıcısı (`session_deferred_for_coverage`,
-#: `reconcile_atlandi`, `MECHANISM_STALE` …) ve mekanizma gecikmesi satırındaki mekanizma adı.
+#: `reconcile_atlandi` …) ve alarm mesajlarının KONUSU. `MECHANISM_STALE` mesajları A1'de ölçülen
+#: tek kalıbı izler (2026-09-24, events.jsonl): `MECHANISM_STALE <ETİKET>: <konu> — …` —
+#: `mekanizma gecikti: hermes_poll`, `BAYAT TÜREV: self_review.json`, `MAKULLÜK:
+#: event_ledger_domination`, `BAYAT MUTABAKAT: mutabakat` … Konu ilk `: `den sonraki ilk
+#: kelimedir; baştaki etiket (`MECHANISM_STALE`) aynı sınıftaki her kalemde AYNIDIR ve ayırt etmez.
 _TANIMLAYICI_DESENI = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
-_MEKANIZMA_DESENI = re.compile(r"mekanizma gecikti: ([A-Za-z0-9_.-]+)")
+_KONU_DESENI = re.compile(r"^[A-Z][A-Z_]+ [^:]*: ([^\s—,;()]+)")
 
 
 def _korunacak_terim(b: dict) -> str:
@@ -616,10 +620,11 @@ def _korunacak_terim(b: dict) -> str:
     bu mekanik ihlalle. Korunumun AMACI susturulamaz kalemin ANILMASIDIR, cümlenin birebir
     kopyası değil: jeton o amacı taşır, biçime tolerans verir.
 
-    SEÇİM SIRASI: toplu kalem → nedeni (`kadans_olculemedi`); mekanizma gecikmesi → mekanizma
-    adı (`hermes_poll`); olay adı → baştaki tanımlayıcı (`session_deferred_for_coverage`).
-    Hiçbiri yoksa ya da jeton görünen adda GEÇMİYORSA tam ada dönülür: model yalnız gördüğünü
-    koruyabilir, görmediği bir terim için cezalandırılmaz.
+    SEÇİM SIRASI: toplu kalem → nedeni (`kadans_olculemedi`); alarm mesajı (`MECHANISM_STALE
+    <ETİKET>: <konu> …`) → konusu (`hermes_poll`, `self_review.json`); olay adı → baştaki
+    tanımlayıcı (`session_deferred_for_coverage`). Hiçbiri yoksa ya da jeton görünen adda
+    GEÇMİYORSA tam ada dönülür: model yalnız gördüğünü koruyabilir, görmediği bir terim için
+    cezalandırılmaz. ÇAKIŞMA `_korunacak_terimler`de ele alınır (tek kalem burada bilinmez).
 
     BEDEL (beyanlı): korunum artık uzun satırdaki SAYILARIN değişip değişmediğini ölçmez.
     Değer doğruluğu kaybolmaz: ölçülen liste model metninin ALTINDA aynen gider (modül başlığı),
@@ -631,7 +636,7 @@ def _korunacak_terim(b: dict) -> str:
         aday = str(kanit["neden"])
     else:
         olay = str(kanit.get("olay") or "")
-        m = _MEKANIZMA_DESENI.search(olay)
+        m = _KONU_DESENI.match(olay)
         if m:
             aday = m.group(1)
         else:
@@ -641,8 +646,20 @@ def _korunacak_terim(b: dict) -> str:
 
 
 def _korunacak_terimler(ham: dict) -> list[str]:
-    """Ölçülemedi kalemlerinin kısa kararlı adları, sırası korunarak tekilleştirilmiş."""
-    return list(dict.fromkeys(_korunacak_terim(b) for b in _olculemeyenler(ham)))
+    """Ölçülemedi kalemlerinin kısa kararlı adları, sırası korunarak tekilleştirilmiş.
+
+    ÇAKIŞMA GÜVENCESİ (inceleme engelleyicisi, 2026-09-24): iki FARKLI kalem aynı jetona düşerse
+    (aynı konu adını taşıyan iki alarm) tek jeton ikisini birden "anılmış" sayardı — model birini
+    susturup ötekini ansa kontrol yine geçerdi. Çakışan jetonun sahibi kalemler bu yüzden TAM
+    ADLARINA döner: kısa jeton ancak TEK bir kalemi adlandırıyorsa kullanılır. Aynı kalemin (aynı
+    tam ad) iki kez listelenmesi çakışma sayılmaz."""
+    kalemler = _olculemeyenler(ham)
+    sahipler: dict[str, set] = {}
+    for b in kalemler:
+        sahipler.setdefault(_korunacak_terim(b), set()).add(str(b.get("ad") or ""))
+    return list(dict.fromkeys(
+        (_korunacak_terim(b) if len(sahipler[_korunacak_terim(b)]) == 1 else str(b.get("ad") or ""))
+        for b in kalemler))
 
 
 # ================================================================================================
@@ -1053,6 +1070,8 @@ def sirala(ham: dict) -> tuple[str | None, str]:
             # yetkisi modelde olsaydı, mekanizma kırıldığı gün görünmez olurdu — yani bekçinin
             # kendisi sessizce ölürdü. (`@sef` emsali.)
             _ham_dali(ham, "sessiz_hukmu_gecersiz")
+            # TAM AD BİLEREK (TSK-138): bu alan İNSAN okuru içindir (hangi kalem susturulamadı);
+            # kısa jeton yalnız `terim_ihlali`nin mekanik eşlemesi içindir (`_korunacak_terimler`).
             obs.log("bekci_brifingi_sessiz_hukmu_gecersiz",
                     olculemeyen=[b["ad"] for b in _olculemeyenler(ham)],
                     tarama_hatasi=bool(ham.get("tarama_hatasi")),
