@@ -816,10 +816,19 @@ def test_r14_prg_tekilligi_gercek_dosya():
 
 def test_r14_prg_tekilligi_gercek_dosya_on_bir_cephe_var():
     """Pozitif kontrol: FAZ B raporunun beyan ettiği 11 cephe (`PRG-01`..`PRG-11`) fiilen
-    dosyada tanımlı — sıfır satır kalırsa test kendi kapsamının çürüdüğünü haber verir."""
+    dosyada tanımlı — sıfır satır kalırsa test kendi kapsamının çürüdüğünü haber verir.
+
+    2026-09-24 (TSK-216): PRG-12..15 eklendi (Bot Filosu · Kalıcı Hafıza · Altyapı ve Sır ·
+    Mikro-yapı ve Tick). Sabit `range(1, 12)` kümesi her yeni cephede kırılırdı; çivinin AMACI
+    (başlık çürümesi/boşluk yakalama) korunarak ölçü "PRG-01'den kesintisiz dizi, en az 11 cephe"
+    oldu — aradan bir başlık düşerse ya da biçimi bozulursa küme kesintili kalır ve çivi öter."""
     metin = _roadmap_metni()
     kimlikler = {m.group(1) for m in PRG_BASLIK_DESENI.finditer(metin)}
-    assert kimlikler == {f"PRG-{n:02d}" for n in range(1, 12)}
+    assert kimlikler, "hiç `### PRG-NN — Ad` başlığı bulunamadı — tarayıcı ya da dosya çürüdü"
+    en_buyuk = max(int(k.split("-")[1]) for k in kimlikler)
+    assert en_buyuk >= 11, f"en az 11 cephe bekleniyordu, en büyük kimlik PRG-{en_buyuk:02d}"
+    assert kimlikler == {f"PRG-{n:02d}" for n in range(1, en_buyuk + 1)}, (
+        f"cephe dizisi kesintili: eksik {sorted({f'PRG-{n:02d}' for n in range(1, en_buyuk + 1)} - kimlikler)}")
 
 
 def test_r14_prg_tekilligi_sentetik_ihlal():
