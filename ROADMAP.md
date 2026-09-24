@@ -558,6 +558,33 @@ WP metinlerinde bu satırların TAM gerekçesi durmaya devam eder; tahta onları
 _Aşağıdaki GÜNCEL DURUM anlık yönelim; ardından uniform ÖZET TABLOSU (her WP tek biçim); sonra WP
 detayları (tam metin). Kapanan alt-kalemler ✅ WP içinde tarihçe olarak kalır; tamamlanan WP'ler §8'da._
 
+### CEPHE ÖZETİ — ÜRETİLMİŞ (TSK-216, 2026-09-24; kalemlerden türer, elle düzenlenmez)
+
+Aşağıdaki tablo açık TSK kalemlerinin beyan ettiği cephelerden ÜRETİLİR (`python ops/roadmap_cephe_ozeti.py --yaz`); bir kalem açıldığında, kapandığında ya da durumu değiştiğinde yeniden üretilir — v535 çivisi bayat bloğu ve cephesiz kalemi yakalar. Aşağıdaki eski ÖZET TABLOSU 2026-08-13 fotoğrafıdır (tarihçe).
+
+<!-- CEPHE-OZETI:BASLA -->
+_Üretildi: `python ops/roadmap_cephe_ozeti.py --yaz` · kaynak: açık TSK kalemleri (başlık `Ref: PRG-NN ·` + tahta `(WP: WPn)`) · ELLE DÜZENLENMEZ (çivi: v535)._
+
+| Cephe | Açık | ACTIVE | QUEUED | GATED | OPERATOR | INTERIM | Kalemler |
+|---|---:|---:|---:|---:|---:|---:|---|
+| PRG-01 İcra ve Friksiyon | 4 | 0 | 1 | 3 | 0 | 0 | TSK-059 · TSK-069 · TSK-071 · TSK-085 |
+| PRG-02 Sermaye ve Koruma | 1 | 0 | 1 | 0 | 0 | 0 | TSK-205 |
+| PRG-03 Öğrenme Döngüsü | 6 | 1 | 1 | 4 | 0 | 0 | TSK-062 · TSK-063 · TSK-072 · TSK-074 · TSK-076 · TSK-204 |
+| PRG-04 Veri ve Evren | 5 | 1 | 0 | 1 | 3 | 0 | TSK-044 · TSK-045 · TSK-065 · TSK-084 · TSK-207 |
+| PRG-05 Ölçüm Altyapısı | 1 | 0 | 0 | 1 | 0 | 0 | TSK-104 |
+| PRG-06 Sistem Bütünlüğü | 8 | 5 | 1 | 2 | 0 | 0 | TSK-128 · TSK-137 · TSK-209 · TSK-212 · TSK-213 · TSK-214 · TSK-215 · TSK-216 |
+| PRG-07 Skill Katmanı | 2 | 0 | 0 | 2 | 0 | 0 | TSK-016 · TSK-093 |
+| PRG-08 Pano ve Operatör | 2 | 1 | 0 | 1 | 0 | 0 | TSK-070 · TSK-097 |
+| PRG-09 QuantConnect | 0 | 0 | 0 | 0 | 0 | 0 | — |
+| PRG-10 Referans Verisi | 0 | 0 | 0 | 0 | 0 | 0 | — |
+| PRG-11 Strateji ve Seçilim | 1 | 0 | 0 | 1 | 0 | 0 | TSK-179 |
+| PRG-12 Bot Filosu | 6 | 1 | 1 | 4 | 0 | 0 | TSK-010 · TSK-018 · TSK-061 · TSK-138 · TSK-196 · TSK-200 |
+| PRG-13 Kalıcı Hafıza | 12 | 3 | 0 | 8 | 1 | 0 | TSK-015 · TSK-060 · TSK-142 · TSK-161 · TSK-162 · TSK-163 · TSK-164 · TSK-165 · TSK-166 · TSK-168 · TSK-169 · TSK-170 |
+| PRG-14 Altyapı ve Sır | 4 | 2 | 1 | 1 | 0 | 0 | TSK-020 · TSK-064 · TSK-096 · TSK-176 |
+| PRG-15 Mikro-yapı ve Tick | 4 | 1 | 2 | 1 | 0 | 0 | TSK-013 · TSK-066 · TSK-067 · TSK-068 |
+| **Toplam** | 56 | 15 | 8 | 29 | 4 | 0 | — |
+<!-- CEPHE-OZETI:BITIR -->
+
 > ⚠ **BU BLOK 2026-08-13 ANLIK GÖRÜNTÜSÜDÜR (Ö-49 şerhi, 2026-08-22):** içindeki en az üç kalem SONRADAN KAPANDI — /api/diagnostics arızası (v243, 08-14) · N1 bildirim kanalı (08-22 CANLI) · beyin zinciri (08-14'te değişti). Güncel durum §2 TAHTA + §7 günlüktedir; bu blok tarihçe.
 > **GÜNCEL DURUM — 2026-08-13 ~20:30Z (YEDİ DAĞITIM + TOHUM YENİLEME; ROADMAP tutarlılık denetimi
 > `docs/DENETIM-ROADMAP-TUTARLILIK-2026-08-13.md`):**
