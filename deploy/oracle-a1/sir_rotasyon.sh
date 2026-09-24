@@ -290,9 +290,10 @@ adim()     { echo "-- $*"; }
 # Tavan kıyası ve "N s" satırı TAM saniyedir; `date +%s` farkı saniye sınırında 1 s fazla
 # sayabiliyordu, burada gerçek fark aşağı yuvarlanır.
 # Okunamayan saat ÖLÇÜLEMEDİ'dir — duvar saatine DÜŞÜLMEZ (düşmek arızayı geri getirmek olurdu).
+# `_saat_oku [ek]` — ek, ÖLÇÜLEMEDİ satırına çağıranın bağlamını ekler (ör. ön kapıda "hiçbir şey yazılmadı").
 _saat_oku() {
   SAAT_MS="$("$PYTHON_BIN" -c 'import time; print(int(time.monotonic() * 1000))')" \
-    || olcum_yok "monotonik saat okunamadı ($PYTHON_BIN) — bekleme tavanı ve süre ölçülemez"
+    || olcum_yok "monotonik saat okunamadı ($PYTHON_BIN) — bekleme tavanı ve süre ölçülemez${1:+ — $1}"
 }
 # `_gecen_s <başlangıç SAAT_MS>` → `GECEN_S`. Çağıran `$( )` DEĞİL doğrudan çağırır: alt kabukta
 # `olcum_yok` yalnız alt kabuğu bitirirdi.
@@ -2555,6 +2556,10 @@ vault_db_rotasyon() {
   [ "$(py esit url "$ISLIK/db_eski_dsn" - - dosya "$ISLIK/db_parola" - -)" = "AYRI" ] \
     || die "yeni parola ESKİ parolayla AYNI (ya da kıyaslanamadı) — rotasyon değil ve negatif kontrol
      ('eski parola FATAL') ölçülemezdi; kasaya HİÇBİR ŞEY yazılmadı."
+  # SAAT ÖN KAPISI (inceleme 2026-09-24): kasa yazımından SONRAKİ ilk saat okuması render beklemesidir;
+  # orada düşen saat `olcum_yok` ile ÇIKAR ve kasa kendiliğinden geri ALINMAZ (render tavanı aşımı
+  # geri alır, bu yol yalnız el reçetesi basar). Saat burada, hiçbir şey yazılmadan bir kez okunur.
+  _saat_oku "kasaya HİÇBİR ŞEY yazılmadı (saat ön kapısı)"
 
   # ---- 3. YENİ DSN + YEDEK -------------------------------------------------------------------------
   adim "3/8 yeni DSN: ESKİ DSN'in YALNIZ parola alanı değişir; ESKİ DSN yedeğe"

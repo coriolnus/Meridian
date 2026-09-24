@@ -30,6 +30,8 @@ BÖLÜMLER
   S5  (a) `_render_bekle` askı altında: gecikmeli render sahte "render bekleme aşıldı" VERMEZ
   S6  sınıf taraması: betikte duvar saatiyle süre ölçümü KALMADI; monotonik saat TEK yerden okunur
   S7  yeni bağımlılığın arıza yüzü: saat okunamazsa ÖLÇÜLEMEDİ, duvar saatine DÜŞÜLMEZ
+  S8  `--db --vault`: saat kasa yazımından ÖNCE okunur — okunamıyorsa kasaya hiçbir şey yazılmaz
+      (inceleme 2026-09-24: sonraki okumada düşen saat kasayı geri almadan çıkıyordu)
   M   MUTASYONLAR — duvar saatine dönüş S1'i, donmuş saat S4'ü, geri gelen `date +%s` S6'yı,
       yutulan saat arızası S7'yi kırar
 
@@ -366,6 +368,24 @@ def test_S7_SAAT_OKUNAMAZSA_OLCULEMEDI_duvar_saatine_DUSULMEZ(tmp_path):
     assert "✓ hazır: " not in r.stdout, r.stdout
 
 
+def test_S8_SAAT_OKUNAMAZSA_db_kasa_yolu_KASAYA_DOKUNMADAN_durur(tmp_path):
+    """İnceleme 2026-09-24 (ÖNEMLİ-2): `--db --vault`de kasa yazımından SONRAKİ ilk saat okuması render
+    beklemesidir. Orada düşen saat `olcum_yok` ile ÇIKAR ve kasa kendiliğinden geri ALINMAZ (render
+    tavanı aşımından farkı bu — o yol kasayı geri alır); yalnız el reçetesi basılırdı. Saat bu yüzden
+    kasa yazımından ÖNCE, ön kapılarla birlikte bir kez okunur: okunamıyorsa hiçbir şey yazılmaz."""
+    kok, ortam, log, durum = v538._db_ortami(tmp_path)
+    ortam["PYTHON_BIN"] = _saatsiz_python(tmp_path)
+    r = v538._kos(BETIK, ortam, "--db", "--vault", girdi=f"{v538.YENI_PG}\n")
+    assert r.returncode == 2, (r.returncode, r.stdout + r.stderr)
+    assert "ÖLÇÜLEMEDİ: monotonik saat okunamadı" in r.stderr, r.stderr
+    assert "kasaya HİÇBİR ŞEY yazılmadı" in r.stderr, r.stderr
+    o = v538._olaylar(kok)
+    assert not [x for x in o if x.startswith(("kv-put", "alter", "restart", "kv-rollback"))], o
+    assert v538._kasa(durum) == v538.KASA_TOHUM and v538._pg(kok) == v538.ESKI["pg"]
+    assert not list((kok / "root").glob("sir-yedek-*")), "saat kapısında durulan koşum yedek aldı"
+    v538._sir_yok(r, kok, log)
+
+
 # =================================================================================================
 # M — MUTASYONLAR
 # =================================================================================================
@@ -404,7 +424,7 @@ def test_M4_MUT_SAAT_ARIZASI_yutulursa_S7_KIRMIZI(tmp_path):
     """S7'nin ısırdığı dal: `_saat_oku`nun `|| olcum_yok` kapısı. Kapı kalkınca `set -e` koşumu
     gerekçesiz çıkış 1 ile keser — "ölçemedim" (2) ile "çöktüm" (1) aynı şey değildir."""
     capa = ('\')" \\\n    || olcum_yok "monotonik saat okunamadı ($PYTHON_BIN) — bekleme tavanı ve süre '
-            'ölçülemez"\n')
+            'ölçülemez${1:+ — $1}"\n')
     m = _mutant(tmp_path, (capa, "')\"\n"))
     _, ortam = _sahte_ortam(tmp_path)
     ortam["PYTHON_BIN"] = _saatsiz_python(tmp_path)
