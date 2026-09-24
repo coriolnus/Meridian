@@ -301,20 +301,23 @@ class DenetciRota:
         ölçüm satırı ve `llm_dustu` kök-neden ayrımı — "denetçinin cevabı bozuk" ile "üst-akım
         hiç cevap vermedi" ancak bu olayla ayrılır.
 
-        `deneme` ÇAĞRI SIRASIDIR: ilk çağrı 1, yeniden deneme 2 (üçüncüsü YOKTUR). Alan bir
-        süs değil, SAYIMIN DOĞRULUĞUDUR (tur-2, K3): TEK bir arıza bu olayı İKİ kez yazar ve
-        olay adını sayan bir grep o tek arızayı iki sayardı — üstelik yanlış çıkan sayı tam da
-        bu turun ölçmek istediği sayıdır. Arıza sayımı `deneme == 1` satırlarından yapılır;
-        `deneme == 2` satırları "yeniden deneme de düştü" kümesidir ve ikisinin ORANI yeniden
-        denemenin KAZANCIDIR. Sayaç `_denetci_cagri` olayının `yeniden_deneme` alanıyla AYNI
+        `deneme` ÇAĞRI SIRASIDIR: ilk çağrı 1, yeniden deneme 2, yedek rota 3 (TSK-196 D2;
+        dördüncüsü YOKTUR). Alan bir süs değil, SAYIMIN DOĞRULUĞUDUR (tur-2, K3): TEK bir arıza bu
+        olayı ÜÇ kereye kadar yazar ve olay adını sayan bir grep o tek arızayı birden çok sayardı —
+        üstelik yanlış çıkan sayı tam da ölçülmek istenen sayıdır. Arıza sayımı `deneme == 1`
+        satırlarından yapılır; `deneme == 2` satırları "yeniden deneme de düştü", `deneme == 3`
+        satırları "yedek rota da düştü" kümesidir — ardışık oranlar yeniden denemenin ve yedek
+        rotanın KAZANCIDIR. Sayaç `_denetci_cagri` olayının `yeniden_deneme` alanıyla AYNI
         yerel sayaçtan türer (tek-kaynak yasası: iki ayrı sayaç iki ayrı hızda çürürdü) ve
         `detail` düzyazısı da bu alandan üretilir — alan ile cümle ayrışamaz."""
         obs.log(f"{self.olay_oneki}_denetci_ustakim_hatasi", kod=hata.get("code"),
                 mesaj=notify.scrub(str(hata.get("message") or ""))[:USTAKIM_MESAJ_TAVANI],
                 rota=rota, deneme=deneme,
                 detail=("kapı HTTP 200 döndürdü ama gövde üst-akım hatası taşıyor (choices YOK) — "
-                        + ("TEK yeniden deneme yapılıyor" if deneme == 1 else
-                           "yeniden deneme de düştü, hüküm `llm_dustu` olur (teslimat DÜŞMEZ)")))
+                        + {1: "TEK yeniden deneme yapılıyor",
+                           2: "yeniden deneme de düştü — yedek rota denenir (yapılandırılmış rota zaten "
+                              "yedekse hüküm `llm_dustu`, teslimat DÜŞMEZ)"}.get(
+                               deneme, "yedek rota da düştü, hüküm `llm_dustu` olur (teslimat DÜŞMEZ)")))
 
     def cevaplayan_oku(self) -> str | None:
         """SON denetçi çağrısında GERÇEKTEN cevap veren model — ölçülmediyse `None`."""

@@ -65,3 +65,15 @@ def test_Y6_bekleme_sinifi_kod_bicimine_duyarsiz():
     assert denetci_rota.ustakim_bekleme_sn({"code": "502"}) == denetci_rota.USTAKIM_ASIRI_YUK_BEKLEME_SN
     assert denetci_rota.ustakim_bekleme_sn({"code": 429}) == denetci_rota.USTAKIM_YENIDEN_DENEME_SN
     assert denetci_rota.ustakim_bekleme_sn({}) == denetci_rota.USTAKIM_YENIDEN_DENEME_SN
+
+
+def test_Y7_olay_detail_ucuncu_denemeyi_ADIYLA_soyler(rota, monkeypatch, zaman):
+    """İnceleme engelleyicisi (2026-09-24): olayın `detail`i deneme sırasından üretilir — 3. düşüş
+    'yedek rota da düştü' demeli; alan (deneme) ile cümle ayrışamaz."""
+    _kapiyi_bagla(monkeypatch, _ustakim_govdesi(kod=503), _ustakim_govdesi(kod=503), _ustakim_govdesi(kod=503))
+    with pytest.raises(RuntimeError):
+        rota.cagir("soru")
+    detaylar = {o.get("deneme"): o.get("detail", "") for o in _olaylar(f"{ONEK}_denetci_ustakim_hatasi")}
+    assert "TEK yeniden deneme" in detaylar[1]
+    assert "yedek rota denenir" in detaylar[2]
+    assert "yedek rota da düştü" in detaylar[3]
