@@ -9,8 +9,13 @@ döner" diye beyan ediyordu; eski yol ise Agent'ın render ettiği dosyaya DOĞR
 geri yazar ve rotasyon sessizce geri alınır. Doğru yön kasadan rotasyondur.
 
 ROL-1 KARARI (Seçenek A, değişmez): dalga-1 girdisine YALNIZ `rotasyon_siri` eklenir — `kaynak` /
-`kopya_kaynaklari` GİREMEZ (v485 E1). `HINDSIGHT_API_DATABASE_URL` / `--db` bu dilimde BAĞLANMAZ;
-onun yerine eski yol ve `--db --vault` Agent render hedefi UYARISI basar, davranış DEĞİŞMEZ.
+`kopya_kaynaklari` GİREMEZ (v485 E1). `HINDSIGHT_API_DATABASE_URL` / `--db` bu dilimde BAĞLANMADI;
+onun yerine eski yol ve `--db --vault` Agent render hedefi UYARISI basıyordu.
+2026-09-24 (TSK-064 `--db --vault`, v538): DB de BAĞLANDI — sıra tasarlandı (kasa → render kanıtı →
+ALTER ROLE → restart → kanıt). A2/A3/B3/E1/M3 yeni sözleşmeye çekildi: bağlı küme artık tablonun
+BÜTÜN sırlarıdır, `--db --vault` kasa yolunun kendi dalıyla koşar (uyarı basmaz); eski `--db`
+uyarısı bağlı sınıfa geçti (E2/E3 aynen yeşil — uyarı, hedef ve kasa yolu yine basılır). Bağsız
+sırrın kapsam beyanı dalı (M3) artık E5'in bağsız-NOUS sahte envanteriyle ölçülür.
 
 ÖLÇÜLÜP BRIEF'E EKLENENLER (rapor: tsk064-baglama-rapor.md):
   · `--openrouter --vault` NOUS bağlanınca İLK KEZ iki sırlı döngü koşar. Döngü boş değerde
@@ -72,10 +77,10 @@ BAGLAR = {
     "nous_api_key": ("NOUS_API_KEY", "openrouter", "secret/meridian/nous_api_key",
                      "/etc/meridian/nous_api_key", "meridian.service"),
 }
-#: Kasaya BAĞLI rotasyon sırlarının TAM kümesi (bu dilimden sonra). Tablodaki tek bağsız sır DB
-#: parolasıdır (Rol-1 kararı: bu dilimde bağlanmaz).
+#: Kasaya BAĞLI rotasyon sırlarının TAM kümesi. Bu dilimde tek bağsız sır DB parolasıydı; 2026-09-24
+#: (TSK-064 `--db --vault`, v538) o da bağlandı — küme artık tablonun BÜTÜN sırlarıdır.
 BAGLI_TAM_KUME = {"KAPI_APIKEY", "HINDSIGHT_API_TENANT_API_KEY", "OPENROUTER_API_KEY",
-                  "MERIDIAN_DASH_TOKEN", "APISIX_ADMIN_KEY", "NOUS_API_KEY"}
+                  "MERIDIAN_DASH_TOKEN", "APISIX_ADMIN_KEY", "NOUS_API_KEY", "HINDSIGHT_DB_PAROLA"}
 DB_SIR = "HINDSIGHT_DB_PAROLA"
 DB_KV = "HINDSIGHT_API_DATABASE_URL"
 DB_HEDEF = "/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL"
@@ -246,21 +251,26 @@ def test_A1_dalga1_girdisi_ROTASYON_SIRI_tasir_ve_tablonun_REFERANSI_render_hede
         f"{sir}: REFERANS satırı render hedefi değil: {satirlar[0]}")
 
 
-def test_A2_DB_URL_BAGLANMADI_ve_hicbir_girdi_DB_parolasini_gostermiyor():
-    """Rol-1 kararı: kasa TAM URL taşır, parola operatörden alınır ve ALTER ROLE ↔ render sırası
-    ayrı tasarımdır. Bağ sessizce eklenirse `--db --vault` tasarlanmamış bir sırayla koşardı."""
+def test_A2_DB_URL_BAGLANDI_ve_YALNIZ_o_girdi_DB_parolasini_gosterir():
+    """2026-09-17'de bağ BİLEREK yoktu (ALTER ROLE ↔ kasa ↔ render sırası tasarlanmamıştı). 2026-09-24
+    (TSK-064, v538): sıra tasarlandı ve uygulandı → bağ VAR, TEK girdiden ve YALNIZ `rotasyon_siri`
+    alanıyla (Seçenek A: dalga-1'e kaynak/kopya GİREMEZ). Bağ düşerse `--db --vault` "kasaya BAĞLI
+    sırrı YOK" ile durur; ikinci bir girdi aynı sırrı gösterirse rotasyon hangi DSN'i döndürdüğünü
+    bilemez."""
     kv = _kv()
-    assert "rotasyon_siri" not in kv[DB_KV], kv[DB_KV]
-    assert not [g["ad"] for g in kv.values() if g.get("rotasyon_siri") == DB_SIR]
+    assert kv[DB_KV].get("rotasyon_siri") == DB_SIR, kv[DB_KV]
+    assert [g["ad"] for g in kv.values() if g.get("rotasyon_siri") == DB_SIR] == [DB_KV]
+    assert not ({"kaynak", "kopya_kaynaklari"} & set(kv[DB_KV])), kv[DB_KV]
 
 
-def test_A3_BAGLI_KUME_tablonun_DB_disindaki_BUTUN_sirlari():
-    """Pozitif kontrol: bağlı küme ELLE yazılı tam küme, ve rotasyon tablosundan DB parolası
-    çıkarılınca kalan kümeyle de AYNI. Bir bağ düşerse ya da tabloya bağsız bir sır girerse öter."""
+def test_A3_BAGLI_KUME_tablonun_BUTUN_sirlari():
+    """Pozitif kontrol: bağlı küme ELLE yazılı tam küme ve rotasyon tablosunun BÜTÜN sırlarıyla AYNI
+    (2026-09-24'e kadar DB parolası dışarıda kalıyordu). Bir bağ düşerse ya da tabloya bağsız bir
+    sır girerse öter."""
     bagli = {g["rotasyon_siri"] for g in _kv().values() if g.get("rotasyon_siri")}
     assert bagli == BAGLI_TAM_KUME, sorted(bagli ^ BAGLI_TAM_KUME)
     tablo = {k["sir"] for k in _betik_kopyalari()}
-    assert tablo - {DB_SIR} == bagli, sorted((tablo - {DB_SIR}) ^ bagli)
+    assert tablo == bagli, sorted(tablo ^ bagli)
 
 
 # =================================================================================================
@@ -287,9 +297,11 @@ def test_B2_SAHTE_envanterde_BAG_YOKSA_satir_BASILMAZ(tmp_path):
         assert r.returncode == 0 and r.stdout == "", (sir, r.stdout, r.stderr)
 
 
-def test_B3_DB_parolasi_icin_satir_YOK():
+def test_B3_DB_parolasi_icin_TEK_satir_kasa_yolu_ve_render_hedefi():
+    """2026-09-24 (TSK-064, v538): bağ var → `--db --vault`ın okuduğu TEK satır (takma ad yok)."""
     r = _kv_satirlari(ENVANTER, DB_SIR)
-    assert r.returncode == 0 and r.stdout == "", r.stdout
+    assert r.returncode == 0, r.stderr
+    assert r.stdout.splitlines() == [f"{DB_KV}\t{DB_KASA}\t{DB_HEDEF}\t{DB_SIR}\t-"], r.stdout
 
 
 # =================================================================================================
@@ -429,8 +441,10 @@ def test_D8_IKI_SIRLI_turda_IKINCI_render_GELMEZSE_ONCE_DONEN_sir_ADIYLA_soyleni
 
 
 # =================================================================================================
-# E) `--db` — AGENT RENDER HEDEFİ UYARISI (bağlanmaz, davranış değişmez)
+# E) `--db` — AGENT RENDER HEDEFİ UYARISI (eski yolda; davranış değişmez)
 # =================================================================================================
+# 2026-09-24 (TSK-064, v538): DB bağlandı → eski yol uyarısı BAĞLI sınıfta (`--db --vault`u gösterir);
+# `_uyari_db`nin ölçtüğü dört iz (başlık, hedef, kasa yolu, sır) iki sınıfta da basılır.
 
 def _uyari_db(metin: str) -> None:
     assert UYARI in metin, f"Agent render hedefi uyarısı YOK:\n{metin}"
@@ -439,13 +453,20 @@ def _uyari_db(metin: str) -> None:
 
 
 @pytest.mark.parametrize("kuru", [True, False])
-def test_E1_DB_VAULT_uyari_basar_eski_yolla_doner_TEK_BASINA_yok_kasaya_DOKUNMAZ(tmp_path, kuru):
+def test_E1_DB_VAULT_kasa_yolunun_KENDI_dali_UYARISIZ_kuru_plan_ya_da_bos_degerde_DURUR(tmp_path, kuru):
+    """Bağ öncesi (2026-09-17) `--vault --db` uyarı basıp düşüyordu. Bağ sonrası kasa yolunun kendi
+    dalı koşar: kuru plan çıkış 0; gerçek koşum bu dosyanın kasa şiminde (yalnız `kv put` tanır,
+    `kv get` BOŞ döner) ön kontrolde durur — "kasaya HİÇBİR ŞEY yazılmadı" (çıkış 1). İkisinde de
+    eski yolun uyarısı YOK (tasarım §3.9 — kasa yolu Agent'ı zaten besler), kasaya yazım ve restart
+    YOK. Akışın kendisi (KV v2 sürüm modeliyle) v538'de ölçülür."""
     kok, ortam, log = _kasa_ortami(tmp_path)
-    r = _kos(BETIK, ortam, "--vault", "--db", *(["--kuru"] if kuru else []))
-    assert r.returncode == 1, f"{r.returncode}\n{r.stdout}\n{r.stderr}"
+    r = _kos(BETIK, ortam, "--vault", "--db", *(["--kuru"] if kuru else []), girdi="\n")
+    assert r.returncode == (0 if kuru else 1), f"{r.returncode}\n{r.stdout}\n{r.stderr}"
     tum = r.stdout + r.stderr
-    _uyari_db(tum)
-    assert ESKI_YOL_METNI not in tum, tum
+    assert UYARI not in tum and ESKI_YOL_METNI not in tum, tum
+    assert "kasaya BAĞLI sırrı YOK" not in tum, tum
+    if not kuru:
+        assert "kasaya HİÇBİR ŞEY yazılmadı" in r.stderr, r.stderr
     assert _kv_put_yollari(log) == [] and not _birimler(kok)
 
 
@@ -555,12 +576,16 @@ def test_M2_v491_A5_dalga1_BAGI_tabloyla_AYRISIRSA_KIRMIZI(tmp_path, monkeypatch
         v491.test_A5_ROTASYON_SIRI_bagi_kopya_kumesiyle_BIREBIR()
 
 
-def test_M3_MUT_kapsam_beyaninin_AGENT_dali_kalkarsa_E1_KIRMIZI(tmp_path):
+def test_M3_MUT_kapsam_beyaninin_AGENT_dali_kalkarsa_E5_KIRMIZI(tmp_path):
+    """2026-09-24: DB bağlandı → bağsız + Agent hedefi olan sırrın TEK dünyası E5'in bağsız-NOUS sahte
+    envanteridir (eskiden `--vault --db`/E1 ölçüyordu). Dal kalkınca uyarı yerine "eski yolla döner"."""
     m = _mutant(tmp_path, (
         """    if printf '%s\\n' "$tablo" | awk -F'\\t' -v k="$sir" '$1==k{b=1} END{exit !b}'; then""",
         "    if false; then"), ad="m3.sh")
-    kok, ortam, _ = _kasa_ortami(tmp_path)
-    r = _kos(m, ortam, "--vault", "--db", "--kuru")
+    uyarili = _sahte_envanter(tmp_path, "nous_bagsiz_m3",
+                              lambda veri: _girdi(veri, "nous_api_key").pop("rotasyon_siri"))
+    kok, ortam, _ = _kasa_ortami(tmp_path, envanter=uyarili)
+    r = _kos(m, ortam, "--vault", "--openrouter", "--kuru")
     tum = r.stdout + r.stderr
     assert UYARI not in tum and ESKI_YOL_METNI in tum, f"MUTASYON ISIRMADI:\n{tum}"
 
@@ -615,8 +640,9 @@ def test_M9_MUT_BIRIMSIZ_tuketici_beyani_kalkarsa_C1_D2_KIRMIZI(tmp_path, kip, c
 
 
 def test_M10_MUT_ONCE_DONEN_sir_beyani_kalkarsa_D8_KIRMIZI(tmp_path):
-    m = _mutant(tmp_path, ('        [ "$donen" = " $sir" ] || echo "!! BU TURDA ÖNCE DÖNEN SIR:',
-                           '        [ "$donen" = " $sir" ] || : "!! BU TURDA ÖNCE DÖNEN SIR:'), ad="m10.sh")
+    # Girinti 2026-09-24'te 8→6 (TSK-064: render beklemesi `_render_bekle`e çıktı, dal `if !` içinde).
+    m = _mutant(tmp_path, ('      [ "$donen" = " $sir" ] || echo "!! BU TURDA ÖNCE DÖNEN SIR:',
+                           '      [ "$donen" = " $sir" ] || : "!! BU TURDA ÖNCE DÖNEN SIR:'), ad="m10.sh")
     kok, ortam, _ = _kasa_ortami(tmp_path, render=("secret/meridian/nous_api_key",))
     r = _kos(m, ortam, "--vault", "--openrouter", girdi=f"{YENI_NOUS}\n{YENI_OR}\n")
     assert r.returncode == 2 and "ÖNCE DÖNEN SIR" not in r.stderr, (
