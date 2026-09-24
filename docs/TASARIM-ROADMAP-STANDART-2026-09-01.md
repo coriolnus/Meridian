@@ -115,3 +115,23 @@ Kapanmış (DONE/DROPPED) TSK maddeleri §2/§4'ten §8 alt bölümlerine (`§8.
 ARŞİV MADDESİ olarak sayar: `section` = §8, kova status'tan (DONE/DROPPED → kapalı; başka status → belirsiz + neden). Yaşayan
 bölümlerde (§2/§4/§5/§6) liste imsiz satır madde SAYILMAZ. §8'de TABLO satırı bırakılmaz (v343: §8 tablo satırı şema sayılır) —
 taşınan tahta satırları düz metne çevrilir. Başlıkta `*` karakteri şema gramerini bozar (TSK-134 vakası, `×` ile yazıldı).
+
+---
+
+## Ek — 2026-09-24 (TSK-216): cephe bağı zorunlu, cephe özeti türetilir
+
+**Ölçülen boşluk:** bu standart TSK'ya cephe alanı koymadı; 2026-09-24'te arşiv dışındaki 55 açık TSK'nın 43'ü
+hiçbir PRG'ye bağlı değildi, §3 cephe özet tablosu 2026-08-13'ten beri elle tutuluyordu ve iki cephe rozeti
+gerçekle çelişiyordu (PRG-02 "kapalı" iken açık koruma boşluğu TSK-205; PRG-06 "neredeyse kapalı" iken 7 açık kalem).
+
+**Kural (şema DEĞİŞMEDİ — v351 sözlüğü donuk kalır):**
+1. Açık her başlık biçimli TSK'nın alan satırlarındaki ilk `  Ref:` satırı `PRG-NN ·` ile BAŞLAR. Ref'in
+   ortasında geçen PRG anıştırması bağ sayılmaz — bağ açık beyandır.
+2. §2 TAHTA tablo satırları cephelerini `(WP: WPn)` etiketiyle taşır (`WPn` → `PRG-0n`, 2026-08-13 numaralaması).
+3. Cepheler `### PRG-NN — Ad` başlıklarıdır, PRG-01'den kesintisiz dizi (v351 R14). 2026-09-24'te eklenenler:
+   PRG-12 Bot Filosu (WP12'nin terfisi) · PRG-13 Kalıcı Hafıza · PRG-14 Altyapı ve Sır · PRG-15 Mikro-yapı ve Tick.
+4. §3 "CEPHE ÖZETİ — ÜRETİLMİŞ" bloğu `ops/roadmap_cephe_ozeti.py` ile kalemlerden türetilir; elle düzenlenmez.
+
+**Zorlama:** `tests/test_roadmap_cephe_ozeti_v535.py` — cephesiz ya da tanımsız cepheye bağlı açık kalem ve bayat
+özet bloğu kırmızıdır.
+
