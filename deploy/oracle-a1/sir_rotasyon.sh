@@ -232,7 +232,8 @@ VAULT_ENVANTER="${VAULT_ENVANTER:-$(cd "$(dirname "$0")" && pwd)/../sir_envanter
 VAULT_POLITIKA_URETICI="${VAULT_POLITIKA_URETICI:-$(cd "$(dirname "$0")" && pwd)/../../ops/vault_politika_uret.py}"
 #: YAML okuyan python — `py()` yardımcısı stdlib'le yetinir (sudo python3), bu ise PyYAML ister.
 #: A1'de sistem python3'ü yeterlidir; ayrı bir kanca olması çivinin kendi yorumlayıcısını
-#: verebilmesi içindir (sanal ortam dışındaki python3'te PyYAML olmayabilir).
+#: verebilmesi içindir (sanal ortam dışındaki python3'te PyYAML olmayabilir). MONOTONİK saat de
+#: buradan okunur (`_saat_oku`, stdlib yeter): yeni bir yorumlayıcı bağımlılığı DEĞİLDİR.
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 #: RENDER BEKLEME — SINIRLI. Agent STATİK (KV-v2) sırları `static_secret_render_interval` ile
 #: yeniden render eder ve o aralık `ops/vault_politika_uret.py::RENDER_ARALIGI`de TEK yerde
@@ -269,11 +270,33 @@ DB_KASA_HEDEF=""     # Agent render hedefi (envanterden)
 DB_ROL=""            # Postgres rolü (kopya tablosunun `sql` satırından)
 DB_GERI_YONTEM=""    # kasa geri alma yolu: rollback ya da (düşerse) eski DSN kv put
 RENDER_GECEN=""      # `_render_bekle`nin ölçtüğü süre (s) — çağıran basar
+SAAT_MS=""           # `_saat_oku`nun son okuması (ms, MONOTONİK — yalnız iki okumanın FARKI anlamlı)
+GECEN_S=""           # `_gecen_s`in ölçtüğü süre (TAM saniye, aşağı yuvarlanır)
 
 die()      { echo "!! $*" >&2; exit 1; }
 olcum_yok(){ echo "!! ÖLÇÜLEMEDİ: $*" >&2; exit 2; }
 oldu()     { echo "  ✓ $*"; }
 adim()     { echo "-- $*"; }
+
+# SAAT — GEÇEN SÜRE MONOTONİK SAATTEN ÖLÇÜLÜR, DUVAR SAATİNDEN DEĞİL. Üç ölçüm yeri de buradan okur
+# (`_hazir_bekle` · `_render_bekle` · pencere B) ve saat TEK satırda seçilir: iki okuma yeri iki
+# ayrı saat seçebilirdi (tek-kaynak yasası). VAKA 2026-09-24 (TSK-213, Rol-1 sondası, yerel Mac):
+# süreç askısı (uyku/güç) sırasında 12 s'lik sınırlı bir döngüde DUVAR saati 62,8 s, MONOTONİK
+# saat 13,1 s ilerledi (iki ~25 s sıçrama). Süre `date +%s` ile ölçülürken askı "bekleme" sayılıyor,
+# birim hazır olsa da tavan "aşılıyor" ve betik sahte ÖLÇÜLEMEDİ ile çıkıyordu (v447 M2 · M4 · N1).
+# `time.monotonic()` askıda İLERLEMEZ (macOS `mach_absolute_time`, Linux `CLOCK_MONOTONIC`) ve saat
+# ayarından (NTP adımı) etkilenmez. Canlıda (A1, sunucu VM) uyku askısı beklenmez; askı yoksa iki
+# saat aynı süreyi ölçer ve gerçekten açılmayan birim yine tavanda ÖLÇÜLEMEDİ olur (v542 S4).
+# Tavan kıyası ve "N s" satırı TAM saniyedir; `date +%s` farkı saniye sınırında 1 s fazla
+# sayabiliyordu, burada gerçek fark aşağı yuvarlanır.
+# Okunamayan saat ÖLÇÜLEMEDİ'dir — duvar saatine DÜŞÜLMEZ (düşmek arızayı geri getirmek olurdu).
+_saat_oku() {
+  SAAT_MS="$("$PYTHON_BIN" -c 'import time; print(int(time.monotonic() * 1000))')" \
+    || olcum_yok "monotonik saat okunamadı ($PYTHON_BIN) — bekleme tavanı ve süre ölçülemez"
+}
+# `_gecen_s <başlangıç SAAT_MS>` → `GECEN_S`. Çağıran `$( )` DEĞİL doğrudan çağırır: alt kabukta
+# `olcum_yok` yalnız alt kabuğu bitirirdi.
+_gecen_s() { _saat_oku; GECEN_S=$(( (SAAT_MS - $1) / 1000 )); }
 
 # =================================================================================================
 # KOPYA SÖZLEŞMESİ — bu betiğin TEK KAYNAĞI
@@ -1291,11 +1314,11 @@ _hazir_bekle() {
     fi
     uc="${satir%% *}"; satir="${satir#* }"; kabul="${satir%% *}"; aciklama="${satir#* }"
     tavan="$(_hazir_tavan "$b")"
-    bas="$(date +%s)"
+    _saat_oku; bas="$SAAT_MS"     # MONOTONİK (bkz. `_saat_oku`): askı bekleme sayılmaz
     while :; do
       kod="$(_kod "-" "$uc" "-" "-")"
       if _hazir_mi "$kabul" "$kod"; then break; fi
-      gecen=$(( $(date +%s) - bas ))
+      _gecen_s "$bas"; gecen="$GECEN_S"
       if [ "$gecen" -ge "$tavan" ]; then
         olcum_yok "hazırlık bekleme aşıldı: $b $uc → HTTP $kod
      ($tavan s içinde $(_kabul_metni "$kabul") gelmedi.) Birim AYAKTA DEĞİL ya da yüzeye
@@ -1303,7 +1326,7 @@ _hazir_bekle() {
       fi
       sleep "$HAZIR_BEKLE_ARALIK_S"
     done
-    gecen=$(( $(date +%s) - bas ))
+    _gecen_s "$bas"; gecen="$GECEN_S"
     # 200 GELMEDEN hazır sayıldıysa satır bunu SÖYLER: kabul ölçütü gevşek OLABİLİR, ölçümün
     # beyanı gevşek OLAMAZ. "hazır: meridian 7 s" ile "hazır: meridian 7 s (healthz 503 — nabız
     # bayat, API ayakta)" aynı cümle değildir ve operatör ikincisini görmek zorundadır.
@@ -2242,18 +2265,18 @@ _vault_oturum() {
 #: (döngü genel akışın içindeyken aynı düşüş çıkış 1 veriyordu; davranış korunur).
 _render_bekle() {
   local hedef="$1" beklenen="$2" bas
-  bas="$(date +%s)"
+  _saat_oku; bas="$SAAT_MS"       # MONOTONİK (bkz. `_saat_oku`): askı bekleme sayılmaz
   while :; do
     if sudo test -s "$KOK$hedef"; then
       py cikar dosya "$KOK$hedef" - - "$ISLIK/vault_render_kanon" \
         || die "render hedefi OKUNAMADI: $hedef (kanonik kopya çıkarılamadı) — render ölçülemez"
       if sudo cmp -s "$beklenen" "$ISLIK/vault_render_kanon"; then break; fi
     fi
-    RENDER_GECEN=$(( $(date +%s) - bas ))
+    _gecen_s "$bas"; RENDER_GECEN="$GECEN_S"
     [ "$RENDER_GECEN" -lt "$VAULT_RENDER_TAVAN_S" ] || return 1
     sleep "$VAULT_RENDER_ARALIK_S"
   done
-  RENDER_GECEN=$(( $(date +%s) - bas ))
+  _gecen_s "$bas"; RENDER_GECEN="$GECEN_S"
 }
 
 vault_rotasyon() {
@@ -2582,7 +2605,7 @@ vault_db_rotasyon() {
      Agent render ETMİYOR olabilir: kasa mühürlü · politika eksik · birim düşmüş.
      Bak: systemctl status vault-agent · journalctl -u vault-agent -n 50 --no-pager"
   fi
-  t_kanit="$(date +%s)"
+  _saat_oku; t_kanit="$SAAT_MS"
   oldu "render ÖLÇÜLDÜ: $hedef ($RENDER_GECEN s) — kanonik kopya kasadaki YENİ DSN'le BİREBİR"
 
   # ---- 6. ALTER ROLE — GERİ ALINAMAZ KANAL, restart'ın hemen önünde -------------------------------
@@ -2602,7 +2625,8 @@ vault_db_rotasyon() {
   fi
   DB_KASA_EVRE=alter
   _sql_sil "$DB_ROL" "$sql"
-  oldu "pencere B (render kanıtı → ALTER ROLE): $(( $(date +%s) - t_kanit )) s — ÖLÇÜLDÜ (tasarım §5; ilk canlı koşum belgeye yazar)"
+  _gecen_s "$t_kanit"
+  oldu "pencere B (render kanıtı → ALTER ROLE): $GECEN_S s — ÖLÇÜLDÜ (tasarım §5; ilk canlı koşum belgeye yazar)"
 
   # ---- 7. RESTART (ZORUNLU — havuzun parola değişimine davranışı ÖLÇÜLMEDİ) ------------------------
   adim "7/8 tüketici yeniden başlat"
