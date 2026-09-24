@@ -24,6 +24,8 @@ KULLANIM (depo kökünden):
     python ops/roadmap_cephe_ozeti.py --yaz         # ROADMAP.md'deki bloğu yeniden üret
     python ops/roadmap_cephe_ozeti.py --denetle     # yazma; blok bayatsa ya da cephesiz kalem varsa çıkış 1
     python ops/roadmap_cephe_ozeti.py --dosya <yol> # başka bir ROADMAP (çiviler bunu kullanır)
+    python ops/roadmap_cephe_ozeti.py --tetikler [--bugun AAAA-AA-GG]
+                                                    # vadesi geçen okuma · bayat aktif · sayaç tetikleri (TSK-217)
 
 OKUYAN: `tests/test_roadmap_cephe_ozeti_v535.py` (ayrışma + cephe bağı çivileri) ve ROADMAP §3'ü
 okuyan operatör. Yalnız stdlib — `meridian` import ETMEZ, yani pytest dışında koşmak canlı ya da
@@ -32,6 +34,7 @@ yerel deftere dokunmaz.
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import pathlib
 import re
 import sys
@@ -134,6 +137,114 @@ def acik_kalemler(metin: str) -> list[dict]:
     return kalemler
 
 
+# =================================================================================================
+# TETİK RAPORU (TSK-217, 2026-09-24) — "ne zaman okunacaktı" sorusunun mekanik kısmı
+# =================================================================================================
+# VAKA: 2026-09-24'te iki "2 hafta sonra oku" okuması (TSK-162 vade 09-21, TSK-074 vade 09-18), bir
+# sayaç tetiği (TSK-196 ≥5 → 7) ve 9 gün kapanış yazımsız bir ACTIVE kalem (TSK-070) elle bulundu.
+# Rapor üç sınıfı MEKANİK ölçer, dördüncüsünü yalnız LİSTELER:
+#   1. VADESİ GEÇEN OKUMA — kalem metninde `N gün|hafta sonra` + öncesindeki son tarih = vade; vade
+#      geçmişse ve kalemde vadeden SONRA tarihli bir not yoksa işaretlenir (not = okuma yapıldı).
+#   2. BAYAT AKTİF — ACTIVE kalemin en yeni (bugünü aşmayan) tarihi `BAYAT_AKTIF_GUN`den eski.
+#   3. OPERATÖRDE BEKLEYEN — OPERATOR kalemleri, en yeni notun yaşıyla (bilgi).
+#   4. SAYAÇ TETİKLERİ — GATED `trigger:` alanında `n≥`/`≥N` geçen kalemler; sayaçlar A1'de yaşar,
+#      burada ÖLÇÜLEMEZ → yalnız listelenir (elle ölçülür, uydurma yasağı).
+# BİLEREK YAPILMAYAN: "tetik alanındaki tarih geçti" kontrolü. Ölçüldü (2026-09-24): 8 GATED tetiğinde
+# tarih geçiyor ve 8'i de BAĞLAM tarihidir (hüküm/ölçüm günü), hiçbiri son tarih değil — kontrol yalnız
+# yanlış alarm üretirdi. İLERİ TARİHLER (notlardaki "≈2026-10-22" öngörüleri) "en yeni not"a sayılmaz.
+BAYAT_AKTIF_GUN = 7
+_TARIH_DESENI = re.compile(r"20\d\d-\d\d-\d\d")
+_GORELI_OKUMA_DESENI = re.compile(r"(\d+) (gün|hafta) sonra")
+_SAYAC_DESENI = re.compile(r"n\s*≥|≥\s*\d")
+
+
+def _kalem_metni(satirlar: list[str], k: dict, bolumler: list[str | None] | None = None) -> str:
+    """Kalemin tüm metni: başlık + alan satırları; tahta satırında satır + `  Not (TSK-…):` satırları.
+
+    TAHTA NOTLARI YALNIZ §2'DEN (inceleme engelleyicisi, 2026-09-24): arşiv (§8) tahta notlarını AYNI
+    `  Not (TSK-…):` biçimiyle "aynen" alıntılar (emsal: TSK-070); bölüm sınırı olmadan toplanırsa
+    arşivdeki bir alıntının tarihi açık kalemin 'en yeni not'una sızardı. Sınır `acik_kalemler`in
+    kullandığı `_bolum_etiketleri`nden gelir — kalem keşfi ile not toplama AYNI bölüm sözleşmesini paylaşır."""
+    i = k["satir"] - 1
+    blok = [satirlar[i]]
+    if k["yuzey"] == "baslik":
+        j = i + 1
+        while j < len(satirlar) and satirlar[j].startswith("  "):
+            blok.append(satirlar[j])
+            j += 1
+    else:
+        onek = f"  Not ({k['tsk']}):"
+        bolumler = bolumler if bolumler is not None else _bolum_etiketleri(satirlar)
+        blok += [s for j, s in enumerate(satirlar) if s.startswith(onek) and bolumler[j] == "2"]
+    return "\n".join(blok)
+
+
+def _gecmis_tarihler(metin: str, bugun: dt.date) -> list[dt.date]:
+    """Metindeki geçerli ve bugünü AŞMAYAN tarihler (öngörüler dışarıda)."""
+    sonuc = []
+    for t in _TARIH_DESENI.findall(metin):
+        try:
+            d = dt.date.fromisoformat(t)
+        except ValueError:  # sessiz-yutma: 2026-13-40 gibi takvim dışı dizge bir TARİH DEĞİLDİR; elenmesi ölçümün kendisidir, sayılmaması raporu bozmaz
+            continue
+        if d <= bugun:
+            sonuc.append(d)
+    return sonuc
+
+
+def tetik_raporu(metin: str, bugun: dt.date) -> dict[str, list[dict]]:
+    """Açık kalemlerin zaman/kapı durumu — dört liste (yukarıdaki blok). Hepsi bilgi amaçlıdır."""
+    satirlar = metin.splitlines()
+    bolumler = _bolum_etiketleri(satirlar)
+    rapor: dict[str, list[dict]] = {"vadesi_gecen_okuma": [], "bayat_aktif": [],
+                                    "operatorde_bekleyen": [], "sayac_tetikleri": []}
+    for k in acik_kalemler(metin):
+        blok = _kalem_metni(satirlar, k, bolumler)
+        gecmis = _gecmis_tarihler(blok, bugun)
+        en_yeni = max(gecmis) if gecmis else None
+        # TEKİL KAYIT (inceleme engelleyicisi, 2026-09-24): aynı taahhüt kalemin notunda alıntıyla
+        # tekrar edilir ('… 2 hafta sonra oku şartı …'); arada yeni tarih yoksa aynı vade iki kez
+        # sayılırdı ve "VADESİ GEÇEN OKUMA: N" yalan söylerdi. Anahtar (kalem, vade).
+        gorulen_vade: set[str] = set()
+        for m in _GORELI_OKUMA_DESENI.finditer(blok):
+            once = _gecmis_tarihler(blok[:m.start()], bugun)
+            if not once:
+                continue
+            gun = int(m.group(1)) * (7 if m.group(2) == "hafta" else 1)
+            vade = once[-1] + dt.timedelta(days=gun)
+            if vade < bugun and (en_yeni is None or en_yeni < vade) and vade.isoformat() not in gorulen_vade:
+                gorulen_vade.add(vade.isoformat())
+                rapor["vadesi_gecen_okuma"].append(
+                    {"tsk": k["tsk"], "vade": vade.isoformat(), "ifade": m.group(0),
+                     "gecikme_gun": (bugun - vade).days})
+        if k["durum"] == "ACTIVE" and en_yeni is not None and (bugun - en_yeni).days > BAYAT_AKTIF_GUN:
+            rapor["bayat_aktif"].append({"tsk": k["tsk"], "en_yeni_not": en_yeni.isoformat(),
+                                         "gun": (bugun - en_yeni).days})
+        if k["durum"] == "OPERATOR":
+            rapor["operatorde_bekleyen"].append(
+                {"tsk": k["tsk"], "en_yeni_not": en_yeni.isoformat() if en_yeni else None,
+                 "gun": (bugun - en_yeni).days if en_yeni else None})
+        if k["durum"] == "GATED":
+            ilk = satirlar[k["satir"] - 1]
+            tetik = ilk.split("trigger: ", 1)[1] if "trigger: " in ilk else ilk.strip().strip("|").split("|")[-1]
+            if _SAYAC_DESENI.search(tetik):
+                rapor["sayac_tetikleri"].append({"tsk": k["tsk"], "tetik": tetik.strip()[:160]})
+    return rapor
+
+
+def tetik_metni(rapor: dict[str, list[dict]]) -> str:
+    """Raporun operatör/Rol-1 okur metni (boş sınıf da ADIYLA 'yok' der — sessizlik ölçüm değildir)."""
+    bas = {"vadesi_gecen_okuma": "VADESİ GEÇEN OKUMA", "bayat_aktif": f"BAYAT AKTİF (> {BAYAT_AKTIF_GUN} gün notsuz)",
+           "operatorde_bekleyen": "OPERATÖRDE BEKLEYEN", "sayac_tetikleri": "SAYAÇ TETİKLERİ (A1'de elle ölçülür)"}
+    cikti = []
+    for anahtar, baslik in bas.items():
+        kayitlar = rapor[anahtar]
+        cikti.append(f"== {baslik}: {len(kayitlar)}")
+        for r in kayitlar:
+            cikti.append("   " + " · ".join(f"{a}={d}" for a, d in r.items()))
+    return "\n".join(cikti)
+
+
 def ihlaller(metin: str) -> list[str]:
     """Cephesiz ya da tanımsız cepheye bağlı açık kalemler — boş liste = her açık kalem bağlı."""
     adlar = cephe_adlari(metin)
@@ -197,9 +308,15 @@ def main(argv: list[str] | None = None) -> int:
     kip = ap.add_mutually_exclusive_group()
     kip.add_argument("--yaz", action="store_true", help="ROADMAP'teki bloğu yeniden üret")
     kip.add_argument("--denetle", action="store_true", help="yazma; bayat blok ya da cephesiz kalem → çıkış 1")
+    kip.add_argument("--tetikler", action="store_true", help="vadesi geçen okuma · bayat aktif · sayaç tetikleri")
     ap.add_argument("--dosya", type=pathlib.Path, default=VARSAYILAN_YOL)
+    ap.add_argument("--bugun", type=dt.date.fromisoformat, default=None, help="rapor günü (AAAA-AA-GG; varsayılan UTC bugün)")
     ns = ap.parse_args(argv)
     metin = ns.dosya.read_text(encoding="utf-8")
+    if ns.tetikler:
+        bugun = ns.bugun or dt.datetime.now(dt.timezone.utc).date()
+        print(tetik_metni(tetik_raporu(metin, bugun)))
+        return 0
     if ns.yaz:
         ns.dosya.write_text(blogu_yaz(metin), encoding="utf-8")
         print(f"yazıldı: {ns.dosya} · açık kalem {len(acik_kalemler(metin))} · cephe {len(cephe_adlari(metin))}")
