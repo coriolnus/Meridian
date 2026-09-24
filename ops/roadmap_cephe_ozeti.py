@@ -158,8 +158,13 @@ _GORELI_OKUMA_DESENI = re.compile(r"(\d+) (gün|hafta) sonra")
 _SAYAC_DESENI = re.compile(r"n\s*≥|≥\s*\d")
 
 
-def _kalem_metni(satirlar: list[str], k: dict) -> str:
-    """Kalemin tüm metni: başlık + alan satırları; tahta satırında satır + `  Not (TSK-…):` satırları."""
+def _kalem_metni(satirlar: list[str], k: dict, bolumler: list[str | None] | None = None) -> str:
+    """Kalemin tüm metni: başlık + alan satırları; tahta satırında satır + `  Not (TSK-…):` satırları.
+
+    TAHTA NOTLARI YALNIZ §2'DEN (inceleme engelleyicisi, 2026-09-24): arşiv (§8) tahta notlarını AYNI
+    `  Not (TSK-…):` biçimiyle "aynen" alıntılar (emsal: TSK-070); bölüm sınırı olmadan toplanırsa
+    arşivdeki bir alıntının tarihi açık kalemin 'en yeni not'una sızardı. Sınır `acik_kalemler`in
+    kullandığı `_bolum_etiketleri`nden gelir — kalem keşfi ile not toplama AYNI bölüm sözleşmesini paylaşır."""
     i = k["satir"] - 1
     blok = [satirlar[i]]
     if k["yuzey"] == "baslik":
@@ -169,7 +174,8 @@ def _kalem_metni(satirlar: list[str], k: dict) -> str:
             j += 1
     else:
         onek = f"  Not ({k['tsk']}):"
-        blok += [s for s in satirlar if s.startswith(onek)]
+        bolumler = bolumler if bolumler is not None else _bolum_etiketleri(satirlar)
+        blok += [s for j, s in enumerate(satirlar) if s.startswith(onek) and bolumler[j] == "2"]
     return "\n".join(blok)
 
 
@@ -189,19 +195,25 @@ def _gecmis_tarihler(metin: str, bugun: dt.date) -> list[dt.date]:
 def tetik_raporu(metin: str, bugun: dt.date) -> dict[str, list[dict]]:
     """Açık kalemlerin zaman/kapı durumu — dört liste (yukarıdaki blok). Hepsi bilgi amaçlıdır."""
     satirlar = metin.splitlines()
+    bolumler = _bolum_etiketleri(satirlar)
     rapor: dict[str, list[dict]] = {"vadesi_gecen_okuma": [], "bayat_aktif": [],
                                     "operatorde_bekleyen": [], "sayac_tetikleri": []}
     for k in acik_kalemler(metin):
-        blok = _kalem_metni(satirlar, k)
+        blok = _kalem_metni(satirlar, k, bolumler)
         gecmis = _gecmis_tarihler(blok, bugun)
         en_yeni = max(gecmis) if gecmis else None
+        # TEKİL KAYIT (inceleme engelleyicisi, 2026-09-24): aynı taahhüt kalemin notunda alıntıyla
+        # tekrar edilir ('… 2 hafta sonra oku şartı …'); arada yeni tarih yoksa aynı vade iki kez
+        # sayılırdı ve "VADESİ GEÇEN OKUMA: N" yalan söylerdi. Anahtar (kalem, vade).
+        gorulen_vade: set[str] = set()
         for m in _GORELI_OKUMA_DESENI.finditer(blok):
             once = _gecmis_tarihler(blok[:m.start()], bugun)
             if not once:
                 continue
             gun = int(m.group(1)) * (7 if m.group(2) == "hafta" else 1)
             vade = once[-1] + dt.timedelta(days=gun)
-            if vade < bugun and (en_yeni is None or en_yeni < vade):
+            if vade < bugun and (en_yeni is None or en_yeni < vade) and vade.isoformat() not in gorulen_vade:
+                gorulen_vade.add(vade.isoformat())
                 rapor["vadesi_gecen_okuma"].append(
                     {"tsk": k["tsk"], "vade": vade.isoformat(), "ifade": m.group(0),
                      "gecikme_gun": (bugun - vade).days})

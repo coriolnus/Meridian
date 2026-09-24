@@ -110,3 +110,40 @@ def test_T8_gercek_roadmap_rapor_kosar_dort_sinif():
     r = m.tetik_raporu((KOK / "ROADMAP.md").read_text(encoding="utf-8"), BUGUN)
     assert set(r) == {"vadesi_gecen_okuma", "bayat_aktif", "operatorde_bekleyen", "sayac_tetikleri"}
     assert r["sayac_tetikleri"], "gerçek dosyada en az bir sayaç tetiği bekleniyordu (2026-09-24: 4)"
+
+
+# ---------------------------------------------------------------------------------------------
+# TUR 2 (inceleme engelleyicileri): tekil vade kaydı + tahta notları yalnız §2'den
+# ---------------------------------------------------------------------------------------------
+
+TUR2 = """\
+## §2 TAHTA
+
+| id | ad | durum | owner | size | trigger |
+|---|---|---|---|---|---|
+| TSK-821 | alıntılı taahhüt (WP: WP3) | ACTIVE | rol1 | M | — |
+  Not (TSK-821): (2026-09-04 kablolandı; operatör: 2 hafta sonra oku) — şart hatırlatması: '2 hafta sonra oku' yerinde.
+| TSK-822 | arşivde alıntılanan (WP: WP8) | ACTIVE | rol1 | M | — |
+  Not (TSK-822): (2026-09-05 pano bacağı; 2 hafta sonra oku)
+
+## §8 ARŞİV
+
+Tahta satırı (aynen): | TSK-822 | arşivde alıntılanan (WP: WP8) | DONE(2026-09-23) | rol1 | M | — |
+  Not (TSK-822): (2026-09-23 KAPANDI — okuma yapıldı, arşive alındı)
+"""
+
+
+def test_T9_ayni_taahhudun_alintisi_TEK_kayit_uretir():
+    r = _mod().tetik_raporu(TUR2, BUGUN)
+    kayitlar = [x for x in r["vadesi_gecen_okuma"] if x["tsk"] == "TSK-821"]
+    assert len(kayitlar) == 1, kayitlar
+    assert kayitlar[0]["vade"] == "2026-09-18"
+
+
+def test_T10_arsivdeki_ayni_bicimli_not_acik_kaleme_SIZMAZ():
+    """§8'deki `  Not (TSK-822):` alıntısı (09-23) açık kalemin 'okuma yapıldı' kanıtı sayılmamalı."""
+    r = _mod().tetik_raporu(TUR2, BUGUN)
+    v = {x["tsk"]: x for x in r["vadesi_gecen_okuma"]}
+    assert "TSK-822" in v and v["TSK-822"]["vade"] == "2026-09-19", r["vadesi_gecen_okuma"]
+    b = {x["tsk"]: x for x in r["bayat_aktif"]}
+    assert b["TSK-822"]["en_yeni_not"] == "2026-09-05", r["bayat_aktif"]
