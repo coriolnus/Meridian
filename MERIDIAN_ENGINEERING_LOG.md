@@ -3874,3 +3874,9 @@ ROADMAP notuna "dağıtım gerekmez" yazdım — betik A1'de sudo ile koşuyor; 
 üretilmemişti; v287 — "özet < tam/2" vekili, oran 09-23 0,4980 → cephe katmanı 4ef8372b 0,5008 (benim bugünkü ROADMAP işim; kapsamına
 v287 girmemişti, main push'lanmış hâliyle kırmızıydı). v287 bileşimden bağımsız ölçüye çevrildi (3/3 mutasyon), boyut sorusu TSK-219.
 Delta küme 2.751 yeşil → push 2af3d9f7. #63 dağıtımı hâlâ operatörde; artık TSK-218 + yeni rotasyon betiğini de taşıyor.
+**Dağıtım #63 (operatör, 22:18:38Z) — Rol-1 doğrulaması 22:2xZ:** `deployed_sha` 93f67028 · site.yml ok=45 changed=3 failed=0 ·
+dagit ok=62 changed=5 failed=0, `SITE_EXIT=0` `DAGIT_EXIT=0` (operatör terminali okundu) · [5b] "koşan her birim dağıtılan kodu
+taşıyor" · meridian 22:20:00Z NRestarts 0, healthz 200 · imzalar A1'de 10/10 (TSK-209/207a/212/214/215/138/196/064/218 ×2) ·
+`MERIDIAN_QUOTE_CAPTURE=1` koşan süreçte (EDG-085) · `logs/` korundu · yeni başarısız birim yok (6 eski tek-seferlik birim 09-05..07'den).
+Journal 22:18 sonrası hata/traceback yok (2 bilinen görünürlük uyarısı: NVDA motor-dışı, KVUE ısınma). TSK-218 canlı kanıtı henüz YOK:
+`broker_reconcile.json` son yazım 20:42Z (kapanış sonrası mutabakat turu yok) → ilk RTH turu 09-25.

@@ -196,3 +196,8 @@ pilot_kaydi_2026_09_22: >
   yol), sayılar karta; aşılırsa pilot DURUR, bayrak 0'a döner (kill-list). Pencere: n_uygun (30 dolum ∧ 10
   seans) dolana kadar, en çok 20 seans. Kaynak: kart adim_0_kaydi_2026_09_13 + rol1_notu_2026_09_18 (tavan);
   hafıza: memory `operator-para-kararlari` (para yok, pilot ücretsiz), `dagit-dropin-kurmaz-a0-rolu-kurar`.
+canli_bayrak_2026_09_24: >
+  (Rol-1, 22:2xZ) Dağıtım #63 (93f67028, 2026-09-24 22:18:38Z) ile `55-edg085-quote.conf` A1'de kurulu ve
+  koşan `meridian` sürecinin ortamında `MERIDIAN_QUOTE_CAPTURE=1` doğrulandı (systemctl show Environment; süreç
+  22:20:00Z'de başladı, NRestarts 0). Pilot kaydı (2026-09-22) bundan böyle canlıda birikir; ilk pilot seansı
+  2026-09-25 RTH — ölçüm o seans kapanınca Rol-1'de. Eşik/kill-list değişmedi.
