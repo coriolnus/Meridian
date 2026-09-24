@@ -22,10 +22,11 @@ SÖZLEŞME (sef'teki asıl gövdeyle birebir, 2026-09-12'de taşındı; gerekçe
   * Cevaplayan model kapı yanıtının `model` alanından okunur; yoksa `None` + olay.
   * Muhakeme kipi `SOUL_DENETIM_REASONING`dan okunur; boş → `kapali`; tanınmayan → ADIYLA olaya
     (dilim-3, aşağıdaki ÖLÇÜM bloğu). `model_timeout_s` 120 sn DEĞİŞMEDİ (v455 D1).
-  * HTTP 200 gövdesi içindeki üst-akım hatası ADIYLA olaya + TEK yeniden deneme; ikincisi de
-    düşerse `RuntimeError` → çağıranın mevcut `llm_dustu` dalı (teslimat DÜŞMEZ). Olay `deneme`
-    alanı taşır (ilk çağrı 1, yeniden deneme 2): TEK arıza bu olayı İKİ kez yazar, arıza SAYIMI
-    `deneme == 1` satırlarından yapılır (tur-2 K3; gerekçe `_ustakim_olayi` şerhinde).
+  * HTTP 200 gövdesi içindeki üst-akım hatası ADIYLA olaya + TEK yeniden deneme (aşırı yük
+    sınıfında 30 s, öteki kodlarda 5 s bekleyerek); ikincisi de düşerse TEK yedek çağrı
+    `YEDEK_DENETIM_ROTASI`na (TSK-196 D2); o da düşerse `RuntimeError` → çağıranın mevcut
+    `llm_dustu` dalı (teslimat DÜŞMEZ). Olay `deneme` alanı taşır (ilk çağrı 1, yeniden deneme 2,
+    yedek rota 3): arıza SAYIMI `deneme == 1` satırlarından yapılır (tur-2 K3; `_ustakim_olayi`).
   * Her başarılı kapı çağrısı süre/jeton olarak ölçülür (`<önek>_denetci_cagri` + `son_olcum`).
 
 OLAY ADLARI bot önekiyle üretilir (`olay_oneki`): `sef_brifingi_denetci_rota_dustu` gibi — v455
@@ -93,9 +94,33 @@ VARSAYILAN_DENETIM_REASONING = "kapali"
 
 # ÜST-AKIM HATASINDA TEK YENİDEN DENEME — SAYI 1'DİR, BEKLEME SINIRLIDIR (CLAUDE.md §7 ayrımı).
 # Yasak olan şey kendi kurduğun YOKLAMA DÖNGÜSÜDÜR; burada döngü yoktur: tek bir bekleme, tek bir
-# tekrar, üçüncü çağrı ASLA. Kotasız bir yüzeyde "birkaç kez daha dene" operatörün bütçesini
-# sessizce yakar ve üst-akım doluyken ısrar kuyruğu uzatır.
+# tekrar, ardından en çok TEK yedek-rota çağrısı (aşağıda) — dördüncü çağrı ASLA. Kotasız bir
+# yüzeyde "birkaç kez daha dene" operatörün bütçesini sessizce yakar ve üst-akım doluyken ısrar
+# kuyruğu uzatır.
 USTAKIM_YENIDEN_DENEME_SN = 5
+# AŞIRI YÜK SINIFI — TSK-196 D1 (ölçüldü A1, 2026-09-14→09-22): 7/7 `_denetci_ustakim_hatasi`
+# olayı 502/503 "Service temporarily overloaded" (Nvidia, rota hizli); 5 s sonraki yeniden deneme
+# 5 arızanın 3'ünü kurtardı. Aşırı yük geçicidir ama saniyelerle değil onlarca saniyeyle geçer:
+# bu sınıfta bekleme uzundur. Kod karşılaştırması DİZGE üzerinden (sağlayıcı sayı ya da dizge
+# yazabilir; `int()` dönüşümü bir `except` dalı isterdi).
+ASIRI_YUK_KODLARI = frozenset({"502", "503"})
+USTAKIM_ASIRI_YUK_BEKLEME_SN = 30
+# YEDEK ROTA — TSK-196 D2: ikinci deneme de üst-akım hatasıyla düşerse TEK çağrı bu rotaya.
+# ZİNCİR (`deploy/apisix/routes.yaml`): `hizli` = gemma → nemotron-super; `danisma` (`/llm/v1`) =
+# nemotron-ultra → gemma → super. Kapının kendi yedeklemesi 200 gövdesindeki hatayı GÖRMEZ, bu
+# yüzden rota değişimini istemci yapar. RİSK (beyanlı): `danisma` birincili de Nvidia'dır, aşırı
+# yük korelasyonlu olabilir — `deneme == 3` olaylarının başarı oranı bunu ölçer.
+# BÜTÇE (beyanlı): üst-akım hata gövdeleri ~1 s'de döner; bir denetim çağrısının en kötüsü
+# ≈ 1 + 30 + 1 + `model_timeout_s`(120) ≈ 152 s. Koşumda iki denetim + iki profil üretimi
+# (profil duvarı 150 s) ≈ 604 s < birim `TimeoutStartSec=660` (ölçüldü 09-10→09-24: en uzun
+# koşum 340 s). Pay DARDIR; bekleme ya da tavan büyütülürse bu hesap yeniden yapılır.
+YEDEK_DENETIM_ROTASI = "danisma"
+
+
+def ustakim_bekleme_sn(hata: dict) -> int:
+    """Üst-akım hatasından sonraki TEK beklemenin süresi — aşırı yük sınıfında uzun."""
+    return (USTAKIM_ASIRI_YUK_BEKLEME_SN if str((hata or {}).get("code")) in ASIRI_YUK_KODLARI
+            else USTAKIM_YENIDEN_DENEME_SN)
 # Üst-akım mesajı BİZİM YAZMADIĞIMIZ, uzunluğu sağlayıcının elinde olan bir metindir — deftere
 # kırpılarak girer. TEK KAYNAK: çivi de bu sabitten okur.
 USTAKIM_MESAJ_TAVANI = 120
@@ -276,20 +301,23 @@ class DenetciRota:
         ölçüm satırı ve `llm_dustu` kök-neden ayrımı — "denetçinin cevabı bozuk" ile "üst-akım
         hiç cevap vermedi" ancak bu olayla ayrılır.
 
-        `deneme` ÇAĞRI SIRASIDIR: ilk çağrı 1, yeniden deneme 2 (üçüncüsü YOKTUR). Alan bir
-        süs değil, SAYIMIN DOĞRULUĞUDUR (tur-2, K3): TEK bir arıza bu olayı İKİ kez yazar ve
-        olay adını sayan bir grep o tek arızayı iki sayardı — üstelik yanlış çıkan sayı tam da
-        bu turun ölçmek istediği sayıdır. Arıza sayımı `deneme == 1` satırlarından yapılır;
-        `deneme == 2` satırları "yeniden deneme de düştü" kümesidir ve ikisinin ORANI yeniden
-        denemenin KAZANCIDIR. Sayaç `_denetci_cagri` olayının `yeniden_deneme` alanıyla AYNI
+        `deneme` ÇAĞRI SIRASIDIR: ilk çağrı 1, yeniden deneme 2, yedek rota 3 (TSK-196 D2;
+        dördüncüsü YOKTUR). Alan bir süs değil, SAYIMIN DOĞRULUĞUDUR (tur-2, K3): TEK bir arıza bu
+        olayı ÜÇ kereye kadar yazar ve olay adını sayan bir grep o tek arızayı birden çok sayardı —
+        üstelik yanlış çıkan sayı tam da ölçülmek istenen sayıdır. Arıza sayımı `deneme == 1`
+        satırlarından yapılır; `deneme == 2` satırları "yeniden deneme de düştü", `deneme == 3`
+        satırları "yedek rota da düştü" kümesidir — ardışık oranlar yeniden denemenin ve yedek
+        rotanın KAZANCIDIR. Sayaç `_denetci_cagri` olayının `yeniden_deneme` alanıyla AYNI
         yerel sayaçtan türer (tek-kaynak yasası: iki ayrı sayaç iki ayrı hızda çürürdü) ve
         `detail` düzyazısı da bu alandan üretilir — alan ile cümle ayrışamaz."""
         obs.log(f"{self.olay_oneki}_denetci_ustakim_hatasi", kod=hata.get("code"),
                 mesaj=notify.scrub(str(hata.get("message") or ""))[:USTAKIM_MESAJ_TAVANI],
                 rota=rota, deneme=deneme,
                 detail=("kapı HTTP 200 döndürdü ama gövde üst-akım hatası taşıyor (choices YOK) — "
-                        + ("TEK yeniden deneme yapılıyor" if deneme == 1 else
-                           "yeniden deneme de düştü, hüküm `llm_dustu` olur (teslimat DÜŞMEZ)")))
+                        + {1: "TEK yeniden deneme yapılıyor",
+                           2: "yeniden deneme de düştü — yedek rota denenir (yapılandırılmış rota zaten "
+                              "yedekse hüküm `llm_dustu`, teslimat DÜŞMEZ)"}.get(
+                               deneme, "yedek rota da düştü, hüküm `llm_dustu` olur (teslimat DÜŞMEZ)")))
 
     def cevaplayan_oku(self) -> str | None:
         """SON denetçi çağrısında GERÇEKTEN cevap veren model — ölçülmediyse `None`."""
@@ -330,10 +358,10 @@ class DenetciRota:
         url = f"{kok}{DENETIM_ROTALARI[rota]}/chat/completions"
         basliklar = {KAPI_BASLIK: anahtar, "Content-Type": "application/json"}
 
-        def _tek_cagri() -> tuple[dict, float]:
+        def _tek_cagri(hedef: str = url) -> tuple[dict, float]:
             """Kapıya TEK istek — `(gövde, süre_sn)`. Süre GERÇEK bir `monotonic` farkıdır."""
             t0 = time.monotonic()
-            r = httpx.post(url, headers=basliklar, json=govde, timeout=self.model_timeout_s)
+            r = httpx.post(hedef, headers=basliklar, json=govde, timeout=self.model_timeout_s)
             r.raise_for_status()
             return (r.json() or {}), round(time.monotonic() - t0, 2)
 
@@ -345,14 +373,30 @@ class DenetciRota:
             # sayacın kendisi taşır: sabit bir 1/2 yazmak, sayacı olayla ayrıştırabilecek ikinci
             # bir gerçek kaynağı olurdu (tek-kaynak yasası; okuyucu `_ustakim_olayi` şerhinde).
             self._ustakim_olayi(hata, rota, deneme=yeniden + 1)
-            time.sleep(USTAKIM_YENIDEN_DENEME_SN)   # TEK ATIM, döngü DEĞİL (sabitin gerekçesine bak)
+            time.sleep(ustakim_bekleme_sn(hata))   # TEK ATIM, döngü DEĞİL (sabitin gerekçesine bak)
             yeniden = 1
             d, sure_sn = _tek_cagri()
             hata = ustakim_hatasi(d)
             if hata is not None:
                 self._ustakim_olayi(hata, rota, deneme=yeniden + 1)
-                raise RuntimeError(f"kapı üst-akım hatası (kod {hata.get('code')}, rota {rota}) "
-                                   "— yeniden deneme de düştü")
+                yedek = YEDEK_DENETIM_ROTASI
+                if yedek == rota or DENETIM_ROTALARI.get(yedek) is None:
+                    raise RuntimeError(f"kapı üst-akım hatası (kod {hata.get('code')}, rota {rota}) "
+                                       "— yeniden deneme de düştü")
+                # OKUYUCU (Yasa 6): Rol-1'in TSK-196 14 günlük ölçümü — `deneme == 3` olaylarıyla
+                # birlikte "yedek rota kurtardı mı" oranı bu olay adının grep'inden okunur.
+                obs.log(f"{self.olay_oneki}_denetci_rota_yedege_gecti", rota=rota, yedek=yedek,
+                        kod=hata.get("code"),
+                        detail="yeniden deneme de üst-akım hatasıyla düştü — TEK yedek çağrı "
+                               "başka rotaya (TSK-196 D2); o da düşerse denetim düşer, teslimat düşmez")
+                rota = yedek
+                yeniden = 2
+                d, sure_sn = _tek_cagri(f"{kok}{DENETIM_ROTALARI[yedek]}/chat/completions")
+                hata = ustakim_hatasi(d)
+                if hata is not None:
+                    self._ustakim_olayi(hata, rota, deneme=yeniden + 1)
+                    raise RuntimeError(f"kapı üst-akım hatası (kod {hata.get('code')}, rota {rota}) "
+                                       "— yeniden deneme ve yedek rota da düştü")
         cevaplayan = str((d or {}).get("model") or "").strip()
         if cevaplayan:
             self.son_cevaplayan_model = cevaplayan
