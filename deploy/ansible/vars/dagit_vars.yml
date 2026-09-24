@@ -65,6 +65,14 @@ rsync_disla:
   - "node_modules"
   - "ui/node_modules"
   - "/ui"
+  # `/logs` (TSK-215, 2026-09-23): CANLI-YALNIZ ÇOCUK SÜREÇ LOGU. `hermes_composite.SPAWN_LOG` =
+  # `logs/composite-prescreen.log` — bileşik ön-elemeyi koşan alt sürecin stdout/stderr'i oraya
+  # düşer; dizini ÇOCUK yaratır (A1'de 2026-09-21 20:39Z doğdu), depoda YOKTUR. Yani `--delete`
+  # onu SİLER: 2026-09-23 kuru koşumu `logs/composite-prescreen.log` ile `logs/`ü silinecekler
+  # arasında saydı ve o dosya C00005 çökmesinin (TSK-214) TEK kanıtıydı. `state`/`backups` ile
+  # aynı sınıf: canlı-sahipli, repo-sahipli değil. ANKORLU (`/logs`): ileride doğacak bir
+  # `ui/logs/` ya da `research/.../logs/` sessizce dağıtım dışı kalmasın.
+  - "/logs"
 
 # =================================================================================================
 # [F9] dagit-kapsamı-dışı canlı artefaktlar — içerik kapısı (39 çift, ölçüldü 2026-09-08)
