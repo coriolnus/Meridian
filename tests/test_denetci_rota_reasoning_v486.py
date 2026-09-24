@@ -211,18 +211,19 @@ def test_B1_ERROR_GOVDESI_OLAY_YAZAR_VE_TEK_KEZ_YENIDEN_DENER(rota, monkeypatch,
     assert _olcum()[-1].get("yeniden_deneme") == 1, _olcum()[-1]
 
 
-def test_B2_IKISI_DE_ERROR_ISE_UCUNCU_CAGRI_ASLA_YAPILMAZ(rota, monkeypatch, zaman):
-    """YENİDEN DENEME SAYISI 1'DİR — bu bir döngü değil, SINIRLI ve TEK bir tekrardır.
+def test_B2_UCU_DE_ERROR_ISE_DORDUNCU_CAGRI_ASLA_YAPILMAZ(rota, monkeypatch, zaman):
+    """ÇAĞRI TAVANI ÜÇTÜR — bir yeniden deneme + bir yedek-rota çağrısı; döngü yok.
 
-    Kotasız bir yüzeyde "birkaç kez daha dene" operatörün bütçesini sessizce yakar; üstelik
-    üst-akım doluyken ısrar etmek kuyruğu uzatır. Üçüncü çağrı olsaydı sahte kapı zaten
-    patlardı, ama SAYI AÇIKÇA ölçülür: sessizce artan bir tavan çiviyi geçerdi."""
-    kapi = _kapiyi_bagla(monkeypatch, _ustakim_govdesi(), _ustakim_govdesi(kod=503))
+    2026-09-24 (TSK-196 D2): eski ad "üçüncü çağrı asla" idi; üçüncü çağrı artık YALNIZ yedek
+    rotaya yapılır. Kotasız bir yüzeyde "birkaç kez daha dene" operatörün bütçesini sessizce yakar;
+    dördüncü çağrı olsaydı sahte kapı zaten patlardı, ama SAYI AÇIKÇA ölçülür."""
+    kapi = _kapiyi_bagla(monkeypatch, _ustakim_govdesi(), _ustakim_govdesi(kod=503),
+                         _ustakim_govdesi(kod=503))
     with pytest.raises(RuntimeError) as hata:
         rota.cagir("soru")
     assert "üst-akım" in str(hata.value), str(hata.value)
-    assert len(kapi.cagrilar) == 2, kapi.urller
-    assert len(_olaylar(f"{ONEK}_denetci_ustakim_hatasi")) == 2, "iki düşüş de ADIYLA yazılmalı"
+    assert len(kapi.cagrilar) == 3, kapi.urller
+    assert len(_olaylar(f"{ONEK}_denetci_ustakim_hatasi")) == 3, "üç düşüş de ADIYLA yazılmalı"
 
 
 def test_B3_UST_AKIM_HATASI_TESLIMATI_DUSURMEZ(kurulum, monkeypatch, sd, zaman):
@@ -232,7 +233,7 @@ def test_B3_UST_AKIM_HATASI_TESLIMATI_DUSURMEZ(kurulum, monkeypatch, sd, zaman):
     `soul_denetimi.gecir`in mevcut `llm_dustu` dalının bu sınıfı da yuttuğunu ölçer."""
     m, _ = kurulum
     monkeypatch.delenv(denetci_rota.DENETIM_REASONING_ENV, raising=False)
-    kapi = _Kapi(_ustakim_govdesi(), _ustakim_govdesi())
+    kapi = _Kapi(_ustakim_govdesi(), _ustakim_govdesi(), _ustakim_govdesi())   # + yedek rota (TSK-196)
     metin, kaynak = _sirala(m, monkeypatch, kapi)
     assert kaynak == "llm" and "MECHANISM_STALE" in metin, (kaynak, metin)
     assert _olaylar(sd.OLAY)[-1].get("kaynak") == "llm_dustu", _olaylar(sd.OLAY)[-1]
@@ -272,12 +273,19 @@ def test_B6_CEVABI_DA_HATAYI_DA_TASIYAN_GOVDE_SAGLAM_SAYILIR(rota, monkeypatch, 
 def test_B5_BEKLEME_TEK_ATIM_VE_SABITTEN(rota, monkeypatch, zaman):
     """Bekleme TEK ATIMDIR ve süresi ADLANDIRILMIŞ SABİTTEN gelir (CLAUDE.md §7).
 
-    Süre testin içinde TEKRARLANMAZ, üretimden okunur: iki kopya sessizce ayrışır ve "5 sn
-    bekliyoruz" cümlesi bir gün yalnız burada doğru kalırdı."""
+    Süre testin içinde TEKRARLANMAZ, üretimden okunur: iki kopya sessizce ayrışır. 2026-09-24
+    (TSK-196 D1): 502 aşırı yük sınıfıdır → uzun bekleme; aşırı yük OLMAYAN kod kısa bekler."""
     kapi = _kapiyi_bagla(monkeypatch, _ustakim_govdesi(), _kapi_govdesi("METİN"))
     rota.cagir("soru")
-    assert zaman.uykular == [denetci_rota.USTAKIM_YENIDEN_DENEME_SN], zaman.uykular
+    assert zaman.uykular == [denetci_rota.USTAKIM_ASIRI_YUK_BEKLEME_SN], zaman.uykular
     assert len(kapi.cagrilar) == 2, kapi.urller
+
+
+def test_B5b_ASIRI_YUK_OLMAYAN_KOD_KISA_BEKLER(rota, monkeypatch, zaman):
+    _kapiyi_bagla(monkeypatch, _ustakim_govdesi(kod=500, mesaj="Internal"), _kapi_govdesi("METİN"))
+    rota.cagir("soru")
+    assert zaman.uykular == [denetci_rota.USTAKIM_YENIDEN_DENEME_SN], zaman.uykular
+    assert denetci_rota.USTAKIM_YENIDEN_DENEME_SN < denetci_rota.USTAKIM_ASIRI_YUK_BEKLEME_SN
 
 
 def test_B7_OLAY_KACINCI_DENEMEDE_YAZILDIGINI_TASIR(rota, monkeypatch, zaman):
@@ -293,12 +301,12 @@ def test_B7_OLAY_KACINCI_DENEMEDE_YAZILDIGINI_TASIR(rota, monkeypatch, zaman):
     SIRA DA ÖLÇÜLÜR (alan listesi tek başına yeterli değil): birinci olayın `kod`u birinci
     gövdeden, ikincisininki İKİNCİ gövdeden gelmeli — alanlar doğru ama ters bağlanmış olsaydı
     yalnız `[1, 2]` bakan bir çivi bunu göremezdi."""
-    _kapiyi_bagla(monkeypatch, _ustakim_govdesi(), _ustakim_govdesi(kod=503))
+    _kapiyi_bagla(monkeypatch, _ustakim_govdesi(), _ustakim_govdesi(kod=503), _ustakim_govdesi(kod=429))
     with pytest.raises(RuntimeError):
         rota.cagir("soru")
     olaylar = _olaylar(f"{ONEK}_denetci_ustakim_hatasi")
-    assert [o.get("deneme") for o in olaylar] == [1, 2], olaylar
-    assert [(o.get("deneme"), o.get("kod")) for o in olaylar] == [(1, 502), (2, 503)], olaylar
+    assert [o.get("deneme") for o in olaylar] == [1, 2, 3], olaylar
+    assert [(o.get("deneme"), o.get("kod")) for o in olaylar] == [(1, 502), (2, 503), (3, 429)], olaylar
 
 
 # ================================================================================================
