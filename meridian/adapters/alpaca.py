@@ -682,7 +682,9 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
     hisseler açık satış emirlerince tutulur ve kapatma "insufficient qty" ile reddedilir). İptal
     başarılı olup kapatma düşerse pozisyon o an KORUMASIZDIR — dönüşte `naked: True` gelir; çağıran
     (loop._mirror_exit_sync) bunu ALARM'a çevirir ve bir sonraki döngüde yeniden dener. Bu pencere
-    sessiz DEĞİLDİR.
+    sessiz DEĞİLDİR. Başarı dalı da `naked`i iptal kaydından türetir (kapatma emri dolana dek
+    pozisyon korumasızdır). Bu fonksiyon seansı BİLMEZ: kapalı seansta çağrılırsa kapatma kuyruklanır
+    ve pencere açılışa dek uzar — o yüzden çağıran yalnız seans AÇIKKEN çağırır (TSK-205 seans kapısı).
 
     KORUMA AİLESİ (08-07 süpürücü çarpışmasının İCRA-bacağı ikizi): plan_id
     süzgeci BAĞIMSIZ koruma OCO'sunu (coid `P-KORUMA-…`, plan_id DEĞİL) görmüyordu; canlı
@@ -826,8 +828,11 @@ def close_engine_position(symbol: str, plan_id: str | None = None) -> dict:
                 oneden = "DELETE cevabında emir gövdesi/id yok"
         except Exception as e:  # sessiz-yutma DEĞİL: neden dönüşte taşınır, çağıran beyanla kapatır
             oneden = f"DELETE cevap gövdesi okunamadı: {type(e).__name__}"
+        # `naked` BAŞARIDA DA TÜRETİLİR (TSK-205): koruma bacağı iptal edildiyse kapatma emri
+        # dolana dek pozisyon korumasızdır. Eski gövde başlangıç değerini (False) aynen dönüyordu;
+        # kapalı seansta bu "False", 15-64 saatlik çıplak pencereyi loop katmanında görünmez kıldı.
         return {**out, "ok": True, "closed_qty": float(close_qty), "detail": "",
-                "close_order_id": oid, "close_order_neden": oneden}
+                "naked": _naked(out), "close_order_id": oid, "close_order_neden": oneden}
     except Exception as e:
         _note(False, f"close_engine_position: {type(e).__name__}: {e}")
         return {**out, "ok": False, "reachable": False, "naked": _naked(out),

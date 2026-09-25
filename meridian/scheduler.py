@@ -937,6 +937,21 @@ def advance_once() -> dict:
         pf = store.read_json("portfolio.json", {})
         already = pf.get("last_date")
         from . import dataset, loop
+        # AÇILIŞ ÇIKIŞ TURU (TSK-205): akşam turu seans kapalıyken karar çıkışlarını ERTELER
+        # (koruma yerinde); açılış yarısı BURADA — her poll, HALT'tan SONRA, bar yüklemesinden ÖNCE.
+        # Neden burası: aşağıdaki "current" dalı seanslar arası her poll'ü `daily_cycle`sız bitirir;
+        # tur o dalın arkasında kalsaydı bekleyen çıkış seans içinde hiç yürümezdi. Bar yüklemesinin
+        # önünde: veri sağlayıcı kesintisi çıkış icrasını bloklamaz. Kuyruk boşken/seans kapalıyken
+        # tur hiçbir yüzeye dokunmaz ve olay basmaz (bkz. `loop.mirror_exit_acilis_turu`).
+        try:
+            loop.mirror_exit_acilis_turu()
+        except Exception as e:
+            # YASA 4: tur düşerse bekleyen çıkış seans içinde yürümez — sessiz kalamaz. Poll düşmez:
+            # kuyruk diskte, sonraki poll yeniden dener; ertesi akşam mutabakat "DENENMEDİ" der.
+            from . import obs as _obs_ac
+            _obs_ac.warn("mirror_exit_acilis_dustu", error=f"{type(e).__name__}: {e}",
+                         detail="seans-içi ayna çıkış turu düştü — bekleyen çıkışlar kuyrukta, "
+                                "sonraki poll yeniden dener")
         # Refetch from the network AT MOST ONCE per newly-closed calendar session — not every poll (M2). The
         # old dedup compared the calendar session (always ahead) against the last DATA bar (lagging free
         # feed), so they never converged and every 300s poll did a full ~50-ticker use_cache=False refetch

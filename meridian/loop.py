@@ -152,7 +152,17 @@ class _MirrorUnreachable(Exception):
 # DOKUNULMAYAN: intraday `_touch_exit` (TP/SL) çıkışlarının aynada KARŞILIĞI VARDIR (bracket'ın
 # kendi bacakları doldurur) — onları buradan kapatmak çift satış olurdu. `scale_out`un ayna boşluğu
 # ise bilinçli ve belgeli (reconcile `scaled` dalı), bu tur onu da değiştirmez.
+# SEANS KAPISI (TSK-205, operatör kararı (b) 2026-09-25): kapatma yalnız seans AÇIKKEN denenir.
+# Ölçülen vaka: akşam döngüsü kapalı seansta koruma bacaklarını iptal edip kapatma gönderiyordu;
+# kapatma kuyruklanıp ertesi açılışta doldu ve pozisyon 15,5-64 sa KORUMASIZ kaldı (NAKED_POSITION
+# DE/MPC/MRNA/MU/PANW/CRM). Artık kapalı seansta girdi kuyrukta "bekleyen çıkış" olarak durur
+# (koruma yerinde), açılış yarısını `mirror_exit_acilis_turu` (zamanlayıcının her poll'ü) yapar.
 MIRROR_EXIT_KEY = "mirror_exit_pending"
+EV_CIKIS_ACILISA_ERTELENDI = "mirror_exit_acilisa_ertelendi"
+# Kuyruk girdisinde İLK ertelemenin tur tarihi. Deneme yapılınca silinir. OKUYAN: mutabakatın çıkış
+# yetimi dalı — bu turda ertelenen girdi alarm DEĞİLDİR, önceki turdan kalan (seans içinde hiç
+# denenmemiş) girdi ise ayrı cümleyle alarmdır (açılış turu koşmuyor demektir).
+ERTELEME_ILK_ALANI = "ertelendi_ilk"
 
 # ==================================================================================================
 # ÇIKIŞ DOLUM-YAMASI KUYRUĞU (teşhis docs/TESHIS-WPE-AYNA-DOLUM-2026-08-10.md)
@@ -245,8 +255,15 @@ def _mirror_exit_sync(meta: dict, dstr: str) -> dict:
     yeniden denenir; hiçbir yetim sessizce terk edilmez (deneme sayısı satırda taşınır).
 
     Denemeye tavan KOYULMADI bilerek: "N denemeden sonra vazgeç" tam olarak sessiz yetim üretirdi.
-    Kuyruk pozisyon sayısıyla sınırlıdır (≤ max_open_positions), yani sınırsız büyüyemez."""
-    out: dict = {"closed": [], "failed": [], "skipped": None}
+    Kuyruk pozisyon sayısıyla sınırlıdır (≤ max_open_positions), yani sınırsız büyüyemez.
+
+    SEANS KAPISI (TSK-205): her girdiden ÖNCE `barclock.is_market_open()` sorulur (döngü uzun
+    sürüp kapanışa taşarsa kalan girdiler de ertelenir). Kapalıysa `close_engine_position` HİÇ
+    çağrılmaz — koruma bacaklarına dokunulmaz, girdi kuyrukta kalır, `tries` ilerlemez (erteleme
+    deneme değildir), ilk erteleme damgası (`ERTELEME_ILK_ALANI`) konur ve erteleme TEK olayla
+    anlatılır. Alarm YOK: planlı erteleme bir arıza değildir. Kapı tatilleri BİLMEZ (barclock
+    beyanı) — resmi tatilde kapatma yine kuyruklanabilir; ayrı kalem, bu kapının kapsamı dışı."""
+    out: dict = {"closed": [], "failed": [], "skipped": None, "ertelendi": []}
     pend = dict(meta.get(MIRROR_EXIT_KEY) or {})
     if not pend:
         return out
@@ -262,13 +279,24 @@ def _mirror_exit_sync(meta: dict, dstr: str) -> dict:
     kalan: dict = {}
     for t, info in pend.items():
         info = dict(info or {})
+        if not barclock.is_market_open():
+            # AÇILIŞA ERTELE: kapalı seansta kapatma kuyruklanır ve koruma iptali pozisyonu açılışa
+            # dek çıplak bırakırdı (TSK-205 vakası). Hiçbir yüzeye dokunmadan kuyrukta bırak.
+            info.setdefault(ERTELEME_ILK_ALANI, dstr)
+            kalan[t] = info
+            out["ertelendi"].append(t)
+            continue
+        info.pop(ERTELEME_ILK_ALANI, None)   # bu artık bir DENEME — "denenmemiş erteleme" değil
         info["tries"] = int(info.get("tries") or 0) + 1
         try:
             res = alpaca.close_engine_position(t, plan_id=info.get("plan_id"))
         except Exception as e:
             res = {"ok": False, "detail": f"{type(e).__name__}: {e}", "naked": False}
         if res.get("ok"):
-            out["closed"].append({"ticker": t, "qty": res.get("closed_qty"), "tries": info["tries"]})
+            # `naked`: koruma iptal edildi ve kapatma emri HENÜZ dolmadı (açık seansta saniyeler).
+            # Olayda taşınır ki bağımsız NAKED_POSITION bekçisinin satırı bu kapatmayla eşlenebilsin.
+            out["closed"].append({"ticker": t, "qty": res.get("closed_qty"), "tries": info["tries"],
+                                  "naked": bool(res.get("naked"))})
             # KARAR KOLU: kapatma emrinin kimliği dolum-yaması kuyruğuna — reconcile o emrin
             # `filled_avg_price`ını okuyup trades satırına yamalar (E2 giriş-yamasının simetriği).
             # `closed_qty=0` dalı (pozisyon zaten yoktu) kuyruğa YAZILMAZ: ölçülecek dolum yok.
@@ -279,7 +307,7 @@ def _mirror_exit_sync(meta: dict, dstr: str) -> dict:
                                   reason=info.get("reason"))
             obs.log("mirror_exit_closed", ticker=t, plan_id=info.get("plan_id"),
                     reason=info.get("reason"), qty=res.get("closed_qty"), tries=info["tries"],
-                    cancelled=len(res.get("cancelled") or []),
+                    cancelled=len(res.get("cancelled") or []), naked=bool(res.get("naked")),
                     # OLAY-KATMANI YÜZÜ: kapatma EMRİNİN kimliği olayda taşınır — dolum fiyatı
                     # bu anda HENÜZ yok (market emri az önce doğdu), fiyatı reconcile yaması yazar.
                     close_order_id=res.get("close_order_id"),
@@ -302,6 +330,79 @@ def _mirror_exit_sync(meta: dict, dstr: str) -> dict:
                   cancel_failed=bool(res.get("cancel_failed")),
                   drift_sinifi="cikis_yetimi")
     meta[MIRROR_EXIT_KEY] = kalan
+    if out["ertelendi"]:
+        obs.log(EV_CIKIS_ACILISA_ERTELENDI, n=len(out["ertelendi"]),
+                tickers=sorted(out["ertelendi"]), dstr=dstr,
+                detail="seans kapalı — ayna kapatması GÖNDERİLMEDİ, koruma bacaklarına dokunulmadı; "
+                       "kuyrukta bekliyor, seans açılınca iptal+kapat art arda (TSK-205)")
+    return out
+
+
+def mirror_exit_acilis_turu() -> dict:
+    """AÇILIŞ ÇIKIŞ TURU (TSK-205) — seans kapalıyken ertelenen karar çıkışlarının açılış yarısı.
+
+    NEDEN AYRI BİR TUR: `_mirror_exit_sync`in tek üretim çağıranı `daily_cycle`dır ve o yalnız YENİ
+    bir günlük bar gelince (akşam, kapanıştan sonra) koşar. Seanslar arası ~24 saatlik kararlı
+    durumda zamanlayıcının her poll'ü "current" dalına düşer ve `daily_cycle` HİÇ çağrılmaz; döngü
+    çağrılsa da aynı seans için `bar already processed` der. Ertelenen çıkışı seans içinde işleyecek
+    bir yol olmasaydı çıkış bir sonraki akşama (yine kapalı seans) kayar, hiç yürümezdi.
+    ÇAĞIRAN: `scheduler.advance_once` — her poll'de, HALT kapısından SONRA, bar yüklemesinden ÖNCE
+    (veri kesintisi çıkışı bloklamaz). Aynı iş parçacığı + `_run_lock` → `daily_cycle`ın
+    `_save_broker`ıyla yarışmaz. Gecikme: açılıştan sonraki ilk poll (≤ poll aralığı, canlıda 300 sn).
+
+    DAR YAMA (`mirror_submit_ve_kalicilastir` deseni): kitap diskten okunur, senkron bir KOPYA
+    üzerinde koşar, sonra `store.update_json` ile YALNIZ iki anahtar yamalanır — ayna çıkış kuyruğu
+    (işlenen semboller: kapananlar düşer, düşenler güncel deneme kaydıyla kalır) ve çıkış
+    dolum-yaması kuyruğu (bu turda doğan/değişen kayıtlar). Silahlı küme, dedup kümesi, sermaye
+    beyanı vb. hiçbir alana dokunulmaz.
+
+    SESSİZLİK SÖZLEŞMESİ: kuyruk boşken ya da seans kapalıyken HİÇBİR yüzeye dokunmaz ve olay
+    basmaz (kapalı seansta her poll — hafta içi gece 17,5 sa / 300 sn ≈ 210 çağrı); erteleme akşam
+    turunda `EV_CIKIS_ACILISA_ERTELENDI` ile bir kez anlatıldı, denenmeyen erteleme ertesi akşam
+    mutabakatta alarmdır. Dönüş: `calisti` + `neden` (çalışmadıysa) + senkronun
+    `closed`/`failed`/`ertelendi` listeleri."""
+    import copy
+    out: dict = {"calisti": False, "neden": None, "closed": [], "failed": [], "ertelendi": []}
+    if config.BROKER != "alpaca_paper":
+        out["neden"] = f"broker={config.BROKER}"
+        return out
+    kitap = store.read_json(PORTFOLIO, {}) or {}
+    kuyruk = dict(kitap.get(MIRROR_EXIT_KEY) or {}) if isinstance(kitap, dict) else {}
+    if not kuyruk:
+        out["neden"] = "kuyruk_bos"
+        return out
+    if not barclock.is_market_open():
+        out["neden"] = "seans_kapali"
+        return out
+    efk0 = copy.deepcopy(kitap.get(EXIT_FILL_KEY) or {})
+    meta = {MIRROR_EXIT_KEY: copy.deepcopy(kuyruk), EXIT_FILL_KEY: copy.deepcopy(efk0)}
+    res = _mirror_exit_sync(meta, barclock.session_date())
+    out.update(calisti=True, closed=res.get("closed") or [], failed=res.get("failed") or [],
+               ertelendi=res.get("ertelendi") or [], neden=res.get("skipped"))
+    kalan = meta.get(MIRROR_EXIT_KEY) or {}
+    efk1 = meta.get(EXIT_FILL_KEY) or {}
+    if kalan == kuyruk and efk1 == efk0:
+        return out                       # hiçbir şey değişmedi (ör. kimlik yok) — yazım yok
+
+    def _yama(doc):
+        """Yalnız işlenen sembolleri ve bu turun dolum-yaması kayıtlarını diskteki kitaba işler."""
+        if not isinstance(doc, dict):
+            return False
+        q = dict(doc.get(MIRROR_EXIT_KEY) or {})
+        for t in kuyruk:
+            if t in kalan:
+                q[t] = kalan[t]
+            else:
+                q.pop(t, None)
+        doc[MIRROR_EXIT_KEY] = q
+        e = dict(doc.get(EXIT_FILL_KEY) or {})
+        for pid, kayit in efk1.items():
+            if efk0.get(pid) != kayit:
+                e[pid] = kayit
+        doc[EXIT_FILL_KEY] = e
+        return True
+
+    store.update_json(PORTFOLIO, _yama, {})
     return out
 
 
@@ -4353,6 +4454,23 @@ def reconcile_broker_state(meta: dict, dstr: str, closed_this_cycle: list,
                   f"defterde yok — {_yn}",
                   ticker=sym, drift_sinifi=_ys)
     for sym in exit_orphans:
+        _qg = (meta.get(MIRROR_EXIT_KEY) or {}).get(sym, {}) or {}
+        _ilk = _qg.get(ERTELEME_ILK_ALANI)
+        if _ilk and str(_ilk) == str(dstr):
+            # TSK-205: BU TURDA seans kapısıyla ertelendi — planlı bekleme, arıza DEĞİL; erteleme
+            # aynı turda `EV_CIKIS_ACILISA_ERTELENDI` olayıyla anlatıldı. Alarm basılsaydı MIRROR_DRIFT
+            # mandalı (imza ticker+drift_sinifi, 96 sa) açılıştaki GERÇEK başarısızlık alarmını yutardı.
+            # Sembol `exit_orphans` listesinde AYNEN kalır (okuyucular bozulmaz).
+            continue
+        if _ilk:
+            # Önceki turdan kalan erteleme: seans açıldı, kapandı, girdi HİÇ denenmedi (deneme işareti
+            # siler) — açılış turu koşmuyor demektir. Sınıf aynı: çıkış icra edilemedi.
+            obs.alarm(obs.ALARM_MIRROR_DRIFT,
+                      f"çıkış yetimi: {sym} açılışa ertelenmişti ({_ilk} turu) ama seans içinde "
+                      f"DENENMEDİ — hâlâ kuyrukta; açılış turu (zamanlayıcı poll'ü) koşmuyor olabilir",
+                      ticker=sym, reason=_qg.get("reason"), tries=_qg.get("tries"),
+                      drift_sinifi="cikis_yetimi", **{ERTELEME_ILK_ALANI: _ilk})
+            continue
         obs.alarm(obs.ALARM_MIRROR_DRIFT,           # SABİT sapma sınıfı (çıkış icra edilemedi, sizing değil)
                   f"çıkış yetimi: {sym} iç motor çıktı ama ayna kapatılamadı — kuyrukta, "
                   f"bir sonraki döngüde yeniden denenecek",
