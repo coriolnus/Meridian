@@ -154,7 +154,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Teşhis adımları
 
-- Bu jetonu **8 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
+- Bu jetonu **9 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
   - `meridian/loop.py::_defter_teyit_yamasi._yama` → mesaj şablonu: `f"karşılıksız canlı işlem: {r.get('ticker')} ({pid}) — kitapta kapandı, " f"broker emir defterinde HİÇ İZ YOK (pencere tam taranmışken)"`
   - `meridian/loop.py::_exit_fill_yamasi` → mesaj şablonu: `f"ayna sapması: {info.get('ticker')} — sim {round(sim, 4)} vs Alpaca " f"{round(af, 4)} (%{div*100:.2f})"`
   - `meridian/loop.py::_koruma_dolumu_isle` → mesaj şablonu: `f"koruma dolumu: {sym} aynada koruma bacağıyla kapandı (bacak={bacak or '?'}, " f"fiyat={fiyat_s})" + (f" — iç kitaba `{reason}` kapanışı işlendi" if islendi else f" — kitaba İŞLENEMEDİ: {neden}")`
@@ -162,6 +162,7 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
   - `meridian/loop.py::reconcile_broker_state` → mesaj şablonu: `f"motor yetimi ({_ys}): {sym} Alpaca'da açık (motorun emri dolmuş) ama iç " f"defterde yok — {_yn}"`
   - `meridian/loop.py::reconcile_broker_state` → mesaj şablonu: `f"çıkış yetimi: {sym} iç motor çıktı ama ayna kapatılamadı — kuyrukta, " f"bir sonraki döngüde yeniden denenecek"`
   - `meridian/loop.py::reconcile_broker_state` → mesaj şablonu: `f"ayna adet sapması: {sym} — içeride {qty:g}, Alpaca'da {aq:g}" f" · sapma sınıfı: {_sinif} — {_neden}"`
+  - `meridian/loop.py::reconcile_broker_state` → mesaj şablonu: `f"çıkış yetimi: {sym} açılışa ertelenmişti ({_ilk} turu) ama seans içinde " f"DENENMEDİ — hâlâ kuyrukta; açılış turu (zamanlayıcı poll'ü) koşmuyor olabilir"`
   - `meridian/loop.py::reconcile_broker_state` → mesaj şablonu: `f"ayna pozisyonu kayıp: {sym} içeride açık, Alpaca'da ne pozisyon ne emir var"`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
