@@ -49,6 +49,25 @@
     group: "{{ meridian_kullanici }}"
     mode: "0700"
 
+# EDG-2026-085 quote kayıt dizini (TSK-225, 2026-09-25). Yazan: `meridian/quotecapture.py` (motor,
+# meridian.service); yol `meridian.service.d/55-edg085-quote.conf`teki `Environment=`/`ReadWritePaths=` ile
+# AYNI olmak zorundadır — `tests/test_sertlesmis_birim_yazim_yolu_v553.py` (F3 + sınıf çivisi C1) kıyaslar.
+# ROL KURAR, BİRİM KURAMAZ: motor `ProtectSystem=strict` ile koşar, `/opt/veri` onun için salt-okurdur ve
+# `-` önekli izin dizin YOKSA boşa düşer. Pilotun ilk canlı seansı (2026-09-25) tam bu yüzden kayıtsız geçti:
+# dizin yoktu, drop-in izin vermiyordu, `store.append_jsonl`in mkdir'i EROFS ile düştü.
+# MOD 0700 — EDG-101 emsalinin gerekçesi burada YARISIYLA geçerli: içerik HASSAS DEĞİL (IEX quote satırları +
+# dolum işaretleri; sır yok), ama okuyucu tek — `research/olcumler/edg085_icra_ani_quote/rapor.py`, Rol-1
+# tarafından AYNI kullanıcıyla (ubuntu, ssh) koşar. Başka kullanıcıya/servise okuma izni verecek bir okuyucu
+# YOK; en az yetki 0700'dür. Yalnız YAPRAK dizin: `/opt/veri/olcum/edg085` A1'de zaten var (taban örnekleyicisi
+# `taban.jsonl`i oraya yazıyor — Rol-1 okumaları 2026-09-15..21).
+- name: EDG-2026-085 quote kayıt dizini (meridian.service 55-edg085-quote.conf drop-in'iyle aynı yol)
+  ansible.builtin.file:
+    path: /opt/veri/olcum/edg085/kayit
+    state: directory
+    owner: "{{ meridian_kullanici }}"
+    group: "{{ meridian_kullanici }}"
+    mode: "0700"
+
 - name: Sır dizini /etc/meridian (DEĞER yazılmaz — yalnız dizin; A1 ölçümü root:root 0755)
   ansible.builtin.file:
     path: /etc/meridian
