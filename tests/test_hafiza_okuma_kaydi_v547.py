@@ -85,6 +85,9 @@ def sunucu():
         "recall_yanit": json.loads(json.dumps(RECALL_YANIT)),
         "govdeler": {},
         "istekler": [],
+        # İstek ANINDA (istemci süreci yanıtı beklerken) çağrılır; v552 (TSK-064) bu anda `ps`
+        # görüntüsü alıp anahtarın hiçbir sürecin argv'sinde/ortamında olmadığını ölçer.
+        "istek_kancasi": None,
     }
 
     class _Isleyici(http.server.BaseHTTPRequestHandler):
@@ -105,6 +108,8 @@ def sunucu():
 
         def do_GET(self):
             durum["istekler"].append(("GET", self.path, self.headers.get("Authorization"), None))
+            if durum["istek_kancasi"] is not None:
+                durum["istek_kancasi"]()
             if not self._yetkili():
                 return self._gonder(401, {"detail": "yetkisiz"})
             if self.path == TABAN_YOL:
@@ -123,6 +128,8 @@ def sunucu():
             n = int(self.headers.get("Content-Length") or 0)
             govde = self.rfile.read(n)
             durum["istekler"].append(("POST", self.path, self.headers.get("Authorization"), govde))
+            if durum["istek_kancasi"] is not None:
+                durum["istek_kancasi"]()
             if not self._yetkili():
                 return self._gonder(401, {"detail": "yetkisiz"})
             if self.path.endswith("/memories/recall"):

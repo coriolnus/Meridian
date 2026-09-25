@@ -10,7 +10,8 @@
 # aranır, kopya kurulursa okuma yine çıkar ama kaydedilmediği stderr'e yazılır.
 #
 # DAVRANIŞ A1 KOPYASIYLA AYNI: çıktı biçimi, argümanlar, çıkış kodları birebir
-# (0 okundu · 1 anahtar/HTTP/bağlantı hatası (traceback) · 2 BULUNAMADI). Tek ekleme OKUMA KAYDI:
+# (0 okundu · 1 anahtar dosyası okunamadı ya da HTTP/bağlantı hatası — ikisi de TEK stderr satırı,
+# ham traceback YOK [TSK-064] · 2 BULUNAMADI). Tek ekleme OKUMA KAYDI:
 # her çağrı `HAFIZA_OKUMA_KAYDI` (varsayılan /opt/veri/olcum/edg103/okuma.jsonl) dosyasına TEK
 # JSON satırı ekler — alanlar, yer tutucu kuralı ve okuyucusu (EDG-2026-103) modül başlığında.
 # Kayıt yazılamazsa okuma yine çıkar, uyarı stderr'e gider. Kayıt çıktı BASILMADAN önce yazılır:
@@ -20,13 +21,43 @@
 #   HAFIZA_PORT             (8888) — ana bilgisayar SABİT 127.0.0.1: anahtar makineden çıkamaz;
 #                           yalnız rakam kabul edilir (`8888@baska.host` ana bilgisayarı değiştirirdi)
 #   HAFIZA_ANAHTAR_DOSYASI  (/opt/hindsight/.key)
+#
+# ANAHTAR SÜREÇ ARGV'SİNDE DURMAZ (TSK-064, 2026-09-25): bash anahtara DOKUNMAZ; gömülü Python
+# `HAFIZA_ANAHTAR_DOSYASI` yolundaki dosyayı KENDİSİ okur. Eskiden anahtar `python3 -`e konumsal
+# argüman gidiyordu ve istek boyunca aynı makinedeki her kullanıcı `ps` / `/proc/<pid>/cmdline` ile
+# görebiliyordu; ortam değişkeni de çözüm değil (`/proc/<pid>/environ` aynı kullanıcıya açık).
+# Kırpma YALNIZ sondaki CR/LF'dir (eski `$(cat …)` yalnız LF kırpardı; CR'lı anahtar başlık
+# hatasıyla düşüyordu, artık çalışır). Anahtar dosyası okunamazsa çıkış 1, istek GİTMEZ, okuma kaydı
+# yazılmaz; stderr'e tek satır (hata türü + yol) — eskiden `cat:` satırıydı.
+# ANAHTAR HİÇBİR ÇIKTI KANALINA BASILMAZ (TSK-064 tur 2): http.client geçersiz başlık hatasının
+# mesajına başlık DEĞERİNİ koyar; basılan her hata metni `arindir()`dan geçer (anahtar → `<anahtar>`)
+# ve yakalanmamış istisna ham traceback yerine `Tür: arındırılmış mesaj` basar (`sys.excepthook`;
+# çıkış kodu Python'un kendi 1'i). Okuma bloğu `hafiza_sor.sh`dekiyle bayt-aynıdır (çivi v552 E3b).
 set -euo pipefail
 PORT="${HAFIZA_PORT:-8888}"
 case "$PORT" in ''|*[!0-9]*) echo "HAFIZA_PORT yalnız rakam olabilir" >&2; exit 1;; esac
-KEY=$(cat "${HAFIZA_ANAHTAR_DOSYASI:-/opt/hindsight/.key}"); BASE="http://127.0.0.1:${PORT}/v1/default/banks/meridian-arsiv"
-HAFIZA_BETIK="${BASH_SOURCE[0]}" python3 - "${1:-}" "$KEY" "$BASE" <<'PY'
+BASE="http://127.0.0.1:${PORT}/v1/default/banks/meridian-arsiv"
+HAFIZA_BETIK="${BASH_SOURCE[0]}" python3 - "${1:-}" "$BASE" <<'PY'
 import sys, json, urllib.request
-ad, key, base = sys.argv[1], sys.argv[2], sys.argv[3]
+# >>> anahtar (TSK-064) — argv'de/ortamda DURMAZ, hiçbir çıktı kanalına BASILMAZ; dosyayı bu süreç okur
+import os, pathlib
+key = ""
+def arindir(metin):
+    """Basılacak hata metninden anahtarı `<anahtar>` ile değiştirir: ham, str-repr ve başlığın bayt-repr
+    biçimi (http.client'ın geçersiz başlık hatası değeri `b'Bearer …'` diye basar)."""
+    m = str(metin)
+    if key:
+        for bicim in (key, repr(key)[1:-1], repr(key.encode("latin-1", "backslashreplace"))[2:-1]):
+            m = m.replace(bicim, "<anahtar>")
+    return m
+# yakalanmamış istisna ham traceback BASMAZ (mesajı anahtarı taşıyabilir): tür + arındırılmış mesaj, çıkış 1
+sys.excepthook = lambda tur, deger, iz: print(f"{tur.__name__}: {arindir(deger)}", file=sys.stderr)
+try:
+    key = os.fsdecode(pathlib.Path(os.environ.get("HAFIZA_ANAHTAR_DOSYASI") or "/opt/hindsight/.key").read_bytes().rstrip(b"\r\n"))
+except OSError as e:  # sessiz-yutma değil: hata türü + yol stderr'e, çıkış 1, istek GİTMEZ
+    print(f"HAFIZA ANAHTARI OKUNAMADI: {type(e).__name__}: {arindir(e)}", file=sys.stderr); sys.exit(1)
+# <<< anahtar
+ad, base = sys.argv[1], sys.argv[2]
 # >>> okuma kaydı (EDG-2026-103 · TSK-222) — okuma işlevi bu bloğa BAĞLI DEĞİL
 import os, time
 T0 = time.time(); SON = {"http": None, "govde": None}
