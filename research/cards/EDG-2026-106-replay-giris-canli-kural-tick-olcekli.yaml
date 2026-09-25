@@ -94,3 +94,10 @@ basari_tanimi: >
   ADIM-0 yazılmış + girdi ve betik sha256'lı + öz-sınama, ölçek eşleme tutarlılığı ve üç PK yeşil + paydada n ≥ 300 ∧ ≥ 100 seans + iki birincil
   karar kuralıyla AYRI AYRI hükme bağlanmış + EDG-2026-040/042/047/102 ve EDG-2026-069'a kart referanslı şerh. Hipotezin tutup tutmaması
   başarı değildir — dürüstçe ölçülmüş olması başarıdır.
+
+rol1_notu_2026_09_25_olcum_oncesi: >
+  (2026-09-25 18:16Z, Rol-1 — ÖLÇÜMDEN ÖNCE; eşik/kill-list DEĞİŞMEDİ) TSK-224 tur 3 uygulayıcısının kaygısı: kartın 'eşleme toleransı %2' kuralı f = 1
+  satırlara da uygulanır; ADIM-0'daki 4/836 yalnız EDG-105'in [0,9, 1,1] bandı DIŞINDAKİ 57 satırdan sayılmıştı. Kill-3 payı kartın TAM
+  kuralıyla (F kümesi, en yakın öğe, |r/f − 1| ≤ %2, parite) EDG-105 koşumunun YALNIZ ölçek alanlarından (`olcek_orani`, `ref_tetik_orani`;
+  sonuç alanlarına bakılmadı) yeniden ölçüldü: payda 836 · parite dışı 4 · eşlenemez 0 → %0,48 — ADIM-0 cümlesi tam kuralla doğrulandı.
+  MNST monotonluk en kötü hâli +1 satır (%0,60). Kaynak: memory `kill-esigi-adim0da-olculur`.
