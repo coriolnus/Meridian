@@ -1,0 +1,109 @@
+# EDG-2026-104 — Replay giriş bacağı ↔ canlı giriş kuralı: 9:30 açılış dolumu vs 9:45 ET pencere + tetik-kırılımı, tick arşiviyle
+# ÖN-KAYIT 2026-09-25 15:38Z (Rol-1; operatör 2026-09-25 "bu verileri nasıl kullanacağımıza odaklanalım" + "full otonom devam et").
+# Kaynak: tick kullanım taslağı 2 (Sonnet salt-okur, scratchpad tick-kullanim-raporu-2.md, aday B) + Rol-1 kod okuması.
+# NEDEN ŞİMDİ: EDG-2026-102 replay'in STOP bacağını tick'le ölçtü (medyan 2,585 bps < model 5 → yeterli). GİRİŞ bacağı hiç tick'le
+# ölçülmedi. Rol-1 kodda doğruladı: `meridian.broker.PaperBroker.fill_entry` replay'de `next_open` (günlük barın 9:30 açılışı) ×
+# (1 + slip) ile dolar ve açılışın tetiğe ULAŞIP ULAŞMADIĞINI SORMAZ (yalnız `max_chase`, limit tavanı ve `open_below_stop` redleri
+# var). Canlı yol (`meridian.loop.mirror_submit_armed`, EXE-2026-009+K2) emri 9:45 ET'den (`meridian.barclock.ENTRY_WINDOW_ET_MIN`)
+# önce göndermez; gönderim anında fiyat tetiğin altındaysa `meridian.broker.entry_order_decision` STOP-LIMIT seçer — o emir fiyat
+# tetiğe çıkmazsa DOLMAZ. Yani replay'in açılışta doldurduğu bazı işlemleri canlı kural HİÇ doğurmaz, doğanların fiyatı da farklıdır.
+# ADIM-0 (aşağıda) bu kümenin büyük olduğunu gösterdi: 843 replay girişinin 392'sinde (%46,5) açılış tetiğin ALTINDA.
+# HAFIZA KONTROLÜ (2026-09-25 15:3xZ, bu ön-kayıttan önce): A1 `hafiza_sor.sh` recall ("replay hedef take-profit dolumu … trade-through")
+# → [3] 2026-09-01 "replay'de pasif limit modellenemez; fill_entry limiti yalnız next_open'a karşı kontrol ediyor", [4] 2026-08-22
+# "gap değilse stop_limit" (canlı giriş yasası), [5] EDG-045 stop hükmü — replay girişinin CANLI KURALLA tick düzeyinde kıyaslandığı
+# kayıt YOK. `ops/kart_benzer.py --hipotez "replay giriş bacağı kayması … tick arşiviyle"` → EDG-2026-069 (0,37, ACTIVE — canlı
+# giriş bacağı, veri kapısında; bu kart onun REPLAY ikizi, ondan bağımsız n'e sahip), EDG-2026-102 (0,37, KALDI — stop bacağı; başarısız
+# yaklaşım değil, hipotez desteklenmedi), EDG-2026-090 (0,14, KALDI — gölge↔gerçek ayrışma nedenleri; bu kart doğum/fiyat bileşenini
+# replay tarafında ayırır), EXE-2026-006 (0,13, NO-GO — E1 limit bacağı monoton zararlı; bu kart limit tavanını DEĞİŞTİRMEZ, yalnız
+# ölçer), EXE-2026-005 (GEÇTİ — giriş tavanının replay'de next_open'a bağlı olduğu tespiti; bu kart o bulgunun tick ölçümüdür) →
+# başarısız yaklaşım tekrarı YOK.
+card_id: EDG-2026-104
+status: registered
+family: friksiyon_olcumu
+on_kayit: 2026-09-25
+selef: EDG-2026-102
+ref: [EDG-2026-102, EDG-2026-069, EDG-2026-047, EDG-2026-040, EDG-2026-042, EDG-2026-090, EXE-2026-005, EXE-2026-006, EXE-2026-009, EDG-2026-066, TSK-013]
+
+hipotez: >
+  Replay tohumu (`trades.kaynak = replay_seed`, strategy_version 91, hepsi long, n=843) girişlerini CANLI giriş kuralıyla (9:45 ET
+  pencere + gönderim anı fiyatına göre marketable-limit / stop-limit, limit tavanı tetik × (1 + limit_pct_cap), gün sonu iptal) tick
+  arşivinde yeniden yürütünce: (H1) replay'in doldurduğu girişlerin anlamlı bir payını canlı kural O GÜN DOĞURMAZ (tetik 9:45–16:00
+  ET arasında kırılmaz ya da limit tavanı içinde işlem yoktur) VE (H2) canlı kuralın doğurduğu girişlerde canlı dolum fiyatı replay
+  dolum fiyatından (`trades.entry` = açılış × (1 + 5 bps) + ≤1 bps etki) aleyhte yüksektir — yani replay giriş bacağında iyimserdir.
+
+adim_0_kaydi_2026_09_25: >
+  (Rol-1, A1 salt-okur, 15:3xZ — ölçümden ÖNCE, sonuç görülmeden) `trades` kaynak=replay_seed n=843, `trade_plans` eşleşmesi
+  843/843 (entry_trigger/stop dolu 843/843). ts_open 2022-01-07 → 2026-07-22, 417 seans (yıl: 2022 37 · 2023 173 · 2024 249 · 2025 203
+  · 2026 181). Açılış (≈ entry / 1,0005) vs tetik: açılış < tetik 392 · ≈tetik (±0,5 bps) 17 · açılış > tetik 434; bps medyan +3,0,
+  p25 −57,9, p75 +65,2, max +394,3 (limit tavanı %4 ile tutarlı), min −4996 (bölünme/ölçek uyumsuzluğu şüphesi — kill-list 3).
+  Tick kapsamı: giriş günlerinin 843/843'ü `/opt/veri/tick/islem/` arşivinde (1346 gün, 2020-09-15 → 2026-09-24). Bar çaprazı:
+  `trades.entry` = bar açılışı × 1,0005 birebir 299 satır, kalan 544'te fark 0,01–0,07 bps (`fill_entry` katılım etkisi) — replay
+  dolumu bar açılışından yeniden kurulabiliyor. Limit tavanı: `state/goal.yaml` `limit_pct_cap: 0.04`, `limit_atr_mult: 100.0`
+  (ATR kolu atıl) → L = tetik × 1,04.
+
+k_registry: {registered_at: "2026-09-25", trial_ids: [EDG-104-dogmaz-orani, EDG-104-giris-fiyat-farki]}
+# İki birincil ölçüm = K=2. Dal kırılımı (açılış<tetik / açılış≥tetik), 9:30 kuralı tanısı ve yıl kovaları TANI'dır, K'ya sayılmaz.
+
+olcum_plani:
+  - "girdi dondurma: replay_seed trades + eşleşen trade_plans satırları ölçüm başında JSON'a dökülür, sha256'ları sonuca yazılır
+     (içerik-adresli; §5). Sabitler (9:45 ET, limit_pct_cap, slip) betik başlığında SEMBOL çapasıyla beyanlı; betik `meridian` İÇE
+     AKTARMAZ — sabitlerin motorla eşitliğini ölçüm betiğinin kendi çivisi doğrular (EDG-102 deseni)."
+  - "gün akışı: giriş gününün (ts_open) `islem/<gün>.parquet`inden ticker kayıtları, NORMAL SEANS (09:30 ≤ ET < 16:00, DST-farkında),
+     ts'e göre kararlı sıralı."
+  - "canlı kural öykünücüsü (tek tanım, iki dal): t0 = ts ≥ 09:45 ET olan ilk kayıt, p0 = fiyatı. (a) p0 ≥ tetik → GAP dalı
+     (marketable-limit): dolum = t0'dan SONRAKİ ilk kayıt içinde fiyatı ≤ L olan ilk kayıt. (b) p0 < tetik → STOP-LIMIT dalı: aktivasyon =
+     t0'dan itibaren fiyatı ≥ tetik olan ilk kayıt (EDG-069 'tetik kırılımı' tanımı); dolum = aktivasyondan SONRAKİ ilk kayıt içinde
+     fiyatı ≤ L olan ilk kayıt. 16:00 ET'ye dek dolum yoksa satır DOGMAZ. t0 yoksa (09:45 sonrası hiç kayıt) satır `akis_yok`
+     sınıfına gider (paydaya GİRMEZ, sayılır). L = tetik × (1 + limit_pct_cap)."
+  - "H1 birincil: dogmaz_orani = DOGMAZ / (DOGMAZ + DOLAN), yüzde; %95 CI seans-kümeli bootstrap B=5000, seed=20260812."
+  - "H2 birincil: DOLAN satırlarda fark_bps = (canli_dolum − trades.entry) / trades.entry × 1e4 (aleyhte pozitif — canlı daha pahalı);
+     medyan + %95 CI, aynı bootstrap künyesi."
+  - "TANI (hüküm değil): (a) dal kırılımı — açılış<tetik (392) ve açılış≥tetik (434) ayrı dogmaz oranı ve fark medyanı; (b) 9:30
+     kuralı: aynı öykünücü t0 = 09:30 ile — 9:45 penceresinin kendi payını tetik semantiğinden ayırır (EXE-2026-009'un bedeli);
+     (c) aktivasyon/dolum gecikmesi (t0'dan dakika) dağılımı; (d) yıl ve fiyat kovası; (e) `kosul` bit 0x20'li kayıtlar dışlanınca iki
+     birincil; (f) dolum anı kotasyon spread'i (k_satis_fiyat − k_alis_fiyat); (g) DOGMAZ satırların replay sonucu (exit_reason, r_multiple)
+     dağılımı — yalnız BETİMLEYİCİ, P&L etkisi ayrı kartın işidir."
+
+esikler:
+  n_uygun_alt: 300            # ADIM-0'da 843; akis_yok + bölünme dışlaması sonrası paydada ≥ 300 satır ve ≥ 100 seans
+  seans_alt: 100
+  dogmaz_esik_pct: 5          # H1: replay'in 'fazladan' doğurduğu işlem payı için önem eşiği
+  fiyat_bandi_bps: 5          # H2: EDG-040 başabaş bandının alt ucu (5–15 bps/bacak) — ±5 bps içi 'eşdeğer'
+  karar_kurali: >
+    H1 — CI-alt > 5 → "REPLAY DOĞUMU İYİMSER" (canlı kuralın doğurmadığı replay işlemleri anlamlı pay) · CI-üst ≤ 5 → "DOĞUM EŞDEĞER"
+    · aksi → "BELİRSİZ". H2 — CI-alt > +5 → "REPLAY GİRİŞ FİYATI İYİMSER" · CI-üst < −5 → "REPLAY GİRİŞ FİYATI KÖTÜMSER" · CI tamamen
+    [−5, +5] içinde → "GİRİŞ FİYATI EŞDEĞER (model yeterli)" · aksi → "BELİRSİZ". İki hüküm AYRI yazılır; biri diğerini ezmez.
+
+kill_list:
+  - "replay dolum yeniden kurma öz-sınaması: `trades.entry`, giriş günü bar açılışı × (1 + 5 bps) ile en az 20 satırda ≤ 1 bps farkla
+     tutarlı gösterilemezse ölçüm GEÇERSİZ (fark kolonu açılış↔tetik dal sınıflandırmasının zeminidir)."
+  - "akis_yok sınıfı aday satırların %10'unu aşarsa (IEX akış boşluğu / kapsam dışı sembol) iki birincil de YAYIMLANMAZ, sınıf incelenir."
+  - "bölünme/ölçek: bar açılışı ↔ o günün ilk normal-seans tick fiyatı oranı [0,9, 1,1] dışındaki satırlar birincilden dışlanır ve
+     sayılır; dışlanan pay %5'i aşarsa sonuç YAYIMLANMAZ (ADIM-0 min −4996 bps bu sınıfın adayı)."
+  - "tek seans ölçülen satırların %10'undan fazlasını taşırsa CI şerhsiz yayımlanmaz."
+  - "öykünücü zaman-tabanlıdır; `kosul` yalnız TANI'dadır — birincile sessizce kosul süzgeci eklenirse GEÇERSİZ."
+  - "pozitif kontrolün üç ayağından biri düşerse hiçbir sayı yayılmaz."
+
+pozitif_kontrol: >
+  YOL-TUTARLI, üç ayak: (1) KİMLİK — sentetik parquet'te her dal için bilinen sonuç: GAP dalında dolum tam beklenen kayıt; STOP-LIMIT
+  dalında aktivasyon ve dolum beklenen kayıtlar; tetiğe hiç çıkmayan akışta DOGMAZ; L üstünde kalan akışta DOGMAZ; 09:45 öncesi kırılım
+  t0'dan önce sayılmaz (ölçüm kodunun kendi çivileri). (2) ELLE — Rol-1 en az 5 gerçek satırı (her daldan en az 2, en az 1 DOGMAZ)
+  parquet'ten BAĞIMSIZ yeniden türetir; betik çıktısıyla birebir. (3) BAR ÇAPRAZI — her satırda giriş günü bar yükseği ≥ tetik ⇔
+  normal-seans tick maksimumu ≥ tetik; tutarsız satır sayılır ve raporlanır (IEX yanlılığının kaba ölçüsü; > %20 ise ayak düşer).
+
+veri_penceresi: "trades kaynak=replay_seed (n=843, ts_open 2022-01-07 → 2026-07-22, 417 seans; donuk dökümün sha256'sı sonuca yazılır)
+  × A1 `/opt/veri/tick/islem/` (EDG-066) × A1 `state/bars/` giriş günü açılışı. Tek atım."
+
+beyanli_sinirlar: >
+  (1) Öykünücü canlı yolun SADELEŞTİRMESİDİR: kuyruk önceliği, kısmi dolum, gönderim gecikmesi ve kotasyona karşı dolum modellenmez;
+  'sonraki kayıt' vekili EDG-102 ile aynıdır. (2) IEX tek-borsa akışıdır (~%2 hacim): 09:45 sonrası ilk IEX kaydı ve tetik kırılımı
+  konsolide akıştan geç/seyrek olabilir — DOGMAZ oranını YUKARI yanlayabilir; PK-3 bu yanlılığın kaba ölçüsüdür. (3) Canlı yolun diğer
+  kapıları (gap_veto, HALT, sermaye, sektör tavanı, `open_below_stop`un canlı karşılığı) öykünmez — yalnız zamanlama + tetik + limit
+  tavanı. (4) DOGMAZ işlemlerin P&L etkisi ve 'canlı kuralla yeniden replay' bu kartın işi DEĞİL (tanı (g) yalnız betimler; P&L ayrı
+  kart). (5) Replay'in kendi redleri (max_chase, missed_limit, open_below_stop) zaten `trades`'e girmez — bu kart yalnız replay'in
+  DOLDURDUĞU girişleri sınar; canlı kuralın doğurup replay'in reddettiği işlemler (ters yön) ölçülmez. (6) Tek strateji sürümü (91).
+
+basari_tanimi: >
+  ADIM-0 yazılmış + girdi dökümü sha256'lı + öz-sınama ve üç PK yeşil + paydada n ≥ 300 ∧ ≥ 100 seans + iki birincil karar kuralıyla
+  AYRI AYRI hükme bağlanmış + EDG-2026-040/042/102 ve EDG-2026-069'a kart referanslı şerh düşülmüş. Hipotezin tutup tutmaması başarı
+  değildir — dürüstçe ölçülmüş olması başarıdır.
