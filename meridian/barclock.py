@@ -10,9 +10,10 @@ baskın kusur sınıfı.
 KİLİT GİRİŞLER: now() (tz-aware UTC tek ŞİMDİ), parse_utc(ts) (RFC-3339 → UTC; okunamazsa None),
 close_ts(bar_t), is_admissible / admissible_bars (look-ahead kapısı; liste tek `as_of` ile ölçülür),
 age_s / is_fresh (kapanıştan bu yana bayatlık — bayat kapanmış bar look-ahead güvenli ama karara
-girmemeli), seans_araligi (O GÜNÜN gerçek XNYS seans aralığı — TEK takvim yolu), is_market_open /
-is_entry_window / session_date (NY seansı; tatil + erken kapanış XNYS takviminden, DST zoneinfo'dan),
-set_clock / reset_clock (YALNIZ test: saat enjeksiyonu), BAR_SECONDS=60.
+girmemeli), seans_araligi (O GÜNÜN gerçek XNYS seans aralığı — TEK takvim yolu), seans_durumu
+(kapı cevabı + takvim arızası, SAF), is_market_open / is_entry_window / session_date (NY seansı; tatil +
+erken kapanış XNYS takviminden, DST zoneinfo'dan), set_clock / reset_clock (YALNIZ test: saat
+enjeksiyonu), BAR_SECONDS=60.
 
 DEĞİŞMEZLER: FAIL-CLOSED — damgasız/biçimsiz bar admissible DEĞİLDİR (bilinmeyen tazelik = kabul
 etme); takvim okunamazsa seans kapısı KAPALI döner (bilinmeyen seans = açık sayma). Bayatlık
@@ -21,8 +22,11 @@ karşılaştırması da burada yaşar, tüketicilere saçılmaz ("tek saat, tek 
 is_admissible'a dayanır.
 
 OKUR/YAZAR: kurulu `pandas_market_calendars` paketinin XNYS takvimini okur (paket-içi kural
-tablosu; ağ YOK) ve başarılı günleri süreç-içi `_SEANS_CACHE`te tutar. Redis'e ve diske dokunmaz;
-tek yazımı takvim arızasında süreç başına BİR `obs.warn` olayıdır (bkz. is_market_open).
+tablosu; ağ YOK) ve başarılı günleri süreç-içi `_SEANS_CACHE`te tutar. HİÇBİR ŞEY YAZMAZ — Redis'e,
+diske, olay defterine dokunmaz. SAF YAPRAKTIR: SIFIR meridian import'u taşır (import-linter sözleşme 3
+"saf yapraklar birbirinden bağımsız"; çiviler v549 + v548 K4). Takvim arızası `seans_durumu` ile DEĞER
+olarak dışarı verilir; olay defterine süreç başına tek uyarıyı zamanlayıcı poll'ü basar
+(`scheduler._seans_kapisi_takvim_denetimi`).
 """
 from __future__ import annotations
 import datetime as dt
@@ -133,12 +137,13 @@ _SEANS_CACHE: dict = {}     # {gün: (durum, açılış, kapanış, hata)} — Y
 # (`barsarchive.gap_scan`). Kilit yok, bilerek: tahliye `sorted()` ile ÖNCE listeye döker (yineleme
 # sırasında boyut değişimi hatası doğmaz); en kötü sonuç tavanın geçici aşılması ya da aynı günün iki
 # kez sorgulanmasıdır — ikisi de bir sonraki çağrıda kendiliğinden düzelir (inceleme KÜÇÜK-1, 2026-09-25).
-# Takvim arızası uyarısı SÜREÇ BAŞINA BİR KEZ: kapı her barfeed olayında ve her poll'de (300 sn)
-# sorulur; koşulsuz uyarı olay defterini — pano olay akışının ve alarm bütçesinin okuduğu kaynağı —
-# boğardı. `scheduler._CALENDAR_WARNED` ile AYNI desen: GERİ SIFIRLANMAZ (takvim gidip geldikçe
-# bastırılan sel geri açılmasın). Arızanın KENDİSİ ise önbelleğe alınmaz — takvim dönünce kapı düzelir.
-_SEANS_TAKVIMI_UYARILDI = False
-EV_SEANS_TAKVIMI_YOK = "session_gate_calendar_unavailable"
+# TAKVİM ARIZASI BURADAN ANLATILMAZ (TSK-223 tur 2): barclock saf yapraktır — `obs`a (dolayısıyla
+# store/provenance zincirine) bir kenar, "saf yapraklar birbirinden bağımsız" mimari sözleşmesini kırar
+# (tur 1'in tembel `from . import obs`u dağıtım kapısı [0c]'yi ve CI dumanını böyle kırdı). Depo deseni:
+# "olay basmak SAF fonksiyonun sözleşmesini kırardı — kaydı çağıran yapar". Arıza `seans_durumu`nun
+# ikinci öğesiyle DEĞER olarak çıkar; süreç başına TEK `session_gate_calendar_unavailable` uyarısını
+# zamanlayıcı poll'ü basar (`scheduler._seans_kapisi_takvim_denetimi`). Arızanın KENDİSİ önbelleğe
+# alınmaz — takvim dönünce kapı düzelir.
 
 
 def seans_araligi(gun) -> tuple:
@@ -152,9 +157,10 @@ def seans_araligi(gun) -> tuple:
     `_seans_araligi` sarmalayıcısı üzerinden) seans sınırını BURADAN okur; ikinci bir `schedule()`
     yolu açmak aynı gerçeğin iki kopyasıdır (tek-kaynak yasası; v548 K2 çivisi).
 
-    SAF: olay BASMAZ — kaydı çağıran yapar (`is_market_open` süreç başına bir uyarı, `gap_scan`
-    raporun `seans.hata` alanı). ÖNBELLEK YALNIZ BAŞARIYA: aynı gün her poll'de/olayda sorulur, takvim
-    sorgusu boşuna tekrarlanmasın; ama bir ARIZAYI önbelleğe almak takvim geri geldikten sonra bile o
+    SAF: olay BASMAZ — kaydı çağıran yapar (zamanlayıcı poll'ü `scheduler._seans_kapisi_takvim_denetimi`
+    süreç başına bir uyarı, `gap_scan` raporun `seans.hata` alanı). ÖNBELLEK YALNIZ BAŞARIYA: aynı
+    gün her poll'de/olayda sorulur, takvim sorgusu boşuna tekrarlanmasın; ama bir ARIZAYI önbelleğe
+    almak takvim geri geldikten sonra bile o
     günü sonsuza dek "takvim_yok" bırakırdı — arıza her çağrıda yeniden denenir. Önbellek
     `SEANS_CACHE_MAX` ile tavanlıdır (en eski günler düşer)."""
     key = str(gun)[:10]
@@ -164,7 +170,7 @@ def seans_araligi(gun) -> tuple:
     try:
         import pandas_market_calendars as mcal
         sched = mcal.get_calendar(SEANS_TAKVIMI).schedule(start_date=key, end_date=key)
-    except Exception as e:  # sessiz-yutma DEĞİL: neden `hata` ile çağırana ÇIKAR — is_market_open süreç başına uyarır, gap_scan raporda taşır (olay basmak SAF yardımcının sözleşmesini kırardı)
+    except Exception as e:  # sessiz-yutma DEĞİL: neden `hata` ile çağırana ÇIKAR — zamanlayıcı poll'ü süreç başına uyarır, gap_scan raporda taşır (olay basmak SAF yardımcının sözleşmesini kırardı)
         return ("takvim_yok", None, None, f"{type(e).__name__}: {e}")
     if not len(sched):
         out = ("seans_disi", None, None, None)
@@ -179,47 +185,42 @@ def seans_araligi(gun) -> tuple:
     return out
 
 
-def _takvim_yok_uyar(gun: str, hata) -> None:
-    """Takvim arızasını SÜREÇ BAŞINA BİR KEZ olay defterine yazar (okuyucular: pano olay akışı ve
-    `watchdog.alarm_budget` warn=low sayımı). `obs` tembel içe aktarılır: barclock en alt katmandır."""
-    global _SEANS_TAKVIMI_UYARILDI
-    if _SEANS_TAKVIMI_UYARILDI:
-        return
-    _SEANS_TAKVIMI_UYARILDI = True
-    from . import obs
-    obs.warn(EV_SEANS_TAKVIMI_YOK, gun=gun, takvim=SEANS_TAKVIMI, error=hata,
-             detail="XNYS takvimi okunamadı — seans kapısı KAPALI döner (fail-closed): ayna çıkışı "
-                    "açılışa ertelenir (koruma bacakları yerinde), giriş gönderimi ve intraday "
-                    "tarama durur; takvim dönünce kapı kendiliğinden düzelir (arıza önbelleğe "
-                    "alınmaz). Süreç başına bir kez kaydedilir")
+def seans_durumu(at: dt.datetime | None = None) -> tuple:
+    """Seans kapısının SAF cevabı: `(acik, takvim_hatasi)`. Açık ⇔ `at`'in NY tarihinde XNYS seansı
+    VAR ve `market_open ≤ at < market_close` (`seans_araligi`). Resmî TATİLİ ve ERKEN KAPANIŞI
+    (13:00 ET) takvimden bilir; DST'yi takvimin UTC damgaları ve zoneinfo halleder. `at` tz'siz
+    gelirse UTC sayılır.
 
+    `takvim_hatasi`: takvim okunamadıysa arızanın nedeni (dizge), aksi hâlde None. Arızada `acik`
+    False'tur (FAIL-CLOSED: çıkışta koruma yerinde kalır, çıplak pencere açılmaz; kardeş
+    `scheduler._leg_ready` de "kapalı taraf güvenli taraftır" der). Olay BASMAZ: süreç başına tek
+    uyarıyı zamanlayıcı poll'ü basar (`scheduler._seans_kapisi_takvim_denetimi`).
 
-def is_market_open(at: dt.datetime | None = None) -> bool:
-    """ABD hisse REGULAR seansı açık mı? Açık ⇔ `at`'in NY tarihinde XNYS seansı VAR ve
-    `market_open ≤ at < market_close` (`seans_araligi`). Resmî TATİLİ ve ERKEN KAPANIŞI (13:00 ET)
-    takvimden bilir; DST'yi takvimin UTC damgaları ve zoneinfo halleder. `at` tz'siz gelirse UTC sayılır.
-
-    KAPI OLARAK OKUNUR, kolaylık değil: ayna çıkışı (`loop._mirror_exit_sync`,
-    `loop.mirror_exit_acilis_turu` — TSK-205) ve giriş penceresi (`is_entry_window` → pencere yasası)
-    bu cevaba dayanır; erken kapanış akşamı "açık" demek kapatmayı seans dışında kuyruklatır.
-
-    FAIL-CLOSED: takvim okunamazsa False (çıkışta koruma yerinde kalır, çıplak pencere açılmaz; kardeş
-    `scheduler._leg_ready` de "kapalı taraf güvenli taraftır" der) ve süreç başına BİR uyarı basılır.
-    Hafta sonu takvim sorulmadan kapalıdır."""
+    HAFTA SONU KISA DEVRESİ: Cmt/Paz takvim SORULMAZ → `(False, None)`; kapı zaten kapalı olduğu için
+    arıza hafta sonu görünmez, ilk hafta içi sorguda (poll dahil) görünür."""
     a = at or now()
     if a.tzinfo is None:
         a = a.replace(tzinfo=UTC)
     ny = a.astimezone(NY)
     if ny.weekday() >= 5:            # Cmt/Paz — takvim sorgusu gereksiz
-        return False
-    gun = ny.date().isoformat()
-    durum, acilis, kapanis, hata = seans_araligi(gun)
+        return (False, None)
+    durum, acilis, kapanis, hata = seans_araligi(ny.date().isoformat())
     if durum == "takvim_yok":
-        _takvim_yok_uyar(gun, hata)
-        return False
+        return (False, hata)
     if durum != "ok":                # takvim okundu, o gün seans yok (tam tatil)
-        return False
-    return acilis <= a < kapanis
+        return (False, None)
+    return (acilis <= a < kapanis, None)
+
+
+def is_market_open(at: dt.datetime | None = None) -> bool:
+    """ABD hisse REGULAR seansı açık mı? `seans_durumu(at)`nin ince sarmalayıcısı (kural, tatil/erken
+    kapanış ve fail-closed davranış orada).
+
+    KAPI OLARAK OKUNUR, kolaylık değil: ayna çıkışı (`loop._mirror_exit_sync`,
+    `loop.mirror_exit_acilis_turu` — TSK-205) ve giriş penceresi (`is_entry_window` → pencere yasası)
+    bu cevaba dayanır; erken kapanış akşamı "açık" demek kapatmayı seans dışında kuyruklatır. Takvim
+    okunamazsa False döner; arızanın anlatımı zamanlayıcı poll'ündedir, burada DEĞİL (saf yaprak)."""
+    return seans_durumu(at)[0]
 
 
 # ---------------- SABAH TETİK PENCERESİ (EXE-2026-009 + K2) ----------------
