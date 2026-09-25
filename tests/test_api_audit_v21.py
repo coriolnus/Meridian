@@ -206,7 +206,9 @@ def test_p3_debug_export_excludes_secrets():
           bugünkü davranışın "doğru" görünmesi de zaten bu tesadüfe bağlıydı.
     DAVRANIŞ BACAĞI AYRI DOSYADADIR (`tests/test_debug_export_sir_v524.py`): burası kaynak
     denetimidir, orada uç gerçekten çağrılır ve zip'in içine bakılır."""
-    blk = next(b for b in re.split(r"\n(?=@app\.)", SRC) if '"/api/debug_export"' in b)
+    # SEÇİCİ DEKORATÖRDÜR (TSK-219): yol literali artık `GZIP_HARIC_YOLLAR`da da geçer ve çıplak
+    # `"/api/debug_export"` araması ilk (başlık) bloğu seçip çiviyi yanlış blokta koştururdu.
+    blk = next(b for b in re.split(r"\n(?=@app\.)", SRC) if '@app.get("/api/debug_export")' in b)
     assert "config.sir_dosyasi_mi(" in blk, (
         "sır kararı tek kaynaktan (`config.sir_dosyasi_mi`) sorulmuyor")
     assert "skip = {" not in blk, (
