@@ -159,7 +159,7 @@ EOT
   error_on_missing_key = true
 }
 
-# /opt/hindsight/.env-cp.vault — tüketici: hindsight-cp.service (EnvironmentFile → docker -e ikamesi, ikinci dosya — drop-in 50-vault-yan-dosya.conf; systemd PID 1 olarak root okur)
+# /opt/hindsight/.env-cp.vault — tüketici: hindsight-cp.service (EnvironmentFile → docker -e AD, değer ortamdan — argv'de yok; ikinci dosya — drop-in 50-vault-yan-dosya.conf; systemd PID 1 olarak root okur)
 template {
   contents    = <<EOT
 HINDSIGHT_CP_ACCESS_KEY={{ with secret "secret/data/meridian/hindsight_cp_access_key" }}{{ .Data.data.value }}{{ end }}

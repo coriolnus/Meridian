@@ -14,7 +14,7 @@ adımı operatörde — bu belge o adımı GEREKTİRMEZ, ondan önceki basamakt�
 | | | HINDSIGHT_API_CONSOLIDATION_LLM_1_API_KEY · HINDSIGHT_API_CONSOLIDATION_LLM_2_API_KEY · HINDSIGHT_API_CONSOLIDATION_LLM_3_API_KEY | SIR ×3 (aynı zincirin konsolidasyon yüzeyi) | hindsight-api.service | EnvironmentFile |
 | | | diğer 29 (LLM/embedder/reranker/DB havuzu/…) | yapılandırma | hindsight-api.service | EnvironmentFile |
 | `/etc/hindsight/creds/<AD>` | 0400 / root | HINDSIGHT_API_DATABASE_URL · HINDSIGHT_API_LLM_API_KEY · HINDSIGHT_API_TENANT_API_KEY | SIR ×3 (dosyanın ADI değişkenin adıdır) | hindsight-api.service (LoadCredential + ExecStart sarmalayıcı) · meridian.service (pano vekili, yalnız TENANT) | LoadCredential |
-| `/opt/hindsight/.env-cp` | 600 / root | HINDSIGHT_CP_ACCESS_KEY · HINDSIGHT_CP_DATAPLANE_API_KEY | SIR | hindsight-cp.service (docker) | docker env-file |
+| `/opt/hindsight/.env-cp` | 600 / root | HINDSIGHT_CP_ACCESS_KEY · HINDSIGHT_CP_DATAPLANE_API_KEY | SIR | hindsight-cp.service (docker) | EnvironmentFile → docker -e AD, değer ortamdan — argv'de yok (düzeltme 2026-09-25, madde 6) |
 | `/opt/apisix/.env-apisix` | **640** / root | APISIX_ADMIN_KEY · OPENROUTER_API_KEY · OPENROUTER_AUTH · PANO_GIRIS_PAROLA · BOT_KEY_{BEKCI,KARNE,SEF,MERIDIAN} | SIR ×8 | apisix.service (docker, `$env://` çözümü) · `ops/apisix_uygula.py` (admin anahtarı) | EnvironmentFile → docker run env |
 | `~/.hermes/profiles/<bekci,karne,sef>/.env` | (ölçülmedi) | BOT_KEY_<AD> · OPENROUTER_API_KEY | SIR | hermes bot birimleri (timer'lı oneshot) | HERMES_HOME/.env (hermes env_loader) |
 
@@ -50,6 +50,14 @@ kaynak, ayrışma çivisini "her şey uyuşuyor" diye yeşil tutar:
    tarihçesidir. Bu madde 4. maddenin TERSİDİR: orada dosya kaldı çünkü dosya duruyordu, burada
    satır çıktı çünkü dosya YOK. (Taşınan tablo 6 dosya / 24 ad; `deploy/sir_envanteri.yaml` aynı
    turda — v439 E0/E2/E3.)
+6. **`/opt/hindsight/.env-cp` KANAL hücresi DÜZELTİLDİ (2026-09-25, TSK-226).** "docker env-file" 2026-09-03'te
+   de YANLIŞTI: `hindsight-cp.service` sırları hiçbir zaman `--env-file` ile almadı (depo birimi ilk
+   commit'inden, 2026-09-01, beri `-e AD=${AD}` — git geçmişi); systemd `EnvironmentFile=` değerini ExecStart'a GENİŞLETİR ve iki sır
+   root `docker run` sürecinin argv'sinde (`ps`, `/proc/<pid>/cmdline`) makinedeki her kullanıcıya açıktı
+   (Rol-1 A1 salt-okur ölçümü 2026-09-25 21:2xZ; süreç 2026-09-15'ten beri). Birim değersiz `-e AD`ye
+   çevrildi: docker istemcisi değeri kendi ortamından okur (ortam yalnız root'a açık). Hücre birimin
+   DEPO hâlini söyler; A1'de dağıtım + `hindsight-cp` yeniden başlatması yapılana kadar eski biçim koşar.
+   Aynı ifade `deploy/sir_envanteri.yaml`ın üç CP metninde; çivi v447 S1-S3 (sınıf çivisi v554).
 
 **ÖLÇÜLMEYEN, DOLAYISIYLA DEĞİŞTİRİLMEYEN TEK SATIR (uydurma yasağı):** `diğer 29` ayar
 sayısı 2026-09-03 ölçümüdür ve 2026-09-08'de YENİDEN SAYILMADI — yalnız sır ADLARININ varlığı

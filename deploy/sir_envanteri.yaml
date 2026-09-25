@@ -127,7 +127,9 @@ dosyalar:
     sahip: "root"
     tuketici: "hindsight-cp.service (docker)"
     sinif: "B"
-    kanal_bugun: "docker env-file"
+    # TSK-226 (2026-09-25): "docker env-file" YANLIŞTI — birim sırları `-e AD=${AD}` ile ExecStart'a
+    # genişletiyordu (argv'de, herkese açık; Rol-1 A1 ölçümü). Birim değersiz `-e AD`ye çevrildi.
+    kanal_bugun: "EnvironmentFile → docker -e AD, değer ortamdan — argv'de yok"
     kanal_hedef: "LoadCredential + ExecStart sarmalayıcı"
     degiskenler:
       - ad: HINDSIGHT_CP_ACCESS_KEY
@@ -260,7 +262,7 @@ rotasyon_kopyalari:
       alan: HINDSIGHT_CP_DATAPLANE_API_KEY
       mod: null                # korunur
       sahip: null
-      tuketici: "hindsight-cp.service (docker env-file)"
+      tuketici: "hindsight-cp.service (EnvironmentFile → docker -e AD, değer ortamdan — argv'de yok)"
 
     - alt_komut: db
       sir: HINDSIGHT_DB_PAROLA
@@ -861,14 +863,16 @@ vault_dosyalar:
       - {alan: HINDSIGHT_API_CONSOLIDATION_LLM_3_API_KEY, sir: openrouter_api_key, onek: null}
 
   # KONTROL PANELİ — birim docker koşar ama sırları `--env-file` ile DEĞİL, systemd ortamından
-  # `-e VAR` ikamesiyle alır (ÖLÇÜLDÜ 2026-09-14, `deploy/hindsight/hindsight-cp.service`). Yani
+  # DEĞERSİZ `-e AD` ile alır: docker istemcisi değeri kendi ortamından okur, o ortamı iki
+  # `EnvironmentFile=` satırı doldurur (TSK-226, 2026-09-25; 2026-09-14 ölçümündeki `-e AD=${AD}`
+  # ikamesi değeri ExecStart'a genişletip argv'ye koyuyordu). Yani
   # bu tüketicinin ikinci kaynağı bir `EnvironmentFile=`dır, ikinci bir `--env-file` DEĞİL:
   # spec §1'in "docker → ikinci --env-file" cümlesi APISIX'in ölçülen biçimidir ve buraya
   # kopyalanamaz. Ölçmeden genellemek, sırrın konteynere HİÇ ulaşmadığı bir geçiş üretirdi.
   - yol: "/opt/hindsight/.env-cp.vault"
     mod: "0400"
     sahip: "root"
-    tuketici: "hindsight-cp.service (EnvironmentFile → docker -e ikamesi, ikinci dosya — drop-in 50-vault-yan-dosya.conf; systemd PID 1 olarak root okur)"
+    tuketici: "hindsight-cp.service (EnvironmentFile → docker -e AD, değer ortamdan — argv'de yok; ikinci dosya — drop-in 50-vault-yan-dosya.conf; systemd PID 1 olarak root okur)"
     yeniden_baslat: "hindsight-cp.service"
     satirlar:
       - {alan: HINDSIGHT_CP_ACCESS_KEY, sir: hindsight_cp_access_key, onek: null}
