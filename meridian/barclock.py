@@ -129,6 +129,10 @@ def is_fresh(bar_t, max_age_s: float, as_of: dt.datetime | None = None) -> bool:
 SEANS_TAKVIMI = "XNYS"      # data.CALENDAR / scheduler._leg_ready ile AYNI ad
 SEANS_CACHE_MAX = 40        # gün başına bir kayıt; uzun ömürlü worker'da sözlük sınırsız büyümesin
 _SEANS_CACHE: dict = {}     # {gün: (durum, açılış, kapanış, hata)} — YALNIZ başarılı okumalar
+# İKİ İŞ PARÇACIĞI PAYLAŞIR (TSK-223 ile YENİ): barfeed tüketicisi (`is_market_open`) ve zamanlayıcı
+# (`barsarchive.gap_scan`). Kilit yok, bilerek: tahliye `sorted()` ile ÖNCE listeye döker (yineleme
+# sırasında boyut değişimi hatası doğmaz); en kötü sonuç tavanın geçici aşılması ya da aynı günün iki
+# kez sorgulanmasıdır — ikisi de bir sonraki çağrıda kendiliğinden düzelir (inceleme KÜÇÜK-1, 2026-09-25).
 # Takvim arızası uyarısı SÜREÇ BAŞINA BİR KEZ: kapı her barfeed olayında ve her poll'de (300 sn)
 # sorulur; koşulsuz uyarı olay defterini — pano olay akışının ve alarm bütçesinin okuduğu kaynağı —
 # boğardı. `scheduler._CALENDAR_WARNED` ile AYNI desen: GERİ SIFIRLANMAZ (takvim gidip geldikçe
