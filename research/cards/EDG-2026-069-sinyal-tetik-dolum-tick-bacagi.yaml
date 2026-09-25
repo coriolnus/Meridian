@@ -124,3 +124,5 @@ adim_0_yeniden_2026_09_13: >
   adayı): tick arşivi `islem/` 09-03'te bitiyor, 09-04..09-11 seansları yok — ileri dolum durmuş olabilir (TAVAN-DOLDU işareti
   09-12); Rol-1 ayrıca ölçüyor (geridolum birimi journal).
 
+serh_edg106_2026_09_25: >
+  (2026-09-25 18:31Z, Rol-1) EDG-2026-106 (tick arşivi, 832 replay girişi / 412 seans, koda sadık canlı giriş kuralı: plan anı emir tipi + 09:45 ET + limit tavanı, bölünme yeniden ölçeklemeli): canlı kuralın doldurmayacağı replay girişi %0,601 [0,122, 1,175] → DOLUM EŞDEĞER; canlı dolum − replay dolumu medyanı −5,011 bps [−13,237, +3,783] → BELİRSİZ (nokta tahmini replay'in 5 bps giriş kaymasının canlıda medyan olarak görülmediğini söyler). Kaynak: research/cards/EDG-2026-106-replay-giris-canli-kural-tick-olcekli.yaml hukum_2026_09_25. Bu kart canlı giriş bacağını ölçer (veri kapısında); EDG-106 onun replay ikizidir ve canlı hükmün yerine GEÇMEZ. EDG-069'un tetik→dolum tanımı ('fiyat ≥ tetik ilk kayıt') EDG-106'nın STOP-LIMIT dalında aynen kullanıldı; replay'de o dal 0 satır doğurdu (tetik = sinyal kapanışı 833/837).

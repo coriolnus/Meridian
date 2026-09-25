@@ -14,7 +14,7 @@
 # recall 2026-09-01 [3][4]; kart_benzer EDG-069/102/090, EXE-005/006; EDG-047 betimleyici +4,65 bps). Bölünme ölçek sınıfı için ek kaynak:
 # memory `kill-esigi-adim0da-olculur` (2026-09-25) — başarısız yaklaşım tekrarı YOK (selefler yaklaşım değil tasarım eksikliğiyle düştü).
 card_id: EDG-2026-106
-status: registered
+status: measured   # KALDI (hipotez) · 2026-09-25 18:30Z Rol-1 hüküm: H1 DOLUM EŞDEĞER · H2 BELİRSİZ — hukum_2026_09_25
 family: friksiyon_olcumu
 on_kayit: 2026-09-25
 selef: EDG-2026-105
@@ -101,3 +101,40 @@ rol1_notu_2026_09_25_olcum_oncesi: >
   kuralıyla (F kümesi, en yakın öğe, |r/f − 1| ≤ %2, parite) EDG-105 koşumunun YALNIZ ölçek alanlarından (`olcek_orani`, `ref_tetik_orani`;
   sonuç alanlarına bakılmadı) yeniden ölçüldü: payda 836 · parite dışı 4 · eşlenemez 0 → %0,48 — ADIM-0 cümlesi tam kuralla doğrulandı.
   MNST monotonluk en kötü hâli +1 satır (%0,60). Kaynak: memory `kill-esigi-adim0da-olculur`.
+
+hukum_2026_09_25: >
+  (2026-09-25 18:30Z, Rol-1) KOŞUM: A1, `research/olcumler/edg106_giris_kurali/olcum.py` sürüm 1 (blob 4ec04e2a, sha256 7e381a68… — stdin kipi, beyan
+  Rol-1 yerel sha'sı), birleştirme f7937d2f (TSK-224 tur 3; inceleme ONAY 0 engelleyici). `--kuru` 18:25Z (aday 837 · 414 seans · erken
+  kapanış 6 · öz-sınama 838 GEÇTİ · şema 414/414 · f dağılımı 1:779 · 1/10:38 · 1/2:8 · 1/5:5 · 1/25:3 · 1/15:1 · 1/6:1 · 3:1 · eşlenemez 0 ·
+  parite dışı 4 · monotonluk ihlali yok · kill-3 %0,478 = ADIM-0 beklentisi) → tam 18:26Z (58 sn) → `--elle-ornek 7` aynı parmak izi
+  91222887…. GİRDİ: trades sha256 8c61ee88… · planlar e74d2522… (EDG-105 ile aynı döküm). Artefakt depoda
+  `research/olcumler/edg106_giris_kurali/kosum_2026-09-25/` (sonuc.json sha256 2efd28fa…, OZET.md, kuru.json, girdi dökümleri, stdout,
+  pk2_elle.py + çıktısı).
+  KILL-LIST: (1) öz-sınama 838 ≥ 20 GEÇTİ; (2) akis_yok %0,119 < %10; (3) ölçek dışlanan %0,478 < %5 (parite dışı 4: GE ×3, MNST
+  2026-07-17); (4) monotonluk ihlali yok; (5) tek seans payı H1 %1,32 / H2 %1,33 < %10; (6) kosul birincilde yok; (7) tip kaynağı plan
+  günü kapanışı; (8) PK üç ayak: PK-1 kimlik GEÇTİ (EST+EDT, beş akış, ölçek kimliği 1/10·1/2·3, %2 dışı eşlenmez) · PK-2 Rol-1 ELLE 7/7
+  UYUŞUYOR — betiğin kodu kullanılmadan ham parquet + bar CSV'den bağımsız türetme (`pk2_elle.py`): PH 2023-02-03 +132,686 · SWKS
+  2023-02-24 −31,315 · ISRG 2024-06-26 −29,026 · PANW 2024-09-12 (f = 1/2) −53,526 · NVDA 2024-11-19 +115,925 · MU 2025-12-19 DOLMAZ ·
+  TER 2026-05-29 −117,108 bps (STOP-LIMIT örneği yok: tek aday parite dışı) · PK-3 tutarsız %1,92 < %20.
+  SONUÇ — H1: DOLMAZ 5 / 832 (412 seans) = **%0,601**, %95 CI **[0,122, 1,175]** → CI-üst ≤ 5 → **"DOLUM EŞDEĞER"** — replay'in doldurup
+  canlı kuralın o gün dolduramayacağı girişlerin payı önemsiz. H2: DOLAN 827 (411 seans) canlı dolum − replay dolumu medyanı
+  **−5,011 bps**, %95 CI **[−13,237, +3,783]** → ne > +5 ne < −5 ne tamamen [−5, +5] içinde → **"BELİRSİZ"** (hüküm yok; nokta tahmini
+  hipotezin TERS yönünde — canlı kural replay'den ~5 bps UCUZ). Hipotez (H1 ∧ H2: replay giriş bacağında iyimser) DESTEKLENMEDİ → KALDI.
+  TANI (hüküm değil): (a) tüm satırlar GAP dalında (plan anı kuralı); (b) 09:30 varyantı medyan −5,014 bps (09:45 ile aynı) — 9:45
+  penceresinin replay girişlerine medyan fiyat bedeli ≈ 0; −5 bps, replay'in `goal.slippage_bps` = 5 giriş kaymasının canlı dolumda medyan
+  olarak GÖRÜLMEMESİDİR (canlı dolum ≈ açılış fiyatı); (c) t0→dolum gecikmesi medyan 0,013 dk; (d) yıl medyanları 2022 −34,0 (n=37) ·
+  2023 +5,1 · 2024 −8,0 … geniş; (e) kosul 0x20 dışı −5,015; (f) dolum anı IEX kotasyon spread'i medyan 221 bps (IEX'in ince defteri, bilgi
+  taşımaz — EDG-102 ile aynı); (g) DOLMAZ 5 satırın replay sonucu: exit target 2 · regime_flip 2 · time_stop 1, R medyanı +0,684 (DOLAN
+  −0,169) — n=5, betimleyici; (h) açılış tetik altındayken −9,2 bps (n=388), üstündeyken −1,2 bps (n=423); (i) f ≠ 1 satırlar dışlanınca
+  −4,983 bps / dolmaz %0,644 — yeniden ölçekleme sonucu sürüklemedi.
+  BEYANLI SINIRLAR aynen: IEX tek-borsa (09:45 sonrası ilk IEX kaydı konsolide akıştan geç olabilir); öykünücü sadeleştirme (kuyruk,
+  kısmi dolum, gönderim gecikmesi yok); H1'in kaba tahmini ön-kayıttan önce görülmüştü (kart başlığı) — hüküm eşiği ondan önce donmuştu ve
+  CI-üst eşiğin 4 katından fazla altında.
+  SONUÇLARI: EDG-2026-102 (stop bacağı temkinli, ~2,4 bps) ile birlikte replay'in ölçülen İKİ bacağında da friksiyon varsayımının İYİMSER
+  olduğuna dair kanıt YOK. EDG-2026-040 başabaş bandı [5,15] replay'in 5 bps/bacak varsayımıyla ölçülmüştü — giriş bacağında canlı kural
+  medyanda bu 5 bps'i ödemiyor, ama CI belirsiz: bant için giriş tarafından yeni bir şerh gerekmez. EDG-2026-047'nin betimleyici +4,65 bps
+  (15 dk bekleme) etiketi bu evrende/pencerede replay girişlerinde medyan olarak görülmedi (tanı b). EDG-2026-069 (canlı giriş bacağı)
+  kendi eşiğiyle ayrıca hükmeder — bu kart onun replay ikizidir, yerine geçmez.
+  K defteri: EDG-106-dolmaz-orani = DOLUM EŞDEĞER (H1 desteklenmedi) · EDG-106-giris-fiyat-farki = BELİRSİZ — K=2 harcandı; aile K'sı 4
+  (EDG-104 0 · EDG-105 2 yayımlanmadı · EDG-106 2). Kayıt k_registry trial_ids ile birebir.
+  hafıza: recall 2026-09-25 15:3xZ (giriş bacağını canlı kuralla tick'te kıyaslayan kayıt yok) · kart_benzer selefler EDG-104/105, EDG-102.

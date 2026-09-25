@@ -1,0 +1,4 @@
+EDG-2026-106: girdi 843 satır (SQL 843) · aday 837 · 414 seans · erken kapanış 6 · öz-sınama tutarlı 838 → GEÇTİ
+DURUM KOSULLU_HUKUM · aday 837 · parmak izi 91222887425fce71 → /opt/veri/olcum/edg106/tam-2026-09-25/sonuc.json
+  H1 [DOLMAZ + DOLAN] n=832 seans=412 · durum KOSULLU_HUKUM · oran %0.601 · CI [0.122, 1.175] · KARAR DOLUM EŞDEĞER
+  H2 [DOLAN] n=827 seans=411 · durum KOSULLU_HUKUM · medyan -5.011 bps · CI [-13.237, 3.783] · KARAR BELİRSİZ

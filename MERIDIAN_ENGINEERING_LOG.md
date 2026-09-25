@@ -3927,3 +3927,13 @@ healthz 200; imzalar canlıda; takvim uyarısı 0. Restart sonrası 20 `intraday
 pencereler — IEX seyrekliği, yeni yardımcı seansı tanıyor). NVDA 1 adet motor-dışı stopsuz pozisyon uyarısı 09-15'ten beri her
 başlangıçta — bilinen, yalnız görünürlük. **Kendi hatam:** TSK-218 kanıtını "ilk RTH mutabakat turu 13:30Z" diye bekledim;
 `reconcile_broker_state` yalnız akşam `daily_cycle`'da koşuyor — kanıt zamanı koddan ölçülmeden yazılmıştı (düzeltildi).
+**Tick kartı ailesi — giriş bacağı (EDG-104 → 105 → 106, 15:38Z → 18:30Z):** operatörün "verileri nasıl kullanacağımıza odaklanalım"
+yönüyle ikinci tick kartı. Üç ön-kayıt, bir hüküm. EDG-104 ölçüm öncesi EMEKLİ: öykünücü emir tipini 09:45 fiyatından seçiyordu, canlı kod
+PLAN ANINDA sinyal kapanışından seçer (uygulayıcı yakaladı; tetik = kapanış 839/843). EDG-105 koştu, kill-3 DOĞRU ateşledi (%7,18 > %5):
+bar CSV'leri geriye dönük bölünme-düzeltmeli, tick ham — kill'in ölçtüğü oran ADIM-0'da hiç ölçülmemişti (memory
+`kill-esigi-adim0da-olculur`). EDG-106 bölünme yeniden ölçeklemesiyle (basit kesir, Fraction, parite, monotonluk) hükme bağlandı: H1 DOLUM
+EŞDEĞER (%0,601), H2 BELİRSİZ (medyan −5,0 bps, CI [−13,2, +3,8]) → KALDI; 09:30 ve 09:45 aynı medyan. PK-2 Rol-1 bağımsız 7/7. Açık
+beyan: EDG-105 özetinde H1'in kaba tahmini görülmüştü (eşikler önceden donmuştu). EDG-102 ile birlikte replay'in iki bacağında da friksiyon
+varsayımı iyimser değil.
+**EDG-085 pilotu ilk seansı kayıtsız (TSK-225):** akşam kanıt betiğinin kuru koşumu yakaladı — `meridian.service` ProtectSystem=strict,
+pilot drop-in'inde ReadWritePaths yok, 13:34Z tek warn. Aynı sınıf 09-16'da brifing birimlerinde tek örnekle kapatılmıştı → sınıf çivisi v553.

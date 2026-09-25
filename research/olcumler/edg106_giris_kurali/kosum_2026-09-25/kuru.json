@@ -1,0 +1,250 @@
+{
+ "kart": "EDG-2026-106",
+ "kip": "kuru",
+ "arac": {
+  "betik": "research/olcumler/edg106_giris_kurali/olcum.py",
+  "surum": "1",
+  "kip": "stdin",
+  "betik_sha256": null,
+  "betik_sha256_neden": "stdin koşumu (python -): kaynak dosyası yok, betik kendi baytlarını okuyamaz — betik_sha256_beyan Rol-1'in yerel sha256'sıdır (doğrulanamaz beyan)",
+  "betik_sha256_beyan": "7e381a68a50cc7a7286ef3c7b73cbd9c5b76d7e0ea454abf6dba9d3cd15dba62",
+  "python": "3.12.3",
+  "okuyucu": "pyarrow",
+  "okuyucu_surumu": "25.0.1",
+  "utc": "2026-09-25T18:25:08+00:00"
+ },
+ "girdi": {
+  "n_trades_tum": 871,
+  "n_trades_filtreli": 843,
+  "sql_capraz_n": 843,
+  "n_plan_satiri": 843,
+  "trade_plans_tablosu": true,
+  "strategy_version": {
+   "91": 843
+  },
+  "trades_sha256": "8c61ee885d2615dd4e1e97da42a1172c8c7803b954495bbfb19b9202a3e3aa3c",
+  "planlar_sha256": "e74d252225e733c8fda324d70c82b84fb0cbe5f3120df927e64fc64c671a0ece",
+  "extra_json_bozuk": 0
+ },
+ "oz_sinama": {
+  "tutarli_n": 838,
+  "olculen_n": 843,
+  "olculemedi_n": 0,
+  "esik": 20,
+  "tolerans_bps": 1.0,
+  "gecti": true,
+  "fark_dagilimi_bps": {
+   "n": 843,
+   "medyan": 0.016,
+   "p25": 0.006,
+   "p75": 0.033,
+   "min": 0.0,
+   "max": 2554.536
+  },
+  "beyan": "SAYIM: |trades.entry − bar_açılış × (1 + 5 bps)| / entry × 1e4 ≤ 1 bps satır ≥ 20 (plan biriminde — ölçekten bağımsız)"
+ },
+ "pk1": {
+  "gecti": true,
+  "gunler": {
+   "2024-01-10": true,
+   "2024-07-10": true
+  },
+  "fark_isareti_aleyhte_pozitif": true,
+  "limit_ornek": 52.0,
+  "kurus_yuvarlamasi": true,
+  "olcek_kimligi": {
+   "1/10": true,
+   "1/2": true,
+   "3": true
+  },
+  "olcek_eslenemez": true,
+  "beyan": "EDG-105 kimlik ayakları + ölçek kimliği (f ∈ {1/10, 1/2, 3} ham akışta f = 1 ile aynı sonucu vermeli) + %2 dışı oranın eşlenmemesi"
+ },
+ "siniflar_tik_oncesi": {
+  "yon_disi": 0,
+  "tarih_okunamadi": 0,
+  "giris_okunamadi": 0,
+  "plan_yok": 0,
+  "plan_belirsiz": 0,
+  "tetik_okunamadi": 0,
+  "erken_kapanis": 6
+ },
+ "aday_n": 837,
+ "seans_n": 414,
+ "kapsam": {
+  "gun_dosyasi_yok": [],
+  "sema_uygun_gun": 414,
+  "sema_hatasi": [],
+  "bar_dosyasi_yok": [],
+  "bar_gunu_yok": 0
+ },
+ "okuma_sinamasi": {
+  "gun": "2022-01-07",
+  "sure_sn": 0.125,
+  "bayt": 24344063,
+  "sembol": {
+   "CF": {
+    "kayit": 1219,
+    "seans_kaydi": 1219
+   },
+   "FANG": {
+    "kayit": 2085,
+    "seans_kaydi": 2085
+   }
+  }
+ },
+ "olcek": {
+  "f_dagilimi": {
+   "1": 779,
+   "1/10": 38,
+   "1/15": 1,
+   "1/2": 8,
+   "1/25": 3,
+   "1/5": 5,
+   "1/6": 1,
+   "3": 1
+  },
+  "olcek_eslenemez_n": 0,
+  "olcek_parite_disi_n": 4,
+  "olcek_olculemedi_n": 0,
+  "akis_yok_n": 1,
+  "olcek_uygun_n": 832,
+  "alt_nedenler": {
+   "kapanis_tetik": 4
+  },
+  "ikinci_aday_n": 0,
+  "monotonluk_ihlali_tickerlar": [],
+  "monotonluk_ayrinti": {},
+  "kill3_payi_pct": 0.478,
+  "kill3_pay_payda": [
+   4,
+   836
+  ],
+  "adim0_beklenen": {
+   "pay": 4,
+   "payda": 836,
+   "pct": 0.478
+  },
+  "ticker_f": {
+   "AVGO": {
+    "1": 9,
+    "1/10": 9
+   },
+   "BKNG": {
+    "1/25": 3
+   },
+   "DD": {
+    "3": 1
+   },
+   "DECK": {
+    "1/6": 1
+   },
+   "KLAC": {
+    "1": 2,
+    "1/10": 8
+   },
+   "LRCX": {
+    "1": 8,
+    "1/10": 7
+   },
+   "MNST": {
+    "1/2": 2
+   },
+   "NFLX": {
+    "1/10": 6
+   },
+   "NOW": {
+    "1/5": 5
+   },
+   "NVDA": {
+    "1": 6,
+    "1/10": 8
+   },
+   "ORLY": {
+    "1/15": 1
+   },
+   "PANW": {
+    "1": 2,
+    "1/2": 6
+   }
+  },
+  "dislanan_satirlar": [
+   {
+    "ticker": "GE",
+    "seans": "2023-07-26",
+    "sinif": "olcek_parite_disi",
+    "olcek_alt_neden": "kapanis_tetik",
+    "olcek_orani": 1.0,
+    "olcek_en_yakin": "1",
+    "olcek_sapma_pct": 0.02560819462227913,
+    "ref_tetik_orani": 1.2478472079471976
+   },
+   {
+    "ticker": "GE",
+    "seans": "2024-01-23",
+    "sinif": "olcek_parite_disi",
+    "olcek_alt_neden": "kapanis_tetik",
+    "olcek_orani": 1.003,
+    "olcek_en_yakin": "1",
+    "olcek_sapma_pct": 0.34383058529342814,
+    "ref_tetik_orani": 1.2478474322755362
+   },
+   {
+    "ticker": "GE",
+    "seans": "2024-03-08",
+    "sinif": "olcek_parite_disi",
+    "olcek_alt_neden": "kapanis_tetik",
+    "olcek_orani": 1.0,
+    "olcek_en_yakin": "1",
+    "olcek_sapma_pct": 0.04422560957631866,
+    "ref_tetik_orani": 1.2478471825634154
+   },
+   {
+    "ticker": "MNST",
+    "seans": "2026-07-17",
+    "sinif": "olcek_parite_disi",
+    "olcek_alt_neden": "kapanis_tetik",
+    "olcek_orani": 0.497,
+    "olcek_en_yakin": "1/2",
+    "olcek_sapma_pct": 0.6308678158064677,
+    "ref_tetik_orani": 0.5
+   }
+  ]
+ },
+ "plan_tipi_dagilimi": {
+  "GAP": 836,
+  "STOP_LIMIT": 1,
+  "ref_yok": 0
+ },
+ "tetik_ref_esit_n": 833,
+ "acilis_tetik_dal_dagilimi": {
+  "acilis_alti": 392,
+  "acilis_ustu": 429,
+  "acilis_yakin": 16
+ },
+ "yil": {
+  "2022": 37,
+  "2023": 173,
+  "2024": 247,
+  "2025": 199,
+  "2026": 181
+ },
+ "paydalar": {
+  "aday": "tik aşamasına giren satır = replay_seed girdisi − tik-öncesi sınıflar (yon_disi, tarih_okunamadi, giris_okunamadi, plan_yok, plan_belirsiz, tetik_okunamadi, erken_kapanis); bu sınıflar ayrıca sayılır",
+  "erken_kapanis": "EDG-105 listesindeki XNYS 13:00 ET günlerinin girişleri birincilden DIŞLANIR ve sayılır; aday değildir, kill-2/kill-3/PK-3 paylarına girmez",
+  "olcek_eslem": "r = bar açılışı / ilk normal-seans tik; f = F'de |r/f − 1| ölçüsüyle en yakın öğe, ≤ %2 (dahil) ise; hepsi Fraction ile TAM (plan fiyatı ondalık gösteriminden). f ≠ 1 satırlarda plan tarafı ÷ f ile ham birime, L ham birimde canlı çift yuvarlamayla",
+  "kill1_oz_sinama": "SAYIM: |trades.entry − bar_açılış × (1 + 5 bps)| / entry × 1e4 ≤ 1 bps satır ≥ 20 (plan biriminde — ölçekten bağımsız)",
+  "kill2_akis_yok": "akis_yok / aday; > %10 → iki birincil YAYIMLANMAZ",
+  "kill3_olcek": "(olcek_eslenemez + olcek_parite_disi + olcek_olculemedi) / (aday − akis_yok); > %5 → YAYIMLANMAZ. Sınıf sırası: akis_yok → ref_yok / bar_acilis_yok (olculemedi) → kesir_disi (eslenemez) → kapanis_tetik (parite_disi) → monotonluk_ihlali (eslenemez, ticker düzeyinde sonradan)",
+  "kill4_monoton": "ticker başına f'ler tarih sırasıyla tek yönlü (hep ≤ ya da hep ≥) olmalı; değilse o ticker'ın TÜM f ≠ 1 satırları (sınıfı ne olursa olsun) olcek_eslenemez olur ve sonuç alanları silinir",
+  "kill5_tek_seans": "her birincil KENDİ paydasında en kalabalık seansın payı > %10 → CI şerhli (düşürülmez)",
+  "kill6_kosul": "yapısal: öykünücü zaman-tabanlı, kosul yalnız tanı (e)'de okunur — birincilde süzgeç YOK",
+  "kill7_tip": "yapısal: emir tipi YALNIZ plan günü bar kapanışından (`emir_tipi`) — kill_list.tip_kaynagi",
+  "kill8_pk": "PK-1 çalışma anı kimlik (ölçek kimliği dahil; düşerse exit 4) · PK-2 Rol-1 elle (koşul) · PK-3 tutarsız / (ölçeği çözülmüş, paritede, ayakları ölçülebilen aday); > %20 ya da payda 0 → GECERSIZ",
+  "h1": "DOLMAZ / (DOLMAZ + DOLAN) × 100 — akis_yok, ölçek ve erken kapanış dışlamaları paydada YOK",
+  "h2": "DOLAN satırlarda fark_bps = (canli_dolum − entry_tik) / entry_tik × 1e4 medyanı (aleyhte +, birimsiz)",
+  "n_esigi": "her birincil KENDİ paydasında ≥ 300 satır ∧ ≥ 100 seans (H1: DOLAN + DOLMAZ; H2: DOLAN)",
+  "gizlilik": "bir birincil yayımlanmıyorsa satır sonuç alanları yazılmaz; H1 yayımlanmıyorsa DOLAN/DOLMAZ sınıfları maskelenir ve özette yalnız birincil_aday_n kalır; stdout/OZET.md yalnız engel nedenini basar"
+ },
+ "sure_sn": 70.0
+}

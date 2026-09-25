@@ -1,0 +1,8 @@
+PH 2023-02-03 f=1 dal=GAP L=351.05 t0=09:45:06 p0=340.31 dolum=341.41 fark=132.686 | betik f=1 dal=GAP dolum=341.41 fark=132.686 sinif=DOLAN -> UYUSUYOR
+SWKS 2023-02-24 f=1 dal=GAP L=117.58 t0=09:46:00 p0=111.29 dolum=110.94 fark=-31.315 | betik f=1 dal=GAP dolum=110.94 fark=-31.315 sinif=DOLAN -> UYUSUYOR
+ISRG 2024-06-26 f=1 dal=GAP L=460.0 t0=09:45:13 p0=440.66 dolum=440.19 fark=-29.026 | betik f=1 dal=GAP dolum=440.19 fark=-29.026 sinif=DOLAN -> UYUSUYOR
+PANW 2024-09-12 f=1/2 dal=GAP L=355.43 t0=09:45:02 p0=342.33 dolum=342.33 fark=-53.526 | betik f=1/2 dal=GAP dolum=342.33 fark=-53.526 sinif=DOLAN -> UYUSUYOR
+NVDA 2024-11-19 f=1 dal=GAP L=145.76 t0=09:45:00 p0=143.055 dolum=143.05 fark=115.925 | betik f=1 dal=GAP dolum=143.05 fark=115.925 sinif=DOLAN -> UYUSUYOR
+MU 2025-12-19 f=1 dal=GAP L=258.49 t0=09:45:00 p0=266.33 dolum=None fark=None | betik f=1 dal=GAP dolum=None fark=None sinif=DOLMAZ -> UYUSUYOR
+TER 2026-05-29 f=1 dal=GAP L=397.96 t0=09:45:00 p0=381.42 dolum=380.84 fark=-117.108 | betik f=1 dal=GAP dolum=380.84 fark=-117.108 sinif=DOLAN -> UYUSUYOR
+PK-2: 7/7 uyuşuyor

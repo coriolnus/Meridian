@@ -64,3 +64,6 @@ beyanli_sinirlar: >
   edilmez; dış n=401 ölçümüyle yönsel kıyas yapılır, birleştirilmez. (2) Menzil bps bir RİSK
   vekilidir, doğrudan dolum maliyeti değil (dolum maliyeti EDG-042'nin işi). (3) L2 dilimi
   planların sinyal-ertesi seansına bakar; canlı emir saatleri birebir modellenmez.
+
+serh_edg106_2026_09_25: >
+  (2026-09-25 18:31Z, Rol-1) EDG-2026-106 (tick arşivi, 832 replay girişi / 412 seans, koda sadık canlı giriş kuralı: plan anı emir tipi + 09:45 ET + limit tavanı, bölünme yeniden ölçeklemeli): canlı kuralın doldurmayacağı replay girişi %0,601 [0,122, 1,175] → DOLUM EŞDEĞER; canlı dolum − replay dolumu medyanı −5,011 bps [−13,237, +3,783] → BELİRSİZ (nokta tahmini replay'in 5 bps giriş kaymasının canlıda medyan olarak görülmediğini söyler). Kaynak: research/cards/EDG-2026-106-replay-giris-canli-kural-tick-olcekli.yaml hukum_2026_09_25. Bu kartın betimleyici '15 dk bekleme bedeli +4,65 bps' etiketi, replay girişlerinde (4,5 yıl, 832 giriş) medyan olarak GÖRÜLMEDİ: 09:30 ve 09:45 öykünücüleri aynı medyanı verdi (−5,014 / −5,011 bps; EDG-106 tanı b). Hüküm DEĞİŞMEZ (farklı evren, pencere ve ölçüt); yorumlanışı şerhlenir.

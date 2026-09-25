@@ -111,3 +111,6 @@ verdict: >
 serh_edg102_2026_09_25: >
   (2026-09-25 10:39Z, Rol-1) EDG-2026-102: tarihsel replay stop çıkışlarında gerçek kayma medyanı 2,585 bps (CI [1,95, 3,07]) — başabaş bandının
   [5,15] ALTINDA ve modelin 5 bps varsayımının altında; stop bacağı bu bandı zorlamıyor. Giriş bacağı (K1) bu şerhin konusu değil.
+
+serh_edg106_2026_09_25: >
+  (2026-09-25 18:31Z, Rol-1) EDG-2026-106 (tick arşivi, 832 replay girişi / 412 seans, koda sadık canlı giriş kuralı: plan anı emir tipi + 09:45 ET + limit tavanı, bölünme yeniden ölçeklemeli): canlı kuralın doldurmayacağı replay girişi %0,601 [0,122, 1,175] → DOLUM EŞDEĞER; canlı dolum − replay dolumu medyanı −5,011 bps [−13,237, +3,783] → BELİRSİZ (nokta tahmini replay'in 5 bps giriş kaymasının canlıda medyan olarak görülmediğini söyler). Kaynak: research/cards/EDG-2026-106-replay-giris-canli-kural-tick-olcekli.yaml hukum_2026_09_25. Başabaş bandı [5,15] bps/bacak replay'in 5 bps varsayımıyla ölçülmüştü; giriş bacağında canlı kuralın bu varsayımı AŞTIĞINA dair kanıt yok (stop bacağı için EDG-102 aynı yönde). Bant için giriş tarafından yeni şerh GEREKMEZ; CI belirsiz olduğundan bant da daraltılmaz.

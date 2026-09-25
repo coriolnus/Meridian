@@ -506,3 +506,6 @@ hafta_kosum_5_2026_09_24_telafi: >
 serh_edg102_2026_09_25: >
   (2026-09-25 10:39Z, Rol-1) EDG-2026-102 (tarihsel, tick): stop çıkış kayması medyanı 2,585 bps, CI [1,95, 3,07]. K3 (canlı cikis_stop, n 11/15)
   hükmü kendi eşiği ve kendi örneklemiyle ayrıca verilir; bu şerh yalnız tarihsel tabanın 5 bps varsayımını AŞMADIĞINI kayda geçirir.
+
+serh_edg106_2026_09_25: >
+  (2026-09-25 18:31Z, Rol-1) EDG-2026-106 (tick arşivi, 832 replay girişi / 412 seans, koda sadık canlı giriş kuralı: plan anı emir tipi + 09:45 ET + limit tavanı, bölünme yeniden ölçeklemeli): canlı kuralın doldurmayacağı replay girişi %0,601 [0,122, 1,175] → DOLUM EŞDEĞER; canlı dolum − replay dolumu medyanı −5,011 bps [−13,237, +3,783] → BELİRSİZ (nokta tahmini replay'in 5 bps giriş kaymasının canlıda medyan olarak görülmediğini söyler). Kaynak: research/cards/EDG-2026-106-replay-giris-canli-kural-tick-olcekli.yaml hukum_2026_09_25. Canlı K1 (giriş) kendi eşiğiyle hükmeder; bu tarihsel tick ikizi K1'in yerine geçmez. Tarihsel tabanda canlı giriş kuralı replay'den medyanda ~5 bps ucuz ama CI belirsiz.
