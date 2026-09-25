@@ -3922,3 +3922,8 @@ koşar** (önce 4 kept/1 broken kırmızı, sonra 5/0). Yan düzeltme: `tick_wat
 (zaten yanlış satırı gösteriyordu, her scheduler eklemesinde v214/v402'yi kırıyordu) sembol çapasına.
 **Oturum yeniden başlaması** (~11:2xZ) arka plandaki tam suite'i %37'de öldürdü; bildirim hüküm vermedi, log `PYTEST_EXIT` taşımıyordu
 → aynı donmuş HEAD'de yeniden koşuldu (memory `oturum-cron-guvenilmez` eki).
+**Dağıtım #66** (operatör 15:08:45Z, 4ced1ec5 — seans İÇİNDE): a1 ok=60 changed=6 failed=0, silme 0; üç birim 15:12Z NRestarts 0;
+healthz 200; imzalar canlıda; takvim uyarısı 0. Restart sonrası 20 `intraday_gap_detected` (tur=sembol, info, dağıtım öncesi
+pencereler — IEX seyrekliği, yeni yardımcı seansı tanıyor). NVDA 1 adet motor-dışı stopsuz pozisyon uyarısı 09-15'ten beri her
+başlangıçta — bilinen, yalnız görünürlük. **Kendi hatam:** TSK-218 kanıtını "ilk RTH mutabakat turu 13:30Z" diye bekledim;
+`reconcile_broker_state` yalnız akşam `daily_cycle`'da koşuyor — kanıt zamanı koddan ölçülmeden yazılmıştı (düzeltildi).
