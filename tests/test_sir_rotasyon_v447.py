@@ -2645,7 +2645,9 @@ def test_N11_RESTART_ISTEMEYEN_tuketiciler_BEYANLI():
         "brifing/learn/sprint@ birimleri (EnvironmentFile, başlangıçta okunur)",  # aynı sınıf
         "postgres",                                          # parolayı ALTER ROLE ile anında alır
         "meridian yerel sır deposu",                         # meridian sürecinin İÇİ
-        "~/bin/hafiza_sor.sh (kabuk okuyucu; LLM'siz recall)",  # kabuk okuyucu, birim değil
+        # kabuk okuyucular, birim değil — 2026-09-25 (TSK-064 notu, TSK-222 incelemesi): sayfa_oku.sh
+        # de aynı `.key`i her çağrıda okur; envanter yalnız hafiza_sor.sh'i sayıyordu
+        "~/bin/hafiza_sor.sh · ~/bin/sayfa_oku.sh (kabuk okuyucular, deploy/hindsight/ bağları; her çağrıda dosyayı okur, restart yok)",
         # 2026-09-13 (TSK-181): motorun CLI çağrısı her seferinde dosyayı okur — birim değil,
         # restart yok; atlanınca akşam inceleme 4 gün 401'de kaldı (envantere bu yüzden girdi)
         "hermes CLI GLOBAL env — motorun hermes._agent_call yolu (kind=review/generic; timer'sız, restart gerekmez)",

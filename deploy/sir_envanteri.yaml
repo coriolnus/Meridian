@@ -203,7 +203,8 @@ dosyalar:
 # AÇIK KALEM (2026-09-07 · KISMEN KAPANDI 2026-09-08): hermes profillerindeki `OPENROUTER_API_KEY`
 # artık `dosyalar:` bloğunda ve §1 tablosunda (spec "ÖLÇÜM GÜNCELLEMESİ" notu). AÇIK KALAN TEK
 # SATIR `/opt/hindsight/.key`tir: §2'nin DONUK sınıf sözlüğünde (A/B/C/D) karşılığı yoktur — bir
-# kabuk okuyucusunun (`~/bin/hafiza_sor.sh`) düz dosyası ne systemd-doğal (A), ne docker (B), ne
+# kabuk okuyucusunun (`~/bin/hafiza_sor.sh`; 2026-09-25'ten beri `~/bin/sayfa_oku.sh` de — ikisi de
+# `deploy/hindsight/` bağı, TSK-222) düz dosyası ne systemd-doğal (A), ne docker (B), ne
 # hermes profili (C), ne de ayar (D). Sözlüğü esnetmek yerine burada beyanla duruyor; sınıf
 # ataması spec turunun işidir (Rol-1).
 
@@ -250,7 +251,7 @@ rotasyon_kopyalari:
       alan: null
       mod: "600"
       sahip: "ubuntu"
-      tuketici: "~/bin/hafiza_sor.sh (kabuk okuyucu; LLM'siz recall)"
+      tuketici: "~/bin/hafiza_sor.sh · ~/bin/sayfa_oku.sh (kabuk okuyucular, deploy/hindsight/ bağları; her çağrıda dosyayı okur, restart yok)"
       not: "spec §1 tablosunda YOK — açık kalem (yukarıdaki şerh)"
     - alt_komut: tenant
       sir: HINDSIGHT_API_TENANT_API_KEY
