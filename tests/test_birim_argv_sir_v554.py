@@ -164,7 +164,7 @@ class Ihlal:
 def _goreli(p: Path, kok: Path) -> str:
     try:
         return p.resolve().relative_to(kok.resolve()).as_posix()
-    except ValueError:
+    except ValueError:  # sessiz-yutma: kök dışındaki yol yalnız ihlal etiketinde görünür; ad yeterli, hüküm etkilenmez
         return p.name
 
 
