@@ -1,0 +1,96 @@
+# EDG-2026-106 — Replay giriş bacağı ↔ koda sadık canlı giriş kuralı, BÖLÜNME YENİDEN ÖLÇEKLEMELİ: 9:30 açılış dolumu vs plan-anı emir tipiyle 9:45 ET gönderim, tick arşiviyle
+# ÖN-KAYIT 2026-09-25 17:1xZ (Rol-1; operatör 2026-09-25 "bu verileri nasıl kullanacağımıza odaklanalım" + "full otonom devam et").
+# SELEFLER: EDG-2026-104 (ölçüm öncesi emekli — öykünücü emir tipini 09:45 fiyatından seçiyordu) → EDG-2026-105 (koşuldu, kill-3
+# ATEŞLEDİ %7,177 > %5 → YAYIMLANMAZ, hüküm yok). EDG-105'in kill-3'ü doğru ateşledi: bar CSV'leri geriye dönük bölünme-düzeltmeli, tick
+# arşivi HAM; dışlanan 60 satırın 56'sı basit bölünme kesriyle (1/10, 1/2, 1/5, 1/6, 1/15, 1/25, 3) eşleniyor. Bu kart aynı soruyu, aynı
+# eşiklerle, tick fiyatlarını plan ölçeğine YENİDEN ÖLÇEKLEYEREK sorar; kill-3'ün eşiği (%5) AYNEN kalır, yalnız 'ölçek dışı' sınıfının
+# tanımı "eşlenemeyen ölçek" olur.
+# AÇIK BEYAN (bias denetimi): EDG-105 koşum özeti sınıf sayılarını bastı (DOLAN 771 · DOLMAZ 5) — H1'in kaba nokta tahmini (~%0,6) bu ön-
+# kayıttan ÖNCE Rol-1'in gözüne düştü. H2 (fiyat farkı) görülmedi. Eşikler EDG-104 ön-kaydında (15:38Z, hiçbir sonuç yokken) donmuştu ve
+# burada DEĞİŞMEDİ; H1 hükmü okunurken bu beyan hatırlanır.
+# KOD GERÇEĞİ ve HAFIZA KONTROLÜ: EDG-2026-105 başlığıyla aynı (replay `meridian.broker.PaperBroker.fill_entry` açılışta doldurur; canlı emir
+# tipi plan anında `meridian.loop.daily_cycle` → `meridian.broker.entry_order_decision(trigger, ref_price = sinyal kapanışı)`, gönderim
+# `meridian.loop.mirror_submit_armed` 09:45 ET, limit L canlı çift yuvarlama zinciri `entry_order_decision` 4 hane → `submit_bracket` 2 hane;
+# recall 2026-09-01 [3][4]; kart_benzer EDG-069/102/090, EXE-005/006; EDG-047 betimleyici +4,65 bps). Bölünme ölçek sınıfı için ek kaynak:
+# memory `kill-esigi-adim0da-olculur` (2026-09-25) — başarısız yaklaşım tekrarı YOK (selefler yaklaşım değil tasarım eksikliğiyle düştü).
+card_id: EDG-2026-106
+status: registered
+family: friksiyon_olcumu
+on_kayit: 2026-09-25
+selef: EDG-2026-105
+ref: [EDG-2026-105, EDG-2026-104, EDG-2026-102, EDG-2026-069, EDG-2026-047, EDG-2026-040, EDG-2026-042, EDG-2026-090, EXE-2026-005, EXE-2026-006, EXE-2026-009, EDG-2026-066, TSK-013, TSK-224]
+
+hipotez: >
+  Replay tohumu (`trades.kaynak = replay_seed`, strategy_version 91, hepsi long, n=843) girişlerini CANLI giriş kuralıyla — emir tipi plan
+  anında sinyal barı kapanışına göre (kapanış ≥ tetik → limit L; aksi → stop-limit tetik/L), gönderim 09:45 ET, gün sonu iptal — tick
+  arşivinde, plan fiyatları tick'in ham ölçeğine bölünme çarpanıyla çevrilerek yeniden yürütünce: (H1) replay'in doldurduğu girişlerin anlamlı
+  bir payını canlı kural O GÜN DOLDURMAZ VE (H2) canlı kuralın doldurduğu girişlerde canlı dolum fiyatı replay dolum fiyatından aleyhte
+  yüksektir — replay giriş bacağında iyimserdir.
+
+adim_0_kaydi_2026_09_25: >
+  (Rol-1, A1 salt-okur — ön-kayıttan ÖNCE) SELEFLERDEN: `trades` replay_seed n=843, plan eşleşmesi 843/843; ts_open 2022-01-07 → 2026-07-22,
+  417 seans; tick kapsamı 843/843; replay dolumu bar açılışından yeniden kurulabiliyor (öz-sınama 838 tutarlı); tetik = sinyal kapanışı
+  833/837 aday (erken kapanış hariç), plan anı tipi GAP 836 / STOP_LIMIT 1; erken kapanış günleri (9 gün, EDG-105 listesi) 6 giriş.
+  ÖLÇEK SINIFI (EDG-105 koşumunun YALNIZ ölçek alanlarından — `olcek_orani`, `ref_tetik_orani`, `bar_acilis`, `ilk_tik`; sonuç alanlarına
+  bakılmadı): bar açılışı / ilk tick oranı [0,9, 1,1] dışında 57 satır — hepsinin oranı basit bölünme kesrinin %2'si içinde: 1/10 (AVGO 9 ·
+  KLAC 8 · LRCX 7 · NFLX 6 · NVDA 8) · 1/2 (PANW 6 · MNST 2023-05-04 · MNST 2026-07-17) · 1/5 (NOW 5) · 1/6 (DECK 1) · 1/15 (ORLY 1) · 1/25
+  (BKNG 3) · 3 (DD 1, ters bölünme). Plan kapanışı / tetik oranı [0,9, 1,1] dışında 4 satır: GE ×3 (1,2478 — spin-off; plan tetiği güncel
+  bardan farklı ölçekte) · MNST 2026-07-17 (0,5). Bu kartın kuralıyla beklenen eşlenemez pay: 4 / 836 = %0,48 (eşik %5).
+
+k_registry: {registered_at: "2026-09-25", trial_ids: [EDG-106-dolmaz-orani, EDG-106-giris-fiyat-farki]}
+# İki birincil = K=2. Aile K'sı: EDG-104 0 koşum (emekli) + EDG-105 2 koşum (yayımlanmadı, muhafazakâr olarak harcanmış) + bu kart 2 → 4.
+
+olcum_plani:
+  - "girdi dondurma + betik sha256: EDG-2026-105 ile aynı (tek dosya, stdin, `meridian` içe aktarılmaz, sabitler sembol çapalı)."
+  - "gün akışı, erken kapanış dışlaması, plan anı emir tipi, L (canlı çift yuvarlama zinciri), öykünücü (t0 = ≥09:45 ET ilk kayıt;
+     GAP → t0'dan SONRAKİ ilk ≤ L kayıt; STOP-LIMIT → aktivasyon ≥ tetik, sonra SONRAKİ ilk ≤ L kayıt; 16:00'a dek yoksa DOLMAZ; t0 yoksa
+     akis_yok): EDG-2026-105 ile AYNEN."
+  - "ÖLÇEK EŞLEME (YENİ): r = giriş günü bar açılışı / o günün ilk normal-seans tick fiyatı. Aday kesir kümesi F = {1} ∪ {1/k : k=2..30} ∪
+     {k : k=2..10} ∪ {2/3, 3/4, 4/5, 3/2, 4/3, 5/4}. f = F içinde r'ye en yakın öğe, |r/f − 1| ≤ %2 ise; yoksa satır `olcek_eslenemez`.
+     Ek parite: plan günü kapanışı / tetik ∈ [0,9, 1,1] değilse satır `olcek_parite_disi` (plan fiyatları bar ölçeğinde değil — GE sınıfı)."
+  - "YENİDEN ÖLÇEKLEME: f ≠ 1 satırlarda plan tarafı fiyatlar (tetik, trades.entry, bar değerleri) HAM (tick) birime ÷ f ile çevrilir; L ham
+     birimde canlı yuvarlama zinciriyle hesaplanır (canlı emir o gün ham fiyatla verilirdi); fark_bps birimsizdir. f = 1 satırlar EDG-105 ile
+     bayt-özdeş yoldan geçer."
+  - "H1 ve H2 birincil: EDG-2026-105 ile AYNEN (dolmaz_orani ve fark_bps; seans-kümeli yüzdelik bootstrap B=5000, seed=20260812)."
+  - "TANI (hüküm değil): EDG-2026-105'in (a)–(h)'si + (i) f ≠ 1 satırlar DIŞLANINCA iki birincil (yeniden ölçeklemenin sonucu sürüklemediğinin
+     gösterimi) + (j) f dağılımı (ticker × f tablosu)."
+
+esikler:
+  n_uygun_alt: 300            # EDG-104/105 ile AYNI
+  seans_alt: 100
+  dolmaz_esik_pct: 5
+  fiyat_bandi_bps: 5
+  olcek_eslem_tolerans_pct: 2 # YENİ ölçek eşleme toleransı — ADIM-0'da 57 satırın hepsi bu toleransın içinde ölçüldü
+  karar_kurali: >
+    EDG-2026-105 ile AYNEN: H1 — CI-alt > 5 → "REPLAY DOLUMU İYİMSER (canlıda dolmayan girişler)" · CI-üst ≤ 5 → "DOLUM EŞDEĞER" · aksi →
+    "BELİRSİZ". H2 — CI-alt > +5 → "REPLAY GİRİŞ FİYATI İYİMSER" · CI-üst < −5 → "REPLAY GİRİŞ FİYATI KÖTÜMSER" · CI tamamen [−5, +5] içinde →
+    "GİRİŞ FİYATI EŞDEĞER (model yeterli)" · aksi → "BELİRSİZ". İki hüküm AYRI yazılır.
+
+kill_list:
+  - "replay dolum yeniden kurma öz-sınaması (EDG-105 kill-1 AYNEN)."
+  - "akis_yok > aday satırların %10'u → YAYIMLANMAZ (AYNEN)."
+  - "ölçek: (olcek_eslenemez + olcek_parite_disi + ölçülemeyen) / (aday − akis_yok) > %5 → YAYIMLANMAZ (eşik AYNEN; sınıf tanımı eşlemeye göre)."
+  - "ölçek tutarlılığı: aynı ticker'ın satırlarında f zaman sırasıyla MONOTON bir basamak dizisi değilse (ileri bölünme: eski satırın f'si ≤
+     yeninin, ör. NVDA 1/10 … 1; ters bölünme: eski ≥ yeni; ticker başına tek yön) o ticker'ın TÜM f ≠ 1 satırları `olcek_eslenemez` sayılır."
+  - "tek seans > ölçülen satırların %10'u → CI şerhli (AYNEN)."
+  - "`kosul` yalnız TANI (AYNEN)."
+  - "plan anı emir tipi yalnız plan günü kapanışından (AYNEN)."
+  - "pozitif kontrolün üç ayağından biri düşerse hiçbir sayı yayılmaz (AYNEN)."
+
+pozitif_kontrol: >
+  EDG-2026-105'in üç ayağı AYNEN, ek olarak: (1) KİMLİK — sentetik parquet'te bilinen f (1/10, 1/2, 3) ile üretilmiş ham akış, ölçeklenmiş
+  plan fiyatlarıyla f = 1 akışıyla AYNI dal, dolum kaydı ve fark_bps'i verir; F'nin %2 dışında kalan oran `olcek_eslenemez` olur.
+  (2) ELLE — Rol-1'in bağımsız türetimine en az 1 f ≠ 1 satırı girer. (3) BAR ÇAPRAZI — ölçeklenmiş plan birimiyle.
+
+veri_penceresi: "EDG-2026-105 ile AYNEN (trades replay_seed n=843 × A1 tick arşivi × A1 state/bars; donuk dökümlerin sha256'sı sonuca). Tek atım."
+
+beyanli_sinirlar: >
+  EDG-2026-105'in (1)–(8)'i AYNEN, ek olarak: (9) Ölçek çarpanı ilk tick ↔ bar açılışından ÇIKARSANIR (kurumsal işlem verisi yok); basit
+  kesir kümesi dışındaki düzeltmeler (spin-off, özel temettü) eşlenemez ve dışlanır. (10) Yeniden ölçeklenen satırlarda L'nin kuruş
+  yuvarlaması ham birimde yapılır — canlı emrin o günkü biçimi; adjusted birimde yapılsaydı fark ≤ yarım kuruş × f. (11) H1'in kaba nokta
+  tahmini ön-kayıttan önce görüldü (başlıktaki açık beyan); eşikler ondan önce donmuştu.
+
+basari_tanimi: >
+  ADIM-0 yazılmış + girdi ve betik sha256'lı + öz-sınama, ölçek eşleme tutarlılığı ve üç PK yeşil + paydada n ≥ 300 ∧ ≥ 100 seans + iki birincil
+  karar kuralıyla AYRI AYRI hükme bağlanmış + EDG-2026-040/042/047/102 ve EDG-2026-069'a kart referanslı şerh. Hipotezin tutup tutmaması
+  başarı değildir — dürüstçe ölçülmüş olması başarıdır.

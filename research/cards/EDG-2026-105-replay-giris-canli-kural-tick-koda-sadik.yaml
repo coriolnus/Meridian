@@ -17,7 +17,7 @@
 # 15 dk bekleme bedeli işaretli medyan +4,65 bps, canlı dakika barı, ~20 seans, BETİMLEYİCİ; bu kart o fiyat etiketinin replay girişleri
 # üzerinde 4,5 yıllık tick ölçümüdür) → başarısız yaklaşım tekrarı YOK.
 card_id: EDG-2026-105
-status: registered
+status: retired  # 2026-09-25 17:17Z — koşuldu, kill-3 ATEŞLEDİ → YAYIMLANMAZ (hüküm YOK); halef EDG-2026-106 (bölünme yeniden ölçekleme)
 family: friksiyon_olcumu
 on_kayit: 2026-09-25
 selef: EDG-2026-104
@@ -38,7 +38,7 @@ adim_0_kaydi_2026_09_25: >
   2022-01 → 2026-07: 2022-11-25 · 2023-07-03 · 2023-11-24 · 2024-07-03 · 2024-11-29 · 2024-12-24 · 2025-07-03 · 2025-11-28 · 2025-12-24 —
   bu günlerde giriş 6 (A1 `pandas_market_calendars` 5.4.0; liste bu kartta DONUK).
 
-k_registry: {registered_at: "2026-09-25", trial_ids: [EDG-105-dolmaz-orani, EDG-105-giris-fiyat-farki]}
+k_registry: {registered_at: "2026-09-25", trial_ids: [EDG-105-dolmaz-orani, EDG-105-giris-fiyat-farki], kosulan: [EDG-105-dolmaz-orani, EDG-105-giris-fiyat-farki]}   # iki deneme KOŞULDU, kill-3 ile yayımlanmadı — K muhafazakâr olarak HARCANMIŞ sayılır
 # İki birincil = K=2. Selef EDG-104'ün iki denemesi KOŞULMADI (K harcanmadı). Dal kırılımı, 9:30 tanısı, yıl kovaları TANI'dır.
 
 olcum_plani:
@@ -107,3 +107,23 @@ basari_tanimi: >
   ADIM-0 yazılmış + girdi dökümü ve betik sha256'lı + öz-sınama ve üç PK yeşil + paydada n ≥ 300 ∧ ≥ 100 seans + iki birincil karar
   kuralıyla AYRI AYRI hükme bağlanmış + EDG-2026-040/042/047/102 ve EDG-2026-069'a kart referanslı şerh düşülmüş. Hipotezin tutup tutmaması
   başarı değildir — dürüstçe ölçülmüş olması başarıdır.
+
+kosum_2026_09_25: >
+  (2026-09-25 17:17Z, Rol-1) KOŞUM: betik `research/olcumler/edg105_giris_kurali/olcum.py` sürüm 1 (blob dd16ae6c, sha256 5881cc32… — stdin kipi,
+  beyan Rol-1 yerel sha'sı), birleştirme fd5291b2 (TSK-224, inceleme ONAY 0 engelleyici). A1 `/opt/veri/pilot-venv` pyarrow 25.0.1:
+  `--kuru` 17:12Z (girdi 843 → aday 837 · 414 seans · erken kapanış 6 · öz-sınama 838 tutarlı GEÇTİ · şema 414/414 · tip GAP 836 /
+  STOP_LIMIT 1 · kapanış/tetik bant dışı 4) → tam 17:13:17Z (83 sn) `/opt/veri/olcum/edg105/tam-2026-09-25/`, parmak izi aa9313ac…;
+  girdi sha256 trades 8c61ee88… · planlar e74d2522….
+  SONUÇ: **YAYIMLANMAZ — kill-3 ATEŞLEDİ: ölçek dışlanan %7,177 > %5** (60 satır: 57 `acilis_tik` + 3 `kapanis_tetik`). Kill doğru sebeple
+  ateşledi: bar CSV'leri geriye dönük BÖLÜNME-DÜZELTMELİ, tick arşivi HAM — dışlanan satırların bar/tick oranları basit bölünme kesirleri
+  (1/10 AVGO·KLAC·LRCX·NFLX·NVDA · 1/2 PANW·MNST-2023 · 1/5 NOW · 1/6 DECK · 1/15 ORLY · 1/25 BKNG · 3 DD); kalan 4 satır (GE ×3 spin-off,
+  plan tetiği ile güncel bar farklı ölçekte · MNST 2026-07-17) eşlenemez. Birincil medyan/CI HESAPLANMADI/YAYILMADI; Rol-1 satır-düzeyi
+  fark_bps'e BAKMADI. AÇIK BEYAN: koşum özeti sınıf sayılarını bastı (DOLAN 771 · DOLMAZ 5 · akis_yok 1) — H1'in kaba nokta tahmini (~%0,6)
+  Rol-1'in gözüne düştü; H2 görülmedi. Halef EDG-2026-106 eşikleri bu kartla (ve EDG-104 ile) AYNI — sonuçtan önce donmuş değerler.
+  TASARIM DERSİ (Rol-1'in): kill-3'ün ölçtüğü oran ADIM-0'da ölçülmeden eşik donduruldu (memory `kill-esigi-adim0da-olculur`); EDG-102
+  aynı sınıfı `dokunus_yok`a örtük dökmüştü (%9,2).
+
+emeklilik_2026_09_25: >
+  (2026-09-25 17:17Z, Rol-1) EMEKLİ — hüküm YOK (kill-3 yayımlamayı durdurdu; bu bir GEÇTİ/KALDI hükmü değildir). Kart disiplini: ölçümle çürüyen kriter
+  YERİNDE düzeltilmez — kill-3'ün 'dışla' tanımı bölünme sınıfında veri kaybettiriyor; halef EDG-2026-106 aynı soruyu bölünme yeniden
+  ölçeklemesiyle (basit kesir çarpanı, plan↔bar ölçek eşliği doğrulanarak) sorar, kill-3'ün eşiği (%5) AYNEN kalır.

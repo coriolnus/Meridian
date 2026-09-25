@@ -11,7 +11,7 @@ Kaynak: `research/cards/*.yaml` → `status` alanı. Üretici: `ops/kart_endeksi
 Bayat mı diye sor: `python ops/kart_endeksi_uret.py --kontrol` (çıkış 1 = bayat).
 Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenmez.
 
-Toplam **119** kart.
+Toplam **120** kart.
 
 ### Kayıtlı — ölçüm bekliyor (14)
 
@@ -44,8 +44,8 @@ Toplam **119** kart.
 - **EDG-2026-101** (`registered`) — 
   · HÜKÜM: 2026-09-16 Rol-1 ön-kayıt; ölçüm kodu kart-önce, implementer sevki ayrı karar
   · kart: `EDG-2026-101-denetci-muhakeme-uydurma-yakalama.yaml`
-- **EDG-2026-105** (`registered`) — 
-  · kart: `EDG-2026-105-replay-giris-canli-kural-tick-koda-sadik.yaml`
+- **EDG-2026-106** (`registered`) — 
+  · kart: `EDG-2026-106-replay-giris-canli-kural-tick-olcekli.yaml`
 - **EXE-2026-009** (`registered`) — B-PENCERE-KAYDIR operatör kararı (2026-08-23 brainstorm 2/7, kanıt EDG-2026-047): canlı sabah tarama/emir tetiği 13:30→13:45 UTC'ye kayar.
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt; uygulama kodu bu karttan SONRA (kart-önce)
   · kart: `EXE-2026-009-pencere-kaydirma.yaml`
@@ -344,7 +344,7 @@ Toplam **119** kart.
   · HÜKÜM: 2026-08-02 ~22:30 TR — ARŞİV (Rol-1 hükmü; kill#1 tetiklendi): İki yüzeyde de fark CI-0-içi VE |fark|<10bps: Y1 @20 −0,06bps [−2,06,+2,60] · Y2 @20 +0,27bps…
   · kart: `KYS-2026-001-kiyas-kirlenmesi.yaml`
 
-### Diğer — kova tanımı yok (YASA 4: adıyla listelenir) (10)
+### Diğer — kova tanımı yok (YASA 4: adıyla listelenir) (11)
 
 - **EDG-2026-011** (`askida`) — Aynı gün üretilen adaylar arasında "in-play" olanlar (kazanç-katalizörü yakınlığı + yüksek rvol) diğer adaylardan daha iyi ileri getiri/isabet taşır…
   · HÜKÜM: 2026-08-01 ~10:40 — kill#3 ASKI (K HARCANMADI): in-play aday-gün ÜST SINIRI bile 11-12 << 150.
@@ -373,6 +373,9 @@ Toplam **119** kart.
 - **EDG-2026-104** (`retired`) — 
   · HÜKÜM: 2026-09-25 16:28Z — halef EDG-2026-105; hüküm YOK (ölçüm hiç koşulmadı, sonuç görülmedi)
   · kart: `EDG-2026-104-replay-giris-canli-kural-tick.yaml`
+- **EDG-2026-105** (`retired`) — 
+  · HÜKÜM: 2026-09-25 17:17Z — koşuldu, kill-3 ATEŞLEDİ → YAYIMLANMAZ (hüküm YOK); halef EDG-2026-106 (bölünme yeniden ölçekleme)
+  · kart: `EDG-2026-105-replay-giris-canli-kural-tick-koda-sadik.yaml`
 
 <!-- ENDEKS: SON -->
 
