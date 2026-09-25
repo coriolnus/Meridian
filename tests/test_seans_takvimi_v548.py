@@ -12,7 +12,8 @@ sonuç:
 
 KARAR (Rol-1, 2026-09-25): kaynak XNYS takvimi (`pandas_market_calendars`), Alpaca `/v2/clock` DEĞİL —
 depo seans gerçeğini zaten bu takvimden okuyor; ağdan ikinci bir saat kaynağı "aynı zaman iki kaynak"
-sınıfıdır. Takvim okunamazsa kapı KAPALI döner (fail-closed) ve süreç başına BİR uyarı basılır.
+sınıfıdır. Takvim okunamazsa kapı KAPALI döner (fail-closed) ve süreç başına BİR uyarı basılır —
+uyarıyı barclock DEĞİL zamanlayıcı poll'ü basar (tur 2: saf yaprak sözleşmesi, v549).
 
 TAKVİM ÖLÇÜMÜ (Rol-1, 2026-09-25, yerel `.venv` ve A1 `/opt/meridian/.venv` — ikisi de
 `pandas_market_calendars 5.4.0`): hafta içi seanssız günler ve erken kapanışlar aşağıdaki
@@ -23,10 +24,12 @@ TAKVİM ÖLÇÜMÜ (Rol-1, 2026-09-25, yerel `.venv` ve A1 `/opt/meridian/.venv`
   E  erken kapanış → 12:59 ET açık, 13:00 ET kapalı; 13:16 ET (akşam döngüsü) pencere kapalı
   N  normal gün sınırları (9:29/9:30/15:59/16:00; pencere 9:44/9:45) — regresyon
   D  DST (kış günü 14:30Z açık, 14:29Z kapalı)
-  F  takvim okunamaz → kapalı (fail-closed), uyarı TAM bir kez, arıza önbelleğe ALINMAZ
+  F  takvim okunamaz → kapalı (fail-closed, barclock SAF: `seans_durumu` arızayı dışarı verir);
+     uyarı TAM bir kez ve TEK noktadan (zamanlayıcı poll'ü); arıza önbelleğe ALINMAZ
   G  entegrasyon: tatilde çıkış kapısı kapatmayı çağırmaz; erken kapanış 13:20 ET'de giriş gönderimi
      ertelenir; tatilde intraday `skipped["session"]` artar (her birinin POZİTİF kontrolü yanında)
   K  tek kaynak: barsarchive seans aralığını barclock'un yardımcısından alır; `schedule()` tek yerde
+     + barclock SIFIR meridian import'u taşır (saf yaprak — mimari sözleşme v549)
 
 Saat ya açık `at` argümanıyla ya da `barclock.set_clock` enjeksiyonuyla verilir — hiçbir test duvar
 saatine bağlı değildir. `set_clock` ve seans önbelleği modül-globaldir: autouse fikstür sıfırlar.
@@ -173,7 +176,13 @@ def test_D1_kis_gunu_sinirlari_UTC():
 
 
 # =================================================================================================
-# F · TAKVİM OKUNAMAZ → FAIL-CLOSED + TEK UYARI + ARIZA ÖNBELLEĞE ALINMAZ
+# F · TAKVİM OKUNAMAZ → FAIL-CLOSED (SAF) + TEK UYARI (ZAMANLAYICI POLL'Ü) + ARIZA ÖNBELLEĞE ALINMAZ
+# -------------------------------------------------------------------------------------------------
+# TUR 2 (2026-09-25): barclock "saf yapraklar birbirinden bağımsız" import-linter sözleşmesinin
+# üyesidir ve SIFIR meridian import'u taşır (v549 + K4). Arıza SAF biçimde dışarı verilir
+# (`barclock.seans_durumu(at) -> (acik, takvim_hatasi)`); `session_gate_calendar_unavailable` uyarısını
+# TEK çağıran nokta basar: zamanlayıcı poll'ü (`scheduler._seans_kapisi_takvim_denetimi`, her poll
+# `loop.mirror_exit_acilis_turu`nun yanında). Bayrak uyarıyı basan modülde yaşar.
 # =================================================================================================
 class _PatlakSchedule:
     """`get_calendar` döner ama `schedule()` patlar — içe aktarma başarılı, sorgu başarısız dünya."""
@@ -190,59 +199,89 @@ class _PatlakSchedule:
 
 def _uyari_yakala(monkeypatch) -> list:
     import meridian.obs as obs
+    from meridian import scheduler
     gorulen: list = []
     monkeypatch.setattr(obs, "warn", lambda ev, **kw: gorulen.append((ev, kw)))
     # Bayrak SÜREÇ globalidir ve geri sıfırlanmaz (tasarım): başka bir test yakmışsa "bir kez basar"
     # iddiası kendiliğinden yeşile ya da kırmızıya döner. monkeypatch sonunda eski değeri geri koyar.
-    monkeypatch.setattr(barclock, "_SEANS_TAKVIMI_UYARILDI", False)
+    monkeypatch.setattr(scheduler, "_SEANS_KAPISI_TAKVIM_UYARILDI", False)
     return gorulen
 
 
-def test_F1_takvim_ice_aktarilamazsa_kapi_kapali_ve_uyari_TAM_bir_kez(monkeypatch):
-    """KIRMIZI-ÖNCE: arızada True dönülürse ilk assert düşer (çıplak pencere açılır); bayrak kalkıp
-    koşulsuz uyarılırsa uyarı sayısı 1'i aşar (poll 300 sn + her barfeed olayı → sel)."""
+def _takvim_uyarilari(gorulen: list) -> list:
+    return [kw for ev, kw in gorulen if ev == EV_TAKVIM_YOK]
+
+
+def test_F1_takvim_ice_aktarilamazsa_kapi_kapali_saf_ve_poll_uyarisi_TAM_bir_kez(monkeypatch):
+    """KIRMIZI-ÖNCE: arızada True dönülürse kapı assert'leri düşer (çıplak pencere açılır); barclock
+    kendisi olay basarsa `barclock_uyarilari == []` düşer (saf yaprak sözleşmesi); poll noktasında
+    bayrak kalkıp koşulsuz uyarılırsa uyarı sayısı 1'i aşar (300 sn poll → 288 satır/gün)."""
+    from meridian import scheduler
     gorulen = _uyari_yakala(monkeypatch)
     monkeypatch.setitem(sys.modules, "pandas_market_calendars", None)      # ImportError üretir
     acik_an = _et(NORMAL_GUN, 10, 0)                                         # takvim olsa AÇIK
     for _ in range(6):
         assert barclock.is_market_open(acik_an) is False, "takvim yokken kapı AÇIK döndü"
         assert barclock.is_entry_window(acik_an) is False
-    adlar = [e for e, _ in gorulen]
-    assert adlar == [EV_TAKVIM_YOK], f"tek-seferlik uyarı sözleşmesi kırıldı: {adlar}"
-    assert "ModuleNotFoundError" in str(gorulen[0][1].get("error")), "arıza sınıfı olaya geçmedi"
+    acik, hata = barclock.seans_durumu(acik_an)
+    assert acik is False and "ModuleNotFoundError" in str(hata), (acik, hata)
+    assert gorulen == [], f"barclock SAF değil — olay bastı: {gorulen}"
+    barclock.set_clock(lambda: acik_an)
+    for _ in range(5):
+        assert "ModuleNotFoundError" in str(scheduler._seans_kapisi_takvim_denetimi())
+    kayit = _takvim_uyarilari(gorulen)
+    assert len(kayit) == 1, f"tek-seferlik uyarı sözleşmesi kırıldı: {[e for e, _ in gorulen]}"
+    assert "ModuleNotFoundError" in str(kayit[0].get("error")), "arıza sınıfı olaya geçmedi"
+    assert kayit[0].get("gun") == NORMAL_GUN and kayit[0].get("takvim") == "XNYS"
 
 
 def test_F2_schedule_istisnasi_da_kapi_kapali_tek_uyari(monkeypatch):
+    from meridian import scheduler
     gorulen = _uyari_yakala(monkeypatch)
     monkeypatch.setitem(sys.modules, "pandas_market_calendars", _PatlakSchedule)
     acik_an = _et(NORMAL_GUN, 10, 0)
     for _ in range(4):
         assert barclock.is_market_open(acik_an) is False
-    adlar = [e for e, _ in gorulen]
-    assert adlar == [EV_TAKVIM_YOK], adlar
-    assert "RuntimeError" in str(gorulen[0][1].get("error"))
+    assert "RuntimeError" in str(barclock.seans_durumu(acik_an)[1])
+    barclock.set_clock(lambda: acik_an)
+    for _ in range(4):
+        scheduler._seans_kapisi_takvim_denetimi()
+    kayit = _takvim_uyarilari(gorulen)
+    assert len(kayit) == 1, [e for e, _ in gorulen]
+    assert "RuntimeError" in str(kayit[0].get("error"))
 
 
 def test_F3_takvim_donunce_ayni_surecte_dogru_sonuc(monkeypatch):
     """ARIZA ÖNBELLEĞE ALINMAZ: takvim geri gelince aynı süreçte kapı düzelir. KIRMIZI-ÖNCE: arıza
-    önbelleğe alınırsa son assert düşer (o gün sonsuza dek 'kapalı' kalırdı)."""
+    önbelleğe alınırsa son assert'ler düşer (o gün sonsuza dek 'kapalı' kalırdı)."""
     import pandas_market_calendars as gercek
+    from meridian import scheduler
     _uyari_yakala(monkeypatch)
     acik_an = _et(NORMAL_GUN, 10, 0)
+    barclock.set_clock(lambda: acik_an)
     monkeypatch.setitem(sys.modules, "pandas_market_calendars", None)
     assert barclock.is_market_open(acik_an) is False
+    assert scheduler._seans_kapisi_takvim_denetimi() is not None
     assert NORMAL_GUN not in barsarchive._SEANS_CACHE, "ARIZA önbelleğe alındı"
     monkeypatch.setitem(sys.modules, "pandas_market_calendars", gercek)
-    assert barclock.is_market_open(acik_an) is True, "takvim döndü ama kapı düzelmedi"
+    assert barclock.seans_durumu(acik_an) == (True, None), "takvim döndü ama kapı düzelmedi"
+    assert barclock.is_market_open(acik_an) is True
     assert barclock.is_entry_window(acik_an) is True
+    assert scheduler._seans_kapisi_takvim_denetimi() is None, "poll noktası arızayı hâlâ görüyor"
     assert NORMAL_GUN in barsarchive._SEANS_CACHE, "başarı önbelleğe alınmadı"
 
 
-def test_F4_hafta_sonu_takvim_sorulmadan_kapali(monkeypatch):
-    """Hafta sonu kısa devresi: takvim hiç sorulmaz — arızada bile uyarı basılmaz."""
+def test_F4_hafta_sonu_takvim_sorulmadan_kapali_ve_uyari_yok(monkeypatch):
+    """Hafta sonu kısa devresi: takvim hiç sorulmaz — arızada bile hata dönmez, poll uyarı basmaz
+    (kapı zaten kapalı; arıza ilk hafta içi poll'ünde görünür)."""
+    from meridian import scheduler
     gorulen = _uyari_yakala(monkeypatch)
     monkeypatch.setitem(sys.modules, "pandas_market_calendars", None)
-    assert barclock.is_market_open(_et("2026-09-26", 10, 0)) is False                 # Cumartesi
+    cumartesi = _et("2026-09-26", 10, 0)
+    assert barclock.is_market_open(cumartesi) is False
+    assert barclock.seans_durumu(cumartesi) == (False, None)
+    barclock.set_clock(lambda: cumartesi)
+    assert scheduler._seans_kapisi_takvim_denetimi() is None
     assert gorulen == []
 
 
@@ -266,6 +305,37 @@ def test_F5_onbellek_yalniz_basariya_ve_tavanli(monkeypatch):
         assert barsarchive._seans_araligi(g)[0] == "ok"
     assert len(barsarchive._SEANS_CACHE) <= barclock.SEANS_CACHE_MAX, "önbellek tavanı yok"
     assert gunler[-1] in barsarchive._SEANS_CACHE and gunler[0] not in barsarchive._SEANS_CACHE
+
+
+class _Dur(RuntimeError):
+    """Poll akışının KONTROLLÜ kesildiği nokta (v545 E2 deseni): açılış turundan sonraki bar yüklemesi."""
+
+
+def test_F6_zamanlayici_pollu_takvim_arizasini_surec_basina_TEK_uyariyla_anlatir(sandbox_state,
+                                                                                   monkeypatch):
+    """UYARININ TEK NOKTASI ZAMANLAYICI POLL'ÜDÜR: `advance_once` her poll'de seans takvimini sorar;
+    arıza süreç başına BİR `session_gate_calendar_unavailable` ile anlatılır. KIRMIZI-ÖNCE: poll'deki
+    uyarı noktası kaldırılırsa uyarı listesi BOŞ kalır; bayrak her poll'de sıfırlanırsa 3 poll 3
+    uyarı basar. Kurulum v545 `_zamanlayici_kur` ile aynı: akış bar yüklemesinde kesilir."""
+    from meridian import dataset, scheduler, watchdog
+    gorulen = _uyari_yakala(monkeypatch)
+    monkeypatch.setattr(scheduler, "_last_closed_session", lambda: "2026-09-24")
+    monkeypatch.setattr(scheduler.health, "halted", lambda: False)
+    monkeypatch.setattr(scheduler, "_repair_once_per_session", lambda s: None)
+    monkeypatch.setattr(scheduler, "_intraday_gap_check", lambda: None)
+    monkeypatch.setattr(watchdog, "check_and_alarm", lambda *a, **k: None)
+    monkeypatch.setattr(dataset, "load_live", lambda *a, **k: (_ for _ in ()).throw(_Dur()))
+    scheduler._state.update(refetch_chase=None, last_refetch_session="2026-09-24",
+                            refetch_attempts=0, refetch_sparse_attempts=0,
+                            learn_session="2026-09-24", dolgu_session="2026-09-24")
+    monkeypatch.setitem(sys.modules, "pandas_market_calendars", None)
+    barclock.set_clock(lambda: _et(NORMAL_GUN, 10, 0))
+    for _ in range(3):
+        with pytest.raises(_Dur):
+            scheduler.advance_once()
+    kayit = _takvim_uyarilari(gorulen)
+    assert len(kayit) == 1, f"poll uyarı sözleşmesi kırıldı: {[e for e, _ in gorulen]}"
+    assert "ModuleNotFoundError" in str(kayit[0].get("error"))
 
 
 # =================================================================================================
@@ -435,3 +505,18 @@ def test_K3_barsarchive_adlari_barclocka_bagli():
     assert barsarchive._SEANS_CACHE is barclock._SEANS_CACHE, "önbellek iki kopya — ayrışır"
     assert barsarchive.GAP_CALENDAR == barclock.SEANS_TAKVIMI == "XNYS"
     assert barclock.SEANS_CACHE_MAX == 40
+
+
+def test_K4_barclock_SIFIR_meridian_importu_tasir():
+    """SAF YAPRAK (import-linter sözleşme 3): barclock'ta `meridian` ya da göreli (`from .`) import YOK
+    — fonksiyon-içi tembel import DAHİL (statik analiz onu da kenar sayar; tur 1'in `from . import obs`u
+    dağıtım kapısını böyle kırdı). v549 aynı gerçeği grafik düzeyinde ölçer; bu çivi kaynağı adıyla gösterir."""
+    agac = ast.parse((REPO / "meridian" / "barclock.py").read_text())
+    ihlal = []
+    for d in ast.walk(agac):
+        if isinstance(d, ast.ImportFrom) and (d.level > 0 or (d.module or "").split(".")[0] == "meridian"):
+            ihlal.append(f"satır {d.lineno}: from {'.' * d.level}{d.module or ''} import …")
+        if isinstance(d, ast.Import):
+            ihlal += [f"satır {d.lineno}: import {a.name}" for a in d.names
+                      if a.name.split(".")[0] == "meridian"]
+    assert ihlal == [], f"barclock saf yaprak değil: {ihlal}"

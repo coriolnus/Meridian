@@ -943,6 +943,8 @@ def advance_once() -> dict:
         # tur o dalın arkasında kalsaydı bekleyen çıkış seans içinde hiç yürümezdi. Bar yüklemesinin
         # önünde: veri sağlayıcı kesintisi çıkış icrasını bloklamaz. Kuyruk boşken/seans kapalıyken
         # tur hiçbir yüzeye dokunmaz ve olay basmaz (bkz. `loop.mirror_exit_acilis_turu`).
+        # SEANS KAPISI TAKVİM DENETİMİ (TSK-223 tur 2) — arızanın TEK anlatım noktası; bkz. tanımı.
+        _seans_kapisi_takvim_denetimi()
         try:
             loop.mirror_exit_acilis_turu()
         except Exception as e:
@@ -1400,6 +1402,41 @@ def advance_once() -> dict:
     finally:
         _nabiz_birak()         # v186: döngü bitti — nabız yetkisi HİÇBİR iş parçacığında değil
         _run_lock.release()
+
+
+# SEANS KAPISI TAKVİM ARIZASI — TEK UYARI NOKTASI (TSK-223 tur 2). Seans kapısı
+# (`barclock.seans_durumu`/`is_market_open`) takvim okunamazsa KAPALI döner (fail-closed) ama olay BASMAZ:
+# barclock "saf yapraklar birbirinden bağımsız" mimari sözleşmesinin üyesidir ve `obs`a bir kenar o
+# sözleşmeyi kırar (tur 1'de dağıtım kapısı [0c] + CI duman böyle kırıldı). Arıza DEĞER olarak çıkar ve
+# ANLATIMI burada, her poll'de (300 sn) — `_GAP_CALENDAR_WARNED` deseni. Kapıyı soranların hepsi (barfeed/
+# intraday iş parçacığı, pano/onay yolu) bu süreçtedir, yani süreç başına tek uyarı onları da kapsar.
+# SÜREÇ BAŞINA BİR KEZ ve GERİ SIFIRLANMAZ (kardeş `_CALENDAR_WARNED`/`_GAP_CALENDAR_WARNED` ile aynı
+# gerekçe: koşulsuz uyarı 288 satır/gün; takvim gidip geldikçe sıfırlamak seli geri açardı).
+# HAFTA SONU: kapı takvimi sormadan kapalıdır (`seans_durumu` kısa devresi) → arıza hafta sonu
+# GÖRÜNMEZ ve uyarı basılmaz; ilk hafta içi poll'ünde (gece dahil — takvim o günün tarihiyle sorulur)
+# görünür. AD KARDEŞLERDEN AYRI: etki ayrı — ayna çıkışı açılışa ertelenir, giriş gönderimi ve intraday
+# tarama durur (kadans değil, KAPI). Okuyucular: pano olay akışı + `watchdog.alarm_budget` (warn=low).
+EV_SEANS_KAPISI_TAKVIM_YOK = "session_gate_calendar_unavailable"
+_SEANS_KAPISI_TAKVIM_UYARILDI = False
+
+
+def _seans_kapisi_takvim_denetimi() -> str | None:
+    """Zamanlayıcı poll'ünün seans-kapısı takvim denetimi: `barclock.seans_durumu()`nun arıza öğesini
+    döndürür (None = takvim okundu ya da hafta sonu) ve arızayı süreç başına BİR kez olay defterine
+    yazar. ATMAZ: takvim arızası `seans_araligi`nda değere çevrilir; kalan iş tarih aritmetiğidir."""
+    global _SEANS_KAPISI_TAKVIM_UYARILDI
+    from . import barclock
+    _acik, hata = barclock.seans_durumu()
+    if hata and not _SEANS_KAPISI_TAKVIM_UYARILDI:
+        _SEANS_KAPISI_TAKVIM_UYARILDI = True
+        from . import obs
+        obs.warn(EV_SEANS_KAPISI_TAKVIM_YOK, gun=barclock.session_date(),
+                 takvim=barclock.SEANS_TAKVIMI, error=hata,
+                 detail="XNYS takvimi okunamadı — seans kapısı KAPALI döner (fail-closed): ayna çıkışı "
+                        "açılışa ertelenir (koruma bacakları yerinde), giriş gönderimi ve intraday "
+                        "tarama durur; takvim dönünce kapı kendiliğinden düzelir (arıza önbelleğe "
+                        "alınmaz). Süreç başına bir kez kaydedilir")
+    return hata
 
 
 def _run(poll_seconds: int) -> None:
