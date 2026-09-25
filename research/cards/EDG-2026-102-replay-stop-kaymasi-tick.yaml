@@ -85,3 +85,16 @@ basari_tanimi: >
   ADIM-0 yazılmış + girdi dökümü sha256'lı + öz-sınama ve üç PK yeşil + n_uygun ≥ 100 ∧ ≥ 50 seans + medyan ve CI karar
   kuralıyla hükme bağlanmış + EDG-2026-045 Ö2'ye ve EDG-2026-040/042'ye kart referanslı şerh düşülmüş. Hipotezin tutup
   tutmaması başarı değildir — dürüstçe ölçülmüş olması başarıdır.
+
+rol1_notu_2026_09_25_olcum_oncesi: >
+  (2026-09-25 09:33Z, Rol-1 — ÖLÇÜMDEN ÖNCE, sonuç görülmeden; eşik/kill-list DEĞİŞMEDİ, yalnız ifadenin yorumu beyan edildi) (1) "uygun" kelimesi
+  kill-list 2 ve 3'te iki paydaya iner: kill-2 (dokunuş_yok > %20) paydası ADAY kümedir (dokunuş_yok zaten ölçülenlerden
+  dışlandığı için başka türlü tanımlanamaz); kill-3 (tek seans > %10) paydası ÖLÇÜLEN satırlardır (medyan/CI'ya giren küme —
+  esikler.n_uygun_alt'ın "dokunuş-yok + tersine-çevirme reddi sonrası kalan" tanımıyla aynı). Seçim muhafazakâr (kill-3 daha
+  kolay tetiklenir). (2) eff_stop: plan stop'u ileri formülle exit'i BİREBİR veriyorsa plan stop kullanılır (motorun değerinin
+  kendisi); aksi hâlde saf ters formül. Saf ters, yuvarlama artığı negatifken (~yarı fiyat) tam stop seviyesindeki tiki kaçırıp
+  kaymayı yukarı yanlayabilir; saf-ters medyanı TANI olarak basılır. (3) Bölünme: bar CSV bölünme-düzeltmeli, tick ham —
+  bar/tick fiyat oranı bandın dışında kalan satırlar sayılır ve dışlanmış medyan TANI olarak basılır; birincil kestirim karttaki
+  tanımla aynı kalır. (4) Okuyucu: A1'de pyarrow (pilot-venv); yerel çiviler duckdb ile — ilk A1 adımı `--kuru` (şema + bir gün
+  okuma süresi). Kaynak: TSK-221 uygulayıcı raporu + bağımsız inceleme (scratchpad tsk221-inceleme.md); hafıza: benzer kayıt yok.
+
