@@ -3703,3 +3703,79 @@ def test_R11_esitle_CREDENTIAL_degerini_kapinin_env_satirina_tasir(tmp_path):
         "eşitleme REFERANSA dokundu"
     assert ESKI["admin"] not in (r.stdout + r.stderr), "eşitleme SIR DEĞERİ bastı"
     assert "yeniden başlatma YAPILMADI" in r.stdout
+
+
+# =================================================================================================
+# S) TSK-226 — CP TÜKETİCİ METNİ BİRİMİN GERÇEK KANALINI SÖYLER (2026-09-25)
+# =================================================================================================
+# OLAY (Rol-1, A1 salt-okur ölçümü 2026-09-25): envanter `hindsight-cp.service`in kanalını "docker
+# env-file" diye beyan ediyordu; birim ise iki sırrı `-e AD=${AD}` ile veriyordu — systemd değeri
+# ExecStart'a genişletir, sır docker sürecinin argv'sinde herkese açıktı. Beyan gerçekle çelişiyordu
+# ve hiçbir çivi o METNİ birime bağlamıyordu (N10 metinden yalnız `.service` adını okur).
+# TSK-226 birimi değersiz `-e AD`ye çevirdi; bu çivi envanterin ÜÇ bloğundaki (dosyalar ·
+# rotasyon_kopyalari · vault_dosyalar) CP metnini VE spec §1 tablosunun satırını tek bir kanal
+# ifadesine bağlar, ifadenin doğruluğunu da birim dosyasının KENDİSİNDEN ölçer. Sınıfın geneli
+# (birim komut satırında sır genişlemesi) `tests/test_birim_argv_sir_v554.py`dedir.
+
+CP_BIRIMI = KOK_DEPO / "deploy" / "hindsight" / "hindsight-cp.service"
+CP_KANAL_METNI = "docker -e AD, değer ortamdan — argv'de yok"
+SPEC_BELGESI = KOK_DEPO / "docs" / "TASARIM-SIR-YOL1-2026-09-03.md"
+
+
+def _cp_execstart_metni() -> str:
+    """Birim dosyasındaki ExecStart'ın `\\` devamlarıyla birleşik metni (yorum satırları atlanır)."""
+    parcalar: list[str] = []
+    devam = False
+    for ham in CP_BIRIMI.read_text(encoding="utf-8").splitlines():
+        s = ham.strip()
+        if s.startswith(("#", ";")):
+            continue
+        if not devam and not s.startswith("ExecStart="):
+            continue
+        devam = s.endswith("\\")
+        parcalar.append(s.rstrip("\\").strip())
+        if not devam:
+            break
+    return " ".join(parcalar)
+
+
+def test_S1_CP_kanal_beyani_BIRIMIN_GERCEGIYLE_ayni():
+    """Beyanın ölçülen gerçeği: ExecStart iki CP sırrını DEĞERSİZ `-e AD` ile geçirir ve `--env-file`
+    taşımaz. Birim geri dönerse (değerli `-e AD=…` ya da `--env-file`) beyan metni yalan olur — burada
+    öter; aynı anda v554 de öter (iki ayrı soru: metin doğru mu · sınıf ihlali var mı)."""
+    komut = _cp_execstart_metni()
+    # Hükümler önce BOOLEAN'a indirilir: pytest'in iddia açılımı komut metnini (sabitlerin `=değer`i
+    # dahil) çıktıya basmasın — çıktıda yalnız AD (çıktı disiplini, TSK-226).
+    okundu = komut.startswith("ExecStart=/usr/bin/docker run")
+    env_file_var = "--env-file" in komut
+    assert okundu, "ExecStart okunamadı — çivi kör"
+    assert not env_file_var, "birim --env-file taşıyor — beyan metni (docker -e AD) yalan"
+    for ad in ("HINDSIGHT_CP_ACCESS_KEY", "HINDSIGHT_CP_DATAPLANE_API_KEY"):
+        degersiz = re.search(rf"(?:^|\s)-e\s+{ad}(?=\s)", komut) is not None
+        degerli = re.search(rf"(?:^|\s)-e\s+{ad}=", komut) is not None
+        assert degersiz and not degerli, f"{ad}: ExecStart onu değersiz `-e AD` ile geçirmiyor"
+
+
+def test_S2_envanter_CP_metinleri_TEK_kanal_ifadesini_tasir():
+    env = yaml.safe_load(ENVANTER.read_text(encoding="utf-8"))
+    metinler = (
+        [("dosyalar.kanal_bugun", d["kanal_bugun"]) for d in env["dosyalar"]
+         if "hindsight-cp.service" in d["tuketici"]]
+        + [("rotasyon_kopyalari.tuketici", k["tuketici"]) for k in env["rotasyon_kopyalari"]["kopyalar"]
+           if "hindsight-cp.service" in k["tuketici"]]
+        + [("vault_dosyalar.tuketici", d["tuketici"]) for d in env["vault_dosyalar"]
+           if "hindsight-cp.service" in d["tuketici"]])
+    assert len(metinler) == 3, f"CP'yi anan envanter metni sayısı değişti: {[y for y, _ in metinler]}"
+    bayat = [yer for yer, m in metinler
+             if CP_KANAL_METNI not in m or "env-file" in m or "ikame" in m]
+    assert not bayat, f"envanterde CP kanalını yanlış söyleyen metin: {bayat}"
+
+
+def test_S3_spec_tablosu_CP_satiri_ayni_kanal_ifadesini_tasir():
+    """Envanterin tek kaynağı spec §1 tablosudur (envanter başlığı: "tablo değişirse ÖNCE orası"). v439
+    tabloyla envanteri AD düzeyinde kıyaslar, kanal sütununu kıyaslamaz — bu çivi CP satırında kıyaslar."""
+    satirlar = [s for s in SPEC_BELGESI.read_text(encoding="utf-8").splitlines()
+                if s.startswith("| `/opt/hindsight/.env-cp` |")]
+    assert len(satirlar) == 1, f"spec tablosunda CP satırı {len(satirlar)} kez"
+    kanal = [h.strip() for h in satirlar[0].strip().strip("|").split("|")][-1]
+    assert CP_KANAL_METNI in kanal and "env-file" not in kanal, "spec §1 CP satırının kanal hücresi bayat"
