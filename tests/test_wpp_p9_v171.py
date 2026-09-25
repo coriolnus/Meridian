@@ -597,6 +597,8 @@ def test_mutlakTs_AYRISTIRILAMAYAN_damgada_null_doner():
 # EK · BOŞLUK TARAMASI — BİLİNMEYEN DURUM YEŞİL DOĞAMAZ (WP-D `takvim_yok`)
 # =================================================================================================
 BARSARCHIVE = (SRC / "meridian" / "barsarchive.py").read_text()
+# TSK-223: seans aralığı yardımcısı (`_seans_araligi` gövdesi) barclock'a taşındı — dönüşleri orada.
+BARCLOCK = (SRC / "meridian" / "barclock.py").read_text()
 
 
 def test_gap_haritasi_URETICININ_TUM_DURUMLARINI_tanir():
@@ -606,7 +608,9 @@ def test_gap_haritasi_URETICININ_TUM_DURUMLARINI_tanir():
     gs = BARSARCHIVE[BARSARCHIVE.index("def gap_scan("):]
     uretilen = set(re.findall(r'out\["durum"\] = "([a-z_]+)"', gs))
     uretilen |= set(re.findall(r'"durum": "([a-z_]+)"', gs))
-    uretilen |= set(re.findall(r'return \("([a-z_]+)"', BARSARCHIVE))     # _seans_araligi dönüşleri
+    seans = set(re.findall(r'return \("([a-z_]+)"', BARSARCHIVE + BARCLOCK))  # seans_araligi dönüşleri
+    assert "takvim_yok" in seans, "seans yardımcısının dönüşleri taranamadı — tarama BOŞ kaldı"
+    uretilen |= seans
     uretilen -= {"ok"}                                                    # ölçülmüş sonuç dalı
     harita = _govde("const _GAP_DURUM = {", "\nfunction _gapRows")
     tanınan = set(re.findall(r"^\s{2}([a-z_]+):", harita, re.M))

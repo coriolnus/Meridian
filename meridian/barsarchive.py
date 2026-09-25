@@ -505,56 +505,40 @@ GAP_CONTEXT_MIN = 5        # deliğin iki yanında bakılan bağlam (dk)
 GAP_CONTEXT_NEED = 4       # bağlamın en az bu kadar dakikasında bar OLMALI (sembol "sürekli akıyor")
 GAP_TAIL_BYTES = 4_000_000  # gün dosyasının yalnız SONU okunur (bkz. `_pencere_satirlari`)
 GAP_MAX_REPORT = 20        # rapora giren en fazla boşluk (yük sınırı; sayı ayrıca `bosluk_sayisi`de)
-GAP_CALENDAR = "XNYS"      # seans takvimi — data.CALENDAR / scheduler._leg_ready ile AYNI ad
-GAP_SEANS_CACHE_MAX = 40   # gün başına bir kayıt; uzun ömürlü worker'da sözlük sınırsız büyümesin
-_SEANS_CACHE: dict = {}    # {gün: (durum, açılış, kapanış, hata)} — YALNIZ başarılı okumalar
+GAP_CALENDAR = barclock.SEANS_TAKVIMI  # seans takvimi adı — TEK kaynak barclock (raporun `seans.takvim` alanı)
+# UYUMLULUK ADI (TSK-223): seans önbelleği barclock'a taşındı; bu ad AYNI sözlük nesnesidir (kopya
+# değil — `clear()`/`in` iki adda da aynı sözlüğe dokunur). Yeniden BAĞLANMAZ, yalnız yerinde değişir.
+_SEANS_CACHE: dict = barclock._SEANS_CACHE
 
 
 def _seans_araligi(gun: str) -> tuple:
-    """O GÜNÜN GERÇEK seans aralığı — XNYS `schedule()`ten, UTC. `(durum, açılış, kapanış, hata)`.
+    """O GÜNÜN GERÇEK seans aralığı — `barclock.seans_araligi`nin İNCE SARMALAYICISI (TSK-223).
+    Sözleşme aynen: `(durum, açılış, kapanış, hata)`, durum ∈ {"ok","seans_disi","takvim_yok"},
+    önbellek YALNIZ başarıya ve tavanlı (ayrıntı yardımcının docstring'inde).
 
-    durum: `"ok"` (seans günü; açılış/kapanış dolu) · `"seans_disi"` (takvim OKUNDU ve o gün seans
-    değil: hafta sonu/tam tatil) · `"takvim_yok"` (takvim okunamadı → HÜKÜM YOK).
+    NEDEN KENDİ `schedule()` ÇAĞRISI YOK: seans sınırının tek takvim yolu artık barclock'tadır ve
+    `barclock.is_market_open` da aynı yardımcıyı kullanır — ikisi AYNI cevabı verir (v548 K1/K2
+    çivileri ikinci bir yolu öttürür). Çağrı ANINDA çözülür (import-anı takma adı değil): yardımcı
+    yamalandığında bu sarmalayıcı da onu görür.
 
-    NEDEN `barclock.is_market_open` DEĞİL: o fonksiyon kendi
-    docstring'inde "TATİLLER hariç (yaklaşık)" der ve bunu şöyle meşrulaştırır — "Alpaca zaten
-    kapalıyken bar göndermez, o yüzden bu yalnız bir KOLAYLIK kapısıdır". Gerekçe `is_admissible`
-    için doğru, `gap_scan` için TERSİNE ÇEVRİLMİŞTİR: burada semantik "bar YOKSA kesinti VAR"dır,
-    yani barın gelmemesi tam da alarm sebebidir. Somut vaka NYSE YARIM GÜNLERİ (13:00 ET kapanış —
-    Şükran ertesi, 24 Aralık, 3 Temmuz): o gün dosya VARDIR (sabah barları yazılmıştır), ama
-    13:03-16:00 ET penceresi tamamen kapanış SONRASINA düşer; eski beklenti ~58 dakika üretir,
-    `dolu` boştur ve `tur="akis"` boşluğu SAHTE bir `intraday_gap_detected` uyarısı bastırırdı
-    ("mrd:bars bir RING'tir, o dakikalar geri gelmez" — yani operatör geri alınamaz bir veri kaybı
-    sanır). TAM tatil `arsiv_yok` ile kurtuluyordu, yarım gün kurtulmuyordu.
+    NEDEN beklenti `barclock.is_market_open`tan ÜRETİLMİYOR (tarihçe + ilke): TSK-223'e dek o kapı
+    9:30–16:00 hafta-içi varsayan YAKLAŞIK bir kapıydı ve gerekçesi "Alpaca kapalıyken bar göndermez,
+    yalnız kolaylık kapısı" idi. Gerekçe `is_admissible` için doğruydu, `gap_scan` için TERSİNE
+    ÇEVRİLMİŞTİ: burada semantik "bar YOKSA kesinti VAR"dır, yani barın gelmemesi tam da alarm
+    sebebidir. Somut vaka NYSE YARIM GÜNLERİ (13:00 ET kapanış — Şükran ertesi, 24 Aralık, 3 Temmuz):
+    o gün dosya VARDIR (sabah barları yazılmıştır), ama 13:03-16:00 ET penceresi tamamen kapanış
+    SONRASINA düşer; eski beklenti ~58 dakika üretir, `dolu` boştur ve `tur="akis"` boşluğu SAHTE bir
+    `intraday_gap_detected` uyarısı bastırırdı ("mrd:bars bir RING'tir, o dakikalar geri gelmez" —
+    yani operatör geri alınamaz bir veri kaybı sanır). TSK-223'ten beri `is_market_open` da XNYS'ten
+    okur; yine de beklenti bir EVET/HAYIR kapısından değil, seansın açılış/kapanış ARALIĞINDAN kurulur
+    (pencere dakika dakika aralıkla kesilir) — o yüzden kaynak kapı değil yardımcının kendisidir.
 
-    TAKVİM OKUNAMAZSA YEDEK BEKLENTİ ÜRETİLMEZ: `is_market_open`a geri düşmek kapatılan deliği
-    aynen geri açardı (yaklaşık takvim = sahte alarm). Ölçülemeyen şey None'dır ve `gap_scan`
-    `durum="takvim_yok"` ile HÜKÜM VERMEZ. Bu bir DARALMA değil, hükümsüzlüktür: gerçek bir
-    kesinti de o turda raporlanmaz, ama uydurma bir kesinti de raporlanmaz.
-
-    ÖNBELLEK YALNIZ BAŞARIYA: `gap_scan` her poll'de (300 sn) aynı günü sorar, takvim sorgusu
-    boşuna tekrarlanmasın. Ama bir ARIZAYI önbelleğe almak, takvim modülü geri geldikten sonra bile
-    o günü sonsuza dek "takvim_yok" bırakırdı — arıza her çağrıda yeniden denenir."""
-    key = str(gun)[:10]
-    hit = _SEANS_CACHE.get(key)
-    if hit is not None:
-        return hit
-    try:
-        import pandas_market_calendars as mcal
-        sched = mcal.get_calendar(GAP_CALENDAR).schedule(start_date=key, end_date=key)
-    except Exception as e:  # sessiz-yutma DEĞİL: neden `durum`/`seans.hata` ile çağırana ÇIKAR ve gap_scan hüküm vermez (olay basmak SAF fonksiyonun sözleşmesini kırardı — kaydı çağıran yapar)
-        return ("takvim_yok", None, None, f"{type(e).__name__}: {e}")
-    if not len(sched):
-        out = ("seans_disi", None, None, None)
-    else:
-        satir = sched.iloc[0]
-        out = ("ok", satir["market_open"].to_pydatetime(),
-               satir["market_close"].to_pydatetime(), None)
-    if len(_SEANS_CACHE) >= GAP_SEANS_CACHE_MAX:
-        for k in sorted(_SEANS_CACHE)[:len(_SEANS_CACHE) - GAP_SEANS_CACHE_MAX + 1]:
-            _SEANS_CACHE.pop(k, None)
-    _SEANS_CACHE[key] = out
-    return out
+    TAKVİM OKUNAMAZSA YEDEK BEKLENTİ ÜRETİLMEZ: bir saat-sabiti (9:30–16:00) varsayımına geri düşmek
+    kapatılan yarım-gün deliğini aynen geri açardı (yaklaşık takvim = sahte alarm); `is_market_open`
+    da takvimsizken yalnız fail-closed bir HAYIR verir, beklenti veremez. Ölçülemeyen şey None'dır ve
+    `gap_scan` `durum="takvim_yok"` ile HÜKÜM VERMEZ. Bu bir DARALMA değil, hükümsüzlüktür: gerçek bir
+    kesinti de o turda raporlanmaz, ama uydurma bir kesinti de raporlanmaz."""
+    return barclock.seans_araligi(gun)
 
 
 def _pencere_satirlari(day: str, tail_bytes: int = GAP_TAIL_BYTES):
