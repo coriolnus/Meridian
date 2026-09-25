@@ -241,7 +241,7 @@ def test_exec_sapmasi_icra_etiketi(sandbox_state, monkeypatch):
     assert satir.get("alpaca_fill_price") == 110.0, "kuyruk yaması satıra yazmadı"
 
 
-def test_184_ayna_cikisi_kapatilamadi_cikis_yetimi_etiketi(sandbox_state, monkeypatch):
+def test_184_ayna_cikisi_kapatilamadi_cikis_yetimi_etiketi(sandbox_state, monkeypatch, seans_acik):
     """`_mirror_exit_sync` (kaynak :184): iç defter KAPALI, ayna kapatılamadı → `cikis_yetimi`."""
     monkeypatch.setattr(config, "BROKER", "alpaca_paper")
     monkeypatch.setattr(alpaca, "paper_available", lambda: True)
@@ -252,3 +252,16 @@ def test_184_ayna_cikisi_kapatilamadi_cikis_yetimi_etiketi(sandbox_state, monkey
     out = loop._mirror_exit_sync(meta, "2026-08-02")
     assert out["failed"], "başarısız kapatma kuyruğa/rapora düşmedi"
     assert any(e.get("drift_sinifi") == "cikis_yetimi" for e in _events("MIRROR_DRIFT"))
+
+
+@pytest.fixture
+def seans_acik():
+    """TSK-205 seans kapısı: `loop._mirror_exit_sync` yalnız seans AÇIKKEN kapatır. Bu dosyanın
+    çivileri kapatma MEKANİĞİNİ ölçer, kapıyı değil — koşum saatinden bağımsız kalsınlar diye saat
+    RTH'ye donar (kapının kendi çivileri `tests/test_cikis_acilisa_ertele_v545.py`de). Fikstür dosya
+    SONUNDA: mevcut satırlar kaymasın (satır çapası tarayıcıları)."""
+    import datetime as _dt
+    from meridian import barclock as _bc
+    _bc.set_clock(lambda: _dt.datetime(2026, 7, 23, 14, 0, tzinfo=_dt.timezone.utc))
+    yield
+    _bc.reset_clock()

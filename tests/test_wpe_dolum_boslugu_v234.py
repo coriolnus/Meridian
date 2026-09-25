@@ -132,7 +132,7 @@ def test_B1_delete_cevabi_close_order_id_tasir(ayna, monkeypatch):
         "kimlik okunamadı ama neden yazılmadı (uydurma yasağı yarım)"
 
 
-def test_B1_kapatma_basarisi_kuyruga_kimlikli_kayit_dusurur(ayna, monkeypatch):
+def test_B1_kapatma_basarisi_kuyruga_kimlikli_kayit_dusurur(ayna, monkeypatch, seans_acik):
     """`_mirror_exit_sync` başarı dalı: dolum-yaması kuyruğuna `kaynak=karar` + `close_order_id`
     kaydı düşer ve `mirror_exit_closed` olayı kimliği taşır (olay-katmanı yüzü)."""
     monkeypatch.setattr(alpaca, "close_engine_position",
@@ -152,7 +152,7 @@ def test_B1_kapatma_basarisi_kuyruga_kimlikli_kayit_dusurur(ayna, monkeypatch):
         "olay kapatma emrinin kimliğini taşımıyor (B1 olay-katmanı)"
 
 
-def test_B1_kapatilacak_pozisyon_yoksa_kuyruk_ACILMAZ(ayna, monkeypatch):
+def test_B1_kapatilacak_pozisyon_yoksa_kuyruk_ACILMAZ(ayna, monkeypatch, seans_acik):
     """POZİTİF KONTROL: `closed_qty=0` (pozisyon zaten yoktu) dalında ölçülecek dolum yok —
     kuyruğa kayıt düşmez (sahte 'ölçülemedi' beyanları üretilmez)."""
     monkeypatch.setattr(alpaca, "close_engine_position",
@@ -684,3 +684,16 @@ def test_Y_emir_gonderim_yolu_ACILMADI():
     # order_by_id SALT-OKUMA: GET dışında fiil yok
     src = inspect.getsource(alpaca.order_by_id)
     assert "httpx.get" in src and ".post(" not in src and ".delete(" not in src
+
+
+@pytest.fixture
+def seans_acik():
+    """TSK-205 seans kapısı: `loop._mirror_exit_sync` yalnız seans AÇIKKEN kapatır. Bu dosyanın
+    çivileri kapatma MEKANİĞİNİ ölçer, kapıyı değil — koşum saatinden bağımsız kalsınlar diye saat
+    RTH'ye donar (kapının kendi çivileri `tests/test_cikis_acilisa_ertele_v545.py`de). Fikstür dosya
+    SONUNDA: mevcut satırlar kaymasın (satır çapası tarayıcıları)."""
+    import datetime as _dt
+    from meridian import barclock as _bc
+    _bc.set_clock(lambda: _dt.datetime(2026, 7, 23, 14, 0, tzinfo=_dt.timezone.utc))
+    yield
+    _bc.reset_clock()

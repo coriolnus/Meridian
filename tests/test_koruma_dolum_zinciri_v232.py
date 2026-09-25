@@ -270,7 +270,7 @@ def test_B4_plan_idsiz_cagri_koruma_dolumu_sahiplik_kaniti_DEGIL(ayna, monkeypat
     assert [s[2] for s in sira if s[0] == "DELETE"] == ["22"]
 
 
-def test_B4_kuyruk_alarmi_cancel_failed_tasir_ve_kuyruk_durur(ayna, monkeypatch):
+def test_B4_kuyruk_alarmi_cancel_failed_tasir_ve_kuyruk_durur(ayna, monkeypatch, seans_acik):
     """YASA-6 okuyucusu: `cancel_failed` alanını `_mirror_exit_sync` alarma taşır; kuyruk düşmez
     (bir sonraki tur yeniden dener). POZİTİF KONTROL: alan False iken alarmda False görünür."""
     monkeypatch.setattr(alpaca, "close_engine_position",
@@ -455,3 +455,16 @@ def test_Y3_koruma_fill_yalniz_okur_hukum_vermez():
     assert kf is not None and kf["bacak"] == "stop" and kf["price"] == 140.5
     assert alpaca.koruma_fill({"id": "p", "status": "new", "filled_qty": "0",
                                "type": "limit", "legs": []}) is None
+
+
+@pytest.fixture
+def seans_acik():
+    """TSK-205 seans kapısı: `loop._mirror_exit_sync` yalnız seans AÇIKKEN kapatır. Bu dosyanın
+    çivileri kapatma MEKANİĞİNİ ölçer, kapıyı değil — koşum saatinden bağımsız kalsınlar diye saat
+    RTH'ye donar (kapının kendi çivileri `tests/test_cikis_acilisa_ertele_v545.py`de). Fikstür dosya
+    SONUNDA: mevcut satırlar kaymasın (satır çapası tarayıcıları)."""
+    import datetime as _dt
+    from meridian import barclock as _bc
+    _bc.set_clock(lambda: _dt.datetime(2026, 7, 23, 14, 0, tzinfo=_dt.timezone.utc))
+    yield
+    _bc.reset_clock()
