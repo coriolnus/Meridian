@@ -41,9 +41,12 @@ Replay tohumu `meridian.run.replay_seed` → `meridian.backtest.replay`; stop ç
           (`ters_hata_siniri` — 4-hane yuvarlamanın ters görüntüsü).
   IZGARA KİLİDİ (beyanlı iyileştirme, öz-sınamanın yan ürünü): plan kaydındaki sert stop P,
           round(P × (1 − s), 4) == exit'i BİREBİR veriyorsa eff_stop = P (motorun kullandığı değerin
-          kendisi). Gerekçe ÖLÇÜLDÜ (v546 `test_izgara_kilidi_…`): P kuruş ızgarasındaysa saf ters değer
-          P'nin ≤ 5e-5 ALTINA düşebilir ve TAM stop seviyesindeki tik dokunuş sayılmaz → dokunuş daha derin
-          bir tike kayar, kayma YUKARI (hipotez yönüne) yanlanır. Trailing çıkışlarda P ≠ eff_stop →
+          kendisi). Gerekçe (v546 `test_izgara_kilidi_…`; inceleme 2026-09-25 ile düzeltildi): 4-hane yuvarlama
+          artığının İŞARETİ fiyatların ~yarısında negatif (bağımsız kontrol ~200 bin kuruş fiyatı: ~%50/%50) —
+          yanlılık "her zaman" DEĞİL. Ama etkisi ASİMETRİK: saf ters değer P'nin ≤ 5e-5 ALTINA düştüğünde TAM
+          stop seviyesindeki tik dokunuş sayılmaz → dokunuş daha derin bir tike kayar → kayma YUKARI (hipotez
+          yönüne); ÜSTÜNE düştüğünde kuruş ızgarasında arada tik olamaz → etki YOK. Yani saf ters, yalnız stop
+          seviyesinde tam tik bulunan satırların ~yarısında yukarı yanlıdır. Trailing çıkışlarda P ≠ eff_stop →
           saf ters değer kullanılır (hata sınırı yukarıda). Tanı (f) saf-ters medyanını ayrıca basar.
 ÖZ-SINAMA (kill-list 1): plan stop'u `trade_plans.stop` (satır `trades.plan_id` = `trade_plans.id`;
   tipli kolon + extra_json birleşimi `meridian.storage._cols_to_row` semantiğiyle — extra KAZANIR).
