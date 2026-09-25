@@ -335,6 +335,73 @@ def _horizon_progress(trades: list, last_at: int, regime: str | None,
             "ready": len(new) >= max(1, int(min_trades)) and span >= min_days}
 
 
+def _yansima_vadesi(trades: list, last_at: int, every: int, live_reg: str | None) -> bool:
+    """YANSIMA VADESİNİN TEK TANIMI: son yansımadan beri ≥ `every` kapanış VE canlı rejimde katı-VE ufuk
+    (`_horizon_ok`). Bekleme döngüsü (`_run`) otomatik yansımayı BUNUNLA ateşler; `yansima_kapisi`
+    (pano geri sayımı + bekçinin öğrenme-canlılık alarmı, TSK-204) "vade doldu"yu BUNUNLA söyler.
+    Döngüde satır-içi bir kopya kalsaydı iki tanım sessizce ayrışabilirdi (tek-kaynak yasası)."""
+    return (len(trades) - int(last_at) >= int(every)
+            and _horizon_ok(trades, int(last_at), regime=live_reg, min_trades=every))
+
+
+def _durum_tabani() -> tuple[bool, dict, dict]:
+    """`(icerde, disk, taban)` — `status()` ile `yansima_kapisi()`nin ORTAK durum tabanı.
+
+    SÜREÇ-İÇİ Mİ? (Ö-50) Döngü kendi systemd biriminde koşuyorsa BU süreçte iplik YOKTUR ve
+    `_state` boş varsayılanlarla durur — o hâlde yetkili kaynak DİSKtir (`STATUS_FILE`)."""
+    icerde = bool(_thread and _thread.is_alive())
+    disk = (store.read_json(STATUS_FILE, {}) or {}) if not icerde else {}
+    taban = {**_state, **disk} if not icerde else dict(_state)
+    return icerde, disk, taban
+
+
+def yansima_kapisi(taban: dict | None = None) -> dict:
+    """YANSIMA KAPISININ GÖZLEMLENEBİLİR HÂLİ — TEK HESAP YERİ. Okuyucular: `status()` (pano geri
+    sayımı, /api/hermes) ve `watchdog._learning_liveness` (ÖĞRENME DURDU alarmının (A) ayağı, TSK-204).
+    İkisi de buradan okur; bekçi kapıyı KENDİSİ hesaplamaz (ikinci kapı uygulaması yok).
+
+    `vade_doldu` = `_yansima_vadesi` (döngünün ateşleme yüklemi). `vade_ts` = vadeyi DOLDURAN kapanışın
+    damgası (`ts_close`, yoksa `ts_open`): tabandan sonraki önekler aynı yüklemle taranır ve ilk doğru
+    olan önekin son kapanışı alınır — yüklem öneklerde tekdüzedir (sayım da takvim açıklığı da yalnız
+    artar). Ölçülemezse `vade_ts` None ve `vade_ts_neden` NEDENİ söyler (uydurma yok). Canlı rejim
+    ŞİMDİKİ rejimdir: vade, döngünün BU poll'da soracağı soruya göre ölçülür.
+    `taban` verilmezse süreç-içi/disk ayrımı `status()` ile AYNI kuralla (`_durum_tabani`) kurulur."""
+    if taban is None:
+        taban = _durum_tabani()[2]
+    every = int(config.goal().get("reflection_every", 5))
+    trades = store.read_jsonl("trades.jsonl")
+    closed = len(trades)
+    base = taban.get("last_reflect_at")
+    # Honest countdown: how many NEW trades must close before the standby loop reflects again. The old UI
+    # formula was `every - closed_trades`, which is 0 for any book with more trades than `every` — i.e. it
+    # always read "hazır" (ready), which was simply false. Computed here so there is ONE source of truth.
+    since = max(0, closed - int(base)) if base is not None else 0
+    # Horizon computed FRESH on every read (not only in the standby loop's healthy branch), so the
+    # dashboard shows the real gate even during HALT/stale and before the first poll.
+    live_reg = store.read_json("regime.json", {}).get("regime")
+    live_reg = live_reg if live_reg in config.VALID_REGIMES else None
+    # TABAN YOKSA (döngü bu kurulumda hiç koşmamış): `_restored_baseline` ilk açılışta tabanı defter
+    # uzunluğuna kurar — birikmiş kapanışlar üzerine yansıma YOK. Vade bu yüzden "dolmadı"dır; uydurma değil türetme.
+    last_at = int(base) if base is not None else closed
+    horizon = _horizon_progress(trades, last_at, live_reg, every)
+    vade = _yansima_vadesi(trades, last_at, every, live_reg)
+    vade_ts, vade_neden = None, None
+    if vade:
+        for k in range(max(last_at, 0) + 1, closed + 1):
+            if _yansima_vadesi(trades[:k], last_at, every, live_reg):
+                son = trades[k - 1]
+                vade_ts = son.get("ts_close") or son.get("ts_open") or None
+                if vade_ts is None:
+                    vade_neden = (f"vadeyi dolduran kapanış (defter sırası {k}) ts_close/ts_open "
+                                  f"taşımıyor — vadenin başladığı an ÖLÇÜLEMEDİ")
+                break
+    return {"reflection_every": every, "closed_trades": closed, "last_reflect_at": base,
+            "trades_since_last_reflection": since, "trades_until_next": max(0, every - since),
+            "horizon": horizon, "horizon_ready": horizon["ready"], "horizon_regime": live_reg,
+            "vade_doldu": bool(vade), "vade_ts": vade_ts, "vade_ts_neden": vade_neden,
+            "son_isinma": taban.get("last_warmup")}
+
+
 def _persist() -> None:
     """Bellekteki `_state`i beyin/model/zincir olgularıyla birlikte STATUS_FILE'a yazar.
 
@@ -508,7 +575,7 @@ def _run(poll_seconds: int) -> None:
                 pass
             if not health.halted() and not health.stale(900):
                 trades = store.read_jsonl("trades.jsonl")
-                n, last_at = len(trades), int(_state["last_reflect_at"])
+                last_at = int(_state["last_reflect_at"])
                 # Phase 3 STRICT-AND guardrail, scoped to the LIVE regime (the one a new reflection would
                 # tune): >= reflection_every trades AND >= min_days span, both within that regime.
                 live_reg = store.read_json("regime.json", {}).get("regime")
@@ -527,7 +594,9 @@ def _run(poll_seconds: int) -> None:
                     # kol_adi çevirisi eski PERSİST edilmiş değerleri de sayaçla yakalar).
                     _state["last_result"] = "halt_learning"        # ısınma da duraklar: operatör tam sessizlik istedi
                     _state["_warm_skip"] = "learn_halted"
-                elif n - last_at >= every and horizon and _reflect_lock.acquire(blocking=False):
+                # ATEŞLEME YÜKLEMİ TEK TANIMDIR (`_yansima_vadesi`): bekçinin "vade doldu ama yansıma yok"
+                # ayağı (TSK-204) aynı yüklemi `yansima_kapisi` üzerinden okur — satır-içi kopya ayrışırdı.
+                elif _yansima_vadesi(trades, last_at, every, live_reg) and _reflect_lock.acquire(blocking=False):
                     try:
                         # pass the CERTIFIED regime: the search takes minutes, and a regime flip in the
                         # meantime must not retarget the ship into a regime the horizon never certified.
@@ -645,11 +714,8 @@ def status() -> dict:
 
     "Sonraki yansımaya kaç işlem kaldı" ve ufuk ilerlemesi HER çağrıda TAZE ölçülür (HALT/bayat
     hâlde ve ilk poll'dan önce de) — tek kaynak burasıdır, arayüz kendi formülünü üretmez."""
-    # SÜREÇ-İÇİ Mİ? (Ö-50) Döngü kendi systemd biriminde koşuyorsa BU süreçte iplik YOKTUR ve
-    # `_state` boş varsayılanlarla durur — o hâlde yetkili kaynak DİSKtir (`STATUS_FILE`).
-    icerde = bool(_thread and _thread.is_alive())
-    disk = (store.read_json(STATUS_FILE, {}) or {}) if not icerde else {}
-    taban = {**_state, **disk} if not icerde else dict(_state)
+    # SÜREÇ-İÇİ Mİ? (Ö-50) — kural `_durum_tabani`da, `yansima_kapisi` ile ORTAK (tek taban kuralı).
+    icerde, disk, taban = _durum_tabani()
     # F8-A3 GEÇİŞ OKUYUCUSU (2026-08-23): üretici artık kanonik "halt_learning" yazar; diskte
     # RESTART-ÖNCESİ persist edilmiş eski "learning_halted" hâlâ yaşayabilir. Okuyucu deseni
     # (durum_sozlugu geçiş rejimi): eşanlamlıyı kanonik ada çevir ve SAY — sayaç uzun süre 0
@@ -681,27 +747,18 @@ def status() -> dict:
             poll = int(disk.get("poll_seconds") or 0)
             if poll > 0 and search_yas <= KALP_PAY * poll:
                 alive, alive_neden = True, "kalp bayat ama arama ilerlemesi taze (uzun yansıma)"
-    every = int(config.goal().get("reflection_every", 5))
-    trades = store.read_jsonl("trades.jsonl")
-    closed = len(trades)
-    base = taban.get("last_reflect_at")
-    # Honest countdown: how many NEW trades must close before the standby loop reflects again. The old UI
-    # formula was `every - closed_trades`, which is 0 for any book with more trades than `every` — i.e. it
-    # always read "hazır" (ready), which was simply false. Computed here so there is ONE source of truth.
-    since = max(0, closed - int(base)) if base is not None else 0
-    # Horizon computed FRESH on every status read (not only in the standby loop's healthy branch), so the
-    # dashboard shows the real gate even during HALT/stale and before the first poll.
-    live_reg = store.read_json("regime.json", {}).get("regime")
-    live_reg = live_reg if live_reg in config.VALID_REGIMES else None
-    horizon = _horizon_progress(trades, int(base) if base is not None else closed, live_reg, every)
+    # DÜRÜST GERİ SAYIM + UFUK: tek hesap yeri `yansima_kapisi` (bekçinin öğrenme-canlılık alarmı da
+    # oradan okur — TSK-204). Pano burada yalnız alanları taşır, formül üretmez.
+    kapi = yansima_kapisi(taban)
     brain = _brain()
     return {**taban, "active": alive, "active_neden": alive_neden, "surec_ici": icerde,
             "search_durumu": search_durumu, "brain": brain, "model": model,
             "brain_availability": _brain_availability(), "brain_chain": _brain_chain(),
             "brain_degraded": brain == "deterministic",
-            "reflection_every": every, "closed_trades": closed,
-            "trades_since_last_reflection": since,
-            "trades_until_next": max(0, every - since),
-            "horizon": horizon, "horizon_ready": horizon["ready"], "horizon_regime": live_reg,
+            "reflection_every": kapi["reflection_every"], "closed_trades": kapi["closed_trades"],
+            "trades_since_last_reflection": kapi["trades_since_last_reflection"],
+            "trades_until_next": kapi["trades_until_next"],
+            "horizon": kapi["horizon"], "horizon_ready": kapi["horizon_ready"],
+            "horizon_regime": kapi["horizon_regime"],
             "search": search,                      # live coordinate-descent progress (probe i/total, best)
             "reflecting": _reflect_lock.locked()}

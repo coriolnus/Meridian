@@ -4951,8 +4951,8 @@ def _bg_on_eleme_kaydi(proposal: dict | None, *, pvar: str, certified, red_neden
           `DEAD_FAMILY_MIN_N = 3`'tür. Ölçülen dağılımda `entry.w_turnover` 21 satır demektir →
           aile ANINDA "ölü" ilan edilir, düğme `hermes.virgin_knobs()`un bakir listesinden DÜŞER.
           Yani reddedilen öneriler öneri UZAYINI daraltırdı — düzeltmenin tam tersi.
-      (b) `watchdog._learning_liveness` (`watchdog.py` → `_learning_liveness`) yaşı `ts`ten ölçer ve 168 saatte
-          "öğrenme durdu" der. TAZE bir satır bu alarmı SIFIRLAR — bu kusuru gösterebilecek TEK
+      (b) `watchdog._learning_liveness` (`watchdog.py` → `_learning_liveness`) son 7 günün hipotezlerini `ts`ten
+          sayar; TAZE bir satır "tam sessizlik" ayağını (B, TSK-204) SIFIRLAR — bu kusuru gösterebilecek
           alarm, kusurun kendi kaydıyla maskelenirdi.
       (c) `selfreview`ın 25/15 satırlık pencereleri (`selfreview._near_miss_attention` +
           `selfreview.contradictions`) düğmeyi "denendi" sayar ve kanıt→hipotez dikkat satırlarını BASTIRIR; ayrıca satır başına gerçek

@@ -3759,7 +3759,7 @@ def check_onayli_gonderim_and_alarm() -> dict:
 # =============================================================================================
 
 SPRINT_ORPHAN_STALE_H = 3 * 24        # pid canlı görünse de durum bu kadar bayatsa: pid yeniden-kullanım şüphesi
-LEARNING_STALL_H = 7 * 24             # bu kadar süredir YENİ hipotez yok → öğrenme durdu (triyaj eşiği; hafta sonunu kapsar)
+LEARNING_STALL_H = 7 * 24             # (A) dolu vadenin / (B) tam sessizliğin süresi → öğrenme durdu (triyaj eşiği; hafta sonunu kapsar)
 # TERMİNAL FAZLAR: sprint DURMUŞ ve bunu DÜRÜSTÇE söylüyor (orphan DEĞİL). Kaynak: app.js
 # `SPRINT_PHASE_TR` sözlüğü — "in-progress" fazlar (starting/baseline/search/candidate) canlılık
 # İDDİA EDER; terminal fazlar (done/stopped/…) etmez, boş faz da (hiç koşmamış) etmez.
@@ -3815,36 +3815,178 @@ def _sprint_liveness() -> dict:
                       + (f", son güncelleme {age_h} sa önce" if age_h is not None else ""))}
 
 
+def _gorus_dolgusu_kolu(esik_epoch: float) -> dict:
+    """(B) ayağının GÖRÜŞ kolu — `esik_epoch`tan beri DOLGULANAN görüş sayısı (02 Eylül tasarımının
+    "dolgulanan görüş sayısı"). Dönüş `{n, neden}`; ölçülemezse `n` None + neden (uydurma yok).
+
+    KAYNAK `plan_atif.jsonl` — sözleşmeli defter (`ledgers.CONTRACTS`, tek yazar `hermes._plan_atif_yaz`):
+    `hermes.backfill_opinions` damgaladığı HER plan için bir satır yazar, `backfill=true`, `ts` = DAMGA
+    anı (`plan_date` aylar öncesini gösterebilir — sözleşme notu bu ayrışmayı beyan eder). Karar-anı
+    inceleme görüşü (`backfill=false`) dolgu DEĞİLDİR, sayılmaz. `learning_cadence` olayının
+    `dolgu=true` alanı "dolgu BAŞLADI" der, "görüş damgalandı" DEMEZ — sayı bu defterden okunur.
+    (`gorus_kuyruk_n` ayrı bir şeydir: `skill_gorus` t-anı kesit kuyruğu, dolgu değil.)"""
+    from . import obs
+    try:
+        rows = store.read_jsonl("plan_atif.jsonl")
+    except Exception as e:
+        obs.warn("liveness_gorus_probe_dustu", error=f"{type(e).__name__}: {e}")
+        return {"n": None,
+                "neden": f"görüş dolgusu defteri (plan_atif.jsonl) okunamadı ({type(e).__name__})"}
+    dolgu = [r for r in rows if isinstance(r, dict) and r.get("backfill") is True]
+    damgalar = [t for t in (_iso_ts(r.get("ts")) for r in dolgu) if t is not None]
+    if dolgu and not damgalar:
+        return {"n": None,
+                "neden": f"{len(dolgu)} dolgu satırının hiçbirinin damgası (ts) ayrıştırılamadı"}
+    return {"n": sum(1 for t in damgalar if t >= esik_epoch), "neden": None}
+
+
+def _yansima_ayagi(simdi: float, hip_yas_h: float | None) -> dict:
+    """(A) ayağı — YANSIMA VADESİ DOLU AMA YANSIMA YOK. Dönüş `{A, kapi, son_isinma, neden}`; `A`
+    True/False/None (None = ölçülemedi, neden taşır).
+
+    KAPI BURADA HESAPLANMAZ: `hermes_runtime.yansima_kapisi()` okunur — pano geri sayımı da oradan okur
+    ve bekleme döngüsü yansımayı aynı `_yansima_vadesi` yüklemiyle ateşler (tek-kaynak yasası; ikinci
+    bir kapı uygulaması yok). Vade YAŞI = şimdi − vadeyi dolduran kapanışın damgası; o damga ölçülemezse
+    son hipotezin yaşı VEKİL olur ve beyan bunu söyler (vekil yalnız o hâlde: ölçülmüş bir vade anı
+    varken hipotez yaşı kullanılsaydı her normal yansımanın 1-3 saatlik araması bir yanlış alarm olurdu)."""
+    from . import obs
+    try:
+        from . import hermes_runtime as _hr
+        k = _hr.yansima_kapisi()
+    except Exception as e:
+        obs.warn("liveness_kapi_probe_dustu", error=f"{type(e).__name__}: {e}")
+        return {"A": None, "kapi": None, "son_isinma": None,
+                "neden": f"yansıma kapısı okunamadı ({type(e).__name__})"}
+    hz = k.get("horizon") or {}
+    kapi = {"ilerleme": f"{k.get('trades_since_last_reflection')}/{k.get('reflection_every')}",
+            "ufuk": f"{hz.get('span_days')}/{hz.get('min_days')} gün", "rejim": k.get("horizon_regime"),
+            "taban": k.get("last_reflect_at"), "vade_doldu": bool(k.get("vade_doldu")),
+            "vade_yas_h": None, "vade_kaynagi": None, "neden": None}
+    out = {"kapi": kapi, "son_isinma": k.get("son_isinma"), "neden": None}
+    if not kapi["vade_doldu"]:
+        return {**out, "A": False}
+    t = _iso_ts(k.get("vade_ts")) if k.get("vade_ts") else None
+    if t is not None:
+        kapi["vade_yas_h"], kapi["vade_kaynagi"] = round((simdi - t) / 3600, 1), "kapanis_damgasi"
+    elif hip_yas_h is not None:
+        kapi["vade_yas_h"], kapi["vade_kaynagi"] = hip_yas_h, "hipotez_yasi_vekil"
+        kapi["neden"] = (k.get("vade_ts_neden")
+                         or f"vade damgası ayrıştırılamadı ({k.get('vade_ts')!r})")
+    else:
+        kapi["neden"] = (k.get("vade_ts_neden") or "vade damgası ayrıştırılamadı")
+        return {**out, "A": None,
+                "neden": f"{kapi['neden']}; vekil (son hipotez yaşı) da ölçülemedi — vade yaşı ÖLÇÜLEMEDİ"}
+    return {**out, "A": kapi["vade_yas_h"] > LEARNING_STALL_H}
+
+
 def _learning_liveness() -> dict:
-    """Öğrenme döngüsü GERÇEKTEN yeni bir şey üretiyor mu? shadow_fit/axis2_cycle NABZI her seans
-    atar; ama hipotez defteri günlerce donuk kalabilir ("kadans koşuyor" ≠ "öğrenme ilerliyor").
-    En taze hipotezin YARATILMA damgasını (`ts`, memory.record) ölçer — durum güncellemeleri
-    (`status_ts`) yaşı tazelemesin diye dosya mtime'ı DEĞİL kayıt damgası kullanılır."""
+    """Öğrenme döngüsü GERÇEKTEN durdu mu? shadow_fit/axis2_cycle NABZI her seans atar; ama öğrenme
+    günlerce donuk kalabilir ("kadans koşuyor" ≠ "öğrenme ilerliyor"). İKİ AYAKLI TETİK (TSK-204,
+    Rol-1 kararı 2026-09-25) — `stalled` YALNIZ şu iki hâlde:
+
+      (A) VADE DOLDU AMA YANSIMA YOK — yansıma kapısı (`hermes_runtime.yansima_kapisi`, bkz.
+          `_yansima_ayagi`) sağlanmış ve bu hâl `LEARNING_STALL_H`ten uzun sürüyor.
+      (B) TAM SESSİZLİK — son `LEARNING_STALL_H` içinde NE yeni hipotez NE görüş dolgusu
+          (2026-09-02 özgün tasarımı; görüş kolu `_gorus_dolgusu_kolu`).
+
+    Aksi hâlde `ok: True` ve beyan BİLGİ taşır: kapı ilerlemesi, son hipotez yaşı, pencere içi görüş
+    dolgusu, son ısınma turu. ÜÇ DEĞERLİ: ölçülemeyen kol None + neden; bir ayak True ise durdu, hiçbiri
+    True değil ama biri None ise ÖLÇÜLEMEDİ ('taze' DEMEZ), ikisi de False ise ok. Hipotez yaşı dosya
+    mtime'ından DEĞİL kayıt damgasından (`ts`, memory.record) ölçülür — durum güncellemeleri
+    (`status_ts`) yaşı tazelemesin.
+
+    BEDEL (bedel yasası — ne KAYBEDİLDİ): eski tetik "7 gündür yeni hipotez yok"tu. Kapanış akışı ~1/2
+    gün iken yansıma kapısı (5 kapanış + ≥30 gün canlı-rejim ufku) ~10 günde bir dolar; yani eski tetik
+    TASARIM GEREĞİ bekleyen kapıyı her gün "DURDU" diye çalıyordu (canlıda 35,1 gün, 2026-09-25). Artık
+    YALNIZ kapanış kuraklığından doğan sessizlik alarm DEĞİL — kapı ilerlemesi beyanda görünür (pano
+    `liveness.learning`), kuraklığın kendisi bu bekçinin değil işlem motorunun konusudur. Gerçek durma
+    yine öter: vade dolup yansıma koşmuyorsa (A), ya da öğrenme hattı topyekûn susmuşsa (B). Bekleme
+    döngüsünün ÖLÜMÜ bu dedektöre bağlı değildir: `hermes_poll` nabzı (30 dk pencere, `EXPECTED`) onu
+    ayrıca yakalar. Kaybedilen tek sınıf: vade dolmamışken VE görüş dolgusu işlerken hipotez üretiminin
+    tek başına susması — o hâl yansıma zaten koşmadığı için tasarım gereğidir."""
     from . import obs
     try:
         hyps = store.read_jsonl("hypotheses.jsonl")
     except Exception as e:
         obs.warn("liveness_learning_probe_dustu", error=f"{type(e).__name__}: {e}")
-        return {"ok": None, "olculemedi": True,
+        return {"ok": None, "olculemedi": True, "stalled": False,
+                "neden": f"hipotez defteri okunamadı ({type(e).__name__})",
                 "beyan": f"öğrenme canlılığı ÖLÇÜLEMEDİ ({type(e).__name__}) — 'taze' DEMEZ"}
     n = len(hyps)
     if n == 0:
         # HİÇ hipotez yok = 'durdu' DEĞİL; ayrı bir hâl (production_report bunu 'starved' der).
         return {"ok": True, "stalled": False, "n": 0,
                 "beyan": "henüz hiç hipotez yok — 'durdu' değil, hiç başlamadı (bkz. production starved)"}
+    simdi = _now()
+    esik = simdi - LEARNING_STALL_H * 3600
+    gun_esik = LEARNING_STALL_H // 24
     tslist = [t for t in (_iso_ts(h.get("ts")) for h in hyps) if t is not None]
-    if not tslist:
-        return {"ok": None, "olculemedi": True, "n": n,
-                "beyan": "hipotez kayıt damgası (ts) ayrıştırılamadı — öğrenme yaşı ÖLÇÜLEMEDİ, 'taze' DEMEZ"}
-    age_h = round((_now() - max(tslist)) / 3600, 1)
-    stalled = age_h > LEARNING_STALL_H
-    gun = round(age_h / 24, 1)
-    if stalled:
-        return {"ok": False, "stalled": True, "n": n, "age_h": age_h,
-                "beyan": (f"öğrenme DURDU — {gun} gündür yeni hipotez yok (son kayıt {age_h} sa önce, "
-                          f"eşik {LEARNING_STALL_H // 24} gün): kadans nabzı atıyor ama defter donuk")}
-    return {"ok": True, "stalled": False, "n": n, "age_h": age_h,
-            "beyan": f"öğrenme ilerliyor — en taze hipotez {age_h} sa önce"}
+    age_h = round((simdi - max(tslist)) / 3600, 1) if tslist else None
+    hip_7g = sum(1 for t in tslist if t >= esik) if tslist else None
+    hip_neden = (None if tslist else
+                 "hipotez kayıt damgası (ts) ayrıştırılamadı — son hipotez yaşı ÖLÇÜLEMEDİ")
+    gorus = _gorus_dolgusu_kolu(esik)
+    gorus_n = gorus["n"]
+    ya = _yansima_ayagi(simdi, age_h)
+    a = ya["A"]
+    # (B) 02 Eylül: İKİ KOL BİRDEN sıfırsa. Bir kol ölçülemese de öteki pozitifse (B) yine yanlışlanır.
+    if hip_7g is not None and gorus_n is not None:
+        b = hip_7g == 0 and gorus_n == 0
+    elif (hip_7g or 0) > 0 or (gorus_n or 0) > 0:
+        b = False
+    else:
+        b = None
+    kapi = ya.get("kapi") or {}
+    isinma = ya.get("son_isinma") if isinstance(ya.get("son_isinma"), dict) else None
+    # ---- BİLGİ (her hâlde beyanda) ----
+    bilgi = []
+    if kapi:
+        vade = ""
+        if kapi.get("vade_doldu"):
+            vy = kapi.get("vade_yas_h")
+            vade = (f", vade DOLU ({round(vy / 24, 1)} gündür)" if vy is not None
+                    else ", vade DOLU (süresi ÖLÇÜLEMEDİ)")
+        bilgi.append(f"yansıma kapısı {kapi.get('ilerleme')} (ufuk {kapi.get('ufuk')}, "
+                     f"rejim {kapi.get('rejim') or '—'}){vade}")
+    else:
+        bilgi.append(f"yansıma kapısı ÖLÇÜLEMEDİ ({ya.get('neden')})")
+    bilgi.append(f"son hipotez {round(age_h / 24, 1)} gün önce" if age_h is not None
+                 else "son hipotez yaşı ÖLÇÜLEMEDİ")
+    bilgi.append(f"son {gun_esik} günde {gorus_n} görüş dolgusu" if gorus_n is not None
+                 else f"görüş dolgusu ÖLÇÜLEMEDİ ({gorus['neden']})")
+    if isinma:
+        bilgi.append(f"son ısınma evaluated {isinma.get('evaluated')} · cleared {isinma.get('cleared')}"
+                     if "error" not in isinma else f"son ısınma hata ({isinma.get('error')})")
+    alanlar = {"n": n, "age_h": age_h, "hipotez_7g": hip_7g, "hipotez_neden": hip_neden,
+               "gorus_dolgusu_7g": gorus_n, "gorus_neden": gorus["neden"], "kapi": kapi or None,
+               "kapi_neden": ya.get("neden"), "son_isinma": isinma}
+    ayak = [ad for ad, v in (("A", a), ("B", b)) if v is True]
+    if ayak:
+        gerekce = []
+        if a is True:
+            vekil = (" — vade anı ölçülemedi, son hipotez yaşı vekil"
+                     if kapi.get("vade_kaynagi") == "hipotez_yasi_vekil" else "")
+            gerekce.append(f"(A) yansıma vadesi {round(kapi['vade_yas_h'] / 24, 1)} gündür DOLU ama "
+                           f"yansıma yok (kapı {kapi.get('ilerleme')}, eşik {gun_esik} gün{vekil})")
+        if b is True:
+            gerekce.append(f"(B) son {gun_esik} günde ne yeni hipotez ne görüş dolgusu")
+        return {"ok": False, "stalled": True, "ayak": ayak, **alanlar,
+                "beyan": f"öğrenme DURDU — {'; '.join(gerekce)} · {' · '.join(bilgi)}"}
+    if a is None or b is None:
+        nedenler = [x for x in ((ya.get("neden") if a is None else None),
+                                (f"(B) hükümsüz: {hip_neden or gorus['neden']}" if b is None else None)) if x]
+        return {"ok": None, "olculemedi": True, "stalled": False, "ayak": [], **alanlar,
+                "neden": "; ".join(nedenler),
+                "beyan": (f"öğrenme canlılığı ÖLÇÜLEMEDİ — {'; '.join(nedenler)} — 'taze' DEMEZ · "
+                          f"{' · '.join(bilgi)}")}
+    if (hip_7g or 0) > 0:
+        bas = "öğrenme ilerliyor"
+    elif kapi.get("vade_doldu"):
+        bas = f"yansıma vadesi dolu, eşik ({gun_esik} gün) içinde — yansıma bekleniyor"
+    else:
+        bas = "öğrenme BEKLİYOR (tasarım gereği — yansıma vadesi dolmadı)"
+    return {"ok": True, "stalled": False, "ayak": [], **alanlar,
+            "beyan": f"{bas} — {' · '.join(bilgi)}"}
 
 
 def liveness_report() -> dict:
