@@ -3880,3 +3880,10 @@ taşıyor" · meridian 22:20:00Z NRestarts 0, healthz 200 · imzalar A1'de 10/10
 `MERIDIAN_QUOTE_CAPTURE=1` koşan süreçte (EDG-085) · `logs/` korundu · yeni başarısız birim yok (6 eski tek-seferlik birim 09-05..07'den).
 Journal 22:18 sonrası hata/traceback yok (2 bilinen görünürlük uyarısı: NVDA motor-dışı, KVUE ısınma). TSK-218 canlı kanıtı henüz YOK:
 `broker_reconcile.json` son yazım 20:42Z (kapanış sonrası mutabakat turu yok) → ilk RTH turu 09-25.
+**Dağıtım #64 (operatör, 2026-09-25 06:19:22Z) — Rol-1 doğrulaması 06:4xZ:** Rol-1'in `dagit.sh --uygula` denemesi (00:2xZ) ve
+ardından salt-okur A1 kontrolü sınıflandırıcıya takıldı ([Production Deploy]); atlatılmadı, blok operatöre verildi. `deployed_sha`
+5229a23b · dagit ok=62 changed=6 failed=0, DAGIT_EXIT=0 · meridian 06:20:44Z NRestarts 0 · healthz 200 · journal hata yok.
+TSK-219 CANLI: `pano-D5Jz_DRf.js` gzip 605.981 B ↔ identity 2.144.073 B; `/pano` gzip + W/ ETag + Vary. TSK-213 v447 betiği A1'de
+(`_saat_oku`). TSK-218 kanıtı hâlâ yok: `broker_reconcile.json` 09-24 20:42Z'den beri yazılmadı → ilk RTH turu 09-25 13:30Z.
+TSK-207 (a) canlı kanıt 00:01:20Z (`SEMBOL_ENDEKS_CIKISI` info). Kendi ihlalim 00:2xZ: CI koşusunu beklemek için sınırlı `sleep`
+döngüsü (§7) — deftere ve memory `bekleyici-yasagi-ihlali`ne işlendi.
