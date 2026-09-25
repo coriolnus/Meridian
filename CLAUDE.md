@@ -19,9 +19,12 @@ kuralı silmeden/gevşetmeden önce o kaydı oku. Sayı taşıyan her satır öl
 5. Rol-1 isen A1'de `~/bin/sayfa_oku.sh meridian-hedef-sapma` (LLM'siz GET) oku; sayfa bir karara
    girerse o kararın yanına `kaynak: zihin modeli <ad> v<n>` yaz, girmezse yazma (sahte-kullanım yasağı).
    Kural EDG-2026-089 penceresinin ön şartıdır (operatör (b) melez+retain, 2026-09-13); kaldırılırsa kart KALIR.
-6. Rol-1 isen `python ops/roadmap_cephe_ozeti.py --tetikler` oku: VADESİ GEÇEN OKUMA ve BAYAT AKTİF satırları
-   o vardiyanın işidir, SAYAÇ TETİKLERİ A1'de ölçülür. Tetikler düzyazıdır ve hiçbir şey onları sormuyordu (vaka
-   2026-09-24: iki gecikmiş okuma, fark edilmemiş bir ≥5 tetiği, 9 gün kapanışsız bir kalem — TSK-217).
+6. Rol-1 isen `python ops/roadmap_cephe_ozeti.py --tetikler` oku: VADESİ GEÇEN OKUMA, BAYAT AKTİF ve BAYAT KAPI
+   satırları o vardiyanın işidir — BAYAT KAPI'daki her tetiği yeniden ölç ve kaleme TARİHLİ not düş (not düşülmeyen
+   kalem listede kalır; kapı metnindeki bağlam tarihi de "not" sayılır, o kalemler geç görünür); SAYAÇ TETİKLERİ A1'de
+   ölçülür. Tetikler düzyazıdır ve hiçbir şey onları sormuyordu (vaka 2026-09-24: iki gecikmiş okuma, fark edilmemiş bir
+   ≥5 tetiği, 9 gün kapanışsız bir kalem — TSK-217; vaka 2026-09-25: TSK-062'nin düzyazı kapısı 2026-09-10'da ateşledi,
+   15 gün hiçbir bölümde görünmedi — TSK-220).
 
 **Muafiyet kuralı:** "Bu kural bana uygulanmaz" diye düşünüyorsan, bu düşünce dur-ve-sor nedenidir.
 Ölçülmüş ihlallerin hepsi muafiyet iddiasıyla başladı (vaka 2026-08-26).
