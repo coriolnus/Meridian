@@ -26,10 +26,12 @@ KULLANIM (depo kökünden):
     python ops/roadmap_cephe_ozeti.py --dosya <yol> # başka bir ROADMAP (çiviler bunu kullanır)
     python ops/roadmap_cephe_ozeti.py --tetikler [--bugun AAAA-AA-GG]
                                                     # vadesi geçen okuma · bayat aktif · sayaç tetikleri (TSK-217)
+                                                    # + bayat kapı (TSK-220)
 
-OKUYAN: `tests/test_roadmap_cephe_ozeti_v535.py` (ayrışma + cephe bağı çivileri) ve ROADMAP §3'ü
-okuyan operatör. Yalnız stdlib — `meridian` import ETMEZ, yani pytest dışında koşmak canlı ya da
-yerel deftere dokunmaz.
+OKUYAN: `tests/test_roadmap_cephe_ozeti_v535.py` (ayrışma + cephe bağı çivileri), tetik raporu çivileri
+`tests/test_roadmap_tetik_raporu_v539.py` + `tests/test_roadmap_bayat_kapi_v544.py`, ROADMAP §3'ü
+okuyan operatör ve `--tetikler`i vardiya başında okuyan Rol-1 (CLAUDE.md §0 adım 6). Yalnız stdlib —
+`meridian` import ETMEZ, yani pytest dışında koşmak canlı ya da yerel deftere dokunmaz.
 """
 from __future__ import annotations
 
@@ -86,6 +88,13 @@ def cephe_adlari(metin: str) -> dict[str, str]:
     return adlar
 
 
+def _tahta_durum_hucresi(s: str) -> str | None:
+    """Tahta satırının DURUM hücresi: kimlikten sonra durum sözlüğüyle başlayan İLK hücre (yoksa None).
+    `acik_kalemler` durumu, `tetik_raporu` GATED(...) kapı metnini bu TEK tanımdan okur."""
+    hucreler = [h.strip() for h in s.strip().strip("|").split("|")]
+    return next((h for h in hucreler[1:] if DURUM_DESENI.match(h)), None)
+
+
 def acik_kalemler(metin: str) -> list[dict]:
     """Taranan bölümlerdeki AÇIK TSK kalemleri, dosya sırasıyla.
 
@@ -125,8 +134,8 @@ def acik_kalemler(metin: str) -> list[dict]:
         tsk = m.group(1)
         if tsk in gorulen:
             continue
-        hucreler = [h.strip() for h in s.strip().strip("|").split("|")]
-        durum = next((DURUM_DESENI.match(h).group(1) for h in hucreler[1:] if DURUM_DESENI.match(h)), None)
+        hucre = _tahta_durum_hucresi(s)
+        durum = DURUM_DESENI.match(hucre).group(1) if hucre is not None else None
         if durum is None or durum in KAPALI_DURUMLAR:
             gorulen.add(tsk)
             continue
@@ -149,10 +158,24 @@ def acik_kalemler(metin: str) -> list[dict]:
 #   3. OPERATÖRDE BEKLEYEN — OPERATOR kalemleri, en yeni notun yaşıyla (bilgi).
 #   4. SAYAÇ TETİKLERİ — GATED `trigger:` alanında `n≥`/`≥N` geçen kalemler; sayaçlar A1'de yaşar,
 #      burada ÖLÇÜLEMEZ → yalnız listelenir (elle ölçülür, uydurma yasağı).
+#   5. BAYAT KAPI (TSK-220, 2026-09-25) — GATED kalemin en yeni notu `BAYAT_KAPI_GUN`den eski (ya da
+#      kalem hiç tarih taşımıyor). Tetik düzyazıdır, ÖLÇÜLEMEZ; ölçülen yalnız SESSİZLİKTİR → kalem en
+#      eski önce, GATED(...) içindeki tetik metniyle listelenir; vardiya tetiği elle yeniden ölçer ve
+#      tarihli not yazar (not yazılınca kalem düşer). VAKA: TSK-062'nin kapısı ("geri-dolum programının
+#      tamamlanması") ~09-12'de ateşledi, 13 gün fark edilmedi — tetiği sayaç desenli olmadığı için 4.
+#      sınıf onu hiç göstermedi.
 # BİLEREK YAPILMAYAN: "tetik alanındaki tarih geçti" kontrolü. Ölçüldü (2026-09-24): 8 GATED tetiğinde
 # tarih geçiyor ve 8'i de BAĞLAM tarihidir (hüküm/ölçüm günü), hiçbiri son tarih değil — kontrol yalnız
 # yanlış alarm üretirdi. İLERİ TARİHLER (notlardaki "≈2026-10-22" öngörüleri) "en yeni not"a sayılmaz.
 BAYAT_AKTIF_GUN = 7
+#: EŞİK ÖLÇÜMÜ (2026-09-25, 30 açık GATED): > 7 gün → 16 kalem · > 10..16 → 14 (düzlük: 10 ile 17 gün
+#: arasında kalem yok) · > 21 → 6 · > 30 → 2. 10 düzlüğün alt ucu: bugünkü listeye satır eklemeden en
+#: kısa sessizliği yakalar — ateşleyen bir tetik en geç 11 gün sonra listede (TSK-062 vakası 13 gün;
+#: v544 K10 eşiği ≥13'e gevşetmeyi kırar). BEDEL: 8–10 gün notsuz kapılar görünmez (bugün 2: TSK-128
+#: 9 g, TSK-065 10 g); 7 seçilseydi kazanç bu ikisi, bedel: notlanan kalem 11 yerine 8 günde bir döner.
+BAYAT_KAPI_GUN = 10
+#: Tetik metni kısaltma sınırı (4. ve 5. sınıf ortak). Kısaltılan metin ADIYLA işaretlenir (`_kisalt`).
+TETIK_AZAMI = 160
 _TARIH_DESENI = re.compile(r"20\d\d-\d\d-\d\d")
 _GORELI_OKUMA_DESENI = re.compile(r"(\d+) (gün|hafta) sonra")
 _SAYAC_DESENI = re.compile(r"n\s*≥|≥\s*\d")
@@ -192,11 +215,40 @@ def _gecmis_tarihler(metin: str, bugun: dt.date) -> list[dt.date]:
     return sonuc
 
 
+def _kisalt(metin: str, azami: int = TETIK_AZAMI) -> str:
+    """Metni `azami` karaktere indirir; kısalttıysa bunu ADIYLA ve özgün boyla söyler (sessiz kırpma yok)."""
+    metin = metin.strip()
+    if len(metin) <= azami:
+        return metin
+    return f"{metin[:azami]}… [kısaltıldı: {len(metin)}→{azami} karakter]"
+
+
+def _kapi_metni(ilk: str, k: dict) -> str | None:
+    """GATED kalemin kapı metni: durum jetonundan hemen sonraki DENGELİ parantezin içi (iç içe
+    parantez korunur: `GATED(EDG-062(b) inişinden sonra)`). Parantez yoksa None; kapanmıyorsa
+    satırın/hücrenin kalanı, kapanmadığı ADIYLA. Durum konumu `acik_kalemler`in tanımından gelir:
+    başlıkta `BASLIK_DESENI`, tahtada `_tahta_durum_hucresi`."""
+    if k["yuzey"] == "baslik":
+        s, bas = ilk, BASLIK_DESENI.match(ilk).end()
+    else:
+        s = _tahta_durum_hucresi(ilk) or ""
+        m = DURUM_DESENI.match(s)
+        bas = m.end() if m else len(s)
+    if bas >= len(s) or s[bas] != "(":
+        return None
+    derinlik = 0
+    for i in range(bas, len(s)):
+        derinlik += {"(": 1, ")": -1}.get(s[i], 0)
+        if derinlik == 0:
+            return s[bas + 1:i]
+    return s[bas + 1:] + " [parantez kapanmıyor]"
+
+
 def tetik_raporu(metin: str, bugun: dt.date) -> dict[str, list[dict]]:
-    """Açık kalemlerin zaman/kapı durumu — dört liste (yukarıdaki blok). Hepsi bilgi amaçlıdır."""
+    """Açık kalemlerin zaman/kapı durumu — beş liste (yukarıdaki blok). Hepsi bilgi amaçlıdır."""
     satirlar = metin.splitlines()
     bolumler = _bolum_etiketleri(satirlar)
-    rapor: dict[str, list[dict]] = {"vadesi_gecen_okuma": [], "bayat_aktif": [],
+    rapor: dict[str, list[dict]] = {"vadesi_gecen_okuma": [], "bayat_aktif": [], "bayat_kapi": [],
                                     "operatorde_bekleyen": [], "sayac_tetikleri": []}
     for k in acik_kalemler(metin):
         blok = _kalem_metni(satirlar, k, bolumler)
@@ -228,13 +280,22 @@ def tetik_raporu(metin: str, bugun: dt.date) -> dict[str, list[dict]]:
             ilk = satirlar[k["satir"] - 1]
             tetik = ilk.split("trigger: ", 1)[1] if "trigger: " in ilk else ilk.strip().strip("|").split("|")[-1]
             if _SAYAC_DESENI.search(tetik):
-                rapor["sayac_tetikleri"].append({"tsk": k["tsk"], "tetik": tetik.strip()[:160]})
+                rapor["sayac_tetikleri"].append({"tsk": k["tsk"], "tetik": _kisalt(tetik)})
+            if en_yeni is None or (bugun - en_yeni).days > BAYAT_KAPI_GUN:
+                kapi = _kapi_metni(ilk, k)
+                rapor["bayat_kapi"].append(
+                    {"tsk": k["tsk"], "en_yeni_not": en_yeni.isoformat() if en_yeni else None,
+                     "gun": (bugun - en_yeni).days if en_yeni else None,
+                     "tetik": _kisalt(kapi if kapi is not None else f"[GATED parantezsiz — tetik alanı] {tetik}")})
+    # En eski önce; tarihsiz kalem (yaşı ÖLÇÜLEMEYEN) en başta — sessizce düşmez, sona da gömülmez.
+    rapor["bayat_kapi"].sort(key=lambda r: (r["en_yeni_not"] is not None, r["en_yeni_not"] or "", int(r["tsk"][4:])))
     return rapor
 
 
 def tetik_metni(rapor: dict[str, list[dict]]) -> str:
     """Raporun operatör/Rol-1 okur metni (boş sınıf da ADIYLA 'yok' der — sessizlik ölçüm değildir)."""
     bas = {"vadesi_gecen_okuma": "VADESİ GEÇEN OKUMA", "bayat_aktif": f"BAYAT AKTİF (> {BAYAT_AKTIF_GUN} gün notsuz)",
+           "bayat_kapi": f"BAYAT KAPI (GATED, > {BAYAT_KAPI_GUN} gün notsuz — tetiği yeniden ölç, tarihli not yaz)",
            "operatorde_bekleyen": "OPERATÖRDE BEKLEYEN", "sayac_tetikleri": "SAYAÇ TETİKLERİ (A1'de elle ölçülür)"}
     cikti = []
     for anahtar, baslik in bas.items():
@@ -308,7 +369,8 @@ def main(argv: list[str] | None = None) -> int:
     kip = ap.add_mutually_exclusive_group()
     kip.add_argument("--yaz", action="store_true", help="ROADMAP'teki bloğu yeniden üret")
     kip.add_argument("--denetle", action="store_true", help="yazma; bayat blok ya da cephesiz kalem → çıkış 1")
-    kip.add_argument("--tetikler", action="store_true", help="vadesi geçen okuma · bayat aktif · sayaç tetikleri")
+    kip.add_argument("--tetikler", action="store_true",
+                     help="vadesi geçen okuma · bayat aktif · bayat kapı · operatörde bekleyen · sayaç tetikleri")
     ap.add_argument("--dosya", type=pathlib.Path, default=VARSAYILAN_YOL)
     ap.add_argument("--bugun", type=dt.date.fromisoformat, default=None, help="rapor günü (AAAA-AA-GG; varsayılan UTC bugün)")
     ns = ap.parse_args(argv)
