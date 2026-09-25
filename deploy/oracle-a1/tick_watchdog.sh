@@ -51,9 +51,9 @@
 #   * Ölçülen 24 saatin TAMAMI seans dışıdır (2026-08-02 Pazar) ve maksimum poll aralığı yine
 #     302 sn çıktı.
 #   * MEKANİZMA (koda karşı doğrulandı): `scheduler.advance_once()` seans dışında "güncel" dalına
-#     düşer ve o dal `_persist()` çağırır (scheduler.py:976) — yani `scheduler_status.updated`
+#     düşer ve o dal `_persist()` çağırır (`scheduler.advance_once`) — yani `scheduler_status.updated`
 #     seanstan BAĞIMSIZ olarak her poll'de (300 sn) tazelenir. `_run()`un istisna dalı da
-#     `updated` yazar (scheduler.py:1051). Seans dışı olmak damganın DURMASI demek değildir.
+#     `updated` yazar (`scheduler._run`). Seans dışı olmak damganın DURMASI demek değildir.
 #   * CANLI KANIT: 2026-08-02 19:46:50Z ölçüm anı · scheduler_status.updated = 19:45:59Z → yaş 51 sn.
 #
 # ============================ YAS (YENİDEN-BAŞLATMA-SONRASI) ==================================
