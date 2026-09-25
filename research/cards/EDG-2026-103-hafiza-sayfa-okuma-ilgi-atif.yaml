@@ -1,0 +1,162 @@
+# EDG-2026-103 — Hindsight zihin modeli sayfaları NEDEN karara girmiyor: okuma / ilgi / atıf / fazlalık ayrımı (EDG-089 halefi)
+# ÖN-KAYIT 2026-09-25 09:0xZ (Rol-1; operatör 2026-09-25 AskUserQuestion "Hepsi sürsün, yeni ölçüm"). Taslak: Sonnet salt-okur
+# ajan (scratchpad hafiza-kart-taslagi.md), Rol-1 düzenledi. Üç kart (EDG-083/084/089) aynı yöntemle ("atıf yazıldı mı") aynı
+# sıfırı üretti; bu kart sıfırın NEDENİNİ ayırır.
+# HAFIZA KONTROLÜ (2026-09-25 09:0xZ, bu ön-kayıttan önce): A1 `hafiza_sor.sh` recall ("zihin modeli sayfaları karara girmiyor
+# okuma olayı atıf fazlalık recall") → doğrudan kayıt YOK; `ops/kart_benzer.py --hipotez "hafıza sayfaları neden karara girmiyor …"`
+# → EDG-2026-065 (0,12), EDG-2026-067 KALDI (0,11 — arama katmanı: recall ↔ operatör soruları; bu kart recall kalitesini değil
+# sayfa kullanımını ölçer, ref'e yazıldı), EDG-2026-061 (0,11), hindsight_hafiza ailesi (074 KALDI · 083 · 089 ≤0,03) →
+# aynı yöntemin tekrarı YOK (yöntem bilerek değişti).
+card_id: EDG-2026-103
+status: registered   # 2026-09-25 Rol-1 ön-kayıt; pencere ADIM-0 (a)–(d) tamamlanıp PK yeşil olunca açılır
+family: hindsight_hafiza
+on_kayit: 2026-09-25
+selef: EDG-2026-089
+ref: [EDG-2026-083, EDG-2026-084, EDG-2026-089, EDG-2026-067, TSK-060, TSK-142,
+      TSK-161, TSK-163, TSK-164, TSK-165, TSK-166, TSK-169, TSK-170,
+      "CLAUDE.md §0 adım 5 (oturum-başı sayfa okuma zorunluluğu)",
+      "CLAUDE.md §2 'Bir karar / ruling / ayar değişikliği yazmak' satırı (atıf türleri: sayfa/recall/memory)"]
+
+hipotez: >
+  Sayfaların karara GİRMEMESİ tek bir nedenle açıklanmıyor olabilir; bu kart dört adayı AYRI AYRI
+  ölçer ve pencere sonunda hangisinin/hangilerinin baskın olduğunu kolon kolon rapor eder (EDG-089
+  "iki hüküm cümlesi" deseninin dörde genişletilmiş hâli):
+    H1 OKUNMUYOR — oturum-başı zorunlu okuma (CLAUDE.md §0-5) fiilen çalışmıyor: doğrulanmış okuma
+       olayı (gerçek gövde, yer tutucu/hata DEĞİL) oturumların çoğunda YOK.
+    H2 OKUNUYOR AMA İLGİSİZ — okuma olayı var ama okunan sayfanın konusu, o pencerede yazılan
+       kararların konusuyla çoğunlukla örtüşmüyor (içerik-soru eşleşmesi zayıf).
+    H3 OKUNUYOR, İLGİLİ, ATIF YAZILMIYOR — okuma var, konu ÖRTÜŞÜYOR, karar yazılıyor, ama
+       `kaynak: zihin modeli <ad> v<n>` atfı düşüyor (ölçüm/alışkanlık körlüğü — sahte negatif;
+       089'un "araç kusuru" dersi: TESLİM değil SONUÇ ölçülür, o yüzden bu kol ayrı bir okuma-olayı
+       kaynağı gerektirir, önceki üç kartın kullandığı grep'in kendisi DEĞİL).
+    H4 FAZLALIK — kararlar zaten `kaynak: recall` / `kaynak: memory` / `ops/kart_benzer.py` ile
+       besleniyor; sayfa konuca mevcut ve ilgili olsa bile tercih edilmiyor (yedek/gölge kaynak).
+  Dördü karşılıklı dışlayıcı DEĞİL: pencuredeki her "karar" kendi kolonunda sınıflanır, sonuç bir
+  dağılımdır (örn. "%60 H4, %30 H3, %10 H1"), tek bir GEÇTİ/KALDI değil.
+
+k_registry: {registered_at: "2026-09-25", trial_ids:
+  [EDG-103-k1-okuma-kadansi, EDG-103-k2-konu-ilgisi, EDG-103-k3-atif-bosluk, EDG-103-k4-fazlalik]}
+# K=4, dördü birincil (EDG-089'un K=3 "kolon kolon" deseninin genişletilmişi). Sayaç-0 (karar
+# envanteri D) EŞİKSİZ/betimleyici — K'ya sayılmaz, ama D < n_min_karar ise dört kol da "ölçülemedi".
+
+adim_0_on_kosul: >
+  (a) CLAUDE.md §0 adım 5 (oturum-başı `sayfa_oku.sh meridian-hedef-sapma` okuma zorunluluğu)
+  pencere boyunca YÜRÜRLÜKTE kalmalı — kaldırılırsa/gevşetilirse K1 "ölçülemedi" değil KALDI sayılır
+  (kill-list). (b) YENİ okuma-olayı enstrümantasyonu (bkz. §3 araç listesi #1) bu karttan SONRA
+  yazılır ve kart AÇILMADAN önce en az bir kez elle test-ateşlenir (CLAUDE.md §9 deseni) — kart-önce
+  kuralı (EDG-089 kill-list #1 emsali). (c) Hindsight API'sinin mental-models GET'inin ZATEN bir
+  erişim/görüntülenme alanı (last_accessed_at, view_count vb.) tutup tutmadığı A1'de KONTROL EDİLİR;
+  tutuyorsa yeni log YAZILMAZ, var olan alan okunur (tek-kaynak yasası) — bu taslak bunu
+  VARSAYMIYOR, açık soru olarak bırakıyor. (d) karar-envanteri betiği (§3 #2) kart açılmadan önce
+  GEÇMİŞ bir haftada (ör. 2026-09-18…09-24) kuru-koşulup D sayısının makul aralıkta olduğu (ne 0 ne
+  yüzlerce) görülür — aracın kendisi hatalıysa (083/084/089'un kill listelerindeki gibi) pencere
+  başlamadan yakalanır.
+
+olcum_plani:
+  - "SAYAÇ-0 (D, karar envanteri, eşiksiz): pencere içi git log (mesaj) + ROADMAP.md hüküm/`status:
+     DONE(`/`KALDI`/`GEÇTİ` satırları + kart hükümleri + MERIDIAN_ENGINEERING_LOG.md 'KARAR
+     (operatör' / 'hüküm:' işaretli satırları — CLAUDE.md §2 tanımına uyan her 'karar/ruling/ayar
+     değişikliği'; her biri için: atıf var mı (evet/hayır), atıf türü (sayfa/recall/memory/
+     kart_benzer/yok), konu token kümesi (ops/kart_benzer.normalize_tokens ile — kopya yok, import)"
+  - "K1: A1 okuma-olayı logundan (§3 #1) — pencuredeki Rol-1 OTURUM SAYISI (S, kaynak: günlükteki
+     §0 oturum-başı kayıtları) paydasına karşı, ≥1 DOĞRULANMIŞ (gerçek gövde, HTTP 200, yer tutucu
+     DEĞİL) okuma olayı taşıyan oturum oranı"
+  - "K2: okuma olaylarının konu token kümesi (sayfanın son içerik/başlık anlık görüntüsünden) ile,
+     okumadan sonraki W saat (öneri: 48 s) içinde yazılan herhangi bir D kararının konu token
+     kümesi arasında Jaccard ≥ τ (öneri: 0.15, kart_benzer'in kendi skor aralığına göre kalibre
+     edilir) olan okuma-karar çiftlerinin oranı"
+  - "K3: K2'de 'ilgili' sayılan karar alt kümesi (D_ilgili) içinde, `kaynak: zihin modeli` atfı
+     taşıyanların oranı"
+  - "K4: D (ya da D_ilgili) içinde HERHANGİ bir hafıza atfı taşıyan kararlar arasında, atıf türü
+     recall/memory/kart_benzer İKEN aynı zamanda K2 anlamında ilgili bir taze sayfa da mevcutken
+     sayfa TERCİH EDİLMEYEN kararların oranı"
+  - "okuyucu: bu kartın 7./ya da kapanış-günü raporu research/olcumler/edg103_okuma_ilgi_atif/
+     altında; dört kolon + D + PK/NK sonucu tek md/json"
+
+esikler:
+  n_min_karar: 5        # D < 5 ise dört kol da 'ölçülemedi/örnek yetersiz' (YENİ gate — önceki üç
+                         # kart bunu hiç kontrol etmedi; '0 atıf' ile '0 karar fırsatı' ayrışmadı)
+  k1_okuma_kadansi_alt: 0.90   # oturumların ≥%90'ında doğrulanmış okuma olayı (zaten mandatory adım)
+  k2_konu_ilgisi_alt: 0.50     # okuma olaylarının ≥yarısı bir kararla konuca örtüşmeli
+  k3_atif_orani_alt: 0.50      # D_ilgili'nin ≥yarısı atıf taşımalı
+  k4_fazlalik_ust: 0.50        # atıflı kararların >yarısı sayfa yerine recall/memory/kart_benzer
+                                # ise fazlalık baskın sayılır (bu bir ÜST eşik, düşük iyi)
+  # eşikler DONUK (§5); τ (0.15) ve W (48 s) kart açılışında GEÇMİŞ bir haftada pilot-kalibre edilip
+  # DONDURULUR — kalibrasyon sonucu göründükten sonra değiştirilmez
+
+kill_list:
+  - "okuma-olayı enstrümantasyonu kart açılmadan önce yazılırsa/mevcutsa (kart-önce ihlali) →
+     geçersiz (EDG-089 kill-list #1 emsali)"
+  - "D < n_min_karar (5), pencere üst sınırında (21 gün) hâlâ → 'ölçülemedi/örnek yetersiz', pencere
+     UZATILMAZ, yeni pencere/karar operatöre (kill-list, dolmayan gün pencereyi uzatmaz emsali)"
+  - "okuma-olayı logu yer tutucu/hata gövdesini (ör. 'Generating content…') OKUNDU sayarsa → o
+     olay sayılmaz, ayrı işaretlenir (EDG-083 16:24Z paralel-set vakası emsali)"
+  - "CLAUDE.md §0-5 (oturum-başı okuma zorunluluğu) pencere içinde kaldırılır/uygulanmazsa → K1
+     'ölçülemedi' değil KALDI (bu kartın ön şartı)"
+  - "okuma-olayı logu ya da karar-envanteri çıktısı sır/kimlik değeri taşırsa (notify.scrub
+     süzgeci atlanırsa) → akış KAPATILIR, tek istisna yok"
+  - "PK/NK tutmazsa hiçbir sayı yayılmaz (apparatus doğrulanmamış demektir)"
+  - "elle/sentetik PK denemesi gerçek K1–K4 sayımına KARIŞMAZ, ayrı işaretlenir"
+  - "τ/W kalibrasyonu pencere AÇILDIKTAN sonra değiştirilirse → geçersiz (eşik sonradan değişmez,
+     §5)"
+
+pozitif_kontrol: >
+  YOL-TUTARLI SENTETİK (kurulumla birlikte, kart açılış günü): Rol-1 bilinen bir sayfayı
+  (`sayfa_oku.sh meridian-hedef-sapma`) kasıtlı okur, AYNI GÜN konuca örtüşen bilinen küçük bir
+  kararı `kaynak: zihin modeli meridian-hedef-sapma v<n>` atfıyla yazar (ör. bu kartın kendi açılış
+  notu). Ölçüm aleti BUNU (a) doğrulanmış okuma olayı, (b) konu-ilgili çift, (c) atıflı karar olarak
+  YAKALAMALI — üçü de tutmazsa apparatus doğrulanmamış sayılır (089 dersi: SONUCU doğrula, TESLİMİ
+  değil). NEGATİF KONTROL: aynı gün, sayfalardaki HİÇBİR konuyla örtüşmeyen bambaşka bir karar
+  (atıfsız) yazılır; araç bunu YANLIŞ POZİTİF olarak H3/H4'e sokmamalı (K2'de 'ilgisiz' kalmalı).
+  EK NK (EDG-083/089 mirası, mümkünse aynı NK sayfası yeniden kullanılır): `nk-kripto-madencilik`
+  sayfası pencere sonunda hâlâ 'bankada yok' hükmünü taşımalı (retain yeni konu icat etmiyor,
+  uydurma yasağı sınırında kalıyor).
+
+veri_penceresi: >
+  İlk doğrulanmış okuma-olayı kaydından itibaren EN AZ 7 gün VE EN AZ n_min_karar (5) karar
+  birikene kadar açık kalır, üst sınır 21 gün (kill-list). DEĞİŞİKLİK ÖNCEKİLERE GÖRE (beyan,
+  gerekçeli): EDG-083/084 sabit 7 günde "atipik hafta" itirafıyla kapandı (09-08 kazası, 09-09..11
+  oturumsuz) — sabit takvim günü yerine YETERLİ KARAR ÖRNEĞİ şartı eklenmesi, üçüncü kez aynı
+  yöntemle aynı belirsiz sonucu önlemenin en ucuz yolu. Banka: meridian-arsiv; canlı motor DEĞİL.
+
+maliyet_sutunu_zorunlu: >
+  Bu kart EDG-083/084/089'un aksine YENİ Hindsight LLM/kota tüketimi GEREKTİRMEZ — okuma-olayı logu
+  ve karar-envanteri deterministik/grep+token'dır (LLM çağrısı yok). Maliyet kolonu: okuma-logu
+  satır sayısı/gün, karar-envanteri betiğinin koşum süresi, A1-yerel disk (log dosyası boyutu).
+
+basari_tanimi: >
+  Pencere kapanışında dört kolon (K1–K4) + D + PK/NK sonucu research/olcumler/edg103_okuma_ilgi_atif/ altında;
+  hüküm AYNI turda karta + K defterine. Hangi kolon(lar) baskınsa TSK-060 ve 7 kapılı kalem
+  (TSK-161/163/164/165/166/169/170) için anlamı:
+    - H1 baskın (K1 KALDI) → yapısal/disiplin sorunu; düzeltme ÖNCE §0-5'i güçlendirmek (ör.
+      otomatik hatırlatma), sayfaların KENDİSİ hakkında henüz bir şey söylemez — TSK-060 kararı
+      ERTELENİR, yeni pencere §0-5 düzeltmesinden SONRA.
+    - H2 baskın (K1 GEÇTİ, K2 KALDI) → sayfa KONU TASARIMI kararların gündemiyle kopuk; sayfa
+      kümesi (S1–S11) gözden geçirilir ya da konuca daraltılır — TSK-060 kısmi devam (sayfa seti
+      revize), 7 kalem beklemede.
+    - H3 baskın (K1,K2 GEÇTİ, K3 KALDI) → en ucuz/aksiyona en yakın bulgu: sayfalar gerçekten
+      okunuyor ve ilgili ama atıf alışkanlığı eksik. TSK-060 sökme yönü ZAYIFLAR (mekanizma
+      çalışıyor); 7 kalem GEÇTİ sinyaline en yakın — önerilen sonraki adım (uygulama DEĞİL, not):
+      atıf hatırlatıcısı.
+    - H4 baskın (K1,K2,K3 GEÇTİ ama K4 yüksek) → EN GÜÇLÜ sökme sinyali: kararlar zaten
+      recall/memory'den doyuyor, sayfalar sistematik yedek/gölge. TSK-060 sökme yönü GÜÇLENİR, 7
+      kalem muhtemelen DÜŞER (gerekçeleri sayfa-temelli).
+    - D < n_min_karar → 'ölçülemedi'; TSK-060 kararı yine ERTELENİR, dördüncü aynı-yöntem
+      denemesine düşülmez (yeni pencere, aynı kart, sayaç sıfırlanmaz — kart AÇIK kalır).
+
+notlar: >
+  Bu kart neyi ÖLÇMEZ: retain kadansı ve otomatik tazeleme mekaniği (EDG-089 K1/K2 zaten ölçtü, K2
+  GEÇTİ — bu kart onu TEKRARLAMAZ, sonucu MİRAS alır). Bu kart de kâr/zarar ölçmez. `hindsight-aktif-
+  kullanim` (operatör 2026-09-06 direktifi) ve `karar-oncesi-hafiza-kontrolu` (operatör 2026-09-06,
+  kalıcı direktif) hafıza sayfaları bu taslağın doğrudan bağlamı; recall/kart_benzer BU turda
+  koşuldu; Rol-1 açılışta A1 recall'u da koştu (başlıktaki HAFIZA KONTROLÜ).
+
+adim_0_kaydi_2026_09_25: >
+  (Rol-1, A1 salt-okur, 09:0xZ) (c) CEVAPLANDI: Hindsight mental-models GET alanları (liste ve tekil aynı): bank_id, content,
+  created_at, id, is_stale, last_memory_seen_at, last_refreshed_at, max_tokens, name, reflect_response, source_query, tags,
+  trigger — erişim/görüntülenme/sayaç alanı YOK → okuma kaydı YENİ bir yazım yolu gerektirir. EK BULGU: `~/bin/sayfa_oku.sh`
+  ve `~/bin/hafiza_sor.sh` yalnız A1'de, DEPODA YOK (sürümsüz; `hafiza_ara.sh` depoya bağlı sembolik bağ) — okuma kaydı
+  eklenirken iki betik `deploy/hindsight/` altına alınıp bağla kurulur (tek-kaynak; F9 sınıfı), kayıt satırı: UTC ts · betik ·
+  sayfa/soru kimliği · HTTP durumu · gövde uzunluğu · gövde sha256 (yer tutucu/hata ayrımı). (a) CLAUDE.md §0 adım 5 yürürlükte.
+  (b) ve (d) SIRADA: enstrümantasyon + karar-envanteri betiği bu ön-kayıttan SONRA yazılır (TSK-222), en az bir kez elle
+  test-ateşlenir, (d) geçmiş hafta kuru koşumu yapılır; pencere ancak bundan sonra açılır.
