@@ -105,10 +105,11 @@ def test_T7_cli_tetikler_bos_siniflari_da_adiyla_basar(tmp_path, capsys):
         assert baslik in cikti, cikti
 
 
-def test_T8_gercek_roadmap_rapor_kosar_dort_sinif():
+def test_T8_gercek_roadmap_rapor_kosar_bes_sinif():
+    """Beşinci sınıf BAYAT KAPI 2026-09-25'te eklendi (TSK-220; çivileri v544)."""
     m = _mod()
     r = m.tetik_raporu((KOK / "ROADMAP.md").read_text(encoding="utf-8"), BUGUN)
-    assert set(r) == {"vadesi_gecen_okuma", "bayat_aktif", "operatorde_bekleyen", "sayac_tetikleri"}
+    assert set(r) == {"vadesi_gecen_okuma", "bayat_aktif", "bayat_kapi", "operatorde_bekleyen", "sayac_tetikleri"}
     assert r["sayac_tetikleri"], "gerçek dosyada en az bir sayaç tetiği bekleniyordu (2026-09-24: 4)"
 
 
