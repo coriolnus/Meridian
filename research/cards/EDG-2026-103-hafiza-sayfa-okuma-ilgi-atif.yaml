@@ -1,8 +1,8 @@
 # EDG-2026-103 — Hindsight zihin modeli sayfaları NEDEN karara girmiyor: okuma / ilgi / atıf / fazlalık ayrımı (EDG-089 halefi)
-# ÖN-KAYIT 2026-09-25 09:0xZ (Rol-1; operatör 2026-09-25 AskUserQuestion "Hepsi sürsün, yeni ölçüm"). Taslak: Sonnet salt-okur
+# ÖN-KAYIT 2026-09-25 08:0xZ (Rol-1; operatör 2026-09-25 AskUserQuestion "Hepsi sürsün, yeni ölçüm"). Taslak: Sonnet salt-okur
 # ajan (scratchpad hafiza-kart-taslagi.md), Rol-1 düzenledi. Üç kart (EDG-083/084/089) aynı yöntemle ("atıf yazıldı mı") aynı
 # sıfırı üretti; bu kart sıfırın NEDENİNİ ayırır.
-# HAFIZA KONTROLÜ (2026-09-25 09:0xZ, bu ön-kayıttan önce): A1 `hafiza_sor.sh` recall ("zihin modeli sayfaları karara girmiyor
+# HAFIZA KONTROLÜ (2026-09-25 08:0xZ, bu ön-kayıttan önce): A1 `hafiza_sor.sh` recall ("zihin modeli sayfaları karara girmiyor
 # okuma olayı atıf fazlalık recall") → doğrudan kayıt YOK; `ops/kart_benzer.py --hipotez "hafıza sayfaları neden karara girmiyor …"`
 # → EDG-2026-065 (0,12), EDG-2026-067 KALDI (0,11 — arama katmanı: recall ↔ operatör soruları; bu kart recall kalitesini değil
 # sayfa kullanımını ölçer, ref'e yazıldı), EDG-2026-061 (0,11), hindsight_hafiza ailesi (074 KALDI · 083 · 089 ≤0,03) →
@@ -152,7 +152,7 @@ notlar: >
   koşuldu; Rol-1 açılışta A1 recall'u da koştu (başlıktaki HAFIZA KONTROLÜ).
 
 adim_0_kaydi_2026_09_25: >
-  (Rol-1, A1 salt-okur, 09:0xZ) (c) CEVAPLANDI: Hindsight mental-models GET alanları (liste ve tekil aynı): bank_id, content,
+  (Rol-1, A1 salt-okur, 08:0xZ) (c) CEVAPLANDI: Hindsight mental-models GET alanları (liste ve tekil aynı): bank_id, content,
   created_at, id, is_stale, last_memory_seen_at, last_refreshed_at, max_tokens, name, reflect_response, source_query, tags,
   trigger — erişim/görüntülenme/sayaç alanı YOK → okuma kaydı YENİ bir yazım yolu gerektirir. EK BULGU: `~/bin/sayfa_oku.sh`
   ve `~/bin/hafiza_sor.sh` yalnız A1'de, DEPODA YOK (sürümsüz; `hafiza_ara.sh` depoya bağlı sembolik bağ) — okuma kaydı
