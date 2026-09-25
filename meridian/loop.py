@@ -261,8 +261,8 @@ def _mirror_exit_sync(meta: dict, dstr: str) -> dict:
     sürüp kapanışa taşarsa kalan girdiler de ertelenir). Kapalıysa `close_engine_position` HİÇ
     çağrılmaz — koruma bacaklarına dokunulmaz, girdi kuyrukta kalır, `tries` ilerlemez (erteleme
     deneme değildir), ilk erteleme damgası (`ERTELEME_ILK_ALANI`) konur ve erteleme TEK olayla
-    anlatılır. Alarm YOK: planlı erteleme bir arıza değildir. Kapı tatilleri BİLMEZ (barclock
-    beyanı) — resmi tatilde kapatma yine kuyruklanabilir; ayrı kalem, bu kapının kapsamı dışı."""
+    anlatılır. Alarm YOK: planlı erteleme bir arıza değildir. Kapı TATİLİ ve ERKEN KAPANIŞI (13:00 ET)
+    XNYS takviminden bilir (TSK-223); takvim okunamazsa da KAPALIDIR (fail-closed — koruma yerinde)."""
     out: dict = {"closed": [], "failed": [], "skipped": None, "ertelendi": []}
     pend = dict(meta.get(MIRROR_EXIT_KEY) or {})
     if not pend:

@@ -24,6 +24,7 @@ YÖNTEM: hiçbir test ağa çıkmaz — adaptörün okuma uçları (`orders`/`po
 kayıt tutar ve emir durumunu gerçekçi günceller, `httpx` kayıt edicidir. Saat `barclock.set_clock`
 ile ÇİVİLENİR (duvar saatine bağlı suite geçtiğinde hiçbir şey kanıtlamaz); fikstür sıfırlar.
 Tatil kör noktası (`is_market_open` resmi tatilleri bilmez) BU DİLİMDE çözülmedi — ayrı kalem.
+(Kapandı: TSK-223 — kapı tatil + erken kapanışı XNYS takviminden bilir; çiviler v548.)
 """
 from __future__ import annotations
 
