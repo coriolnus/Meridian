@@ -3905,3 +3905,20 @@ düzeltip yeniden türettim). EDG-045'in +5/+10/+20 bps stop-slip kırpması sto
 **Kendi hatalarım:** alt ajana A1 okuma (09-24) · 09-24 "olay sıkıştırma hiç koşmadı" yanlış ölçümü (yanlış yol) · bugünkü saat
 etiketlerini ~1 sa ileri yazmak (37 etiket düzeltildi) · CI beklemede sınırlı sleep döngüsü (00:2xZ). Hepsi memory'de.
 **Oturum yeniden başladı** (~10:2xZ): scratchpad temizlendi — briefler/raporlar/ajan defteri kayboldu; iş commit'liydi, kayıp yok.
+
+### 30. TSK-223 SEANS TAKVİMİ + SUITE'İN GÖRMEDİĞİ MİMARİ SÖZLEŞME (2026-09-25 10:4x→12:2xZ, model Opus 5.5)
+**Karar değişikliği:** TSK-223'ün kaynağı Alpaca `/v2/clock` değil XNYS takvimi (`pandas_market_calendars`) — depo seans gerçeğini
+zaten buradan okuyordu (tek-kaynak); emsal gap_scan yarım gün düzeltmesi 58e4a828 (2026-08-02). Ölçüm: yerel ve A1 mcal 5.4.0,
+2026-11-26/12-25 seanssız, 2026-11-27/12-24 13:00 ET. **İkinci örnek aynı sınıftan:** `is_entry_window` 16:00 varsayıyordu → erken
+kapanış günü ~13:16 ET akşam döngüsü giriş emrini kapanıştan sonra gönderip ertesi açılışta doldururdu (EXE-009+K2 ihlali); pencere
+artık `is_market_open` ∧ ≥9:45 ET.
+**Olay — yeşil suite, kırmızı kapı:** tur 1 birleşti, tam suite 14.167/0 + seri KILL#1 yeşil → push 498f3fa5 → dağıtım kuru koşumu
+`[0c] lint-imports` ve CI duman KIRMIZI: `barclock` (saf yaprak, `pyproject` SÖZLEŞME 3) uyarı için tembel `from . import obs`
+eklemişti → obs → store → provenance. Suite import-linter sözleşmelerini HİÇ koşmuyordu; yalnız CI duman ve dagit `[0c]` koşuyordu —
+yani "tam suite yeşil" motor push'u için yeterli kapı değildi. main 11:41Z–düzeltme arası kırmızı. **Düzeltme (tur 2):** istisna yok;
+barclock sıfır import'a döndü (`seans_durumu` arızayı saf döndürür), uyarı `scheduler._seans_kapisi_takvim_denetimi` tek noktasından
+(depo deseni: "olay basmak SAF fonksiyonun sözleşmesini kırardı — kaydı çağıran yapar"); **v549 sözleşmelerin tamamını suite içinde
+koşar** (önce 4 kept/1 broken kırmızı, sonra 5/0). Yan düzeltme: `tick_watchdog.sh`'deki `scheduler.py:976/:1051` satır çapaları
+(zaten yanlış satırı gösteriyordu, her scheduler eklemesinde v214/v402'yi kırıyordu) sembol çapasına.
+**Oturum yeniden başlaması** (~11:2xZ) arka plandaki tam suite'i %37'de öldürdü; bildirim hüküm vermedi, log `PYTEST_EXIT` taşımıyordu
+→ aynı donmuş HEAD'de yeniden koşuldu (memory `oturum-cron-guvenilmez` eki).
