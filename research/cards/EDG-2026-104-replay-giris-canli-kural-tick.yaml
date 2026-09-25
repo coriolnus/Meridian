@@ -18,7 +18,7 @@
 # ölçer), EXE-2026-005 (GEÇTİ — giriş tavanının replay'de next_open'a bağlı olduğu tespiti; bu kart o bulgunun tick ölçümüdür) →
 # başarısız yaklaşım tekrarı YOK.
 card_id: EDG-2026-104
-status: registered
+status: retired  # 2026-09-25 16:28Z — halef EDG-2026-105; hüküm YOK (ölçüm hiç koşulmadı, sonuç görülmedi)
 family: friksiyon_olcumu
 on_kayit: 2026-09-25
 selef: EDG-2026-102
@@ -41,7 +41,7 @@ adim_0_kaydi_2026_09_25: >
   dolumu bar açılışından yeniden kurulabiliyor. Limit tavanı: `state/goal.yaml` `limit_pct_cap: 0.04`, `limit_atr_mult: 100.0`
   (ATR kolu atıl) → L = tetik × 1,04.
 
-k_registry: {registered_at: "2026-09-25", trial_ids: [EDG-104-dogmaz-orani, EDG-104-giris-fiyat-farki]}
+k_registry: {registered_at: "2026-09-25", trial_ids: [EDG-104-dogmaz-orani, EDG-104-giris-fiyat-farki], kosulan: []}   # emekli: hiçbir deneme koşulmadı, K harcanmadı
 # İki birincil ölçüm = K=2. Dal kırılımı (açılış<tetik / açılış≥tetik), 9:30 kuralı tanısı ve yıl kovaları TANI'dır, K'ya sayılmaz.
 
 olcum_plani:
@@ -107,3 +107,14 @@ basari_tanimi: >
   ADIM-0 yazılmış + girdi dökümü sha256'lı + öz-sınama ve üç PK yeşil + paydada n ≥ 300 ∧ ≥ 100 seans + iki birincil karar kuralıyla
   AYRI AYRI hükme bağlanmış + EDG-2026-040/042/102 ve EDG-2026-069'a kart referanslı şerh düşülmüş. Hipotezin tutup tutmaması başarı
   değildir — dürüstçe ölçülmüş olması başarıdır.
+
+emeklilik_2026_09_25: >
+  (2026-09-25 16:28Z, Rol-1) EMEKLİ — hüküm YOK: ölçüm hiç koşulmadı, hiçbir gerçek sonuç görülmedi; bu bir GEÇTİ/KALDI hükmü değildir.
+  GEREKÇE — TASARIM HATASI (ölçüm öncesi, TSK-224 uygulayıcısının kaygısı, Rol-1 kodda ve A1'de doğruladı): kartın 'canlı kural
+  öykünücüsü' emir tipini 09:45'teki fiyata göre seçiyordu; canlı kod tipi PLAN ANINDA sinyal barının kapanışına göre seçer
+  (`meridian.loop.daily_cycle` → `meridian.broker.entry_order_decision(trigger, ref_price=kapanış)`; `gap = ref ≥ tetik`) ve 09:45'te
+  yeniden karar VERMEZ. ADIM-0' (A1, 16:28Z'ye dek): tetik = sinyal kapanışı 839/843 (±1e-4) → plan anı kuralı GAP (limit emir,
+  L = tetik × 1,04) 842/843; tek STOP-LIMIT satırı tetik/kapanış = 2,0 (bölünme artefaktı). Yani kartın H1'i canlının hiç kullanmadığı
+  bir dalı ölçerdi; 'açılış < tetik 392/843' bir kırılım-olmadı sinyali değil, önceki kapanışın altında AÇILIŞTIR (gap-down). Kart
+  disiplini gereği hipotez YERİNDE değiştirilmez: kart emekli, halef EDG-2026-105 (aynı soru ailesi, koda sadık öykünücü; eşikler
+  aynı değerlerde — sonuç görülmeden seçildikleri için). TSK-224'ün betiği halef için uyarlanır (koda sadık dal birincil olur).
