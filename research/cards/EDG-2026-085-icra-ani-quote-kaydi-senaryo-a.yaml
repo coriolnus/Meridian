@@ -201,3 +201,11 @@ canli_bayrak_2026_09_24: >
   koşan `meridian` sürecinin ortamında `MERIDIAN_QUOTE_CAPTURE=1` doğrulandı (systemctl show Environment; süreç
   22:20:00Z'de başladı, NRestarts 0). Pilot kaydı (2026-09-22) bundan böyle canlıda birikir; ilk pilot seansı
   2026-09-25 RTH — ölçüm o seans kapanınca Rol-1'de. Eşik/kill-list değişmedi.
+
+pilot_olayi_2026_09_25: >
+  (2026-09-25 17:50Z, Rol-1, A1 salt-okur) İLK PİLOT SEANSI (2026-09-25) KAYITSIZ: 13:34:25Z `quote_capture_yazim_dustu` — 'Read-only file system:
+  /opt/veri/olcum/edg085/kayit'; kayıt dizini A1'de yok. Kök neden `meridian.service` `ProtectSystem=strict` ve pilot drop-in'inde
+  `ReadWritePaths` yok (TSK-225). Bu seans birincil ölçülere GİRMEZ (kayıt yok); CPU/healthz taban örnekleyicisi (`meridian-edg085-taban`)
+  koştu ama yazımsız bir seansın yükü pilot yükü değildir → fizibilite ölçüsü için de geçersiz sayılır. Ek bağlam: dağıtım #66 seans
+  ortasında (15:08Z) worker'ı yeniden başlattı. Pencere sayımı (en çok 20 seans) bu seansı SAYMAZ; ilk geçerli pilot seansı TSK-225
+  canlıya indikten sonraki ilk açık seans. Eşik/kill-list DEĞİŞMEDİ.
