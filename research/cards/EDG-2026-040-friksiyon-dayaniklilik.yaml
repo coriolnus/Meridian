@@ -107,3 +107,7 @@ verdict: >
   tek başına −5.697$, CI sıfır-dışı). Yani buradaki "başabaş 5-15 bps/bacak" bandı İYİMSER
   tarafta — gerçek başabaş daha aşağıda olabilir. Bant, 042-K1 (giriş) + 042-K3 (stop) gerçek
   bantları geldiğinde birlikte yeniden okunur.
+
+serh_edg102_2026_09_25: >
+  (2026-09-25 10:39Z, Rol-1) EDG-2026-102: tarihsel replay stop çıkışlarında gerçek kayma medyanı 2,585 bps (CI [1,95, 3,07]) — başabaş bandının
+  [5,15] ALTINDA ve modelin 5 bps varsayımının altında; stop bacağı bu bandı zorlamıyor. Giriş bacağı (K1) bu şerhin konusu değil.

@@ -8,7 +8,7 @@
 # sayfa kullanımını ölçer, ref'e yazıldı), EDG-2026-061 (0,11), hindsight_hafiza ailesi (074 KALDI · 083 · 089 ≤0,03) →
 # aynı yöntemin tekrarı YOK (yöntem bilerek değişti).
 card_id: EDG-2026-103
-status: registered   # 2026-09-25 Rol-1 ön-kayıt; pencere ADIM-0 (a)–(d) tamamlanıp PK yeşil olunca açılır
+status: measuring   # 2026-09-25 10:33Z Rol-1 — pencere AÇILDI (ADIM-0 (a)–(d) tamam, PK okuması kayıtta); kapanış en erken 2026-10-02, en geç 2026-10-16
 family: hindsight_hafiza
 on_kayit: 2026-09-25
 selef: EDG-2026-089
@@ -160,3 +160,21 @@ adim_0_kaydi_2026_09_25: >
   sayfa/soru kimliği · HTTP durumu · gövde uzunluğu · gövde sha256 (yer tutucu/hata ayrımı). (a) CLAUDE.md §0 adım 5 yürürlükte.
   (b) ve (d) SIRADA: enstrümantasyon + karar-envanteri betiği bu ön-kayıttan SONRA yazılır (TSK-222), en az bir kez elle
   test-ateşlenir, (d) geçmiş hafta kuru koşumu yapılır; pencere ancak bundan sonra açılır.
+
+pencere_acilis_2026_09_25: >
+  (2026-09-25 10:33Z, Rol-1) ADIM-0 TAMAM: (a) CLAUDE.md §0 adım 5 yürürlükte (atıf biçimi 09-25'te `tazeleme <last_refreshed_at>`'e çekildi —
+  API sürüm alanı yok; `ops/karar_envanteri.py` atfı `kaynak: zihin modeli` öneğinden tanır, biçim değişikliği ölçümü bozmaz).
+  (b) Enstrümantasyon TSK-222 ana dalda (cbf82191) ve A1'de kurulu — dağıtım #65 (b38df359, 10:23:29Z), `~/bin/sayfa_oku.sh` ve
+  `~/bin/hafiza_sor.sh` → `/opt/meridian/deploy/hindsight/` bağları (eski kopyalar `~/yedek-tsk222/`, sha e8f0c0ca… / 6791eab5…),
+  kayıt `/opt/veri/olcum/edg103/okuma.jsonl`. TEST-ATEŞLEME 10:32:05–10:32:44Z (etiket `test-atesleme`, 3 satır: liste · sayfa ·
+  recall, hepsi `durum: gercek` http 200, recall `kimlik` sha256); SIR DENETİMİ temiz (anahtar kayıtta yok, url/sorgu yok).
+  (c) Hindsight API'de okuma alanı yok (08:0xZ ölçüldü). (d) Geçmiş hafta kuru koşumu (09-18…09-24, TSK-222 uygulayıcısı, depo):
+  D=30, atıflı 14 (recall 8 · memory 8 · kart_benzer 1 · diğer 1 · sayfa 0), atıfsız 16 — aralık makul.
+  PENCERE BAŞI = ilk doğrulanmış gerçek (etiketsiz) okuma: 2026-09-25T10:33:10Z (Rol-1 §0 adım 5 oturum okuması, sayfa
+  `meridian-hedef-sapma`, tazeleme 2026-09-24T18:56:24Z — o okuma bu turun hiçbir kararına girmedi, atıf YAZILMADI).
+  POZİTİF KONTROL (sentetik, K1–K4 sayımına KARIŞMAZ — `[PK-EDG-103]` işaretli): okuma 10:33:10Z etiket `pk`; PK kararı —
+  [PK-EDG-103] "EDG-103 penceresi bugün açılır" kararı, kaynak: zihin modeli meridian-hedef-sapma tazeleme 2026-09-24T18:56:24Z.
+  NEGATİF KONTROL (atıfsız, sayfalarla konu örtüşmesi yok): [NK-EDG-103] "EDG-102 kuru adımı çıktısı /opt/veri/olcum/edg102/ altına
+  yazılır" kararı. Araç bunları sırasıyla (okuma + konu-ilgili + atıflı) ve (ilgisiz, atıfsız) saymalı; pencere sonunda PK/NK
+  sonucu ayrı raporlanır. Kapanış: ≥7 gün ∧ ≥5 karar → en erken 2026-10-02; üst sınır 21 gün → 2026-10-16.
+

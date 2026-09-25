@@ -11,7 +11,7 @@
 # aynı aile — bu kart onun Ö2 devamı), EDG-037/066/040/042/043/046 (≤0,15), KALDI yakın benzer: EDG-2026-079 (evren_pit, 0,12 —
 # tohum defterinin ≤%2'si açılış günü S&P 500 dışı; kapsam şerhi olarak aşağıda) → başarısız yaklaşım tekrarı YOK.
 card_id: EDG-2026-102
-status: registered   # 2026-09-25 Rol-1 ön-kayıt; ölçüm kodu ayrı dilim (Opus), koşum A1'de Rol-1
+status: measured   # KALDI (hipotez) · 2026-09-25 10:39Z Rol-1 hüküm: MODEL YETERLİ (stop bacağı) — hipotez desteklenmedi; hukum_2026_09_25
 family: friksiyon_olcumu
 on_kayit: 2026-09-25
 selef: EDG-2026-045
@@ -97,4 +97,32 @@ rol1_notu_2026_09_25_olcum_oncesi: >
   bar/tick fiyat oranı bandın dışında kalan satırlar sayılır ve dışlanmış medyan TANI olarak basılır; birincil kestirim karttaki
   tanımla aynı kalır. (4) Okuyucu: A1'de pyarrow (pilot-venv); yerel çiviler duckdb ile — ilk A1 adımı `--kuru` (şema + bir gün
   okuma süresi). Kaynak: TSK-221 uygulayıcı raporu + bağımsız inceleme (scratchpad tsk221-inceleme.md); hafıza: benzer kayıt yok.
+
+hukum_2026_09_25: >
+  (2026-09-25 10:39Z, Rol-1) KOŞUM: A1 10:34:40Z, `research/olcumler/edg102_stop_kayma/olcum.py` sürüm 1 (sha256 56da5e6c…, okuyucu pyarrow 25.0.1,
+  85 sn); önce `--kuru` (10:34:14Z: 369/369 uygun, 244 seans, öz-sınama 278, şema 244/244, bar dosyası eksik 0). GİRDİ (içerik-
+  adresli): trades sha256 8245b837… (369 satır), planlar sha256 524a23de…; artefakt depoda `research/olcumler/edg102_stop_kayma/
+  kosum_2026-09-25/` (sonuc.json sha256 6ffd8f1d…, OZET.md, kuru.json, girdi dökümleri, pk2_elle.py).
+  KILL-LIST: (1) öz-sınama tutarlı 278 ≥ 20 GEÇTİ (plan_ileri_esit 278 · trailing_ustte 91 · alt_ihlal 0 · kaynak_yok 0);
+  (2) dokunuş_yok 34/369 = %9,21 < %20; (3) tek seans payı %1,49 < %10 (payda ölçülen, ölçüm-öncesi notla beyanlı); (4) kosul
+  birincilde yok; (5) PK üç ayak: PK-1 kimlik GEÇTİ (0 bps / enjeksiyon 12 bps birebir) · PK-2 Rol-1 elle 5/5 UYUŞUYOR (CLX
+  2023-05-08 1,991 · ORCL 2023-06-29 2,743 · TSLA 2025-01-24 0,584 · UNH 2026-06-15 11,243 · VMC 2026-07-08 9,882 bps — ham
+  parquet'ten bağımsız türetme, fiyat 1e4 ölçekli; `pk2_elle.py`) · PK-3 sayıldı ve raporlandı (bar ayağı tutarsız 2/369; tik
+  ayağı tutarsız 33 = dokunuş_yok sınıfıyla aynı olgu — IEX akışı o gün eff_stop'a inmemiş, bir satırı NFLX 10:1 bölünmesi —
+  kill-2 yönetiyor).
+  SONUÇ: n_ölçülen 335 (≥100), 227 seans (≥50). kayma medyanı **2,585 bps**, %95 CI **[1,950, 3,074]** (seans-kümeli bootstrap
+  B=5000, seed=20260812). KARAR KURALI: CI-üst 3,074 < 5 → **"MODEL YETERLİ (stop bacağı)"** — hipotez ("medyan 5'i aşar, stop
+  bacağında model iyimser") DESTEKLENMEDİ. TANI (hüküm değil): (a) tek-lot bayraklı kayıtlar dışlanınca 3,99 bps (n=326) — yine < 5;
+  (b) dokunuş anı IEX kotasyon spread'i medyanı 227 bps — IEX'in kendi ince defteri, konsolide spread DEĞİL, bilgi taşımaz; (c) yıl
+  medyanları 2022 3,30 · 2023 2,74 · 2024 3,23 (tek yılda 5'i aşan yok); (d) `ek = medyan − 5 = −2,415 bps` → EDG-045 hücrelerinin
+  (5/10/20) HİÇBİRİ gerçekçi değil: replay'in genel 5 bps çıkış kayması stop bacağının gerçek kaymasını ~2,4 bps FAZLASIYLA karşılıyor;
+  (e) ölçek-uyumlu altküme 2,538 bps (n=334, 1 bölünme şüpheli); (f) saf ters (ızgara kilitsiz) 2,585 bps — kilit sonucu değiştirmedi.
+  BEYANLI SINIR hâlâ geçerli: IEX tek-borsa akışı — dokunuştan sonraki ilk IEX işlemi konsolide ilk işlemden geç olabilir (kaymayı
+  YUKARI yanlar); yanlılık yönü hükmü güçlendirir (gerçek kayma ≤ ölçülen).
+  SONUÇLARI: EDG-2026-045 Ö2 cevaplandı — stop-slip enjeksiyonu (+5/+10/+20 bps) gerçek kaymayı temsil etmiyor, 045'in P&L
+  kırpması (+23.806 → +20.721/+18.109/+12.769) stop bacağı için gereksizdi; replay'in stop bacağı temkinli. EDG-040 başabaş bandı
+  [5,15] ve EDG-042 K3 (canlı cikis_stop, n 11/15) için bu, tarihsel tabanın 5 bps varsayımını AŞMADIĞINI söyler; canlı K3 hükmü
+  kendi eşiğiyle ayrıca verilir (bu kart onun yerine geçmez).
+  K defteri: EDG-102-stop-kayma-medyan = KALDI (hipotez desteklenmedi; karar kuralı çıktısı MODEL YETERLİ) — K=1 harcandı, kayıt k_registry trial_ids ile birebir.
+  hafıza: recall 2026-09-25 07:5xZ (EDG-045 hükümleri; gerçek kaymayı ölçen kayıt yok) · kart_benzer selef EDG-045.
 

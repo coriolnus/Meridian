@@ -502,3 +502,7 @@ hafta_kosum_5_2026_09_24_telafi: >
   YENİ KAYIT (kalıcı emeklilik DEĞİL): bu koşumda [6] doğrulama adımı (kapsam testleri +
   codelaw) brief kararıyla ATLANDI (telafi, kod/kart değişmedi) — sıradaki normal haftalık koşum
   bunu normal şekilde çalıştırmalı.
+
+serh_edg102_2026_09_25: >
+  (2026-09-25 10:39Z, Rol-1) EDG-2026-102 (tarihsel, tick): stop çıkış kayması medyanı 2,585 bps, CI [1,95, 3,07]. K3 (canlı cikis_stop, n 11/15)
+  hükmü kendi eşiği ve kendi örneklemiyle ayrıca verilir; bu şerh yalnız tarihsel tabanın 5 bps varsayımını AŞMADIĞINI kayda geçirir.

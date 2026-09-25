@@ -1,0 +1,77 @@
+{
+ "kart": "EDG-2026-102",
+ "kip": "kuru",
+ "arac": {
+  "betik": "research/olcumler/edg102_stop_kayma/olcum.py",
+  "surum": "1",
+  "betik_sha256": "56da5e6cf1383e2a60f7fd726075daf84ba219016c40b0e99d5ac3fadf1c6548",
+  "python": "3.12.3",
+  "okuyucu": "pyarrow",
+  "okuyucu_surumu": "25.0.1",
+  "utc": "2026-09-25T10:34:14+00:00"
+ },
+ "girdi": {
+  "n_trades_tum": 871,
+  "n_trades_filtreli": 369,
+  "sql_capraz_n": 369,
+  "n_plan_satiri": 369,
+  "trade_plans_tablosu": true,
+  "trades_sha256": "8245b83702fad84d63f4e97edb9d44da4c668753cd8239d4e1f86622775d4f02",
+  "planlar_sha256": "524a23de47c75d4bf19ea4c82bc38d2064c4ce7c7628db9c82e86a3773f5b93f",
+  "extra_json_bozuk": 0
+ },
+ "oz_sinama": {
+  "plan_ileri_esit": 278,
+  "plan_trailing_ustte": 91,
+  "plan_yakin_esit_degil": 0,
+  "plan_alti_ihlal": 0,
+  "islem_ici_tutarli": 0,
+  "islem_ici_trailing_ustte": 0,
+  "islem_ici_alti_ihlal": 0,
+  "kaynak_yok": 0,
+  "exit_okunamadi": 0,
+  "plan_coklu": 0,
+  "tutarli_n": 278,
+  "esik": 20,
+  "gecti": true,
+  "beyan": "tutarlı = plan_ileri_esit (sert stop, ileri formül exit'i BİREBİR verir) + islem_ici_tutarli (plan yokken entry − r_payda_usd/qty ile tolerans içinde); trailing satırlar tutarlılık sayısına GİRMEZ (trail yeniden hesaplanmadı), yalnız 'sert stopun altına düşmedi' sınanır — altına düşen satır tersine-çevirme reddidir"
+ },
+ "pk1": {
+  "gecti": true,
+  "kimlik_bps": 0.0,
+  "enjeksiyon_bps": 12.000000000000455,
+  "ileri_formul_ornek": true,
+  "beyan": "sentetik 2024-03-11 (EDT) akışı; seans öncesi eşik-altı kayıt dokunuş SAYILMAMALI"
+ },
+ "siniflar_tik_oncesi": {
+  "yon_disi": 0,
+  "tarih_okunamadi": 0,
+  "ters_red": 0
+ },
+ "uygun_n": 369,
+ "seans_n": 244,
+ "kapsam": {
+  "gun_dosyasi_yok": [],
+  "sema_uygun_gun": 244,
+  "sema_hatasi": [],
+  "bar_dosyasi_yok": [],
+  "bar_gunu_yok": 0
+ },
+ "okuma_sinamasi": {
+  "gun": "2022-08-22",
+  "sure_sn": 0.282,
+  "bayt": 22350976,
+  "sembol": {
+   "EL": {
+    "kayit": 2051,
+    "seans_kaydi": 2051
+   },
+   "TJX": {
+    "kayit": 4404,
+    "seans_kaydi": 4404
+   }
+  }
+ },
+ "scaled_out_n": 0,
+ "sure_sn": 3.5
+}

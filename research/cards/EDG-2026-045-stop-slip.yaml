@@ -62,3 +62,10 @@ beyanlı_sinirlar: >
   (1) Sabit-bps ek-slip gerçek stop dinamiğini (hızlı piyasada kayma likiditeye bağlı) temsil
   etmez — alt sınır sınıfı. (2) trail_stop aynı kademeden geçer, ayrı kova açılmadı (grid
   şişirme); trail payı sonuçta künyelenir. (3) Gerçek stop-slip bandı 042-K3'ün işidir.
+
+serh_edg102_2026_09_25: >
+  (2026-09-25 10:39Z, Rol-1) Ö2 CEVAPLANDI — EDG-2026-102 (tick arşivi, 335 replay stop çıkışı, 227 seans): gerçek stop kayması medyanı
+  2,585 bps, %95 CI [1,950, 3,074]; replay'in genel 5 bps çıkış kayması bunu ~2,4 bps FAZLASIYLA karşılıyor → bu kartın
+  +5/+10/+20 bps stop-slip enjeksiyon hücrelerinin HİÇBİRİ gerçekçi değil; hükmün P&L kırpması stop bacağı için gereksizdi.
+  Hüküm bu kartın kendi hücrelerini DEĞİŞTİRMEZ (ölçülen şey doğruydu: enjeksiyonun etkisi); yorumlanışı şerhlenir.
+  Kaynak: research/cards/EDG-2026-102-replay-stop-kaymasi-tick.yaml hukum_2026_09_25.

@@ -3887,3 +3887,21 @@ TSK-219 CANLI: `pano-D5Jz_DRf.js` gzip 605.981 B ↔ identity 2.144.073 B; `/pan
 (`_saat_oku`). TSK-218 kanıtı hâlâ yok: `broker_reconcile.json` 09-24 20:42Z'den beri yazılmadı → ilk RTH turu 09-25 13:30Z.
 TSK-207 (a) canlı kanıt 00:01:20Z (`SEMBOL_ENDEKS_CIKISI` info). Kendi ihlalim 00:2xZ: CI koşusunu beklemek için sınırlı `sleep`
 döngüsü (§7) — deftere ve memory `bekleyici-yasagi-ihlali`ne işlendi.
+
+### 29. PARALEL PROGRAM BAŞLATMA + İLK TICK KART HÜKMÜ + DAĞITIM #65 (2026-09-25 07:0x→10:40Z, model Opus 5.5)
+**Operatör:** "bütün programları paralel olarak başlat, full otonom devam et" + beş karar (AskUserQuestion): öğrenme AÇ (gözetimli) ·
+tick tavanı 120 GB KALIR ("verileri nasıl kullanacağımıza odaklanalım") · hafıza "hepsi sürsün, yeni ölçüm" · TSK-205 (b) açılışa ertele.
+**Kaçan tetik (15 gün):** geri dolum 09-10 11:37Z'de 120 GB tavanında durmuştu; öğrenme bu program yüzünden kapalıydı → operatör kararıyla
+07:36:08Z açıldı (TSK-204). Sınıf: düzyazı tetik → TSK-220 BAYAT KAPI (ilk gününde 25 gündür yanlış GATED duran TSK-059'u yakaladı).
+**Ana dala girenler:** TSK-220 (BAYAT KAPI) · TSK-205 (seans kapalıyken çıkış açılışa ertelenir; tam suite 20e24763 14.070/0 + seri KILL#1) ·
+TSK-222 (sayfa_oku/hafiza_sor depoya + okuma kaydı + karar envanteri) · TSK-221 (EDG-102 ölçüm betiği). Açılan: TSK-223 (tatil/erken
+kapanış kapısı, son tarih 11-26), EDG-2026-102 ve EDG-2026-103 ön-kayıtları.
+**Dağıtım #65** (operatör 10:23:29Z, b38df359): imzalar canlıda, journal'da yalnız beklenen "öğrenme durdu" alarmı (ilk yansıma yeni
+kapanışı bekliyor) ve yeniden başlatma kaynaklı mirror_stream_stale_flag. TSK-222 A1 kurulumu Rol-1 (yedek + bağ + test-ateşleme + sır
+denetimi temiz) → EDG-103 penceresi AÇILDI 10:33:10Z.
+**EDG-2026-102 HÜKMÜ (tick arşivinin ilk kart kullanımı):** 335 replay stop çıkışı / 227 seans, kayma medyanı 2,585 bps, CI [1,95, 3,07]
+< 5 → MODEL YETERLİ (stop bacağı); PK-2 elle 5/5 (ilk bağımsız türetmem fiyatın 1e4 ölçekli int64 olduğunu atladı — kendi hatam,
+düzeltip yeniden türettim). EDG-045'in +5/+10/+20 bps stop-slip kırpması stop bacağı için gereksizdi; şerhler 045/040/042.
+**Kendi hatalarım:** alt ajana A1 okuma (09-24) · 09-24 "olay sıkıştırma hiç koşmadı" yanlış ölçümü (yanlış yol) · bugünkü saat
+etiketlerini ~1 sa ileri yazmak (37 etiket düzeltildi) · CI beklemede sınırlı sleep döngüsü (00:2xZ). Hepsi memory'de.
+**Oturum yeniden başladı** (~10:2xZ): scratchpad temizlendi — briefler/raporlar/ajan defteri kayboldu; iş commit'liydi, kayıp yok.
