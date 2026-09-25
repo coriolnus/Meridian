@@ -1,0 +1,87 @@
+# EDG-2026-102 — Replay stop çıkışlarının GERÇEK kayması: tick arşiviyle eff_stop'a dokunuş sonrası ilk işlem fiyatı (EDG-045 Ö2)
+# ÖN-KAYIT 2026-09-25 08:4xZ (Rol-1; operatör 2026-09-25 "bu verileri nasıl kullanacağımıza odaklanalım" + "bütün programları
+# paralel olarak başlat, full otonom"). Kaynak: tick kullanım taraması (Sonnet, scratchpad tick-kullanim-raporu.md, aday A).
+# NEDEN ŞİMDİ: EDG-2026-045 replay'in bar-içi stop dolumunu TAM eff_stop'ta saydığını ve ek 5/10/20 bps stop kaymasının defteri
+# anlamlı küçülttüğünü ölçtü (taban +23.806 → +20.721 / +18.109 / +12.769; hücrelerin üçü de CI<0) — ama GERÇEK kaymanın hangi
+# hücreye düştüğü hiç ölçülmedi (Ö2 açık). Canlı karşılığı EDG-2026-042 K3 (cikis_stop n=11/15, haftalar). Tick arşivi
+# (EDG-066, 2020-09-15 → bugün) bu soruyu 369 tarihsel stop çıkışıyla BUGÜN cevaplayabilir.
+# HAFIZA KONTROLÜ (2026-09-25 08:4xZ, bu ön-kayıttan önce): A1 `hafiza_sor.sh` recall ("stop kayması replay eff_stop tick
+# ölçümü EDG-045 stop-slip bandı") → EDG-045 hükümleri (2026-08-23/09-01) döndü, gerçek kaymayı ölçen kayıt YOK;
+# `ops/kart_benzer.py --hipotez "replay stop çıkışlarında tick verisiyle gerçek stop kayması …"` → en yakın EDG-2026-045 (0,26,
+# aynı aile — bu kart onun Ö2 devamı), EDG-037/066/040/042/043/046 (≤0,15), KALDI yakın benzer: EDG-2026-079 (evren_pit, 0,12 —
+# tohum defterinin ≤%2'si açılış günü S&P 500 dışı; kapsam şerhi olarak aşağıda) → başarısız yaklaşım tekrarı YOK.
+card_id: EDG-2026-102
+status: registered   # 2026-09-25 Rol-1 ön-kayıt; ölçüm kodu ayrı dilim (Opus), koşum A1'de Rol-1
+family: friksiyon_olcumu
+on_kayit: 2026-09-25
+selef: EDG-2026-045
+ref: [EDG-2026-045, EDG-2026-042, EDG-2026-040, EDG-2026-037, EDG-2026-066, EDG-2026-069, EDG-2026-079, TSK-013]
+
+hipotez: >
+  Replay tohumu (`trades.kaynak = replay_seed`, strategy_version 91, hepsi long) işlemlerinden `exit_reason = "stop"`
+  olanlarda (bar-içi dokunuş; `stop_gap` HARİÇ — o zaten gerçek açılış fiyatıdır), çıkış günü tick akışında fiyatın eff_stop'a
+  İLK dokunduğu işlemden SONRAKİ ilk normal-seans işlem fiyatının eff_stop'a göre kayması (bps, aleyhte pozitif) medyanı,
+  replay'in varsaydığı genel çıkış kaymasını (`goal.slippage_bps` = 5) AŞAR — yani stop bacağında model iyimserdir.
+
+adim_0_kaydi_2026_09_25: >
+  (Rol-1, A1 salt-okur, 08:3xZ — ölçümden ÖNCE) `trades` kaynak=replay_seed n=843 · exit_reason: stop 369 · regime_flip 162 ·
+  time_stop 144 · target 94 · stop_gap 51 · target_gap 23 · side 843/843 long · strategy_version 91 (843/843, tek koşum) ·
+  ts_close 2022-01-10 → 2026-07-24. Stop çıkışlarının arşiv günü ∧ `kapsam.txt` içinde olanı 369/369 (244 seans; yıl: 2022 15 ·
+  2023 61 · 2024 111 · 2025 94 · 2026 88). `islem/<gün>.parquet` şeması: ts, sembol, fiyat, lot, kosul, k_ts, k_alis_fiyat,
+  k_alis_lot, k_satis_fiyat, k_satis_lot (işlem anı kotasyonu VAR). `kosul` bir günlük dağılım: 32, 0, 160, 128, 144, 176, 96,
+  224 — bit anlamları depoda BELGELENMEMİŞ (IEX TOPS "sale condition flags" varsayımı DOĞRULANMADI) → birincil süzgeç `kosul`a
+  DAYANMAZ (aşağıda).
+
+k_registry: {registered_at: "2026-09-25", trial_ids: [EDG-102-stop-kayma-medyan]}
+
+olcum_plani:
+  - "girdi dondurma: trades satırları (replay_seed ∧ stop) ölçüm başında JSON'a dökülür, sha256'sı sonuca yazılır (içerik-adresli;
+     canlı defter değişirse ölçüm sessizce kaymaz — §5)."
+  - "eff_stop tersine-çevirme: replay'in stop çıkış dolum formülü KODDAN okunur (broker stop dalı + close_position kayması);
+     formül ve tersi ölçüm betiğinin başlığına sembol çapasıyla yazılır; öz-sınama kill-list 1'dedir."
+  - "tick_fill: ts_close gününün `islem/` parquet'inde ticker için, NORMAL SEANS (09:30 ≤ ET < 16:00, DST-farkında) kayıtları
+     zaman sırasıyla; fiyat ≤ eff_stop olan İLK kayıt = dokunuş; dokunuştan SONRAKİ ilk kayıt fiyatı = tick_fill (stop-market
+     dolumunun gerçekçi vekili). Dokunuş yoksa satır `dokunus_yok` sınıfına gider (medyana GİRMEZ)."
+  - "kayma_bps = (eff_stop - tick_fill) / eff_stop × 1e4 (long; aleyhte pozitif — EDG-042 işaret sözleşmesi)."
+  - "birincil kestirim: kayma_bps medyanı + %95 CI — seans-kümeli bootstrap B=5000, seed=20260812 (EDG-040/042/045 künyesi)."
+  - "TANI (hüküm değil): (a) `kosul` bit 0x20'li (tek-lot varsayımı) kayıtlar dışlanınca medyan; (b) dokunuş anındaki kotasyon
+     spread'i (k_satis_fiyat − k_alis_fiyat) dağılımı; (c) yıl ve fiyat kovası kırılımı; (d) `ek = medyan − 5` ile EDG-045
+     hücreleri {5,10,20} arasında en yakın hücre."
+
+esikler:
+  n_uygun_alt: 100            # ADIM-0'da 369 ölçüldü; dokunuş-yok + tersine-çevirme reddi sonrası kalan n ≥ 100 ve ≥ 50 seans
+  seans_alt: 50
+  model_varsayimi_bps: 5      # goal.slippage_bps (replay'in genel çıkış kayması)
+  karar_kurali: >
+    CI-alt > 5 → "STOP BACAĞINDA MODEL İYİMSER" (EDG-045 şerhi rakamla doğrulanır; en yakın hücre raporlanır) ·
+    CI-üst < 5 → "MODEL YETERLİ (stop bacağı)" · CI 5'i içeriyor → "BELİRSİZ" (hüküm yok).
+
+kill_list:
+  - "eff_stop tersine-çevirme öz-sınaması düşerse (formülün geri verdiği eff_stop, plan kaydındaki stop ya da trailing
+     sonrası stop ile en az 20 satırda tutarlı gösterilemezse) ölçüm GEÇERSİZ."
+  - "dokunuş_yok sınıfı uygun satırların %20'sini aşarsa (bar ↔ tick tutarsızlığı ya da kapsam boşluğu) medyan YAYIMLANMAZ,
+     sınıf incelenir."
+  - "tek seans uygun örneklemin %10'undan fazlasını taşırsa CI şerhsiz yayımlanmaz."
+  - "seans süzgeci zaman-tabanlıdır; `kosul` yalnız TANI'dadır — birincile sessizce kosul süzgeci eklenirse GEÇERSİZ."
+  - "pozitif kontrolün üç ayağından biri düşerse hiçbir sayı yayılmaz."
+
+pozitif_kontrol: >
+  YOL-TUTARLI, üç ayak: (1) KİMLİK — sentetik parquet'te dokunuştan sonraki fiyat = eff_stop verilen satırda kayma 0 bps, bilinen
+  bir kayma enjekte edilen satırda tam o değer çıkar (ölçüm kodunun kendi çivisi). (2) ELLE — rastgele 5 gerçek satır için eff_stop,
+  dokunuş ve tick_fill parquet'ten elle okunup betik çıktısıyla karşılaştırılır. (3) BAR ÇAPRAZI — her uygun satırda ts_close
+  gününün bar düşüğü ≤ eff_stop (bar dokunuşu vardı) ve tick günlük min ≤ eff_stop; tutarsız satır sayılır ve raporlanır.
+
+veri_penceresi: "trades kaynak=replay_seed ∧ exit_reason=stop, ts_close 2022-01-10 → 2026-07-24 (n=369, 244 seans; 2026-09-25 donuk
+  dökümün sha256'sı sonuca yazılır) × A1 `/opt/veri/tick/islem/` (EDG-066). Tek atım."
+
+beyanli_sinirlar: >
+  (1) Seçilim: yalnız replay'in 'dolan' saydığı stop çıkışları; stop_gap (51) ayrı sınıftır. (2) IEX tek-borsa akışıdır (~%2
+  hacim) — konsolide değil; dokunuştan sonraki ilk IEX işlemi konsolide ilk işlemden geç ve seyrek olabilir (kaymayı YUKARI
+  yanlı yapabilir) — tanı (b)'deki kotasyon spread'i bu yanlılığın büyüklüğünü sınırlar. (3) Genel 5 bps'in kendisi (giriş
+  bacağı) bu kartın konusu değil (EDG-042 K1). (4) EDG-079: tohum defterinin ≤%2'si açılış günü S&P 500 dışı — kapsam listesi
+  S&P500+NDX100 birleşimi olduğu için etkisi ADIM-0'da 369/369 kapsam ile sınırlandı.
+
+basari_tanimi: >
+  ADIM-0 yazılmış + girdi dökümü sha256'lı + öz-sınama ve üç PK yeşil + n_uygun ≥ 100 ∧ ≥ 50 seans + medyan ve CI karar
+  kuralıyla hükme bağlanmış + EDG-2026-045 Ö2'ye ve EDG-2026-040/042'ye kart referanslı şerh düşülmüş. Hipotezin tutup
+  tutmaması başarı değildir — dürüstçe ölçülmüş olması başarıdır.
