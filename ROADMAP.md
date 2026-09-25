@@ -564,7 +564,7 @@ _Üretildi: `python ops/roadmap_cephe_ozeti.py --yaz` · kaynak: açık TSK kale
 | Cephe | Açık | ACTIVE | QUEUED | GATED | OPERATOR | INTERIM | Kalemler |
 |---|---:|---:|---:|---:|---:|---:|---|
 | PRG-01 İcra ve Friksiyon | 6 | 1 | 1 | 4 | 0 | 0 | TSK-069 · TSK-071 · TSK-072 · TSK-085 · TSK-104 · TSK-221 |
-| PRG-02 Sermaye ve Koruma | 1 | 1 | 0 | 0 | 0 | 0 | TSK-205 |
+| PRG-02 Sermaye ve Koruma | 2 | 1 | 1 | 0 | 0 | 0 | TSK-205 · TSK-223 |
 | PRG-03 Öğrenme Döngüsü | 5 | 1 | 0 | 4 | 0 | 0 | TSK-062 · TSK-063 · TSK-074 · TSK-076 · TSK-204 |
 | PRG-04 Veri ve Evren | 5 | 1 | 0 | 1 | 3 | 0 | TSK-044 · TSK-045 · TSK-065 · TSK-084 · TSK-207 |
 | PRG-05 Ölçüm Altyapısı | 0 | 0 | 0 | 0 | 0 | 0 | — |
@@ -578,7 +578,7 @@ _Üretildi: `python ops/roadmap_cephe_ozeti.py --yaz` · kaynak: açık TSK kale
 | PRG-13 Kalıcı Hafıza | 12 | 3 | 0 | 8 | 1 | 0 | TSK-015 · TSK-060 · TSK-142 · TSK-161 · TSK-163 · TSK-164 · TSK-165 · TSK-166 · TSK-168 · TSK-169 · TSK-170 · TSK-222 |
 | PRG-14 Altyapı ve Sır | 4 | 1 | 1 | 2 | 0 | 0 | TSK-020 · TSK-064 · TSK-096 · TSK-176 |
 | PRG-15 Mikro-yapı ve Tick | 5 | 2 | 2 | 1 | 0 | 0 | TSK-013 · TSK-066 · TSK-067 · TSK-068 · TSK-218 |
-| **Toplam** | 55 | 17 | 5 | 29 | 4 | 0 | — |
+| **Toplam** | 56 | 17 | 6 | 29 | 4 | 0 | — |
 <!-- CEPHE-OZETI:BITIR -->
 
 > ⚠ **BU BLOK 2026-08-13 ANLIK GÖRÜNTÜSÜDÜR (Ö-49 şerhi, 2026-08-22):** içindeki en az üç kalem SONRADAN KAPANDI — /api/diagnostics arızası (v243, 08-14) · N1 bildirim kanalı (08-22 CANLI) · beyin zinciri (08-14'te değişti). Güncel durum §2 TAHTA + §7 günlüktedir; bu blok tarihçe.
@@ -2425,6 +2425,10 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
   İŞ: (1) spawner çocuğun çıkışını gözler: `Popen` → ayrı iş parçacığı `wait()` ya da bir sonraki tur `poll()`; `returncode != 0` → `obs.warn("composite_prescreen_failed", queue_id, returncode, log_kuyruk=<son 20 satır>)`, `== 0` → `obs.log("composite_prescreen_done", queue_id, sure_s)`; okuyan: brifing/bekçi triyajı + `composite_budget` (düşen kalem bütçeye İADE mi? — karar: iade YOK, ama kayıt `_denied`/`dusen` alanına; Yasa 6). (2) Log dizini rsync kapsamı DIŞINA: `/opt/veri/olcum/composite/` (EDG-085/101 deseni; A0 `dizinler.yml` görevi + ReadWritePaths gerekirse) YA DA `dagit_vars.yml` dışlama listesine `logs/` — öneri birincisi (dağıtım `--delete` sözleşmesi 'repo dışı yaşayan şey /opt/veri'de yaşar'). (3) Çivi: sentetik çocuk `exit 3` → `composite_prescreen_failed` olayı basılır (mutasyon: gözlemi kaldır → kırmızı).
   Why: 21 Eylül'de haftanın bileşik kalemi yandı ve sistemin hiçbir yüzeyi bunu söylemedi; ben iki gün sonra dağıtımın silme listesinden öğrendim. 'Okuyucusuz yazım' (Yasa 6) ve 'kurulu ≠ çalışır' (CLAUDE.md §9) sınıfı: log yazılıyor, kimse okumuyor, dağıtım siliyor.
   Ref: PRG-06 · `meridian/hermes_composite.py` (spawn) · `meridian/prescreen.py::main` · `deploy/ansible/vars/dagit_vars.yml` (dışlama listesi) · `deploy/ansible/roles/meridian_a1/tasks/dizinler.yml` · TSK-214 · TSK-197 (aynı 'sessiz arıza' sınıfı, yedek birimi)
+- **[TSK-223] Seans kapısı tatil ve erken kapanışı bilmiyor (`barclock.is_market_open`) — TSK-205'in ertelemesi o günlerde çalışmaz; Şükran Günü ertesi (2026-11-27) ve Noel (2026-12-25) önce kapanmalı** — status: QUEUED · born: 2026-09-25 · owner: rol1 · size: S · trigger: —
+  What: (2026-09-25 08:27Z AÇILDI [Rol-1; TSK-205 uygulayıcı kaygı 1]: `is_market_open` NY saat dilimi + DST + hafta sonunu biliyor, resmî tatil ve erken kapanışı BİLMİYOR. Erken kapanış günü (13:00 ET) EOD barı ~13:30 ET'de gelir, kapı 'açık' sanır → iptal+kapat seans DIŞINDA → ~64 sa çıplak (TSK-205 öncesiyle AYNI). Tatil hafta içi sabahı açılış turu 'açık' sanır → iptal+kapat kuyruğa → Noel Cuma: ~72 sa (TSK-205 öncesi Perşembe akşamından ~89 sa — kötüleşme yok, kapanma da yok). İŞ: Alpaca `/v2/clock` (is_open · next_open · next_close) ile kapı — broker gerçeği; ağ düşerse güvenli yön (kapalı say, koruma yerinde kalır) ve sessiz değil. Takvim tarihleri depoda doğrulanmadı — kapı saatten değil broker'dan okur. SON TARİH: 2026-11-26'dan önce canlıda.)
+  Why: TSK-205 çıplak pencereyi normal günlerde kapattı; tatil ve erken kapanışta aynı boşluk sürüyor — yılda ~10 gün, en uzunları hafta sonuna bitişik.
+  Ref: PRG-02 · TSK-205 · `meridian/barclock.py::is_market_open` · `meridian/loop.py::_mirror_exit_sync` · scratchpad tsk205-uygulama-rapor.md
 - **[TSK-222] EDG-2026-103 enstrümantasyonu — sayfa/recall okuma kaydı + karar envanteri betiği; `sayfa_oku.sh`/`hafiza_sor.sh` depoya** — status: ACTIVE · born: 2026-09-25 · owner: rol1 · size: S-M · trigger: —
   What: (2026-09-25 08:0xZ AÇILDI [Rol-1]: EDG-103 ADIM-0 (b)/(d). (1) `~/bin/sayfa_oku.sh` ve `~/bin/hafiza_sor.sh` `deploy/hindsight/` altına alınır (bugün yalnız A1'de, sürümsüz), A1'de bağla kurulur; her çağrı A1-yerel ayrı bir dosyaya satır ekler: UTC ts · betik · sayfa/soru kimliği · HTTP durumu · gövde uzunluğu · gövde sha256 — sır/anahtar YAZMAZ, bankaya retain EDİLMEZ. (2) `ops/` altında karar envanteri betiği (`meridian` içe aktarmaz; `ops/kart_benzer` token fonksiyonları İTHAL). (3) Elle test-ateşleme + geçmiş hafta (09-18…09-24) kuru koşumu. Opus uygulayıcı sonraki dilim; A1 kurulumu (bağ + dizin) Rol-1/A0 rolü.)
   Why: EDG-103'ün K1'inin (okunuyor mu) tek kaynağı; ölçüm aleti olmadan dördüncü kart da aynı sıfırı üretir. Ayrıca iki operasyon betiği depoda olmadığı için değişiklik izi yok (tek-kaynak).
