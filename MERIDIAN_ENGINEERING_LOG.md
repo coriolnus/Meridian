@@ -3937,3 +3937,10 @@ beyan: EDG-105 özetinde H1'in kaba tahmini görülmüştü (eşikler önceden d
 varsayımı iyimser değil.
 **EDG-085 pilotu ilk seansı kayıtsız (TSK-225):** akşam kanıt betiğinin kuru koşumu yakaladı — `meridian.service` ProtectSystem=strict,
 pilot drop-in'inde ReadWritePaths yok, 13:34Z tek warn. Aynı sınıf 09-16'da brifing birimlerinde tek örnekle kapatılmıştı → sınıf çivisi v553.
+**Dağıtım #67** (operatör: A0 site.yml ~19:30Z → dagit 21:13Z, 49ed596b): TSK-225 (EDG-085 kayıt dizini + ReadWritePaths) ve TSK-064 argv dilimi
+canlı; üç birim 21:17Z NRestarts 0, healthz 200. site.yml `uv sync` venv'i değiştirdi (rol uyarısı: restart dagit'in işi) — dagit restart'ı
+kapattı. **TSK-218 CANLI KANITLANDI** (20:44Z akşam döngüsü: 868–871 + yeni 872 giriş ailesi dolu, 27/29) → kapandı. **YENİ GÜVENLİK BULGUSU
+(TSK-226):** TSK-064 doğrulamasında `hindsight-cp.service` docker komut satırının iki sırrı 09-15'ten beri argv'de taşıdığı ölçüldü (envanter
+'docker env-file' diyordu). **Kendi hatam:** süreci tanımlarken yalnız aradığım anahtarı maskeledim; aynı satırdaki `HINDSIGHT_CP_ACCESS_KEY`
+değeri tool çıktısına düştü → TSK-226 dağıtımından sonra rotasyon; memory'ye beyaz-liste kuralı. Akşam kanıt betiği 20:45Z'de koşulmadı
+(oturum boştaydı, 21:18Z'de koşuldu) — veri kaybı yok, okuma gecikti.
