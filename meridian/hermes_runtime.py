@@ -75,7 +75,8 @@ def _bg_ready_regime(trades: list, every: int, live_reg: str | None) -> str | No
     diğer rejimlerin BİRİKMİŞ kanıtını israf etmekti (chop'ta yaşarken trend_up defterinde 80+
     işlem kullanılmadan duruyordu). Ufku DOLU (katı-VE, rejim-dilimli) canlı-dışı rejimlerden,
     son arka-plan yansımasından beri EN ÇOK yeni işlem birikmişi seçilir. Rejim başına taban:
-    aynı kanıta ikinci kez yansıma yok.
+    aynı kanıta ikinci kez yansıma yok — restart'ta da (taban açılışta kalıcı durumdan geri
+    yüklenir: `_restored_bg_baselines`, TSK-229).
 
     GÜVENLİK BEYANI ARTIK KODDA KARŞILIĞI OLAN BİR CÜMLE. Beyan: "ship yalnız
     params_by_regime[o rejim]'i değiştirir — canlı davranış rejim dönene dek değişmez ve o güne
@@ -459,6 +460,53 @@ def _restored_baseline() -> int:
     return min(int(persisted), n_now) if isinstance(persisted, (int, float)) else n_now
 
 
+def _restored_bg_baselines() -> dict:
+    """Taze sürecin ARKA PLAN rejim tabanları (TSK-229) — `_restored_baseline`in rejim-başına ikizi: AYNI kaynak
+    (STATUS_FILE, `_persist` yazar) ve AYNI sınır (`min(değer, defter uzunluğu)`, her rejime ayrı ayrı).
+
+    NEDEN: `_persist` `bg_reflect_by_regime`i diske yazıyordu ama açılışta hiçbir yol onu geri okumuyordu. Taze süreçte
+    alan yoktu, `_bg_ready_regime` her rejimin TÜM geçmişini yeni kanıt sayıyordu ve önceki sürecin zaten yansıdığı AYNI
+    kanıtla arka plan yansımasını yeniden başlatıyordu (ölçüldü 2026-09-26: diskte `{"trend_down": 21}` varken taze süreç
+    trend_down'u yeniden seçti). Bedeli gereksiz bir LLM+arama turuydu; canlı taban (`last_reflect_at`) TSK-227'den beri
+    bundan etkilenmiyor.
+
+    SINIR: defter kısalmış ya da yeniden tohumlanmışsa kalıcı taban defterin ötesini gösterir; kırpılmasaydı
+    `trades[taban:]` defter o uzunluğa ulaşana dek boş kalır, rejim yeni kanıtı ne olursa olsun hiç seçilmezdi.
+
+    ELEME, SESSİZ DEĞİL: tam sayı olmayan değer (bool dahil — JSON `true` Python'da int'tir; kesirli de: `_persist` yalnız
+    `len(defter)` yazar), negatif değer ve sözlük olmayan alan ELENİR, `hermes_bg_taban_elendi` uyarısı her eleneni rejim
+    adı ve gerekçesiyle taşır. Düzeltilmez, elenir: sayıya çevrilemeyen değer `_bg_ready_regime`in `int()`inde her poll'u
+    istisnaya düşürürdü (arka plan ve ısınma dalı birlikte ölür); negatif taban `trades[-k:]` ile defterin SONUNU okurdu
+    (yanlış kanıt penceresi). Elenen rejim tabansız sayılır = geri yüklemesiz bugünkü davranış; uydurma taban yazılmaz.
+    Anahtarlar süzülmez: seçici yalnız `config.VALID_REGIMES`i okur, tanımadığı anahtar zararsızdır.
+
+    Dosya ya da alan yoksa `{}` — bugünkü davranış; yokluk bozukluk değildir, uyarı yok."""
+    n_now = len(store.read_jsonl("trades.jsonl"))
+    disk = store.read_json(STATUS_FILE, {})
+    ham = disk.get("bg_reflect_by_regime") if isinstance(disk, dict) else None
+    if ham is None:
+        return {}
+    if not isinstance(ham, dict):
+        obs.warn("hermes_bg_taban_elendi", alan_tipi=type(ham).__name__, elenen={},
+                 detail="bg_reflect_by_regime sözlük değil — hiçbir arka plan tabanı geri yüklenmedi; "
+                        "seçici her rejimi tabansız sayar (geri yüklemesiz davranış)")
+        return {}
+    geri: dict = {}
+    elenen: dict = {}
+    for rejim, deger in ham.items():
+        if isinstance(deger, bool) or not isinstance(deger, int):
+            elenen[str(rejim)] = f"tam sayı değil: {type(deger).__name__} {deger!r:.40}"
+        elif deger < 0:
+            elenen[str(rejim)] = f"negatif: {deger}"
+        else:
+            geri[str(rejim)] = min(deger, n_now)
+    if elenen:
+        obs.warn("hermes_bg_taban_elendi", alan_tipi="dict", elenen=elenen,
+                 detail="bozuk arka plan tabanı geri yüklenmedi — elenen rejim tabansız sayılır "
+                        "(geri yüklemesiz davranış); uydurma taban yazılmadı")
+    return geri
+
+
 _acilis_senkron_calisti = False      # SÜREÇ BAŞINA bir kez (start/stop döngüsü tekrarlatmaz)
 
 
@@ -568,6 +616,14 @@ def _run(poll_seconds: int) -> None:
     every = int(config.goal().get("reflection_every", 5))
     if _state.get("last_reflect_at") is None:
         _state["last_reflect_at"] = _restored_baseline()
+    # Arka plan rejim tabanları da AYNI desenle geri yüklenir (TSK-229): süreç başına bir kez ve aşağıdaki ilk `_persist`ten
+    # ÖNCE — o yazım diski `_state`le ezer, sonra okunsa geri yüklenecek bir şey kalmazdı. Alan süreçte zaten varsa
+    # (aynı süreçte stop→start) süreç-içi değer diskten tazedir, yeniden okunmaz. Geri yüklenecek taban yoksa alan
+    # KURULMAZ: bugünkü hâl birebir (seçici yokluğu boş sözlük sayar).
+    if _state.get("bg_reflect_by_regime") is None:
+        geri = _restored_bg_baselines()
+        if geri:
+            _state["bg_reflect_by_regime"] = geri
     _state.update(started_at=_now(), poll_seconds=poll_seconds)
     _persist()
     while not _stop.is_set():
