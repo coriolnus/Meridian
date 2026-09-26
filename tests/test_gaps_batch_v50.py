@@ -119,7 +119,8 @@ def test_reflection_outcome_is_always_recorded(sandbox_state):
     """Her yansıma bir SONUÇ bırakır: sayaç artar, son durum ve taban güncellenir."""
     from meridian import hermes_runtime as hr
     before = hr._state.get("reflections", 0)
-    hr._record({"status": "rejected_by_backtest", "hypothesis": {"variable": "entry.min_score"}})
+    hr._record({"status": "rejected_by_backtest", "hypothesis": {"variable": "entry.min_score"}},
+               arka_plan=False)                                # canlı/elle tür (TSK-227: beyan zorunlu)
     assert hr._state["reflections"] == before + 1
     assert hr._state["last_result"] == "rejected_by_backtest"
     assert hr._state["last_variable"] == "entry.min_score"

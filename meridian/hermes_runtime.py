@@ -243,9 +243,10 @@ _thread: threading.Thread | None = None
 _stop = threading.Event()
 _state: dict = {"reflections": 0, "last_reflection": None, "last_poll": None,
                 "last_result": None, "last_variable": None, "started_at": None, "poll_seconds": None,
-                # trade-count baseline at the LAST reflection — the standby loop's trigger AND the honest
-                # "next auto-reflection" countdown both derive from it. It used to be a local in _run(), so
-                # the dashboard invented its own (wrong) formula from total closed trades.
+                # trade-count baseline at the LAST live or manual reflection — the standby loop's trigger AND
+                # the honest "next auto-reflection" countdown both derive from it. It used to be a local in
+                # _run(), so the dashboard invented its own (wrong) formula from total closed trades.
+                # Background reflections do NOT move it (TSK-227 — they carry `bg_reflect_by_regime`).
                 "last_reflect_at": None}
 
 
@@ -420,15 +421,27 @@ def _persist() -> None:
                                    "brain_degraded": brain == "deterministic"})
 
 
-def _record(res: dict) -> None:
+def _record(res: dict, *, arka_plan: bool) -> None:
     """Biten bir yansımanın sonucunu `_state`e işler (sayaç, zaman damgası, durum, değişken).
 
-    Geri sayım tabanını (`last_reflect_at`) da güncel defter uzunluğuna çeker: ELLE tetiklenen
-    yansıma da bekleme döngüsünün tetiğini ileri iter, aynı işlemler üzerinde tekrarlanmaz."""
+    CANLI ve ELLE yansımada (`arka_plan=False`) geri sayım tabanını (`last_reflect_at`) da güncel
+    defter uzunluğuna çeker: elle tetiklenen yansıma da bekleme döngüsünün tetiğini ileri iter, aynı
+    işlemler üzerinde tekrarlanmaz.
+
+    ARKA PLAN yansıması (`arka_plan=True`) `last_reflect_at`a DOKUNMAZ (TSK-227): o alan canlı
+    rejimin vade yükleminin (`_yansima_vadesi`) tek zaman tabanı ve bekçinin öğrenme-canlılık
+    alarmının (A) ayağının (`yansima_kapisi`) tabanıdır. Taşısaydı, canlı sayaç `reflection_every`e
+    ulaşmadan araya giren her arka plan turu sayacı sıfırlardı → canlı yansıma hiç ateşlemez (livelock),
+    (A) vadeyi hiç görmez. Arka plan turunun KENDİ tabanı çağrı yerinde taşınır
+    (`bg_reflect_by_regime[rejim]`, `_bg_ready_regime` okur). Parametre ZORUNLU ve yalnız-ADLA: yeni
+    bir çağrı yeri türünü beyan etmeden yazılamaz — varsayılan olsaydı beyansız bir arka plan yolu
+    canlı tabanı yine sessizce taşırdı (kusurun sınıfı)."""
     _state["reflections"] += 1
     _state["last_reflection"] = _now()
     _state["last_result"] = res.get("status")
     _state["last_variable"] = (res.get("hypothesis") or {}).get("variable")
+    if arka_plan:
+        return
     # reset the countdown baseline. A MANUAL reflection must push the standby trigger out too — otherwise
     # the loop would immediately re-reflect on the very same trades.
     _state["last_reflect_at"] = len(store.read_jsonl("trades.jsonl"))
@@ -601,7 +614,7 @@ def _run(poll_seconds: int) -> None:
                         # pass the CERTIFIED regime: the search takes minutes, and a regime flip in the
                         # meantime must not retarget the ship into a regime the horizon never certified.
                         _state["_warm_skip"] = "reflect"
-                        _record(hermes.reflect_once(target_regime=live_reg))
+                        _record(hermes.reflect_once(target_regime=live_reg), arka_plan=False)
                     finally:
                         _reflect_lock.release()
                 elif (bg := _bg_ready_regime(trades, every, live_reg)) and \
@@ -615,7 +628,9 @@ def _run(poll_seconds: int) -> None:
                         # bayrak olmadan kanıtın canlı-dışı bir rejimden geldiğini BİLEMİYORDU ve
                         # bg=trend_up hâlinde ship yüzeyi GLOBAL oluyordu. Bayrak, aramayı `bg`
                         # rejimine zorlar ve global (@'sız) önerileri o turda reddettirir.
-                        _record(hermes.reflect_once(target_regime=bg, background=True))
+                        # `arka_plan=True`: canlı geri sayım (`last_reflect_at`) TAŞINMAZ — bu tur yalnız
+                        # kendi rejim tabanını taşır (TSK-227; gerekçe `_record`da).
+                        _record(hermes.reflect_once(target_regime=bg, background=True), arka_plan=True)
                         _state.setdefault("bg_reflect_by_regime", {})[bg] = len(trades)
                     finally:
                         _reflect_lock.release()
@@ -696,7 +711,7 @@ def reflect_now() -> dict:
         if not _reflect_lock.acquire(blocking=False):
             return
         try:
-            _record(hermes.reflect_once())
+            _record(hermes.reflect_once(), arka_plan=False)
         except Exception as e:
             _state["last_result"] = f"error: {type(e).__name__}"
         finally:
