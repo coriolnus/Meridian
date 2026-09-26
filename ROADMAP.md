@@ -525,6 +525,7 @@ _(Bölüm bilerek silinmedi: aşama sırası `H0→H1→H2→H3…` bir sözleş
 | id | name | status | owner | size | trigger |
 |---|---|---|---|---|---|
 | TSK-065 | PIT mid-cap üst-sınır (sağ-kalan üst-sınır ölçümü) (WP: WP4) | GATED(veri kapısı — delist-bar kaynağı kararı, EDG-018 askıda) | rol1 | M | delist-bar kaynağı kararı (TSK-084) + kart-önce ölçüm |
+  Not (TSK-065): (2026-09-26 20:54Z BAYAT KAPI YENİDEN ÖLÇÜLDÜ [Rol-1]: tetik (delist-bar kaynağı kararı, TSK-084) OPERATÖRDE BEKLEMEDE (09-15 'hepsi beklesin') — değişmedi; ölçülecek veri yok, kapı kapalı kalır)
 | TSK-084 | delist-bar kaynağı + FINVIZ erişim bloğu — `dataset.load↔bars_integrity` bağlama (WP: WP4) — operatör 2026-09-03 sabah: beklemede (fiyat/kapsam tablosu istenmedi) | OPERATOR | operator | M | — |
 | TSK-051 | (bkz. TSK-051 — QC LEAN CLI `lean login`, kimlik-bloklu; bu satır makine-kurulumu bloğunun DİK DURUM kaydı) (WP: WP9) | (bkz. TSK-051) | operator | — | — |
 | TSK-085 | `23b` çıkış slipajı (örneklem bekliyor — ayrı iş üretmez) (WP: WP1) | QUEUED(TSK-069 [EDG-042 K2/K3] + EDG-045 üzerinden kapanacak) | rol1 | — | — |
