@@ -54,7 +54,8 @@
 #   ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 #                                           başlayacağını listeler, HİÇBİR ŞEY yazmaz
 #   sudo ./sir_rotasyon.sh --<alt> --vault  → KASADAN ROTASYON (TSK-064 Faz-2 DALGA-2, 2026-09-14):
-#                                           yeni değer operatörden alınır ve ÖNCE KASAYA konur;
+#                                           yeni değer operatörden alınır (`--uret` ile betik İÇİNDE
+#                                           üretilir — aşağıda) ve ÖNCE KASAYA konur;
 #                                           Agent yan dosyaları render eder, betik render'ı ÖLÇER
 #                                           (kanonik tek-değer kopyasının kasadaki değere eşitlenmesi,
 #                                           bekleme SINIRLI), eski kanal kopyalarını AYNI pencerede
@@ -66,6 +67,19 @@
 #                                           yolun yazımı kasadaki değerle ezilebilir; 2026-09-17'de yalnız
 #                                           `--db`ydi, 2026-09-24'ten beri böyle bir sır YOK). Her kasa sırrı
 #                                           AYRI sorulur; boş bırakılan o tur DÖNMEZ ve ADIYLA söylenir.
+#   sudo ./sir_rotasyon.sh --<alt> --vault --uret → KASADAN ROTASYON, DEĞER BETİK İÇİNDE (TSK-226c,
+#                                           2026-09-26): İSTEM YOK — değer eski yolun AYNI yöntemiyle
+#                                           üretilir (`_uret`; alt komutun sınıfı `_uret_sinifi`nde, eski yol
+#                                           gövdeleriyle ayrışması çivili — v557), uzunluğu denetlenir, render
+#                                           hedefindeki ESKİ değerle AYNI olamaz, hiçbir yere BASILMAZ. Takma
+#                                           ad, render kanıtı, eski kanal, restart, kanıt ve geri alma AYNEN —
+#                                           yalnız değerin KAYNAĞI değişir. Yalnız --kapi | --tenant | --dash |
+#                                           --apisix-admin; --openrouter (anahtarı sağlayıcı üretir) ve --db
+#                                           (kendi dalı, bu turun kapsamı dışı) AÇIK hatayla reddedilir,
+#                                           --vault'suz verilemez; --cp --vault değeri ZATEN üretir (bayrak
+#                                           etkisiz, söylenir). `--kuru` ile birleşir. Hedef kullanım:
+#                                           --tenant --vault --uret (Rol-1 bir isteme sır değeri GİREMEZ;
+#                                           eski yolun yazımı Agent render'ıyla ezilir).
 #   sudo ./sir_rotasyon.sh --db --vault   → KASADAN DB PAROLASI (TSK-064, 2026-09-24) — genel döngü DEĞİL,
 #                                           kendi dalı (`vault_db_rotasyon`): kasa TAM DSN taşır, sır yalnız
 #                                           PAROLA alanıdır ve ikinci hakikat noktası GERİ ALINAMAZ (`ALTER
@@ -125,7 +139,9 @@
 # şerhinin 2026-09-01 üretim reçetesi de `openssl rand -hex 32`dir). Üretimden SONRA uzunluk denetlenir;
 # boş ya da yalnız boşluk olan değer bir ARIZADIR (bir kez ölçüldü: boş credential dosyası birimi
 # sessizce yetkisiz bıraktı) ve betik durur. `--openrouter` üretmez: iki anahtarı operatör
-# OpenRouter panosunda üretir ve buraya `read -s` ile yapıştırır.
+# OpenRouter panosunda üretir ve buraya `read -s` ile yapıştırır. `--<alt> --vault --uret` (TSK-226c)
+# AYNI `_uret`i çağırır; alt komut → sınıf eşlemesi `_uret_sinifi`ndedir ve eski yol gövdeleriyle
+# ayrışması çivilidir (v557 A1) — kasa yolu eski yoldan FARKLI bir değer biçimi üretemez.
 #
 # SIR DEĞERİ HİÇBİR YOLA BASILMAZ. Ne terminale, ne loga, ne argv'ye. Hash de basılmaz: bir
 # sha256'nın ilk sekiz hanesi "değeri sızdırmayan bir kimlik" gibi görünür ama iki koşumu
@@ -271,6 +287,9 @@ VAULT_RENDER_ARALIK_S="${VAULT_RENDER_ARALIK_S:-3}"
 ISLIK=""          # 0700 çalışma dizini (değer taşıyan geçici dosyalar YALNIZ burada yaşar)
 YEDEK=""          # bu koşumun yedek dizini
 KURU=0            # --kuru: hiçbir yazım yok
+#: --uret (TSK-226c, 2026-09-26): kasa yolunun İSTEMİ yerine değer betik İÇİNDE üretilir (`_vault_uret`).
+#: Okuyanlar: `vault_rotasyon` (istem noktası) · `_vault_kuru_rapor` (plan satırı) · `_deger_kaynagi_beyani`.
+URET=0
 GERI_AL_LISTESI=""  # negatif kontrolün geri alacağı <yedek>|<hedef> çiftleri
 #: NEGATİF KONTROLÜN BOZUK/BOŞ DEĞERLE YENİDEN BAŞLATTIĞI BİRİMLER. Dosyaları geri almak YETMEZ:
 #: birim değeri AÇILIŞTA okur (apisix `$env://` çözümünü yalnız açılışta yapar, systemd
@@ -1079,9 +1098,12 @@ _yedekleri_listele() {
 # =================================================================================================
 # Uzunluk ÜRETİMDEN SONRA denetlenir: `openssl` bir konteyner/PATH kazasıyla boş çıktı verirse
 # boş bir credential dosyası yazılır ve birim sessizce YETKİSİZ kalır (2026-09-07 vakası).
+# `_uret <sınıf> [çıktı]` — çıktı verilmezse `$ISLIK/yeni` (eski yol ve `--cp --vault`); kasa yolunun
+# `--uret`i (`_vault_uret`) istemin yazdığı dosyaya (`$ISLIK/vault_yeni`) üretir: değer İKİNCİ bir
+# dosyaya kopyalanmaz.
 _uret() {
   local sinif="$1" hedef_uz cikti
-  cikti="$ISLIK/yeni"
+  cikti="${2:-$ISLIK/yeni}"
   case "$sinif" in
     b64) openssl rand -base64 36 | tr '+/' '-_' | tr -d '\r\n' > "$cikti"; hedef_uz=48 ;;
     hex) openssl rand -hex 32 | tr -d '\r\n' > "$cikti"; hedef_uz=64 ;;
@@ -1093,6 +1115,20 @@ _uret() {
   [ "$uz" = "$hedef_uz" ] || die "üretilen değer $uz karakter (beklenen $hedef_uz) — yazım YAPILMADI"
   grep -q '[^[:space:]]' "$cikti" || die "üretilen değer boş/boşluk — yazım YAPILMADI"
   oldu "yeni değer üretildi ($sinif, $hedef_uz karakter; DEĞER BASILMAZ)"
+}
+
+#: ESKİ YOLUN ÜRETİM SINIFI — `--<alt> --vault --uret` (TSK-226c) değeri eski yolun AYNI yöntemiyle
+#: üretir. Tanım kümesi GENEL kasa döngüsünden geçen üreticilerdir: `db` (eski yol `_uret b64`) kendi
+#: kasa dalındadır ve `--uret` orada kapsam dışıdır; `cp` kendi dalında ZATEN üretir; `openrouter`
+#: üretmez. KOPYA KAÇINILMAZ (eski yol gövdeleri sınıfı literal taşır ve o gövdelere dokunmak bu turun
+#: "`--uret` yokken davranış birebir" sözleşmesini riske atardı) → ayrışma çivisi: v557 A1 her alt
+#: komutta bu tabloyu eski yol gövdesinin `_uret <sınıf>` çağrısıyla kıyaslar. Tanımsız alt komut 1 döner.
+_uret_sinifi() {
+  case "$1" in
+    kapi|dash|apisix-admin) echo b64 ;;
+    tenant) echo hex ;;
+    *) return 1 ;;
+  esac
 }
 
 # Operatörden değer alır (ekrana yansımaz). Boş bırakılırsa o bacak ATLANIR — `--openrouter`
@@ -2314,12 +2350,59 @@ _vault_kapsam_beyani() {
 #: (v522 — `_uret` çağıran küme ↔ bu küme). Kuru rapor ve gerçek koşumun istem noktası aynı satırı basar.
 #: `cp` YOK (TSK-226b) ve bu bilinçlidir: `--cp --vault` genel döngüye girmez, kendi dalında değeri eski
 #: yol gibi betik İÇİNDE üretir — iki yolun değer kaynağı AYNI, beyan edilecek fark yok (v556 A4).
+#: `--uret` (TSK-226c, 2026-09-26): kasa yolu da değeri betik İÇİNDE üretir → beyan "sizden İSTER" DEMEZ
+#: (yalan beyan olurdu), kaynağı söyler. `db` listede kalır: `--db --vault --uret` ayrıştırmada reddedilir,
+#: yani `URET=1` iken buraya hiç ulaşmaz. `${URET:-0}`: fonksiyon çivilerde betikten KESİLİP koşar (v522 B3).
 _deger_kaynagi_beyani() {
   case "$1" in
     kapi|tenant|db|dash|apisix-admin)
-      echo "  · DEĞER KAYNAĞI: bu yol değeri ÜRETMEZ, sizden İSTER — eski yol (sudo $0 --$1) değeri"
-      echo "    betik İÇİNDE üretir. Güçlü rastgele bir değer girin (ekrana yansımaz, hiçbir yere BASILMAZ)." ;;
+      if [ "${URET:-0}" = 1 ]; then
+        echo "  · DEĞER KAYNAĞI: betik İÇİNDE üretilir (--uret) — eski yol (sudo $0 --$1) ile AYNI yöntem; SORULMAZ, hiçbir yere BASILMAZ."
+      else
+        echo "  · DEĞER KAYNAĞI: bu yol değeri ÜRETMEZ, sizden İSTER — eski yol (sudo $0 --$1) değeri"
+        echo "    betik İÇİNDE üretir. Güçlü rastgele bir değer girin (ekrana yansımaz, hiçbir yere BASILMAZ)."
+      fi ;;
   esac
+}
+
+#: `--uret` — KASA YOLUNUN İSTEM NOKTASININ YERİNE (TSK-226c, 2026-09-26). `_vault_uret <alt> <sır> <render
+#: hedefi>` → `$ISLIK/vault_yeni` (istemin yazacağı dosyanın AYNISI: döngünün geri kalanı değerin nereden
+#: geldiğini bilmez ve bilmemeli). NİYE: kasa yolu değeri operatörden ister; komutları koşan Rol-1 bir yapay
+#: zekâ oturumudur ve bir isteme sır değeri GİREMEZ, eski yol ise kasaya bağlı sırda Agent render'ıyla ezilir.
+#: ÜÇ KAPI, üçü de kasaya yazımdan ÖNCE (düşüş = HİÇBİR ŞEY yazılmadı, yedek bile alınmadı):
+#:   (1) sınıf eski yolla AYNI (`_uret_sinifi` — ayrışma çivisi v557 A1); (2) uzunluk/boşluk `_uret`in kendi
+#:   denetimi; (3) ESKİ DEĞERLE AYNI OLAMAZ — kıyas render hedefinin KANONİK kopyasıyladır, çünkü bu döngünün
+#:   kanıtı o dosyanın YENİ değere eşitlenmesidir: hedef zaten "yeni" değeri taşısaydı render ölçümü Agent hiç
+#:   çalışmasa da geçerdi (tiyatro). Hedef YOKSA ESKİ değer okunamaz — kıyas UYDURULMAZ, ADIYLA atlanır; boş
+#:   hedef render kanıtını sahte geçiremez (kanıt BİREBİR eşitliktir). Değer hiçbir yere BASILMAZ.
+_vault_uret() {
+  local alt="$1" sir="$2" hedef="$3" sinif hal
+  sinif="$(_uret_sinifi "$alt")" \
+    || die "--uret: --$alt için üretim sınıfı YOK (_uret_sinifi) — kasaya YAZILMADI: $sir"
+  _uret "$sinif" "$ISLIK/vault_yeni"
+  hal="$(py esit dosya "$KOK$hedef" - - dosya "$ISLIK/vault_yeni" - -)" \
+    || die "ESKİ değer kıyası ÖLÇÜLEMEDİ (yardımcı düştü): $hedef — kasaya YAZILMADI: $sir"
+  case "$hal" in
+    AYRI) oldu "yeni değer render hedefindeki ESKİ değerden AYRI: $hedef (DEĞER BASILMAZ)" ;;
+    "REFERANS YOK")
+      echo "  · ESKİ değer kıyası YAPILAMADI: render hedefi YOK ($hedef) — çakışma ölçülemez, 'AYRI' denmez;"
+      echo "    render kanıtı yine hedefin YENİ değere BİREBİR eşitlenmesidir (boş hedef onu sahte geçiremez)." ;;
+    EŞİT) die "üretilen değer render hedefindeki ESKİ değerle AYNI: $hedef — rotasyon değil ve render kanıtı
+     Agent çalışmasa da geçerdi. Kasaya YAZILMADI: $sir (yedek alınmadı). Üretimi (openssl) denetle." ;;
+    *) die "ESKİ değer kıyası ÖLÇÜLEMEDİ ($hal): $hedef — kasaya YAZILMADI: $sir" ;;
+  esac
+}
+
+#: Kuru planın `  değer:` satırının METNİ (TSK-226c). `--uret` iken değer SORULMAZ — "AYRI sorulur" satırı
+#: orada yalan olurdu; sınıf gerçek koşumun okuduğu tablodan (`_uret_sinifi`) basılır. Ayrı fonksiyondur ki
+#: rapordaki satır sırası (`_birimsiz_tuketici_beyani` → `değer:` → `_deger_kaynagi_beyani`) DEĞİŞMESİN —
+#: mutasyon çivileri o bitişikliği çapa olarak kullanır (v521 M9 · v522 M6).
+_kuru_deger_metni() {
+  if [ "$URET" = 1 ]; then
+    echo "betik İÇİNDE üretilir — eski yolun AYNI yöntemi (_uret $(_uret_sinifi "$1")), uzunluk denetlenir; SORULMAZ, BASILMAZ; render hedefindeki ESKİ değerle AYNI olamaz"
+  else
+    echo "her kasa sırrı AYRI sorulur (ekrana yansımaz); boş bırakılan sır bu tur DÖNMEZ ve ADIYLA söylenir"
+  fi
 }
 
 _vault_kuru_rapor() {
@@ -2344,7 +2427,7 @@ _vault_kuru_rapor() {
   # shellcheck disable=SC2086
   echo "  yeniden başlatılacak: $(_sirala $hepsi)   (değeri VERİLEN sırların tüketicileri — boş bırakılan sırrınki başlamaz)"
   _birimsiz_tuketici_beyani "$alt"
-  echo "  değer: her kasa sırrı AYRI sorulur (ekrana yansımaz); boş bırakılan sır bu tur DÖNMEZ ve ADIYLA söylenir"
+  echo "  değer: $(_kuru_deger_metni "$alt")"
   _deger_kaynagi_beyani "$alt"
   echo "  render bekleme tavanı: $VAULT_RENDER_TAVAN_S s (yoklama aralığı $VAULT_RENDER_ARALIK_S s; aşımda ÖLÇÜLEMEDİ, eski kanal YAZILMAZ)"
   echo "  ÖN KOŞUL: sudo systemctl stop meridian-tick-watchdog.timer (sonda geri aç)"
@@ -2426,7 +2509,11 @@ vault_rotasyon() {
     # imkânsızlaşırdı ve `_oku_gizli`nin kendi istemi ("boş = bu bacağı atla") yalan söylerdi. Eski
     # yolun `openrouter()` sözleşmesiyle AYNI: her anahtar ayrı sorulur, hiçbiri verilmezse durulur.
     _deger_kaynagi_beyani "$alt"          # istemden HEMEN önce (TSK-064 takip (4))
-    if ! _oku_gizli "$sir (KASAYA konacak)" "$ISLIK/vault_yeni"; then
+    # `--uret` (TSK-226c): istem YOK — değer eski yolun yöntemiyle AYNI dosyaya üretilir (`_vault_uret`).
+    # Buradan sonrası (yedek · kanon · kasa · render · eski kanal · restart · kanıt) iki kipte BİREBİR (v557 C3).
+    if [ "$URET" = 1 ]; then
+      _vault_uret "$alt" "$sir" "$hedef"
+    elif ! _oku_gizli "$sir (KASAYA konacak)" "$ISLIK/vault_yeni"; then
       echo "  · ATLANDI: $sir — değer boş; kasaya YAZILMADI ve bu tur DÖNMEDİ (yürürlükteki değer kalır)"
       continue
     fi
@@ -2454,6 +2541,10 @@ vault_rotasyon() {
      Bak: systemctl status vault-agent · journalctl -u vault-agent -n 50 --no-pager"
     fi
     oldu "render ÖLÇÜLDÜ: $hedef ($RENDER_GECEN s) — kanonik kopya kasadaki değerle BİREBİR"
+    # `--uret`: değeri operatör GÖRMEDİ — nerede durduğu söylenir (ör. `--dash`ın pano jetonunu elle eşitleyen
+    # okur oradan alır); değerin kendisi BASILMAZ.
+    [ "$URET" = 0 ] \
+      || echo "  · --uret: yeni değer hiçbir yere BASILMADI — kasadadır ($yol) ve render hedefindedir ($hedef)."
 
     adim "eski kanal (iki-kanal dönemi): kopyalar KASADAN gelen değerle yazılır"
     # `api` kopyası (NOUS) burada restart ve kanıttan ÖNCE yazılır: `_api_yaz` hata metni bunu
@@ -3164,16 +3255,18 @@ esitle() {
 KURU=0
 ESITLE=0
 VAULT_KIP=0
+URET=0
 ALT=""
 for _a in "$@"; do
   case "$_a" in
     --kuru) KURU=1 ;;
     --esitle) ESITLE=1 ;;
     --vault) VAULT_KIP=1 ;;
+    --uret) URET=1 ;;
     --kapi|--tenant|--db|--dash|--openrouter|--apisix-admin|--cp|--envanter|--kopyalar)
       [ -z "$ALT" ] || die "iki alt komut verildi: --$ALT ve $_a — her koşum TEK sır döndürür"
       ALT="${_a#--}" ;;
-    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --envanter | --kopyalar [| --kuru | --esitle | --vault])" ;;
+    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --envanter | --kopyalar [| --kuru | --esitle | --vault | --uret])" ;;
   esac
 done
 [ -n "$ALT" ] || die "alt komut ZORUNLU: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --envanter | --kopyalar (+ --kuru)"
@@ -3199,6 +3292,30 @@ esac
   || die "--vault yalnız rotasyon alt komutlarıyla: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp (+ --vault [--kuru]); --$ALT ile anlamsız"
 [ "$VAULT_KIP" = 0 ] || [ "$ESITLE" = 0 ] \
   || die "--vault ile --esitle birlikte verilemez: biri KASADAN yeni değer yayar, öteki mevcut referansı kopyalara taşır"
+# `--uret` (TSK-226c, 2026-09-26) YALNIZ `--vault` ile ve YALNIZ genel kasa döngüsünün üreticileriyle anlamlıdır
+# (`_uret_sinifi` tanım kümesi). Kapılar ROOT kapısının ve `_islik_kur`un ÜSTÜNDE: yanlış birleşim hiçbir
+# istem açmadan, hiçbir dosyaya ve kasaya dokunmadan durur (v557 E1). Sessiz kabul, operatöre "üretildi"
+# sandırıp istemi (ya da eski yolun Agent'la ezilen yazımını) koşturmak olurdu.
+if [ "$URET" = 1 ]; then
+  if [ "$VAULT_KIP" = 0 ]; then
+    # Öneri YALNIZ geçerli bir biçim varsa basılır (`--envanter --vault --uret` diye bir sözleşme YOK —
+    # olmayan biçimi önermek hata metnini yanlış yola sokar; `_KURU_ONERI` emsali, inceleme B6).
+    _URET_ONERI=""
+    _uret_sinifi "$ALT" >/dev/null && _URET_ONERI=" Doğrusu: sudo $0 --$ALT --vault --uret."
+    die "--uret yalnız --vault ile anlamlıdır: kasa yolunun istemi yerine değeri betik İÇİNDE üretir (eski yol
+     değeri ZATEN üretir ama kasaya bağlı sırda yazımı Agent render'ıyla ezilir).$_URET_ONERI HİÇBİR ŞEY yazılmadı."
+  fi
+  case "$ALT" in
+    openrouter) die "--uret --openrouter ile verilemez: OpenRouter ve NOUS anahtarlarını betik ÜRETEMEZ — sağlayıcı
+     panosunda üretilir ve kasa yolu istemle alır (sudo $0 --openrouter --vault). HİÇBİR ŞEY yazılmadı." ;;
+    db) die "--db --vault --uret bu turun kapsamı DIŞI (TSK-226c): DB dalı (vault_db_rotasyon) parolayı istemle alır
+     ve ikinci hakikat noktası (ALTER ROLE) GERİ ALINAMAZ — üretim o dalda tasarlanmadı. Kasa yolu:
+     sudo $0 --db --vault (istemle). HİÇBİR ŞEY yazılmadı." ;;
+    cp) echo "!! --uret bu yolda ETKİSİZDİR: --cp --vault değeri ZATEN betik İÇİNDE üretir (vault_cp_rotasyon, TSK-226b)." >&2 ;;
+    *) _uret_sinifi "$ALT" >/dev/null \
+         || die "--uret: --$ALT için üretim sınıfı YOK (_uret_sinifi) — HİÇBİR ŞEY yazılmadı." ;;
+  esac
+fi
 
 # `--kopyalar` gömülü tabloyu basar: hiçbir dosya açmaz, hiçbir uca konuşmaz, hiçbir şey yazmaz —
 # ve çivinin sözleşme yüzeyidir. Root kapısının ÜSTÜNDE durması bilinçlidir: kapıyı buraya da
