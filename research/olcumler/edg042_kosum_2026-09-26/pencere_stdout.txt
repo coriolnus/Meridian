@@ -1,0 +1,1 @@
+{"yazildi": "pencere_altbant.json", "n_giris_once": 15, "n_giris_1345": 18, "damgasiz": 13, "damga_ts_ayrisan": 0, "olculemedi": 0, "oneri_tetigi": "tetiklenmedi"}

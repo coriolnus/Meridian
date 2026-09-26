@@ -1,0 +1,1 @@
+{"yazildi": "sonuc.json", "giris_once_n": 15, "giris_1345_n": 18, "cikis_hedef_n": 14, "cikis_stop_n": 12}

@@ -1,0 +1,30 @@
+EDG-2026-042 — OTOMATİK HAFTALIK KOŞUM #6 — TELAFİ (Rol-1 ana oturumda, 2026-09-26 12:33Z; operatör "komutları sen çalıştır")
+NEDEN TELAFİ: zamanlanmış görev 2026-09-26T07:30:59Z başladı, 07:31:13Z'de bir Bash çağrısında (izin istemi) takıldı;
+~5 saat ilerlemedi, çıktı dizini doğmadı. Rol-1 oturumu durdurdu (ikinci koşum aynı dizine yazmasın) ve telafiyi koştu.
+Kural (memory ajana-a1-verisi-rol1-ceker): A1 verisini Rol-1 çeker — ajan kullanılmadı.
+
+[0] BİTİŞ KONTROLÜ: eşiğe ulaşabilen üç kova (giris_1345 · cikis_hedef · cikis_stop) hükümlü mü? HAYIR — görev sürer.
+[1] REÇETE İŞARETÇİSİ (karttan, p3_karar_ayrik_ts_2026_08_31): research/olcumler/edg042_recete_ayrik_2026-08-31/
+    bayt-özdeş kopya; sha256 kart künyesiyle BİREBİR:
+      canli_cek.py  a846449eaa7fdfa8a4e47db648e5c27703be8f59747e0a1a649a74fd77e6cfa2 ✓
+      olcum.py      1787a9ffe6b477484fba096ebcaf553899cf560f3b700057d985318204a1f317 ✓
+    olcum.py içe aktarımı yalnız stdlib (datetime/hashlib/json/random/statistics/pathlib).
+[2] KOŞUM (salt-okunur):
+    ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'cd /opt/meridian && ./.venv/bin/python -' < canli_cek.py > canli_ham.json  → RC 0
+    PYTHONDONTWRITEBYTECODE=1 python3 olcum.py → sonuc.json, RC 0
+    canli_ham.json sha256 3b4880d0cf6340897ae93aabb10de0fb7b7c386a45698cc6902980083f179c54 · çekim 2026-09-26T12:31:55Z · A1 canlı · goal.slippage_bps 5
+    sonuc.json sha256 08edf382422dde0aa8d9360ee757969c8616818ccbe60abae16271a2dd4a16b0
+[3] EŞİK KONTROLÜ — DÖRT KOVA DA EŞİK ALTINDA (hükümlü koşum yok, CI yok):
+      giris_once  n=15 / 5 seans   (eşik 30/10; kalıcı taban) — 09-24 ile BİREBİR
+      giris_1345  n=18 / 12 seans  (eşik 30/10) — değişmedi
+      cikis_hedef n=14 / 5 seans   (eşik 15/6)  — değişmedi (EN YAKIN: 1 dolum + 1 seans)
+      cikis_stop  n=12 / 9 seans   (eşik 15/6)  — +1 (09-25 PANW stop çıkışı); medyan 2,553 bps (p25 −4,046 · p75 18,149)
+      olculemedi 0
+    DAMGA: "ÖLÇÜLEMEDİ (n < eşik) — sayılar betimleyicidir, istatistiksel hüküm taşımaz."
+[EK] PENCERE HAKEMİ (EXE-2026-009 işaretçisi: research/olcumler/edg042_hakem_2026-09-01/), sha256 BİREBİR:
+      pencere_cek.py     9ad462a56e40ae585ce8268b94fca4488fb7751a24666cf728f74632b360690b ✓
+      pencere_altbant.py 3d8eda316d15dd3b7fb14154f2dc9bd2fe213d63414b9972d9f5861b1b72cf02 ✓
+    pencere_ham.json sha256 f8f879997901413ba94172cf7585af334333f9a90e6f724c6749b7a196fe89b3 · çekim 2026-09-26T12:32:31+00:00 · RC 0
+    SONUÇ: giris_once n=15 · giris_1345 n=18 · damgasız 13 · damga↔ts ayrışan 0 · olculemedi 0 · oneri_tetigi "tetiklenmedi"
+    → geri_al_onerisi beyanı YOK.
+[6] DOĞRULAMA: DOGRULAMA.txt (kapsam testleri Rol-1 ana checkout'ta, pytest).

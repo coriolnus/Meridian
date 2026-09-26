@@ -1,0 +1,1 @@
+EDG-042 koşum #6 doğrulama (Rol-1, ana checkout pytest): test_kart_kimlik_v219 · test_kart_hukum_damgasi_v251 · test_nous_eval_v131 · test_wpm_sasi_v173 → 91 passed, PYTEST_EXIT=0, FAILED/ERROR grep boş.
