@@ -233,7 +233,8 @@ def test_next_reflection_countdown_uses_last_reflection_baseline(seeded_sandbox)
     hermes_runtime._state["last_reflect_at"] = None
     for i in range(40):                                # a book far larger than reflection_every (5)
         store.append_jsonl("trades.jsonl", {"id": i})
-    hermes_runtime._record({"status": "rejected_by_backtest", "hypothesis": {"variable": "x"}})
+    hermes_runtime._record({"status": "rejected_by_backtest", "hypothesis": {"variable": "x"}},
+                           arka_plan=False)      # canlı/elle tür (TSK-227: beyan zorunlu)
     st = hermes_runtime.status()
     assert st["closed_trades"] == 40 and st["last_reflect_at"] == 40
     assert st["trades_since_last_reflection"] == 0
