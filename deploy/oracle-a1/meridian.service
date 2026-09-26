@@ -107,11 +107,12 @@ EnvironmentFile=-/opt/meridian/.dash.env
 Environment=MERIDIAN_BIND_HOST=127.0.0.1
 # uv PATH'i (deploy.sh uv'yi ~/.local/bin veya ~/.cargo/bin'e kurar)
 Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
-# `uv run --no-dev` (TSK-228, 2026-09-26). Bayraksız `uv run` açılışta proje ortamını VARSAYILAN gruplarla
-# (dev dahil) eşitler; A0/dagit `uv sync --frozen --no-dev` (exact) dev'i her dağıtımda kaldırıyordu → venv
-# her dağıtımda İKİ KEZ değişiyordu. Bayrak A0 `defaults/main.yml::uv_sync_bayrak`ın KOPYASIDIR (birim
-# şablonsuz kopyalanır); ayrışma çivisi + `--no-sync`un neden seçilmediği: tests/test_birim_uv_run_v558.py.
-ExecStart=/home/ubuntu/.local/bin/uv run --no-dev uvicorn meridian.api:app --host ${MERIDIAN_BIND_HOST} --port 8080 --log-level warning
+# `uv run --frozen --no-dev` (TSK-228, 2026-09-26/27) — A0/dagit `uv sync --frozen --no-dev` ile AYNI semantik.
+# Bayraksız `uv run` açılışta VARSAYILAN grupları (dev dahil) kurar, A0 onları her dağıtımda kaldırıyordu → venv
+# her dağıtımda İKİ KEZ değişiyordu; `--frozen`sız hâli pyproject↔uv.lock ayrışınca kilidi YENİDEN YAZAR + ağa
+# çıkar. Bayraklar A0 görev metninin + `defaults/main.yml::uv_sync_bayrak`ın KOPYASIDIR (birim şablonsuz
+# kopyalanır); ayrışma çivisi + `--no-sync`un neden seçilmediği: tests/test_birim_uv_run_v558.py.
+ExecStart=/home/ubuntu/.local/bin/uv run --frozen --no-dev uvicorn meridian.api:app --host ${MERIDIAN_BIND_HOST} --port 8080 --log-level warning
 # HER `systemctl restart`/`stop` OnFailure'ı YANLIŞ ATEŞLİYORDU (triyaj Kalem 1, 2026-08-09). systemd
 # durdurmada ana sürece SIGTERM yollar; ExecStart'taki ana süreç `uv run`dır ve çocuğu (uvicorn)
 # SIGTERM'le ölünce KENDİSİ 143 (128+15) EXIT KODUYLA çıkar — sürecin SIGTERM SİNYALİYLE ölmesi değil.

@@ -151,11 +151,12 @@ uv_installer_dizini: /usr/local/lib/meridian
 # sürümünde vardır. dagit ayrıca koşum anında `uv sync --help`e sorup `--no-default-groups`a
 # yükseliyor; rol A1'e ssh yapamadığı için o sondayı ATAMAZ ve tabanı taşır (ikisi de ÖLÇÜLEN
 # aynı 17 paketi kaldırıyor — dagit.sh [3] şerhi). Rol-1 A1'de ölçtükten sonra yükseltebilir.
-# LİTERAL KOPYALARI VAR (TSK-228, 2026-09-26): `uv run` koşan dört birimin ExecStart'ı (meridian ·
-# meridian-barsarchive · meridian-fail-notify · meridian-backup) bu bayrağı taşır — bayraksız `uv run`
-# açılışta dev grubunu geri kurar ve venv her dağıtımda iki kez değişirdi. Birimler ŞABLONSUZ kopyalandığı
-# için kopya kaçınılmaz; bu değer değişirse dört birim AYNI değişiklikte güncellenir, yoksa
-# tests/test_birim_uv_run_v558.py (ayrışma çivisi) kırmızı.
+# LİTERAL KOPYALARI VAR (TSK-228, 2026-09-26/27): `uv run` koşan dört birimin ExecStart'ı (meridian ·
+# meridian-barsarchive · meridian-fail-notify · meridian-backup) bu bayrağı — `venv.yml` `uv sync` görev
+# metnindeki `--frozen` ile birlikte — taşır (`uv run --frozen --no-dev`): bayraksız `uv run` açılışta dev
+# grubunu geri kurar ve venv her dağıtımda iki kez değişirdi. Birimler ŞABLONSUZ kopyalandığı için kopya
+# kaçınılmaz; bu değer ya da görev metnindeki bayraklar değişirse dört birim AYNI değişiklikte güncellenir,
+# yoksa tests/test_birim_uv_run_v558.py (ayrışma çivisi) kırmızı.
 uv_sync_bayrak: "--no-dev"
 
 # --- kadans kapısına tabi birimler (deploy.sh 6c-e/11a-c; brifing/bekçi/karne) ---
