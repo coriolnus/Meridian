@@ -206,7 +206,11 @@
 # YEDEK. Her koşum ÖNCE `/root/sir-yedek-<UTC ts>-<alt komut>/` (0700 root) altına dokunacağı her
 # dosyayı `cp -p` ile alır. Ad SANİYE taşır: aynı sırrı gün içinde iki kez döndürmek ilk yedeği
 # EZMEZ. Geri alma reçetesi RUNBOOK'ta değil burada, çünkü okunacağı an bu betiğin çıktısıdır:
-# `sudo cp -p <yedek>/<yol> <yol>` + ilgili birimleri yeniden başlat.
+# kasasız yol → `sudo cp -p <yedek>/<yol> <yol>` + ilgili birimleri yeniden başlat. `--vault` yolu
+# (TSK-064, 2026-09-26) → ÖNCE kasa: `vault kv rollback -version=<N> <yol>` (N = `kv put` ÖNCESİ
+# `current_version`, her kasa yolu için ayrı kaydedilir), SONRA dosya — ters sırada Agent render'ı
+# geri konan dosyayı kasadaki yeni değerle tekrar ezer. Genel döngüde `kv rollback`un kendisi düşerse
+# yedek yol YOK (eski kasa değeri okunmuyor; `--db`/`--cp` dallarında var) — açık kalem TSK-064.
 #
 # YAPMADIKLARI (burada olmayan şey, burada yapılmayacak şeydir): kanal geçişi yapmaz (o
 # `sir_credential_gecis.sh`); drop-in kurmaz; Vault'a dokunmaz; operatörün YEREL `.env` kopyasını
