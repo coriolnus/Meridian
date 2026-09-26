@@ -33,12 +33,22 @@ _token_oku() {
   sudo sed -n 's/^MERIDIAN_DASH_TOKEN=//p;t;p' "$1" 2>/dev/null | head -1 | tr -d '\r\n'
 }
 
+# --- dosyanın YERİ: izin + sahip (DEĞER DEĞİL) — `durum`un kullandığı `stat` biçimi (TSK-064) ----
+_izin() { sudo stat -c '%a %U:%G' "$1" 2>/dev/null || echo "ölçülemedi"; }
+
 # --- kimlik doğrulaması GERÇEKTEN çalışıyor mu? --------------------------------------------------
 # `/healthz` YETMEZ: kimlik doğrulaması İSTEMEYEN bir uçtur, yani token yanlışken de 200 döner ve
 # "yeşil" bir doğrulama hiçbir şey kanıtlamazdı. `/api/hermes` `_auth`tan geçer (token yanlışsa
 # 401), yani HTTP kodunun kendisi token'ın SUNUCUDA yürürlükte olduğunun kanıtıdır.
+#
+# TOKEN ARGV'YE GİRMEZ (TSK-064, 2026-09-26): başlık eskiden curl'ün KOMUT SATIRINDAYDI — `ps` ve
+# `/proc/<pid>/cmdline` onu makinedeki her kullanıcıya gösterir. Başlık artık STDIN'den okunur (`-H @-`,
+# curl >= 7.55; A1 curl 8.5.0 — Rol-1 ölçümü 2026-09-26) ve `printf` bash'in YERLEŞİĞİDİR: süreç
+# doğurmaz, değer hiçbir argv'ye girmez. Desen `deploy/hermes_api.sh` (TSK-226b). Çıkış kodu ve çıktı
+# AYNI — `tests/test_dash_token_betigi_v559.py` C bölümü eski biçimle birebir kıyaslar.
 _auth_kodu() {
-  curl -s -o /dev/null -w "%{http_code}" -H "x-meridian-token: $1" "$API/api/hermes" 2>/dev/null || echo 000
+  printf 'x-meridian-token: %s\n' "$1" \
+    | curl -s -o /dev/null -w "%{http_code}" -H @- "$API/api/hermes" 2>/dev/null || echo 000
 }
 
 _servis_ayakta() {
@@ -112,7 +122,14 @@ faz1() {
   [ "$kod" = "200" ] || die "yeni token ile kimlik doğrulaması BAŞARISIZ (HTTP $kod) — servis ayakta ama token yürürlükte değil"
   oldu "servis ayakta · healthz 200 · yeni token ile /api/hermes 200"
   echo
-  echo ">> FAZ 1 TAMAM. YENİ TOKEN (panoya/CLI'ye gerekecek): $yeni"
+  # YENİ TOKEN BASILMAZ (TSK-064, 2026-09-26): bu satır eskiden değeri terminale — ve oradan ssh/ajan
+  # oturumunun dökümüne — basıyordu. Şimdi YERİ söylenir (yol · ölçülen izin · sahip) ve operatörün
+  # KENDİ terminalinde koşacağı OKUMA KOMUTU metin olarak verilir; değer hiçbir çıktıya girmez.
+  echo ">> FAZ 1 TAMAM. YENİ TOKEN BASILMADI (panoya/CLI'ye gerekecek) — iki kopyası yazıldı:"
+  echo "   · $KRED ($(_izin "$KRED")) — credential kaynağı (LoadCredential)"
+  echo "   · $ENVF ($(_izin "$ENVF")) — ortam kanalı (faz 2 kapatır)"
+  echo ">> Değeri KENDİ terminalinde oku (ekrana basar — kaydedilen/paylaşılan bir oturumda koşma):"
+  echo "     sudo cat $KRED"
   echo ">> Faz 2'ye GEÇMEDEN ÖNCE uygulama tarafı credential'ı okuyor olmalı (api.DASH_TOKEN →"
   echo "   CREDENTIALS_DIRECTORY). Hazır olduğunda: ./dash_token_credential.sh --faz2"
 }

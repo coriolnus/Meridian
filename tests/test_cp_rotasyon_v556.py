@@ -1107,13 +1107,9 @@ KIMLIK_BAYRAKLARI = ("-H", "--header", "-u", "--user", "--oauth2-bearer", "--pro
 YETKI_BASLIGI_PARCALARI = ("token", "auth", "key", "cookie", "secret", "pass", "session", "credential")
 #: (depo-göreli dosya, başlık adı ya da değişken) → gerekçe (≥20 karakter). ÇÜRÜMEZ: kullanılmayan
 #: kayıt kırmızıdır (G5a).
-SINIF_ISTISNALARI: dict[tuple[str, str], str] = {
-    ("deploy/oracle-a1/dash_token_credential.sh", "x-meridian-token"):
-        "KAPSAM DIŞI BULGU 2026-09-26 (TSK-226b sınıf taraması): WP-H H3 tur-3 geçiş aracı jetonu "
-        "`_auth_kodu \"$tok\"` ile KONUMSAL argümandan argv'ye koyuyor ve faz-1 sonunda YENİ jetonu "
-        "terminale basıyor; `.dash.env` 2026-09-14'te silindi, `--dash` rotasyonu sir_rotasyon.sh'ta. "
-        "Emekliye ayırma ya da düzeltme Rol-1 kararı (brief kapsamı iki betik).",
-}
+#: 2026-09-26: tek kayıt (`deploy/oracle-a1/dash_token_credential.sh` · `x-meridian-token`) TSK-064 ile
+#: KAPANDI — başlık stdin'den (`-H @-`), yeni jeton basılmıyor; çiviler `tests/test_dash_token_betigi_v559.py`.
+SINIF_ISTISNALARI: dict[tuple[str, str], str] = {}
 _GENISLEME = re.compile(r"\$(?:\{([A-Za-z_][A-Za-z0-9_]*|[0-9@*])|([A-Za-z_][A-Za-z0-9_]*|[0-9@*]))")
 _ARGUMAN = re.compile(r"""(?:^|[\s(;|&])(%s)(?:=|\s+)("(?:[^"\\]|\\.)*"|'[^']*'|[^\s;|&)]+)"""
                       % "|".join(re.escape(b) for b in KIMLIK_BAYRAKLARI))
