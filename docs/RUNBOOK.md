@@ -1818,7 +1818,8 @@ yeni → 200, eski → 401. Kasaya BAĞLIDIR: doğru yol
 ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 başlayacağını listeler, HİÇBİR ŞEY yazmaz
 sudo ./sir_rotasyon.sh --<alt> --vault  → KASADAN ROTASYON (TSK-064 Faz-2 DALGA-2, 2026-09-14):
-yeni değer operatörden alınır ve ÖNCE KASAYA konur;
+yeni değer operatörden alınır (`--uret` ile betik İÇİNDE
+üretilir — aşağıda) ve ÖNCE KASAYA konur;
 Agent yan dosyaları render eder, betik render'ı ÖLÇER
 (kanonik tek-değer kopyasının kasadaki değere eşitlenmesi,
 bekleme SINIRLI), eski kanal kopyalarını AYNI pencerede
@@ -1830,6 +1831,19 @@ sırlar; bağlı olmayanlar ADIYLA beyan edilir ve eski yolla döner
 yolun yazımı kasadaki değerle ezilebilir; 2026-09-17'de yalnız
 `--db`ydi, 2026-09-24'ten beri böyle bir sır YOK). Her kasa sırrı
 AYRI sorulur; boş bırakılan o tur DÖNMEZ ve ADIYLA söylenir.
+sudo ./sir_rotasyon.sh --<alt> --vault --uret → KASADAN ROTASYON, DEĞER BETİK İÇİNDE (TSK-226c,
+2026-09-26): İSTEM YOK — değer eski yolun AYNI yöntemiyle
+üretilir (`_uret`; alt komutun sınıfı `_uret_sinifi`nde, eski yol
+gövdeleriyle ayrışması çivili — v557), uzunluğu denetlenir, render
+hedefindeki ESKİ değerle AYNI olamaz, hiçbir yere BASILMAZ. Takma
+ad, render kanıtı, eski kanal, restart, kanıt ve geri alma AYNEN —
+yalnız değerin KAYNAĞI değişir. Yalnız --kapi | --tenant | --dash |
+--apisix-admin; --openrouter (anahtarı sağlayıcı üretir) ve --db
+(kendi dalı, bu turun kapsamı dışı) AÇIK hatayla reddedilir,
+--vault'suz verilemez; --cp --vault değeri ZATEN üretir (bayrak
+etkisiz, söylenir). `--kuru` ile birleşir. Hedef kullanım:
+--tenant --vault --uret (Rol-1 bir isteme sır değeri GİREMEZ;
+eski yolun yazımı Agent render'ıyla ezilir).
 sudo ./sir_rotasyon.sh --db --vault   → KASADAN DB PAROLASI (TSK-064, 2026-09-24) — genel döngü DEĞİL,
 kendi dalı (`vault_db_rotasyon`): kasa TAM DSN taşır, sır yalnız
 PAROLA alanıdır ve ikinci hakikat noktası GERİ ALINAMAZ (`ALTER
@@ -1889,7 +1903,9 @@ YOK — hindsight-control-plane 0.9.2 `api/auth/login` yalnız sabit-zamanlı e�
 şerhinin 2026-09-01 üretim reçetesi de `openssl rand -hex 32`dir). Üretimden SONRA uzunluk denetlenir;
 boş ya da yalnız boşluk olan değer bir ARIZADIR (bir kez ölçüldü: boş credential dosyası birimi
 sessizce yetkisiz bıraktı) ve betik durur. `--openrouter` üretmez: iki anahtarı operatör
-OpenRouter panosunda üretir ve buraya `read -s` ile yapıştırır.
+OpenRouter panosunda üretir ve buraya `read -s` ile yapıştırır. `--<alt> --vault --uret` (TSK-226c)
+AYNI `_uret`i çağırır; alt komut → sınıf eşlemesi `_uret_sinifi`ndedir ve eski yol gövdeleriyle
+ayrışması çivilidir (v557 A1) — kasa yolu eski yoldan FARKLI bir değer biçimi üretemez.
 
 SIR DEĞERİ HİÇBİR YOLA BASILMAZ. Ne terminale, ne loga, ne argv'ye. Hash de basılmaz: bir
 sha256'nın ilk sekiz hanesi "değeri sızdırmayan bir kimlik" gibi görünür ama iki koşumu
