@@ -38,8 +38,9 @@
 # BU BİR BEKLEYİCİ DÖNGÜSÜ DEĞİLDİR (CLAUDE.md §7). §7'nin yasakladığı şey, bir işin bitmesini
 # yoklayan SÜRESİZ bekleyicidir. Buradaki döngü bir SERVİS AÇILIŞ YOKLAMASIDIR: sınırı sabittir
 # (AYAKTA_DENEME), adımı 1 sn'dir ve tavana vurunca BAŞARISIZ döner — yani en kötü hâlde
-# birkaç saniyede hüküm verir, sonsuza dek asılmaz. Emsal: dash_token_credential.sh içindeki
-# `_servis_ayakta`. Type=notify zaten hazır olmadan buraya gelmez; bu döngü güvenlik ağıdır.
+# birkaç saniyede hüküm verir, sonsuza dek asılmaz. Emsal: sir_credential_gecis.sh içindeki
+# `_servis_ayakta` (ilk hâli emekli dash_token_credential.sh'teydi — TSK-064, 2026-09-26).
+# Type=notify zaten hazır olmadan buraya gelmez; bu döngü güvenlik ağıdır.
 #
 # ÇIKIŞ KODLARI (HÜKÜM):
 #   0  mühür AÇIK (zaten açıktı ya da bu koşumda açıldı) — YA DA kasa henüz INIT EDİLMEMİŞ

@@ -849,8 +849,20 @@ def test_sir_kapisi_recete_veriyor():
     )
     assert kapi.get("no_log") is not True, "kapının fail_msg'i gizlenirse denetim okunamaz olur"
     fail_msg = str(kapi["ansible.builtin.assert"].get("fail_msg", ""))
-    for betik in ("sir_credential_gecis.sh", "dash_token_credential.sh"):
-        assert betik in fail_msg, f"fail_msg reçetesinde {betik} yok: {fail_msg!r}"
+    for recete in ("sir_credential_gecis.sh", "sir_rotasyon.sh --dash --vault --uret", "--kuru",
+                   "/etc/meridian/dash_token"):
+        assert recete in fail_msg, f"fail_msg reçetesinde {recete} yok: {fail_msg!r}"
+    # EMEKLİ BETİK REÇETEDE OLAMAZ (TSK-064, 2026-09-26): `dash_token_credential.sh` bir mezar taşıdır
+    # (her çağrıda çıkış 2, hiçbir iş yapmaz) — reçete onu gösterseydi denetimi düşen operatörü hiçbir
+    # şey yapmayan bir betiğe gönderirdi. `.dash.env` dalı da ölüdür: dosya `zorunlu_sir_dosyalari`nda
+    # yok (2026-09-15), yani o reçete hiçbir düşüşte basılamazdı.
+    for bayat in ("dash_token_credential.sh", ".dash.env"):
+        assert bayat not in fail_msg, f"fail_msg bayat reçete taşıyor: {bayat}"
+    # Reçetenin gösterdiği her betik DEPODA VAR (bayat reçete sınıfı: var olmayan bir betiğe yönlendirme).
+    betikler = re.findall(r"deploy/oracle-a1/[\w.-]+\.sh", fail_msg)
+    assert len(betikler) >= 2, f"reçete betik yolu taşımıyor (ölçüm kör): {betikler}"
+    yok = [b for b in betikler if not (REPO_KOK / b).is_file()]
+    assert yok == [], f"reçete var olmayan betiği gösteriyor: {yok}"
 
 
 # ---------------------------------------------------------------------------------------------

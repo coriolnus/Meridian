@@ -3,7 +3,7 @@
 # h3_tur2_sertlestir.sh — H3 tur-2 uygulama adımları (bakım penceresi): tick-watchdog + fail-notify
 # sertleştirme drop-in'lerinin FAZLI kurulumu / doğrulaması / geri alınması
 # =================================================================================================
-# SUNUCUDA (A1) KOŞAR — deploy.sh / dash_token_credential.sh ile aynı sözleşme. Otomatik ÇAĞRILMAZ:
+# SUNUCUDA (A1) KOŞAR — deploy.sh / sir_credential_gecis.sh ile aynı sözleşme. Otomatik ÇAĞRILMAZ:
 # bakım penceresinde, operatör eliyle. dagit.sh bu dosyaları NE TAŞIR NE KURAR ([1c]/[F9] kapıları
 # yalnız repo↔canlı farkını raporlar).
 #

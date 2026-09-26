@@ -1108,7 +1108,8 @@ YETKI_BASLIGI_PARCALARI = ("token", "auth", "key", "cookie", "secret", "pass", "
 #: (depo-göreli dosya, başlık adı ya da değişken) → gerekçe (≥20 karakter). ÇÜRÜMEZ: kullanılmayan
 #: kayıt kırmızıdır (G5a).
 #: 2026-09-26: tek kayıt (`deploy/oracle-a1/dash_token_credential.sh` · `x-meridian-token`) TSK-064 ile
-#: KAPANDI — başlık stdin'den (`-H @-`), yeni jeton basılmıyor; çiviler `tests/test_dash_token_betigi_v559.py`.
+#: KAPANDI — başlık stdin'den (`-H @-`), yeni jeton basılmıyor. Aynı gün betik EMEKLİ oldu (mezar taşı: curl
+#: yok, kimlik bayrağı SIFIR); çiviler `tests/test_dash_token_betigi_v559.py`.
 SINIF_ISTISNALARI: dict[tuple[str, str], str] = {}
 _GENISLEME = re.compile(r"\$(?:\{([A-Za-z_][A-Za-z0-9_]*|[0-9@*])|([A-Za-z_][A-Za-z0-9_]*|[0-9@*]))")
 _ARGUMAN = re.compile(r"""(?:^|[\s(;|&])(%s)(?:=|\s+)("(?:[^"\\]|\\.)*"|'[^']*'|[^\s;|&)]+)"""

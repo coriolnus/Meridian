@@ -47,9 +47,10 @@
       mod={{ item.stat.mode | default('(yok)') }} sahip={{ item.stat.pw_name | default('(yok)') }}.
       SONUCU: credential drop-in'leri KURULMADI (bilerek) — kurulsalardı meridian.service
       `LoadCredential=` kaynağı olmadan başlatılamaz hâle gelirdi.
-      REÇETE (DEĞER bu rolde ÜRETİLMEZ): /etc/meridian/* ve /etc/hindsight/creds/* için
-      `bash deploy/oracle-a1/sir_credential_gecis.sh`; /opt/meridian/.dash.env için
-      `bash deploy/oracle-a1/dash_token_credential.sh`.
+      REÇETE (DEĞER bu rolde ÜRETİLMEZ): /etc/meridian/dash_token için
+      `sudo deploy/oracle-a1/sir_rotasyon.sh --dash --vault --uret` (önce `--kuru`; dosya Vault
+      Agent'ın render hedefidir); öteki /etc/meridian/* ve /etc/hindsight/creds/* için
+      `bash deploy/oracle-a1/sir_credential_gecis.sh`.
     success_msg: "{{ item.item.yol }}: var, {{ item.item.mod }}, {{ item.item.sahip }}"
   loop: "{{ sir_stat.results }}"
   loop_control:
