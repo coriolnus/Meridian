@@ -37,7 +37,9 @@ Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
 # TEK FİZİKSEL SATIR — bilinçli: systemd `\` devamı, devam satırının baş boşluklarını -c dizgisine
 # dahil eder ve Python IndentationError ile çöker (2026-07-30 test-ateşlemesi bunu CANLIDA yakaladı:
 # güvenlik ağının kendisi hiç çalışmamıştı). Gömülü çok-satır Python systemd'de YASAK.
-ExecStart=/home/ubuntu/.local/bin/uv run python -c "from meridian import notify; ok = notify.configured(); print('[fail-notify] kanal yapilandirildi mi:', ok); print('[fail-notify] gonderim sonucu:', notify.send('MERIDIAN A1: meridian.service FAILED - surec olu, systemd OnFailure tetikledi. journalctl -u meridian -n 100')) if ok else print('[fail-notify] NO-OP: TELEGRAM_BOT_TOKEN+CHAT_ID veya MERIDIAN_WEBHOOK_URL yok (operator kalemi)')"
+# `uv run --no-dev` (TSK-228): bayraksız hâli HER ateşlemede dev grubunu venv'e geri kurardı. `--no-sync`
+# BİLEREK DEĞİL: bu birim venv bozukken de konuşabilmeli — `uv run` eksik ana bağımlılığı onarır (v558 şerhi).
+ExecStart=/home/ubuntu/.local/bin/uv run --no-dev python -c "from meridian import notify; ok = notify.configured(); print('[fail-notify] kanal yapilandirildi mi:', ok); print('[fail-notify] gonderim sonucu:', notify.send('MERIDIAN A1: meridian.service FAILED - surec olu, systemd OnFailure tetikledi. journalctl -u meridian -n 100')) if ok else print('[fail-notify] NO-OP: TELEGRAM_BOT_TOKEN+CHAT_ID veya MERIDIAN_WEBHOOK_URL yok (operator kalemi)')"
 ExecStartPost=/bin/sh -c "echo '[fail-notify] birim tamamlandi' ; exit 0"
 SuccessExitStatus=0 1
 

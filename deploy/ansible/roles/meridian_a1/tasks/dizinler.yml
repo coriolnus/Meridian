@@ -32,6 +32,34 @@
     mode: "0700"
   loop: "{{ bot_adlari }}"
 
+# /opt/veri ve /opt/veri/olcum — ARA DİZİNLER, ADIYLA (TSK-225 açık bulguları → Rol-1 kararı 2026-09-26,
+# TSK-228 turu). İki birim bu yolları ÖNEKSİZ `ReadWritePaths=` ile alır: `meridian-geridolum` → /opt/veri,
+# `meridian-edg085-taban` → /opt/veri/olcum. Öneksiz izin dizin YOKSA birimi hiç açmaz (yüksek sesli, doğru
+# yön — izinler AYNEN kalır); rol iki timer'ı da enable ettiği için dizinleri kurmak ROLÜN işidir. Önceden
+# hiçbir görev onları ADIYLA kurmuyordu: taze hostta yalnız aşağıdaki EDG-101/085 yaprak görevlerinin ARA
+# dizini olarak doğuyorlardı — tesadüfi bağ (yapraklar emekli olunca hiç doğmazlardı).
+# DEĞER A1 ÖLÇÜMÜDÜR (2026-09-16): ikisi de ubuntu:ubuntu 0755. Yaprakların 0700'ünden farkı BİLEREK: bunlar
+# içerik değil yol düğümüdür; geridolum betiği/pilot-venv ve edg085 taban dosyası altlarında yaşar.
+# SIRA SÖZLEŞMEDİR — bu iki görev yaprak görevlerinden ÖNCE: ansible `file state=directory` YENİ yarattığı
+# ara dizinlere YAPRAĞIN sahip/modunu uygular (var olanlara dokunmaz). Ters sırada taze hostta ara dizin
+# yaprağın 0700'üyle doğar ve bu görev sonradan çeker. Çivi: tests/test_sertlesmis_birim_yazim_yolu_v553.py
+# (C1 görev varlığı · G1 değerler · G2 ata-önce sırası).
+- name: Veri kökü /opt/veri (meridian-geridolum ReadWritePaths — öneksiz)
+  ansible.builtin.file:
+    path: /opt/veri
+    state: directory
+    owner: "{{ meridian_kullanici }}"
+    group: "{{ meridian_kullanici }}"
+    mode: "0755"
+
+- name: Ölçüm kökü /opt/veri/olcum (meridian-edg085-taban ReadWritePaths — öneksiz)
+  ansible.builtin.file:
+    path: /opt/veri/olcum
+    state: directory
+    owner: "{{ meridian_kullanici }}"
+    group: "{{ meridian_kullanici }}"
+    mode: "0755"
+
 # EDG-2026-101 yakalama dizini (TSK-200, 2026-09-17). Yazan: `ops/soul_denetimi.py` yakalama bölümü,
 # üç brifing biriminden (bekci · brifing · karne); yol `60-edg101-yakalama.conf` drop-in'lerindeki
 # `Environment=`/`ReadWritePaths=` ile AYNI olmak zorundadır — `tests/test_edg101_yakalama_v516.py`
@@ -40,7 +68,7 @@
 # yakalama `edg101_yakalama_dustu` ile düşer, brifing yine gider) — yani dizini canlıda birinin
 # yaratması ŞART. MOD 0700: içerik brifing metni + üretici istemi (VERİ blokları); A1 tek kullanıcı,
 # okuyan ölçüm kodu da aynı kullanıcıyla koşar. Yalnız YAPRAK dizin kurulur: `/opt/veri` ve
-# `/opt/veri/olcum` A1'de zaten `ubuntu:ubuntu 0755` (2026-09-16 ölçümü).
+# `/opt/veri/olcum` yukarıdaki kendi görevlerinde (2026-09-26'dan beri; A1'de `ubuntu:ubuntu 0755`, 2026-09-16).
 - name: EDG-2026-101 brifing denetimi yakalama dizini (üç brifing biriminin drop-in'iyle aynı yol)
   ansible.builtin.file:
     path: /opt/veri/olcum/edg101/yakalama

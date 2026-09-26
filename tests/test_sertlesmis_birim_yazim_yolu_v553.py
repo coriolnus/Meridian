@@ -29,6 +29,12 @@ susar. Bu dosya örneği değil SINIFI ölçer:
      zincirine katılmaz, `\\` devamı) ayrı ayrı sürülür.
   F. EDG-085 örneği: drop-in izni `-` önekli TEK yol = kayıt dizini; birimin kendi izni onu KAPSAMAZ
      (izin gerekli); A0 görevi aynı yol, sahip `meridian_kullanici`, 0700.
+  G. /opt/veri ARA dizinleri (TSK-225 açık bulguları → Rol-1 kararı 2026-09-26, TSK-228 turu): `/opt/veri`
+     ve `/opt/veri/olcum` ADIYLA kurulur (sahip/grup `meridian_kullanici`, 0755 — A1 ölçümü 2026-09-16) ve
+     dizinler.yml'de her ATA dizin görevi TORUN görevlerinden ÖNCE koşar. Neden sıra: ansible `file
+     state=directory` YENİ yarattığı ara dizinlere YAPRAĞIN sahip/modunu uygular (`modules/file.py`
+     `ensure_directory`: "mkdir -p with mode applied to all of the newly created directories"), var olanlara
+     dokunmaz — ters sırada taze hostta ara dizin yaprağın 0700'üyle doğar ve ata görevi sonradan çeker.
 
 KAPSAM TEK KAYNAKTAN: birimler A0 rolünün `defaults/main.yml::birim_kaynaklari` glob'larından türer
 (rolün A1'e KURDUĞU küme: oracle-a1 + hindsight + apisix + vault). Brief `deploy/oracle-a1/`i istedi;
@@ -108,25 +114,10 @@ SALT_OKUR_BEYANI: dict[str, dict] = {
 
 #: `ReadWritePaths`'teki /opt/veri yolu için dizinler.yml görevi OLMAYAN, bilinen durumlar. Anahtar yol,
 #: `birimler` o yolu izinle alan birimler (başka bir birim aynı yolu alırsa bu beyan onu KAPSAMAZ).
-DIZIN_GOREVI_BEYANI: dict[str, dict] = {
-    "/opt/veri": {
-        "birimler": ("meridian-geridolum",),
-        "gerekce": "AÇIK BULGU (TSK-225 taraması, 2026-09-25) — Rol-1 kararı bekliyor. Birim F9 elle-kurulum "
-                   "sınıfı (betik + pilot-venv /opt/veri'ye elle kopyalanır) ama A0 rolü birimi "
-                   "`birim_kaynaklari` glob'uyla KOPYALAR ve timer'ını enable eder; izin ÖNEKSİZ → dizin "
-                   "yoksa birim açılmaz. A1'de dizin VAR (ubuntu:ubuntu 0755, 2026-09-16 ölçümü); taze bir "
-                   "hostta bugün yalnız EDG-101/085 yaprak görevlerinin ARA DİZİNİ olarak yaprağın 0700 "
-                   "moduyla doğar — tesadüfi bağ. Seçenek: dizinler.yml görevi ya da kalıcı gerekçe.",
-    },
-    "/opt/veri/olcum": {
-        "birimler": ("meridian-edg085-taban",),
-        "gerekce": "AÇIK BULGU (TSK-225 taraması, 2026-09-25) — Rol-1 kararı bekliyor. İzin ÖNEKSİZ ve A0 "
-                   "rolü `meridian-edg085-taban.timer`ı enable eder; dizin yoksa birim 'namespace' "
-                   "hatasıyla düşer (taban örneklemi kaybolur). A1'de dizin VAR (ubuntu:ubuntu 0755, "
-                   "2026-09-16 ölçümü) ama onu adıyla kuran görev yok; taze hostta yalnız EDG-101/085 "
-                   "yaprak görevlerinin ara dizini olarak doğar — o görevler emekli olunca kurulmaz.",
-    },
-}
+#: BOŞ (2026-09-26, TSK-228 turu): iki "AÇIK BULGU" girdisi (`/opt/veri` ← meridian-geridolum,
+#: `/opt/veri/olcum` ← meridian-edg085-taban) Rol-1 kararıyla KAPANDI — dizinler.yml artık ikisini ADIYLA
+#: kurar (G bölümü). Öneksiz izinler AYNEN kaldı: dizin yoksa birim açılmaz = yüksek sesli, doğru yön.
+DIZIN_GOREVI_BEYANI: dict[str, dict] = {}
 
 
 # ================================================================================================
@@ -645,3 +636,71 @@ def test_F3_dizinler_yml_edg085_gorevi_ayni_yol_meridian_kullanicisi_0700():
     a = eslesen[0]
     assert a["state"] == "directory" and str(a["mode"]) == "0700", a
     assert a["owner"] == a["group"] == "{{ meridian_kullanici }}", a
+
+
+# ================================================================================================
+# G — /opt/veri ARA dizinleri ADIYLA ve ata-önce sırasıyla (Rol-1 kararı 2026-09-26, TSK-228 turu)
+# ================================================================================================
+
+#: Rol-1 kararı: iki ara dizin ADIYLA kurulur; değer A1 ölçümüdür (2026-09-16: ikisi de ubuntu:ubuntu 0755).
+ARA_DIZINLER: dict[str, str] = {"/opt/veri": "0755", "/opt/veri/olcum": "0755"}
+
+
+def _dizin_gorev_yollari(gorevler: list[dict]) -> list[str]:
+    """dizinler.yml'deki literal yollu `state=directory` görevlerinin yolları, DOSYA SIRASIYLA."""
+    yollar: list[str] = []
+    for g in gorevler or []:
+        arg = g.get("ansible.builtin.file") or g.get("file")
+        if isinstance(arg, dict) and arg.get("state") == "directory" and "{{" not in str(arg.get("path", "")):
+            yollar.append(posixpath.normpath(str(arg["path"])))
+    return yollar
+
+
+def _sira_ihlalleri(yollar: list[str]) -> list[tuple[str, str]]:
+    """(ata, torun) çiftleri: ata dizinin görevi torununkinden SONRA geliyor."""
+    return [(ata, torun) for i, torun in enumerate(yollar) for ata in yollar[i + 1:]
+            if torun.startswith(ata.rstrip("/") + "/")]
+
+
+def _ata_torun_ciftleri(yollar: list[str]) -> list[tuple[str, str]]:
+    return [(a, t) for a in yollar for t in yollar if t.startswith(a.rstrip("/") + "/")]
+
+
+def test_G1_opt_veri_ara_dizinleri_ADIYLA_meridian_kullanicisi_0755():
+    gorevler = yaml.safe_load(DIZINLER.read_text(encoding="utf-8"))
+    for yol, mod in ARA_DIZINLER.items():
+        eslesen = [g["ansible.builtin.file"] for g in gorevler
+                   if str(g.get("ansible.builtin.file", {}).get("path", "")) == yol]
+        assert len(eslesen) == 1, f"{yol} için dizin görevi tek değil: {eslesen}"
+        a = eslesen[0]
+        assert a["state"] == "directory" and str(a["mode"]) == mod, (yol, a)
+        assert a["owner"] == a["group"] == "{{ meridian_kullanici }}", (yol, a)
+
+
+def test_G2_dizinler_yml_ATA_gorevi_TORUNDAN_once():
+    yollar = _dizin_gorev_yollari(yaml.safe_load(DIZINLER.read_text(encoding="utf-8")))
+    assert _ata_torun_ciftleri(yollar), (
+        "dizinler.yml'de hiçbir ata/torun dizin görevi çifti yok — sıra kuralı boşta yeşil (G1 görevleri yok mu?)")
+    ihlal = _sira_ihlalleri(yollar)
+    assert not ihlal, (
+        "ata dizin görevi torunundan SONRA — taze hostta ara dizin yaprağın modu/sahibiyle doğar "
+        f"(ansible `file` yeni ara dizinlere yaprağın özniteliklerini uygular): {ihlal}")
+
+
+# (kimlik, dosya sırasıyla yollar, beklenen (ata, torun) ihlalleri)
+SIRA_DURUMLARI = [
+    ("ata_once_temiz", ["/opt/veri", "/opt/veri/olcum", "/opt/veri/olcum/x/y"], []),
+    ("ters_sira_OTER", ["/opt/veri/olcum/x/y", "/opt/veri"], [("/opt/veri", "/opt/veri/olcum/x/y")]),
+    ("dizgi_oneki_ata_DEGIL", ["/opt/veri/olcum2", "/opt/veri/olcum"], []),
+    ("kardesler_serbest", ["/opt/veri/b", "/opt/veri/a"], []),
+]
+
+
+@pytest.mark.parametrize("kimlik, sira, beklenen", SIRA_DURUMLARI, ids=[d[0] for d in SIRA_DURUMLARI])
+def test_G3_pozitif_kontrol_SIRA_kurali(tmp_path, kimlik, sira, beklenen):
+    dosya = tmp_path / "dizinler.yml"
+    dosya.write_text("".join(_GOREV.format(yol=y, sahip="{{ meridian_kullanici }}") for y in sira),
+                     encoding="utf-8")
+    yollar = _dizin_gorev_yollari(yaml.safe_load(dosya.read_text(encoding="utf-8")))
+    assert yollar == sira, f"{kimlik}: ayrıştırma {yollar}"
+    assert _sira_ihlalleri(yollar) == beklenen, kimlik
