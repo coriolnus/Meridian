@@ -111,7 +111,10 @@ UYE_ALANLARI = tuple(f"HINDSIGHT_API_{yuzey}_LLM_{n}_API_KEY"
 #: 2026-09-17 (TSK-064 (d-1)): −1 = 25 — `dash … env /opt/meridian/.dash.env` satırı ÇIKTI. Dosya
 #: A1'de 2026-09-14 17:46Z operatör kararıyla SİLİNDİ; satır kalsaydı `--dash` "hedef dosya YOK" ile
 #: yarıda düşerdi. Sayı bu kez KÜÇÜLDÜ ve sebebi keşif değil ÖLÇÜM: Rol-1 `--envanter` `test -e` → YOK.
-KOPYA_SAYISI = 25
+#: 2026-09-26 (TSK-226b): +2 = 27 — `HINDSIGHT_CP_ACCESS_KEY` (`--cp`): Vault Agent'ın kanonik render
+#: hedefi (REFERANS) + `/opt/hindsight/.env-cp` satırı. Sırrın rotasyon yolu YOKTU; değer TSK-226'da
+#: argv'de ve bir tanımlama çıktısında görüldüğü için döndürülmesi gerekiyor (v556).
+KOPYA_SAYISI = 27
 
 
 # =================================================================================================
@@ -784,7 +787,7 @@ def test_A0_kopya_tablosu_BOS_DEGIL_pozitif_kontrol():
     sessiz arızası; A1/A2 o hâlde "her şey uyuşuyor" derdi."""
     k = _betik_kopyalari()
     assert len(k) == KOPYA_SAYISI, k
-    assert {x["alt"] for x in k} == {"kapi", "tenant", "db", "dash", "openrouter", "apisix-admin"}
+    assert {x["alt"] for x in k} == {"kapi", "tenant", "db", "dash", "openrouter", "apisix-admin", "cp"}
     assert {x["tur"] for x in k} == {"dosya", "env", "url", "api", "sql"}
 
 
@@ -1486,7 +1489,7 @@ def test_K1b_KULLANIM_blogu_sudo_ile_yaziyor():
     ayrışırsa operatör belgeye uyar, betik durur ve bakım penceresi yanar."""
     metin = BETIK.read_text(encoding="utf-8")
     baslik = metin.split("set -euo pipefail", 1)[0]
-    for alt in ("--kapi", "--tenant", "--db", "--dash", "--openrouter", "--envanter"):
+    for alt in ("--kapi", "--tenant", "--db", "--dash", "--openrouter", "--envanter", "--cp"):
         assert f"sudo ./sir_rotasyon.sh {alt}" in baslik, f"KULLANIM satırı sudo'suz: {alt}"
     assert "NİYE ROOT" in baslik, "kapının GEREKÇESİ belgede yok"
 
@@ -2300,16 +2303,35 @@ def test_M2_CANLI_VAKA_openrouter_ARTIK_gecer(tmp_path):
 def test_M3_UCU_OLMAYAN_birim_HAZIR_SAYILMAZ_ve_bunu_SOYLER(tmp_path):
     """`hindsight-cp.service` bir sağlık ucu sunmuyor (2026-09-08 itibarıyla ölçülmedi). Sessizce
     "hazır" saymak, ölçülmemiş bir şeyi ölçülmüş göstermek olurdu (uydurma yasağı); satır
-    kapsamını BEYAN eder. Ölçülen ötekiler beklenir."""
+    kapsamını BEYAN eder. Ölçülen ötekiler beklenir.
+
+    2026-09-26 (TSK-226b): öncül değişti — CP'nin hazırlık ucu KAYNAKTAN ölçüldü (hindsight-control-plane
+    0.9.2 `api/health`: kimliksiz, açıldıktan sonra her zaman 200; A1'de ÖLÇÜLMEDİ → kabul `http`) ve
+    `_hazir_uc`e girdi: `--cp`nin kanıtı restart'ın hemen ardından CP'ye gider ve beklemeden `000`
+    alırdı (2026-09-08 vakasının CP'deki ikizi). Bedel: `--tenant` artık CP'yi de bekler (+1 yoklama,
+    tavan 60 s). "Ucu olmayan birim" dalı bir GÜVENLİK AĞI olarak kalır (tabloya ucsuz giren yeni bir
+    birim) ve MUTANTLA ölçülür: CP satırı `_hazir_uc`ten çıkınca eski beyan AYNEN geri gelir."""
     kok, ortam = _sahte_ortam(tmp_path)
     ortam["SAHTE_HAZIR_N"] = "2"
     r = _kos(BETIK, ortam, "--tenant")
     assert r.returncode == 0, r.stdout + r.stderr
-    assert "hazırlık yoklaması YOK: hindsight-cp.service" in r.stdout
-    assert "hazır SAYILMADI" in r.stdout
+    assert "hazırlık yoklaması YOK" not in r.stdout, r.stdout
     assert "hazır: hindsight-api" in r.stdout and "hazır: meridian" in r.stdout
-    assert len([u for u in _url_gunlugu(kok) if u.endswith("/health")]) == 3
-    assert len([u for u in _url_gunlugu(kok) if u.endswith("/healthz")]) == 3
+    assert "hazır: hindsight-cp" in r.stdout, r.stdout
+    url = _url_gunlugu(kok)
+    assert len([u for u in url if u.endswith("/api/health")]) == 1, url      # CP: v447 şimi bütçe tutmaz
+    assert len([u for u in url if u.endswith("/health") and not u.endswith("/api/health")]) == 3
+    assert len([u for u in url if u.endswith("/healthz")]) == 3
+    satir = [s for s in BETIK.read_text(encoding="utf-8").splitlines(True)
+             if s.lstrip().startswith("hindsight-cp.service)")]
+    assert len(satir) == 1, satir
+    kok2, ortam2 = _sahte_ortam(tmp_path / "ucsuz")
+    ortam2["SAHTE_HAZIR_N"] = "2"
+    r2 = _kos(_mutant(tmp_path, (satir[0], "")), ortam2, "--tenant")
+    assert r2.returncode == 0, r2.stdout + r2.stderr
+    assert "hazırlık yoklaması YOK: hindsight-cp.service" in r2.stdout
+    assert "hazır SAYILMADI" in r2.stdout
+    assert not [u for u in _url_gunlugu(kok2) if u.endswith("/api/health")]
 
 
 def test_M4_TAVAN_asilirsa_OLCULEMEDI_ve_HICBIR_KALICI_YAZIM(tmp_path):
@@ -2354,9 +2376,9 @@ def test_M4_TAVAN_asilirsa_OLCULEMEDI_ve_HICBIR_KALICI_YAZIM(tmp_path):
     assert _depo(kok)["NOUS_API_KEY"] == ESKI["nous"], "depo kopyası geri alınmadı"
 
 
-@pytest.mark.parametrize("alt,bekleyen", [("--kapi", 2), ("--tenant", 2), ("--db", 1),
+@pytest.mark.parametrize("alt,bekleyen", [("--kapi", 2), ("--tenant", 3), ("--db", 1),
                                           ("--dash", 1), ("--openrouter", 3),
-                                          ("--apisix-admin", 1)])
+                                          ("--apisix-admin", 1), ("--cp", 1)])
 def test_M7_KURU_KOSUM_bekleme_BEDELINI_de_soyler(tmp_path, alt, bekleyen):
     """BEDEL YASASI. Bekleme bakım penceresine SÜRE ekler; kuru koşum operatörün koşacağı İLK
     komuttur ve o süreyi orada görmelidir (C2'nin "hangi birimler" sorusunun ikinci yarısı).
@@ -2610,7 +2632,8 @@ def test_N10_SIR_BIRIM_HARITASI_envanterle_AYRISMAZ(tmp_path):
     (A bölümünün `--kopyalar` gerekçesiyle aynı)."""
     _, ortam = _sahte_ortam(tmp_path)
     betikte: dict[str, set[str]] = {}
-    for alt in ("--kapi", "--tenant", "--db", "--dash", "--openrouter", "--apisix-admin"):
+    # 2026-09-26 (TSK-226b): `--cp` eklendi — envanter CP satırlarını taşıyor, betik haritası da taşımalı.
+    for alt in ("--kapi", "--tenant", "--db", "--dash", "--openrouter", "--apisix-admin", "--cp"):
         r = _kos(BETIK, ortam, alt, "--kuru")
         assert r.returncode == 0, r.stdout + r.stderr
         # YALNIZ sır→birim bölümü okunur: "hazırlık beklemesi" bloğu da "    · " ile başlar ve
@@ -2654,6 +2677,11 @@ def test_N11_RESTART_ISTEMEYEN_tuketiciler_BEYANLI():
         # TSK-064 Faz-1C: kaynağı okuyan şey bir BİRİM değil, operatörün eliyle koştuğu ops
         # aracıdır — her koşumda dosyayı yeniden okur, yani restart diye bir kavramı yoktur.
         "ops/apisix_uygula.py (operatör eliyle koşan ops aracı; birim DEĞİL, restart yok)",
+        # TSK-226b (2026-09-26): CP erişim anahtarının REFERANSI Vault Agent'ın kanonik kopyasıdır —
+        # okuyucusu rotasyonun render kanıtı ve envanter/eşitleme kıyasıdır, bir birim DEĞİL (konteyner
+        # değeri yan dosyadan ortamla alır; o satırın tüketicisi `.env-cp` satırında `.service`le yazılı).
+        "Vault Agent kanonik tek-değer kopyası — sir_rotasyon.sh --cp --vault render kanıtı ve "
+        "--envanter/--esitle REFERANSI (birim DEĞİL, restart yok; CP bu dosyayı OKUMAZ)",
     }
     servissiz = {k["tuketici"] for k in _envanter_kopyalari()
                  if not re.search(r"[a-z0-9-]+\.service", k["tuketici"])}
@@ -3765,7 +3793,8 @@ def test_S2_envanter_CP_metinleri_TEK_kanal_ifadesini_tasir():
            if "hindsight-cp.service" in k["tuketici"]]
         + [("vault_dosyalar.tuketici", d["tuketici"]) for d in env["vault_dosyalar"]
            if "hindsight-cp.service" in d["tuketici"]])
-    assert len(metinler) == 3, f"CP'yi anan envanter metni sayısı değişti: {[y for y, _ in metinler]}"
+    # 2026-09-26 (TSK-226b): 3 → 4 — `--cp`nin `.env-cp` kopya satırı (rotasyon_kopyalari) CP'yi anar.
+    assert len(metinler) == 4, f"CP'yi anan envanter metni sayısı değişti: {[y for y, _ in metinler]}"
     bayat = [yer for yer, m in metinler
              if CP_KANAL_METNI not in m or "env-file" in m or "ikame" in m]
     assert not bayat, f"envanterde CP kanalını yanlış söyleyen metin: {bayat}"

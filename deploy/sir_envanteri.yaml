@@ -211,7 +211,7 @@ dosyalar:
 # ataması spec turunun işidir (Rol-1).
 
 rotasyon_kopyalari:
-  olcum: "2026-09-07 22:0xZ — A1, elle rotasyon penceresi (yalnız AD ve YOL okundu; değer basılmadı) · EK 2026-09-08 08:0xZ — /opt/hindsight/.env failover ÜYE anahtarları (altı satır) ölçüldü ve eklendi"
+  olcum: "2026-09-07 22:0xZ — A1, elle rotasyon penceresi (yalnız AD ve YOL okundu; değer basılmadı) · EK 2026-09-08 08:0xZ — /opt/hindsight/.env failover ÜYE anahtarları (altı satır) ölçüldü ve eklendi · EK 2026-09-26 (TSK-226b) — CP erişim anahtarının iki satırı DEPODAN türetildi (birim EnvironmentFile + vault_kv.hedef); A1'de yol/ad ÖLÇÜLMEDİ — ilk `--envanter` ölçer"
   kaynak_betik: "deploy/oracle-a1/sir_rotasyon.sh"
 
   kopyalar:
@@ -487,6 +487,35 @@ rotasyon_kopyalari:
       tuketici: "apisix.service (docker --env-file; config.yaml ${{APISIX_ADMIN_KEY}} çözümü — RESTART gerekir, reload yetmez)"
       not: "KOPYA (2026-09-17'ye kadar REFERANSTI): kapının asıl env-file satırı; yürürlükteki değer .env-apisix.vault ikinci --env-file'ından gelir"
 
+    # ---- KONTROL PANELİ GİRİŞ ANAHTARI (TSK-226b, 2026-09-26) ------------------------------------
+    # `HINDSIGHT_CP_ACCESS_KEY` CP'nin (hindsight-control-plane, 127.0.0.1:9999) GİRİŞ anahtarıdır;
+    # `HINDSIGHT_CP_DATAPLANE_API_KEY` ile KARIŞTIRILMAZ (o kiracı anahtarının kopyasıdır, `--tenant`
+    # yazar). 2026-09-15..25 arasında root `docker run` argv'sinde görünüyordu (TSK-226) ve değer Rol-1'in
+    # bir tanımlama çıktısında oturum dökümüne düştü → döndürülmesi gerekiyordu, rotasyon yolu YOKTU
+    # (`vault_kv` girdisi `rotasyon_siri: null` taşıyordu). Alt komut `sir_rotasyon.sh --cp` (+ `--vault`).
+    # REFERANS Vault Agent'ın KANONİK tek-değer kopyasıdır (d-1 emsali, `OPENROUTER_API_KEY` ·
+    # `APISIX_ADMIN_KEY`): `--envanter` kasadaki değeri referans alır, `--esitle` kasa değerini eski kanala
+    # taşır — tersi DEĞİL. `.env-cp` satırı ESKİ KANAL kopyasıdır. Kasa yan dosyası (`.env-cp.vault`)
+    # TABLODA YOK: onu yalnız Agent yazar (emsal `.env-apisix.vault` · `.env.vault`), rotasyon render'ı
+    # kanonik kopyadan ölçer; oraya yazmak Agent'la yarışmak olurdu.
+    - alt_komut: cp
+      sir: HINDSIGHT_CP_ACCESS_KEY
+      tur: dosya
+      yol: "/etc/meridian/hindsight_cp_access_key"
+      alan: null
+      mod: "400"
+      sahip: "root"
+      tuketici: "Vault Agent kanonik tek-değer kopyası — sir_rotasyon.sh --cp --vault render kanıtı ve --envanter/--esitle REFERANSI (birim DEĞİL, restart yok; CP bu dosyayı OKUMAZ)"
+      not: "REFERANS kopya: vault_kv.hindsight_cp_access_key.hedef (Agent render hedefi). Konteyner değeri .env-cp.vault yan dosyasından ortamla alır"
+    - alt_komut: cp
+      sir: HINDSIGHT_CP_ACCESS_KEY
+      tur: env
+      yol: "/opt/hindsight/.env-cp"
+      alan: HINDSIGHT_CP_ACCESS_KEY
+      mod: null                # korunur (dosya 600 root — `dosyalar:` bloğunda ölçülü)
+      sahip: null
+      tuketici: "hindsight-cp.service (EnvironmentFile → docker -e AD, değer ortamdan — argv'de yok; drop-in'in .env-cp.vault'u varsa o KAZANIR)"
+
 # =================================================================================================
 # VAULT KV DALGA-1 — TSK-064 Faz-2 (2026-09-14, repo tarafı; A1 kurulumu Rol-1'de)
 # =================================================================================================
@@ -631,8 +660,8 @@ vault_kv:
   # `rotasyon_siri`: bu sır `rotasyon_kopyalari` tablosunda da yaşıyorsa onun KİMLİĞİ. Kaynak +
   # kopya kümesi o tablodan TÜRETİLİR ve çivi ikisinin BİREBİR eşit olduğunu ölçer — ikinci bir
   # kopya listesi tutmak, tek-kaynak yasasının bu depoda en pahalıya mal olmuş ihlalidir. `null`
-  # ise sır rotasyon tablosunda YOKTUR (bot anahtarları, pano parolası, CP erişim anahtarı için
-  # bugün böyledir) ve kopya listesi ADIYLA beyanlıdır.
+  # ise sır rotasyon tablosunda YOKTUR (bot anahtarları ve pano parolası için bugün böyledir; CP erişim
+  # anahtarı 2026-09-26'ya kadar böyleydi — TSK-226b `--cp`) ve kopya listesi ADIYLA beyanlıdır.
   # 2026-09-17 (TSK-064): alan artık dalga-1'de de VAR (`dash_token` · `nous_api_key` ·
   # `apisix_admin_key`; 2026-09-24 `HINDSIGHT_API_DATABASE_URL`) — orada kaynak/kopya listesi YOKTUR,
   # bağın tablo tutarlılığı REFERANS satırıyla ölçülür (bloğun başındaki şerh).
@@ -763,18 +792,26 @@ vault_kv:
     rotasyon_siri: null
     kaynak: {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: PANO_GIRIS_PAROLA, onek: null}
 
-  # HİNDSİGHT KONTROL PANELİ — İKİ AYRI SIR, tek dosya. `ACCESS_KEY` CP'nin kendi giriş anahtarı
-  # (rotasyon tablosunda YOK), `DATAPLANE_API_KEY` ise TENANT anahtarının kopyasıdır ve o tabloda
-  # YAŞAR — kopya kümesi oradan türer (üç satır: credential kaynağı · hafıza okuyucusunun düz
-  # dosyası · CP env satırı).
+  # HİNDSİGHT KONTROL PANELİ — İKİ AYRI SIR, tek dosya. `ACCESS_KEY` CP'nin kendi giriş anahtarı,
+  # `DATAPLANE_API_KEY` ise TENANT anahtarının kopyasıdır ve rotasyon tablosunda o sırla YAŞAR — kopya
+  # kümesi oradan türer (üç satır: credential kaynağı · hafıza okuyucusunun düz dosyası · CP env satırı).
+  # 2026-09-26 (TSK-226b): `ACCESS_KEY` de rotasyon tablosuna girdi (`sir_rotasyon.sh --cp`, iki satır:
+  # bu girdinin `hedef`i REFERANS + `.env-cp` satırı) ve BAĞLANDI (`rotasyon_siri`). `kaynak` artık tablonun
+  # REFERANSIDIR (v520 A5 kuralı: kaynak = referans; emsal `openrouter_api_key` · `bot_key_meridian` ·
+  # `hindsight_cp_dataplane_api_key`), `.env-cp` satırı `kopya_kaynaklari`na geçti (v491 A5 küme eşitliği).
+  # BEDEL (bedel yasası): `vault_sir_koy.sh` bu sırrı artık kasadan render edilmiş dosyadan okur — kasa BOŞ
+  # bir kurulumda (yeni A1) sıfırdan tohumlayamaz; o hâlde kaynak geçici olarak `.env-cp` satırına çevrilir
+  # (emsal: `openrouter_api_key` 2026-09-17 d-1 ile aynı bedeli taşıyor). A1'de kasa 2026-09-14'ten beri dolu.
   - ad: hindsight_cp_access_key
     vault_yolu: "secret/meridian/hindsight_cp_access_key"
     hedef: "/etc/meridian/hindsight_cp_access_key"
     mod: "0400"
     sahip: "root"
     tuketici: "vault_dosyalar şablonu (/opt/hindsight/.env-cp.vault) · sir_rotasyon.sh --vault render kanıtı"
-    rotasyon_siri: null
-    kaynak: {tur: env_satiri, dosya: "/opt/hindsight/.env-cp", alan: HINDSIGHT_CP_ACCESS_KEY, onek: null}
+    rotasyon_siri: HINDSIGHT_CP_ACCESS_KEY
+    kaynak: {tur: dosya, dosya: "/etc/meridian/hindsight_cp_access_key", alan: null, onek: null}
+    kopya_kaynaklari:
+      - {tur: env_satiri, dosya: "/opt/hindsight/.env-cp", alan: HINDSIGHT_CP_ACCESS_KEY, onek: null}
   # `DATAPLANE_API_KEY` TENANT anahtarının kopyasıdır → TAKMA AD (birincil
   # `HINDSIGHT_API_TENANT_API_KEY`, kasada dalga-1'den beri duruyor).
   - ad: hindsight_cp_dataplane_api_key

@@ -59,8 +59,10 @@ DPID=$(pgrep -f "uvicorn meridian.api" 2>/dev/null | head -1 || true)
 AUTO="unknown"
 if [ -n "${MERIDIAN_DASH_TOKEN:-}" ]; then
   # Sunucunun KENDİ beyanı (süreç-içi env) — en doğrudan kanıt.
-  AJ=$(curl -s -H "x-meridian-token: ${MERIDIAN_DASH_TOKEN}" \
-        http://127.0.0.1:8080/api/hermes 2>/dev/null || true)
+  # JETON ARGV'YE GİRMEZ (TSK-226b, 2026-09-26): başlık curl'e STDIN'den verilir (`-H @-`, curl ≥ 7.55);
+  # `printf` bash YERLEŞİĞİDİR — süreç doğurmaz, jeton hiçbir `ps`/`/proc/<pid>/cmdline`da görünmez.
+  AJ=$(printf 'x-meridian-token: %s\n' "${MERIDIAN_DASH_TOKEN}" \
+        | curl -s -H @- http://127.0.0.1:8080/api/hermes 2>/dev/null || true)
   case "$AJ" in
     *'"autostart":true'*)  AUTO="on";;
     *'"autostart":false'*) AUTO="off";;

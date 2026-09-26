@@ -79,8 +79,11 @@ BAGLAR = {
 }
 #: Kasaya BAĞLI rotasyon sırlarının TAM kümesi. Bu dilimde tek bağsız sır DB parolasıydı; 2026-09-24
 #: (TSK-064 `--db --vault`, v538) o da bağlandı — küme artık tablonun BÜTÜN sırlarıdır.
+#: 2026-09-26 (TSK-226b, v556): `HINDSIGHT_CP_ACCESS_KEY` tabloya `--cp` ile girdi ve kasaya BAĞLI
+#: (dalga-2 girdisi `hindsight_cp_access_key`in `rotasyon_siri`si) — küme yine tablonun BÜTÜN sırları.
 BAGLI_TAM_KUME = {"KAPI_APIKEY", "HINDSIGHT_API_TENANT_API_KEY", "OPENROUTER_API_KEY",
-                  "MERIDIAN_DASH_TOKEN", "APISIX_ADMIN_KEY", "NOUS_API_KEY", "HINDSIGHT_DB_PAROLA"}
+                  "MERIDIAN_DASH_TOKEN", "APISIX_ADMIN_KEY", "NOUS_API_KEY", "HINDSIGHT_DB_PAROLA",
+                  "HINDSIGHT_CP_ACCESS_KEY"}
 DB_SIR = "HINDSIGHT_DB_PAROLA"
 DB_KV = "HINDSIGHT_API_DATABASE_URL"
 DB_HEDEF = "/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL"
