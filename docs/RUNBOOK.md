@@ -1384,23 +1384,37 @@ BU BETİK KESME KARARINI VERMEZ, UYGULAR. Koştuğu an yerel sistem DURUR.
 
 ```
 =================================================================================================
-dash_token_credential.sh — pano token'ı: rotasyon + systemd LoadCredential geçişi (WP-H/H3 tur-3)
+dash_token_credential.sh — EMEKLİ (2026-09-26, TSK-064): MEZAR TAŞI, hiçbir iş yapmaz
 =================================================================================================
-SUNUCUDA (A1) KOŞAR — `deploy.sh`/`cutover.sh` ile aynı sözleşme. Otomatik ÇAĞRILMAZ: bakım
-penceresinde, operatör eliyle. Kayıttaki hüküm buydu: "rotasyon + LoadCredential'a taşıma AYNI
-bakım penceresinde" — çünkü ikisini ayırmak, eski token'ın hâlâ geçerliyken yeni kanalın
-doğrulanmasını imkânsız kılar (hangi kanalın çalıştığı ölçülemez, yalnız varsayılır).
+HER ÇAĞRI (argümansız eski DURUM dahil, her bayrak) tek bir açıklama basar ve ÇIKIŞ 2 ile döner:
+hiçbir dosya okumaz ya da yazmaz, sudo/systemctl/curl çağırmaz. Gövde yalnız bash yerleşikleridir
+(set · printf · exit) — çivi: tests/test_dash_token_betigi_v559.py.
 
-NEDEN (kalan yüzey): sır artık 0600'lük `.dash.env`te (tur-1) ve birim dosyasında DEĞİL (tur-2).
-Kalan yüzey SÜREÇ ORTAMIDIR: `serve.sh:51` uvicorn'u `env=os.environ` ile, `hermes_composite.py`
-ajan alt süreçlerini devralınan ortamla doğurur — token her birinin `/proc/<pid>/environ`ında.
-LoadCredential sırrı ortama HİÇ koymaz. Gerekçenin tamamı: meridian.service.d/50-*.conf.
+YERİNE NE:
+rotasyon → sudo deploy/oracle-a1/sir_rotasyon.sh --dash --vault --uret   (önce --kuru ile)
+Değer betik İÇİNDE üretilir, hiçbir yere basılmaz, ÖNCE kasaya yazılır; render ölçümü,
+yeni/eski jeton kanıtı ve sürümlü geri alma o betiktedir.
+kanal    → Vault Agent render'ı → /etc/meridian/dash_token → meridian.service LoadCredential
+(meridian.service.d/50-dash-credential.conf).
+kurulum  → drop-in'leri A0 rolü kurar (deploy/ansible/roles/meridian_a1/tasks/dropinler.yml).
+durum    → sudo deploy/oracle-a1/sir_rotasyon.sh --envanter  +  systemctl show meridian -p LoadCredential
 
-KULLANIM:
-./dash_token_credential.sh              → DURUM (hiçbir şey değiştirmez; önce bunu koş)
-./dash_token_credential.sh --faz1       → rotasyon + credential kanalı EKLE (ortam kanalı KALIR)
-./dash_token_credential.sh --faz2       → ortam kanalını KAPAT (faz-1 + uygulama tarafı şartlı)
-./dash_token_credential.sh --geri-al    → her iki drop-in'i kaldır, ortam kanalına dön
+NEDEN EMEKLİ: geçiş bitti. LoadCredential canlıda (TSK-049, 2026-09-01), ortam kanalını
+51-dash-env-kaldir.conf kapattı, `.dash.env` A1'de 2026-09-14'te silindi ve kaynak dosyayı artık
+Vault Agent yazar. Bu düzende eski --faz1 ve --faz2 `.dash.env` yok diye düşüyordu; --geri-al ise
+ZARARLIYDI: tek kanalı (50 drop-in'i) kaldırıp pano jetonunu boşa düşürürken "ortam kanalı
+yürürlükte" diyordu (model ölçümü + kod okuması, 46120fb4 — A1'de koşulmadı).
+
+NEDEN SİLİNMEDİ: tarihsel belgeler ve mühendislik günlüğünden RUNBOOK'a alıntılanan bir pano jetonu
+kurtarma yönergesi bu yolu gösteriyor. Dosya yerinde kalınca o yönergeyi izleyen operatör "dosya yok"
+yerine doğru yolu bulur.
+
+TARİHÇE (değer yok): 2026-08-03'te doğdu (WP-H/H3 tur-3). Argümansız mod kanalların durumunu (dosya
+izinleri, drop-in'ler, LoadCredential, servis) gösterirdi; --faz1 jetonu döndürür, credential
+kaynağını ve `.dash.env`i aynı değere çeker, 50 drop-in'ini kurup yeni jetonla /api/hermes 200'ü
+ölçerdi; --faz2 ortam kanalına sahte değer koyup gerçek credential'la farksal ölçüm yapar, geçerse
+51'i kurardı; --geri-al iki drop-in'i kaldırırdı. Farksal kanal ölçümü deseni sir_credential_gecis.sh'te
+genelleştirilmiş hâliyle yaşar; eski gövde git geçmişindedir (son hâli 8ccbbb15).
 ```
 
 ## `deploy/oracle-a1/deploy.sh` {#deploy-oracle-a1-deploy-sh}
@@ -1543,7 +1557,7 @@ listeden düşse başlık aynı kalırdı — yukarıdaki çivi tam olarak bunu 
 h3_tur2_sertlestir.sh — H3 tur-2 uygulama adımları (bakım penceresi): tick-watchdog + fail-notify
 sertleştirme drop-in'lerinin FAZLI kurulumu / doğrulaması / geri alınması
 =================================================================================================
-SUNUCUDA (A1) KOŞAR — deploy.sh / dash_token_credential.sh ile aynı sözleşme. Otomatik ÇAĞRILMAZ:
+SUNUCUDA (A1) KOŞAR — deploy.sh / sir_credential_gecis.sh ile aynı sözleşme. Otomatik ÇAĞRILMAZ:
 bakım penceresinde, operatör eliyle. dagit.sh bu dosyaları NE TAŞIR NE KURAR ([1c]/[F9] kapıları
 yalnız repo↔canlı farkını raporlar).
 
@@ -1970,7 +1984,11 @@ okunduğunu söylemezdi.
 YEDEK. Her koşum ÖNCE `/root/sir-yedek-<UTC ts>-<alt komut>/` (0700 root) altına dokunacağı her
 dosyayı `cp -p` ile alır. Ad SANİYE taşır: aynı sırrı gün içinde iki kez döndürmek ilk yedeği
 EZMEZ. Geri alma reçetesi RUNBOOK'ta değil burada, çünkü okunacağı an bu betiğin çıktısıdır:
-`sudo cp -p <yedek>/<yol> <yol>` + ilgili birimleri yeniden başlat.
+kasasız yol → `sudo cp -p <yedek>/<yol> <yol>` + ilgili birimleri yeniden başlat. `--vault` yolu
+(TSK-064, 2026-09-26) → ÖNCE kasa: `vault kv rollback -version=<N> <yol>` (N = `kv put` ÖNCESİ
+`current_version`, her kasa yolu için ayrı kaydedilir), SONRA dosya — ters sırada Agent render'ı
+geri konan dosyayı kasadaki yeni değerle tekrar ezer. Genel döngüde `kv rollback`un kendisi düşerse
+yedek yol YOK (eski kasa değeri okunmuyor; `--db`/`--cp` dallarında var) — açık kalem TSK-064.
 
 YAPMADIKLARI (burada olmayan şey, burada yapılmayacak şeydir): kanal geçişi yapmaz (o
 `sir_credential_gecis.sh`); drop-in kurmaz; Vault'a dokunmaz; operatörün YEREL `.env` kopyasını

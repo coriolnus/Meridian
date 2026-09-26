@@ -3955,3 +3955,18 @@ bf51cca3) → `--tenant --vault --uret` 16:50Z EXIT 0; bağımsız kanıt: yeni 
 **EDG-042 koşum #6:** zamanlanmış oturum 07:31Z'de izin isteminde takıldı → Rol-1 durdurdu, telafiyi koştu (dört kova eşik altında).
 **Açılanlar:** TSK-227 (arka plan yansıması canlı sayaç sıfırlama şüphesi — kodla doğrulandı, ölçüm: bugün etkin değil), TSK-228 (`uv run`
 dev grubu flip-flop).
+
+### 32. DÖRT DİLİM: ÖĞRENME TABANI · UV HİJYENİ · PANO JETONU BETİĞİ EMEKLİLİĞİ · KASA SÜRÜMÜ (2026-09-26 gece, model Opus 5.5)
+**TSK-227:** arka plan yansıması artık canlı rejimin geri sayımını (`last_reflect_at`) taşımıyor — `_record(res, *, arka_plan)`; v560
+livelock senaryosu eski kodda kırmızı. Restart'ta arka plan rejim tabanının kaybı ölçüldü (pytest) → TSK-229 (bugün etkin değil: arka plan
+yansıması 08-16'dan beri koşmadı). **TSK-228 (+225 açıkları):** kapsam 2 değil 4 birim — `meridian-backup` günlük timer'ıyla her gece dev
+grubunu geri kuruyordu, `meridian-fail-notify` de bayraksızdı. Dördü `uv run --frozen --no-dev`: `--frozen` Rol-1 kararı (A0 `uv sync
+--frozen --no-dev` ile birebir; yoksa restart kilidi yeniden yazıp ağa çıkabilir), `--no-sync` reddedildi (bozuk venv'i onarmaz, son-çare
+alarmını susturur). A1: uv 0.12.0 iki bayrağı destekler, `uv.lock` sha repo ile eşit. v558 sınıf çivisi; artıklar TSK-230, birim şerhlerinde
+satır çapası taraması yok → TSK-231. **TSK-064:** (a) `dash_token_credential.sh` jetonu argv'ye koymuyor, yeni jetonu basmıyor; (b) aynı
+gece EMEKLİ — mezar taşı (çağıran yok, LoadCredential/Vault geçişi tamam, `--geri-al` bugünkü düzende tek kanalı kaldırırdı — kod okuması,
+A1'de denenmedi); SİLİNMEDİ çünkü RUNBOOK'un DATA_QUALITY yönergesi (bu günlükten) ve tarihçe belgeler onu gösteriyor — izleyen operatör
+doğru yola yönlenir. (c) genel kasa döngüsü `kv put` öncesi sürümü kaydeder, geri alma önce kasa sonra dosya. Açık: iki kanal kapanışı
+(≥09-28 gecesi), genel yolda rollback-düşme yedeği, `sir_denetimi.yml` diğer reçetesi bayat. **Süreç:** birleşmiş yedi worktree'nin temizliği
+sınıflandırıcıya takıldı, operatöre devrettim; operatör "senin işin" dedi → hedef yeniden ölçülüp aynı komut geçti (memory eki). Saat etiketi:
+ledger/brief/memory'ye yerel tarihle 09-27 yazdım, `date -u` 09-26 — düzeltildi.
