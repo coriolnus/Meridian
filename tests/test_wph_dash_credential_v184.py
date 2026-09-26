@@ -6,7 +6,8 @@ ile, `hermes_composite` ajan alt süreçlerini devralınan ortamla doğurur), ya
 sürecinin VE her LLM ajan sürecinin `/proc/<pid>/environ`ında duruyor. systemd `LoadCredential=`
 sırrı ortama HİÇ koymaz. Geçiş iki fazlıdır ve FAZ 2 (ortam kanalının kapatılması) BU DOSYANIN
 ölçtüğü davranış canlıda olmadan yapılamaz — `dash_token_credential.sh --faz2` içindeki farksal
-ölçüm tam olarak bunu arar (sahte ortam + gerçek credential → 200 gelmezse faz 2 REDDEDİLİR).
+ölçüm tam olarak bunu arardı (sahte ortam + gerçek credential → 200 gelmezse faz 2 REDDEDİLİRDİ).
+Geçiş tamamlandı; betik 2026-09-26'da emekli (TSK-064, mezar taşı — v559). Okuyucunun sözleşmesi KALIR.
 
 NEDEN `_read_dash_token()` DOĞRUDAN ÇAĞRILIYOR (modül yeniden yüklenmiyor): `api.DASH_TOKEN` süreç
 açılışında BİR KEZ hesaplanır; `importlib.reload(api)` ise FastAPI uygulamasını, rota sınıfını ve

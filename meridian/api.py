@@ -215,8 +215,8 @@ def _read_dash_token() -> str | None:
     TAMAMINI değer olarak taşır), ama operatörün `.dash.env` alışkanlığı `MERIDIAN_DASH_TOKEN=...`
     biçimidir ve o dosyanın credential yoluna kopyalanması ÖNGÖRÜLEBİLİR bir kaza. Önek sessizce
     yutulmaz, TANINIR: aksi hâlde token "ayarlı" görünür, kimlik doğrulaması hep 401 döner ve
-    operatör arızayı ağda arar. Aynı hoşgörü `dash_token_credential.sh::_token_oku`da da var —
-    iki taraf aynı biçimi kabul eder.
+    operatör arızayı ağda arar. Emsali emekli `dash_token_credential.sh`in okuyucusuydu (TSK-064,
+    2026-09-26); bugün kaynağı Vault Agent şablonu yazar, çıplak değerle — hoşgörü elle kopyaya karşı kalır.
 
     HİÇBİRİ YOKSA `None`: mevcut zorunlu-token kapısı (`_auth_posture_check` uyarısı ve
     `_auth`ın no-op dalı) BİREBİR korunur. Bu okuyucu bir kanal ekler, bir yasa değiştirmez.

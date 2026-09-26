@@ -91,11 +91,11 @@ EnvironmentFile=-/opt/meridian/.dash.env
 #     `LoadCredential`dır (sır ortama HİÇ girmez). Hazırlık VERSİYONDA, canlıda DEĞİL:
 #       meridian.service.d/50-dash-credential.conf  (faz 1: credential kanalını ekler)
 #       meridian.service.d/51-dash-env-kaldir.conf  (faz 2: bu satırı etkisizleştirir)
-#       dash_token_credential.sh                    (rotasyon + kurulum + farksal doğrulama)
+#       dash_token_credential.sh                    (EMEKLİ 2026-09-26 — rotasyon: sir_rotasyon.sh --dash --vault --uret)
 #     BU DOSYAYA `LoadCredential=` YAZILMADI ve yazılmamalı: kaynak dosya (/etc/meridian/dash_token)
 #     yokken systemd birimi BAŞLATMAZ, ve `deploy.sh`ın “6) systemd birimleri” bölümü bu birimi her dağıtımda canlıya kopyalar —
-#     yani satır burada dururken koşacak İLK dağıtım panoyu düşürürdü. Drop-in'i kuran tek yer
-#     bakım penceresinde elle koşan `dash_token_credential.sh --faz1`dir.
+#     yani satır burada dururken koşacak İLK dağıtım panoyu düşürürdü. Drop-in'i A0 rolü kurar (dropinler.yml,
+#     sır dosyası denetiminden SONRA); ilk kurulum elle koşulan `dash_token_credential.sh --faz1`di (emekli, TSK-064).
 # --- BAĞLANMA ADRESİ TEK KAYNAK (denetim C1, 2026-08-02) ---------------------------------------
 #     api._auth_posture_check bu değişkeni okur ve loopback DIŞI + parolasız hâlde süreci
 #     AÇMAYI REDDEDER. Eskiden ExecStart `--host 127.0.0.1` SABİTİYDİ ve bu değişkeni hiçbir
