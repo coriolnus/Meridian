@@ -1281,6 +1281,9 @@ def _vault_sim(tmp_path: pathlib.Path, kok: pathlib.Path, render: bool = True) -
         "#!/usr/bin/env bash\n"
         f'echo "$*" >> "{log}"\n'
         'if [ "$1" = "login" ]; then cat > /dev/null; exit 0; fi\n'
+        # KV v2 META (TSK-064 takibi, 2026-09-27): genel döngü put'tan ÖNCE `current_version` okur (geri
+        # almanın hedefi; okunamazsa YAZMAZ). Bu şim TEK değerli bir kasadır → tek sürüm.
+        'if [ "$1" = "kv" ] && [ "$2" = "metadata" ]; then echo \'{"data": {"current_version": 1}}\'; exit 0; fi\n'
         'if [ "$1" = "kv" ] && [ "$2" = "put" ]; then\n'
         f'  cat > "{kasa}/deger"\n'
         f"{render_satiri}"
