@@ -129,6 +129,10 @@ def _girdi(veri: dict, ad: str) -> dict:
 #: da oradan ÜRETİLİR (`ops/vault_politika_uret.py`), yani şim üretilmiş yapılandırmanın modelidir.
 #: `render`: True = her eşlenen yol · False = hiçbiri · yol demeti = YALNIZ o kasa yolları (iki sırlı
 #: turda ikinci sırrın render'ı gelmeyince ilk sırrın hâli ölçülebilsin diye — D8).
+#: KV v2 META (TSK-064 takibi, 2026-09-27): genel döngü `kv put`tan ÖNCE `kv metadata get -format=json` ile
+#: `current_version` okur (geri almanın hedefi; okunamazsa YAZMAZ). Şim onu modeller: A1'de bağlı yollar DOLUDUR
+#: (dalga-1/2 `vault_sir_koy.sh`) → tohum 1 sürüm, her `kv put` +1 (`.surum_<yol>`). Model olmasaydı şimin sessiz
+#: `exit 0`ı boş cevap verir ve bu dosyanın bütün gerçek koşumları sürüm kapısında dururdu.
 SIM_KASA = '''#!/usr/bin/env python3
 import os, sys
 ESLEME = __ESLEME__
@@ -138,15 +142,32 @@ RENDER = __RENDER__
 with open(__LOG__, "a", encoding="utf-8") as fh:
     fh.write(" ".join(sys.argv[1:]) + "\\n")
 a = sys.argv[1:]
+
+
+def surum_yolu(yol):
+    return os.path.join(KASA, ".surum_" + yol.replace("/", "_"))
+
+
+def surum(yol):
+    p = surum_yolu(yol)
+    return int(open(p).read()) if os.path.exists(p) else 1
+
+
 if a[:1] == ["login"]:
     sys.stdin.read()
+    sys.exit(0)
+if a[:3] == ["kv", "metadata", "get"]:
+    print('{"data": {"current_version": %d}}' % surum(a[-1]))
     sys.exit(0)
 if a[:2] == ["kv", "put"]:
     yol = a[2]
     deger = sys.stdin.read()
     os.makedirs(KASA, exist_ok=True)
+    n = surum(yol) + 1
     with open(os.path.join(KASA, yol.replace("/", "_")), "w", encoding="utf-8") as fh:
         fh.write(deger)
+    with open(surum_yolu(yol), "w", encoding="utf-8") as fh:
+        fh.write(str(n))
     if yol in ESLEME and (RENDER is True or (RENDER and yol in RENDER)):
         hedef = KOK + ESLEME[yol]
         os.makedirs(os.path.dirname(hedef), exist_ok=True)
