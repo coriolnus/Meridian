@@ -1808,6 +1808,13 @@ sudo ./sir_rotasyon.sh --apisix-admin → APISIX_ADMIN_KEY (kapı ADMIN API anah
 DEĞİL: o kapının TÜKETİCİ anahtarıdır, bu kapının
 YÖNETİM anahtarıdır — ayrı sır, ayrı yüzey, ayrı kopya
 kümesi. TSK-064 Faz-1C, spec §3 madde 4.)
+sudo ./sir_rotasyon.sh --cp           → HINDSIGHT_CP_ACCESS_KEY (Hindsight kontrol paneli GİRİŞ
+anahtarı; TSK-226b, 2026-09-26). `--tenant` DEĞİL: CP'nin
+öteki sırrı (`HINDSIGHT_CP_DATAPLANE_API_KEY`) kiracı
+anahtarının kopyasıdır ve `--tenant` yazar. Kanıt CP'nin
+kendi giriş ucudur (POST /api/auth/login, gövde `key`):
+yeni → 200, eski → 401. Kasaya BAĞLIDIR: doğru yol
+`--cp --vault` (aşağıda); eski yol uyarıyla koşar.
 ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 başlayacağını listeler, HİÇBİR ŞEY yazmaz
 sudo ./sir_rotasyon.sh --<alt> --vault  → KASADAN ROTASYON (TSK-064 Faz-2 DALGA-2, 2026-09-14):
@@ -1829,6 +1836,13 @@ PAROLA alanıdır ve ikinci hakikat noktası GERİ ALINAMAZ (`ALTER
 ROLE`). Sıra: kasa → render kanıtı → ALTER ROLE → restart → kanıt;
 ALTER'dan önceki her düşüş kasayı KV v2 sürümüyle geri alır.
 Tasarım: docs/TASARIM-SIR-DB-KASA-2026-09-21.md. `--kuru` ile birleşir.
+sudo ./sir_rotasyon.sh --cp --vault   → KASADAN CP ERİŞİM ANAHTARI (TSK-226b, 2026-09-26) — genel döngü
+DEĞİL, kendi dalı (`vault_cp_rotasyon`): değer betik İÇİNDE
+üretilir (SORULMAZ, BASILMAZ — bu sırrın döndürülme sebebi bir
+GÖRÜNTÜLEME sızıntısıydı, yapıştırma bir yüzey daha açardı),
+kanıtın NEGATİF ayağı ESKİ değeri KASADAN okur, geri alma reçetesi
+EVREYE göredir (KV v2 sürümü). Sıra: kasa → render kanıtı → eski
+kanal (`.env-cp`) → restart → kanıt (CP giriş ucu). `--kuru` ile.
 TAKMA AD (`ayni_deger`, Rol-1 hükmü 2026-09-14): aynı değerin
 TEK kasa yolu vardır; rotasyon BİRİNCİL yola yapılır ve takma
 adlar onu otomatik izler. Restart listesi kasa YOLUNDAN toplanır
@@ -1870,7 +1884,9 @@ profilleri, `/opt/hindsight/.key`) root altında da MEVCUT sahip ve izinle yazı
 yazıyor olması, dosyayı root'a DEVRETMEK değildir.
 
 DEĞER ÜRETİMİ. `--kapi`/`--db`/`--dash`: `openssl rand -base64 36 | tr '+/' '-_'` → 48 karakter
-URL-güvenli. `--tenant`: `openssl rand -hex 32` → 64 hex. Üretimden SONRA uzunluk denetlenir;
+URL-güvenli. `--tenant` ve `--cp`: `openssl rand -hex 32` → 64 hex (CP anahtarının biçim beklentisi
+YOK — hindsight-control-plane 0.9.2 `api/auth/login` yalnız sabit-zamanlı eşitlik kıyaslar; birim
+şerhinin 2026-09-01 üretim reçetesi de `openssl rand -hex 32`dir). Üretimden SONRA uzunluk denetlenir;
 boş ya da yalnız boşluk olan değer bir ARIZADIR (bir kez ölçüldü: boş credential dosyası birimi
 sessizce yetkisiz bıraktı) ve betik durur. `--openrouter` üretmez: iki anahtarı operatör
 OpenRouter panosunda üretir ve buraya `read -s` ile yapıştırır.
@@ -1919,8 +1935,9 @@ meridian 6-8 s (HTTP cevabı; 200 çok daha geç) · hindsight-api ~60 s (200) �
 Süre ÇIKTIYA BASILIR ve 200 GELMEDEN hazır sayılan birimin satırı bunu SÖYLER
 ("hazır: meridian 7 s (healthz 503 — nabız bayat, API ayakta)") — sessizce geçmek, ölçülmemiş
 bir tazeliği ölçülmüş göstermek olurdu. Tavan aşılırsa betik "hazır" demez, `ölçülemedi` der ve
-çıkış 2 verir. Sağlık ucu tanımlı OLMAYAN birim (`hindsight-cp.service`) beklenmez ve hazır
-SAYILMAZ — satır bunu söyler.
+çıkış 2 verir. Sağlık ucu tanımlı OLMAYAN birim beklenmez ve hazır SAYILMAZ — satır bunu söyler.
+`hindsight-cp.service` 2026-09-26'ya kadar bu sınıftaydı; artık `/api/health` ucuyla beklenir (kabul
+`http` — gerekçe `_hazir_uc` şerhinde) çünkü `--cp`nin kanıtı restart'ın hemen ardından CP'ye gider.
 
 GERİ-DÜŞÜŞ ZİNCİRİ — NOUS BACAĞININ İNCE YERİ. Motor sırrı TEK yerden okumaz:
 `meridian/secrets.py::_fetch` sırayla credential → süreç ortamı → `state/secrets.json` → GCP
