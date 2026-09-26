@@ -3944,3 +3944,14 @@ kapattı. **TSK-218 CANLI KANITLANDI** (20:44Z akşam döngüsü: 868–871 + ye
 'docker env-file' diyordu). **Kendi hatam:** süreci tanımlarken yalnız aradığım anahtarı maskeledim; aynı satırdaki `HINDSIGHT_CP_ACCESS_KEY`
 değeri tool çıktısına düştü → TSK-226 dağıtımından sonra rotasyon; memory'ye beyaz-liste kuralı. Akşam kanıt betiği 20:45Z'de koşulmadı
 (oturum boştaydı, 21:18Z'de koşuldu) — veri kaybı yok, okuma gecikti.
+
+### 31. SIR ARGV KAPANIŞI + İKİ ROTASYON (2026-09-26, model Opus 5.5)
+**Dağıtım #68** (operatör, dagit 09:31Z 9987afee): TSK-226 + 226b + 204. `hindsight-cp` birimi dagit'le KURULMADI — F9 yalnız "AYRIK"
+bildirir (uygulayıcı + inceleme + Rol-1 "dagit kurar" sandı; memory eki); 10:25Z restart eski biçimle kalktı; operatör site.yml → restart
+10:48Z → docker argv'de `_KEY=` 0, konteyner ortamı dolu (docker `-e AD` A1'de ilk kez ölçüldü). TSK-204 canlı: restart'ta alarm yok.
+**Operatör "komutları sen koş":** CP erişim anahtarı Rol-1'ce `--cp --vault` ile döndürüldü (kanıt yeni 200 / eski 401). Kiracı yolu değeri
+operatörden istiyordu — Rol-1 bir isteme sır giremez → TSK-226c `--uret` bayrağı (Opus + Sonnet ONAY) → dağıtım #69 (Rol-1 dagit 16:46Z,
+bf51cca3) → `--tenant --vault --uret` 16:50Z EXIT 0; bağımsız kanıt: yeni anahtarla recall, eski anahtarla `/banks` 401. TSK-226 kapandı.
+**EDG-042 koşum #6:** zamanlanmış oturum 07:31Z'de izin isteminde takıldı → Rol-1 durdurdu, telafiyi koştu (dört kova eşik altında).
+**Açılanlar:** TSK-227 (arka plan yansıması canlı sayaç sıfırlama şüphesi — kodla doğrulandı, ölçüm: bugün etkin değil), TSK-228 (`uv run`
+dev grubu flip-flop).
