@@ -10,8 +10,8 @@
 #
 # TOKEN NEVER ENTERS A PROCESS ARGV (TSK-226b, 2026-09-26): `-H "x-meridian-token: ${TOKEN}"` put the
 # token on curl's command line, where `ps`/`/proc/<pid>/cmdline` show it to every user on the machine.
-# The header is now read by curl from STDIN (`-H @-`, needs curl >= 7.55; measured on the operator Mac:
-# curl 8.7.1, 2026-09-26 — the A1 curl version was NOT measured) and written by `jeton`, whose `printf`
+# The header is now read by curl from STDIN (`-H @-`, needs curl >= 7.55; measured 2026-09-26: operator
+# Mac curl 8.7.1, A1 curl 8.5.0 — Rol-1, re-measured 21:39Z) and written by `jeton`, whose `printf`
 # is a bash BUILTIN — no process is spawned, so no argv carries it.
 # Output and exit codes are unchanged (tests/test_cp_rotasyon_v556.py G4a diffs old vs new form).
 set -euo pipefail
