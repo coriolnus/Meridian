@@ -379,7 +379,7 @@ CONTRACTS: dict[str, Contract] = {
                   "model_olculemedi", "model_istenen", "iz_id", "backfill"),
         writers=("hermes.py",),          # tek yazar: `hermes._plan_atif_yaz` (damga çağrısı içinde)
         key="plan_id",
-        consumers=("analytics",),
+        consumers=("analytics", "watchdog"),   # watchdog: öğrenme canlılığının görüş-dolgusu kolu (TSK-204)
         # `key_format` BİLEREK YOK: bu defter plan satırındaki kimliği AYNEN aynalar ve biçim
         # denetiminin sahibi `trade_plans.jsonl` sözleşmesidir (orada PLAN_ID_RE ile çivili).
         # Burada ikinci kez denetlemek, aynı kusuru iki deftere fatura eder ve atıf defterini
