@@ -35,7 +35,9 @@ Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
 EnvironmentFile=-/opt/meridian/.env
 # Bayraksız çağrı = uzun-koşan döngü (barsarchive.py main(): --ozet/--once yoksa arch.run()).
 # poll-ms / idle-s / count VARSAYILANLARI kullanılır — ops betiği de bayrak geçmiyor, taklit ediyoruz.
-ExecStart=/home/ubuntu/.local/bin/uv run python -m meridian.barsarchive
+# `--frozen --no-dev` uv'nin bayraklarıdır, modülün DEĞİL (TSK-228): açılışta dev kurmaz, kilidi yazmaz — A0
+# `uv sync` semantiğinin kopyası; gerekçe meridian.service ExecStart şerhinde, ayrışma çivisi v558.
+ExecStart=/home/ubuntu/.local/bin/uv run --frozen --no-dev python -m meridian.barsarchive
 Restart=always
 RestartSec=30
 # KillSignal=SIGINT: modülün __main__'i KeyboardInterrupt'ı yakalayıp stop()+close() yapıyor ve son

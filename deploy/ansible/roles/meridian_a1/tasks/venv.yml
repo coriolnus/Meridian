@@ -84,6 +84,8 @@
 # BAYRAK (TUR 2, K3): bayraksız `uv sync --frozen` DEV GRUBUNU A1'e kurar ve dagit `[3]`ün
 # bilinçli kararını (dev grubu canlıya KURULMAZ, 2026-08-01) sessizce ters çevirirdi. Bayrak
 # `defaults::uv_sync_bayrak`tan gelir ve v451 çivisi onun dagit.sh'takilerden biri olduğunu ölçer.
+# KOPYA (TSK-228): bu görevin eşitleme bayrakları (`--frozen` + `uv_sync_bayrak`) `uv run` koşan dört birimin
+# ExecStart'ında AYNI sırayla durur; burada bir bayrak değişirse v558 (A1/B0/E1) birimleri de değiştirtir.
 - name: Meridian bağımlılıkları (uv sync --frozen, dev grubu HARİÇ)
   ansible.builtin.command:
     cmd: "{{ uv_ikili }} sync --frozen {{ uv_sync_bayrak }}"

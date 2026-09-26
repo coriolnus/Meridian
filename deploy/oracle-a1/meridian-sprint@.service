@@ -191,13 +191,14 @@ StandardError=journal
 # CollectMode= BİLEREK YOK (yani varsayılan `inactive`). Başarıyla biten örnekler systemd tarafından
 # kendiliğinden boşaltılır; BAŞARISIZ olanlar `systemctl --failed` listesinde DURUR. Bu bir kusur
 # değil bir SEÇİMDİR: `CollectMode=inactive-or-failed` yazsaydık çöken bir antrenman systemd'nin
-# arıza listesinden de sessizce silinirdi. "Gürültü, sessizlikten iyidir" (meridian.service:176).
+# arıza listesinden de sessizce silinirdi. "Gürültü, sessizlikten iyidir" (meridian.service
+# `# --- BİLİNÇLİ OLARAK DIŞARIDA BIRAKILANLAR` bloğu, `SystemCallErrorNumber=EPERM` maddesi).
 # Bedeli operatörün ara sıra temizlemesidir:  sudo systemctl reset-failed 'meridian-sprint@*'
 # OnFailure= BİLEREK YOK. `meridian.service` OnFailure=meridian-fail-notify.service kullanır çünkü
 # worker'ın ölümü bir ARIZADIR. Başarısız bir gecelik antrenman arıza DEĞİLDİR: kadansın yetim
 # tetiği (sprint.py) onu zaten uygun ilk gece penceresinde yeniden başlatır. Antrenman gürültüsünü
-# arıza kanalına bağlamak, meridian.service:78'de adı konmuş hatanın tekrarı olurdu (GERÇEK arıza
-# gürültüde boğulur).
+# arıza kanalına bağlamak, meridian.service `SuccessExitStatus=143` şerhinde adı konmuş hatanın tekrarı
+# olurdu (GERÇEK arıza gürültüde boğulur).
 
 # ==================================================================================================
 # H3 SERTLEŞTİRME — meridian.service ile AYNI çekirdek küme; gerekçelerin TAMAMI orada yazılı ve

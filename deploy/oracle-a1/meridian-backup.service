@@ -93,7 +93,9 @@ ExecStartPre=/bin/chmod 700 /home/ubuntu/backups
 # Çözüm iki bacaklı: (1) yol string-literal değil sys.argv[1] — dizgide İÇ TIRNAK KALMADI,
 # systemd'nin çözeceği kaçış yok; (2) `ok` bayrağı — python bacağı düşerse tar YİNE alınır
 # (bars değerlidir) ama birim BAŞARISIZ beyan eder; sessiz yedek kaybı bir daha yaşanmaz.
-ExecStart=/bin/sh -c 'ok=1; if [ -s /opt/meridian/state/meridian.db ]; then uv run python -c "import sys; from meridian import storage; storage.backup_to(sys.argv[1])" /opt/meridian/state/meridian.db.yedek || ok=0; fi; tar -czf /home/ubuntu/backups/state-$(date +%%F).tar.gz --exclude=state/sprint --exclude="state/secrets.json.bak-*" --exclude="state/.secrets_*.tmp" --exclude="state/tmp*.tmp" -C /opt/meridian state; rc=$$?; [ $$rc -le 1 ] && [ $$ok -eq 1 ]'
+# `uv run --frozen --no-dev` (TSK-228, 2026-09-26/27): bayraksız hâli GÜNLÜK timer'la iki dağıtım arasında dev'i
+# HER GECE geri kuruyordu (A0/dagit kaldırır → salınım). Bayraklar A0 `uv sync` semantiğinin kopyası; v558 çivili.
+ExecStart=/bin/sh -c 'ok=1; if [ -s /opt/meridian/state/meridian.db ]; then uv run --frozen --no-dev python -c "import sys; from meridian import storage; storage.backup_to(sys.argv[1])" /opt/meridian/state/meridian.db.yedek || ok=0; fi; tar -czf /home/ubuntu/backups/state-$(date +%%F).tar.gz --exclude=state/sprint --exclude="state/secrets.json.bak-*" --exclude="state/.secrets_*.tmp" --exclude="state/tmp*.tmp" -C /opt/meridian state; rc=$$?; [ $$rc -le 1 ] && [ $$ok -eq 1 ]'
 ExecStartPost=/usr/bin/find /home/ubuntu/backups -maxdepth 1 -name state-*.tar.gz -mtime +7 -delete
 
 # ==================================================================================================
