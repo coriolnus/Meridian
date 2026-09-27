@@ -38,9 +38,11 @@ CPUWeight=50
 Environment=MERIDIAN_AUTOSTART_HERMES=1
 Environment=HERMES_POLL_SECONDS=300
 # ARAMA DÜĞMELERİ BİLEREK İKİ YERDE (burada + meridian.service) ve DEĞERLERİ AYNI OLMAK ZORUNDA.
-# Taşımak istemiştik; tasarım denetimi engelledi: elle tetiklenen yansıma (`/api/hermes/reflect_now`)
-# API sürecinde KALIYOR ve aynı düğmeleri okuyor. Buradan kaldırsaydık bekleme döngüsü ile elle
-# tetikleme FARKLI bütçelerle koşardı — "aynı yasanın iki uygulaması" kusurunun tam hâli.
+# Gerekçe TSK-233'te (2026-09-27) DEĞİŞTİ, eşitlik şartı DEĞİŞMEDİ: elle yansıma artık pano sürecinde
+# koşmaz (istek dosyasıyla BU birime devredildi) — ama pano süreci sprint'i tetikler ve iki düğmeyi
+# sprint çocuğuna devreder, üçüncüsünü pano karnesinde okur (okuyucular adıyla `meridian.service`in
+# "ARAMA DÜĞMELERİ" şerhinde). Ayrışırlarsa sprint araması bu döngüden FARKLI ayarla koşar, karne de
+# uygulanmayan bir bütçeyi gösterir — "aynı yasanın iki uygulaması" kusurunun tam hâli.
 # `dagit [1c]` repo↔/etc ayrışmasını yakalar ama BİRİM↔BİRİM ayrışmasını YAKALAMAZ; eşitlik
 # şimdilik bu yorumla ve `test_ogrenme_birimi_ayrimi` çivisiyle korunuyor.
 Environment=MERIDIAN_PARALLEL_PROBES=1

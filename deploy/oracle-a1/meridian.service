@@ -31,7 +31,10 @@ Environment=CYCLE_POLL_SECONDS=300
 # arkasına diziliyordu (`/api/public/summary` 2,6-14,0 sn; 4 çekirdeğin biri dolu, üçü boş).
 # BU SATIRI 1 YAPMAK ESKİ ARIZAYI GERİ GETİRİR — ve iki birim aynı anda 1 olursa iki bekleme
 # döngüsü koşar; `reflect._ProcessLock` yansımaları serileştirir ama boşuna CPU yakılır.
-# Elle tetikleme (`/api/hermes/reflect_now`) bu bayraktan BAĞIMSIZ ve burada KALIR.
+# ELLE TETİKLEME DE BU SÜREÇTE KOŞMAZ (TSK-233, 2026-09-27): pano "düşün" düğmesi (`POST /api/hermes/reflect`,
+# `meridian/api.py::api_hermes_reflect`) yansımayı KOŞMAZ — `state/hermes_yansima_istegi.json` istek dosyasını
+# bırakır; öğrenme süreci (`meridian-learn`) onu poll döngüsünde alır, koşar ve siler (istek alma
+# fonksiyonu `meridian/hermes_runtime.py` içinde, TSK-233). Yani bu süreçte hermes yansıma araması hiç koşmaz.
 Environment=MERIDIAN_AUTOSTART_HERMES=0
 Environment=HERMES_POLL_SECONDS=300
 # --- ÇEKİRDEK AYARI (4 OCPU, sunucuda ÖLÇÜLDÜ 2026-07-30: nproc=4 / 12GB). Eski "2 OCPU → havuzu
@@ -52,6 +55,19 @@ Environment=HERMES_POLL_SECONDS=300
 #     yola çevirir (seam: sprint.py `_tetik_komutu`). Polkit kuralı yoksa tetik yetki hatası alır ve kod
 #     GÖRÜNÜR şekilde popen'a düşer (`sprint_systemd_yok` olayı + `kosum_yolu` damgası) — sessiz bozulma yok.
 Environment=MERIDIAN_SPRINT_SYSTEMCTL=/usr/bin/systemctl
+# --- ARAMA DÜĞMELERİ (aşağıdaki üç satır) — TSK-233 SONRASI DA ÖLÜ AYAR DEĞİL (ölçüm 2026-09-27) -----
+#     Bu süreçte hermes yansıma araması artık koşmaz (yukarıdaki bayrak 0; elle tetikleme istek
+#     dosyasıyla `meridian-learn`e devredildi). Satırların yine de iki OKUYUCUSU var:
+#     · MERIDIAN_PARALLEL_PROBES · MERIDIAN_SEARCH_MAX_MIN — bu süreç sprint'i tetikler (zamanlayıcı
+#       kadansı `sprint.maybe_start` + `/api/sprint/start`) ve `sprint.start` bu ikisini KENDİ ortamından
+#       sprint çocuğuna devreder (`meridian/sprint.py::DEVREDILEN_ORTAM`). Kaldırılırsa sprint araması
+#       SESSİZCE serileşir ve arama tavanı kod varsayılanına düşer.
+#     · HERMES_SEARCH_BUDGET — sprint'e devredilmez; pano karnesi (`/api/diagnostics` →
+#       `meridian/analytics.py::hermes_scorecard` → `hermes.search_budget`) arama bütçesini BU sürecin
+#       ortamından hesaplar. Kaldırılırsa karne öğrenme sürecinin uyguladığı değeri değil kod
+#       varsayılanından türeyen tavanı gösterir.
+#     Değerler `meridian-learn.service` ile EŞİT kalmak zorunda (çivi: tests/test_ogrenme_birimi_ayrimi_v249.py).
+#     KALDIRMA ayrı bir karardır (canlı birim değişikliği) ve bu iki okuyucu taşınmadan yapılamaz.
 Environment=MERIDIAN_PARALLEL_PROBES=1
 Environment=MERIDIAN_SEARCH_MAX_MIN=60
 Environment=HERMES_SEARCH_BUDGET=8

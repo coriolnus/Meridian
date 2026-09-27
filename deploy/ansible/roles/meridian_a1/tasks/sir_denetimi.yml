@@ -47,10 +47,14 @@
       mod={{ item.stat.mode | default('(yok)') }} sahip={{ item.stat.pw_name | default('(yok)') }}.
       SONUCU: credential drop-in'leri KURULMADI (bilerek) — kurulsalardı meridian.service
       `LoadCredential=` kaynağı olmadan başlatılamaz hâle gelirdi.
-      REÇETE (DEĞER bu rolde ÜRETİLMEZ): /etc/meridian/dash_token için
-      `sudo deploy/oracle-a1/sir_rotasyon.sh --dash --vault --uret` (önce `--kuru`; dosya Vault
-      Agent'ın render hedefidir); öteki /etc/meridian/* ve /etc/hindsight/creds/* için
-      `bash deploy/oracle-a1/sir_credential_gecis.sh`.
+      REÇETE (DEĞER bu rolde ÜRETİLMEZ; dosya-başı eşleme burada YAZILMAZ — tek kaynak envanterdir):
+      (1) bu dosya bir Vault Agent RENDER HEDEFİDİR (`deploy/vault/agent.hcl` `destination`,
+      `deploy/sir_envanteri.yaml`den üretilir) → önce `systemctl status vault-agent`; kasa
+      mühürlüyse `deploy/vault/vault_unseal.sh` (A1'de `sudo systemctl start vault-unseal` aynı
+      betiği koşar). (2) değeri döndürmek/yeniden kurmak: `deploy/sir_envanteri.yaml`
+      `rotasyon_kopyalari` bloğunda `yol`u bu dosya olan satırın `alt_komut`u (kasa bağı: `vault_kv`
+      → `rotasyon_siri`) → `sudo deploy/oracle-a1/sir_rotasyon.sh --<alt> --vault [--uret]`
+      (önce `--kuru`; `--uret`i kabul etmeyen alt komutu betik AÇIK hatayla reddeder).
     success_msg: "{{ item.item.yol }}: var, {{ item.item.mod }}, {{ item.item.sahip }}"
   loop: "{{ sir_stat.results }}"
   loop_control:
