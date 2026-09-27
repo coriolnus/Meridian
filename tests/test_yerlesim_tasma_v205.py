@@ -372,7 +372,7 @@ def test_sarmalamayi_GERI_ALAN_kural_yok():
         assert "white-space:nowrap" not in govde, f"{secici}: nowrap sarmalamayı geri alıyor"
         assert "overflow-wrap:normal" not in govde, f"{secici}: overflow-wrap:normal"
         assert "text-overflow:ellipsis" not in govde, (
-            f"{secici}: kırpma. Bu panelin sözleşmesi (app.js:5809-5812) ekrandaki adın "
+            f"{secici}: kırpma. Bu panelin sözleşmesi (app.js «MAKİNE-OKUNUR AD SATIRDA DURUR» şerhi) ekrandaki adın "
             "günlükte greplenen adla AYNI olmasıdır; yarım ad greplenemez.")
 
 

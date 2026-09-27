@@ -126,7 +126,7 @@ ssh -i $K ubuntu@130.61.126.87 '
 | `redis-server` (apt) | sıcak durum + bar ring'i | **ŞART**, opsiyonel değil — `hotstate.py`/`barsarchive.py` buna bağlı. Ubuntu default'u yalnız `127.0.0.1` dinler, **değiştirme** |
 
 **Redis yoksa arşivci ÖLMEZ, sessizce boşa döner:** `poll()` `None` döner, `run()` `idle_s` uyuyup
-yeniden dener (`barsarchive.py:343/413`). Yani `is-active` **bar yazdığını kanıtlamaz** — ölçüsü
+yeniden dener (`barsarchive.py::BarsArchiver.poll` / `barsarchive.py::BarsArchiver.run`). Yani `is-active` **bar yazdığını kanıtlamaz** — ölçüsü
 `--ozet` (aşağıda).
 
 ## Bölüm B3 — H3 tur-2 systemd sertleştirme: **uygulama prosedürü** (bakım penceresi)
@@ -291,7 +291,7 @@ izin verilen her çağrıyı — kullanılamaz gürültü.) Suçlu belirlenince 
 birim dosyasına yazılır.
 
 ### Bilinen yan etki: `PrivateTmp` ve `/tmp/prescreen-*`
-`hermes_composite.py:330` ön-eleme alt süreçlerini `/tmp/prescreen-<id>` altında koşturur.
+`hermes_composite.py::spawn_pending` ön-eleme alt süreçlerini `/tmp/prescreen-<id>` altında koşturur.
 `PrivateTmp=true` bunu **kırmaz** (özel ad alanı yazılabilir) ama SSH kabuğundan o dizin **görünmez**.
 Bakmak için:
 ```bash
@@ -453,7 +453,7 @@ ssh -i $K $A1 'set -x
 ```
 **`_litestream_seq` / `_litestream_lock` tabloları:** geri almada **bırakılır**. Zararsızdırlar
 (Meridian'ın hiçbir kodu tablo envanteri saymaz — tarama: `sqlite_master` yalnız
-`tests/test_denetim_defter_v159.py:221`de, sandbox'ta ve negatif iddia). Düşürülecekse **worker
+`tests/test_denetim_defter_v159.py::test_c4_sema_migrasyon_transaction_ININ_ICINDE_kurulur`de, sandbox'ta ve negatif iddia). Düşürülecekse **worker
 DURMUŞKEN** yapılır (CLAUDE.md §5: canlı worker koşarken state'e yazma):
 ```bash
 # BAKIM PENCERESİ — worker durmuş olmalı
@@ -533,7 +533,7 @@ ssh -i ~/Documents/OCI/ssh-key-2026-07-21.key -L 8080:127.0.0.1:8080 ubuntu@130.
 systemctl is-active redis-server meridian meridian-barsarchive
 systemctl list-timers 'meridian-*'   # meridian-backup.timer sırada mı
 redis-cli ping                       # PONG
-curl -s localhost:8080/healthz       # 200=taze · 503=BAYAT ama süreç canlı (/healthz api.py:478'de VAR)
+curl -s localhost:8080/healthz       # 200=taze · 503=BAYAT ama süreç canlı (/healthz `api.py::healthz`de VAR)
 curl -s localhost:8080/api/today     # 200 + JSON
 journalctl -u meridian -f            # canlı log
 # tam suite A1'de KOŞULMAZ (TSK-230): pytest DEV grubundadır ve A1'e kurulmaz (A0 `--no-dev`);

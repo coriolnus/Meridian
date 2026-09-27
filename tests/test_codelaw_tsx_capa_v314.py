@@ -63,7 +63,7 @@ def test_ts_uzantisi_da_taranir(tmp_path):
     (`krizUclari.ts` 4, `tipler.ts` 3, `onayEylem.ts` 3)."""
     _sentetik_agac(tmp_path, 'export const U = "sentetik_hedef.py:999";\n', ad="uclar.ts")  # çapa-sentetik: tmp_path'e yazılan sentetik fikstür, gerçek dosya değil (TSK-119, 2026-09-03)
     curuk = codelaw.stale_tsx_line_anchors(str(tmp_path), py_kokler=(str(tmp_path),))
-    assert [c["kaynak"] for c in curuk] == ["uclar.ts:1"], curuk
+    assert [c["kaynak"] for c in curuk] == ["uclar.ts:1"], curuk  # çapa-sentetik: beklenen kaynak kimliği (TSK-236)
 
 
 def test_tsx_capasi_YORUM_ve_BOS_SATIRI_da_curuk_sayar(tmp_path):
@@ -122,7 +122,7 @@ def test_TARAMA_SESSIZCE_BOS_DEGIL():
 
 def test_taban_ASILINCA_OTER():
     """Çırçırın ötme yönü. Taban ALTINDAKİ sayı ihlal değildir; taban ÜSTÜ ihlaldir."""
-    capalar = [{"kaynak": "A.tsx:1"}, {"kaynak": "B.tsx:2"}]
+    capalar = [{"kaynak": "A.tsx:1"}, {"kaynak": "B.tsx:2"}]  # çapa-sentetik: sahte kaynak kimliği (TSK-236)
     assert codelaw.tsx_capa_nuksu(capalar, taban=1) is True
 
 
@@ -130,7 +130,7 @@ def test_taban_ALTINDA_ve_TABANDA_SUSAR():
     """İki yön birden çivilenir: TABANIN KENDİSİ ihlal değildir (`>` , `>=` değil) ve DÜŞÜŞ
     serbesttir — başka ajanlar aynı turda kendi `.tsx` dosyalarındaki çapaları sembole çeviriyor,
     yani sayı tur sonunda tabanın altına inebilir ve bu bir kırmızı OLMAMALI."""
-    capalar = [{"kaynak": "A.tsx:1"}, {"kaynak": "B.tsx:2"}]
+    capalar = [{"kaynak": "A.tsx:1"}, {"kaynak": "B.tsx:2"}]  # çapa-sentetik: sahte kaynak kimliği (TSK-236)
     assert codelaw.tsx_capa_nuksu(capalar, taban=2) is False
     assert codelaw.tsx_capa_nuksu(capalar, taban=9) is False
     assert codelaw.tsx_capa_nuksu([], taban=0) is False

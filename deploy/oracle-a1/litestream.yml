@@ -40,7 +40,7 @@
 #   (a) birimin `ReadWritePaths`i `/opt/meridian/state`i AÇMAK ZORUNDA (salt-okuma birim çalışmaz);
 #   (b) `meridian.db` içinde `_litestream_seq` + `_litestream_lock` GÖRÜNECEK. Depoda tablo
 #       envanterini SABİTLEYEN bir ölçüm YOK (tarama: `sqlite_master` yalnız
-#       tests/test_denetim_defter_v159.py:221'de, o da sandbox'ta ve NEGATİF iddia) — yani bu iki
+#       tests/test_denetim_defter_v159.py::test_c4_sema_migrasyon_transaction_ININ_ICINDE_kurulur'da, o da sandbox'ta ve NEGATİF iddia) — yani bu iki
 #       tablo hiçbir kapıyı kırmaz. Yine de yedeğe/pariteye bakan bir sonraki tur onları GÖRDÜĞÜNDE
 #       "bu nereden geldi" diye sormasın diye burada yazılıdır.
 #   (c) checkpoint'ler Meridian'ın yazarlarıyla kilit yarışına girer → `busy-timeout` aşağıda
@@ -92,7 +92,7 @@ snapshot:
 
 dbs:
   # TEK DB — H9 defter çekirdeği. Yol `meridian/storage.py`ten türer: `config.STATE / DB_NAME`
-  # (storage.py:59 `DB_NAME = "meridian.db"`, :143). A1'de STATE = /opt/meridian/state.
+  # (`storage.py::DB_NAME` = `"meridian.db"`, `storage.py::db_path`). A1'de STATE = /opt/meridian/state.
   - path: /opt/meridian/state/meridian.db
 
     # META DİZİNİ **state/ AĞACININ DIŞINDA** — BİLİNÇLİ SAPMA. Varsayılan konum DB'nin yanıdır:

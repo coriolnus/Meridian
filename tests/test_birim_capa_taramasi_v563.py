@@ -48,7 +48,7 @@ desenle `deploy/**` altında ÖLÇÜLDÜ (2026-09-27), bu dosya onları TARAMAZ:
   * `.yml`/`.yaml` — 20 çapa (19'u `deploy/oracle-a1/litestream.yml`, çoğu harici litestream kaynağı).
   * `.sh` — 4 çapa (`cutover.sh`, `deploy.sh`, `litestream_kur.sh` ×2).
   * `.py` (`deploy/` altında 4 dosya) — 0 gerçek çapa (2 eşleşme bir `strftime` biçim dizgesi).
-  Bu yüzeyler brief kapsamı dışında bırakıldı; genişletme ayrı bir kalemin işidir.
+  Bu yüzeyler brief kapsamı dışında bırakıldı; TSK-236 onları `test_capa_pydisi_hedef_v571.py`de tarar.
 """
 from __future__ import annotations
 
@@ -142,8 +142,8 @@ def test_uzanti_kumesi_CODELAW_listesinden_TURETILIR():
     "uydurma_modul.py:7",                    # çapa-sentetik: desen örneği, gerçek dosya değil (TSK-231)
     "uydurma_modul.py:412345",               # çapa-sentetik: desen örneği, gerçek dosya değil (TSK-231)
     "ops/uydurma_alt/uydurma.py:44",         # çapa-sentetik: yol önekli desen örneği (TSK-231)
-    "uydurma.yaml:27",
-    "uydurma.sh:12-30",
+    "uydurma.yaml:27",  # çapa-sentetik: desen örneği (TSK-236)
+    "uydurma.sh:12-30",  # çapa-sentetik: desen örneği (TSK-236)
 ])
 def test_desen_CODELAW_desenlerinin_UST_KUMESI_ornekler(ornek):
     """Ayrışma çivisi (örnek dizgeler): codelaw'ın iki deseninin yakaladığı her örneği bu desen de
@@ -176,12 +176,12 @@ def test_desen_CODELAW_desenlerinin_UST_KUMESI_canli_korpus():
 
 @pytest.mark.parametrize("satir,beklenen", [
     # TSK-228'in BİREBİR biçimi: `.service` hedefli çapa (bayatlık tarayıcısının göremediği sınıf)
-    ("# Gürültü, sessizlikten iyidir (meridian.service:176).", ["meridian.service:176"]),
-    ("# (meridian-sprint@.service:170 ile aynı küme)", ["meridian-sprint@.service:170"]),
-    ("# PYTHONPATH=. — ops/uydurma-run.sh:45 ile AYNI", ["ops/uydurma-run.sh:45"]),
+    ("# Gürültü, sessizlikten iyidir (meridian.service:176).", ["meridian.service:176"]),  # çapa-sentetik: birim deseni fikstürü (TSK-236)
+    ("# (meridian-sprint@.service:170 ile aynı küme)", ["meridian-sprint@.service:170"]),  # çapa-sentetik: birim deseni fikstürü (TSK-236)
+    ("# PYTHONPATH=. — ops/uydurma-run.sh:45 ile AYNI", ["ops/uydurma-run.sh:45"]),  # çapa-sentetik: birim deseni fikstürü (TSK-236)
     ("#  · log — uydurma_modul.py:340-341 ROOT'a yazar", ["uydurma_modul.py:340-341"]),  # çapa-sentetik: desen örneği (TSK-231)
-    ("# (v0.5.15 cmd/uydurma/main_notwindows.go:20", ["cmd/uydurma/main_notwindows.go:20"]),
-    ("# drop-in (uydurma.conf:3, uydurma.timer:9)", ["uydurma.conf:3", "uydurma.timer:9"]),
+    ("# (v0.5.15 cmd/uydurma/main_notwindows.go:20", ["cmd/uydurma/main_notwindows.go:20"]),  # çapa-sentetik: birim deseni fikstürü (TSK-236)
+    ("# drop-in (uydurma.conf:3, uydurma.timer:9)", ["uydurma.conf:3", "uydurma.timer:9"]),  # çapa-sentetik: birim deseni fikstürü (TSK-236)
     # devam biçimi (şerhte): bitişik çapanın ardından yalın iki nokta + sayı
     ("# YAZAR: uydurma_modul.py:1942 `.env` · :1956 yedek · (:96-99)",  # çapa-sentetik: desen örneği (TSK-231)
      ["uydurma_modul.py:1942", ":1956", ":96-99"]),  # çapa-sentetik: beklenen değer (TSK-231)
@@ -211,8 +211,8 @@ def test_MUAFIYETLI_satir_GECER_isaretsiz_YAKALANIR():
     """İki muafiyet işareti de geçer; aynı satır işaretsizken yakalanır (tek çivide — biri sessizce
     bozulamasın)."""
     mezar, sentetik = _muafiyetler()
-    ham = "# eski çapa: meridian.service:176"
-    assert [c for _i, c in _birim_capa_ihlalleri(ham)] == ["meridian.service:176"]
+    ham = "# eski çapa: meridian.service:176"  # çapa-sentetik: muafiyet fikstürü (TSK-236)
+    assert [c for _i, c in _birim_capa_ihlalleri(ham)] == ["meridian.service:176"]  # çapa-sentetik: beklenen değer (TSK-236)
     assert list(_birim_capa_ihlalleri(f"{ham} ({mezar})")) == []
     assert list(_birim_capa_ihlalleri(f"{ham} ({sentetik}: fikstür)")) == []
 

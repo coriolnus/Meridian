@@ -199,14 +199,14 @@ a{color:inherit;text-decoration:none}
 /* ROL SINIFI (D5, 2026-08-07) — burada `.pos{color:var(--green)}` ve `.neg{color:var(--red)}`
    duruyordu ve İKİSİ DE YANLIŞTI, ama AYRI AYRI. Kullanımlar sayıldı, tahmin edilmedi:
 
-     `.neg` — SIFIR kullanıcı. landing.js:108 `" neg"` üretiyor ama HER ZAMAN `pm-cell`e
+     `.neg` — SIFIR kullanıcı. landing.js'in `c.mean_r` sınıf ataması `" neg"` üretiyor ama HER ZAMAN `pm-cell`e
        ekleyerek (`'<div class="pm-cell' + cls + '"'`), yani eşleşen kural 0-2-0 özgüllüğüyle
        `.pm-cell.neg`tir; çıplak 0-1-0 kuralı hiçbir öğeyi boyamıyordu. Ölü kural SİLİNDİ.
      `.pos` — TEK kullanıcı ve o da YÖN DEĞİLDİ: "bağlı" rozeti (Alpaca · paper, aşağıda).
        "bağlı" ROL 2'nin ŞİDDET-3'ü (nominal: sakin, geçti, bağlı) — index.html :root'un kendi
        tanımı. Yani `--yon-arti`ya çevirmek bir rol sızıntısını başkasıyla değiştirirdi.
        Sınıf ADI da yalan söylüyordu: aynı ad panoda YÖN, burada DURUM demek oluyordu.
-       Kullanım index.html:436'nın rol sınıfına taşındı; `.pos` de böylece sıfır kullanıcıya
+       Kullanım index.html'in `.sev-*` rol sınıfına taşındı; `.pos` de böylece sıfır kullanıcıya
        düştü ve o da SİLİNDİ. Matris hücreleri gerçekten yöndür — `.pm-cell.pos/.neg`
        (aşağıda) `--yon-*` okumaya devam eder, dokunulmadı.
 
@@ -356,7 +356,7 @@ h1 .g{color:var(--tx2)}
    --pm-pos/--pm-neg zeminini okuyordu. --pm-* rol katmanı ÖNCESİNİN yön sözlüğüydü ve
    D1'de index.html'te yerini --yon-*-zemin'e bıraktı; bu yüzeyde emekli edilmeden kaldı,
    yani aynı ürünün iki yüzeyi K/Z işaretini iki farklı sözlükten boyuyordu. Kural artık
-   index.html:956-957 ile aynı jetonları okur: kroma yönde şiddetin ALTINDADIR (ölçülmüş
+   index.html'in `.pm-cell.pos/.neg` kuralıyla aynı jetonları okur: kroma yönde şiddetin ALTINDADIR (ölçülmüş
    kısıt), ve alfa .08/.07 KORUNDU — değişen yalnız hue'nun hangi rolden geldiği. */
 .pm-cell.pos{color:var(--yon-arti);background:var(--yon-arti-zemin)}
 .pm-cell.neg{color:var(--yon-eksi);background:var(--yon-eksi-zemin)}
@@ -643,7 +643,7 @@ footer{border-top:1px solid var(--line);padding:var(--s8) 0 var(--s10);color:var
         <div class="acct">
           <p class="slab">HESAP</p>
           <!-- "bağlı" bir DURUMdur, K/Z işareti değil: ŞİDDET-3 (nominal). Gerekçe ve ölçüm
-               `.sev-3` kuralının yanında; sınıf adı index.html:436 ile aynı. -->
+               `.sev-3` kuralının yanında; sınıf adı index.html'in `.sev-3` kuralıyla aynı. -->
           <div class="r"><span>Alpaca · paper</span><b class="sev-3">bağlı</b></div>
         </div>
         <span class="slabel"><span class="d"></span>KURULUM × REJİM</span>

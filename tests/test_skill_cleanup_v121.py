@@ -51,7 +51,7 @@ RETIRED = (
 # dala almak zorunda kalmıştı ("kayıt girdisi uydurulmamalı"): manifest, kendi istisnasıyla
 # kusuru ilan ediyordu ama sınıfı düzeltmiyordu.
 #
-# GİT-İZSİZLİĞİN BEDELİ ÖDENDİ. MERIDIAN_ENGINEERING_LOG.md:378 bunu bir bulgu olarak kayda
+# GİT-İZSİZLİĞİN BEDELİ ÖDENDİ. Günlüğün 2026-08-02 «DESTEKLEYİCİ KOŞU» kaydı bunu bir bulgu olarak kayda
 # geçmişti: "BOŞ ve git-izsiz dizin, yalnız Mac diskinde; 'taşındı-silinmedi' güvencesi git'ten
 # yeniden üretilemiyor". 2026-08-09'da dizin diskten kayboldu ve git'te izi olmadığı için
 # NEYİN sildiği kanıtlanamaz — tam da o notun uyardığı hâl. Mekanizma ispatlanamayacağı için

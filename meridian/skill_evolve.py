@@ -189,7 +189,7 @@ def draft_revision(skill_name: str) -> dict | None:
     # ATOMİK ŞART: yarım/sıfır-baytlık taslak, operatör ONAY YOLUNDA os.replace ile CANLI SKILL.md'ye
     # taşınır → ajan bozuk skill okur. draft_path skills/ altında (STATE DIŞI) → store mutlak adı
     # olduğu gibi kullanır; tek yazar (bu fonksiyon) için kilit yeterli. YASA-6 OKUYUCU: onay yolu
-    # (os.replace ile SKILL.md yapar) + pano ipucu (app.js:8367); taşınan SKILL.md sonra hermes-agent
+    # (os.replace ile SKILL.md yapar) + pano ipucu (app.js'in «SKILL.md.v2-draft» ipucu); taşınan SKILL.md sonra hermes-agent
     # skill kütüphanesince okunur.
     store.write_text(draft_path, body)
     recs = revisions()

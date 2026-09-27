@@ -962,7 +962,7 @@ available and was taken seriously: *long-form wants a bigger body than a console
 the deviation instead of destroying the reading.* **It was tested and it lost.** Pre-registration,
 harness and numbers: `research/olcumler/tipografi_rampa_2026-08-07/`.
 
-The benchmark was not imported. `index.html:1368` already ships the product's own long-form prose
+The benchmark was not imported. `index.html`'s `.md` rule already ships the product's own long-form prose
 spec — `.md { font-size:14px; line-height:1.8; max-width:72ch }` — so the question became whether
 the runbook needed to be *larger than the console's own long-form class*, which is answerable.
 

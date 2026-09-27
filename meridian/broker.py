@@ -807,7 +807,7 @@ class PaperBroker:
         # EZER: (bu zincirde ezen kod değil EMİR BOYUTUNUN KÜÇÜKLÜĞÜ) ADV_CAP_PCT + IMPACT_COEF
         # ezilen taraf — 25d zinciri c-10 (canlı ölçüm: katılım 1e-5…8e-4, etki ≤0,8 bps; %2×ADV
         # = 1.419 hisse vs sipariş 25 — hiçbir emirde bağlamadı,
-        # docs/ARASTIRMA-SLIPAJ-AZALTMA-2026-08-13.md:225-228), 2026-08-23
+        # docs/ARASTIRMA-SLIPAJ-AZALTMA-2026-08-13.md §B.3 «Kötümser çapraz kontrol»), 2026-08-23
         if adv and adv > 0:
             cap = int(ADV_CAP_PCT * adv)
             if cap <= 0:

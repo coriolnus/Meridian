@@ -2,7 +2,7 @@
 
 BAĞLAM: `price_for` ücretsiz OpenRouter slug'larını Opus listesinden fiyatlıyordu (#14'te
 düzeltildi, çivi `test_ucretsiz_katman_fiyati_v325.py`). Kod düzeltmesi yalnız GELECEK satırları
-düzeltir: `dagit.sh:30` rsync'i `state/`i DIŞLAR, yani diskteki satırlar dağıtımdan sonra da
+düzeltir: dağıtımın rsync'i (`deploy/ansible/vars/dagit_vars.yml` `rsync_disla` listesi) `state/`i DIŞLAR, yani diskteki satırlar dağıtımdan sonra da
 aynen yanlış kalır ve `/api/spend` → pano onları okumaya devam eder (ölçüm: 13 çağrı / 7.89 USD).
 
 BU BETİK O SATIRLARI ONARIR — ve onarımın kendisi bu deponun en tehlikeli işidir: CANLI DEFTERE

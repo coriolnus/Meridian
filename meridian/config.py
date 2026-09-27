@@ -507,7 +507,7 @@ def default_strategy() -> dict:
     """v01 seed params. Every value sits inside bounds.yaml. Midpoint-ish, sensible for swing momentum.
 
     `position_size_r` NEDEN 1,0 DEĞİL 0,5 — bu yedek CANLIYLA AYRIŞIKTI.
-    `state/goal.yaml:123-125` kendi metninde şunu BEYAN ediyor: *"BERABERİNDE GİDEN AYAR:
+    `state/goal.yaml` `limits` şerhi kendi metninde şunu BEYAN ediyor: *"BERABERİNDE GİDEN AYAR:
     `position_size_r` 1,0 → 0,5 … İkisi AYRILMAZ: slot 20 tek başına ısı zarfını 5R'de bağlar ve
     boyut yarıya inmeden ölçülen davranışı vermez."* Ama çiftin YARISI (`max_open_positions: 20`)
     git-izli `goal.yaml`da, öteki yarısı ise izlenmeyen `state/strategy.yaml`da yaşıyordu — ve o
@@ -535,7 +535,7 @@ def default_strategy() -> dict:
     `run.bootstrap_v01` (taze kurulumun v01'i artık ölçülmüş boyutla doğar), `mutation.build_state`
     (dedektör fikstürleri) ve `sprint._reset_sandbox_state` (kum havuzunun v1 tohumu — bugün canlı
     0,5R iken sandbox 1,0R ile arıyordu; bu değişiklik o ayrışmayı KAPATIR). Bounds DOKUNULMADI:
-    0,5 zaten aralık-içi ve adım-üstü (`bounds.yaml:15` — min 0,1 · max 1,0 · step 0,1)."""
+    0,5 zaten aralık-içi ve adım-üstü (`bounds.yaml` `position_size_r` satırı — min 0,1 · max 1,0 · step 0,1)."""
     return {
         "version": 1,
         "params": {
@@ -549,8 +549,8 @@ def default_strategy() -> dict:
             "exit.breakeven_r": 1.0,
             "stop_loss_atr_mult": 2.0,
             # CANLIYLA HİZALI (0,5 — operatör kararı 2026-08-12). Gerekçenin tamamı ve neden
-            # `goal.limits`ten TÜRETİLMEDİĞİ bu fonksiyonun docstring'inde; `goal.yaml:123-125`
-            # invaryantının bu yarısı buraya bakar.
+            # `goal.limits`ten TÜRETİLMEDİĞİ bu fonksiyonun docstring'inde; `goal.yaml` `limits` şerhindeki
+            # («BERABERİNDE GİDEN AYAR») invaryantın bu yarısı buraya bakar.
             "position_size_r": 0.5,
             "regime.min_exposure_score": 40,
             "exit.giveback_pct": 0.0,          # Batch L — default OFF (Hermes can turn on)

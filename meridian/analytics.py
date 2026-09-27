@@ -2374,7 +2374,7 @@ def edge_verdict() -> dict:
         else:
             _durum = "gecti"
         # `dd_bacagi` ÜÇ DEĞERLİ OLDU: True (ölçüldü, geçti) / False (ölçüldü, aştı) / None
-        # (ölçülemedi — pano `null`ı zaten "mut" rengiyle çiziyor, app.js:4944 üçlü dalı hazır).
+        # (ölçülemedi — pano `null`ı zaten "mut" rengiyle çiziyor, app.js'in `k.dd_bacagi` üçlü dalı hazır).
         kuyruk = _olcut(_durum, _kdeger, kuyruk_esik, kuyruk_kaynak,
                         dd_bacagi=(False if _dd_asti else (None if _alt else True)),
                         cvar_bacagi=bool(_cv_ok), **kuyruk_ek)

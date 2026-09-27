@@ -4958,7 +4958,7 @@ def _bg_on_eleme_kaydi(proposal: dict | None, *, pvar: str, certified, red_neden
           `selfreview.contradictions`) düğmeyi "denendi" sayar ve kanıt→hipotez dikkat satırlarını BASTIRIR; ayrıca satır başına gerçek
           bir hipotezi pencereden DIŞARI iter.
     Ek olarak `api.py` → `api_public_summary` (`/api/public/summary`) → `hypotheses_total` KAMUYA AÇIK ship-oranının
-    PAYDASIdır (landing.js:68) ve `selfreview.build` + `web/app.js:5945` `startswith("rejected")`
+    PAYDASIdır (landing.js'in `d.hypotheses_total` okuması) ve `selfreview.build` + app.js'in `startsWith("rejected")`
     süzgeciyle reddi GERÇEK KAPI REDDİYLE aynı kovaya koyar. Bu tüketicilerin HİÇBİRİ bu turun
     dosya sınırında değildir, dolayısıyla kill kriteri hipotez defterinde SAĞLANAMAZDI.
 

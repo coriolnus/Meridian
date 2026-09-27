@@ -49,18 +49,18 @@ def test_a_goal_sektor_tavani_capasi_gercek_guard_satirini_gosterir():
 
 
 def test_b_api_slippage_capasi_goal_gercek_satiriyla_tutarli():
-    """api.py `_slippage_measured` docstring'i `goal.yaml:N slippage_bps: V` çapası taşır; N'inci
-    satır gerçekten `slippage_bps:` olmalı ve değeri V ile (ve goal'un parse edilmiş değeriyle)
-    eşit olmalı. Eski `:27` çapası bayatlamıştı — aynı A17 nöbeti."""
+    """api.py `_slippage_measured` docstring'i goal.yaml'ın `slippage_bps: V` ANAHTARINI çapalar (TSK-236:
+    motor yüzeyinde satır çapası yasak — eski "goal.yaml + satır numarası" biçimi anahtar çapasına çevrildi);
+    anahtar goal'da TEK üst-düzey satır olmalı ve V, goal'un parse edilmiş değeriyle eşit olmalı (A17 nöbeti)."""
     api_txt = (REPO / "meridian" / "api.py").read_text()
-    capalar = re.findall(r"goal\.yaml:(\d+)\s+slippage_bps:\s*(\d+)", api_txt)
+    capalar = re.findall(r"goal\.yaml `slippage_bps:\s*(\d+)` anahtarı", api_txt)
     assert len(capalar) == 1, f"slippage çapası TEK olmalı, bulunan: {capalar}"
-    satir_no, beyan = int(capalar[0][0]), int(capalar[0][1])
+    beyan = int(capalar[0])
 
     goal_metin = (REPO / "state" / "goal.yaml").read_text()
-    hedef = goal_metin.splitlines()[satir_no - 1]
-    assert re.match(r"^slippage_bps:", hedef), (
-        f"A17 çapa BAYAT: api.py `goal.yaml:{satir_no}` diyor ama o satır: {hedef!r}")
+    hedef = [s for s in goal_metin.splitlines() if re.match(r"^slippage_bps:", s)]
+    assert len(hedef) == 1, (
+        f"A17 çapa BAYAT: api.py goal.yaml `slippage_bps` anahtarını çapalıyor ama üst-düzey satırlar: {hedef!r}")
     gercek = int(yaml.safe_load(goal_metin)["slippage_bps"])
     assert beyan == gercek, (f"api.py çapası değeri {beyan} beyan ediyor, "
                              f"goal.yaml gerçekte {gercek} diyor")
