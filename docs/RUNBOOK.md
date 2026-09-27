@@ -1995,8 +1995,13 @@ kasasız yol → `sudo cp -p <yedek>/<yol> <yol>` + ilgili birimleri yeniden ba�
 `current_version`, her kasa yolu için ayrı kaydedilir), SONRA dosya — ters sırada Agent render'ı
 geri konan dosyayı kasadaki yeni değerle tekrar ezer. `kv rollback`un kendisi düşerse (politika · ağ ·
 mühür) YEDEK YOL üç kasa dalında da AYNIDIR (genel döngü TSK-064(b), 2026-09-27): `kv put` ÖNCESİ kasadan
-okunan ESKİ değer `<yedek>/vault/<kasa yolu>`dadır (0600) ve STDIN'le `vault kv put <yol> value=-` ile
-geri konur — değer argv'ye girmez; reçete her rollback satırının altında bunu yoluyla söyler.
+okunan ESKİ değer `<yedek>/vault/<kasa yolu>`dadır (0600 root) ve STDIN'le `vault kv put <yol> value=-` ile
+geri konur — değer argv'ye girmez. Reçete bunu her rollback satırının altında A1'de OLDUĞU GİBİ koşulacak
+TEK SATIR olarak basar (TSK-237, 2026-09-27; üç dalın ortak `_geri_koy_satiri`si):
+sudo bash -c '<sabit gövde>' _ <VAULT_ADDR> <vault ikilisi> <yönetici jetonu> <yedek dosyası> <kasa yolu>
+Kasa ortamı betiğin KENDİSİNİNKİDİR: jeton `login -no-print -` ile STDIN'den (`VAULT_TOKEN=` yok), oturum
+geçici bir HOME'da ve çıkışta silinir; yedek sudo ile okunur ve `tr -d` ile STDIN'e borulanır; yedek yoksa
+ya da boşsa kasaya HİÇBİR ŞEY yazılmadan durur.
 
 YAPMADIKLARI (burada olmayan şey, burada yapılmayacak şeydir): kanal geçişi yapmaz (o
 `sir_credential_gecis.sh`); drop-in kurmaz; Vault'a dokunmaz; operatörün YEREL `.env` kopyasını

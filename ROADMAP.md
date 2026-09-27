@@ -577,9 +577,9 @@ _Üretildi: `python ops/roadmap_cephe_ozeti.py --yaz` · kaynak: açık TSK kale
 | PRG-11 Strateji ve Seçilim | 1 | 0 | 0 | 1 | 0 | 0 | TSK-179 |
 | PRG-12 Bot Filosu | 6 | 2 | 1 | 3 | 0 | 0 | TSK-010 · TSK-018 · TSK-061 · TSK-138 · TSK-196 · TSK-200 |
 | PRG-13 Kalıcı Hafıza | 11 | 2 | 0 | 8 | 1 | 0 | TSK-015 · TSK-060 · TSK-142 · TSK-161 · TSK-163 · TSK-164 · TSK-165 · TSK-166 · TSK-168 · TSK-169 · TSK-170 |
-| PRG-14 Altyapı ve Sır | 6 | 1 | 3 | 2 | 0 | 0 | TSK-020 · TSK-064 · TSK-096 · TSK-176 · TSK-237 · TSK-238 |
+| PRG-14 Altyapı ve Sır | 6 | 2 | 2 | 2 | 0 | 0 | TSK-020 · TSK-064 · TSK-096 · TSK-176 · TSK-237 · TSK-238 |
 | PRG-15 Mikro-yapı ve Tick | 5 | 2 | 2 | 1 | 0 | 0 | TSK-013 · TSK-066 · TSK-067 · TSK-068 · TSK-225 |
-| **Toplam** | 58 | 16 | 9 | 29 | 4 | 0 | — |
+| **Toplam** | 58 | 17 | 8 | 29 | 4 | 0 | — |
 <!-- CEPHE-OZETI:BITIR -->
 
 > ⚠ **BU BLOK 2026-08-13 ANLIK GÖRÜNTÜSÜDÜR (Ö-49 şerhi, 2026-08-22):** içindeki en az üç kalem SONRADAN KAPANDI — /api/diagnostics arızası (v243, 08-14) · N1 bildirim kanalı (08-22 CANLI) · beyin zinciri (08-14'te değişti). Güncel durum §2 TAHTA + §7 günlüktedir; bu blok tarihçe.
@@ -2446,8 +2446,8 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
   What: (2026-09-27 01:0xZ AÇILDI [Rol-1; TSK-231 uygulayıcısı K5 (65), inceleme bağımsız ölçümle mertebeyi doğruladı]: İş: kalan sayıyı ölç, v382/v401 desenini `.py` dışı hedeflere genişlet (hedef dosyada satır/sembol doğrulaması), çürükleri sembol/başlık çapasına çevir; `deploy/` altında beyanla taranmayan yüzeyler (`.md` 99 · `.yml` 20 · `.sh` 4) aynı kalemde değerlendirilir.)
   Why: CLAUDE.md §2 çapa kuralının ikinci kör yüzeyi; satır kaydıkça atıf sessizce yanlış satırı gösterir.
   Ref: PRG-06 · TSK-231 · `tests/test_kovab_dilim_v382.py` · `tests/test_birim_capa_taramasi_v563.py`
-- **[TSK-237] Sır rotasyonu geri alma reçetesinin "rollback düşerse" yedek-yol satırı çalıştırılabilir tek satır değil — operatör 0600 root yedeği önce sudo ile okuyup boruya vermeli; üç dal (db · cp · genel) aynı biçimi taşıyor** — status: QUEUED · born: 2026-09-27 · owner: rol1 · size: S · trigger: —
-  What: (2026-09-27 03:4xZ AÇILDI [Rol-1; TSK-064(b) uygulayıcısı kaygı 4, inceleme doğruladı — yeni değil, db/cp emsali]: İş: üç dalın reçete satırını AYNI anda tek satırlık, değeri argv'ye koymayan komuta çevir (ör. `sudo cat <yedek> | sudo vault kv put <yol> value=-` biçiminin doğruluğu ölçülür); v567 A1/A3 birebirlik sözleşmesi üç dalda birlikte güncellenir.)
+- **[TSK-237] Sır rotasyonu geri alma reçetesinin "rollback düşerse" yedek-yol satırı çalıştırılabilir tek satır değil — operatör 0600 root yedeği önce sudo ile okuyup boruya vermeli; üç dal (db · cp · genel) aynı biçimi taşıyor** — status: ACTIVE · born: 2026-09-27 · owner: rol1 · size: S · trigger: —
+  What: (2026-09-27 05:4xZ ANA DALDA [Rol-1] — birleştirme 0d01c4da (0ee7e346): `_geri_koy_satiri` üç dalda tek yardımcı; satır `sudo bash -c` + STDIN boru (değer argv'de yok), yedek yoksa/boşsa yazmaz (kapısız hâl BOŞ değer yazıyordu — mutasyonla ölçüldü); A1 ölçümü: örnek satır dış + iç gövde bash 5.2 `-n` temiz, sudo `TMPDIR`i düşürüyor; inceleme ONAY. KARAR: kuru (--kuru) plan metinleri yöntemi anlatmaya devam eder — kuru koşumda gerçek yedek yolu yok, tek satır kazanç vermez (inceleme gerekçesi). KALAN: dağıtım #73 (A1'e betik)) (2026-09-27 03:4xZ AÇILDI [Rol-1; TSK-064(b) uygulayıcısı kaygı 4, inceleme doğruladı — yeni değil, db/cp emsali]: İş: üç dalın reçete satırını AYNI anda tek satırlık, değeri argv'ye koymayan komuta çevir (ör. `sudo cat <yedek> | sudo vault kv put <yol> value=-` biçiminin doğruluğu ölçülür); v567 A1/A3 birebirlik sözleşmesi üç dalda birlikte güncellenir.)
   Why: arıza anında okunacak reçete yarım kalırsa operatör sırrı elle taşımaya zorlanır — sızıntı riski tam o anda en yüksektir.
   Ref: PRG-14 · TSK-064 · `deploy/oracle-a1/sir_rotasyon.sh` · `tests/test_sir_kasa_yedek_v567.py`
 - **[TSK-238] uv hijyeni artıkları — `ops/*.py`/`deploy/*/*.py` ileti ve docstring yüzeyinde 31 satır bayraksız `uv` öğüdü, `ops/kapilar.sh` ilk iş bayraksız `uv run` (bayat kilidi yerelde yeniden yazar), A1 kabuğunda `UV_NO_DEV`/`UV_FROZEN` yok** — status: QUEUED · born: 2026-09-27 · owner: rol1 · size: S · trigger: —
