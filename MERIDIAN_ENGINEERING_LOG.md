@@ -3970,3 +3970,18 @@ doğru yola yönlenir. (c) genel kasa döngüsü `kv put` öncesi sürümü kayd
 (≥09-28 gecesi), genel yolda rollback-düşme yedeği, `sir_denetimi.yml` diğer reçetesi bayat. **Süreç:** birleşmiş yedi worktree'nin temizliği
 sınıflandırıcıya takıldı, operatöre devrettim; operatör "senin işin" dedi → hedef yeniden ölçülüp aynı komut geçti (memory eki). Saat etiketi:
 ledger/brief/memory'ye yerel tarihle 09-27 yazdım, `date -u` 09-26 — düzeltildi.
+
+### 33. GECE VARDİYASI: DAĞITIM #70 + ÖĞRENME DURUMUNUN TEK YAZANI (2026-09-26/27 gece, model Opus 5.5)
+**Tam suite kırmızısı kendi hatamdı:** 20:54Z BAYAT KAPI notunu (TSK-065) tahta tablosunda satır ARASINA yazdım → tablo bölündü, dört satır
+ayrıştırmadan düştü (13 → 9); v351/v535 geçti, motor dokunmayan commit'ler tam suite koşmadığından iki commit sonra v337 C-kapısı (≥10) yakaladı.
+Düzeltme 3fd54764; sınıf çivisi TSK-232 (v337 F/G: ham `|` satır sayısı = ayrıştırılan satır). **Dağıtım #70** (Rol-1, 3fd54764): site.yml 8 dosya
+(4 birim `uv run --frozen --no-dev`), dagit EXIT 0; restart sonrası `uv.lock` sha değişmedi, venv'de dev paket 0, backup elle ateşlendi — başarı.
+**TSK-229:** arka plan rejim tabanı açılışta geri yüklenir (`min(değer, defter)`, geçersiz elenir). İnceleme yeni bir sınıf doğruladı → **TSK-233:**
+pano "düşün" düğmesi yansımayı PANO sürecinde koşuyordu — durum dosyasını pano sürecinin boş `_state`iyle eziyor (`last_reflect_at` None → öğrenme
+sürecinin sonraki restart'ında taban defter ucuna düşer; TSK-227'nin kapattığı sıfırlama başka yoldan) ve süreç-başı kilit yüzünden ikinci bir
+eşzamanlı yansıma açabiliyordu. Karar tek yazan: pano istek dosyası bırakır, `meridian-learn` alır ve kendi kilidiyle koşar (emsal: 09-05 start/stop
+devri); tur-2: ısınma kalbi (normal ısınmada sahte ret yok), istek TTL'i. Düğmenin kullanım sıklığı ÖLÇÜLEMEDİ (API erişim satırı yok) — yeni
+olaylar bundan sonra ölçer. **TSK-231/232:** satır-çapası taraması birim şerhlerine genişledi (v563). **TSK-064(c):** sır denetimi reçetesi tek
+kaynağa işaret eder; brief öncülüm YANLIŞTI — `meridian.service`teki üç arama ayarı ölü değil (sprint çocuğuna devir + pano karnesi), ajan ölçtü.
+**Triyaj:** `/opt/veri` DISK_ESIK 21:39Z geçici tepe (günlük ham ~20 GB indirilip siliniyor; tavan koruması çalışıyor; tepe payı ~6 GB) → operatör
+kararı. **Açılanlar:** TSK-229…236. Saat etiketi iki kez yerel tarihle yazıldı, `date -u` ile düzeltildi.
