@@ -31,8 +31,8 @@ E. **NEGATİF KONTROL (çivi ısırıyor mu).** Aynı yardımcı, sentetik bir t
 
 F. **TABLO BÖLÜNMESİ SESSİZ OLAMAZ (TSK-232, 2026-09-27 — SINIF ÇİVİSİ).** Markdown tablosu, satırları
    arasına `|` ile başlamayan bir satır girdiği yerde BİTER; `api._roadmap_ayristir` alttaki satırları
-   başlıksız/ayraçsız bir parça olarak düşürür (en iyi hâlde `tablo_atlanan`a yazar, bloğun başında bir
-   başlık+ayraç çifti daha varsa HİÇ kaydetmeden). VAKA (2026-09-26): TSK-065'in tarihli notu DİK DURUM
+   başlıksız/ayraçsız bir parça olarak tablodan ÇIKARIR (TSK-235 sonrası her durumda sayılı olarak `tablo_atlanan`a
+   yazar — önceden bloğun başında bir başlık+ayraç çifti daha varsa HİÇ kaydetmeden düşürüyordu). VAKA (2026-09-26): TSK-065'in tarihli notu DİK DURUM
    tablosunun satır ARASINA yazıldı ve tahta 13 satırdan 9'a indi — TSK-084/051/085/063 ayrıştırmadan
    düştü; A ve B o dört satırı hiç görmedi, yalnız C'nin "en az 10 satır" tabanı ŞANSLA yakaladı
    (düzeltme 3fd54764). C bir taban çivisidir, sınıf çivisi DEĞİL: 13 satırlık tahtada 3 satırlık bir
@@ -248,8 +248,8 @@ def test_g_negatif_kontrol_araya_not_satiri_DUSEN_satirlari_yakalar():
 
 
 def test_g_negatif_kontrol_parca_ARDINDAN_yeni_tablo_gelse_de_yakalar():
-    """Bölünen parçanın ardından (yalnız boş satırla) YENİ bir tablo başlığı gelirse ayrıştırıcı
-    parçayı yeni tablonun başlığından ÖNCEKİ satırlar olarak atar — ham sayım yine yakalar."""
+    """Bölünen parçanın ardından (yalnız boş satırla) YENİ bir tablo başlığı gelirse parça yeni tablonun
+    başlığından ÖNCEKİ satırlar olur — TSK-235 sonrası `tablo_atlanan`a sayılı düşer (tabloda değil); ham sayım yakalar."""
     sentetik = (_SENTETIK_BASI + _SATIR.format(n=1)
                 + "Not: araya düşen düzyazı.\n"
                 + _SATIR.format(n=2) + "\n"
