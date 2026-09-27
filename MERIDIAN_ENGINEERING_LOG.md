@@ -3996,3 +3996,6 @@ adımı. A1 kılavuzundaki H3 bloğunda gerçek bash sözdizimi hatası düzeldi
 **TSK-064(b):** genel kasa döngüsü put öncesi ESKİ değeri db/cp yöntemiyle yedekler; rollback düşerse yedekten STDIN ile `kv put`.
 **Süreç:** bir inceleyici salt-okur kurala rağmen `dagit.yml` üzerinde mutasyon denedi (sınıflandırıcı kesti, ağaç temiz doğrulandı) →
 sonraki inceleme brief'lerine "HİÇBİR dosyayı geçici de olsa değiştirme" eklendi. **Triyaj** (00:40Z, 03:30Z): canlı arıza yok.
+**Dağıtım #72** (Rol-1, ddc2be85, 04:0xZ): tam suite 14890/0; CI uv 0.12.0 pinli → `[0/4]` "uv.lock pyproject.toml ile TAZE" (0.12.0'ın 0.11.28
+kilidini taze saydığı ÖLÇÜLDÜ); site.yml "VENV DEĞİŞTİ" yine 0; dagit `[0b]` ilk gerçek koşumu "taze", yerel ağaç temiz kaldı (kilit yeniden
+yazılmadı); A1'de yeni `sir_rotasyon.sh` (kasa yedeği) yerinde — pazartesi gecesi iki-kanal kapanışından önce. TSK-230 kapandı.
