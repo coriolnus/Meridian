@@ -1602,7 +1602,12 @@ _CAPA_DESENI = re.compile(r"((?:[A-Za-z0-9_.-]+/)*)([A-Za-z_][A-Za-z0-9_]*\.py):
 #: (`…-2026-08-02.md`) — onlar tarihli birer KAYITTIR, yazıldıkları gün doğruydular ve geriye
 #: dönük "düzeltmek" tarihi tahrif etmek olurdu. Kalan 36'sı üretilen `RUNBOOK.md`de ve kaynağın
 #: kendi yorum bloklarının kopyasıdır; orası üreticinin işidir (ROADMAP Ö-49, açık kalem).
-_EK_CAPA_KOKLERI = ("tests", "ops")
+#: `deploy/` EKLENDİ (TSK-244(b), 2026-09-27): bu sabit ÇÖZÜCÜ ağacıdır da — altı çapa dünyasının adres
+#: defteri (`report()` → `capa_kokleri`) buradan kurulur. `deploy/**/*.py` dışarıdayken onu gösteren çapa
+#: `cozulemeyen`e düşüyor, çürük olsa da `ok` görmüyordu (vaka: git tarihinde hiç var olmamış bir geridolum
+#: adı, TSK-244(a)). ADIM-0 (karşı-olgusal, taban 9a758bab): +7 çözülen, 0 çürük, 0 yeni ad çakışması,
+#: deploy'da 0 satır çapası, soğuk `report()` farkı gürültü içinde. Çivi: `tests/test_deploy_cozucu_kok_v576.py`.
+_EK_CAPA_KOKLERI = ("tests", "ops", "deploy")
 
 #: PANONUN KAYNAĞI — YASANIN İKİNCİ DÜNYASI (2026-08-25, iki denetçinin bağımsız bulduğu kör
 #: nokta). Çapa deseni `dosya.py:NNN` olduğu için yasa yıllarca yalnız `.py` dosyalarını taradı;
@@ -2561,8 +2566,8 @@ def report(root=URETIM_KOKLERI, tsx_kok: str | None = None) -> dict:
     ek = _EK_CAPA_KOKLERI if uretim else ()
     # ÇAPA DÜNYASININ PYTHON KÖKLERİ — TEKİL (TSK-206): `ops` hem üretim demetinde hem `ek`te durur;
     # iki kez gezilseydi her ops çapası iki kez sayılır, adres defterinde her ops adı `ikircikli`
-    # olurdu. Küme TSK-206 öncesiyle AYNI (meridian + tests + ops), yalnız gezinme sırası
-    # (meridian, ops, tests) — sayım aynı kalır (çivi: v518 `test_9a`).
+    # olurdu. Küme TSK-206 öncesiyle AYNI (meridian + tests + ops; TSK-244(b)'den beri + deploy), yalnız
+    # gezinme sırası (meridian, ops, tests, deploy) — sayım aynı kalır (çivi: v518 `test_9a`).
     capa_kokleri = _kokler((*kokler, *ek))
     capalar = stale_line_anchors(kokler, cozulemeyen_out=capa_kor, ek_kokler=ek)
     # TSX ÇAPALARI — ÖLÇÜLMEYEN None'DIR, BOŞ LİSTE DEĞİL (UYDURMA YASAĞI): boş liste "baktım,

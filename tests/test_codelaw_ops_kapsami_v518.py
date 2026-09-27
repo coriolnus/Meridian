@@ -363,10 +363,10 @@ def test_9b_ayni_kok_iki_kez_verilse_de_capa_TEK_sayilir(tmp_path):
 
 
 def test_9a_capa_sayimi_TARIHI_kok_kumesiyle_AYNI():
-    """ÖNCE/SONRA: çapa dünyası tarihsel olarak `meridian` + `_EK_CAPA_KOKLERI` (= tests, ops) idi.
+    """ÖNCE/SONRA: çapa dünyası tarihsel olarak `meridian` + `_EK_CAPA_KOKLERI` (tests, ops; TSK-244(b): + deploy).
     Üretim demeti `ops`u zaten taşıdığı için `report()` onu İKİ kez gezmemeli — sayım aynı kalır."""
     tarihi: list[dict] = []
-    codelaw.stale_line_anchors(("meridian", "tests", "ops"), cozulemeyen_out=tarihi)
+    codelaw.stale_line_anchors(("meridian", *codelaw._EK_CAPA_KOKLERI), cozulemeyen_out=tarihi)
     ciftli: list[dict] = []
     codelaw.stale_line_anchors(codelaw.URETIM_KOKLERI, cozulemeyen_out=ciftli,
                                ek_kokler=codelaw._EK_CAPA_KOKLERI)

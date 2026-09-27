@@ -25,7 +25,7 @@ KAPSAM KARARI (TSK-242: test tarafı) → TSK-243 (2026-09-27): `codelaw.report(
 (`codelaw.OPS_YORUM_KOKLERI` + `codelaw.OPS_YORUM_DUZ_KOKLERI` — TEK KAYNAK; bu dosyanın `METIN_KOKLERI`si oradan
 türer, ayrışma çivisi `tests/test_codelaw_ops_kok_v575.py`): çürük artık `report()["ok"]`i ve CI dumanını (v214)
 düşürür. Bu dosya SIKI katman olarak kalır: codelaw beslemesi yalnız `curuyen`i hükme bağlar, `cozulemeyen`i
-SAYMAZ (uydurma yasağı) — burada beyansız çözülemeyen, bayat beyan kırmızı; çözücü kökü `deploy`u da taşır;
+SAYMAZ (uydurma yasağı) — burada beyansız çözülemeyen, bayat beyan kırmızı; çözücü kökü codelaw'ınkiyle AYNI (v576);
 körlük alarmı ve yol-tutarlı pozitif kontrol burada.
 
 BÖLÜŞÜM: `meridian/`+`tests/` `.py` codelaw üçüncü beslemesinin; `.py` DIŞI kaynaklar v572'nin. Bu dosya yalnız

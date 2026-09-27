@@ -69,17 +69,17 @@ from tests.test_capa_pydisi_hedef_v571 import (
 )
 
 # =================================================================================================
-# ÇÖZÜCÜ KÖKLERİ — codelaw'ın çapa kökleri + `deploy` (kopya liste yok)
+# ÇÖZÜCÜ KÖKLERİ — codelaw'ın çapa kökleri, AYNEN (kopya liste yok)
 # =================================================================================================
 
-#: `codelaw.report` sembol çözümünü `meridian` + `codelaw._EK_CAPA_KOKLERI` (tests, ops) ile kurar. `.py` DIŞI
-#: kaynaklar `deploy/**/*.py`yi de çapalar (pano app.js → geridolum.py) — ek kök TEK: `deploy`.
-_EK_COZUCU_KOKLERI = ("deploy",)
+#: `codelaw.report` sembol çözümünü `meridian` + `codelaw._EK_CAPA_KOKLERI` ile kurar. `.py` DIŞI kaynaklar
+#: `deploy/**/*.py`yi de çapalar (pano app.js → geridolum.py); bu dosyanın eskiden AYRICA eklediği `deploy` kökü
+#: TSK-244(b)'den (2026-09-27) beri codelaw sabitindedir — ek kök yok, iki dünya AYNI ağaçla çözer (v576).
 
 
 def _py_kokleri(kok: pathlib.Path = REPO) -> tuple[str, ...]:
     """MUTLAK kökler — codelaw yol önekli çapayı `endswith("/" + önek)` ile eşler; göreli kökte önek eşleşmez."""
-    return tuple(str(kok / k) for k in ("meridian", *codelaw._EK_CAPA_KOKLERI, *_EK_COZUCU_KOKLERI))
+    return tuple(str(kok / k) for k in ("meridian", *codelaw._EK_CAPA_KOKLERI))
 
 
 # =================================================================================================
