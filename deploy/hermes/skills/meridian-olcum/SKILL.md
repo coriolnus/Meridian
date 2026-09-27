@@ -129,9 +129,9 @@ hangisi olduğunu ayırt EDEMEZ:
    kapsam satırı onu taradım diye beyan eder) ama içindeki çağrılar hiçbir sayaca düşmez.
    **`K > 0` gördüğün bir koşumda sıfır sonuç "bulunamadı" bile DEĞİLDİR** — önce o dosyayı elle aç.
 
-**Bu belgede bilerek SATIR NUMARASI YOK, yalnız dosya adı var.** `.md` dosyaları bu deponun çapa
-tarayıcılarının hiçbirinin kapsamında değildir: buraya gömülen bir `dosya.py:123`, dosyanın her
-düzenlemesinde SESSİZCE bayatlar ve hiçbir kapı ötmez. Konusu "bayat iddiaya güvenme" olan bir
+**Bu belgede bilerek SATIR NUMARASI YOK, yalnız dosya adı var.** Buraya gömülen bir `dosya.py:123`, dosyanın
+her düzenlemesinde bayatlar. `deploy/**/*.md` 2026-09-27'den beri çapa taramasında (v571) — burada çürük çapa kapıyı
+öttürür; ama deponun çoğu belgesi hâlâ taranmaz ve orada bayat iddia SESSİZ kalır. Konusu "bayat iddiaya güvenme" olan bir
 belgede bayatlayabilen bir iddia bulunmaz. Sembolü ara, satırı değil.
 
 `# çözülemeyen çağrı yeri: M` bir ÇIKARMADIR: (açılan dosyalarda metod adı log/warn/error/alarm
