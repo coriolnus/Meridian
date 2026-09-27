@@ -849,20 +849,34 @@ def test_sir_kapisi_recete_veriyor():
     )
     assert kapi.get("no_log") is not True, "kapının fail_msg'i gizlenirse denetim okunamaz olur"
     fail_msg = str(kapi["ansible.builtin.assert"].get("fail_msg", ""))
-    for recete in ("sir_credential_gecis.sh", "sir_rotasyon.sh --dash --vault --uret", "--kuru",
-                   "/etc/meridian/dash_token"):
+    # BUGÜNKÜ YOL (TSK-064(c), 2026-09-27): her zorunlu sır dosyası bir Vault Agent RENDER HEDEFİDİR
+    # (`deploy/vault/agent.hcl` `destination`) → reçete önce Agent'ı/mührü, sonra kasadan rotasyonu
+    # gösterir; hangi dosyanın hangi alt komutla döndüğü TEK KAYNAKTAN (envanter) okunur, burada
+    # yeniden yazılmaz (dosya-başı eşlemenin yokluğu + render hedefi ayrışması: v565).
+    for recete in ("systemctl status vault-agent", "deploy/vault/vault_unseal.sh",
+                   "deploy/vault/agent.hcl", "deploy/sir_envanteri.yaml", "rotasyon_kopyalari",
+                   "rotasyon_siri", "sudo deploy/oracle-a1/sir_rotasyon.sh --<alt> --vault [--uret]",
+                   "--kuru"):
         assert recete in fail_msg, f"fail_msg reçetesinde {recete} yok: {fail_msg!r}"
     # EMEKLİ BETİK REÇETEDE OLAMAZ (TSK-064, 2026-09-26): `dash_token_credential.sh` bir mezar taşıdır
     # (her çağrıda çıkış 2, hiçbir iş yapmaz) — reçete onu gösterseydi denetimi düşen operatörü hiçbir
     # şey yapmayan bir betiğe gönderirdi. `.dash.env` dalı da ölüdür: dosya `zorunlu_sir_dosyalari`nda
     # yok (2026-09-15), yani o reçete hiçbir düşüşte basılamazdı.
-    for bayat in ("dash_token_credential.sh", ".dash.env"):
+    # BAYAT YÖNLENDİRME (TSK-064(c), 2026-09-27): `sir_credential_gecis.sh` 2026-09-07 KANAL geçişi
+    # aracıdır (ortam → LoadCredential); zorunlu sır dosyalarının bugünkü yazarı Vault Agent'tır ve
+    # değeri `sir_rotasyon.sh --vault` döndürür — reçete onu gösterseydi operatörü eski yola gönderirdi.
+    for bayat in ("dash_token_credential.sh", ".dash.env", "sir_credential_gecis.sh"):
         assert bayat not in fail_msg, f"fail_msg bayat reçete taşıyor: {bayat}"
     # Reçetenin gösterdiği her betik DEPODA VAR (bayat reçete sınıfı: var olmayan bir betiğe yönlendirme).
-    betikler = re.findall(r"deploy/oracle-a1/[\w.-]+\.sh", fail_msg)
+    betikler = re.findall(r"deploy/(?:oracle-a1|vault)/[\w.-]+\.sh", fail_msg)
     assert len(betikler) >= 2, f"reçete betik yolu taşımıyor (ölçüm kör): {betikler}"
     yok = [b for b in betikler if not (REPO_KOK / b).is_file()]
     assert yok == [], f"reçete var olmayan betiği gösteriyor: {yok}"
+    # Reçetenin gösterdiği tek-kaynak dosyaları da DEPODA VAR (aynı sınıf, betik dışı hedef).
+    kaynaklar = re.findall(r"deploy/[\w./-]+\.(?:yaml|hcl)", fail_msg)
+    assert len(kaynaklar) >= 2, f"reçete tek-kaynak yolu taşımıyor (ölçüm kör): {kaynaklar}"
+    yok = [k for k in kaynaklar if not (REPO_KOK / k).is_file()]
+    assert yok == [], f"reçete var olmayan kaynağı gösteriyor: {yok}"
 
 
 # ---------------------------------------------------------------------------------------------

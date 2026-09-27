@@ -3,8 +3,12 @@
 NEDEN ÇİVİ: ayrımın tamamı İKİ systemd birimindeki bayrakların karşıtlığına dayanıyor. Bir gün
 biri `meridian.service`teki bayrağı "düzeltmek" için 1 yaparsa ölçülen arıza (GIL çekişmesi, pano
 2,6-14,0 sn) sessizce geri gelir — test kırmazsa kimse görmez. Arama düğmelerinin İKİ birimde
-EŞİT olması da aynı sınıf: `reflect_now` API sürecinde kaldığı için düğmeler iki yerde durmak
-zorunda, ve ayrışırlarsa bekleme döngüsü ile elle tetikleme farklı bütçelerle koşar.
+EŞİT olması da aynı sınıf. GEREKÇE TSK-233'te (2026-09-27) DEĞİŞTİ: elle yansıma artık pano
+sürecinde koşmaz (istek dosyasıyla öğrenme birimine devredildi); düğmeler pano biriminde yine de
+okunur — pano süreci sprint'i tetikler ve iki düğmeyi çocuğa devreder (`sprint.DEVREDILEN_ORTAM`),
+`HERMES_SEARCH_BUDGET`i pano karnesi okur (`analytics.hermes_scorecard`). Ayrışırlarsa sprint
+araması öğrenme döngüsünden farklı ayarla koşar, karne de uygulanmayan bir bütçeyi gösterir.
+Gerekçenin kaynağa karşı ölçümü: tests/test_sir_recete_v565.py B2.
 """
 
 import pathlib
@@ -49,12 +53,13 @@ def test_ogrenme_bayragi_karsit():
 
 @pytest.mark.parametrize("ad", ORTAK_DUGMELER)
 def test_arama_dugmeleri_iki_birimde_esit(ad):
-    """`reflect_now` API sürecinde kaldığı için bu düğmeler iki yerde durur; DEĞERLERİ ayrışamaz."""
+    """Pano süreci arama düğmelerini sprint devri ve karne için okur (modül başlığı), `MERIDIAN_BROKER`ı
+    motor/veri dalları için; DEĞERLERİ ayrışamaz."""
     a, o = _env(ANA).get(ad), _env(OGRENME).get(ad)
     assert a is not None, f"{ad} meridian.service'te yok"
     assert o is not None, f"{ad} meridian-learn.service'te yok"
-    assert a == o, (f"{ad} birimler arasında AYRIŞTI: ana={a!r} öğrenme={o!r} — bekleme döngüsü ile "
-                    f"elle tetikleme farklı bütçelerle koşar")
+    assert a == o, (f"{ad} birimler arasında AYRIŞTI: ana={a!r} öğrenme={o!r} — pano sürecinin tetiklediği "
+                    f"sprint / gösterdiği karne öğrenme döngüsünden farklı ayarla koşar")
 
 
 def test_ogrenme_birimi_cpu_tavani_degil_agirlik_kullanir():
