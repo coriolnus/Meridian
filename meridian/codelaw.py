@@ -2613,7 +2613,7 @@ def report(root=URETIM_KOKLERI, tsx_kok: str | None = None) -> dict:
         # metin taraması SENTETİK köke iner: `root/"meridian"` ve `root/"tests"`ten VAR OLANLAR
         # taranır, yoksa () → 0 dosya (UYDURMA YASAĞI: sentetik ağaçta gerçek repo metni karışmaz).
         # TSK-206: "gerçek ağaç" kararı `_uretim_agaci_mi`dir; metin kökü KAPSAMI DEĞİŞMEDİ (ops
-        # yorumları bu beslemeye bu kalemde ALINMADI — `_yorum_metinleri` docstring'indeki asimetri).
+        # yorumları bu beslemeye bu kalemde ALINMADI — `_yorum_metinleri` docstring'indeki asimetri; TSK-242: test tarafında v574 okur).
         metin_kokler = (("meridian", "tests") if uretim else
                         tuple(str(p) for k in kokler for p in
                               (pathlib.Path(k) / "meridian", pathlib.Path(k) / "tests")

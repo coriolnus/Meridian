@@ -51,7 +51,10 @@ bu dosya orada YALNIZ `.py` dışı hedeflere bakar. Birim dosyaları v563'ünd�
 
 KAPSAM DIŞI — BEYAN (`BEYANLI_ATLANAN`, bedel yasası: atlanan her yüzey ADIYLA ve SAYISIYLA görünür; bkz.
 `test_ATLANAN_yuzeyler_SAYILIR_ve_GEREKCELI`). `research/` hiç GEZİLMEZ: 1659 metin dosyası / 113 MB, tek
-tarama 13 s (ölçüldü 2026-09-27); donmuş ölçüm arşivi, kartlar git blob'una bağlıdır (CLAUDE.md §5)."""
+tarama 13 s (ölçüldü 2026-09-27); donmuş ölçüm arşivi, kartlar git blob'una bağlıdır (CLAUDE.md §5).
+
+TARİHÇE (TSK-242, 2026-09-27): E bölümünün çözüm çivisi (`test_cevrilen_SEMBOL_capalari_COZULUR_curuyen_YOK`) KALDIRILDI —
+aynı 17 çapayı v572'nin yol-tutarlı pozitif kontrolü korpus yolundan çözer; aynı iddia iki dosyada tutulmaz."""
 from __future__ import annotations
 
 import pathlib
@@ -631,7 +634,8 @@ def test_SAYIM_bugunku_dagilim():
 # =================================================================================================
 # E) ÇEVRİLEN ÇAPALAR ÇÜRÜMEZ — sembol çapaları codelaw çekirdeğinden, başlık/alıntı çapaları metinden
 # =================================================================================================
-#: (kaynak, kaynakta DURMASI ZORUNLU sembol çapası) — `codelaw.capa_uyusmasi` ile çözülür.
+#: (kaynak, kaynakta DURMASI ZORUNLU sembol çapası). Çözümü (`codelaw.capa_uyusmasi`) v572 ölçer:
+#: `tests/test_sembol_capa_pydisi_v572.py::test_POZITIF_KONTROL_bilinen_capa_KORPUSTA_cozulur`.
 CEVRILEN_SEMBOL = [
     ("meridian/web/app.js", "loop.py::MIRROR_DRIFT_TOL"),
     ("meridian/web/app.js", "loop.py::mirror_submit_armed"),
@@ -735,14 +739,6 @@ def test_cevrilen_SEMBOL_capasi_KAYNAKTA_duruyor(kaynak, capa):
     geçtiği için çürüme SESSİZ kalırdı — sembolün ardında ad karakteri olmamalı."""
     govde = (REPO / kaynak).read_text(encoding="utf-8")
     assert re.search(re.escape(capa) + r"(?![A-Za-z0-9_])", govde), f"{kaynak} içinde `{capa}` yok"
-
-
-def test_cevrilen_SEMBOL_capalari_COZULUR_curuyen_YOK():
-    """Tek çekirdek: `codelaw.capa_uyusmasi` (ikinci bir sembol çözücü yazılmadı). Kökler MUTLAK."""
-    kokler = tuple(str(REPO / k) for k in ("meridian", *codelaw._EK_CAPA_KOKLERI))
-    h = codelaw.capa_uyusmasi([(k, c) for k, c in CEVRILEN_SEMBOL], py_kokler=kokler)
-    assert h["curuyen"] == [] and h["cozulemeyen"] == [], (h["curuyen"], h["cozulemeyen"])
-    assert len(h["cozulen"]) == len(CEVRILEN_SEMBOL)
 
 
 @pytest.mark.parametrize("kaynak,capa,_hedef,_metinler", CEVRILEN_BASLIK)

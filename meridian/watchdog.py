@@ -798,7 +798,7 @@ def determinism_report(persist: bool = False) -> dict:
     except Exception as e:
         # FAIL-CLOSED. Eski hâli `{"ok": True, "detail": "kontrol atlandı"}` idi ve
         # işaretinin gerekçesi ("sonuç KAYDA GEÇİYOR") FİİLEN YANLIŞTI: hiçbir obs.warn basılmıyordu
-        # ve `detail` metnini okuyan TEK bir tüketici yoktu — üç tüketicinin (bu dosya :1086,
+        # ve `detail` metnini okuyan TEK bir tüketici yoktu — üç tüketicinin (`watchdog.check_integrity_and_alarm`,
         # `mutation.detector_red`, pano `_patOK`) üçü de yalnız `ok`a bakar. Yani ÖLÇÜLEMEYEN bir hüküm
         # "temiz" kılığında yeşile boyanıyordu; UYDURMA YASAĞI'nın tam karşılığı.
         # `olculemedi` MAKİNE-OKUNUR: alarm katmanı bunu "SESSİZ BAR MUTASYONU" diye değil
@@ -2694,7 +2694,7 @@ EQUIVALENT_TRUTHS: dict[str, dict] = {
             ("goal.yaml:max_drawdown", lambda: _yaml_alan("goal.yaml", "max_drawdown")),
             ("analytics.EDGE_MAXDD_MAX", lambda: _sabit("analytics", "EDGE_MAXDD_MAX")),
             ("analytics.RESULT_MAXDD_MAX", lambda: _sabit("analytics", "RESULT_MAXDD_MAX")),
-            # Aşağıdaki `derisk_tabani`nin AKSİNE bu bağ KOPARILMADI: `shadowlaw` kendi yorumunda (`:102` bloğu)
+            # Aşağıdaki `derisk_tabani`nin AKSİNE bu bağ KOPARILMADI: `shadowlaw` kendi yorumunda (`shadowlaw.DD_VETO_MARGIN` şerhi)
             # marjı goal'ün yarısı olarak tanımlar. Ölçüm sırasında bir kez AYRIK yakalandı
             # (0,04 iken goal 0,16) ve sonraki okumada onarılmıştı — yani sürüklenme GERÇEK.
             ("shadowlaw.DD_VETO_MARGIN", lambda: _sabit("shadowlaw", "DD_VETO_MARGIN"), "yarisi"),
@@ -3177,7 +3177,7 @@ def koruma_report() -> dict:
 
     SÖZLEŞME (dördü de bilinçli):
       1. `ok` DÖNER. Hüküm vermeyen bir dedektör bakanı hiçbir şey öğrenmeden geçirir
-         (`conservation_report`ın öğrendiği ders, bu dosyanın :518'i).
+         (`watchdog.conservation_report`ın öğrendiği ders).
       2. PAYDA BEYANLI: `korumasiz / toplam` + `payda_beyani` metni. Paydasız bir sayı ("3 korumasız")
          okuyucuya risk oranını söylemez.
       3. BROKER OKUNAMAZSA `ok=None` + `neden` — **0 DEĞİL**. "0 korumasız" ile "ölçemedim" aynı şey
@@ -3645,7 +3645,7 @@ def check_mutabakat_and_alarm() -> dict:
 # JETON `ONAYLI_PLAN_GONDERILMEDI` (obs.py'de gerekçeli — MIRROR_DRIFT alt-sınıfı BİLEREK değil:
 # jeton-başına susturma penceresi + "iki teşhis tek isimde okunamaz" yasası).
 # =============================================================================================
-_ONAYLI_GONDERIM_ALARMED: set = set()   # mandal süreç-içi (koruma bekçisiyle aynı gerekçe, :2093)
+_ONAYLI_GONDERIM_ALARMED: set = set()   # mandal süreç-içi (koruma bekçisiyle aynı gerekçe: `watchdog._KORUMA_ALARMED` şerhi)
 
 
 def onayli_gonderim_report() -> dict:
@@ -4101,7 +4101,7 @@ def check_universe_and_alarm() -> dict:
 # KÖK: v220+v221 koruma×süpürücü kök düzeltmesinin kapanış maddesi "davranışsal EOD kanıtı
 # Pazartesi 13:30 UTC sonrası ilk gerçek süpürmede" diye söz verdi; o Pazartesi (2026-08-10)
 # geçti, KAYIT hiç doğmadı (ROADMAP.md §8 ARŞİV → "SB-2 drift_sinifi · davranışsal EOD süpürme
-# kanıtı" satırı, H6 ✅ KAPANDI 2026-08-22 v265 — TSK-083, 2026-09-03: satır çapası ROADMAP :503
+# kanıtı" satırı, H6 ✅ KAPANDI 2026-08-22 v265 — TSK-083, 2026-09-03: satır çapası ROADMAP :503 [çapa-mezar-taşı]
 # çürümüştü, sembole çevrildi). Ölçüm (research/olcumler/wp2_eod_supurme_2026-08-22,
 # canlı, salt-okuma): davranış ASLINDA VAR — son 10 işlenen seansın 10'unda günlük-kadans
 # süpürme olayı defterde (20:31-20:50 UTC), 10'unda da cancelled=0 / koruma sınıfına

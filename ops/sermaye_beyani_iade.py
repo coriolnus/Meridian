@@ -20,7 +20,7 @@ kaybolan/iki kez sayılan bir işlemi HÂLÂ yakalar.
 TERS YÖNLÜ ONARIMI DA GERİ ALIR. Kimlikleri yeşile döndürmenin ikinci bir yolu daha vardır ve
 YANLIŞTIR: kitabı defterin eski tabanına geri çekmek (cash 94.457,91 / realized −5.542,09).
 O yol sayıları uzlaştırır ama OPERATÖRÜN KARARINI geri alır — antrenman tohumunun zararı yeniden
-canlı sermayeden düşülür ve boyutlandırma tabanı yine küçülür (`broker.equity()` =
+canlı sermayeden düşülür ve boyutlandırma tabanı yine küçülür (`broker.PaperBroker.equity()` =
 start_equity + realized_pnl). Bu betik kitabı BEYAN EDİLEN tabana götürdüğü için böyle bir onarım
 yapılmışsa o da geri alınmış olur. Ne bulduğunu VARSAYMAZ: ÖNCE tablosu diskte ne varsa onu basar.
 

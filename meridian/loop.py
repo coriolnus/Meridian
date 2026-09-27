@@ -1318,8 +1318,8 @@ def mirror_submit_armed(meta: dict, dstr: str, *, eq_now: float | None = None,
 # ==================================================================================================
 # VAKA (P-2026-08-07-VLO, operatör: "onayladığım bir emrin gönderilmemesi büyük bir fiyasko"):
 # operatör onayı planı silahlı kümeye koyuyordu ama aynaya GÖNDERİM yalnız iki yerden tetikleniyordu
-# — döngünün P3 sonu (:1640) ve pano düğmesi. Onay döngüden SONRA gelince plan bir SONRAKİ turun
-# AÇILIŞ fazında iç motorca dolup silahlı kümeden çıkıyor, :1640 onu hiç görmüyordu → Alpaca'ya emir
+# — döngünün P3 sonu (`loop.daily_cycle`) ve pano düğmesi. Onay döngüden SONRA gelince plan bir SONRAKİ turun
+# AÇILIŞ fazında iç motorca dolup silahlı kümeden çıkıyor, P3-sonu çağrısı onu hiç görmüyordu → Alpaca'ya emir
 # hiç gitmedi, reconcile split_brain alarmladı. Bu yardımcı, pano ucundaki gönderim+kalıcılaştırma
 # desenini (api_alpaca_submit_armed) fonksiyonlaştırır ki onay anı ve intraday 4b AYNI tek kapıdan
 # (mirror_submit_armed) geçsin; İKİNCİ bir emir gövdesi yazılmaz.
@@ -2885,7 +2885,7 @@ def daily_cycle(bars: dict, index: pd.DataFrame, on_date: str | None = None) -> 
                                         opens={t: float(df.loc[d, "open"]) for t, df in per.items()
                                                if d in df.index},
                                         # DOLUM anının boyut tabanı — iç motor bu `eq_now`la
-                                        # doldurdu (yukarıda :1114). Adet sapması sınıflandırması bunu
+                                        # doldurdu (yukarıdaki `eq_now = b.equity(marks_open)` satırı). Adet sapması sınıflandırması bunu
                                         # gönderim makbuzuyla kıyaslar (drift_sinifi).
                                         fill_eq_now=eq_now,
                                         # koruma-OCO dolumu kitaba kapanış olarak işlenebilsin
@@ -3138,8 +3138,8 @@ def _persist_trade(trade: dict, *, broker: PaperBroker | None = None) -> None:
 # olarak BEYAN edilir ve `recompute`in `equity_curve_tail` kimliği eğrinin sonuna tam olarak o
 # ofseti EKLEYEREK ölçer (`recompute.report` kimlik kıyasları). Ham `eq_now` yazmak iki şeyi birden bozardı:
 #   (a) kimlik ofseti İKİ KEZ sayar → kalıcı kırmızı bir mutabakat satırı (kurt masalı),
-#   (b) eğri, reset gününde ofset kadar SIÇRAR → hiç kazanılmamış bir günlük kâr çizilir; sermaye.py
-#       :339 bu hatayı adıyla ("%5,87'lik UYDURMA bir günlük kâr") zaten uyarıyordu.
+#   (b) eğri, reset gününde ofset kadar SIÇRAR → hiç kazanılmamış bir günlük kâr çizilir;
+#       `sermaye.py::_yeni_kitap` bu hatayı adıyla ("%5,87'lik UYDURMA bir günlük kâr") zaten uyarıyordu.
 # Nokta bu yüzden `eq_now − ofset` olarak yazılır: seri TEK tabanda kalır, kimlik ölçmeye devam
 # eder ve kırılma yine yalnız `reset_isaretleri` beyanında durur.
 #
@@ -4131,8 +4131,8 @@ def _koruma_dolumu_isle(kd: dict, sym: str, out: dict, dstr: str, broker) -> Non
 # AYNA SAPMASI İKİ BOYUTLUDUR — NABIZ BUGÜNE DEK YALNIZ BİRİNİ TAŞIYORDU
 # (`docs/DENETIM-SPLIT-SINIFI-2026-08-13.md`; canlı ölçüm 2026-08-12T22:01Z)
 # --------------------------------------------------------------------------------------------------
-# `mirror_drift` FİYAT sapmasıdır (`MIRROR_DRIFT_TOL`, bu dosyanın :25'i — iç sim dolumu ile gerçek
-# Alpaca dolumu arasındaki fark). ADET sapması BAŞKA bir gerçektir (`position_drift`, :3075 —
+# `mirror_drift` FİYAT sapmasıdır (`loop.MIRROR_DRIFT_TOL` — iç sim dolumu ile gerçek
+# Alpaca dolumu arasındaki fark). ADET sapması BAŞKA bir gerçektir (`position_drift`, `loop.reconcile_broker_state` —
 # `missing_on_alpaca` ∪ `qty_drift`) ve yalnız `broker_reconcile.json`a yazılıyordu; NABIZDA O
 # ANAHTAR HİÇ YOKTU. Ölçülen sonuç: pano HESAP rozeti nabzı okuduğu için (app.js) `mirror_drift`
 # False görüp **"ayna uyumlu" (yeşil)** yazarken 4/4 pozisyon ~2 kat ayrıktı (NUE 54/25 · EMR 64/37
@@ -4144,8 +4144,8 @@ def _koruma_dolumu_isle(kd: dict, sym: str, out: dict, dstr: str, broker) -> Non
 # /api/today, digest ve bundan sonra yazılacak olanlar) böylece otomatik kapsanır. Tüketiciyi
 # yamalamak, "kapının kapsamı elle tutulan bir liste" kusurunu bir kez daha üretirdi.
 #
-# ÖLÇÜLMEDİ ≠ TEMİZ (UYDURMA YASAĞI). Mutabakat atlandıysa/düştüyse `checked` False'tur (:2778 iskelet
-# + :2833 damga; `daily_cycle`daki `except` dalında `mirror` boş sözlüktür) ve o hâlde sapma hakkında
+# ÖLÇÜLMEDİ ≠ TEMİZ (UYDURMA YASAĞI). Mutabakat atlandıysa/düştüyse `checked` False'tur (`loop.reconcile_broker_state` iskeleti
+# + iç `_skip` damgası; `daily_cycle`daki `except` dalında `mirror` boş sözlüktür) ve o hâlde sapma hakkında
 # HİÇBİR ŞEY bilmiyoruz → iki alan da `None`. Eski `bool(mirror.get("drift"))` biçimi tam bu uydurmayı
 # yapıyordu: mutabakat hiç koşmasa bile nabza "sapma yok" düşüyordu.
 #

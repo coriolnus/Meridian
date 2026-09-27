@@ -1375,7 +1375,7 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 .t-vi{background:var(--accent-tint);color:var(--accent-2);box-shadow:inset 0 0 0 1px var(--ink-h)}
 .chain{font-size:var(--t-cap);color:var(--tx2);}
 /* ROL SINIFI KAPTAN SONRA GELİR (D1, 2026-08-07). Ölçüldü: `.chain` bu satırda, rol
-   sınıfları :377-383'te — AYNI özgüllükte (0,1,0) ve KAYNAK SIRASI gereği kap kazanıyordu.
+   sınıfları (yukarıdaki `.pos`/`.neg` kuralı) — AYNI özgüllükte (0,1,0) ve KAYNAK SIRASI gereği kap kazanıyordu.
    Yani `class="chain neg"` basan iki emisyon (bütünlük parity satırları, beyansız yazar)
    ekranda HİÇBİR ZAMAN renklenmiyordu: ihlal, uyumlu satırla aynı griydi. Bu, `.pm-yield`
    için 2026-07 turunda belgelenen çakışmanın ta kendisi — orada da kural kaynakta canlı,

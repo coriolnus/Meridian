@@ -288,7 +288,7 @@ def tara(kok: pathlib.Path = KOK) -> OlayTarama:
 
     `kok` parametresi test edilebilirlik İÇİNDİR (varsayılan: gerçek depo kökü) — sentetik bir
     `tmp_path` ağacı vererek "yapısal ÇIKARMA" özelliğini repo'ya dokunmadan sınamak mümkün olsun
-    diye (bkz. `tests/test_olcum_araci_v328.py::test_COZULEMEYEN_YAPISAL_TAMDIR_...`).
+    diye (bkz. `tests/test_olcum_araci_v328.py::test_COZULEMEYEN_YAPISAL_TAMDIR_BILINMEYEN_BICIME_TEPKI_VERIR`).
 
     `cozulemeyen` BİR ENUMERASYON DEĞİL: metod adı `log/warn/error/alarm` olan TÜM çağrı
     yerleri ALICIDAN BAĞIMSIZ sayılır (`toplam_cagri`), sonra GERÇEKTEN çözülenler bundan

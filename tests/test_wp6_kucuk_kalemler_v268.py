@@ -33,7 +33,7 @@ REPO = Path(__file__).resolve().parent.parent
 
 def test_a_goal_sektor_tavani_capasi_gercek_guard_satirini_gosterir():
     """goal.yaml'daki sektör-tavanı yorumu `guard.py:N` çapası taşır; N, `def sector_cap_basis`ın
-    BUGÜNKÜ satırı olmalı. Eski `:352` çapası bayatlamıştı (denetim A17, 2026-08-13) — bu test o
+    BUGÜNKÜ satırı olmalı. Eski `:352` çapası [çapa-mezar-taşı] bayatlamıştı (denetim A17, 2026-08-13) — bu test o
     sınıfın nöbetçisidir: guard.py kayar da çapa güncellenmezse adıyla düşer."""
     goal_satirlar = (REPO / "state" / "goal.yaml").read_text().splitlines()
     capali = [s for s in goal_satirlar if "sector_cap_basis" in s and "guard.py:" in s]

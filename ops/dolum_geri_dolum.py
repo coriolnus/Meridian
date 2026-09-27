@@ -47,8 +47,8 @@ motorun kendi yüzeylerindedir ve buraya YENİDEN YAZILMAZ: `loop._entry_fill_pr
 dolumu — bracket parent'ının girişi ve `DELETE /positions`ın doğurduğu karar-kapatma emri),
 `alpaca.exit_fill_price` / `alpaca.exit_fill_ts` (dolan TP/SL bacağı, fiyat ve zaman AYNI bacak
 seçimiyle), `alpaca.is_engine_order` (motor sahipliği), `loop._EMIR_PENCERESI_SAYFA_TAVANI`
-(sayfa tavanı). Çivi: `tests/test_dolum_geri_dolum_v475.py::test_okuma_kurallari_ITHAL_EDILIR_
-kopyalanmaz` — betiğin kaynak metninde dolum fiyatı alan adının ELLE geçmediğini de ölçer.
+(sayfa tavanı). Çivi: `tests/test_dolum_geri_dolum_v475.py::test_okuma_kurallari_ITHAL_EDILIR_kopyalanmaz`
+— betiğin kaynak metninde dolum fiyatı alan adının ELLE geçmediğini de ölçer.
 
 `meridian.obs`A ULAŞIR — BİLİNÇLİ VE SINIRLI. `ops/` betiklerinin varsayılan kuralı "obs'a ulaşma"
 olsa da (pytest dışı koşumda canlı yerel deftere yazar) bu araç `--uygula`da TEK bir olay

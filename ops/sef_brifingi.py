@@ -808,7 +808,7 @@ def _profili_cagir(prompt: str) -> str:
     komut = [bin_, "--accept-hooks", "-z", notify.scrub(prompt)]
     # ÇALIŞMA DİZİNİ DE BİR PROMPT YÜZEYİDİR (denetim 2026-08-30). Birim
     # `WorkingDirectory=/opt/meridian` veriyor ve `cwd=` GEÇİLMEZSE çocuk onu miras alır.
-    # ÖLÇÜLDÜ (yerel Hermes v0.18.2, `agent/prompt_builder.py::load_context_files` + `_load_*`
+    # ÖLÇÜLDÜ (yerel Hermes v0.18.2, `agent/prompt_builder.py::build_context_files_prompt` + `_load_*`
     # yükleyicileri; canlı v0.19.0 — sürüm farkı beyan edilir): sistem prompt'u cwd'den şunları
     # toplar, İLK BULUNAN KAZANIR — (1) `.hermes.md`/`HERMES.md` GIT KÖKÜNE KADAR YUKARI yürür,
     # (2) `AGENTS.md`/`agents.md` yalnız cwd, (3) `CLAUDE.md`/`claude.md` yalnız cwd,

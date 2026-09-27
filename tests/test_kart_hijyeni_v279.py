@@ -3,8 +3,8 @@
 KAYIT ÇAPI — NEDEN BU DOSYA VAR. Üç kusur AYNI turda ölçüldü (docs/ELEME-WP5-2026-08-23.md
 kalem 3 ve kalem 14) ve üçü de ELLE bakımın kaçırdığı sınıftı:
 
-  1. ÇİFT ÜST-DÜZEY ANAHTAR. `EDG-2026-038` iki `verdict:` taşıyordu (`:120` boş placeholder +
-     `:122` gerçek hüküm). ZARAR O GÜN OLMADI ama TESADÜFEN: PyYAML son-kazanır, ikinci (dolu)
+  1. ÇİFT ÜST-DÜZEY ANAHTAR. `EDG-2026-038` iki `verdict:` taşıyordu (`:120` boş placeholder [çapa-mezar-taşı] +
+     `:122` gerçek hüküm [çapa-mezar-taşı]). ZARAR O GÜN OLMADI ama TESADÜFEN: PyYAML son-kazanır, ikinci (dolu)
      blok kazandı. Sıra ters olsaydı GERÇEK HÜKÜM SESSİZCE YUTULURDU — ve bir kartın hükmü
      yutulduğunda geriye "ölçüldü" diyen ama hükmü boş bir kart kalır, yani ölçüm defteri
      yalan söyler. Rol-1 vakayı 2026-08-23'te düzeltti; ÇİVİ BURADA çünkü sınıfın nüfusu

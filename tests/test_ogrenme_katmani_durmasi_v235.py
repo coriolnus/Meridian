@@ -289,7 +289,7 @@ def test_yarim_sent_tasiyan_kaynak_deterministik(sandbox_state):
     (birikim noktaları `broker.py::PaperBroker.scale_out` ve `::PaperBroker.close_position`).
     ÇAPA SEMBOLE ÇEVRİLDİ + HEDEF ÖLÇÜLDÜ (2026-09-03, TSK-030 adım-3): burada
     `broker.py:569/595` yazıyordu [çapa-mezar-taşı]; bu turun `broker.py`ye eklediği satırlar onu kaydırdı ve ölçüldüğünde
-    `:569` zaten `fill_entry` DOCSTRING'ine düşüyordu. Parantezin İDDİASI da bayat: "WP-E yama planı"
+    `:569` [çapa-mezar-taşı] zaten `fill_entry` DOCSTRING'ine düşüyordu. Parantezin İDDİASI da bayat: "WP-E yama planı"
     inmiş durumda — birikim artık HAM değil SENT-TAM (`round(..., 2)`, 2026-08-12 canlı alarmı).
     Yani yarım-sent bir `realized_pnl` bugün ancak ESKİ bir defterden gelebilir — çivinin
     determinizm iddiası tam bu yüzden hâlâ gerekli. Kanonik türetim o dünyada bile TEK ve

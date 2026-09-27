@@ -185,7 +185,7 @@ def test_desen_CODELAW_desenlerinin_UST_KUMESI_canli_korpus():
     # devam biçimi (şerhte): bitişik çapanın ardından yalın iki nokta + sayı
     ("# YAZAR: uydurma_modul.py:1942 `.env` · :1956 yedek · (:96-99)",  # çapa-sentetik: desen örneği (TSK-231)
      ["uydurma_modul.py:1942", ":1956", ":96-99"]),  # çapa-sentetik: beklenen değer (TSK-231)
-    ("#     :2072 config · :2215 skills/", [":2072", ":2215"]),
+    ("#     :2072 config · :2215 skills/", [":2072", ":2215"]),  # çapa-sentetik: devam biçimi fikstürü (TSK-241)
 ])
 def test_tarayici_SENTETIK_ihlali_yakalar(satir, beklenen):
     assert [c for _i, c in _birim_capa_ihlalleri(satir)] == beklenen
@@ -197,7 +197,7 @@ def test_tarayici_SENTETIK_ihlali_yakalar(satir, beklenen):
     "ExecStart=/usr/bin/x -e URL=http://127.0.0.1:8888 \\",
     "OnCalendar=Mon..Fri *-*-* 13..19:00/5:00 UTC",
     "# her gece 23:32 UTC",
-    "ExecStart=/usr/local/bin/uydurma --addr :9090",          # devam biçimi AYAR satırında aranmaz
+    "ExecStart=/usr/local/bin/uydurma --addr :9090",          # devam biçimi AYAR satırında aranmaz (çapa-sentetik: yanlış-pozitif fikstürü, TSK-241)
     "# ssh -N -L 9999:127.0.0.1:9999 ubuntu@host",
     "# `hermes.py::sync_agent_skills` sembol çapası satır çapası DEĞİLDİR",
     "# IPv6 [::1]:8080 ve (::1)",
