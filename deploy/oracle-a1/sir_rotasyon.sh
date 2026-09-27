@@ -209,8 +209,10 @@
 # kasasız yol → `sudo cp -p <yedek>/<yol> <yol>` + ilgili birimleri yeniden başlat. `--vault` yolu
 # (TSK-064, 2026-09-26) → ÖNCE kasa: `vault kv rollback -version=<N> <yol>` (N = `kv put` ÖNCESİ
 # `current_version`, her kasa yolu için ayrı kaydedilir), SONRA dosya — ters sırada Agent render'ı
-# geri konan dosyayı kasadaki yeni değerle tekrar ezer. Genel döngüde `kv rollback`un kendisi düşerse
-# yedek yol YOK (eski kasa değeri okunmuyor; `--db`/`--cp` dallarında var) — açık kalem TSK-064.
+# geri konan dosyayı kasadaki yeni değerle tekrar ezer. `kv rollback`un kendisi düşerse (politika · ağ ·
+# mühür) YEDEK YOL üç kasa dalında da AYNIDIR (genel döngü TSK-064(b), 2026-09-27): `kv put` ÖNCESİ kasadan
+# okunan ESKİ değer `<yedek>/vault/<kasa yolu>`dadır (0600) ve STDIN'le `vault kv put <yol> value=-` ile
+# geri konur — değer argv'ye girmez; reçete her rollback satırının altında bunu yoluyla söyler.
 #
 # YAPMADIKLARI (burada olmayan şey, burada yapılmayacak şeydir): kanal geçişi yapmaz (o
 # `sir_credential_gecis.sh`); drop-in kurmaz; Vault'a dokunmaz; operatörün YEREL `.env` kopyasını
@@ -331,6 +333,7 @@ CP_KASA_HEDEF=""     # Agent render hedefi (envanterden)
 #: turda (`--openrouter`) ikinci sırrın ön kapısı düşse de ilk sır kasadadır.
 GENEL_KASA_EVRE=""
 #: `<kasa yolu>\t<kv put ÖNCESİ current_version>\t<render hedefi>` satırları — put'u DENENEN her yol, yazım sırasıyla.
+#: Yol buraya ESKİ değeri `$YEDEK/vault/<yol>`a yedeklendikten SONRA girer (TSK-064(b)): reçetenin yedek yol satırı türetilir.
 GENEL_KASA_SATIRLARI=""
 KASA_SURUM=""        # `_kasa_surumu`nun son okuması — üç dal (genel · db · cp) buradan kopyalar
 RENDER_GECEN=""      # `_render_bekle`nin ölçtüğü süre (s) — çağıran basar
@@ -2431,6 +2434,8 @@ _vault_kuru_rapor() {
     echo "  kasaya yazılacak : $yol   ($sir → $ad)"
     # Gerçek koşumun `_kasa_surumu`su (TSK-064 takibi): plan da söyler — kuru koşum kasaya DOKUNMAZ, sürümü okumaz.
     echo "  kasa sürümü      : ÖNCE current_version kaydedilir — geri alma: vault kv rollback -version=<o sürüm> $yol (DOSYA geri alımından ÖNCE; okunamaz/geçersizse bu yol YAZILMAZ)"
+    # Gerçek koşumun ESKİ değer yedeği (TSK-064(b)) — `--db`/`--cp` kuru planlarının "ESKİ değer yedeğe" adımının ikizi.
+    echo "  ESKİ değer yedeği: yedeklenir — kv put ÖNCESİ KASADAN okunur → $KOK/root/sir-yedek-<UTC ts>-$alt/vault/$yol (0600); rollback düşerse STDIN'le: vault kv put $yol value=- (değer BASILMAZ; okunamazsa bu yol YAZILMAZ)"
     [ "$birincil" = "-" ] \
       || echo "  TAKMA AD         : $ad → $birincil   (yol ve render kanıtı BİRİNCİLİNDİR; takma adın tüketicileri onu izler)"
     echo "  render kanıtı    : $hedef   (kanonik tek-değer kopyası — sha DEĞİL, BİREBİR kıyas)"
@@ -2570,6 +2575,17 @@ vault_rotasyon() {
     yazilmadi="HİÇBİR ŞEY yazılmadı"
     [ -z "$GENEL_KASA_SATIRLARI" ] || yazilmadi="bu sır YAZILMADI; bu turda ÖNCE yazılan kasa yolu VAR — reçete aşağıda"
     _kasa_surumu "$yol" "$yazilmadi"
+    # ESKİ DEĞER YEDEĞİ (TSK-064(b), 2026-09-27) — `--db`/`--cp` dallarının AYNI yöntemi (ayrışma çivisi v567 A1).
+    # `kv rollback`un KENDİSİ düşerse (politika · ağ · mühür) geri almanın tek girdisi yazım ÖNCESİ KASA değeridir.
+    # KASADAN okunur, render hedefinden DEĞİL: Agent geride kaldıysa ikisi ayrışır ve doğru olan kasadakidir.
+    # Sürüm kapısından SONRA: yol yoksa (ilk yazım) o kapı ZATEN durdurur ve hata metni değişmez. Satır + evreden
+    # ÖNCE: okunamazsa bu yol reçeteye girmez ve kasaya YAZILMAZ (yedeksiz güvence YOK). Değer BASILMAZ, argv'ye
+    # GİRMEZ: kv get çıktısı 0600 dosyaya yönlenir, `py cikar` yalnız dosya YOLU alır.
+    ( umask 077; _vault kv get -field=value "$yol" > "$ISLIK/vault_eski_ham" ) \
+      || die "ESKİ değer kasadan okunamadı ($yol) — rollback düşerse geri konacak yedek olmadan kasaya YAZILMAZ ($yazilmadi)"
+    sudo install -d -m 0700 -o root -g root "$YEDEK/vault/$(dirname "$yol")"
+    py cikar dosya "$ISLIK/vault_eski_ham" - - "$YEDEK/vault/$yol"
+    oldu "yedek: ESKİ değer (KASADAN) → $YEDEK/vault/$yol (0600 — geri almanın girdisi)"
     # Satır + evre yazımdan ÖNCE (`--db`/`--cp` emsali): put düşse bile kasaya ulaşmış OLABİLİR — reçete bu yolu da
     # geri alır. Ulaşmadıysa `rollback -version=<o sürüm>` aynı değeri yeni sürüm yazar: zararsız.
     GENEL_KASA_SATIRLARI="$GENEL_KASA_SATIRLARI$yol"$'\t'"$KASA_SURUM"$'\t'"$hedef"$'\n'
@@ -2655,6 +2671,9 @@ vault_rotasyon() {
 #: güvence verirdi (TSK-226c incelemesi BULGU 1). Eski kanal kopyaları (iki-kanal dönemi) betiğin yazdığı
 #: dosyalardır, Agent'ın DEĞİL: onlar yedekten geri konur — kasadan SONRA. Hedef sürüm yazım ÖNCESİ ölçülen
 #: `current_version`dır (`_kasa_surumu`); put'u DENENEN her yol listelenir. Değer BASILMAZ.
+#: ROLLBACK DÜŞERSE (TSK-064(b), 2026-09-27; db/cp emsali): her rollback satırını o yolun YEDEK YOLU izler — yazım
+#: ÖNCESİ kasa değeri `$YEDEK/vault/<yol>`dadır ve STDIN'le `kv put` edilir (argv'de değer YOK). Satır yalnız yedeği
+#: ALINMIŞ yol için vardır: `GENEL_KASA_SATIRLARI`na yol yedekten SONRA girer (`vault_rotasyon`).
 _genel_kasa_recetesi() {
   local birimler yol surum hedef hedefler=""
   # sessiz-yutma: `_birimler` bilinmeyen alt komutta `die` eder ve o hata METNİ burada hükme GİRMEZ — burası
@@ -2670,6 +2689,7 @@ _genel_kasa_recetesi() {
         while IFS=$'\t' read -r yol surum hedef; do
           [ -n "$yol" ] || continue
           echo "        vault kv rollback -version=$surum $yol"
+          echo "        düşerse ESKİ değer yedekte: $YEDEK/vault/$yol — STDIN'le: vault kv put $yol value=-"
           hedefler="$hedefler $hedef"
         done <<< "$GENEL_KASA_SATIRLARI"
         echo "     2) render: kasadaki ESKİ değere BİREBİR olana kadar bekle:$hedefler"
