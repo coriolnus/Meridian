@@ -163,7 +163,7 @@ ExecStart=/opt/meridian/.venv/bin/python -m meridian.sprint_run ${MERIDIAN_SPRIN
 Restart=no
 # KillMode=control-group (systemd VARSAYILANI — burada AÇIKÇA yazılıdır çünkü bu turun kök nedeni
 # tam olarak kill semantiğidir ve bir sonraki mühendis yürürlükteki değeri TAHMİN ETMEMELİDİR).
-# SEÇİM GEREKÇESİ: sprint Faz-B'de `ProcessPoolExecutor` açar (reflect.py:1049, 4 çekirdekte 2 işçi).
+# SEÇİM GEREKÇESİ: sprint Faz-B'de `ProcessPoolExecutor` açar (`reflect.py::_parallel_prefill_probes`, 4 çekirdekte 2 işçi).
 # `KillMode=process` bu işçileri YETİM bırakırdı: ana süreç ölür, havuz işçileri init'e devrolup
 # çekirdekleri yakmaya devam ederdi — kadansın eşzamanlılık kapılarının tam olarak önlemeye çalıştığı
 # hâl. `control-group` sprint'in TÜM ağacını birlikte indirir. Bu, v241'in kök nedeniyle ÇELİŞMEZ:

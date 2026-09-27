@@ -100,7 +100,7 @@ ExecStartPost=/usr/bin/find /home/ubuntu/backups -maxdepth 1 -name state-*.tar.g
 
 # ==================================================================================================
 # H3 SERTLEŞTİRME — TUR-2 (2026-08-02). Tur-1 bu birimi ATLAMIŞTI (drop-in yalnız meridian ve
-# meridian-barsarchive'e kuruluyordu, bakim_h9.sh:56). ATLANMASI YANLIŞTI: bu birim `uv run
+# meridian-barsarchive'e kuruluyordu, bakim_h9.sh `[9] H3 sertleştirme drop-in'leri` adımı). ATLANMASI YANLIŞTI: bu birim `uv run
 # python -c` ile KOD ÇALIŞTIRIR ve arşive `state/secrets.json` DAHİL her şeyi alır — maruziyeti
 # diğer ikisiyle aynı sınıftadır. Gerekçelerin tamamı meridian.service'te; burada YALNIZ ayrışan
 # kalemler yazılıdır.
@@ -108,7 +108,7 @@ ExecStartPost=/usr/bin/find /home/ubuntu/backups -maxdepth 1 -name state-*.tar.g
 # ARIZA ŞEKLİ UYARISI (bu birime ÖZGÜ): `OnFailure=` YOK ve `Type=oneshot` günde bir koşar. Bir
 # sertleştirme hatası burada SESSİZ YEDEK KAYBIDIR — kimse haber almaz, kayıp ancak restore
 # gerektiğinde görülür. BU YÜZDEN uygulama prosedürü birimi ELLE bir kez tetiklemeden ve
-# `Result=success` + yeni tar dosyasını GÖRMEDEN tamamlanmış SAYILMAZ (bakim_h9.sh:79 deseni).
+# `Result=success` + yeni tar dosyasını GÖRMEDEN tamamlanmış SAYILMAZ (bakim_h9.sh `[12] son doğrulama paketi` adımındaki yedek unit provası deseni).
 # ==================================================================================================
 NoNewPrivileges=true
 CapabilityBoundingSet=
