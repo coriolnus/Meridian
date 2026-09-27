@@ -13,7 +13,7 @@ silinince aynı süreçteki ikinci `report()` bayat "temiz" dönerdi).
 
 BÖLÜŞÜM (korundu, gerekçe): `report()` bu beslemede yalnız `curuyen`i hükme bağlar — `cozulemeyen` İHLAL DEĞİLDİR
 (uydurma yasağı; `meridian/`+`tests/` metniyle AYNI kural). v574 daha SIKI kalır: beyansız çözülemeyen kırmızı,
-bayat beyan, `deploy` çözücü kökü, körlük alarmı, yol-tutarlı pozitif kontrol. O sıkılık motora TAŞINMADI: beyan
+bayat beyan, körlük alarmı, yol-tutarlı pozitif kontrol (çözücü kökü v576'dan beri AYNI). O sıkılık motora TAŞINMADI: beyan
 defteri (hermes-agent harici kaynağı) yalnız test tarafında, yerel ağaçta doğrulanabiliyor — motorda doğrulanamayan
 beyan borç defteridir, hüküm değil. Çivi E bu bölüşümü davranışla ölçer.
 
