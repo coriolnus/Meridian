@@ -4017,3 +4017,9 @@ gösteriyordu; çevrildi, `meridian/` 11 dosyada yalnız yorum (inceleme AST ile
 Suite 15102/0 ama 20:24 sürdü — yavaşlık Mac yükünden (AirPlay/ekran yansıtma/video kodlama, load ~8,6), v571 en yavaşlarda yok. Uygulayıcı beyaz-liste
 dışı salt-okur `git ls-files` koştu (itiraf, zararsız) — kaydedildi; beyaz liste genişletmesi operatör kararı. Açılanlar TSK-239 (.py dışı sembol
 çapaları, 2 çürük) · TSK-240 (üç F9 artefaktı yalnız yorumda ayrık).
+**TSK-239 · TSK-241 · TSK-242** (2026-09-27 akşam): çapa denetimi son kör yüzeylere genişledi — `.py` dışı dosyalarda sembol çapası (v572), devam biçimi
+satır çapası `:NNN` (v573), `ops/`+`deploy/`+kök `.py` yorumları (v574, test tarafı). Motor yorumlarındaki 13 canlı devam çapasının 13'ü de yanlış satırı
+gösteriyordu (TSK-236'da 60'ın 46'sı) — çapa çürümesi istisna değil kuraldı. Uygulayıcılar iki kez beyaz liste dışı salt-okur git alt komutu koştu
+(`ls-files`, `describe`; itiraf) → brief'e alt komut listesi açıkça yazıldı, üçüncüde ihlal yok. Kendi hatam: TSK-241 sevk mesajım ("motor: yalnız yorum")
+brief'in codelaw genişletmesiyle çelişti; ajan test tarafını seçti, kabul edildi (codelaw.report genişletmesi → TSK-243). TSK-240: üç F9 artefaktı yorum-dışı
+canlıyla aynı (ilk "FARKLI" ölçümüm süreç ikamesindeki stdin hatasıydı); tek seferlik eşitleme sınıflandırıcıya takıldı → operatöre komut.
