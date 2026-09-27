@@ -5859,10 +5859,36 @@ def api_hermes(request: Request):
 
 @app.post("/api/hermes/reflect")
 def api_hermes_reflect(request: Request):
-    """Operator-triggered single reflection cycle (a few seconds — runs the walk-forward gate)."""
+    """`POST /api/hermes/reflect`: operatörün "şimdi düşün" düğmesi. YETKİLİ ve YAN ETKİLİ uç — ama yansımayı
+    KOŞMAZ (TSK-233).
+
+    NEDEN KOŞMAZ — BU BİR TEK-YAZAN KAPISIDIR, kolaylık değil: öğrenme döngüsü `meridian-learn` biriminde,
+    AYRI süreçte koşar. Uç eskiden `hermes_runtime.reflect_now()` çağırıyordu: yansıma BU (pano) süreçte koşuyor ve
+    `hermes_status.json`un TAMAMI bu sürecin boş belleğinden yazılıyordu → öğrenme sürecinin `last_reflect_at`,
+    `bg_reflect_by_regime` ve `kalp` kaydı eziliyor, süreç-başı kilit iki süreçte iki eşzamanlı yansımayı
+    durduramıyor, ağır walk-forward panonun GIL'ine biniyordu (Ö-50). Emsal: 2026-09-05'te start/stop düğmeleri
+    `_ogrenme_kumanda` ile `meridian-learn`e devredildi.
+
+    ŞİMDİ: karar `hermes_runtime.yansima_istegi_karari` (döngünün durumunu DİSKTEN okur, YAZMAZ); kabul edilirse bu
+    uç istek dosyasını (`hermes_runtime.YANSIMA_ISTEGI_FILE`, dosyanın TEK yazanı) atomik yazar ve
+    `hermes_yansima_istegi` olayını düşer; döngü poll'unda alıp KENDİ kilidi altında koşar. Cevap `status`:
+    `queued` · `busy` (bekleyen istek ya da süren yansıma) · `unavailable` (döngü poll etmiyor — istek BIRAKILMAZ).
+    Kontrol-oku-yaz dosya kilidi altında: iki eşzamanlı tıklama iki istek bırakamaz. Teşhis önbelleği yalnız istek
+    GERÇEKTEN bırakıldıysa düşer (reddedilen tıklama tam hesap tetiklemez)."""
     _auth(request)
     from . import hermes_runtime
-    out = hermes_runtime.reflect_now()
+    with store.file_lock(hermes_runtime.YANSIMA_ISTEGI_FILE):
+        out = hermes_runtime.yansima_istegi_karari(kaynak="pano:/api/hermes/reflect")
+        if out.get("status") != "queued":
+            if out.get("status") == "unavailable":
+                obs.warn("hermes_yansima_istegi_reddedildi", neden=out.get("neden"),
+                         canlilik_neden=out.get("canlilik_neden"),
+                         detail="öğrenme döngüsü poll etmiyor — pano isteği bırakılmadı (ölü kuyruk yok)")
+            return out
+        istek = out["istek"]
+        store.write_json(hermes_runtime.YANSIMA_ISTEGI_FILE, istek)
+    obs.log("hermes_yansima_istegi", **istek,
+            detail="pano elle yansıma isteği bıraktı — öğrenme süreci bir sonraki poll'unda alacak")
     _diag_onbellek_bosalt("hermes_reflect")
     return out
 

@@ -8,18 +8,23 @@ rejim-dilimli katı-VE (`_horizon_ok`) — `hermes.reflect_once` çağrılır. U
 `_bg_ready_regime` birikmiş kanıtlı bir canlı-dışı rejim seçer ve yansıma `background=True`
 ile o rejime kapsanmış koşar; o da yoksa ısınma sprinti (`_warmup_sprint`) hiçbir şey ship
 etmeden UCB önceliklerini ve sonda önbelleğini ısıtır (süre tavanlı, `_warmup_tavan_dk`).
-Operatör `reflect_now()` ile tek turu elle tetikler (arka plan iş parçacığında — HTTP isteği
-bloklanmaz); `status()` süreç/ufuk/beyin durumunu döndürür ve state/hermes_status.json'a
-aynalanır (panonun Hermes bölümü).
+Operatörün panodaki "düşün" düğmesi yansımayı KOŞMAZ (TSK-233): pano istek dosyası bırakır
+(`YANSIMA_ISTEGI_FILE`; kabul kararı `yansima_istegi_karari`), bekleme döngüsü poll'unda alır ve
+KENDİ kilidi altında koşar (`_yansima_istegini_isle`). `reflect_now()` süreç-içi/CLI yolu olarak
+yaşar. `status()` süreç/ufuk/beyin durumunu döndürür ve state/hermes_status.json'a aynalanır
+(panonun Hermes bölümü).
 
 Değişmezler: beyin yalnız önerir — her yansıma `reflect.submit`ten geçer, ship kararını kapı
 verir; tek yansıma kilidi (`_reflect_lock`) bekleme döngüsü ile elle tetiklemenin aynı anda
-iki yansıma koşmasını engeller; arka plan turunun ship yüzeyi seçilen rejimle sınırlıdır
+iki yansıma koşmasını engeller — ikisi de artık AYNI süreçte koştuğu için süreç-başı kilit
+yeterlidir; öğrenme durumunun (hermes_status.json) TEK yazanı bekleme döngüsünün sürecidir,
+pano yalnız okur; arka plan turunun ship yüzeyi seçilen rejimle sınırlıdır
 (kanıt kendi rejimini terk etmez — kapsama `reflect_once(background=True)` dalında uygulanır
 ve iki dosya birbirini adıyla gösterir); ısınma tavanının aşımı kadans değil anomalidir.
 
-Okur/yazar: trades.jsonl, regime.json, goal.yaml okur; hermes_status.json yazar; watchdog'a
-`hermes_poll` nabzı atar; olayları events.jsonl'a (obs) düşer."""
+Okur/yazar: trades.jsonl, regime.json, goal.yaml, hermes_yansima_istegi.json (pano yazar) okur;
+hermes_status.json yazar, işlediği isteği siler; watchdog'a `hermes_poll` nabzı atar; olayları
+events.jsonl'a (obs) düşer."""
 from __future__ import annotations
 import datetime as dt
 import os
@@ -28,6 +33,10 @@ import threading
 from . import config, store, health, secrets, obs
 
 STATUS_FILE = "hermes_status.json"
+# ELLE YANSIMA İSTEĞİ (TSK-233). TEK yazanı pano ucudur (`api.api_hermes_reflect`); okuyanı ve sileni bekleme
+# döngüsüdür (`_yansima_istegini_isle`). Durum dosyasından AYRI bir dosya: pano öğrenme durumuna yazmadan "düşün"
+# diyebilsin diye — iki süreç aynı dosyayı yazınca birinin boş belleği ötekinin kaydını eziyordu.
+YANSIMA_ISTEGI_FILE = "hermes_yansima_istegi.json"
 REFLECTION_MIN_DAYS = int(os.environ.get("HERMES_REFLECTION_MIN_DAYS", "30"))   # Phase 3 overfitting horizon
 WARMUP_EVERY_POLLS = int(os.environ.get("MERIDIAN_WARMUP_EVERY_POLLS", "12"))   # ısınma sprinti sıklığı (poll)
 
@@ -566,8 +575,10 @@ KALP_PAY = 3
 
 def _kalp_vur() -> None:
     """Döngünün "hâlâ buradayım" damgası + kalıcılaştırma. YALNIZ `_run` çağırır: `_persist`in
-    içine konsaydı `reflect_now` (API sürecinden elle tetikleme) de kalp atardı ve pano, döngü
-    başka süreçte ölü olsa bile onu CANLI görürdü — ölçmediğimiz şeyi iddia etmiş olurduk."""
+    içine konsaydı `reflect_now` (döngüsüz bir süreçten elle tetikleme) de kalp atardı ve pano,
+    döngü başka süreçte ölü olsa bile onu CANLI görürdü — ölçmediğimiz şeyi iddia etmiş olurduk.
+    Pano isteğinin kabul kapısı da (`yansima_istegi_karari`) bu damgaya bakar: kalp yalanlasaydı
+    istek ölü bir kuyruğa düşerdi."""
     _state["kalp"] = _now()
     _persist()
 
@@ -595,6 +606,195 @@ def _kalp_canliligi(disk: dict) -> tuple[bool | None, str | None]:
     if yas <= KALP_PAY * poll:
         return True, None
     return False, f"kalp atışı {yas:.0f}sn eski (eşik {KALP_PAY}×{poll}sn)"
+
+
+def _arama_taze(disk: dict, search_durumu: str | None, search_yas: float | None) -> bool:
+    """Diskteki arama ilerlemesi KOŞUYOR ve kalbin payı içinde TAZE mi — süreç-dışından görülen "bir yansıma şu an
+    ilerliyor" olgusu. Tazelik ölçüsü `_kalp_canliligi`nin payıdır (`KALP_PAY × poll_seconds`); ikinci bir eşik icat
+    edilmedi. Bayat `running=True` (SIGKILL'de diskte donar) koşuyor SAYILMAZ: donmuş bayrak düğmeyi sonsuza dek
+    "meşgul"e kilitlerdi."""
+    poll = int((disk or {}).get("poll_seconds") or 0)
+    return (search_durumu == "kosuyor" and search_yas is not None and poll > 0
+            and search_yas <= KALP_PAY * poll)
+
+
+def _dongu_canliligi(icerde: bool, disk: dict, search_durumu: str | None,
+                     search_yas: float | None) -> tuple[bool | None, str | None]:
+    """Bekleme döngüsü CANLI mı — `(canli, neden)`. TEK kural; okuyucuları `status()` (panonun `active` alanı) ve
+    `yansima_istegi_karari` (istek kabul kapısı). Süreç-içindeyse iplik yetkilidir; değilse kalp atışı, ve UZUN ARAMA
+    kalbi bastırdığında taze arama ilerlemesi (ölçülmüş normal: arama 1s55dk–3s14dk, 2026-08-16)."""
+    if icerde:
+        return True, None
+    alive, neden = _kalp_canliligi(disk)
+    if alive is not True and _arama_taze(disk, search_durumu, search_yas):
+        alive, neden = True, "kalp bayat ama arama ilerlemesi taze (uzun yansıma)"
+    return alive, neden
+
+
+def _yansiyor_mu(icerde: bool, disk: dict, search_durumu: str | None, search_yas: float | None) -> bool:
+    """Şu an bir yansıma SÜRÜYOR mu — `status()["reflecting"]` ve pano isteğinin "meşgul" kapısı AYNI olgudan okur.
+
+    Bu sürecin kilidi tutuluyorsa evet (eski anlam birebir). Döngü BAŞKA süreçteyse (`meridian-learn`) bu sürecin
+    kilidi hiçbir şey söylemez — elle yansıma pano sürecinden taşındığından beri orada hep boştur; o zaman olgu
+    diskteki taze arama ilerlemesidir (`_arama_taze`)."""
+    return _reflect_lock.locked() or (not icerde and _arama_taze(disk, search_durumu, search_yas))
+
+
+def _yas_s(damga, simdi: str | None = None) -> tuple[float | None, str | None]:
+    """ISO damganın yaşı (sn) — `(yas, neden)`. Ölçülemezse yaş None ve NEDEN (uydurma yok; 0 "bilmiyorum" değildir)."""
+    if not damga:
+        return None, "damga yok"
+    try:
+        t0 = dt.datetime.fromisoformat(str(damga))
+        t1 = dt.datetime.fromisoformat(simdi) if simdi else dt.datetime.now(dt.timezone.utc)
+        return max(0.0, round((t1 - t0).total_seconds(), 1)), None
+    except (TypeError, ValueError) as e:  # sessiz-yutma: çözümlenemeyen damga YUTULMUYOR — yaş None + neden olarak çağırana (olaya/yanıta) dönüyor
+        return None, f"damga çözümlenemedi: {str(damga)[:40]!r} ({type(e).__name__})"
+
+
+def _ufuk_notu(hz: dict) -> str:
+    """Elle tetiklemenin atladığı ufuk kapısının DÜRÜST notu — ufuk doluysa boş. TEK metin kaynağı: `reflect_now`
+    yanıtı, pano isteğinin yanıtı ve öğrenme tarafındaki elle yansıma kaydı aynı cümleyi taşır (operatör egemendir,
+    kapıyı bilerek atlar; ama atlama GÖRÜNÜR olmalı)."""
+    if hz.get("ready"):
+        return ""
+    return (" · not: otomatik ufuk kapısı henüz dolmadı "
+            f"({hz.get('trades', 0)}/{hz.get('trades_needed', '?')} işlem, "
+            f"{hz.get('span_days', 0)}/{hz.get('min_days', '?')} gün) — elle tetikleme bunu bilerek atlar")
+
+
+def _elle_yansima_govdesi() -> None:
+    """ELLE yansımanın TEK gövdesi — `reflect_now` (süreç-içi/CLI) ve pano isteği (`_yansima_istegini_isle`, öğrenme
+    süreci) AYNI gövdeyi koşar; iki kopya ayrışırdı. Kilit ÇAĞIRANDA tutulur ve orada bırakılır.
+
+    `arka_plan=False`: elle yansıma canlı geri sayımı (`last_reflect_at`) taşır — döngü aynı işlemler üzerinde hemen
+    yeniden yansımasın (TSK-227 kararı). Hata `last_result`a sınıf adıyla düşer; döngüyü/çağıranı düşürmez."""
+    from . import hermes
+    try:
+        _record(hermes.reflect_once(), arka_plan=False)
+    except Exception as e:
+        _state["last_result"] = f"error: {type(e).__name__}"
+
+
+def yansima_istegi_karari(kaynak: str) -> dict:
+    """PANO SÜRECİ (TSK-233): "şimdi düşün" isteği KABUL edilebilir mi? YAZMAZ — istek dosyasını pano ucu yazar
+    (`api.api_hermes_reflect`, dosyanın TEK yazanı); burası öğrenme döngüsünün durumunu DİSKTEN okur ve karar verir.
+
+    Dört cevap (`status`):
+      "busy"/"bekleyen_istek"   — işlenmemiş (ya da işlenmekte olan) bir istek zaten var; ikincisi bırakılmaz.
+      "busy"/"yansima_suruyor"  — bir yansıma sürüyor (`_yansiyor_mu`, `status()["reflecting"]` ile aynı olgu).
+      "unavailable"             — döngü poll ETMİYOR (kalp bayat — eşik `KALP_PAY × poll_seconds`, `_kalp_canliligi`in
+                                  TEK kuralı: bir kaçırılan poll tolere edilir, ikisi edilmez) ya da canlılık
+                                  ÖLÇÜLEMEDİ. İstek BIRAKILMAZ: alınmayacak istek ölü bir kuyruktur ve operatöre
+                                  "düşünüyor" yanılsaması verir. `systemctl` alt süreci ÇAĞRILMAZ — kalp yeter.
+      "queued"                  — `istek` alanı yazılacak yükü taşır (istek anı, kaynak, ufuk notu).
+    Ufuk-kapısı atlama notu (`_ufuk_notu`) yanıtın `detail`inde ve istekte korunur."""
+    icerde, disk, taban = _durum_tabani()
+    bekleyen = store.read_json(YANSIMA_ISTEGI_FILE, None)
+    if bekleyen is not None:
+        b = bekleyen if isinstance(bekleyen, dict) else {}
+        yas, _n = _yas_s(b.get("istek_at"))
+        son = taban.get("son_elle_istek") or {}
+        isleniyor = (son.get("durum") == "kosuyor" and b.get("istek_id") is not None
+                     and son.get("istek_id") == b.get("istek_id"))
+        return {"status": "busy", "neden": "bekleyen_istek",
+                "bekleyen": dict(bekleyen) if isinstance(bekleyen, dict) else bekleyen,
+                "detail": ("zaten bir düşünme isteği var"
+                           + (f" ({yas:.0f} sn önce bırakıldı)" if yas is not None else "")
+                           + (" — öğrenme süreci onu ŞU AN işliyor" if isleniyor
+                              else " — öğrenme süreci bir sonraki poll'unda alacak")
+                           + "; ikinci istek bırakılmadı")}
+    try:
+        from . import hermes
+        okuma = hermes.search_progress_oku(ayni_surec=icerde)
+        s_durum, s_yas = okuma.get("durum"), okuma.get("yas_s")
+    except Exception as e:  # sessiz-yutma: arama ilerlemesi ölçülemedi — "olculemedi" olarak kapıya giriyor; koşan arama VARSAYILMAZ, canlılık kalpten ölçülür ve yanıtta görünür
+        s_durum, s_yas = f"olculemedi: {type(e).__name__}", None
+    if _yansiyor_mu(icerde, disk, s_durum, s_yas):
+        return {"status": "busy", "neden": "yansima_suruyor", "detail": "zaten bir düşünme sürüyor"}
+    canli, neden = _dongu_canliligi(icerde, disk, s_durum, s_yas)
+    if canli is not True:
+        bas = ("öğrenme biriminin canlılığı ÖLÇÜLEMEDİ" if canli is None
+               else "öğrenme birimi çalışmıyor ya da poll etmiyor")
+        return {"status": "unavailable", "neden": "ogrenme_dongusu_poll_etmiyor", "canlilik_neden": neden,
+                "detail": (f"{bas} — istek alınmadı ({neden or 'durum kaydı yok: döngü bu kurulumda hiç koşmamış'}). "
+                           "Döngü durmuş ya da uzun bir iş (ısınma) onu tutuyor olabilir; istek bırakılmadı, "
+                           "birim yeniden poll ettiğinde tekrar dene.")}
+    hz = yansima_kapisi(taban)["horizon"]
+    notu = _ufuk_notu(hz)
+    poll = int(taban.get("poll_seconds") or 0)
+    import uuid
+    # `istek_id` KİMLİKTİR: `istek_at` saniye çözünürlüklüdür, iki istek aynı saniyeye düşebilir — "bu istek zaten
+    # koştu mu" sorusu damgayla değil kimlikle cevaplanır (`_yansima_istegini_isle`).
+    istek = {"istek_id": uuid.uuid4().hex, "istek_at": _now(), "kaynak": str(kaynak)[:80],
+             "ufuk_hazir": bool(hz.get("ready")),
+             "ufuk_notu": notu.strip(" ·") or None}
+    return {"status": "queued", "horizon_ready": bool(hz.get("ready")), "istek": istek,
+            "detail": ("istek bırakıldı — öğrenme süreci bir sonraki poll'unda"
+                       + (f" (≤{poll} sn)" if poll > 0 else "")
+                       + " alıp koşacak; süren bir iş (ısınma) varsa o bittikten sonra" + notu)}
+
+
+def _yansima_istegini_sil() -> None:
+    """İşlenen isteği siler. Silinemezse (izin/disk) SESSİZ değil: uyarı düşer ve aynı istek bir sonraki poll'da
+    `son_elle_istek` eşleşmesiyle TANINIR, yeniden koşmaz (`_yansima_istegini_isle`)."""
+    try:
+        (config.STATE / YANSIMA_ISTEGI_FILE).unlink(missing_ok=True)
+    except OSError as e:
+        obs.warn("hermes_yansima_istegi_silinemedi", error=f"{type(e).__name__}: {e}"[:300],
+                 detail="işlenen elle yansıma isteği silinemedi — aynı istek yeniden KOŞMAZ, pano 'bekleyen istek' "
+                        "görür; dosya elle silinmeli")
+
+
+def _yansima_istegini_isle() -> bool:
+    """ÖĞRENME SÜRECİ (TSK-233): panonun bıraktığı elle yansıma isteğini poll'da alır — koştuysa True.
+
+    * İstek yoksa hiçbir şey yapmaz (poll maliyeti tek dosya varlık denetimi).
+    * Kilit doluysa (bu süreçte başka bir yansıma koşuyor) istek BEKLER, KAYBOLMAZ: dosyaya dokunulmaz, bir sonraki
+      poll yeniden dener.
+    * Kilidi alınca: alınış olayı (`hermes_yansima_istegi_alindi`, istek anından GECİKMEYLE) + `son_elle_istek`
+      kaydı ("kosuyor", ufuk notuyla — elle tetikleme kapıyı atlar ama bu kayıtta görünür) diske yazılır; elle
+      yansıma gövdesi (`_elle_yansima_govdesi`, `arka_plan=False`) koşar; istek SİLİNİR ve kayıt "bitti" + sonuçla
+      kalıcılaşır.
+    SİLME YANSIMADAN SONRA: istek dosyası yansıma boyunca durur → pano o sürede ikinci isteği "meşgul" diye reddeder.
+    Süreç yansıma ortasında ölürse (SIGKILL, `TimeoutStopSec`) istek kalır ve yeniden başlayan döngü onu koşar —
+    operatörün istediği yansıma sessizce kaybolmaz. Aynı süreçte aynı istek (silme düştüyse) ikinci kez KOŞMAZ.
+    HALT/bayat veri denetlenmez: elle tetikleme bunları hiç denetlemedi (`reflect_now` birebir); ship kapısı
+    (`reflect.submit`) öğrenme durdurmasını zaten uygular."""
+    ham = store.read_json(YANSIMA_ISTEGI_FILE, None)
+    if ham is None:
+        return False
+    if not _reflect_lock.acquire(blocking=False):
+        return False
+    try:
+        ist = ham if isinstance(ham, dict) else {}
+        onceki = _state.get("son_elle_istek") or {}
+        if ist.get("istek_id") is not None and onceki.get("istek_id") == ist.get("istek_id") \
+                and onceki.get("durum") == "bitti":
+            _yansima_istegini_sil()          # silinemeyip kalmış, ZATEN koşmuş istek — ikinci yansıma YOK
+            return False
+        alindi = _now()
+        gecikme, gecikme_neden = _yas_s(ist.get("istek_at"), simdi=alindi)
+        kayit = {"istek_id": ist.get("istek_id"), "istek_at": ist.get("istek_at"), "kaynak": ist.get("kaynak"),
+                 "alindi_at": alindi, "gecikme_s": gecikme, "durum": "kosuyor"}
+        _state["son_elle_istek"] = kayit
+        try:
+            hz = yansima_kapisi(dict(_state))["horizon"]
+            kayit.update(ufuk_hazir=bool(hz.get("ready")), ufuk_notu=_ufuk_notu(hz).strip(" ·") or None)
+            obs.log("hermes_yansima_istegi_alindi", istek_id=kayit["istek_id"], istek_at=kayit["istek_at"],
+                    kaynak=kayit["kaynak"], alindi_at=alindi, gecikme_s=gecikme, gecikme_neden=gecikme_neden,
+                    istek_bicimi=None if isinstance(ham, dict) else f"sözlük değil: {type(ham).__name__}",
+                    ufuk_hazir=kayit["ufuk_hazir"], ufuk_notu=kayit["ufuk_notu"],
+                    detail="pano isteği öğrenme sürecinde alındı — elle yansıma bu süreçte koşuyor")
+            _persist()                       # "kosuyor" işareti panoya görünsün (uzun yansıma boyunca)
+            _elle_yansima_govdesi()
+        finally:
+            _yansima_istegini_sil()
+            kayit.update(durum="bitti", bitti_at=_now(), sonuc=_state.get("last_result"))
+            _persist()
+    finally:
+        _reflect_lock.release()
+    return True
 
 
 def _run(poll_seconds: int) -> None:
@@ -642,6 +842,10 @@ def _run(poll_seconds: int) -> None:
                 # sessiz-yutma: kalıcı bozukluk bir SONRAKİ poll'da yine denenir ve start() yolundaki
                 # AYNI çağrı uyarıyı zaten yazar; burada uyarmak aynı olayı günde yüzlerce kez tekrarlardı.
                 pass
+            # PANO İSTEĞİ (TSK-233): operatörün "düşün" isteği BU süreçte, BU kilit altında koşar — öğrenme durumunun
+            # tek yazanı bu döngüdür. Sağlık dallarından ÖNCE ve onlardan bağımsız: elle tetikleme HALT/bayat veriyi hiç
+            # denetlemedi (`reflect_now` birebir). Kilit doluysa istek bekler; aşağıdaki zincir her durumda koşar.
+            _yansima_istegini_isle()
             if not health.halted() and not health.stale(900):
                 trades = store.read_jsonl("trades.jsonl")
                 last_at = int(_state["last_reflect_at"])
@@ -747,29 +951,29 @@ def reflect_now() -> dict:
     """Kick off ONE reflection in a BACKGROUND thread (operator-triggered) and return immediately. The
     coordinate-descent search runs several walk-forwards and can take minutes — far too long to block an
     HTTP request (browser/proxy timeouts, a stuck worker). Poll status()['reflecting'] for completion.
-    Refuses if a reflection is already running."""
-    from . import hermes
+    Refuses if a reflection is already running.
+
+    PANO UCU BUNU ÇAĞIRAMAZ (TSK-233; sınıf çivisi v564): bu fonksiyon BU süreçte yansıma koşar ve durum dosyasını
+    BU sürecin `_state`inden yazar — döngüsü başka süreçte olan pano sürecinde çağrılınca öğrenme sürecinin kaydını
+    (`last_reflect_at`, `bg_reflect_by_regime`, `kalp`) eziyordu. Pano `yansima_istegi_karari` + istek dosyası
+    yoluyla öğrenme sürecine devreder. Burası süreç-içi/CLI yoludur; gövde `_elle_yansima_govdesi` ile ORTAKTIR."""
     if _reflect_lock.locked():
         return {"status": "busy", "detail": "zaten bir düşünme sürüyor"}
     # Operator override: the manual button deliberately bypasses the standby horizon (the operator is
     # sovereign), but the bypass must be VISIBLE — report the gate state honestly instead of hiding it.
     st = status()
     hz = st.get("horizon") or {}
-    note = "" if hz.get("ready") else (" · not: otomatik ufuk kapısı henüz dolmadı "
-                                       f"({hz.get('trades', 0)}/{hz.get('trades_needed', '?')} işlem, "
-                                       f"{hz.get('span_days', 0)}/{hz.get('min_days', '?')} gün) — elle tetikleme bunu bilerek atlar")
+    note = _ufuk_notu(hz)
 
     def _bg():
         """Arka plan iş parçacığının gövdesi: tek yansımayı koşar, sonucu kaydeder, durumu yazar.
 
         Kilidi bloksuz alır — alamazsa sessizce döner (tek-kapı: aynı anda tek yansıma). Hata
-        `last_result`a sınıf adıyla düşer; `_persist` + kilit bırakma her hâlde koşar."""
+        `last_result`a sınıf adıyla düşer (`_elle_yansima_govdesi`); `_persist` + kilit bırakma her hâlde koşar."""
         if not _reflect_lock.acquire(blocking=False):
             return
         try:
-            _record(hermes.reflect_once(), arka_plan=False)
-        except Exception as e:
-            _state["last_result"] = f"error: {type(e).__name__}"
+            _elle_yansima_govdesi()
         finally:
             _persist()
             _reflect_lock.release()
@@ -806,18 +1010,12 @@ def status() -> dict:
     # KULLANILMADI — o yalnız sürecin VAR olduğunu söyler, İLERLEDİĞİNİ değil; asılı bir döngü
     # "active" görünürdü. Kalp atışı ikisini birden ölçer. Yaş ölçülemiyorsa `active` None kalır
     # (UYDURMA YASAĞI: "durdu" demek bir iddiadır, ölçülmemiş hâlin adı değildir).
-    if icerde:
-        alive, alive_neden = True, None
-    else:
-        alive, alive_neden = _kalp_canliligi(disk)
-        # UZUN ARAMA KALBİ BASTIRIR — ve bu bir istisna değil, ÖLÇÜLMÜŞ normaldir: geçmiş altı
-        # aramanın süresi 1s55dk–3s14dk (2026-08-16 günlük ölçümü). O saatler boyunca poll dönmez,
-        # yani kalp bayatlar; ama arama ilerlemesi TAZE ise döngü kanıtlı biçimde çalışıyordur.
-        # Tazelik ölçüsü yine kalbin payıdır — ikinci bir eşik icat edilmedi.
-        if alive is not True and search_durumu == "kosuyor" and search_yas is not None:
-            poll = int(disk.get("poll_seconds") or 0)
-            if poll > 0 and search_yas <= KALP_PAY * poll:
-                alive, alive_neden = True, "kalp bayat ama arama ilerlemesi taze (uzun yansıma)"
+    # UZUN ARAMA KALBİ BASTIRIR — ve bu bir istisna değil, ÖLÇÜLMÜŞ normaldir: geçmiş altı
+    # aramanın süresi 1s55dk–3s14dk (2026-08-16 günlük ölçümü). O saatler boyunca poll dönmez,
+    # yani kalp bayatlar; ama arama ilerlemesi TAZE ise döngü kanıtlı biçimde çalışıyordur.
+    # Tazelik ölçüsü yine kalbin payıdır — ikinci bir eşik icat edilmedi. Kural TEK yerde
+    # (`_dongu_canliligi`): pano isteğinin kabul kapısı (`yansima_istegi_karari`) da oradan okur.
+    alive, alive_neden = _dongu_canliligi(icerde, disk, search_durumu, search_yas)
     # DÜRÜST GERİ SAYIM + UFUK: tek hesap yeri `yansima_kapisi` (bekçinin öğrenme-canlılık alarmı da
     # oradan okur — TSK-204). Pano burada yalnız alanları taşır, formül üretmez.
     kapi = yansima_kapisi(taban)
@@ -832,4 +1030,5 @@ def status() -> dict:
             "horizon": kapi["horizon"], "horizon_ready": kapi["horizon_ready"],
             "horizon_regime": kapi["horizon_regime"],
             "search": search,                      # live coordinate-descent progress (probe i/total, best)
-            "reflecting": _reflect_lock.locked()}
+            # SÜREÇ-DIŞINDA da doğru (TSK-233): elle yansıma pano sürecinden taşındı, o süreçteki kilit hep boştur.
+            "reflecting": _yansiyor_mu(icerde, disk, search_durumu, search_yas)}
