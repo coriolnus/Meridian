@@ -10776,6 +10776,18 @@ def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
     def _aktif() -> dict | None:
         return yigin[-1][1] if yigin else None
 
+    def _onsoz() -> dict:
+        """İlk başlıktan ÖNCE gelen madde ya da tablo satırının bölümü — ilk ihtiyaçta açılır.
+
+        Başlıksız önsöz maddeleri SESSİZCE DÜŞMEZ: sayım dosyayla tutarlı kalmalı. TABLO SATIRI DA
+        (TSK-235, 2026-09-27): önsöz yalnız madde için açılıyordu ve ilk `##` başlığından önceki
+        bir tablo, bağlanacak bölüm bulamayıp hiçbir kovaya yazılmadan düşüyordu."""
+        nonlocal onsoz
+        if onsoz is None:
+            onsoz = _yeni(2, "(başlıksız önsöz)", 1)
+            onsoz["no"] = None
+        return onsoz
+
     acik: dict | None = None       # devam satırı katlanabilecek AÇIK madde (yoksa None)
     for i, l in enumerate(satirlar, 1):
         if l.lstrip().startswith("```"):
@@ -10823,13 +10835,7 @@ def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
         mm = _ROADMAP_MADDE.match(l)
         if mm:
             girinti, govde = len(mm.group(1)), mm.group(3)
-            hedef = _aktif()
-            if hedef is None:
-                if onsoz is None:
-                    # Başlıksız önsöz maddeleri SESSİZCE DÜŞMEZ: sayım dosyayla tutarlı kalmalı.
-                    onsoz = _yeni(2, "(başlıksız önsöz)", 1)
-                    onsoz["no"] = None
-                hedef = onsoz
+            hedef = _aktif() or _onsoz()
             acik = {"satir": i, "girinti": girinti, "_ham": [govde]}
             hedef["maddeler"].append(acik)
             continue
@@ -10855,9 +10861,7 @@ def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
             # deponun birinci yasasının ihlali. Satır maddeye KATLANMAZ: tablo hücresi bir
             # maddenin devamı değildir.
             acik = None
-            hedef = _aktif() or onsoz
-            if hedef is not None:
-                hedef.setdefault("_tablo_ham", []).append((i, l.strip()))
+            (_aktif() or _onsoz()).setdefault("_tablo_ham", []).append((i, l.strip()))
             continue
         # Bitişik devam satırı: bu dosya madde gövdelerini sarıyor, katlanmazsa metin yarım kalır.
         if acik is not None:
@@ -10926,27 +10930,53 @@ def _roadmap_ayristir(metin: str, *, yol: str, bayt: int, mtime: str | None,
             return bool(re.fullmatch(r"[\s|:\-]+", l)) and "-" in l
 
         def _bitir(blok):
-            """Bir `|` bloğunu tablolara böler. AYRAÇ satırı (`|---|`) tabloyu başlatır; bir blokta
-            birden çok ayraç varsa üst üste binmiş birden çok tablo demektir."""
+            """Bir `|` bloğunu tablolara böler. AYRAÇ satırı (`|---|`) tabloyu başlatır ve başlığı
+            ayracın bloktaki öncülüdür; blokta birden çok başlıklı ayraç varsa art arda birden çok
+            tablo demektir.
+
+            HER SATIR TAM OLARAK BİR KOVAYA DÜŞER: tablo başlığı · ayraç · tablo satırı · ya da
+            nedeniyle `tablo_atlanan` (TSK-235, 2026-09-27). Önceki sürüm iki yolda satırı HİÇBİR
+            kovaya yazmıyordu ve `tablo_atlanan_n` 0 derken satır kayıptı: (1) ilk başlık+ayraç
+            çiftinden ÖNCEKİ satırlar — araya giren düz metinle bölünen tablonun alt parçası,
+            ardından yalnız boş satırla yeni bir tablo gelince yeni tablonun başlığının üstünde
+            kalıp atılıyordu (TSK-231 K4); (2) blok ayraçla başlayınca kayıt `satir_n: 1` diyor,
+            ayraçtan sonraki başlıksız satırlar düşüyordu. Art arda iki ayraçta ise birinci ayraç
+            ikinci tablonun "başlığı" olup İKİ kovaya düşüyordu. Ölçüm (2026-09-27): bugünkü
+            belgede ve 07-31'den beri örneklenen 129 sürümde bu yollardan düşen satır 0 — kusur
+            gizliydi, veri kaybı yaşanmadı. Çivisi v569 (küçük belgelerin tamamını tarar)."""
             if len(blok) < 2:
                 if blok:
                     atlanan.append({"satir": blok[0][0], "satir_n": len(blok),
                                     "neden": "tek satırlık `|` bloğu — tablo değil"})
                 return
-            ayrac_ix = [k for k, (_no, _l) in enumerate(blok) if _ayrac(_l)]
-            if not ayrac_ix:
+            ayrac_mi = [_ayrac(_l) for _no, _l in blok]
+            if not any(ayrac_mi):
                 # SESSİZ DÜŞÜRME YOK: atlanan her blok sayılır ve NEDENİ gövdede taşınır.
                 atlanan.append({"satir": blok[0][0], "satir_n": len(blok),
                                 "neden": "ayraç satırı (`|---|`) yok — markdown tablosu değil, "
                                          "boru karakterli düz metin"})
                 return
-            for j, ix in enumerate(ayrac_ix):
-                if ix == 0:
-                    atlanan.append({"satir": blok[0][0], "satir_n": 1,
-                                    "neden": "ayraç ilk satır — üstünde başlık satırı yok"})
-                    continue
-                son = ayrac_ix[j + 1] - 1 if j + 1 < len(ayrac_ix) else len(blok)
-                _tabloyu_kur(blok[ix - 1], [x for x in blok[ix + 1:son] if not _ayrac(x[1])])
+            # BAŞLIKLI AYRAÇ tablo açar: bloktaki öncülü var ve öncülü ayraç DEĞİL. Öncülü ayraç
+            # olan ayraç tablo AÇMAZ — açsaydı öncül ayraç hem önceki tablonun ayracı hem yenisinin
+            # başlığı olurdu. Böyle ayraçlar ancak başlıklı bir ayracın (ya da bloğun başının)
+            # hemen altında ardışık dizi olarak durabilir; aşağıda nedeniyle atlanır.
+            baslar = [k for k in range(1, len(blok)) if ayrac_mi[k] and not ayrac_mi[k - 1]]
+            on = blok[:baslar[0] - 1] if baslar else blok
+            if on:
+                atlanan.append({"satir": on[0][0], "satir_n": len(on), "neden": (
+                    "ayraç ilk satır — üstünde başlık satırı yok; altındaki satırlar başlıksız "
+                    "tablo parçası" if ayrac_mi[0] else
+                    "ilk başlık+ayraç çiftinden ÖNCE kalan `|` satırları — başlıksız tablo "
+                    "parçası (tablo araya giren düz metinle bölünmüş olabilir)")})
+            for j, ix in enumerate(baslar):
+                son = baslar[j + 1] - 1 if j + 1 < len(baslar) else len(blok)
+                govde = blok[ix + 1:son]
+                fazla = [x for x in govde if _ayrac(x[1])]
+                if fazla:
+                    atlanan.append({"satir": fazla[0][0], "satir_n": len(fazla),
+                                    "neden": "ayracın hemen altında ikinci ayraç — tablo satırı "
+                                             "değil, üstünde başlık olmadığından tablo da açmaz"})
+                _tabloyu_kur(blok[ix - 1], [x for x in govde if not _ayrac(x[1])])
 
         def _tabloyu_kur(baslik_satiri, govde):
             basliklar = _hucreler(baslik_satiri[1])
