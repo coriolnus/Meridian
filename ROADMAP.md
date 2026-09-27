@@ -569,7 +569,7 @@ _Üretildi: `python ops/roadmap_cephe_ozeti.py --yaz` · kaynak: açık TSK kale
 | PRG-03 Öğrenme Döngüsü | 6 | 2 | 0 | 4 | 0 | 0 | TSK-062 · TSK-063 · TSK-074 · TSK-076 · TSK-204 · TSK-233 |
 | PRG-04 Veri ve Evren | 5 | 1 | 0 | 1 | 3 | 0 | TSK-044 · TSK-045 · TSK-065 · TSK-084 · TSK-207 |
 | PRG-05 Ölçüm Altyapısı | 0 | 0 | 0 | 0 | 0 | 0 | — |
-| PRG-06 Sistem Bütünlüğü | 7 | 4 | 1 | 2 | 0 | 0 | TSK-128 · TSK-137 · TSK-209 · TSK-212 · TSK-214 · TSK-215 · TSK-244 |
+| PRG-06 Sistem Bütünlüğü | 7 | 5 | 0 | 2 | 0 | 0 | TSK-128 · TSK-137 · TSK-209 · TSK-212 · TSK-214 · TSK-215 · TSK-244 |
 | PRG-07 Skill Katmanı | 2 | 0 | 0 | 2 | 0 | 0 | TSK-016 · TSK-093 |
 | PRG-08 Pano ve Operatör | 1 | 0 | 0 | 1 | 0 | 0 | TSK-097 |
 | PRG-09 QuantConnect | 0 | 0 | 0 | 0 | 0 | 0 | — |
@@ -579,7 +579,7 @@ _Üretildi: `python ops/roadmap_cephe_ozeti.py --yaz` · kaynak: açık TSK kale
 | PRG-13 Kalıcı Hafıza | 11 | 2 | 0 | 8 | 1 | 0 | TSK-015 · TSK-060 · TSK-142 · TSK-161 · TSK-163 · TSK-164 · TSK-165 · TSK-166 · TSK-168 · TSK-169 · TSK-170 |
 | PRG-14 Altyapı ve Sır | 5 | 1 | 2 | 2 | 0 | 0 | TSK-020 · TSK-064 · TSK-096 · TSK-176 · TSK-240 |
 | PRG-15 Mikro-yapı ve Tick | 5 | 2 | 2 | 1 | 0 | 0 | TSK-013 · TSK-066 · TSK-067 · TSK-068 · TSK-225 |
-| **Toplam** | 56 | 16 | 7 | 29 | 4 | 0 | — |
+| **Toplam** | 56 | 17 | 6 | 29 | 4 | 0 | — |
 <!-- CEPHE-OZETI:BITIR -->
 
 > ⚠ **BU BLOK 2026-08-13 ANLIK GÖRÜNTÜSÜDÜR (Ö-49 şerhi, 2026-08-22):** içindeki en az üç kalem SONRADAN KAPANDI — /api/diagnostics arızası (v243, 08-14) · N1 bildirim kanalı (08-22 CANLI) · beyin zinciri (08-14'te değişti). Güncel durum §2 TAHTA + §7 günlüktedir; bu blok tarihçe.
@@ -2442,8 +2442,8 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
   What: (2026-09-27 16:2xZ EK [Rol-1]: TSK-239 ile `deploy/hermes/profiles/sef/config.yaml` de yalnız yorumda ayrık olacak (F9 el-ile artefakt; YAML verisi aynı) — aynı eşitleme adımına girer) (2026-09-27 15:2xZ ÖLÇÜLDÜ [Rol-1, A1 salt-okur]: üç dosyanın yorum-dışı satırları canlıyla AYNI (agent.hcl 2 fark satırı = tek yorum); canlı izinler agent.hcl root:vault 640 · vault_unseal.sh root:root 750 · litestream.yml root:root 644; hiçbir A0 görevi kurmuyor (el kurulumu). Eşitleme A1'de yazım gerektirir — operatörde, acil değil. Tasarım sorusu: A0 rolüne alınsın mı (agent.hcl işlevsel değişiminde vault-agent restart işleyicisi gerekir) yoksa F9 ayrım dedektörü olarak mı kalsın) (2026-09-27 14:5xZ AÇILDI [Rol-1; dağıtım #70–#74 F9 raporları + TSK-236 litestream şerhi]: üçünde de fark yalnız yorum satırı (TSK-226/064 emeklilik/TSK-236 çapa düzeltmeleri); işlev aynı. İş: (a) bugünkü eşitleme yolu ölçülür (bu dosyaları kim kurar — el ile mi, vault rolü mü); (b) A0 rolüne kurulum görevi (sahip/izin korunur, restart YOK — içerik yorum) ya da F9 listesine "yalnız yorum ayrığı" beyanı; karar gerekçesiyle.)
   Why: her dağıtımda tekrarlayan yalancı "AYRIK" raporu gerçek bir ayrışmayı gürültüde saklar.
   Ref: PRG-14 · TSK-236 · `deploy/ansible/vars/dagit_vars.yml` · dagit `[F9]`
-- **[TSK-244] Ölü sembol çapası `geridolum.py::_bos_disk_bayt` (`meridian/watchdog.py` + v414 şerhleri) görünmüyor — `deploy` codelaw sembol çözücüsünün kökü değil** — status: QUEUED · born: 2026-09-27 · owner: rol1 · size: S · trigger: —
-  What: (2026-09-27 18:5xZ AÇILDI [Rol-1; TSK-243 uygulayıcısı K1, inceleme doğruladı]: ad `deploy/oracle-a1/geridolum.py`de yok; bugün "çözülemeyen" sayılıyor, ihlal değil. İki metin de geçmiş zaman alıntısı → büyük olasılıkla `[çapa-mezar-taşı]` imi (ucuz). Ayrıca `deploy`un çözücü köküne eklenmesi ADIM-0 sayımıyla değerlendirilir (bugün eklenirse `report()["ok"]` kırmızıya döner).)
+- **[TSK-244] Ölü sembol çapası `geridolum.py::_bos_disk_bayt` (`meridian/watchdog.py` + v414 şerhleri) görünmüyor — `deploy` codelaw sembol çözücüsünün kökü değil** — status: ACTIVE · born: 2026-09-27 · owner: rol1 · size: S · trigger: —
+  What: (2026-09-27 19:1xZ (a) KAPANDI [Rol-1]: `deploy/oracle-a1/geridolum.py`deki fonksiyon `bos_bayt` — `_bos_disk_bayt` adı git tarihinde HİÇ yok (TSK-131 şerhi 09-05'te yanlış adla yazılmış); iki şerh `geridolum.py::bos_bayt`e düzeltildi (yalnız yorum, 308 passed). KALAN (b): `deploy`un codelaw sembol çözücü köküne eklenmesi — ADIM-0 sayımı (bugün kaç çapa çürük/çözülemez) önce) (2026-09-27 18:5xZ AÇILDI [Rol-1; TSK-243 uygulayıcısı K1, inceleme doğruladı]: ad `deploy/oracle-a1/geridolum.py`de yok; bugün "çözülemeyen" sayılıyor, ihlal değil. İki metin de geçmiş zaman alıntısı → büyük olasılıkla `[çapa-mezar-taşı]` imi (ucuz). Ayrıca `deploy`un çözücü köküne eklenmesi ADIM-0 sayımıyla değerlendirilir (bugün eklenirse `report()["ok"]` kırmızıya döner).)
   Why: çözücü kökü dışında kalan dizine atıf yapan çapalar çürüse de "çözülemeyen" sınıfında saklanır.
   Ref: PRG-06 · TSK-243 · `meridian/codelaw.py` · `tests/test_veri_disk_esigi_v414.py`
 - **[TSK-207] `SEMBOL_OLU_ADAY` sensörü 'delist adayı' diyor ama dört sembol CANLI: 2026-09-09 S&P 500 çıkışı → bar akışı kesildi; açık pozisyonlu sembol endeksten çıkarsa çıkış mantığı KÖR kalır** — status: ACTIVE · born: 2026-09-18 · owner: rol1 · size: S-M · trigger: —

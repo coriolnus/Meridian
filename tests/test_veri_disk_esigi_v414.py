@@ -2,7 +2,7 @@
 
 ÖLÇÜLEN BOŞLUK (D1, bu turun ölçümü): `grep -rn "disk_usage|statvfs|/opt/veri|df " meridian/
 watchdog.py meridian/*.py ops/bekci_tarama.py ops/bekci_brifingi.py deploy/oracle-a1/
-geridolum.py` tek isabeti `geridolum.py::_bos_disk_bayt` idi — geri dolumun KENDİ iş-açma kapısı
+geridolum.py` tek isabeti `geridolum.py::bos_bayt` idi — geri dolumun KENDİ iş-açma kapısı
 (ham-geçici alan <25 G kalınca dur). Hiçbir sensör /opt/veri'nin TOPLAM kullanımını izleyip
 OPERATÖRE önceden haber vermiyordu. Operatör kararı (ROADMAP TSK-131, 2026-09-05): geri dolum
 DEVAM, 120 G tavanında (`deploy/oracle-a1/geridolum.py::TAVAN_BAYT` — TEK KAYNAK) ele alınır; bu

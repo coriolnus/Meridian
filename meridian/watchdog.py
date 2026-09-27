@@ -4275,7 +4275,7 @@ def check_eod_supurme_and_alarm() -> dict:
 #
 # ÖLÇÜM (2026-09-05, bu turun D1'i): `grep -rn "disk_usage|statvfs|/opt/veri|df " meridian/
 # watchdog.py meridian/*.py ops/bekci_tarama.py ops/bekci_brifingi.py deploy/oracle-a1/
-# geridolum.py` tek isabeti `geridolum.py::_bos_disk_bayt` idi (kendi `DISK_PAYI_BAYT` ile
+# geridolum.py` tek isabeti `geridolum.py::bos_bayt` idi (kendi `DISK_PAYI_BAYT` ile
 # ham-geçici alanı için İŞ AÇILMADAN ÖNCE bir bekçi kapısı) — hiçbir sensör /opt/veri'nin TOPLAM
 # kullanımını izleyip OPERATÖRE önceden haber vermiyordu; bu sensör o boşluğu kapatır, geridolum'un
 # kendi iç kapısını ÇOĞALTMAZ (ayrı olgu: biri "iş açma", öteki "operatöre erken haber").
