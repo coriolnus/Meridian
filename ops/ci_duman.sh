@@ -10,11 +10,17 @@
 # Yerel hızlı kapı ops/kapilar.sh'tır; bu betik onun CI ikizidir — farkları: bayt-derleme taban
 # kontrolü eklidir ve pytest kapsamı daha geniştir (CI'ın dakikaları vardır, operatörün saniyeleri).
 #
-# SIRA ucuzdan pahalıya; AMA İLK KIRMIZI KOŞUMU DURDURMAZ. Dört kapının HEPSİ koşar, hepsinin
-# hükmü ekranda görünür ve kırmızılar sonda TEK bir `exit 1`e toplanır. Bu BİLİNÇLİ: bir turda
-# tüm kapıların durumu bir kerede görülsün — kısa devre yapan bir kapı, ikinci kırmızıyı bir
-# sonraki koşuma erteler ve turu gereksiz yere ikiye böler. Sıra yine de ucuzdan pahalıyadır,
+# SIRA ucuzdan pahalıya; AMA İLK KIRMIZI KOŞUMU DURDURMAZ. Beş kapının (ön kapı [0] + dört) HEPSİ
+# koşar, hepsinin hükmü ekranda görünür ve kırmızılar sonda TEK bir `exit 1`e toplanır. Bu BİLİNÇLİ:
+# bir turda tüm kapıların durumu bir kerede görülsün — kısa devre yapan bir kapı, ikinci kırmızıyı
+# bir sonraki koşuma erteler ve turu gereksiz yere ikiye böler. Sıra yine de ucuzdan pahalıyadır,
 # çünkü ucuz kapının hükmü saniyeler içinde ekrana düşer (bekleme değil, okuma sırası).
+#   [0] kilit tazeliği (~0,01 sn) — `uv lock --check --offline`: pyproject.toml ↔ uv.lock ayrışması
+#                                KIRMIZI. İLK SIRADA OLMAK ZORUNDA: bayraksız `uv run` ve `uv audit`
+#                                bayat kilidi SESSİZCE yeniden yazar (TSK-230 ölçümü) — sonra koşan
+#                                bir kontrol yeniden yazılmış kilidi "taze" görürdü. CI'ın eşitleme
+#                                adımı da bu yüzden `--frozen` taşır. `--check` bu uv sürümünde YOKSA
+#                                hüküm KIRMIZI değil ÖLÇÜLEMEDİ'dir ([3] ile aynı desen).
 #   [1] compileall   (~5 sn)   — beyan edilen Python tabanında (>=3.11) SÖZDİZİMİ. CI, venv'i
 #                                bilerek 3.11'e sabitler: 3.12+'da geçerli olup 3.11'de patlayan
 #                                sözdizimi (PEP 701 f-string vakası, 2026-08-15) burada yakalanır.
@@ -43,6 +49,29 @@ UV="${UV:-uv}"
 KIRMIZI=0
 
 baslik() { printf '\n=== %s ===\n' "$1"; }
+
+baslik "[0/4] kilit tazeliği — pyproject.toml ↔ uv.lock (her \`uv run\`/\`uv audit\`tan ÖNCE)"
+# ÖLÇÜM (TSK-230, 2026-09-27, uv 0.11.28, yalıtılmış kopyalar): taze kilit → çıkış 0, ~0,01 sn, BOŞ
+# önbellekle de (ağ gerekmez); ayrışma (yeni ana/dev bağımlılığı, extra kısıtı, kilitli sürümün hâlâ
+# sağladığı gevşetme, silme, requires-python) → çıkış 1; kilit yok → 2. uv.lock HİÇBİR durumda yazılmaz.
+# `--offline` ayrışmayı bazen "network was disabled" ipucuyla bildirir — hüküm AYNIDIR (kilit bayat).
+# YOKLAMA pipe'sız (here-string): `uv … | grep -q` pipefail altında erken kapanan grep'in SIGPIPE'ıyla
+# "bayrak yok" diyebilirdi. `--check-exists` ayrı bir bayraktır, eşleşmez.
+_KILIT_YARDIM="$("$UV" lock --help 2>/dev/null || true)"
+if grep -qE -- '^[[:space:]]+--check[[:space:]]' <<< "$_KILIT_YARDIM"; then
+  if "$UV" lock --check --offline; then
+    echo "  ✓ uv.lock pyproject.toml ile TAZE"
+  else
+    echo "!! KİLİT BAYAT — pyproject.toml ile uv.lock ayrışık (ya da uv kilidi okuyamadı)."
+    echo "   Çare: \`uv lock\` koş ve uv.lock'u pyproject ile AYNI commit'e koy. A1 eşitlemesi kilidi"
+    echo "   OLDUĞU GİBİ kurar (--frozen): bayat kilit pyproject'in söylediğini canlıya GÖTÜRMEZ."
+    KIRMIZI=1
+  fi
+else
+  echo "  ? ÖLÇÜLEMEDİ (araç yok): bu uv sürümü '$UV lock --check' bayrağını tanımıyor."
+  echo "    Sürüm: $("$UV" --version 2>/dev/null || echo 'okunamadı')"
+  echo "    Kilit tazeliği bu koşumda DENETLENMEDİ — yeşil DEĞİL, ölçüsüz."
+fi
 
 baslik "[1/4] compileall — beyan edilen Python tabanında sözdizimi"
 if "$UV" run python -m compileall -q meridian tests; then

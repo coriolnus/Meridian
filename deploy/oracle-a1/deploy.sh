@@ -155,9 +155,15 @@ export PATH="$HOME/.local/bin:$PATH"
 echo "uv: $(uv --version)"
 
 # 3) Meridian bağımlılıkları (uv.lock → tekrarlanabilir; aarch64 wheel'leri)
+#    A0 İLE AYNI SEMANTİK (TSK-230): `--frozen --no-dev`. Kaynak A0 rolüdür (`venv.yml` görev metni +
+#    defaults `uv_sync_bayrak`); buradaki literal kopyalar tests/test_uv_cagri_hijyeni_v566.py ile
+#    çivili. Eski yedek yol KALDIRILDI (`--frozen` düşünce hatayı `2>/dev/null` ile susturup bayraksız
+#    `uv sync`e dönüyordu): kilidi YENİDEN YAZIYOR ve dev grubunu A1'e kuruyordu (A0 sonraki dağıtımda geri alır →
+#    "VENV DEĞİŞTİ"). `--frozen` düşerse (kilit yok/bozuk) betik `set -e` ile BURADA durur — sessiz
+#    yeniden kilitleme yerine görünür arıza; çare yerelde `uv lock` + commit + yeniden rsync.
 echo "-- uv sync (bağımlılıklar)"
-uv sync --frozen 2>/dev/null || uv sync
-uv run python -c "import meridian.api, pandas, numpy, fastapi; print('meridian import OK')"
+uv sync --frozen --no-dev
+uv run --frozen --no-dev python -c "import meridian.api, pandas, numpy, fastapi; print('meridian import OK')"
 
 # 4) state/ var mı? (yoksa uyar — operatör yerelden rsync'lemeli)
 if [ ! -f state/portfolio.json ] && [ ! -s state/meridian.db ]; then
@@ -635,7 +641,7 @@ echo "   sessizse ya da 30 işlem gününden kısaysa DÖRT hüküm de meşru ol
 echo "   DİKKAT — O HÂLDE BİRİM KIRMIZIYA DÖNMEZ, YEŞİL KALIR (çıkış 0): 'susmaz' sözleşmesi"
 echo "   gereği mesaj gider. Yani hükmü BİRİM DURUMUNDAN DEĞİL MESAJIN GÖVDESİNDEN oku —"
 echo "   '⚠ KARNE HESAPLANAMADI' satırı, ÖLÇÜLEMEDİ hükümleri ve kapsam beyanı oradadır:"
-echo "       journalctl -u meridian-karne -n 80   ·   uv run python ops/karne_hesap.py --json"
+echo "       journalctl -u meridian-karne -n 80   ·   uv run --frozen --no-dev python ops/karne_hesap.py --json"
 echo "   ÖLÇÜLMÜŞ AÇIK KALEM (Rol-1'e devredildi, bu betik ÇÖZMEZ): ops/karne_hesap.py CLI'sı"
 echo "   'dördü de ÖLÇÜLEMEDİ → çıkış 2' kapısını taşır ve gerekçesinde 'birim tam ölçüm"
 echo "   kesintisinde sonsuza dek yeşil görünürdü' der — ama birim O CLI'yı değil harness'i"
@@ -689,13 +695,13 @@ esac
 #    `-s state/trades.jsonl` kontrolü DOLU defteri BOŞ görüp CANLI defterin üstüne replay koşardı.
 if [ ! -s state/trades.jsonl ] && [ ! -s state/meridian.db ]; then
   echo "-- TOHUM: state/trades.jsonl boş/yok ve state/meridian.db yok → geçmişten tohumlanıyor (2022 → bugün)"
-  uv run python -m meridian.run --dry-run --replay 2022-01-01:"$(date +%F)" \
+  uv run --frozen --no-dev python -m meridian.run --dry-run --replay 2022-01-01:"$(date +%F)" \
     || echo "   (tohum başarısız — canlı turlarla devam edilecek; sebebi yukarıdaki çıktıda)"
 elif [ -s state/trades.jsonl ]; then
   echo "-- TOHUM ATLANDI: state/trades.jsonl dolu ($(wc -l < state/trades.jsonl) satır) — taşınan canlı state korunuyor"
 else
   echo "-- TOHUM ATLANDI: defter SQLite'ta (state/meridian.db) — taşınan canlı state korunuyor"
-  uv run python -m meridian.dbmigrate --durum || true
+  uv run --frozen --no-dev python -m meridian.dbmigrate --durum || true
 fi
 sudo systemctl restart meridian meridian-barsarchive
 sleep 8

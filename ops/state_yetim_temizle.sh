@@ -73,7 +73,9 @@ else
 fi
 
 # ÖLÇÜLEMEDİ ≠ TEMİZ (UYDURMA YASAĞI): dedektör koşamazsa sayı UYDURULMAZ, sebebi yazılır.
-_DEDEKTOR="cd '$KOK' && uv run python -c \"
+# `--frozen --no-dev` (TSK-230): varsayılan kip A1'e SSH'tir; bayraksız `uv run` orada dev grubunu
+# geri kurar ve kilidi yeniden yazabilir (A0 semantiği; v566 çivili). Yerel kipte de zararsızdır.
+_DEDEKTOR="cd '$KOK' && uv run --frozen --no-dev python -c \"
 import json
 from meridian import recompute
 r = [x for x in recompute.report()['rows'] if x['check'] == 'orphan_state_files']

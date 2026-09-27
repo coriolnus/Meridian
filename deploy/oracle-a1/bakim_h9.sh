@@ -15,15 +15,15 @@ cd "$REPO"
 echo "  ✓ ağaç temiz · dağıtılacak: $(git rev-parse --short HEAD)"
 
 echo "=== [1] ledgerstamp (SIRA BAĞLAYICI — migrasyondan önce, mtime kanıtı) ==="
-"${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv run python -m meridian.ledgerstamp --uygula 2>&1 | tail -3' || die "ledgerstamp"
+"${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv run --frozen --no-dev python -m meridian.ledgerstamp --uygula 2>&1 | tail -3' || die "ledgerstamp"
 
 echo "=== [2] kod rsync (dry-run özeti + gerçek) ==="
 rsync -azin --delete "${RSYNC_EXC[@]}" -e "ssh -i $KEY" "$REPO"/ ubuntu@"$IP":/opt/meridian/ | head -25
 rsync -az  --delete "${RSYNC_EXC[@]}" -e "ssh -i $KEY" "$REPO"/ ubuntu@"$IP":/opt/meridian/ || die "rsync"
-"${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv sync --frozen --extra dev -q && echo "  ✓ uv sync"' || die "uv sync"
+"${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv sync --frozen --no-dev -q && echo "  ✓ uv sync"' || die "uv sync"
 
 echo "=== [3] DB henüz pasif mi? ==="
-"${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv run python -m meridian.dbmigrate --durum 2>&1 | head -4'
+"${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv run --frozen --no-dev python -m meridian.dbmigrate --durum 2>&1 | head -4'
 
 echo "=== [4] BAKIM PENCERESİ: durdur + keepalive ==="
 "${SSH[@]}" 'sudo systemctl stop meridian meridian-barsarchive && rm -f /opt/meridian/state/keepalive.pid && echo "  ✓ durdu"' || die "stop"
@@ -32,16 +32,16 @@ echo "=== [5] soğuk yedek (durmuşken → tutarlı) ==="
 "${SSH[@]}" 'tar -czf /home/ubuntu/backups/state-premigration-$(date -u +%Y%m%dT%H%M).tar.gz -C /opt/meridian state && ls -lh /home/ubuntu/backups/ | tail -2' || die "soğuk yedek"
 
 echo "=== [6] MİGRASYON: kuru → uygula → durum ==="
-"${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv run python -m meridian.dbmigrate 2>&1 | tail -10'
-if ! "${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv run python -m meridian.dbmigrate --uygula 2>&1 | tail -10'; then
+"${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv run --frozen --no-dev python -m meridian.dbmigrate 2>&1 | tail -10'
+if ! "${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv run --frozen --no-dev python -m meridian.dbmigrate --uygula 2>&1 | tail -10'; then
   echo "!! MİGRASYON BAŞARISIZ — parite korumalı geri alma devrede; servisler DOSYA arka ucuyla başlatılıyor"
   "${SSH[@]}" 'sudo systemctl start meridian meridian-barsarchive'
   die "dbmigrate --uygula (kaynak dosyalar yerinde; incele: dbmigrate --durum)"
 fi
-"${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv run python -m meridian.dbmigrate --durum 2>&1 | tail -8'
+"${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv run --frozen --no-dev python -m meridian.dbmigrate --durum 2>&1 | tail -8'
 
 echo "=== [7] uygulamanın gözünden çapraz kontrol (restart ÖNCESİ) ==="
-"${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv run python -c "
+"${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian && uv run --frozen --no-dev python -c "
 from meridian import store
 print(\"trades:\", len(store.read_jsonl(\"trades.jsonl\")),
       \"cash:\", store.read_json(\"portfolio.json\",{}).get(\"cash\"),
@@ -70,7 +70,7 @@ fi
 echo "=== [12] son doğrulama paketi ==="
 "${SSH[@]}" 'export PATH="$HOME/.local/bin:$PATH"; cd /opt/meridian
 curl -s -o /dev/null -w "healthz: %{http_code}\n" http://127.0.0.1:8080/healthz
-uv run python -m meridian.dbmigrate --durum 2>&1 | grep -E "aktif|kaynak_digest|sema" | head -8
+uv run --frozen --no-dev python -m meridian.dbmigrate --durum 2>&1 | grep -E "aktif|kaynak_digest|sema" | head -8
 systemctl is-active meridian meridian-barsarchive meridian-tick-watchdog.timer | tr "\n" " "; echo
 echo "--- maruziyet skorları (9.2 idi) ---"
 systemd-analyze security meridian 2>/dev/null | tail -1

@@ -6,7 +6,7 @@
 # bölüm başlıklarındadır — buradaki `name:` satırları o başlıkların ÖZETİDİR, ikinci kaynağı değil.
 #
 # KAPI LİSTESİ DÜŞMEZ (plan Global Constraints):
-#   [0a] temiz ağaç + DAGIT_SHA'nın DONMASI   [0b] uv audit          [0c] lint-imports
+#   [0a] temiz ağaç + DAGIT_SHA'nın DONMASI   [0b] kilit + uv audit  [0c] lint-imports
 #   [0d] import taraması                      [1]  rsync kuru koşum  [1b] versiyonlu state farkı
 #   [1c] sistem birimi ayrıklığı              [F9] kapsam-dışı artefakt içerik kapısı
 #   [F10] enabled+inactive anomalisi          [2]  rsync             [3]  uv sync --frozen
@@ -220,6 +220,58 @@
     # çıkış kodunu görürdü. `failed_when` yalnız SÖZLEŞME DIŞI çıkış kodlarını (araç KOŞAMADI)
     # düşürür; ihlal hükmü `assert`tedir ve reçeteyi taşır. Her iki yol da fail-closed'dır:
     # sıfır-dışı hiçbir çıkış kodu dağıtımı sürdürmez (dagit.sh `|| exit 1` ile birebir).
+    #
+    # [0b] KİLİT TAZELİĞİ (TSK-230) — Play 1'in İLK `uv` görevi OLMAK ZORUNDA. Ölçüldü (2026-09-27,
+    # uv 0.11.28, yalıtılmış kopyalar): `uv audit` ve bayraksız `uv run` ([0c]/[0d]/[5c]) pyproject ↔
+    # uv.lock ayrışmasında kilidi SESSİZCE YENİDEN YAZAR — audit çıkış 2 ile düştüğü koşumda bile uv.lock
+    # değişti. Bu kapı onlardan sonra koşsaydı [0a]'nın temiz bulduğu ağaç burada kirlenir, commit'lenmemiş
+    # bir kilit [2] ile A1'e gider, [3] `uv sync --frozen` onu kurar ve [B] beyanı başka bir kilidi anlatırdı.
+    # `--offline`: taze kilit ağsız ve önbelleksiz doğrulanır (~0,01 sn); uv.lock hiçbir durumda yazılmaz.
+    # ÇIKIŞ KODU SÖZLEŞMESİ (uv; `uv yok` Ansible'da da rc 2 döner — `[Errno 2]`, ölçüldü): 0 = taze ·
+    # 1 = ayrışık/çözülemez · 2 = uv ÖLÇEMEDİ (uv yok, kilit yok, yorumlayıcı yok ya da bu sürümde
+    # `--check` yok). HÜKÜM (Rol-1, 2026-09-27, TSK-230 tur 2): YALNIZ rc 1 DURDURUR — kapının amacı
+    # AYRIŞMADIR, operatör Mac'inin uv sürümü DEĞİL (A0 uv'si pinsiz). rc 2 dağıtımı DURDURMAZ ama
+    # SESSİZ DE GEÇMEZ: ÖLÇÜLEMEDİ nedeniyle birlikte log'a basılır (CI `[0/4]` ÖLÇÜLEMEDİ deseni).
+    # Bedel (hüküm yanlışsa): uv ölçemediği turda ayrışma sızar — TSK-230 öncesi durum, yeni risk değil.
+    # Sözleşme DIŞI kod (3, sinyal…) görevi düşürür (araç tanımsız davrandı — [0b]/[0c] deseni).
+    # Çivi: tests/test_uv_cagri_hijyeni_v566.py (E3: sıra + failed_when + rc 1 DURUR · rc 2 SÜRER+basar).
+    # BEYANLI-FARK 12
+    - name: "[0b] Kilit tazeliği (pyproject ↔ uv.lock) — ÖLÇÜM (her `uv` görevinden ÖNCE)"
+      ansible.builtin.command:
+        cmd: uv lock --check --offline
+        chdir: "{{ repo_kok_yerel }}"
+      register: uv_kilit
+      changed_when: false
+      check_mode: false
+      failed_when: uv_kilit.rc not in [0, 1, 2]
+
+    - name: "[0b] KAPI — kilit pyproject ile ayrışıksa DAĞITIM İPTAL"
+      ansible.builtin.assert:
+        that:
+          - uv_kilit.rc != 1
+        fail_msg: >-
+          KİLİT BAYAT (pyproject.toml ile uv.lock ayrışık) — dağıtım İPTAL.
+          {{ uv_kilit.stderr_lines | default([]) }}
+          Çare: yerelde `uv lock` koş, uv.lock'u pyproject ile AYNI commit'e koy, yeniden dağıt.
+          [3] `uv sync --frozen` kilidi OLDUĞU GİBİ kurar — bayat kilit pyproject'i canlıya götürmez.
+        success_msg: >-
+          {{ '[0b] uv.lock pyproject.toml ile taze' if uv_kilit.rc == 0
+             else '[0b] kilit ayrışması ÖLÇÜLEMEDİ — hüküm bir sonraki görevde (dağıtım sürer)' }}
+
+    - name: "[0b] Kilit tazeliği ÖLÇÜLEMEDİ — nedeniyle log'a (dağıtım SÜRER, yeşil DEĞİL)"
+      ansible.builtin.debug:
+        msg: >-
+          [0b] ÖLÇÜLEMEDİ: {{
+            'uv bulunamadı (PATH)' if 'No such file or directory' in (uv_kilit.msg | default(''))
+            else 'uv.lock yok' if 'Unable to find lockfile' in (uv_kilit.stderr | default(''))
+            else 'bu uv sürümü `lock --check` bayrağını tanımıyor'
+              if "unexpected argument '--check'" in (uv_kilit.stderr | default(''))
+            else 'uv çıkış 2 (yorumlayıcı yok ya da başka bir uv hatası)' }}
+          — kilit tazeliği doğrulanmadı, dağıtım sürüyor. Ham: {{ uv_kilit.msg | default('') }}
+          {{ (uv_kilit.stderr_lines | default([]))[-3:] }}. Ölçmek için: `uv --version` ve
+          `uv lock --check --offline` (A0 uv'si pinsiz — CI ve A1 `uv_surum`e pinli).
+      when: uv_kilit.rc == 2
+
     - name: "[0b] uv audit (tedarik-zinciri kapısı) — ÖLÇÜM"
       ansible.builtin.command:
         cmd: uv audit --preview-features audit-command

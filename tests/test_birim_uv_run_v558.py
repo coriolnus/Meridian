@@ -62,11 +62,13 @@ MODELLENMEYEN (bilinçli; hepsi GÜRÜLTÜLÜ yönde ya da adıyla KAPSAM DIŞI)
   · uv ikilisini değişkenle çağırmak (`${UV} run`) → GÖRÜLMEZ (bugün depoda yok, 2026-09-26).
   · Python gövdesinde düz `uv` kelimesi → sahte çağrı sayılabilir → ÖTER.
   · Birim DIŞI uv çağrıları (RUNBOOK'taki elle `uv run` komutları, `bakim_h9.sh`, eski `deploy.sh`) KAPSAM
-    DIŞI; ExecStart'ın çağırdığı betik gövdeleri ölçüldü (2026-09-26): `tick_watchdog.sh`,
+    DIŞI — TSK-230'da `tests/test_uv_cagri_hijyeni_v566.py` kapsadı (aynı `_beklenen()`, aynı algılayıcı);
+    ExecStart'ın çağırdığı betik gövdeleri ölçüldü (2026-09-26): `tick_watchdog.sh`,
     `hindsight-api-baslat.sh`, `taban_orneklem.sh`, vault betikleri `uv` çağırmaz.
   · `uvx` (araç ortamı, proje venv'ine dokunmaz) ölçülmez.
   · Kilit tazeliği ekseni: A0 `sync --frozen`, birim `run` kilidi denetler; pyproject ↔ uv.lock ayrışırsa
-    birim yeniden kilitler (uv.lock yazar + ağ). Ayrı sınıf, ayrı karar (TSK-228 raporu).
+    birim yeniden kilitler (uv.lock yazar + ağ). Ayrı sınıf, ayrı karar (TSK-228 raporu) — kapısı TSK-230'da
+    kuruldu: CI duman `[0/4]` + dagit `[0b]` `uv lock --check --offline` (v566 E).
 
 A1 uv SÜRÜMÜ BU TURDA ÖLÇÜLMEDİ (ajan A1'e ssh yapmaz): pin `defaults/main.yml::uv_surum` = 0.12.0
 (Rol-1 ölçümü 2026-09-08). `--no-dev` `uv run`da 0.11.28'de belgeli; A1'de `uv run --help` ile dağıtımdan

@@ -26,11 +26,22 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      # uv SÜRÜMÜ PİNLİ (TSK-230 tur 2): sürümsüz installer her koşumda "en son" uv'yi kurar ve duman
+      # kapısı [0/4] `uv lock --check`in sözleşmesine dayanır — kod değişmeden kırmızı dönebilirdi.
+      # TEK KAYNAK A1 pini: deploy/ansible/roles/meridian_a1/defaults/main.yml::uv_surum; buradaki literal
+      # kopya tests/test_uv_cagri_hijyeni_v566.py (E6) ile çivili. Biçim astral'ın belgelediği sürüm-pinli
+      # URL'dir ("include it in the URL", docs.astral.sh/uv/getting-started/installation, 2026-09-27) —
+      # A0 `venv.yml` ile aynı. `uv --version` kurulan sürümü log'a düşürür.
+      - name: Install uv (sürüm pinli — A1 uv_surum)
+        run: |
+          curl -LsSf https://astral.sh/uv/0.12.0/install.sh | sh
+          ~/.local/bin/uv --version
+      # `--frozen` (TSK-230): bayraksız `uv sync` pyproject ↔ uv.lock ayrışmasında kilidi SESSİZCE
+      # yeniden yazar — duman kapısının [0/4] kilit kontrolü sonra koşar ve yeniden yazılmış kilidi
+      # "taze" görürdü (kapı CI'da kör). Kilit olduğu gibi kurulur; ayrışmayı [0/4] KIRMIZI bildirir.
       - name: Sync deps (Python 3.11 = beyan edilen taban)
         run: |
           ~/.local/bin/uv python install 3.11
-          ~/.local/bin/uv sync --extra dev --python 3.11
-      - name: Duman kapısı (compileall + lint-imports + audit + pytest duman)
+          ~/.local/bin/uv sync --frozen --extra dev --python 3.11
+      - name: Duman kapısı (kilit tazeliği + compileall + lint-imports + audit + pytest duman)
         run: UV=~/.local/bin/uv ./ops/ci_duman.sh
