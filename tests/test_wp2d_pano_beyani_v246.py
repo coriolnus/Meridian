@@ -25,7 +25,7 @@ docstring'indeki "iki hesap" kusuru).
 =================================================================================================
 KALEM 2 — `config.default_strategy()` YEDEĞİ CANLIYLA AYRIŞIKTI (ROADMAP Ö-30)
 =================================================================================================
-`state/goal.yaml:123-125` kendi metninde BEYAN EDİYOR: *"BERABERİNDE GİDEN AYAR: `position_size_r`
+`state/goal.yaml` `limits` şerhi kendi metninde BEYAN EDİYOR: *"BERABERİNDE GİDEN AYAR: `position_size_r`
 1,0 → 0,5 … İkisi AYRILMAZ."* Ama çiftin yarısı git-izli `goal.yaml`da (`max_open_positions: 20`),
 öteki yarısı izlenmeyen `state/strategy.yaml`da — ve o dosya yok/boş/bozuk olduğu an
 `config.load_strategy()` sessizce `default_strategy()`e düşüyor, orada `position_size_r: 1.0`
@@ -413,7 +413,7 @@ def test_KALEM2_yedegin_boyutu_CANLI_karariyla_hizali():
 def test_KALEM2_UC_ARIZA_HALINDE_de_yedek_CANLI_boyutu_verir(sandbox_state, hal, icerik):
     """ÇİVİNİN ASIL CÜMLESİ: `strategy.yaml` yok/boş/bozuk olduğunda motorun koştuğu boyut,
     operatörün ölçtüğü boyuttur. Eskiden bu üç hâlin üçü de 1,0R'ye düşüyordu — yani beyan edilmiş
-    invaryant (`goal.yaml:123-125`) tek dosya arızasıyla kırılıyordu."""
+    invaryant (`goal.yaml` «BERABERİNDE GİDEN AYAR» şerhi) tek dosya arızasıyla kırılıyordu."""
     if icerik is not None:
         config.strategy_path().write_text(icerik)
     s = config.load_strategy()
@@ -458,7 +458,7 @@ def test_KALEM2_SURUKLENME_dedektoru_canli_yuzeyle_BIREBIR():
         pytest.skip("canlı strategy.yaml `position_size_r` taşımıyor — kıyas YAPILAMADI")
     assert float(canli["position_size_r"]) == BEKLENEN_BOYUT, (
         "YEDEK CANLIYLA AYRIŞTI: operatör canlı boyutu değiştirdi ama `config.default_strategy()` "
-        "eski değerde kaldı — `goal.yaml:123-125` invaryantı yine tek dosya arızasıyla kırılır")
+        "eski değerde kaldı — `goal.yaml` «BERABERİNDE GİDEN AYAR» invaryantı yine tek dosya arızasıyla kırılır")
 
 
 def test_KALEM2_yedek_BOUNDS_icinde_ve_GOAL_tavaninin_altinda():

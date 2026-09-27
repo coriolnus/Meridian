@@ -688,7 +688,7 @@ case "$TICK_CIKTI" in
 esac
 
 # 7) tohum + başlat
-#    KORUMA (serve.sh:16 ile BİREBİR): dolu bir state üzerine replay KOŞULMAZ. Eski sürüm bu kontrolü
+#    KORUMA (serve.sh'ın `[ ! -s state/trades.jsonl ] && [ ! -s state/meridian.db ]` kapısıyla BİREBİR): dolu bir state üzerine replay KOŞULMAZ. Eski sürüm bu kontrolü
 #    taşımıyordu → rsync'lenmiş CANLI state'in üstüne 2022→bugün replay koşabiliyordu.
 #    SQLite GEÇİŞİ SONRASI TUZAK KAPALI (WP-H/H9, 2026-07-31): migrasyon sonrası defter
 #    `state/meridian.db` içindedir ve `state/trades.jsonl` `.migrated` ekiyle durur — tek başına

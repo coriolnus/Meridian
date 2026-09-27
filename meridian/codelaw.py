@@ -29,7 +29,7 @@ buldu ve bu modül ikisini de çalışma zamanına hiç dokunmadan, ast ile kayn
   taşıdığı satır çapaları) `ops/runbook_uret.py`de nötrlendi, RUNBOOK artık normal `.md` gibi
   taranır (`_DOCS_URETILMIS` boş — bkz. o sabitin şerhi). Ölçüm gövdesi ortaktır (`_capalari_olc`),
   ayrışan yalnız hükümdür. DÖRDÜNCÜ, AYRI bir sınıf — düz-metin/çapraz-biçim çapası
-  (`stale_text_anchors`, TSK-080): `.py` DIŞI hedefler (`goal.yaml:27`) ve dosya adı bitişik
+  (`stale_text_anchors`, TSK-080): `.py` DIŞI hedefler (`goal.yaml:27` — desen örneği, çapa-mezar-taşı) ve dosya adı bitişik
   OLMAYAN Türkçe "satır NNN" biçimi. Bu sınıfın hükmü YAPISAL OLARAK DAR (içerik uyumu ölçülemez)
   ve `report()["ok"]`i ETKİLEMEZ — adıyla raporlanır, bekçiyi kırmızıya çekmez.
 
@@ -2379,11 +2379,11 @@ def stale_docs_line_anchors(root: str = DOCS_CAPA_KOKU,
 #: `stale_line_anchors`/`stale_tsx_line_anchors`/`stale_docs_line_anchors` ÜÇÜ DE TEK SÖZDİZİMİ
 #: tanır: dosya-adı BİTİŞİK `:NNN`, hedef DAİMA `.py`. Bu tarayıcı KOPYA DEĞİL — iki AYRI kör
 #: noktayı kapatan YENİ bir desen sınıfı:
-#:   (a) ÇAPRAZ-BİÇİM — hedef `.py` DEĞİL (`goal.yaml:27`, `ROADMAP.md:503`), opsiyonel `NNN-MMM`
+#:   (a) ÇAPRAZ-BİÇİM — hedef `.py` DEĞİL (`goal.yaml:27`, `ROADMAP.md:503` — desen örnekleri, çapa-mezar-taşı), opsiyonel `NNN-MMM`
 #:       ARALIK biçimiyle.
 #:   (b) DÜZ-METİN — Türkçe "satır NNN"/"satırı NNN": dosya adı çapanın kendi metninde bitişik
 #:       DEĞİL, AYNI SATIRDA daha önce geçen bir dosya-adı belirtecinden ÇÖZÜLÜR (canlı örnekler —
-#:       `RUNBOOK.md`, `ARTEFAKT-TARAMASI-2026-08-07.md:420` "`bararchive.py`… (satır 13-18)" — hep
+#:       `RUNBOOK.md`, `ARTEFAKT-TARAMASI-2026-08-07.md`deki "`bararchive.py`… (satır 13-18)" — hep
 #:       bu şekli izler: dosya adı ÖNCE anılır, "satır NNN" birkaç kelime sonra gelir).
 #: `.py` UZANTISI (a)'nın ÇAPA DESENİNDE YOK — o zaten üç dünyanın konusu, aynı hedefi ikinci bir
 #: yasayla ölçmek KOPYA ölçüm üretirdi. (b)'nin ÇÖZÜMLEME uzantı listesinde `.py`/`.ts`/`.tsx` DA

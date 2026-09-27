@@ -74,7 +74,7 @@
   var gece = modu === "dark" || (modu === "system" && sistemGece());
   kok.classList.toggle("dark", gece);
   /* ESKİ YÜZEYLERLE KÖPRÜ: landing / workflow / runbook `data-theme`i okur ve
-     değerleri "gunduz"/"gece"dir (theme.js:29-30) — "light"/"dark" DEĞİL. Yanlış
+     değerleri "gunduz"/"gece"dir (theme.js `GUNDUZ`/`GECE` sabitleri) — "light"/"dark" DEĞİL. Yanlış
      değer yazmak niteliği doldurur ama eski CSS onu tanımaz: hata yok, tema yok. */
   kok.setAttribute("data-theme", gece ? "gece" : "gunduz");
   /* Tarayıcı kendi çizdiklerini de bilsin: kaydırma çubuğu, form kontrolü,

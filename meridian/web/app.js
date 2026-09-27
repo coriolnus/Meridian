@@ -830,7 +830,7 @@ function sermayeKokenSatiri(k, { kisa = false, ibareyle = false } = {}) {
   if (!k) return "";
   const parca = [];
   // KENAR ŞERİDİNDE İBARE BU SATIRA İNER, `<b>`nin İÇİNE DEĞİL: `.acct .r b` kuralı
-  // `white-space:nowrap` + `flex:none` taşır (index.html:330), yani değerin yanına eklenen her
+  // `white-space:nowrap` + `flex:none` taşır (index.html `.acct .r b` kuralı), yani değerin yanına eklenen her
   // kelime satırı GENİŞLETİR ve dar şeritte "Sermaye" etiketini taşırırdı. Geniş kahraman kartında
   // ibare değerin hemen altında kendi satırında durur.
   if (ibareyle && k.ibare) parca.push(esc(k.ibare));
@@ -858,12 +858,12 @@ function sermayeKokenSatiri(k, { kisa = false, ibareyle = false } = {}) {
 // ---- AYNA ROZETİ: İKİ BOYUT, TEK CÜMLE -------------------------------------------------------
 // (2026-08-13 · docs/DENETIM-SPLIT-SINIFI-2026-08-13.md §3.1)
 // KUSUR NEYDİ: bu rozet YALNIZ `hb.mirror_drift`e bakıyordu ve o alan FİYAT sapmasını ölçer
-// (loop.py:25 `MIRROR_DRIFT_TOL` — iç sim dolumu ↔ gerçek Alpaca dolumu). ADET sapması
+// (`loop.py::MIRROR_DRIFT_TOL` — iç sim dolumu ↔ gerçek Alpaca dolumu). ADET sapması
 // (`position_drift`, `loop.reconcile_broker_state`) BAŞKA bir gerçektir ve nabızda anahtarı hiç
 // yoktu. Canlı
 // ölçüm (2026-08-12T22:01Z): fiyat sapması False, adet sapması True, 4/4 pozisyon ~2 kat ayrık —
 // rozet "ayna uyumlu" (yeşil) yazarken aynı ekranın eylem şeridi "Alpaca aynasında sapma var"
-// diyordu. Kök neden bir DÜZELTMENİN yan ürünüydü: P6 tekilleştirmesi (app.js:9739-9744) sapma
+// diyordu. Kök neden bir DÜZELTMENİN yan ürünüydü: P6 tekilleştirmesi (bu dosyadaki «P6 TEKİLLEŞTİRMESİ» şerhi) sapma
 // metnini mutabakat masasına taşıdı, bu özet rozeti BAŞKA bir alandan besleniyordu ve taşınmadı.
 //
 // SÖZLEŞME: iki boyut da doğruysa "ayna uyumlu" YAZILABİLİR; biri bile sapıksa yazılamaz ve HANGİ
@@ -1271,8 +1271,8 @@ function spineHTML(t, h, rc, ws) {
 
 // ---- `broker_status` DEĞER SÖZLÜĞÜ (v280 · M11/T-2) -----------------------------------------
 // ÖLÇÜLEN KUSUR (docs/TARAMA-KOVA6-ALAN-MERCEGI-2026-08-24.md §2.2): üretici ÜÇ değer yazar —
-// `failed_broker_rejection` (loop.py:830/852), `gap_veto` (loop.py:813) ve `armed_dropped_<kapı>`
-// (loop.py:332). Pano yalnız BİRİNCİSİNİ tanıyordu; kalan her değer `else` dalında nötr/olumlu
+// `failed_broker_rejection` ve `gap_veto` (`loop.py::mirror_submit_armed`) ve `armed_dropped_<kapı>`
+// (`loop.py::_armed_drop_row`). Pano yalnız BİRİNCİSİNİ tanıyordu; kalan her değer `else` dalında nötr/olumlu
 // "gönderilecek" rozetiyle çiziliyor ve `bekleyen` sayacına giriyordu. Yani gap-vetosuyla ya da
 // HALT/kesici kapısıyla DÜŞÜRÜLMÜŞ bir plan "açılışta gidecek" diye okunuyordu — ve o damgalar
 // tam "silahlı bir planın kaybolma sebebi defterden OKUNABİLMELİ" diye eklenmişti
@@ -4622,7 +4622,7 @@ const OLAY_YUZEYLERI = {
     // `karar#mutabakat` altında duruyor ve aşağıdaki "Mutabakat masası" eylemi zaten oraya gidiyor.
     // İCRA-SÖZLEŞMESİ (2026-08-12, v233 — VLO vakası): ONAYLI_PLAN_GONDERILMEDI de bu masada —
     // olgu ayna-gönderim olgusudur (onaylı plan broker'a ulaşmadı); MIRROR_DRIFT'ten AYRI jeton
-    // olması split_brain gürültüsüne gömülmemesi için (obs.py:71 gerekçesi), yüzeyi aynı mutabakat masası.
+    // olması split_brain gürültüsüne gömülmemesi için (`obs.py::ALARM_ONAYLI_PLAN_GONDERILMEDI` şerhindeki gerekçe), yüzeyi aynı mutabakat masası.
     jetonlar: ["MIRROR_DRIFT", "BROKER_REJECT", "TRAIL_DESYNC", "NAKED_POSITION", "ONAYLI_PLAN_GONDERILMEDI"],
     neOldu: "İç sim dolumu ile gerçek Alpaca dolumu toleransın ötesinde ayrıştı (MIRROR_DRIFT), " +
             "broker iç defterin yürüteceği bir emri reddetti (BROKER_REJECT) ya da takip-stop " +
@@ -7694,7 +7694,7 @@ async function opParcalar() {
                  // yazımında kardeşlerini (`production`/`coherence`) kopyalayıp `${v.esit ?? 0}/
                  // ${v.total ?? 0}` diyordu — ama tam o iki kardeş, nullsıfır triyajında **(a)
                  // YALAN SÖYLEYEN** olarak sınıflanmış ve kaldırma kuyruğunda duruyor
-                 // (RAPOR.md §4, `app.js:4977`/`4980`: "yokluk 'ölçülmedi', basılan 0 'ölçtük,
+                 // (RAPOR.md §4, `production`/`coherence` satırları: "yokluk 'ölçülmedi', basılan 0 'ölçtük,
                  // sıfır çıktı' der"). Yani kopyalanan şey desen değil KUSURDU ve çırçır 192→194
                  // GERİYE dönmüştü. `total` hiçbir zaman 0 olamaz (`len(EQUIVALENT_TRUTHS)`),
                  // dolayısıyla basılan "0/0 olgu eşit" ölçülmemiş bir turu "her şey kıyaslandı,
@@ -7740,7 +7740,7 @@ async function opParcalar() {
     `<div class="trow" style="grid-template-columns:170px 1fr"><span class="tick">${esc(nm)}</span>
      <span class="chain sev-1">beyansız yazar: ${esc((v.beyan_edilmemis_yazar || []).join(", ") || "—")}${(v.beyan_edilip_yazmayan || []).length ? ` · yazmayan: ${esc(v.beyan_edilip_yazmayan.join(", "))}` : ""}</span></div>`).join("");
   // ---- TAZELİK ROZETİ (K1, 2026-07-30) -----------------------------------------------------
-  // api.py:1300-1301 ve watchdog.py:660-661 açık bir TASARIM SÖZÜ veriyor: "pano raporun kaç
+  // `api.py::api_diagnostics` ve `watchdog.py::integrity_report_cached` açık bir TASARIM SÖZÜ veriyor: "pano raporun kaç
   // saniye önce hesaplandığını söyler, taze gibi göstermez". `integrity_age_s` bu yüzden dışarı
   // veriliyordu — ama pano onu HİÇ okumuyordu (repo genelinde sıfır eşleşme), yani 20 sn TTL'li
   // önbellekten gelen rapor ekranda YAŞSIZ basılıyordu. Söz kod yorumunda yaşıyordu, ekranda değil.
@@ -8955,7 +8955,7 @@ function firsatOlgunlasma(sd, hz, ladder, cf) {
 
 // ---- F14 · İKİ KADEMELİ EŞİK + NO_DATA — panonun TEK üç-hâl dili ------------------------------
 // ÖLÇÜLEN KUSUR: eşikli göstergeler panoda ÜÇ ayrı biçimde konuşuyordu — kimi `warn` (sev-2), kimi
-// elle `n >= mx ? "sev-1" : n/mx > 0.6 ? "sev-2" : "accent"` (app.js:5899), kimi renksiz. ÜÇ HÂL
+// elle `n >= mx ? "sev-1" : n/mx > 0.6 ? "sev-2" : "accent"` (`opParcalar` EOD sabır göstergesi), kimi renksiz. ÜÇ HÂL
 // (uyarı / alarm / ölçülemedi) her göstergede AYNI olmalı; bu fonksiyon o dili TEK yerde kurar ve
 // başka göstergeler de onu okuyabilsin diye SAF tutulur (Node'da davranış olarak ölçülür).
 // D1 ROL KATMANI: uyarı → --sev-2 ("insan gerekiyor") · alarm → --sev-1 ("şimdi müdahale"). Renk
@@ -10303,7 +10303,7 @@ RENDER.skiller = async () => {
 // `pipeline_runs.jsonl` her skill koşusunda satır yazıyordu; tek okuyucusu /api/pipeline_runs'tı
 // ve o ucu HİÇBİR istemci çağırmıyordu. Artefakt yasası tatmin görünüyordu (modüller-arası okuma
 // VAR) ama zincir bir kat yukarıda — HTTP→DOM katmanında — kopuktu: statik Python grafı JS'i
-// göremez. skills.py:3'ün "ajanın yaptığı hiçbir şey görünmez değildir" vaadi panoda karşılıksızdı.
+// göremez. skills.py modül belgesinin "ajanın yaptığı hiçbir şey görünmez değildir" vaadi panoda karşılıksızdı.
 //
 // `skills_declared_not_run` BİLEREK ÖNE ÇIKARILIYOR: "beyan edildi ama koşmadı" tam olarak
 // Hermes'in 15 gündür aynı 14 düğmede dönmesiyle aynı sınıf bir körlük kanıtıdır ve yalnız bu
@@ -11218,7 +11218,7 @@ function line(pts, b) {
 const EGRI_YAZIM_TR = {
   yazildi: ["nokta yazıldı", ""],
   tazelendi: ["nokta yerinde tazelendi", ""],
-  // ÜÇÜNCÜ HÂL AYRI CÜMLE (loop.py:2262'nin `durum` sözleşmesinin var olma sebebi): "yazmadım
+  // ÜÇÜNCÜ HÂL AYRI CÜMLE (`loop.py::_persist_equity_point` `durum` sözleşmesinin var olma sebebi): "yazmadım
   // çünkü zaten yazılı" bir ARIZA DEĞİL, "yazamadım" arızadır. İkisi aynı tonda gösterilseydi
   // operatör her gün bir uyarı görür ve uyarılara bakmayı bırakırdı.
   idempotent_atlandi: ["aynı gün aynı değer — yeniden yazılmadı", "mut"],
@@ -11299,7 +11299,7 @@ function egriBeyani(b) {
   else {
     const [txt, kls] = EGRI_YAZIM_TR[y.durum] || [`son yazım: ${y.durum || "?"}`, "mut"];
     // OFSET SIFIRDAN FARKLIYSA SÖYLENİR: seri kitabın HAM nakdi değil, beyanlı ofset düşülmüş
-    // tabandır (loop.py:2221) — bu, grafiğin sayısı ile "Sermaye" kartının sayısı arasındaki
+    // tabandır (`loop.py::_persist_equity_point`) — bu, grafiğin sayısı ile "Sermaye" kartının sayısı arasındaki
     // farkın TEK açıklaması ve söylenmezse iki kart çelişiyor gibi okunur.
     p.push(`son yazım ${esc(String(y.tarih || b.son_dongu_tarih || "—"))}: <span class="${kls}">${esc(txt)}</span>${
       y.ofset ? ` · beyanlı ofset ${money(y.ofset)} düşülmüş tabanda` : ""}${
@@ -11365,7 +11365,7 @@ window.kararKaydet = async (id, decision) => {
     return;   // TAZELEME YOK: yeniden çizim mesajı siler ve ret yine görünmez olurdu (v219 dersi)
   }
   // `_JC.clear()` BURADA YOK ve bu bilinçli: `apiFetch` GET olmayan her istekte önbelleği zaten
-  // boşaltıyor (app.js:171). İkinci bir temizlik, "önbelleği kim boşaltır" sorusuna ikinci bir
+  // boşaltıyor (`apiFetch`in GET-dışı dalı). İkinci bir temizlik, "önbelleği kim boşaltır" sorusuna ikinci bir
   // cevap yazmak olurdu — bu turda kapattığımız sınıfın küçük hali.
   await _aktifSayfayiCiz();
 };
@@ -11508,7 +11508,7 @@ function sprintCard(sp, learning) {
   const stepLog = ((search.trace) || []).filter(t => t.passes).map(t =>
     `  <span class="ok">YAYIN</span> ${esc(t.variable)} ${esc(String(t.old))}→${esc(String(t.new))} · oos ${t.candidate_oos} (inc ${t.incumbent_oos}) · folds ${esc(t.fold_wins)}`).join("\n");
   // ---- SON KOŞULAR: `sp.runs` NİHAYET ÇİZİLİYOR (K1, 2026-07-30) ----------------------------
-  // `sprint_runs.jsonl` YASA 6 için okuyucuya bağlanmıştı (sprint.py:73 → status().runs) ve
+  // `sprint_runs.jsonl` YASA 6 için okuyucuya bağlanmıştı (`sprint.py::status` → `.runs`) ve
   // gerekçesi "pano zaten sprint.status()'u render ediyor" diye yazılmıştı. Ama pano `.runs`'ı HİÇ
   // OKUMUYORDU: alan ağa çıkıp DOM'a hiç girmiyordu — yani düzeltme, görünürlük amacını
   // karşılamadan yasayı SUSTURMUŞTU (codelaw bu "kağıt tüketiciyi" göremez, çünkü modüller-arası

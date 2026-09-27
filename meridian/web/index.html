@@ -913,8 +913,8 @@ main{min-width:0}
    şeyi — dört hücreli sayısal özet — iki ayrı kap dilinde yazıyordu.
    MAKET TEK REÇETE KULLANIR ve yedi blok kabının yedisinde aynı: kapalı 12px kap +
    `overflow:hidden`, hücreler PAYLAŞILAN KENARLA bölünür, `gap:0`, hücrede yarıçap yok
-   (scratch-panov2/index.html:134-139 `.para/.sekme` · :174-178 `.zincir-yatay/.zadim` ·
-   :264-268 `.alanlar/.alan`). Boşluklu ızgarada kendi çerçevesi+yarıçapı olan mini-kart
+   (onaylı maket `scratch-panov2/index.html`: `.para/.sekme` · `.zincir-yatay/.zadim` ·
+   `.alanlar/.alan` kuralları). Boşluklu ızgarada kendi çerçevesi+yarıçapı olan mini-kart
    maket sözlüğünde SIFIR kez geçiyor — ölçtüm.
    ~~gap:var(--s4) · hücrede border+border-radius:var(--r-card)~~ düştü.
    TIKLANABİLİRLİK DEĞİŞMEDİ: hücre hâlâ bir <button>, çekmeceyi hâlâ açıyor (yukarıdaki
@@ -1244,7 +1244,7 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
 /* BAŞLIK MERTEBESİ (2026-07-27): kart başlıkları h3'tü ve üstlerinde hiç h2 yoktu — ağaç
    h1'den h3'e atlıyordu. Etiket biçimi (mono 11px indigo, kural altında) DEĞİŞMEZ; değişen
    yalnız etiketin mertebesi. Bu yüzden seçici tag'den sınıfa taşındı. */
-/* KART BAŞLIĞININ SESİ DEĞİŞTİ (2026-08-24) — kaynak: onaylanan maket `scratch-panov2/index.html:186`
+/* KART BAŞLIĞININ SESİ DEĞİŞTİ (2026-08-24) — kaynak: onaylanan maket `scratch-panov2/index.html`
    `.kart > h2{font-size:var(--t-cap);font-weight:600;letter-spacing:.04em;color:var(--fog);
                 text-transform:uppercase;margin-bottom:var(--s4)}`
    Operatör: "tasarım dilini de buna göre değiştirmen gerekiyordu". Bu TEK KURAL 106 `class="card`
@@ -1316,7 +1316,7 @@ button.pm-cell.sel.thin{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 0 4px
    `overflow-wrap` DEVRALINIR, dolayısıyla iç içe geçmiş çocuklar (ör. `<span><span class="tick">`)
    da kapsanır; `min-width` devralınmaz, o yüzden öğenin KENDİSİNDE durur.
    KIRPMA DEĞİL SARMALAMA — ölçülü bir bedel: `text-overflow:ellipsis` satır yüksekliğini hiç
-   büyütmezdi ama adı KISALTIRDI, ve bu panelin açık sözleşmesi (app.js:5809-5812) "operatörün
+   büyütmezdi ama adı KISALTIRDI, ve bu panelin açık sözleşmesi (app.js «MAKİNE-OKUNUR AD SATIRDA DURUR» şerhi) "operatörün
    panodan okuduğu ad ile obs günlüğünde greplediği ad AYNI olmalı"dır. Yarım ad greplenemez.
    `anywhere` (`break-word` değil) seçildi çünkü yalnız o, öğenin min-content katkısını da
    düşürür — esnek kolonların daralabilmesi buna bağlı. Bedeli jeton ORTASINDAN kırmaktır; yukarıda

@@ -25,7 +25,7 @@ WP6-E'nin "GERÇEKTEN AÇIK KALANLAR" listesindeki iki alt-kalemi kapatır:
 
   B2 · DÜZ-METİN / ÇAPRAZ-BİÇİM ÇAPASI — üç satır-çapası dünyası da (`.py`, `.tsx`, `docs`) TEK
        sözdizimini tanır: dosya adı BİTİŞİK `:NNN`, hedef DAİMA `.py`. `codelaw.stale_text_anchors`
-       iki YENİ kör noktayı kapatır: (a) çapraz-biçim (`goal.yaml:27`, opsiyonel `NNN-MMM` aralık),
+       iki YENİ kör noktayı kapatır: (a) çapraz-biçim (`goal.yaml:27` — çapa-sentetik: desen örneği —, opsiyonel `NNN-MMM` aralık),
        (b) düz-metin Türkçe "satır NNN" (dosya adı bitişik DEĞİL, aynı satırdaki ÖNCEKİ belirteçten
        çözülür). Hüküm YAPISAL OLARAK DAR (içerik uyumu ölçülemez — yalnız hedef VARLIĞI/MENZİLİ),
        bu yüzden `report()["ok"]`i ETKİLEMEZ (v214 emsali: `line_anchor_unresolved` ile aynı
@@ -144,7 +144,7 @@ def test_docs_capasi_ARTIK_GORULUYOR(tmp_path, monkeypatch):
     curuk = codelaw.stale_docs_line_anchors("docs", py_kokler=("meridian",),
                                             cozulemeyen_out=kor, disla_out=disla)
     assert [(c["kaynak"], c["neden"]) for c in curuk] == [
-        ("RUNBOOK.md:1", "menzil_disi"), ("yasayan.md:1", "menzil_disi")], curuk
+        ("RUNBOOK.md:1", "menzil_disi"), ("yasayan.md:1", "menzil_disi")], curuk  # çapa-sentetik: beklenen değer (TSK-236)
 
 
 def test_docs_dislama_IKI_SINIF_da_ADIYLA_DUSER(tmp_path, monkeypatch):
@@ -297,20 +297,20 @@ def test_capraz_bicim_capa_menzil_disi_yakalanir(tmp_path, monkeypatch):
     (tmp_path / "state" / "goal.yaml").write_text("a: 1\nb: 2\n", encoding="utf-8")
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "notlar.md").write_text(
-        "eşik `goal.yaml:27`de tanımlı\n", encoding="utf-8")
+        "eşik `goal.yaml:27`de tanımlı\n", encoding="utf-8")  # çapa-sentetik: fikstür (TSK-236)
     monkeypatch.chdir(tmp_path)
     curuk = codelaw.stale_text_anchors("docs", hedef_kokler=("state",))
-    assert [(c["capa"], c["neden"]) for c in curuk] == [("goal.yaml:27", "menzil_disi")], curuk
+    assert [(c["capa"], c["neden"]) for c in curuk] == [("goal.yaml:27", "menzil_disi")], curuk  # çapa-sentetik: beklenen değer (TSK-236)
 
 
 def test_capraz_bicim_capa_ARALIK_menzil_disi_yakalanir(tmp_path, monkeypatch):
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "hedef.sh").write_text("#!/bin/sh\necho hi\n", encoding="utf-8")
     (tmp_path / "docs" / "notlar.md").write_text(
-        "gövde `hedef.sh:10-20` arası\n", encoding="utf-8")
+        "gövde `hedef.sh:10-20` arası\n", encoding="utf-8")  # çapa-sentetik: fikstür (TSK-236)
     monkeypatch.chdir(tmp_path)
     curuk = codelaw.stale_text_anchors("docs", hedef_kokler=("docs",))
-    assert [(c["capa"], c["neden"]) for c in curuk] == [("hedef.sh:10-20", "menzil_disi")], curuk
+    assert [(c["capa"], c["neden"]) for c in curuk] == [("hedef.sh:10-20", "menzil_disi")], curuk  # çapa-sentetik: beklenen değer (TSK-236)
 
 
 def test_capraz_bicim_AYAKTA_capa_curuk_SAYILMAZ(tmp_path, monkeypatch):
@@ -319,7 +319,7 @@ def test_capraz_bicim_AYAKTA_capa_curuk_SAYILMAZ(tmp_path, monkeypatch):
     (tmp_path / "state").mkdir()
     (tmp_path / "state" / "goal.yaml").write_text("a: 1\nb: 2\nc: 3\n", encoding="utf-8")
     (tmp_path / "docs").mkdir()
-    (tmp_path / "docs" / "notlar.md").write_text("eşik `goal.yaml:2`de\n", encoding="utf-8")
+    (tmp_path / "docs" / "notlar.md").write_text("eşik `goal.yaml:2`de\n", encoding="utf-8")  # çapa-sentetik: fikstür (TSK-236)
     monkeypatch.chdir(tmp_path)
     curuk = codelaw.stale_text_anchors("docs", hedef_kokler=("state",))
     assert curuk == [], curuk
@@ -398,7 +398,7 @@ def test_metin_capasi_menzil_kontrolu_KALDIRILINCA_OTER(tmp_path, monkeypatch):
     (tmp_path / "state").mkdir()
     (tmp_path / "state" / "goal.yaml").write_text("a: 1\n", encoding="utf-8")
     (tmp_path / "docs").mkdir()
-    (tmp_path / "docs" / "notlar.md").write_text("eşik `goal.yaml:27`de\n", encoding="utf-8")
+    (tmp_path / "docs" / "notlar.md").write_text("eşik `goal.yaml:27`de\n", encoding="utf-8")  # çapa-sentetik: fikstür (TSK-236)
     monkeypatch.chdir(tmp_path)
     curuk = codelaw.stale_text_anchors("docs", hedef_kokler=("state",))
     assert len(curuk) == 1, curuk
@@ -414,7 +414,7 @@ def test_report_text_anchor_stale_ALANI_GORUNUR_ve_OK_HUKMUNU_ETKILEMEZ(monkeypa
     doldurup `ok`un DEĞİŞMEDİĞİ doğrudan kanıtlanır."""
     taban = codelaw.report()
     monkeypatch.setattr(codelaw, "stale_text_anchors",
-                        lambda *a, **k: [{"kaynak": "x.md:1", "capa": "y.yaml:1", "neden": "menzil_disi"}])
+                        lambda *a, **k: [{"kaynak": "x.md:1", "capa": "y.yaml:1", "neden": "menzil_disi"}])  # çapa-sentetik: sahte kayıt (TSK-236)
     sonra = codelaw.report()
     assert sonra["text_anchor_stale"], "monkeypatch etkisiz kaldı — alan hâlâ boş"
     assert sonra["ok"] == taban["ok"], (

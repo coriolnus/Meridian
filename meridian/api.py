@@ -2358,7 +2358,7 @@ def api_skills(request: Request):
 #     DEĞİL. O yol ayrıdır, gerçektir ve davranışsaldır: `loop.operator_onay_ver` → plan satırına
 #     onay damgası → `loop.girise_uygun` → silahlı küme. İlgili denetim kaydının kendi "ayırt edici notu" bu
 #     karışıklığı açıkça yasaklıyor. Buraya `approvals.jsonl` kapısı koymak, çalışan bir onay
-#     mekanizmasının üstüne İKİNCİ bir onay yolu açmak olurdu (app.js:8470'in reddettiği desen).
+#     mekanizmasının üstüne İKİNCİ bir onay yolu açmak olurdu (app.js «İKİNCİ ONAY YOLU AÇILMADI» şerhinin reddettiği desen).
 #   * `skills.auto_shadow_from_evidence` (`skills.py`, süreç-içi, HTTP değil): operatör kararı
 #     DEĞİLDİR — gelen kutusunda kimliği yoktur (`pending: False` yazar), dolayısıyla ona ait bir
 #     onay satırı HİÇBİR ZAMAN var olamaz; kapı oraya konsaydı L1'de skill öz-yönetim döngüsünü kalıcı ve
@@ -2860,7 +2860,7 @@ def _slippage_measured(trades: list[dict], goal: dict) -> dict:
     `loop.py` → `reconcile_broker_state` kapanan işlemlere `alpaca_fill_price` + `mirror_divergence` geri-yazıyor ve
     gerekçesi açık: "real-world slippage vs the model is measurable". Ama ölçülen sapmayı
     `goal.slippage_bps`e (ya da herhangi bir kalibrasyon raporuna) geri besleyen tüketici YOKTU —
-    döngünün kapanan ucu hiç kurulmamıştı. Model tarafı sabit: goal.yaml:62 slippage_bps: 5
+    döngünün kapanan ucu hiç kurulmamıştı. Model tarafı sabit: goal.yaml `slippage_bps: 5` anahtarı
     (A17: eski `:27` çapası bayattı — satır kaydı, değer değişmedi).
 
     UYDURMA YASAĞI: ayna henüz hiçbir satırı yamamadı (canlı sayım 2026-07-30: 0/95). O yüzden
