@@ -19,14 +19,14 @@ kök 0), 250 çözülen (30 dosya biçimi · 220 modül biçimi), 4 ÇÜRÜK, 2 
     doğrulanırken biri ÇÜRÜK çıktı: yerel v0.18.2'de o adla bir işlev YOK (git tarihinde de yok); şerhin anlattığı
     öncelik listesini taşıyan işlev `build_context_files_prompt` — şerh o ada düzeltildi. İkincisi (bir satıcı
     test metodu, yol öneksiz) doğrulandı.
-  * Bedel (ölçüldü): çıkarım ~0,24 s + çözüm ~0,34 s (soğuk). `codelaw.report`un kendi beslemesine katılsaydı bu
-    maliyet her `report()` çağrısına binerdi; burada yalnız suite öder.
+  * Bedel (ölçüldü): çıkarım ~0,24 s + çözüm ~0,34 s (soğuk).
 
-KAPSAM KARARI — TEST TARAFI, MOTOR DEĞİL (TSK-242 brief'i "codelaw kapsam kararı, gerekçele"): (1) bu tur motor
-dosyalarında yalnız yorum değişir (Rol-1 kuralı); (2) v563/v571/v572 emsali — codelaw canlı kod ailesindedir,
-test tarafı çivi `report()["ok"]`e yeni hüküm eklemez; (3) codelaw'ın üçüncü beslemesi yalnız `curuyen`i hükme
-bağlar, `cozulemeyen`i SAYMAZ — bu dosya beyansız çözülemeyeni de kırmızı yapar (daha sıkı). BEDEL: codelaw
-`report()` (ve onu okuyan CI duman çivileri) ops çürümesini görmez; yalnız bu dosyanın koşulduğu suite görür.
+KAPSAM KARARI (TSK-242: test tarafı) → TSK-243 (2026-09-27): `codelaw.report()` üçüncü beslemesi bu kökleri DE okur
+(`codelaw.OPS_YORUM_KOKLERI` + `codelaw.OPS_YORUM_DUZ_KOKLERI` — TEK KAYNAK; bu dosyanın `METIN_KOKLERI`si oradan
+türer, ayrışma çivisi `tests/test_codelaw_ops_kok_v575.py`): çürük artık `report()["ok"]`i ve CI dumanını (v214)
+düşürür. Bu dosya SIKI katman olarak kalır: codelaw beslemesi yalnız `curuyen`i hükme bağlar, `cozulemeyen`i
+SAYMAZ (uydurma yasağı) — burada beyansız çözülemeyen, bayat beyan kırmızı; çözücü kökü `deploy`u da taşır;
+körlük alarmı ve yol-tutarlı pozitif kontrol burada.
 
 BÖLÜŞÜM: `meridian/`+`tests/` `.py` codelaw üçüncü beslemesinin; `.py` DIŞI kaynaklar v572'nin. Bu dosya yalnız
 `ops/`+`deploy/`+kök `.py`yi okur ve öyle olduğu çivilidir.
@@ -43,14 +43,15 @@ from tests.test_capa_pydisi_hedef_v571 import REPO, _atlanan_sinif as _v571_atla
 from tests.test_sembol_capa_pydisi_v572 import _HERMES_AGENT, _py_kokleri, sembol_hukmu
 
 #: Metni okunan kökler (özyineli) — kök düzeyi `.py` ayrıca TEK SEVİYE okunur (bugün 0 dosya; doğduğu gün görünür).
-METIN_KOKLERI = ("ops", "deploy")
+#: TEK KAYNAK codelaw'dır (TSK-243): `report()` aynı sabitlerle okur.
+METIN_KOKLERI = codelaw.OPS_YORUM_KOKLERI
 
 
 def _metinler(kok: pathlib.Path = REPO) -> list[tuple[str, str]]:
-    """`(rel yol, yorum+docstring metni)` — codelaw'ın üçüncü besleme çıkarımı. Kökler MUTLAK geçilir (çalışma
-    dizininden bağımsız); kök düzeyi `.py` aynı çıkarımla (`codelaw._dosya_yorum_metni`)."""
-    ler = codelaw._yorum_metinleri(tuple(str(kok / k) for k in METIN_KOKLERI if (kok / k).is_dir()))
-    ler += [(str(p), m) for p in sorted(kok.glob("*.py")) if (m := codelaw._dosya_yorum_metni(p))]
+    """`(rel yol, yorum+docstring metni)` — codelaw'ın üçüncü besleme çıkarımı, `report()`un geçtiği AYNI kök
+    sabitleriyle. Kökler MUTLAK geçilir (çalışma dizininden bağımsız)."""
+    ler = codelaw._yorum_metinleri(tuple(str(kok / k) for k in METIN_KOKLERI if (kok / k).is_dir()),
+                                   tuple(str(kok / d) for d in codelaw.OPS_YORUM_DUZ_KOKLERI))
     return [(pathlib.Path(y).relative_to(kok).as_posix(), m) for y, m in ler]
 
 
