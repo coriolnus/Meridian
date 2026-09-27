@@ -164,7 +164,7 @@ model:
 #       OpenAI-uyumlu istemciye `api_key` olarak verilir — yani tel üzerinde
 #       `Authorization: Bearer <anahtar>`. Kapıdaki köprü (routes.yaml, serverless-pre-function)
 #       onu `apikey`e çevirir. `extra_headers` ile anahtarı buraya YAZMAK MÜMKÜN DEĞİLDİ:
-#       `config.py::normalize_extra_headers` ENV GENİŞLETMEZ, literal taşır (sır yasağı).
+#       `hermes_cli/config.py::normalize_extra_headers` ENV GENİŞLETMEZ, literal taşır (sır yasağı).
 #   (3) ZAMAN AŞIMININ EVİ DEĞİŞTİ — göçün SESSİZ bedeli. Adlandırılmış custom sağlayıcı
 #       çözüldüğünde runtime sözlüğü `{"provider": "custom", …}` döner
 #       (`_resolve_custom_provider_runtime`) ve çağıran onu `agent.provider` yapar
