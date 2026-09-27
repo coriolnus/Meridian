@@ -4002,3 +4002,13 @@ yazılmadı); A1'de yeni `sir_rotasyon.sh` (kasa yedeği) yerinde — pazartesi 
 **TSK-237 + Dağıtım #73** (Rol-1, 5d3540f1, 05:5xZ): üç kasa dalının "rollback düşerse" satırı tek yardımcıdan tek çalıştırılabilir satır (sudo STDIN
 boru, değer argv'de yok; yedek yoksa/boşsa YAZMAZ — kapısız hâl boş değer yazıyordu, uygulayıcı mutasyonla ölçtü). A1 ölçümleri (Rol-1): örnek satır
 dış + iç gövde bash 5.2 `-n` temiz; `sudo` `TMPDIR`i düşürüyor. CI yeşil, dagit EXIT 0, A1'de betik `bash -n` temiz. TSK-237 kapandı.
+
+### 35. PAZAR ÖĞLEDEN SONRA: AYRIŞTIRICI + UV ARTIKLARI + DAĞITIM #74 (2026-09-27, model Opus 5.5)
+Operatör "yapılabileceklere devam et". TSK-020'nin kalanları (Kademe C büyük motor/ertelenmiş, adım-2 Ekim penceresi, 9 Prometheus — TSK-096 kararıyla
+çelişik) operatöre bırakıldı. **TSK-235:** ROADMAP ayrıştırıcısında sessiz kayıp yolu kalmadı (ayraç öncesi `|` satırları, ayraçla başlayan blok, önsöz
+tablosu → sayılı `tablo_atlanan`); ardışık ikinci ayraç sahte tablo açmaz — KORUNDU (inceleme eski kodu elle izledi: ayraç metnini başlık yapan sahte
+tablo üretiyordu). Bugünkü ROADMAP çıktısı bayt bayt aynı (327/327, 129 geçmiş sürümde kayıp 0) — kusur gizliydi. Ölçüm: `tablo_atlanan` okuyucusuz
+DEĞİLDİ (API sayacı + pano), kalem başlığı kısmen yanlıştı. **TSK-238:** ileti/docstring uv öğütleri, `kapilar.sh`/`haftalik_mutasyon.sh` `--frozen`,
+A0 rolü `/etc/environment`e `UV_NO_DEV=1 UV_FROZEN=1` (Rol-1 A1 ölçümü: `.bashrc` etkileşimsizde döner, sshd+sudo `pam_env`; dosya tek PATH satırı),
+CI uv kurulumu sha256 kapılı (0.12.0 immutable sürüm; inceleme `gh api` + indirmeyle bağımsız doğruladı). **Dağıtım #74** (deca767b): suite 14968/0,
+CI yeşil (sha256 kapısı geçti), site.yml yalnız iki satır, dagit EXIT 0; A1 ssh komutu artık `UV_NO_DEV=1 UV_FROZEN=1` görüyor. TSK-235/238 kapandı.
