@@ -18,10 +18,12 @@ NE YAPMAZ: öğrenme mantığına DOKUNMAZ. Bu bir yerleşim değişikliğidir; 
 `_PROBE_CACHE` anahtarlıdır ve determinizm sıraya değil anahtara dayanır (`_havuz_tavani`
 docstring'inin beyanı) — sonuçlar bit-özdeş kalmalıdır.
 
-EŞZAMANLILIK: ek koruma GEREKMEDİ, zaten vardı. `reflect._ProcessLock` (`state/.reflect.lock`
-üzerinde BLOKSUZ `fcntl.flock`) tam bu senaryoyu adıyla öngörmüş: *"süreç-içi `_reflect_lock`
-İKİNCİ BİR SÜRECİ durduramaz… kaybeden dürüst 'locked' cevabı alır."* API sürecindeki elle
-tetikleme (`/api/hermes/reflect_now`) ile bu süreçteki bekleme döngüsü aynı kilidi paylaşır.
+EŞZAMANLILIK: `reflect._ProcessLock` (`state/.reflect.lock` üzerinde BLOKSUZ `fcntl.flock`) ship
+aşamasını (`reflect.submit`) süreçler arası sıraya sokar: *"süreç-içi `_reflect_lock` İKİNCİ BİR
+SÜRECİ durduramaz… kaybeden dürüst 'locked' cevabı alır."* Aramanın KENDİSİNİ korumaz. TSK-233'ten
+beri panonun elle tetiklemesi (`/api/hermes/reflect`) yansıma KOŞMAZ, istek dosyası bırakır; istek
+BU süreçte, bekleme döngüsünün `_reflect_lock`u altında koşar — iki yansıma aynı anda koşamaz ve
+öğrenme durumunun (hermes_status.json) tek yazanı bu süreçtir.
 
 DURDURMA: systemd SIGTERM yollar → `_isaret` kancası `hermes_runtime.stop()` çağırır → döngü
 bayrağını görür ve turunu bitirip çıkar. `TimeoutStopSec` dolmadan inemezse systemd SIGKILL atar;

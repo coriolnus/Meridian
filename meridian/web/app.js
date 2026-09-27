@@ -11948,14 +11948,21 @@ window.applySkillRec = async (skill, action) => {
   await _aktifSayfayiCiz();   // düğme Onaylar'da da var — sabit `RENDER.hermes()` görünmeyen sayfayı tazelerdi
 };
 window.hermesReflect = async () => {
+  // TSK-233: pano yansımayı KOŞMAZ — öğrenme sürecine (meridian-learn) istek bırakır; döngü bir sonraki poll'unda
+  // alıp koşar. Üç cevap: queued (istek bırakıldı) · busy (bekleyen istek / süren yansıma) · unavailable (döngü poll
+  // etmiyor — istek BIRAKILMADI). Metin sunucudan (`detail`) gelir; burada ikinci bir açıklama uydurulmaz.
   const btn = $("hbtn-reflect"), msg = $("hbtn-msg");
-  if (btn) { btn.disabled = true; btn.textContent = "arıyor… (birkaç dakika)"; }
-  if (msg) msg.textContent = "koordinat-iniş araması — tüm düğmeler aynı OOS kapısından geçiriliyor…";
+  if (btn) { btn.disabled = true; btn.textContent = "istek gönderiliyor…"; }
   try {
     const r = await apiFetch("/api/hermes/reflect", { method: "POST" }).then(x => x.json());
-    if (r.status === "busy") { if (msg) msg.textContent = "zaten bir düşünme sürüyor"; if (btn) btn.disabled = false; return; }
-    _hermesReflectPoll();   // runs in the background (minutes) — poll status, re-render when it lands
-  } catch (e) { if (msg) msg.innerHTML = `<span class="neg">${esc(e.message)}</span>`; if (btn) btn.disabled = false; }
+    if (r.status === "queued") {
+      if (btn) btn.textContent = "istek bırakıldı";
+      if (msg) msg.textContent = r.detail || "istek bırakıldı — öğrenme süreci bir sonraki poll'unda alacak";
+      return;   // yeniden çizim beklenmez: yansıma poll'da başlar, "düşünüyor…" durumu /api/hermes'ten okunur
+    }
+    if (msg) msg.innerHTML = `<span class="${r.status === "busy" ? "warn" : "neg"}">${esc(r.detail || r.status || "cevap yok")}</span>`;
+    if (btn) { btn.disabled = false; btn.textContent = "Şimdi düşün"; }
+  } catch (e) { if (msg) msg.innerHTML = `<span class="neg">${esc(e.message)}</span>`; if (btn) { btn.disabled = false; btn.textContent = "Şimdi düşün"; } }
 };
 window.hermesBackfill = async () => {
   const btn = $("hbtn-backfill"), msg = $("backfill-msg");
