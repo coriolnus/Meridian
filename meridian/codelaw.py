@@ -2429,7 +2429,16 @@ _TEXT_DOSYA_ADI_DESENI = re.compile(
 #: `.gitignore`li) gibi devasa/ilgisiz dizinler kökten `rglob` ile taranırdı; bunun yerine SABİT,
 #: KÜÇÜK bir küme kullanılır — üretim + belge kökleri. Depo KÖKÜ (`.`) yalnız TEK SEVİYE taranır
 #: (`ROADMAP.md`, `CLAUDE.md` gibi kök-düzeyi belgeler için), `rglob` DEĞİL.
-_TEXT_HEDEF_KOKLERI = ("meridian", "tests", "ops", "docs", "state")
+#: TÜRETİLİR (TSK-245, 2026-09-28): elle yazılmış liste `deploy`u kaçırıyordu — TSK-244(b) onu çözücü
+#: ağacına kattı, bu liste ayrı durduğu için metin dünyası görmedi (RUNBOOK'taki bakim_h9 satır-59 çapası
+#: kalıcı `hedef_yok`, bayatlasa da ötmezdi). Python kısmı artık `report()`in `capa_kokleri`yle AYNI
+#: kaynaktan (`URETIM_KOKLERI` + `_EK_CAPA_KOKLERI`), üstüne yalnız bu dünyaya ait `docs` + `state`.
+#: ADIM-0 (karşı-olgusal, taban e67c64ec): 14 metin çapası; +1 çözülen (bakim_h9), YANLIŞ HEDEF 0, çürük
+#: 0 → 0, çözülemeyen 4 → 3; süre 73 → 82 ms. AD ÇAKIŞMASI: `RUNBOOK.md` (docs ↔ deploy/oracle-a1) ve
+#: `README.md` (kök ↔ deploy/ansible) — aday > 1 olduğu için hüküm KURULMAZ (`ikircikli`, sayılır);
+#: bedeli yolsuz yazılan bu adlı çapanın ölçülememesi (bugün 0 çapa), yol önekli çapa tekil çözülür.
+#: Çivi: `tests/test_metin_capa_deploy_kok_v577.py`.
+_TEXT_HEDEF_KOKLERI = _kokler((*URETIM_KOKLERI, *_EK_CAPA_KOKLERI, "docs", "state"))
 
 
 def _text_hedef_dosyalari(kokler: tuple[str, ...] = _TEXT_HEDEF_KOKLERI) -> dict[str, list[pathlib.Path]]:
@@ -2598,6 +2607,8 @@ def report(root=URETIM_KOKLERI, tsx_kok: str | None = None) -> dict:
         docs_curuk_var = bool(docs_capalar)
     # DÜZ-METİN/ÇAPRAZ-BİÇİM ÇAPASI — DÖRDÜNCÜ DÜNYA (TSK-080). `ok`u ETKİLEMEZ (docstringte
     # yazılı yapısal sınır: içerik uyumu ölçülemez) — AYNI kapıya bağlı, ÖLÇÜLMEYEN None'dır.
+    # Kök GEÇİLMEZ ama ayrışmaz (TSK-245): varsayılan `_TEXT_HEDEF_KOKLERI` `capa_kokleri`nin kaynağından
+    # türer (+ docs/state) — deploy dahil; çivi v577 `report()` sırasında kapsamayı ölçer.
     text_kor: list[dict] | None = None
     text_capalar: list[dict] | None = None
     if tsx_hedef is not None:
