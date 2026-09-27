@@ -1061,16 +1061,18 @@ def _onbellege_yaz(cache: dict, key, res: Any, evreler: tuple[str, ...]) -> Any:
     return res
 
 
-def _src_stamp(root) -> tuple:
+def _src_stamp(root, tek_seviye: bool = False) -> tuple:
     """Kaynak ağacının parmak izi: dosya sayısı + en yeni değişiklik zamanı.
     61 stat() çağrısı, mikrosaniyeler — ayrıştırmanın yanında ölçülemez.
 
     Tek kök → `(sayı, en_yeni_mtime)` (eski şekil AYNEN). Kök demeti (TSK-206) → kök başına bu
     çiftlerin demeti: bir dosyanın kökler arasında taşınması toplam sayıyı değiştirmese de kök
-    başına sayıyı değiştirir ve önbelleği düşürür."""
+    başına sayıyı değiştirir ve önbelleği düşürür. `tek_seviye` (TSK-243): yalnız kökün KENDİ
+    `*.py`leri — depo kökü özyineli damgalanırsa bütün ağaç (ve `.venv`) gezilirdi."""
     damgalar = []
     for k in _kokler(root):
-        ps = sorted(pathlib.Path(k).rglob("*.py"))
+        kok = pathlib.Path(k)
+        ps = sorted(kok.glob("*.py") if tek_seviye else kok.rglob("*.py"))
         damgalar.append((len(ps), max((q.stat().st_mtime_ns for q in ps), default=0)))
     return damgalar[0] if len(damgalar) == 1 else tuple(damgalar)
 
@@ -2134,29 +2136,41 @@ def _dosya_yorum_metni(path) -> str:
     return sonuc
 
 
-def _yorum_metinleri(kokler: tuple[str, ...] = ("meridian", "tests")) -> list[tuple[str, str]]:
+#: ÜÇÜNCÜ BESLEMENİN OPS DÜNYASI — TEK KAYNAK (TSK-243, 2026-09-27). `report()` üretim ağacında
+#: yorum/docstring metnini `meridian`+`tests` YANINDA bu köklerden de okur (özyineli) ve depo
+#: kökünün KENDİ `*.py`lerini tek seviye okur (`OPS_YORUM_DUZ_KOKLERI`; özyineli okunsa meridian/
+#: tests/research/`.venv` de girerdi). `tests/test_ops_py_yorum_capa_v574.py` kapsamını BURADAN
+#: türetir; ayrışma çivisi `tests/test_codelaw_ops_kok_v575.py`. Hüküm meridian/tests ile AYNI:
+#: yalnız `curuyen` `ok`u düşürür, `cozulemeyen` sayılır ama ihlal değildir — beyansız
+#: çözülemeyeni kırmızı yapan SIKI katman (harici kaynak beyanı yerel ağaçta doğrulanır) v574'te
+#: kalır. ÖLÇÜLDÜ (taban c92509f7): 50 dosya (ops 46 · deploy 4 · kök 0), 254 çözülen, 0 çürük.
+OPS_YORUM_KOKLERI: tuple[str, ...] = ("ops", "deploy")
+OPS_YORUM_DUZ_KOKLERI: tuple[str, ...] = (".",)
+
+
+def _yorum_metinleri(kokler: tuple[str, ...] = ("meridian", "tests"),
+                     duz_kokler: tuple[str, ...] = ()) -> list[tuple[str, str]]:
     """BESLEME (c) — ÜÇÜNCÜ BESLEME (D3, TSK-120, 2026-09-03): `kokler` altındaki `.py`
     dosyalarının YORUM+DOCSTRING metni, AYNI çekirdekten (`capa_uyusmasi`) geçer. İkinci bir
     tarayıcı YAZILMADI — tek-kaynak yasası; yeni olan yalnız bu besleme ve `_dosya_yorum_metni`nin
     kod-dizgesini süzen ayrımıdır. Emsal ve alt küme: `tests/test_kovab_dilim_v382.py` bölüm E
     (`UCUNCU_BESLEME`) bu fonksiyonun prototipiydi, dilim-kapsamlı sabit bir dosya listesiyle.
+    `duz_kokler` (TSK-243): yalnız kendi `*.py`leri okunan (özyinesiz) kökler — depo kökü.
 
-    VARSAYILAN `ops` İÇERMİYOR — bilinçli asimetri (inceleme bulgusu, düzeltme turu 1): `report()`
-    bu fonksiyonu SEMBOL ÇÖZÜMLEME kökü `(root, *_EK_CAPA_KOKLERI)` = meridian+tests+`ops` ile
-    çağırır (bir çapanın HEDEFİ `ops/`de olabilir), ama METİN TARAMA köküdür yalnız brief D3'ün
-    talep ettiği `meridian`+`tests` — `ops/` betikleri ayrı bir sözleşme dünyasıdır (CLAUDE.md §1:
-    "Sözleşmeleri KOMUT SATIRIdır, `main()` değil") ve bu turda kapsam DIŞI bırakıldı; genişletmek
-    isteyen çağıran `kokler=("meridian","tests","ops")` geçebilir, varsayılan DEĞİŞMEDİ."""
+    VARSAYILAN `ops` İÇERMİYOR — varsayılan D3'ün çekirdeğidir (`meridian`+`tests`). TSK-243'ten
+    (2026-09-27) beri `report()` metin köklerini varsayılandan DEĞİL `OPS_YORUM_KOKLERI` +
+    `OPS_YORUM_DUZ_KOKLERI` ile genişleterek geçirir; eski asimetri ("`ops/` ayrı sözleşme
+    dünyası, kapsam DIŞI") kapandı. Sembol ÇÖZÜMLEME kökü ayrıdır: `(root, *_EK_CAPA_KOKLERI)`."""
+    duz = (f for k in _kokler(duz_kokler) for f in sorted(pathlib.Path(k).glob("*.py")))
     ler: list[tuple[str, str]] = []
-    for kok in kokler:
-        for f in _py_files(kok):
-            try:
-                metin = _dosya_yorum_metni(f)
-            except (OSError, ValueError) as e:  # sessiz-yutma: okunamayan tek dosya bekçiyi çökertmez; körlük UNSCANNED'e yazılır (`_tsx_metinleri` ile aynı disiplin)
-                _note_unscanned(str(f), e, "_yorum_metinleri")
-                continue
-            if metin:
-                ler.append((str(f), metin))
+    for f in (*_py_files(kokler), *duz):
+        try:
+            metin = _dosya_yorum_metni(f)
+        except (OSError, ValueError) as e:  # sessiz-yutma: okunamayan tek dosya bekçiyi çökertmez; körlük UNSCANNED'e yazılır (`_tsx_metinleri` ile aynı disiplin)
+            _note_unscanned(str(f), e, "_yorum_metinleri")
+            continue
+        if metin:
+            ler.append((str(f), metin))
     return ler
 
 
@@ -2164,7 +2178,8 @@ _YORUM_SEMBOL_CACHE: dict = {}
 
 
 def _yorum_sembol_capalari(metin_kokler: tuple[str, ...] = ("meridian", "tests"),
-                           py_kokler: tuple[str, ...] | None = None) -> dict:
+                           py_kokler: tuple[str, ...] | None = None,
+                           duz_kokler: tuple[str, ...] = ()) -> dict:
     """ÜÇÜNCÜ BESLEMENİN SONUÇ ÖNBELLEĞİ (bedel yasası, TSK-120 2026-09-03). `_dosya_yorum_metni`
     dosya-başına önbelleklidir (`_YORUM_MEMO`) ama `capa_uyusmasi`nın SEMBOL ÇÖZÜMÜ — her hedef
     modül için `_modul_adlari` AST YÜRÜYÜŞÜ, ~2200+ çapa üzerinden — çağrı başına YENİDEN
@@ -2176,7 +2191,7 @@ def _yorum_sembol_capalari(metin_kokler: tuple[str, ...] = ("meridian", "tests")
     sözleşmesi); ölçülemeyen şey `report()["ok"]`i sessizce yeşile çevirmez.
 
     `metin_kokler` D1'DEN BERİ (TSK-135, 2026-09-04) `report()`TAN GERÇEKTEN PARAMETRİZE EDİLİR:
-    gerçek ağaçta (`root == "meridian"`) varsayılan `("meridian","tests")` DEĞİŞMEDEN geçirilir;
+    gerçek ağaçta `("meridian","tests")` (TSK-243'ten beri + `OPS_YORUM_KOKLERI`) geçirilir;
     sentetik `root`la çağrılan `report()` artık `root/"meridian"` ve `root/"tests"`ten VAR
     OLANLARI geçirir — eskiden bu parametre HİÇ geçirilmiyordu ve varsayılana (GERÇEK ağaç)
     sessizce düşüyordu (bkz. `tests/test_capa_uyusmasi_v373.py::test_CURUME_report_OKUNU_DUSURUR`
@@ -2187,14 +2202,20 @@ def _yorum_sembol_capalari(metin_kokler: tuple[str, ...] = ("meridian", "tests")
     (n=3), soğuk 6.632 ms. D1 SONRASI YENİ ÖLÇÜM (aynı yöntem, `report()` genelinde, n=3 —
     2026-09-04): sıcak 1.775–1.779 ms, TAM soğuk (temiz süreç, ilk çağrı) 6.535 ms — fark
     GÖZLEMLENEMEYECEK kadar küçük (<20 ms, ölçüm gürültüsü mertebesinde): iki `Path.exists()`
-    çağrısının bedeli AST/regex taramasının yanında SIFIRA yakın."""
+    çağrısının bedeli AST/regex taramasının yanında SIFIRA yakın.
+
+    ANAHTAR (TSK-243, 2026-09-27): damga metin + ÇÖZÜCÜ + tek-seviye köklerin HEPSİNİ kapsar. Eski
+    anahtar yalnız metin köklerini damgalıyordu — metin kökü DIŞINDAKİ bir çözücü kökünde (üretimde
+    `ops/`) sembol silinince aynı süreçteki ikinci çağrı bayat "0 çürük" dönerdi (çivi v575 B)."""
     if py_kokler is None:
         py_kokler = metin_kokler
-    _key = (metin_kokler, tuple(_src_stamp(k) for k in metin_kokler), py_kokler)
+    _key = (metin_kokler, duz_kokler, py_kokler,
+            tuple(_src_stamp(k) for k in _kokler((*metin_kokler, *py_kokler))),
+            tuple(_src_stamp(k, tek_seviye=True) for k in duz_kokler))
     _hit = _onbellek_oku(_YORUM_SEMBOL_CACHE, _key)
     if _hit is not _YOK:
         return _hit
-    yorum_met = _yorum_metinleri(metin_kokler)
+    yorum_met = _yorum_metinleri(metin_kokler, duz_kokler)
     s_yorum = capa_uyusmasi(yorum_met, py_kokler=py_kokler, modul_bicimi=True)
     sonuc = {
         "taranan_dosya": len(yorum_met),
@@ -2591,8 +2612,9 @@ def report(root=URETIM_KOKLERI, tsx_kok: str | None = None) -> dict:
         sembol["besleme"] = {"beyan": len(beyan), "tsx": len(tsx_met)}
         sembol_curume = bool(sembol["curuyen"])
     # ÜÇÜNCÜ BESLEME — YORUM/DOCSTRING METNİ (D3, TSK-120, 2026-09-03 → AŞAMA 2, TSK-129,
-    # 2026-09-04). `meridian/**`+`tests/**` yorum satırları + docstring'leri AYNI çekirdekten geçer
-    # (`capa_uyusmasi`, tek-kaynak yasası — ikinci bir tarayıcı YAZILMADI). AŞAMA 1 (TSK-120)
+    # 2026-09-04). `meridian/**`+`tests/**` (TSK-243: + `ops/**`+`deploy/**`+kök `*.py`) yorum
+    # satırları + docstring'leri AYNI çekirdekten geçer (`capa_uyusmasi`, tek-kaynak yasası —
+    # ikinci bir tarayıcı YAZILMADI). AŞAMA 1 (TSK-120)
     # GÖZLEMSELDİ: canlı taban ölçülmeden sıfır toleransa bağlamak henüz keşfedilmemiş borcu
     # sessizce bekçiyi kırmızıya çevirirdi. TSK-129 tabanı ÖLÇTÜ (102 çürük/71 dosya, 2026-09-03
     # 18:17Z) ve TAMAMEN DÜZELTTİ (0 çürük, 2026-09-04) — AŞAMA 2 artık `yorum_sembol_curume`
@@ -2612,13 +2634,18 @@ def report(root=URETIM_KOKLERI, tsx_kok: str | None = None) -> dict:
         # "meridian") davranış AYNI kalır — varsayılan hâlâ ("meridian","tests"). Sentetik kökte
         # metin taraması SENTETİK köke iner: `root/"meridian"` ve `root/"tests"`ten VAR OLANLAR
         # taranır, yoksa () → 0 dosya (UYDURMA YASAĞI: sentetik ağaçta gerçek repo metni karışmaz).
-        # TSK-206: "gerçek ağaç" kararı `_uretim_agaci_mi`dir; metin kökü KAPSAMI DEĞİŞMEDİ (ops
-        # yorumları bu beslemeye bu kalemde ALINMADI — `_yorum_metinleri` docstring'indeki asimetri; TSK-242: test tarafında v574 okur).
-        metin_kokler = (("meridian", "tests") if uretim else
+        # TSK-206: "gerçek ağaç" kararı `_uretim_agaci_mi`dir. TSK-243 (2026-09-27): metin kökleri
+        # `OPS_YORUM_KOKLERI` ile genişler, depo kökü (`OPS_YORUM_DUZ_KOKLERI`) tek seviye okunur —
+        # sentetik kökte AYNI alt yollar sentetik köke iner (D1 disiplini).
+        metin_kokler = (("meridian", "tests", *OPS_YORUM_KOKLERI) if uretim else
                         tuple(str(p) for k in kokler for p in
-                              (pathlib.Path(k) / "meridian", pathlib.Path(k) / "tests")
+                              (pathlib.Path(k) / a for a in ("meridian", "tests", *OPS_YORUM_KOKLERI))
                               if p.exists()))
-        yorum_sembol = _yorum_sembol_capalari(metin_kokler=metin_kokler, py_kokler=capa_kokleri)
+        duz_kokler = (OPS_YORUM_DUZ_KOKLERI if uretim else
+                      tuple(str(p) for k in kokler for p in
+                            (pathlib.Path(k) / d for d in OPS_YORUM_DUZ_KOKLERI) if p.is_dir()))
+        yorum_sembol = _yorum_sembol_capalari(metin_kokler=metin_kokler, py_kokler=capa_kokleri,
+                                              duz_kokler=duz_kokler)
         yorum_sembol_curume = bool(yorum_sembol["curuyen"])
     return {"silent_handlers": len(sil), "annotated_handlers": len(ann),
             "artifacts": len(graph["artifacts"]), "unread": graph["unread"],
@@ -2685,7 +2712,8 @@ def report(root=URETIM_KOKLERI, tsx_kok: str | None = None) -> dict:
             "sembol_capalari": sembol,
             "sembol_capa_curume": sembol_curume,
             # ÜÇÜNCÜ BESLEME (D3, TSK-120, 2026-09-03) — `meridian/**`+`tests/**` yorum/docstring
-            # metni. AŞAMA 2 (TSK-129, 2026-09-04): `yorum_sembol_curume` `ok`u ETKİLER (aşağıda,
+            # metni (TSK-243: + ops/deploy/kök `*.py`). AŞAMA 2 (TSK-129, 2026-09-04):
+            # `yorum_sembol_curume` `ok`u ETKİLER (aşağıda,
             # v373'ün `sembol_capa_curume` deseniyle BİREBİR — sıfır tolerans, taban YOK). "capa_n"
             # ve "taranan_dosya" KÖRLÜK ALARMIdır: ikisi de düşükse tarayıcı yanlış köke bakıyor
             # demektir (`CANLI_ASGARI_COZULEN`/v373 ile aynı disiplin) — bkz.

@@ -281,7 +281,9 @@ def test_report_GERCEK_KOKTE_METIN_KOKU_DEGISMEDI():
     """VARSAYILAN DAVRANIŞ (gerçek ağaç) AYNI KALIR: `root == "meridian"`ken `metin_kokler`
     `("meridian","tests")`e sabit kalmalı — D1 yalnız SENTETİK kökte davranışı DEĞİŞTİRİR.
     Dolaylı ölçüm: `test_KORLUK_ALARMI_taranan_dosya_ve_capa_n_TABANI_asiyor` zaten gerçek
-    ağaçta taranan_dosya ≥ 500 olduğunu doğruluyor; burada kaynak satırıyla DOĞRUDAN ölçülür."""
+    ağaçta taranan_dosya ≥ 500 olduğunu doğruluyor; burada kaynak satırıyla DOĞRUDAN ölçülür.
+    TSK-243 (2026-09-27): gerçek ağaçta kökler `("meridian","tests")` + `codelaw.OPS_YORUM_KOKLERI`
+    olarak GENİŞLEDİ (bilinçli); bu çivi çekirdeğin KALDIĞINI ölçer, genişlemeyi v575 ölçer."""
     import inspect
     kaynak = inspect.getsource(codelaw.report)
     blok = kaynak[kaynak.index("metin_kokler = ("):kaynak.index("yorum_sembol = _yorum_sembol_capalari")]
