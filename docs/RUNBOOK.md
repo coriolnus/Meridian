@@ -1077,11 +1077,17 @@ BU TAM SUITE DEĞİLDİR VE ONUN YERİNE GEÇMEZ (CLAUDE.md kural 6: tam suite R
 Yerel hızlı kapı ops/kapilar.sh'tır; bu betik onun CI ikizidir — farkları: bayt-derleme taban
 kontrolü eklidir ve pytest kapsamı daha geniştir (CI'ın dakikaları vardır, operatörün saniyeleri).
 
-SIRA ucuzdan pahalıya; AMA İLK KIRMIZI KOŞUMU DURDURMAZ. Dört kapının HEPSİ koşar, hepsinin
-hükmü ekranda görünür ve kırmızılar sonda TEK bir `exit 1`e toplanır. Bu BİLİNÇLİ: bir turda
-tüm kapıların durumu bir kerede görülsün — kısa devre yapan bir kapı, ikinci kırmızıyı bir
-sonraki koşuma erteler ve turu gereksiz yere ikiye böler. Sıra yine de ucuzdan pahalıyadır,
+SIRA ucuzdan pahalıya; AMA İLK KIRMIZI KOŞUMU DURDURMAZ. Beş kapının (ön kapı [0] + dört) HEPSİ
+koşar, hepsinin hükmü ekranda görünür ve kırmızılar sonda TEK bir `exit 1`e toplanır. Bu BİLİNÇLİ:
+bir turda tüm kapıların durumu bir kerede görülsün — kısa devre yapan bir kapı, ikinci kırmızıyı
+bir sonraki koşuma erteler ve turu gereksiz yere ikiye böler. Sıra yine de ucuzdan pahalıyadır,
 çünkü ucuz kapının hükmü saniyeler içinde ekrana düşer (bekleme değil, okuma sırası).
+[0] kilit tazeliği (~0,01 sn) — `uv lock --check --offline`: pyproject.toml ↔ uv.lock ayrışması
+KIRMIZI. İLK SIRADA OLMAK ZORUNDA: bayraksız `uv run` ve `uv audit`
+bayat kilidi SESSİZCE yeniden yazar (TSK-230 ölçümü) — sonra koşan
+bir kontrol yeniden yazılmış kilidi "taze" görürdü. CI'ın eşitleme
+adımı da bu yüzden `--frozen` taşır. `--check` bu uv sürümünde YOKSA
+hüküm KIRMIZI değil ÖLÇÜLEMEDİ'dir ([3] ile aynı desen).
 [1] compileall   (~5 sn)   — beyan edilen Python tabanında (>=3.11) SÖZDİZİMİ. CI, venv'i
 bilerek 3.11'e sabitler: 3.12+'da geçerli olup 3.11'de patlayan
 sözdizimi (PEP 701 f-string vakası, 2026-08-15) burada yakalanır.
@@ -1987,8 +1993,10 @@ EZMEZ. Geri alma reçetesi RUNBOOK'ta değil burada, çünkü okunacağı an bu 
 kasasız yol → `sudo cp -p <yedek>/<yol> <yol>` + ilgili birimleri yeniden başlat. `--vault` yolu
 (TSK-064, 2026-09-26) → ÖNCE kasa: `vault kv rollback -version=<N> <yol>` (N = `kv put` ÖNCESİ
 `current_version`, her kasa yolu için ayrı kaydedilir), SONRA dosya — ters sırada Agent render'ı
-geri konan dosyayı kasadaki yeni değerle tekrar ezer. Genel döngüde `kv rollback`un kendisi düşerse
-yedek yol YOK (eski kasa değeri okunmuyor; `--db`/`--cp` dallarında var) — açık kalem TSK-064.
+geri konan dosyayı kasadaki yeni değerle tekrar ezer. `kv rollback`un kendisi düşerse (politika · ağ ·
+mühür) YEDEK YOL üç kasa dalında da AYNIDIR (genel döngü TSK-064(b), 2026-09-27): `kv put` ÖNCESİ kasadan
+okunan ESKİ değer `<yedek>/vault/<kasa yolu>`dadır (0600) ve STDIN'le `vault kv put <yol> value=-` ile
+geri konur — değer argv'ye girmez; reçete her rollback satırının altında bunu yoluyla söyler.
 
 YAPMADIKLARI (burada olmayan şey, burada yapılmayacak şeydir): kanal geçişi yapmaz (o
 `sir_credential_gecis.sh`); drop-in kurmaz; Vault'a dokunmaz; operatörün YEREL `.env` kopyasını

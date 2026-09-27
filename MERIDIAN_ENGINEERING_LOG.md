@@ -3985,3 +3985,14 @@ olaylar bundan sonra ölçer. **TSK-231/232:** satır-çapası taraması birim �
 kaynağa işaret eder; brief öncülüm YANLIŞTI — `meridian.service`teki üç arama ayarı ölü değil (sprint çocuğuna devir + pano karnesi), ajan ölçtü.
 **Triyaj:** `/opt/veri` DISK_ESIK 21:39Z geçici tepe (günlük ham ~20 GB indirilip siliniyor; tavan koruması çalışıyor; tepe payı ~6 GB) → operatör
 kararı. **Açılanlar:** TSK-229…236. Saat etiketi iki kez yerel tarihle yazıldı, `date -u` ile düzeltildi.
+
+### 34. SABAH DİLİMLERİ: KASA YEDEĞİ + UV KAPISI + DAĞITIM #71 (2026-09-27, model Opus 5.5)
+**Dağıtım #71** (Rol-1, 08b06680, 02:22Z): tam suite 14802/0; site.yml "VENV DEĞİŞTİ" 0 kez → TSK-228 canlı kanıtla kapandı; `meridian` +
+`meridian-learn` birlikte yeni koda geçti (TSK-233 tek yazan), `last_reflect_at` 871 korundu. Kapananlar §8'e: TSK-227/228/229/231/232/234
+(TSK-234: `ReadWritePaths` zaten tüm ağaç — yalnız envanter şerhi yanlıştı, A1 ölçümü). **TSK-230:** birim dışı `uv` çağrıları A0 semantiği;
+kilit tazeliği kapısı CI `[0/4]` + dagit `[0b]` (rc1 durdurur, rc2 ÖLÇÜLEMEDİ uyarıp sürer — Rol-1 kararı, CI ile simetrik); CI uv 0.12.0'a
+pinli (A0 `uv_surum` tek kaynak). Yan bulgu (ölçüldü): `uv audit` ve bayraksız `uv run` bayat kilidi yeniden yazıyor → kilit kapısı ilk uv
+adımı. A1 kılavuzundaki H3 bloğunda gerçek bash sözdizimi hatası düzeldi. Düzeltme: tur-2 commit mesajı "11 mutasyon" diyor, tabloda 10 satır.
+**TSK-064(b):** genel kasa döngüsü put öncesi ESKİ değeri db/cp yöntemiyle yedekler; rollback düşerse yedekten STDIN ile `kv put`.
+**Süreç:** bir inceleyici salt-okur kurala rağmen `dagit.yml` üzerinde mutasyon denedi (sınıflandırıcı kesti, ağaç temiz doğrulandı) →
+sonraki inceleme brief'lerine "HİÇBİR dosyayı geçici de olsa değiştirme" eklendi. **Triyaj** (00:40Z, 03:30Z): canlı arıza yok.
