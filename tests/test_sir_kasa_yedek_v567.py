@@ -39,6 +39,11 @@ BÖLÜMLER
 SIR DEĞERİ YOK: tohumlar `SAHTE-` önekli ve sahtedir. İddialar bool'a indirilir (`_iddia` — pytest içgözlemi işlenenleri
 HAM basmasın); mesajlar yalnız ad/etiket ya da maskeli metin taşır. Bu dosyanın maskesi v561'in kısa tohumlarını da
 kapsar (v561 incelemesinin DÜŞÜK bulgusu: v557 `_TOHUMLAR` onları görmüyordu).
+
+TSK-237 (2026-09-27, v568): reçetenin "rollback düşerse" satırı artık açıklama DEĞİL, operatörün A1'de koşacağı TEK SATIR
+komuttur (`_geri_koy_satiri`, üç dalın ortak yardımcısı). Satırın biçimi, çözücüsü ve koşturucusu v568'de yaşar (tek
+kaynak); bu dosya reçete iddialarını oradan alır (A3 yardımcı çağrısını sayar, C3 satırı YAZILDIĞI GİBİ koşar, E1 çapası
+yardımcı çağrısıdır, M2b gövdenin STDIN borusunu argv'ye çevirir). Yedek YÖNTEMİ (A1/A2/C/D) değişmedi.
 """
 from __future__ import annotations
 
@@ -54,10 +59,10 @@ import pytest
 
 from tests import test_cp_rotasyon_v556 as v556
 from tests import test_sir_kasa_surum_v561 as v561
+from tests import test_sir_recete_tek_satir_v568 as v568
 from tests import test_sir_uret_v557 as v557
 from tests import test_vault_db_kasa_v538 as v538
 from tests import test_vault_dalga1_baglama_v521 as v521
-from tests.test_hindsight_anahtar_argv_v552 import _torunlar
 from tests.test_sir_rotasyon_v447 import BETIK, ENVANTER, ESKI, _dosya_imzalari, _kos
 
 KOK_DEPO = pathlib.Path(__file__).resolve().parents[1]
@@ -70,17 +75,15 @@ TAKMA_OR = v561.TAKMA_OR
 CP_YOLU = v556.KASA_YOLU
 ISTEM_DEGERI = "SAHTE-ISTEM-0567"
 
-#: Betiğin basacağı satırlar — BİREBİR (A3 aynı biçimi emsalle kıyaslar).
+#: Betiğin basacağı satırlar — BİREBİR.
 YEDEK_OLDU = "  ✓ yedek: ESKİ değer (KASADAN) → {yedek}/vault/{yol} (0600 — geri almanın girdisi)"
-YEDEK_SATIRI = "        düşerse ESKİ değer yedekte: {yedek}/vault/{yol} — STDIN'le: vault kv put {yol} value=-"
-YEDEK_ONEKI = "        düşerse ESKİ değer yedekte: "
+#: Reçetenin yedek yol satırı — TSK-237'den beri TEK SATIR komut; biçim ve çözücü v568'de (tek kaynak).
+YEDEK_ONEKI = v568.YEDEK_ONEKI
 KURU_YEDEK = ("  ESKİ değer yedeği: yedeklenir — kv put ÖNCESİ KASADAN okunur → {kok}/root/sir-yedek-<UTC ts>-{alt}/vault/"
               "{yol} (0600); rollback düşerse STDIN'le: vault kv put {yol} value=- (değer BASILMAZ; okunamazsa bu yol "
               "YAZILMAZ)")
 GET_OKUNAMADI = ("!! ESKİ değer kasadan okunamadı ({yol}) — rollback düşerse geri konacak yedek olmadan kasaya YAZILMAZ "
                  "({neden})")
-#: Reçetenin yedek yol satırı — komut kısmı STDIN biçiminde (`value=-`), argv'de değer YOK.
-YEDEK_DESENI = re.compile(r"^        düşerse ESKİ değer yedekte: (\S+) — STDIN'le: (vault kv put \S+ value=-)$")
 
 #: Maskelenecek bilinen tohumlar — v557'ninkiler + v561'in KISA tohumları + bu dosyanınki.
 _TOHUMLAR = v557._TOHUMLAR + (v561.ONCEKI_TENANT, v561.ONCEKI_NOUS, v561.LLM_V1, v561.LLM_V2, v561.YENI_NOUS,
@@ -239,21 +242,24 @@ def _yedek_ihlalleri(r: subprocess.CompletedProcess, kok: pathlib.Path, alt: str
 def _recete_yedek_ihlalleri(r: subprocess.CompletedProcess, yedek: pathlib.Path | None, yollar: list[str],
                             yok: tuple[str, ...] = ()) -> list[str]:
     """Kasa evresi reçetesi: her yol için TAM bir yedek yol satırı · rollback satırının HEMEN ARDINDA · DOSYA
-    adımından ÖNCE · STDIN biçimi (`value=-`, argv'de değer yok) · `yok` yolları için yedek yol YOK."""
+    adımından ÖNCE · TEK SATIR komut, değer dosyadan STDIN'e borulanır (argv'de değer yok; biçim v568) · `yok` yolları
+    için yedek yol YOK."""
     ih = []
     rec = v561._recete(r.stderr)
     if not rec:
         return ["geri alma reçetesi basılmadı"]
     dosya = v561._satir_indeksi(rec, v561.DOSYA_ADIMI)
     for s in rec:
-        if s.startswith("        düşerse") and not YEDEK_DESENI.match(s):
-            ih.append("yedek yol satırı STDIN biçiminde değil (`vault kv put <yol> value=-` dışında bir şey)")
+        if s.startswith("        düşerse"):
+            d = v568._coz(s)
+            if d is None or v568._yedek_ve_yol(s) is None or not v568._stdin_govdesi(d["govde"]):
+                ih.append("yedek yol satırı STDIN biçiminde değil (TEK SATIR `sudo bash -c` + dosya → STDIN boru dışında)")
     n = sum(s.startswith(YEDEK_ONEKI) for s in rec)
     if n != len(yollar):
         ih.append(f"yedek yol satırı sayısı {n} ≠ {len(yollar)}")
     for yol in yollar:
         rb = [i for i, s in enumerate(rec) if s.startswith("        vault kv rollback ") and s.endswith(" " + yol)]
-        yd = [i for i, s in enumerate(rec) if yedek is not None and s == YEDEK_SATIRI.format(yedek=yedek, yol=yol)]
+        yd = [i for i, s in enumerate(rec) if yedek is not None and v568._yedek_ve_yol(s) == (f"{yedek}/vault/{yol}", yol)]
         if len(yd) != 1 or len(rb) != 1:
             ih.append(f"{yol}: reçetede rollback {len(rb)} · yedek yol {len(yd)} satırı (1/1 bekleniyordu)")
             continue
@@ -262,40 +268,27 @@ def _recete_yedek_ihlalleri(r: subprocess.CompletedProcess, yedek: pathlib.Path 
         if dosya is None or yd[0] > dosya:
             ih.append(f"{yol}: yedek yol satırı DOSYA adımından SONRA")
     for yol in yok:
-        if any(s.startswith(YEDEK_ONEKI) and f"vault kv put {yol} " in s for s in rec):
+        if any(s.startswith(YEDEK_ONEKI) and (v568._yedek_ve_yol(s) or ("", ""))[1] == yol for s in rec):
             ih.append(f"{yol}: yedeği ALINMAMIŞ yol için yedek yol önerildi")
     return ih
 
 
 def _yedek_yolunu_uygula(r: subprocess.CompletedProcess, ortam: dict, yol: str) -> list[str]:
-    """Reçetenin yedek yol satırı YÜRÜTÜLÜR (sahte kasada, yazıldığı gibi): gösterdiği dosya · komutu TAM
-    `vault kv put <yol> value=-` · girdi dosyadan STDIN'le (`tr -d '\\r\\n' <` ile aynı kırpma)."""
-    ms = [m for m in (YEDEK_DESENI.match(s) for s in v561._recete(r.stderr))
-          if m and m.group(2).split()[3] == yol]
-    if len(ms) != 1:
-        return [f"reçetede {yol} için STDIN biçimli TEK yedek yol satırı yok ({len(ms)})"]
-    dosya, komut = pathlib.Path(ms[0].group(1)), ms[0].group(2).split()
-    ih = [] if komut == ["vault", "kv", "put", yol, "value=-"] else ["yedek yol komutu `vault kv put <yol> value=-` değil"]
-    if not dosya.is_file():
-        return ih + ["reçetenin gösterdiği yedek dosyası YOK"]
-    girdi = dosya.read_text(encoding="utf-8").replace("\r", "").replace("\n", "")
-    y = subprocess.run([ortam["VAULT_BIN"], *komut[1:]], input=girdi, capture_output=True, text=True, env=ortam)
-    if y.returncode != 0:
-        ih.append("yedek yol komutu sahte kasada koşmadı")
-    return ih
+    """Reçetenin yedek yol satırı YÜRÜTÜLÜR (sahte kasada, YAZILDIĞI GİBİ — TSK-237'den beri TEK SATIR komut, v568):
+    gösterdiği dosya gerçek yedek · komut `sudo bash -c '<gövde>' _ <adres> <vault> <jeton> <yedek> <yol>` · değer
+    dosyadan STDIN'e borulanır (betiğin `tr -d '\\r\\n'` kırpması gövdede)."""
+    ds = [d for d in (v568._coz(s) for s in v561._recete(r.stderr))
+          if d and d["args"] and len(d["args"]) == 5 and d["args"][4] == yol and v568._stdin_govdesi(d["govde"])]
+    if len(ds) != 1:
+        return [f"reçetede {yol} için STDIN biçimli TEK yedek yol satırı yok ({len(ds)})"]
+    if not pathlib.Path(ds[0]["args"][3]).is_file():
+        return ["reçetenin gösterdiği yedek dosyası YOK"]
+    y = v568._satiri_kos(ds[0]["komut"], ortam)
+    return [] if y.returncode == 0 else ["yedek yol komutu sahte kasada koşmadı"]
 
 
-def _ps_goruntuleri(dizin: pathlib.Path) -> list[list[str]]:
-    """Her görüntüde YALNIZ bu pytest sürecinin torunlarının argv'si (v556 `_verify_torun_argvleri` deseni)."""
-    out = []
-    for p in sorted(dizin.glob("ps_*.txt")):
-        tablo = {}
-        for satir in p.read_text(encoding="utf-8").splitlines():
-            q = satir.split(None, 2)
-            if len(q) >= 2:
-                tablo[q[0]] = (q[1], q[2] if len(q) > 2 else "")
-        out.append([tablo[pid][1] for pid in _torunlar(tablo)])
-    return out
+#: Süreç görüntüsü okuyucusu v568'de (tek kaynak; v552/v556 deseni).
+_ps_goruntuleri = v568._ps_goruntuleri
 
 
 def _ps_ihlalleri(dizin: pathlib.Path, yol: str, *degerler: str) -> list[str]:
@@ -331,8 +324,6 @@ def _yorumsuz(metin: str) -> str:
 KV_GET_DESENI = re.compile(r'\(\s*umask 077;\s*_vault kv get -field=value "\$yol" > "\$ISLIK/(\w+)"\s*\)')
 INSTALL_DESENI = re.compile(r'sudo install -d -m (0\d{3}) -o (\w+) -g (\w+) "\$YEDEK/vault/\$\(dirname "\$yol"\)"')
 CIKAR_DESENI = re.compile(r'py cikar dosya "\$ISLIK/(\w+)" - - "\$YEDEK/vault/\$yol"')
-RECETE_DESENI = re.compile(r"düşerse ESKİ (değer|DSN) yedekte: \$YEDEK/vault/(\$\w+) — STDIN'le: vault kv put (\$\w+) "
-                           r"value=-")
 DALLAR = ("vault_rotasyon", "vault_db_rotasyon", "vault_cp_rotasyon")
 
 
@@ -363,6 +354,11 @@ def test_A1_AYRISMA_CIVISI_uc_dal_AYNI_yedek_yontemi_kasadan_0700_0600():
            f"yedek dizini kurulumu dallar arasında ayrıştı: {kurulum}")
     genel = y["vault_rotasyon"]
     _iddia(genel["get"][0] == genel["cikar"][0], "genel dal: yedeğin kaynağı kasadan okunan dosya DEĞİL")
+    # TSK-237: reçetenin TEK SATIRI yedeği dalların YAZDIĞI yerden okur — yardımcı `"$YEDEK/vault/$2"` (2. argüman = dalın
+    # kendi yol değişkeni, A3) ↔ üç dalın yazım hedefi `"$YEDEK/vault/$yol"` (CIKAR_DESENI). Biri taşınırsa öteki izlemeli.
+    yardimci = _yorumsuz(v521._fonksiyon(v568.YARDIMCI))
+    _iddia(yardimci.count('"$YEDEK/vault/$2"') == 1 and all(v["cikar"] for v in y.values()),
+           "reçetenin okuduğu yedek yeri dalların yazdığı yerden ayrıştı")
 
 
 def test_A2_GENEL_DONGU_sira_surum_kapisi_ESKI_deger_yedek_satir_put():
@@ -377,17 +373,12 @@ def test_A2_GENEL_DONGU_sira_surum_kapisi_ESKI_deger_yedek_satir_put():
            f"genel döngüde sıra bozuk: {list(zip(parcalar, yerler))}")
 
 
-def test_A3_RECETE_yedek_yol_satiri_UC_dalda_AYNI_bicim_STDIN():
-    """Reçetenin yedek yol satırı üç dalda AYNI biçimde: `düşerse ESKİ <değer|DSN> yedekte: $YEDEK/vault/<yol> —
-    STDIN'le: vault kv put <yol> value=-` ve iki yol değişkeni AYNI. Genel dal satırı CP emsaliyle, yol değişkeni
-    dışında BİREBİR."""
-    bulunan = {}
-    for fn, adet in (("_genel_kasa_recetesi", 1), ("_cp_kasa_recetesi", 2), ("_db_kasa_recetesi", 2)):
-        m = RECETE_DESENI.findall(v521._fonksiyon(fn))
-        _iddia(len(m) == adet and all(x[1] == x[2] for x in m), f"{fn}: {len(m)} satır / yol değişkenleri ayrışık")
-        bulunan[fn] = m
-    genel, cp = bulunan["_genel_kasa_recetesi"][0], bulunan["_cp_kasa_recetesi"][0]
-    _iddia(genel[0] == cp[0] == "değer" and genel[1] == "$yol", f"genel {genel} ↔ cp {cp}")
+def test_A3_RECETE_yedek_yol_satiri_UC_dalda_AYNI_yardimcidan_TEK_SATIR():
+    """TSK-237: reçetenin yedek yol satırı üç dalda AYNI yardımcıdan (`_geri_koy_satiri`) — her rollback satırı kadar
+    çağrı (genel 1 · cp 2 · db 2), doğru ad (değer/DSN) ve dalın KENDİ yol değişkeni; eski açıklama biçimi hiçbir kod
+    satırında yok, etiket metni yardımcı dışında kopyalanmamış. Ölçüm v568 A1'in listesidir (tek kaynak)."""
+    ih = v568._a1_ihlalleri()
+    _iddia(not ih, "\n".join(ih))
 
 
 # =================================================================================================
@@ -649,8 +640,8 @@ YEDEK_BLOK = (
     '    sudo install -d -m 0700 -o root -g root "$YEDEK/vault/$(dirname "$yol")"\n'
     '    py cikar dosya "$ISLIK/vault_eski_ham" - - "$YEDEK/vault/$yol"\n'
     '    oldu "yedek: ESKİ değer (KASADAN) → $YEDEK/vault/$yol (0600 — geri almanın girdisi)"\n')
-RECETE_YEDEK = ('          echo "        düşerse ESKİ değer yedekte: $YEDEK/vault/$yol — STDIN\'le: vault kv put $yol '
-                'value=-"\n')
+#: TSK-237 (v568): genel reçetenin yedek yol satırı artık ortak yardımcının ÇAĞRISIDIR (satırın biçimi yardımcıda).
+RECETE_YEDEK = '          _geri_koy_satiri değer "$yol"\n'
 KURU_YEDEK_ECHO = ('    echo "  ESKİ değer yedeği: yedeklenir — kv put ÖNCESİ KASADAN okunur → $KOK/root/sir-yedek-<UTC ts>-'
                    '$alt/vault/$yol (0600); rollback düşerse STDIN\'le: vault kv put $yol value=- (değer BASILMAZ; '
                    'okunamazsa bu yol YAZILMAZ)"\n')
@@ -668,7 +659,7 @@ E_SENARYO = (("db_basari", "db", {}, 0, "✓ kasa sürümü (yazım ÖNCESİ): 3
              ("db_rollback_kirik", "db", {"SAHTE_ALTER_DUSER": "1", "SAHTE_ROLLBACK_KIRIK": "1"}, 1,
               "YEDEK YOL: ESKİ DSN STDIN'le kv put"),
              ("cp_basari", "cp", {}, 0, "✓ yedek: ESKİ değer (KASADAN) → "),
-             ("cp_render_yok", "cp", {"SAHTE_RENDER": "yok"}, 2, "düşerse ESKİ değer yedekte: "))
+             ("cp_render_yok", "cp", {"SAHTE_RENDER": "yok"}, 2, YEDEK_ONEKI))
 
 
 @pytest.mark.parametrize("etiket,dal,bayrak,rc,capa", E_SENARYO, ids=[e[0] for e in E_SENARYO])
@@ -722,8 +713,9 @@ def test_M2_MUT_DEGER_ARGVye_konursa_C1_ve_C8_KIRMIZI(tmp_path):
 
 
 def test_M2b_MUT_RECETE_degeri_ARGVde_gosterirse_C1_ve_C3_KIRMIZI(tmp_path):
-    """Reçetenin yedek yol komutu STDIN yerine değeri argv'de ister (`value=$(sudo cat …)`)."""
-    m = _mutant(tmp_path, "m2b.sh", (RECETE_YEDEK, RECETE_YEDEK.replace("value=-", "value=\\$(sudo cat $YEDEK/vault/$yol)")))
+    """Reçetenin yedek yol komutu STDIN yerine değeri argv'ye koyar (TSK-237: yardımcının gövdesinde `value="$(tr … <
+    yedek)"`) — üç dalın ORTAK satırı olduğu için tek mutasyon üçünü birden bozar."""
+    m = _mutant(tmp_path, "m2b.sh", (v568.GOVDE_BORU, v568.GOVDE_ARGV))
     r, kok, ortam, _, _ = _kos_tenant(tmp_path, betik=m, SAHTE_RENDER="yok")
     ih = _recete_yedek_ihlalleri(r, _yedek_dizini(kok, "tenant"), [TENANT_YOLU])
     _iddia(any("STDIN biçiminde değil" in i for i in ih), "MUTASYON ISIRMADI (C1 reçete): " + "\n".join(ih))
@@ -732,8 +724,8 @@ def test_M2b_MUT_RECETE_degeri_ARGVde_gosterirse_C1_ve_C3_KIRMIZI(tmp_path):
 
 
 RECETE_KV = v561.RECETE_KV
-DOSYADAN_SONRA = ('        while IFS=$\'\\t\' read -r yol surum hedef; do [ -z "$yol" ] || echo "        düşerse ESKİ değer '
-                  'yedekte: $YEDEK/vault/$yol — STDIN\'le: vault kv put $yol value=-"; done <<< "$GENEL_KASA_SATIRLARI"\n')
+DOSYADAN_SONRA = ('        while IFS=$\'\\t\' read -r yol surum hedef; do [ -z "$yol" ] || _geri_koy_satiri değer "$yol"; '
+                  'done <<< "$GENEL_KASA_SATIRLARI"\n')
 
 
 @pytest.mark.parametrize("bicim", ["rollbacktan_once", "dosyadan_sonra"])

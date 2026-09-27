@@ -211,8 +211,13 @@
 # `current_version`, her kasa yolu için ayrı kaydedilir), SONRA dosya — ters sırada Agent render'ı
 # geri konan dosyayı kasadaki yeni değerle tekrar ezer. `kv rollback`un kendisi düşerse (politika · ağ ·
 # mühür) YEDEK YOL üç kasa dalında da AYNIDIR (genel döngü TSK-064(b), 2026-09-27): `kv put` ÖNCESİ kasadan
-# okunan ESKİ değer `<yedek>/vault/<kasa yolu>`dadır (0600) ve STDIN'le `vault kv put <yol> value=-` ile
-# geri konur — değer argv'ye girmez; reçete her rollback satırının altında bunu yoluyla söyler.
+# okunan ESKİ değer `<yedek>/vault/<kasa yolu>`dadır (0600 root) ve STDIN'le `vault kv put <yol> value=-` ile
+# geri konur — değer argv'ye girmez. Reçete bunu her rollback satırının altında A1'de OLDUĞU GİBİ koşulacak
+# TEK SATIR olarak basar (TSK-237, 2026-09-27; üç dalın ortak `_geri_koy_satiri`si):
+#   sudo bash -c '<sabit gövde>' _ <VAULT_ADDR> <vault ikilisi> <yönetici jetonu> <yedek dosyası> <kasa yolu>
+# Kasa ortamı betiğin KENDİSİNİNKİDİR: jeton `login -no-print -` ile STDIN'den (`VAULT_TOKEN=` yok), oturum
+# geçici bir HOME'da ve çıkışta silinir; yedek sudo ile okunur ve `tr -d` ile STDIN'e borulanır; yedek yoksa
+# ya da boşsa kasaya HİÇBİR ŞEY yazılmadan durur.
 #
 # YAPMADIKLARI (burada olmayan şey, burada yapılmayacak şeydir): kanal geçişi yapmaz (o
 # `sir_credential_gecis.sh`); drop-in kurmaz; Vault'a dokunmaz; operatörün YEREL `.env` kopyasını
@@ -2665,6 +2670,29 @@ vault_rotasyon() {
   echo "   adımdır (≥2 gece sonra, yedekli) — geri alım: systemctl stop vault-agent + drop-in kaldır."
 }
 
+#: ROLLBACK DÜŞERSE — YEDEKTEN GERİ KOYMA SATIRI (TSK-237, 2026-09-27). Üç kasa reçetesinin (`_genel_kasa_recetesi` ·
+#: `_db_kasa_recetesi` · `_cp_kasa_recetesi`) "rollback düşerse" satırının TEK kaynağı: biçim burada yaşar, reçeteler
+#: yalnız bu yardımcıyı çağırır (ayrışma çivisi v568 A1). `_geri_koy_satiri <ad: değer|DSN> <kasa yolu>` → tek satır.
+#: NİYE TEK SATIR: yedek 0600 root'tur. Eski satır yolu ve yöntemi yalnız ANLATIYORDU ("STDIN'le: vault kv put …");
+#: operatör dosyayı sudo ile okuyup boruya vermeyi ve kasa oturumunu KENDİSİ kurmak zorundaydı — arıza anında yarım
+#: kalan reçete, sırrı elle taşıtır. Satır artık A1'de olduğu gibi yapıştırılıp koşulan TEK komuttur (`): `dan sonrası).
+#: ORTAM BETİĞİN KENDİSİDİR (uydurma yok): `VAULT_ADDR` (global `export`) · `$VAULT_BIN` (`_vault`) · yönetici jetonu
+#: `$VAULT_JETON_DOSYASI`dan `login -no-print -` ile STDIN'den (`_vault_oturum`; `VAULT_TOKEN=` YOK) · oturum yardımcısı
+#: geçici bir HOME'a düşer ve trap onu siler (`_vault`un `HOME="$ISLIK"` disiplini — kalıcı yönetici oturumu kalmaz).
+#: Değer yedekten `tr -d` ile STDIN'e BORULANIR (`_db_kasa_geri_al`ın yöntemi) — argv'ye GİRMEZ; yedek root 0600 kalır
+#: ve `sudo` ile okunur. Değişken parçalar `bash -c`nin KONUMSAL argümanlarıdır (`printf %q`): gövde SABİTTİR ve tek
+#: tırnak taşımaz. Yedek yoksa/boşsa YAZIMDAN ÖNCE durur: boru eksik dosyada `tr`ı düşürür ama `kv put` boş STDIN'i yine
+#: okur ve kasaya BOŞ değer yazardı (pipefail yalnız çıkış kodunu düzeltir, yazımı geri almaz).
+_geri_koy_satiri() {
+  local govde='set -euo pipefail; test -s "$4" || { echo "yedek yok/boş: $4" >&2; exit 1; }; '
+  govde+='export VAULT_ADDR="$1"; h="$(mktemp -d "${TMPDIR:-/tmp}/sir-geri.XXXXXXXX")"; trap "rm -rf \"$h\"" EXIT; '
+  govde+='HOME="$h" "$2" login -no-print - < "$3" > /dev/null; '
+  govde+='tr -d "\r\n" < "$4" | HOME="$h" "$2" kv put "$5" value=- > /dev/null; '
+  govde+='echo "kasa geri kondu: $5 (yedekteki ESKİ değer, yeni sürüm)"'
+  printf "        düşerse (TEK SATIR, root — yedekteki ESKİ %s STDIN'le kasaya; değer argv'ye GİRMEZ): sudo bash -c '%s' _ %q %q %q %q %q\n" \
+    "$1" "$govde" "$VAULT_ADDR" "$VAULT_BIN" "$VAULT_JETON_DOSYASI" "$YEDEK/vault/$2" "$2"
+}
+
 #: GERİ ALMA REÇETESİ — genel kasa döngüsü (TSK-064 takibi, 2026-09-27; `_db_kasa_recetesi`/`_cp_kasa_recetesi`nin
 #: ikizi). NİYE KASA ÖNCE: render hedefi ve yan dosyalar Agent'ındır — kasa YENİ değerdeyken yedekten geri konan
 #: dosyayı Agent bir sonraki render'da (`RENDER_ARALIGI`) YENİ değerle EZER; yalnız dosya öneren reçete YANLIŞ
@@ -2672,7 +2700,8 @@ vault_rotasyon() {
 #: dosyalardır, Agent'ın DEĞİL: onlar yedekten geri konur — kasadan SONRA. Hedef sürüm yazım ÖNCESİ ölçülen
 #: `current_version`dır (`_kasa_surumu`); put'u DENENEN her yol listelenir. Değer BASILMAZ.
 #: ROLLBACK DÜŞERSE (TSK-064(b), 2026-09-27; db/cp emsali): her rollback satırını o yolun YEDEK YOLU izler — yazım
-#: ÖNCESİ kasa değeri `$YEDEK/vault/<yol>`dadır ve STDIN'le `kv put` edilir (argv'de değer YOK). Satır yalnız yedeği
+#: ÖNCESİ kasa değeri `$YEDEK/vault/<yol>`dadır ve STDIN'le `kv put` edilir (argv'de değer YOK); satır TSK-237'den beri
+#: üç dalın ortak `_geri_koy_satiri`nin bastığı TEK SATIR komuttur. Satır yalnız yedeği
 #: ALINMIŞ yol için vardır: `GENEL_KASA_SATIRLARI`na yol yedekten SONRA girer (`vault_rotasyon`).
 _genel_kasa_recetesi() {
   local birimler yol surum hedef hedefler=""
@@ -2689,7 +2718,7 @@ _genel_kasa_recetesi() {
         while IFS=$'\t' read -r yol surum hedef; do
           [ -n "$yol" ] || continue
           echo "        vault kv rollback -version=$surum $yol"
-          echo "        düşerse ESKİ değer yedekte: $YEDEK/vault/$yol — STDIN'le: vault kv put $yol value=-"
+          _geri_koy_satiri değer "$yol"
           hedefler="$hedefler $hedef"
         done <<< "$GENEL_KASA_SATIRLARI"
         echo "     2) render: kasadaki ESKİ değere BİREBİR olana kadar bekle:$hedefler"
@@ -2764,7 +2793,7 @@ _db_kasa_recetesi() {
     kasa)
       echo ">> GERİ ALMA (--db --vault): kasaya YENİ DSN yazıldı ya da yazımı DENENDİ; ALTER ROLE KOŞMADI — DB ESKİ parolada.
      1) kasa: vault kv rollback -version=$DB_KASA_SURUM $DB_KASA_YOL   (yönetici jetonuyla)
-        düşerse ESKİ DSN yedekte: $YEDEK/vault/$DB_KASA_YOL — STDIN'le: vault kv put $DB_KASA_YOL value=-
+$(_geri_koy_satiri DSN "$DB_KASA_YOL")
      2) render hedefi ($DB_KASA_HEDEF) ESKİ DSN'e dönene kadar $birim YENİDEN BAŞLATILMAMALI (dosya YENİ, DB ESKİ)." >&2 ;;
     geri)
       echo ">> GERİ ALMA (--db --vault): kasa ESKİ DSN'e GERİ ALINDI ($DB_GERI_YONTEM; kasadaki değer ölçüldü) ve
@@ -2773,7 +2802,7 @@ _db_kasa_recetesi() {
     alter)
       echo ">> GERİ ALMA (--db --vault — ALTER ROLE UYGULANDI; başarıda da arızada da geçerli; sıra ileri yolun AYNISI):
      1) kasa: vault kv rollback -version=$DB_KASA_SURUM $DB_KASA_YOL   (yönetici jetonuyla)
-        düşerse ESKİ DSN yedekte: $YEDEK/vault/$DB_KASA_YOL — STDIN'le: vault kv put $DB_KASA_YOL value=-
+$(_geri_koy_satiri DSN "$DB_KASA_YOL")
      2) render: $DB_KASA_HEDEF kasadaki ESKİ DSN'e BİREBİR olana kadar bekle
      3) ALTER ROLE $DB_ROL PASSWORD <yedekteki ESKİ DSN'in parolası> — SQL dosyası 0600 + psql -f - (parola argv'ye GİRMEZ)
      4) sudo systemctl restart $birim" >&2 ;;
@@ -2981,12 +3010,12 @@ _cp_kasa_recetesi() {
     kasa)
       echo ">> GERİ ALMA (--cp --vault): kasaya YENİ değer yazıldı ya da yazımı DENENDİ; eski kanal YAZILMADI, $birim YENİDEN BAŞLATILMADI (konteyner ESKİ değerde).
      1) kasa: vault kv rollback -version=$CP_KASA_SURUM $CP_KASA_YOL   (yönetici jetonuyla)
-        düşerse ESKİ değer yedekte: $YEDEK/vault/$CP_KASA_YOL — STDIN'le: vault kv put $CP_KASA_YOL value=-
+$(_geri_koy_satiri değer "$CP_KASA_YOL")
      2) render hedefi ($CP_KASA_HEDEF) kasadaki ESKİ değere dönene kadar $birim YENİDEN BAŞLATILMAMALI (yan dosya YENİ değeri taşıyabilir)." >&2 ;;
     yayim)
       echo ">> GERİ ALMA (--cp --vault — eski kanal yazımı BAŞLADI; başarıda da arızada da geçerli; sıra ileri yolun AYNISI):
      1) kasa: vault kv rollback -version=$CP_KASA_SURUM $CP_KASA_YOL   (yönetici jetonuyla)
-        düşerse ESKİ değer yedekte: $YEDEK/vault/$CP_KASA_YOL — STDIN'le: vault kv put $CP_KASA_YOL value=-
+$(_geri_koy_satiri değer "$CP_KASA_YOL")
      2) render: $CP_KASA_HEDEF kasadaki ESKİ değere BİREBİR olana kadar bekle
      3) eski kanal: $eski_kanal
      4) sudo systemctl restart $birim" >&2 ;;
