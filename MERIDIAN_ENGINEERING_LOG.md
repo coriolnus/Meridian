@@ -4012,3 +4012,8 @@ DEĞİLDİ (API sayacı + pano), kalem başlığı kısmen yanlıştı. **TSK-23
 A0 rolü `/etc/environment`e `UV_NO_DEV=1 UV_FROZEN=1` (Rol-1 A1 ölçümü: `.bashrc` etkileşimsizde döner, sshd+sudo `pam_env`; dosya tek PATH satırı),
 CI uv kurulumu sha256 kapılı (0.12.0 immutable sürüm; inceleme `gh api` + indirmeyle bağımsız doğruladı). **Dağıtım #74** (deca767b): suite 14968/0,
 CI yeşil (sha256 kapısı geçti), site.yml yalnız iki satır, dagit EXIT 0; A1 ssh komutu artık `UV_NO_DEV=1 UV_FROZEN=1` görüyor. TSK-235/238 kapandı.
+**TSK-236 + Dağıtım #75** (e4655b87): satır-çapası taraması `.py` dışı hedeflere (v571) — ilk ölçümde doğrulanabilir 60 çapanın 46'sı YANLIŞ satırı
+gösteriyordu; çevrildi, `meridian/` 11 dosyada yalnız yorum (inceleme AST ile kanıtladı); canlı bota giden `meridian-olcum` SKILL.md cümlesi doğrulandı.
+Suite 15102/0 ama 20:24 sürdü — yavaşlık Mac yükünden (AirPlay/ekran yansıtma/video kodlama, load ~8,6), v571 en yavaşlarda yok. Uygulayıcı beyaz-liste
+dışı salt-okur `git ls-files` koştu (itiraf, zararsız) — kaydedildi; beyaz liste genişletmesi operatör kararı. Açılanlar TSK-239 (.py dışı sembol
+çapaları, 2 çürük) · TSK-240 (üç F9 artefaktı yalnız yorumda ayrık).
