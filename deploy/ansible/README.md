@@ -272,7 +272,7 @@ ansible-lint deploy/ansible/dagit.yml
 | Kapı | Ne sorar | Düşürür mü |
 |---|---|---|
 | `[0a]` | dağıtım kaynağı **ana checkout** mu; çalışma ağacı temiz mi; **dağıtılan tepe (`DAGIT_SHA`) burada donar** | evet (`-e worktree_gec=true` / `-e kirli_gec=true` ile beyanlı geçilir) |
-| `[0b]` | `uv lock --check --offline` — kilit tazeliği (pyproject ↔ uv.lock; her `uv` görevinden ÖNCE) · `uv audit` — tedarik zinciri | evet (kilit: rc 1 ayrışık · rc 2 ölçülemedi — ikisi de) |
+| `[0b]` | `uv lock --check --offline` — kilit tazeliği (pyproject ↔ uv.lock; her `uv` görevinden ÖNCE) · `uv audit` — tedarik zinciri | evet — kilit: YALNIZ rc 1 (ayrışık); **rc 2 (uv yok / kilit yok / `--check` yok) = ÖLÇÜLEMEDİ, nedeniyle basılır, sürer** · audit: evet |
 | `[0c]` | `uv run lint-imports` — mimari sözleşmeler | evet |
 | `[0d]` | `ops/import_tarama.py` — dev-daraltması hâlâ güvenli mi | evet (rc 2 = ölçülemedi de ENGEL) |
 | `[5c]` | pano artefaktı kaynağından taze mi (`ops/artefakt_tazelik.py`) | rc 1 evet (kuru koşumda UYARI) · **rc 2 = ölçülemedi, sürer** |
@@ -373,9 +373,12 @@ modülleri (`systemd_service`, `copy`) check-mode'da hiçbir şeyi değiştirmez
 12. **`[0b]` kilit tazeliği kapısı** (TSK-230, 2026-09-27) dagit.sh'ta YOKTU. `uv lock --check
    --offline` Play 1'in ilk `uv` görevidir: `uv audit` ve bayraksız `uv run` (`[0c]`/`[0d]`/`[5c]`)
    bayat kilidi SESSİZCE yeniden yazar (ölçüldü — audit düştüğü koşumda bile), yani eski sırada
-   `[0a]`nın temiz bulduğu ağaç kirlenir ve commit'lenmemiş bir kilit A1'e giderdi. rc 1 (ayrışık)
-   ve rc 2 (uv koşamadı) İKİSİ DE durdurur (`[0d]` sözleşmesi). Aynı komut CI dumanında `[0/4]`
-   (orada sürümü `--check` bilmeyen uv ÖLÇÜLEMEDİ'dir, kırmızı değil). Çivi: v566 E3.
+   `[0a]`nın temiz bulduğu ağaç kirlenir ve commit'lenmemiş bir kilit A1'e giderdi. **Yalnız rc 1
+   (ayrışık) durdurur**; rc 2 (uv yok — Ansible'da da rc 2 — / kilit yok / yorumlayıcı yok / bu uv
+   `--check` bilmiyor) ÖLÇÜLEMEDİ'dir: nedeniyle log'a basılır, dağıtım SÜRER (Rol-1 hükmü
+   2026-09-27: kapının amacı ayrışma, operatör Mac'inin pinsiz uv'si değil; bedel = TSK-230 öncesi
+   durum). Sözleşme dışı kod (3, sinyal) görevi düşürür. Aynı komut CI dumanında `[0/4]` (orada
+   `--check` bilmeyen ya da bulunmayan uv ÖLÇÜLEMEDİ'dir, kırmızı değil). Çivi: v566 E3.
 
 > Bu liste ile davranış arasındaki bağ ÖLÇÜLÜR: her maddenin playbook'ta bir `# BEYANLI-FARK n`
 > şerhi vardır ve kıyas İKİ YÖNLÜDÜR (v452 `test_B18_…`) — listeden madde düşerse de, playbook'a

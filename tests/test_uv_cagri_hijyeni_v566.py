@@ -47,10 +47,16 @@ KİLİT TAZELİĞİ (E). Ölçüm (bu tur, Mac, uv 0.11.28, yalıtılmış kopya
     · CI: `ci.yml` eşitleme adımı `--frozen` taşır (bayraksızı kilidi kapıdan ÖNCE tazelerdi) ve
       `ops/ci_duman.sh` `[0/4]` her `uv run|audit`tan ÖNCE koşar; sürüm uyumu `[3/4] uv audit` deseni
       (bu uv `--check` bilmiyorsa ÖLÇÜLEMEDİ, KIRMIZI değil).
-    · dagit: `[0b]`nin İLK görevi; `[0b] uv audit` + `[0c]/[0d]/[5c]` `uv run`dan önce. Fail-closed
-      (dagit `[0b]/[0d]` sözleşmesi): rc 1 ve rc 2 İKİSİ DE dağıtımı durdurur — A0'ın uv'si ölçüldü
-      (0.11.28 `--check` taşır); dagit'in kapısı yoksa `[0a]`nın temiz bulduğu ağaç `[0b]`de kirlenir ve
-      commit'lenmemiş bir kilit `[2]` ile A1'e gider.
+    · dagit: `[0b]`nin İLK görevi; `[0b] uv audit` + `[0c]/[0d]/[5c]` `uv run`dan önce (yoksa `[0a]`nın
+      temiz bulduğu ağaç `[0b]`de kirlenir, commit'lenmemiş kilit `[2]` ile A1'e gider). TUR 2 (Rol-1 hükmü
+      2026-09-27): YALNIZ rc 1 (ayrışma) DURDURUR; rc 2 (uv yok — Ansible'da da rc 2, ölçüldü — / kilit
+      yok / yorumlayıcı yok / `--check` yok) ÖLÇÜLEMEDİ'dir: nedeniyle log'a basılır, dağıtım SÜRER. Kapının
+      amacı ayrışma, operatör Mac'inin pinsiz uv'si değil; bedel = TSK-230 öncesi durum. Sözleşme dışı kod
+      (3, sinyal) görevi düşürür.
+    · CI uv'si A1 pinine (`defaults/main.yml::uv_surum`) sabitlendi (belgeli sürüm-pinli installer URL'si);
+      literal kopya E6 ile çivili. 0.12.0'da `uv lock --check` ve `uv audit` (preview `AuditCommand`)
+      KAYNAKTAN okundu (tag 0.12.0, `uv-cli::LockArgs.check`, `uv-preview`), KOŞULMADI — `[0/4]`/`[3/4]`
+      yoklama deseni (alt komut/bayrak yoksa ÖLÇÜLEMEDİ) yerinde kalır.
 
 MODELLENMEYEN (bilinçli; hepsi adıyla):
   · `ops/*.py` ve `deploy/*/*.py` docstring'leri ve operatöre giden ileti metinleri (`uv run python
@@ -80,7 +86,13 @@ import pytest
 import yaml
 
 from tests.conftest import betikten_modul_yukle
-from tests.test_ansible_dagit_v452 import _dagit_yml, _komut_metni, _play_gorevleri, _when_degerlendir
+from tests.test_ansible_dagit_v452 import (
+    _dagit_yml,
+    _jinja_ortami,
+    _komut_metni,
+    _play_gorevleri,
+    _when_degerlendir,
+)
 from tests.test_birim_argv_sir_v554 import _goreli
 from tests.test_birim_argv_sir_v554 import _kapsam as _birim_kapsami
 from tests.test_birim_uv_run_v558 import (
@@ -88,6 +100,7 @@ from tests.test_birim_uv_run_v558 import (
     ESITLEYEN_ALT_KOMUTLAR,
     _bayrak,
     _beklenen,
+    _defaults,
     _semantik,
     _uv_cagrilari,
 )
@@ -680,7 +693,28 @@ def _play1_gorevleri() -> list[dict]:
     return _play_gorevleri(_dagit_yml()[0])
 
 
-def test_E3_dagit_0b_kilit_kapisi_ILK_uv_gorevi_ve_FAIL_CLOSED():
+#: ÖLÇÜLEMEDİ iletisinin neden sınıflandırması — (register içeriği, iletide olması gereken neden parçası).
+#: Girdiler ÖLÇÜLDÜ (2026-09-27): uv yokken Ansible `command` rc 2 + msg `[Errno 2] No such file…`;
+#: kilitsiz proje stderr "Unable to find lockfile…"; bilinmeyen bayrak (clap) "unexpected argument '…' found".
+OLCULEMEDI_NEDENLERI = [
+    ({"rc": 2, "msg": "[Errno 2] No such file or directory: b'uv'", "stderr": "", "stderr_lines": []},
+     "uv bulunamadı"),
+    ({"rc": 2, "msg": "non-zero return code",
+      "stderr": "error: Unable to find lockfile at `uv.lock`, but `--check` was provided.",
+      "stderr_lines": ["error: Unable to find lockfile at `uv.lock`, but `--check` was provided."]},
+     "uv.lock yok"),
+    ({"rc": 2, "msg": "non-zero return code", "stderr": "error: unexpected argument '--check' found",
+      "stderr_lines": ["error: unexpected argument '--check' found"]},
+     "`lock --check` bayrağını tanımıyor"),
+    ({"rc": 2, "msg": "non-zero return code", "stderr": "error: No interpreter found",
+      "stderr_lines": ["error: No interpreter found"]},
+     "uv çıkış 2"),
+]
+
+
+def test_E3_dagit_0b_kilit_kapisi_ILK_uv_gorevi_rc1_DURUR_rc2_SURER_ve_BASAR():
+    """Rol-1 hükmü (TSK-230 tur 2): kapının amacı AYRIŞMA. rc 1 → dağıtım DURUR; rc 2 (uv ölçemedi) →
+    DURMAZ ama SESSİZ de geçmez — ÖLÇÜLEMEDİ nedeniyle log'a basılır; sözleşme dışı kod görevi düşürür."""
     gorevler = _play1_gorevleri()
     komutlar = [(i, str(g.get("name", "")), _komut_metni(g).strip()) for i, g in enumerate(gorevler)]
     kilit = [(i, ad) for i, ad, k in komutlar if k == f"uv {KILIT_KOMUTU}"]
@@ -696,22 +730,57 @@ def test_E3_dagit_0b_kilit_kapisi_ILK_uv_gorevi_ve_FAIL_CLOSED():
         f"yeniden yazar): kilit #{ki}, öncekiler {[x for x in diger_uv if x[0] < ki]}")
     kayit = olcum.get("register")
     assert kayit, "kilit ölçümü register etmiyor"
-    # failed_when: bilinen üç kod hükme taşınır (reçeteyle), bilinmeyen kod görevi düşürür.
+    # failed_when: sözleşmedeki üç kod hükme taşınır, sözleşme dışı kod görevi düşürür.
     for rc, dusmeli in ((0, False), (1, False), (2, False), (3, True), (-9, True)):
         assert _when_degerlendir(olcum["failed_when"], {kayit: {"rc": rc}}) is dusmeli, (rc, olcum["failed_when"])
-    # Hüküm: yalnız rc 0 geçer — 1 (ayrışık) ve 2 (uv koşamadı) DAĞITIMI DURDURUR.
-    assertler = [g for g in gorevler[ki + 1:ki + 3]
+    # KAPI: ölçümün hemen ardındaki assert — rc 1 DURDURUR, rc 0 ve rc 2 GEÇER.
+    sonraki = gorevler[ki + 1:ki + 3]
+    assertler = [g for g in sonraki
                  if "ansible.builtin.assert" in g and kayit in str(g["ansible.builtin.assert"].get("that"))]
     assert len(assertler) == 1, "kilit ölçümünün hemen ardında tek bir KAPI (assert) görevi yok"
     that = assertler[0]["ansible.builtin.assert"]["that"]
-    for rc, gecmeli in ((0, True), (1, False), (2, False)):
-        assert _when_degerlendir(that, {kayit: {"rc": rc}}) is gecmeli, (rc, that)
+    for rc, gecmeli in ((0, True), (1, False), (2, True)):
+        assert _when_degerlendir(that, {kayit: {"rc": rc}}) is gecmeli, (
+            f"rc {rc}: {'geçmeli' if gecmeli else 'DURDURMALI'} — {that}")
     assert "uv lock" in str(assertler[0]["ansible.builtin.assert"].get("fail_msg")), "fail_msg çareyi söylemiyor"
+    # ÖLÇÜLEMEDİ: SESSİZ DEĞİL — yalnız rc 2'de basan bir `debug` (durdurmaz), iletisi nedeni taşır.
+    debuglar = [g for g in sonraki if "ansible.builtin.debug" in g]
+    assert len(debuglar) == 1, "rc 2 için ÖLÇÜLEMEDİ iletisini basan `debug` görevi kilit kapısının ardında yok"
+    debug = debuglar[0]
+    for rc, basmali in ((0, False), (1, False), (2, True)):
+        assert _when_degerlendir(debug.get("when", "false"), {kayit: {"rc": rc}}) is basmali, (
+            f"ÖLÇÜLEMEDİ iletisi rc {rc}'de {'basılmalı' if basmali else 'basılMAMALI'}: {debug.get('when')!r}")
+    sablon = _jinja_ortami().from_string(str(debug["ansible.builtin.debug"]["msg"]))
+    for sonuc, neden in OLCULEMEDI_NEDENLERI:
+        ileti = sablon.render(**{kayit: sonuc})
+        assert "ÖLÇÜLEMEDİ" in ileti and "dağıtım sürüyor" in ileti and neden in ileti, (
+            f"neden {neden!r} iletide yok ya da ileti 'sürüyor' demiyor:\n{ileti}")
 
 
-def test_E3b_dagit_README_0b_satiri_kilit_kontrolunu_anar():
+def test_E3b_dagit_README_0b_satiri_kilit_kontrolunu_ve_rc_hukmunu_anar():
     satir = [s for s in ANSIBLE_README.read_text(encoding="utf-8").splitlines() if s.startswith("| `[0b]`")]
     assert len(satir) == 1 and "uv lock --check" in satir[0], satir
+    assert "rc 1" in satir[0] and "ÖLÇÜLEMEDİ" in satir[0] and "sürer" in satir[0], (
+        f"README `[0b]` satırı rc 1 = durur / rc 2 = ÖLÇÜLEMEDİ, sürer hükmünü söylemiyor: {satir[0]}")
+
+
+#: `https://astral.sh/uv[/<sürüm>]/install.sh` — sürümsüz biçimde grup boş kalır.
+_UV_KURULUM_URL = re.compile(r"https://astral\.sh/uv/(?:([^/\s]+)/)?install\.sh")
+
+
+def test_E6_ci_uv_surumu_A1_pinine_ESIT_surumsuz_kurulum_YOK():
+    """CI uv'si A1 pinine (`defaults/main.yml::uv_surum`, TEK KAYNAK) eşit: sürümsüz installer her koşumda
+    en son uv'yi kurar ve `[0/4]` kod değişmeden kırmızıya dönebilirdi (inceleme bulgusu, tur 2)."""
+    beklenen = str(_defaults()["uv_surum"])
+    assert beklenen and beklenen != "OLCULECEK", f"A0 uv_surum ölçülmemiş: {beklenen!r}"
+    veri = yaml.safe_load(CI_YML.read_text(encoding="utf-8"))
+    kosumlar = [adim.get("run", "") for is_ in veri["jobs"].values() for adim in is_.get("steps", [])]
+    surumler = [m.group(1) or "" for k in kosumlar for m in _UV_KURULUM_URL.finditer(k)]
+    assert surumler, "ci.yml uv'yi resmi installer'dan kurmuyor — çivi bayat"
+    assert "" not in surumler, "ci.yml sürümsüz uv installer'ı kullanıyor (`astral.sh/uv/install.sh`)"
+    assert set(surumler) == {beklenen}, (
+        f"ci.yml uv sürümü {sorted(set(surumler))} ≠ A1 pini {beklenen!r} (defaults/main.yml::uv_surum) — "
+        "ikisi aynı değişiklikte güncellenir")
 
 
 def _uv_ikili() -> str:
