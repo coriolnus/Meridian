@@ -32,9 +32,19 @@ jobs:
       # kopya tests/test_uv_cagri_hijyeni_v566.py (E6) ile çivili. Biçim astral'ın belgelediği sürüm-pinli
       # URL'dir ("include it in the URL", docs.astral.sh/uv/getting-started/installation, 2026-09-27) —
       # A0 `venv.yml` ile aynı. `uv --version` kurulan sürümü log'a düşürür.
-      - name: Install uv (sürüm pinli — A1 uv_surum)
+      # DOĞRULAMALI KURULUM (TSK-238): sürüm-pinli URL sürümü sabitler, İÇERİĞİ doğrulamaz — `curl … | sh`
+      # indirdiğini körlemesine koşuyordu. Installer dosyaya iner, sha256'sı A0 ile AYNI değere karşı
+      # doğrulanır (defaults/main.yml::uv_installer_sha256 — literal kopya E6b ile çivili), sonra koşar.
+      # Özet kaynağı ÖLÇÜLDÜ (2026-09-27, GitHub API üst verisi): uv 0.12.0 sürümü `immutable: true`;
+      # `uv-installer.sh` varlığının GitHub-hesaplı özeti bu değere EŞİT (Rol-1'in 2026-09-08 ölçümüyle
+      # iki bağımsız kaynak); installer her arşivin sha256'sını GÖMÜLÜ taşır ve `verify_checksum` ile
+      # doğrular (cargo-dist 0.31.0) — zincir: sabit özetli installer → gömülü arşiv özeti. Sürüm ya da
+      # özet değişirse İKİSİ de defaults ile AYNI değişiklikte güncellenir (uyuşmazsa bu adım DÜŞER).
+      - name: Install uv (sürüm pinli + installer sha256 kapısı — A1 uv_surum / uv_installer_sha256)
         run: |
-          curl -LsSf https://astral.sh/uv/0.12.0/install.sh | sh
+          curl -LsSf -o "$RUNNER_TEMP/uv-install.sh" https://astral.sh/uv/0.12.0/install.sh
+          echo "b67e385074fddc9b99cd152b838fd91046d9fbc261b2c45f448a983ad23b8764  $RUNNER_TEMP/uv-install.sh" | sha256sum -c -
+          sh "$RUNNER_TEMP/uv-install.sh"
           ~/.local/bin/uv --version
       # `--frozen` (TSK-230): bayraksız `uv sync` pyproject ↔ uv.lock ayrışmasında kilidi SESSİZCE
       # yeniden yazar — duman kapısının [0/4] kilit kontrolü sonra koşar ve yeniden yazılmış kilidi

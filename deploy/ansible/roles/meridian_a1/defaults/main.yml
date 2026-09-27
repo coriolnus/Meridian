@@ -159,6 +159,24 @@ uv_installer_dizini: /usr/local/lib/meridian
 # yoksa tests/test_birim_uv_run_v558.py (ayrışma çivisi) kırmızı.
 uv_sync_bayrak: "--no-dev"
 
+# --- A1 kabuk ortamı (venv.yml son görevi; TSK-238, 2026-09-27) ---
+# NEDEN: ssh ile A1'de koşulan (elle ya da betikle) BAYRAKSIZ `uv run|sync` dev grubunu geri kurar ve bayat
+# kilidi yeniden yazar (v558/TSK-230 ölçümü). Metin yüzeyi v566 ile bayraklandı; bu, unutulan bir öğüdün
+# kabukta ZARARSIZ kalması için ikinci katmandır. Görev bu adları `/etc/environment`e satır satır yazar.
+# KAYNAK (Rol-1 A1 ölçümü 2026-09-27 12:3xZ; hafıza: benzer kayıt yok): `/etc/pam.d/sshd` pam_env kullanır →
+# `/etc/environment` etkileşimsiz ssh komutuna da uygulanır; `~/.bashrc` etkileşimsiz kabukta erken döner
+# (oraya yazmak ssh komutlarını KAPSAMAZ); systemd birimleri `/etc/environment`i OKUMAZ (birimler zaten
+# bayraklı — v558). Adlar uv belgesindendir (0.12.0 `env_vars.rs`: "Equivalent to the `--frozen` /
+# `--no-dev` command-line argument"). SEMANTİK A0 `uv sync --frozen {{ uv_sync_bayrak }}`e EŞİT olmak
+# zorunda: `uv_sync_bayrak` ya da venv.yml bayrakları değişirse bu sözlük AYNI değişiklikte güncellenir,
+# yoksa tests/test_a1_kabuk_uv_ortami_v570.py (T1) kırmızı.
+# BEDEL (ölçüldü): bu ortamda `uv lock --check` yalnız GEÇERLİLİK denetler (bayat kilitte rc 0 + uyarı) ve
+# `uv run|sync --locked` rc 2 ile reddedilir. Kilit tazeliği kapıları A1'de KOŞMAZ (dagit [0b] localhost,
+# CI dumanı GitHub) — v570 T4 A1'e giden yüzeyde ikisinin doğmasını çiviler.
+uv_kabuk_ortami:
+  UV_FROZEN: "1"
+  UV_NO_DEV: "1"
+
 # --- kadans kapısına tabi birimler (deploy.sh 6c-e/11a-c; brifing/bekçi/karne) ---
 # Birim ADI (uzantısız): `<ad>.service` + `<ad>.timer` çiftinin ikisi de kapıya tabidir.
 kadans_birimleri:

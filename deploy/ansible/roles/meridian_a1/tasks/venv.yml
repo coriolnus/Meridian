@@ -128,3 +128,22 @@
   become: true
   become_user: "{{ meridian_kullanici }}"
   changed_when: false
+
+# TSK-238 — A1 KABUK ORTAMI: ssh oturumlarında (etkileşimsiz komut dahil, pam_env) bayraksız `uv run|sync`
+# A0 semantiğiyle (`--frozen` + `uv_sync_bayrak`) koşsun. Adlar/değerler defaults `uv_kabuk_ortami`nda
+# (gerekçe + BEDEL orada). `lineinfile` SATIR DÜZEYİDİR: dosyanın öteki satırlarına dokunmaz (copy/template
+# bütün dosyayı yazar, A1'deki mevcut satırı silerdi). `regexp` YALNIZ aynı adın atamasını yakalar (başında
+# boşluk ya da `export ` olabilir — pam_env ikisini de okur) → elle yazılmış çelişik bir atama İKİNCİ satır
+# doğurmaz, düzeltilir. owner/group/mode/create BİLEREK YOK: mevcut dosyanın sahip/izni korunur; dosya
+# yoksa görev DÜŞER (Ubuntu'da her zaman var — yokluğu bir arızadır, sessizce yaratılmaz). Kuru koşumda
+# (`--check --diff`) yalnız bu satırların eklenişi görünür. Etki YENİ oturumlardadır; systemd birimleri
+# `/etc/environment`i okumaz (davranışları değişmez). Çivi: tests/test_a1_kabuk_uv_ortami_v570.py.
+- name: A1 kabuk ortamı — /etc/environment'a uv bayrak değişkeni (satır düzeyi, idempotent)
+  ansible.builtin.lineinfile:
+    path: /etc/environment
+    regexp: '^\s*(export\s+)?{{ item.key }}='
+    line: "{{ item.key }}={{ item.value }}"
+    state: present
+  loop: "{{ uv_kabuk_ortami | dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"

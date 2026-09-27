@@ -30,9 +30,9 @@ aynı id'yi iki kez eklemez, ikinci koşum yazacak bir şey bulamaz. Kurtarılan
 (tarih+id sırasıyla) konur — işlem defterinin işaret ettiği eski çağ satırlarıdır.
 
 KULLANIM:
-    uv run python ops/plan_geri_doldur.py --kaynak <yol> [--kaynak <yol> ...]   # KURU KOŞU
-    uv run python ops/plan_geri_doldur.py --kaynak <yol> --uygula               # YAZ
-    MERIDIAN_ROOT=/yol/kopya uv run python ops/plan_geri_doldur.py ...          # sandbox'ta dene
+    uv run --frozen --no-dev python ops/plan_geri_doldur.py --kaynak <yol> [--kaynak <yol> ...]  # KURU KOŞU
+    uv run --frozen --no-dev python ops/plan_geri_doldur.py --kaynak <yol> --uygula              # YAZ
+    MERIDIAN_ROOT=/yol/kopya uv run --frozen --no-dev python ops/plan_geri_doldur.py ...         # sandbox'ta dene
   Kaynak biçimleri: trade_plans.jsonl · plan listesi taşıyan .json · meridian.db (trade_plans
   tablosu, salt-okunur açılır) · state/ dizini (içinde ikisinden biri) · state-*.tar.gz.
 

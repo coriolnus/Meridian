@@ -195,7 +195,7 @@ def main(argv: list[str] | None = None) -> int:
         # bayatlamasıdır. İkisi de iş kalemidir — birim BAŞARISIZ beyan eder.
         rapor["yuklendi"] = False
         rapor["neden"] = (f"{ay} için {'/'.join(DIZINLER)} altında hiç dosya yok — arşivci o ay "
-                          f"koştu mu? (ölçü: uv run python -m meridian.barsarchive --ozet)")
+                          f"koştu mu? (ölçü: uv run --frozen --no-dev python -m meridian.barsarchive --ozet)")
         print(json.dumps(rapor, ensure_ascii=False, indent=1))
         return 1
 

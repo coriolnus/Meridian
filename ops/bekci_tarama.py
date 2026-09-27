@@ -964,7 +964,7 @@ def _hukumsuzleri_topla(kalemler, bilinen=frozenset()):
                           "BASILMAZ: kararlı bir ölçülemezlik sınıfı sessizliği her gün bozamaz. "
                           "DAHA ÖNCE ADIYLA BİLDİRİLMİŞ kalemler bu yığına GİRMEZ, kendi "
                           "satırlarını korur; tam liste "
-                          "`uv run python ops/bekci_tarama.py --json`")},
+                          "`uv run --frozen --no-dev python ops/bekci_tarama.py --json`")},
             kimlik=f"toplu:{neden}"))
     return gecen, ayrinti
 
