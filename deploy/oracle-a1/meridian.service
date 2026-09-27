@@ -163,10 +163,10 @@ CapabilityBoundingSet=
 ProtectSystem=strict
 ProtectHome=read-only
 # --- ReadWritePaths ENVANTERİ — ÖLÇÜLDÜ (kod tarandı; "olsun diye" hiçbir yol eklenmedi) ---------
-#  /opt/meridian  → BÜTÜN AĞAÇ AÇIK, `state/`e DARALTILAMAZ. state DIŞINDA yazılan beş yol var:
+#  /opt/meridian  → BÜTÜN AĞAÇ AÇIK, `state/`e DARALTILAMAZ. state DIŞINDA yazılan dört yol var:
 #     · logs/composite-prescreen.log  — `hermes_composite.py::spawn_pending` (`SPAWN_LOG`) ROOT'a yazar (state'e DEĞİL)
 #     · skills/<ad>.v2-draft          — `skill_evolve.py::draft_revision`
-#     · research/edgar_facts/…csv.gz  — `adapters/edgar_shares.py::SHARES_FILE` (config.ROOT altı)
+#     · (research/edgar_facts/ YAZILMAZ — `adapters/edgar_shares.py::SHARES_FILE` yalnız OKUR; A1'de son değişiklik 2026-08-01, TSK-234)
 #     · .venv/ + uv.lock              — `uv run` HER AÇILIŞTA ortamı doğrular ve gerekirse yazar
 #     · */__pycache__/*.pyc           — import ANINDA, kaynak ağacının her yerine
 #     (state'in kendisi: `store.py::_state` → config.STATE · strategy.yaml `config.py::strategy_path` · SQLite+WAL)
