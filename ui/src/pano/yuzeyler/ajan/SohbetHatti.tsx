@@ -435,7 +435,7 @@ export function YazmaSeridi({ hal, sohbeteGit }: { hal: "ajan" | "kanal"; sohbet
         </p>
         <p className="mt-1 leading-relaxed">
           Bu muhataba yazan bir uç hâlâ YOK. En yakın olanlar mesaj değil KUMANDA:
-          `POST /api/hermes/reflect` gövdesiz bir yansıma turu başlatır,
+          `POST /api/hermes/reflect` gövdesiz bir yansıma İSTEĞİ bırakır (öğrenme birimi alıp koşar),
           `POST /api/hermes/{"{action}"}` yalnız `start` · `stop` · `backfill` ·
           `sync_integrations` tanır. 2026-08-31'de açılan `GET /api/ajanlar` ise SALT OKUNUR.
         </p>
