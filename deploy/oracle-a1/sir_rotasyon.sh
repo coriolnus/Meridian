@@ -575,7 +575,7 @@ KRED_SON
 #: `dosya`/`url` satırının hedefidir ve DEĞER ÜRETİMİ sonrası uzunluk denetiminden geçer — bkz.
 #: başlıktaki "DEĞER ÜRETİMİ"). Sütunlar: <alt komut> <birim> <kimlik> <kaynak yolu> — kaynak
 #: yolu BURADA (uzun ömürlü tablo taşımaz) çünkü doğrulama ONA bakar, restart'a değil.
-#: `tests/test_sir_rotasyon_v447.py::test_P6` iki tabloyu BİRLEŞTİREREK drop-in çiftleriyle iki
+#: `tests/test_sir_rotasyon_v447.py::test_P6_KREDENSIYEL_tablosu_DROPINLERLE_AYRISMAZ` iki tabloyu BİRLEŞTİREREK drop-in çiftleriyle iki
 #: yönlü eşitler VE her çiftin doğru tabloda olduğunu birim dosyasındaki `Type=oneshot`/eşleşen
 #: `.timer` VARLIĞINDAN ölçer — elle liste DEĞİL: sınıf yanlışsa çivi öter.
 _oneshot_kredensiyeller() {
