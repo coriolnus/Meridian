@@ -33,8 +33,8 @@ Environment=CYCLE_POLL_SECONDS=300
 # döngüsü koşar; `reflect._ProcessLock` yansımaları serileştirir ama boşuna CPU yakılır.
 # ELLE TETİKLEME DE BU SÜREÇTE KOŞMAZ (TSK-233, 2026-09-27): pano "düşün" düğmesi (`POST /api/hermes/reflect`,
 # `meridian/api.py::api_hermes_reflect`) yansımayı KOŞMAZ — `state/hermes_yansima_istegi.json` istek dosyasını
-# bırakır; öğrenme süreci (`meridian-learn`) onu poll döngüsünde alır, koşar ve siler (istek alma
-# fonksiyonu `meridian/hermes_runtime.py` içinde, TSK-233). Yani bu süreçte hermes yansıma araması hiç koşmaz.
+# bırakır; öğrenme süreci (`meridian-learn`) onu poll döngüsünde alır, koşar ve siler
+# (`meridian/hermes_runtime.py::_yansima_istegini_isle`, TSK-233). Yani bu süreçte hermes yansıma araması hiç koşmaz.
 Environment=MERIDIAN_AUTOSTART_HERMES=0
 Environment=HERMES_POLL_SECONDS=300
 # --- ÇEKİRDEK AYARI (4 OCPU, sunucuda ÖLÇÜLDÜ 2026-07-30: nproc=4 / 12GB). Eski "2 OCPU → havuzu
