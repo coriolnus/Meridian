@@ -36,7 +36,7 @@ Environment=MERIDIAN_AUTOSTART_HERMES=0
 Environment=HERMES_POLL_SECONDS=300
 # --- ÇEKİRDEK AYARI (4 OCPU, sunucuda ÖLÇÜLDÜ 2026-07-30: nproc=4 / 12GB). Eski "2 OCPU → havuzu
 #     KAPAT" notu ESKİDİ: operatör 4 OCPU'luk instance açabildi. Havuz artık AÇIK ve kendini
-#     sınırlıyor — reflect.py:1049 `workers = max(2, min(4, cpu_count-2))` → 4 çekirdekte 2 işçi,
+#     sınırlıyor — `reflect.py::_havuz_tavani` (`max(1, min(tavan, cpu_count-2))`, tavan 4) → 4 çekirdekte 2 işçi,
 #     geriye sunucu+ajan için 2 çekirdek kalır (yerel prod serve.sh ile aynı bayrak).
 #     Duvar-saati tavanı yine geniş: Ampere çekirdeği Apple Silicon'dan yavaş, aramalar uzun sürer. ---
 # --- SPRINT TETİK KOMUTU (v241, 2026-08-13 — CANLIDA ÖLÇÜLDÜ, varsayılmadı) -------------------
@@ -80,13 +80,13 @@ Environment=MERIDIAN_AGENT_RPD=600
 #     `-` öneki: dosya yoksa hata değil (token'sız kurulumda pano açık kalır — tek savunma
 #     127.0.0.1 bağıdır, bkz. MERIDIAN_BIND_HOST kapısı aşağıda).
 #     DEPO–CANLI AYRIKLIĞI KAPANDI (H3 tur-2, 2026-08-02): bu satır 2026-07-31'de YALNIZ canlı
-#     birime `sed` ile eklenmişti (bakim_h9.sh:59), depodaki kopya CHANGEME'li kalmıştı. Depodaki
+#     birime `sed` ile eklenmişti (bakim_h9.sh `[10] token rotasyonu` adımı), depodaki kopya CHANGEME'li kalmıştı. Depodaki
 #     birimi canlıya kopyalayan HER prosedür (`deploy.sh` → “6) systemd birimleri” bölümündeki `sudo cp … meridian.service` dahil) rotasyonu sessizce geri alırdı.
 #     Sır DOSYADA taşınır, birimde değil: `.dash.env` `dagit.sh` rsync'inden bilerek dışlanmıştır.
 EnvironmentFile=-/opt/meridian/.dash.env
 #     KALAN YÜZEY ve TUR-3 HAZIRLIĞI (2026-08-03): bu satır sırrı DOSYADAN çıkarıp SÜREÇ ORTAMINA
-#     koyar, ve bu depoda ortam ÇOCUKLARA AKAR (`serve.sh:51` uvicorn'u `env=os.environ` ile,
-#     `hermes_composite.py:341` ajan alt süreçlerini devralınan ortamla doğurur) — yani token her
+#     koyar, ve bu depoda ortam ÇOCUKLARA AKAR (serve.sh'ın uvicorn `subprocess.Popen` satırı uvicorn'u `env=os.environ` ile,
+#     `hermes_composite.py::spawn_pending` ajan alt süreçlerini devralınan ortamla doğurur) — yani token her
 #     LLM alt sürecinin `/proc/<pid>/environ`ında duruyor. Yapısal kapanış systemd
 #     `LoadCredential`dır (sır ortama HİÇ girmez). Hazırlık VERSİYONDA, canlıda DEĞİL:
 #       meridian.service.d/50-dash-credential.conf  (faz 1: credential kanalını ekler)
@@ -130,7 +130,7 @@ TimeoutStartSec=0
 
 # ==================================================================================================
 # H3 SERTLEŞTİRME — TUR-2 (2026-08-02).  ÖNCEKİ: tur-1 (2026-07-31) aynı seti AYRI bir drop-in
-# dosyasından (`sertlestirme.conf`, bakim_h9.sh:56) uyguluyordu ve 9.2 UNSAFE → 6.3 MEDIUM yaptı.
+# dosyasından (`sertlestirme.conf`, bakim_h9.sh `[9] H3 sertleştirme drop-in'leri` adımı) uyguluyordu ve 9.2 UNSAFE → 6.3 MEDIUM yaptı.
 #
 # NEDEN ARTIK DROP-IN DEĞİL, BİRİMİN İÇİNDE: drop-in bir SKALER direktifi (ProtectHome, ProtectSystem)
 # birim dosyasının üstüne SESSİZCE yazar; `ReadWritePaths` ise BİRİKİR. İki kaynak bir arada olsaydı
@@ -148,18 +148,18 @@ ProtectSystem=strict
 ProtectHome=read-only
 # --- ReadWritePaths ENVANTERİ — ÖLÇÜLDÜ (kod tarandı; "olsun diye" hiçbir yol eklenmedi) ---------
 #  /opt/meridian  → BÜTÜN AĞAÇ AÇIK, `state/`e DARALTILAMAZ. state DIŞINDA yazılan beş yol var:
-#     · logs/composite-prescreen.log  — hermes_composite.py:340-341 ROOT'a yazar (state'e DEĞİL)
-#     · skills/<ad>.v2-draft          — skill_evolve.py:169
-#     · research/edgar_facts/…csv.gz  — adapters/edgar_shares.py:71 (config.ROOT altı)
+#     · logs/composite-prescreen.log  — `hermes_composite.py::spawn_pending` (`SPAWN_LOG`) ROOT'a yazar (state'e DEĞİL)
+#     · skills/<ad>.v2-draft          — `skill_evolve.py::draft_revision`
+#     · research/edgar_facts/…csv.gz  — `adapters/edgar_shares.py::SHARES_FILE` (config.ROOT altı)
 #     · .venv/ + uv.lock              — `uv run` HER AÇILIŞTA ortamı doğrular ve gerekirse yazar
 #     · */__pycache__/*.pyc           — import ANINDA, kaynak ağacının her yerine
-#     (state'in kendisi: store.py:39 → config.STATE · strategy.yaml config.py:176 · SQLite+WAL)
+#     (state'in kendisi: `store.py::_state` → config.STATE · strategy.yaml `config.py::strategy_path` · SQLite+WAL)
 #     Tur-1 de tüm ağacı açmıştı ve canlıda çalıştı — daraltma bu turda ÖLÇÜLMEDİ, denenmedi.
 #  /home/ubuntu/.cache  → `uv run` önbelleği. ProtectHome=read-only'yi bilerek deler; ReadWritePaths
 #     ProtectHome/ProtectSystem'e ÖNCELİKLİDİR. Yoksa servis BAŞLAMAZ (tur-1'de canlıda ölçüldü).
 #  /home/ubuntu/.hermes → TUR-2 DÜZELTMESİ; TUR-1'DE EKSİKTİ VE SESSİZCE KIRIYORDU. Süreç bu dizine
-#     YAZAR: hermes.py:1942 `mkstemp(dir=~/.hermes)` + .env 0600 · :1956 meridian-model-backup.json ·
-#     :2072 config.yaml.meridian.bak + mkstemp/os.replace · :2215 skills/ mkdir · :2221 symlink
+#     YAZAR: `hermes.py::sync_local_agent_gemini` `mkstemp(dir=~/.hermes)` + .env 0600 + meridian-model-backup.json ·
+#     `hermes.py::config_ensure_integrations` config.yaml.meridian.bak + mkstemp/os.replace · `hermes.py::sync_agent_skills` skills/ mkdir + symlink
 #     kurma/sökme; ayrıca `hermes config set` alt süreci kendi config.yaml/auth.json'ını yazar.
 #     KIRILGANLIK SINIFI: bu yazımların HEPSİ `except OSError: pass` / `except Exception` altında —
 #     read-only kök altında hata GÖRÜNMEDEN yutulur, `sync_agent_skills` sessiz no-op'a döner.
@@ -173,7 +173,7 @@ ProtectHome=read-only
 #     Dizin yoksa yol sessizce atlanır ve durum tur-1'dekiyle AYNI kalır; RUNBOOK adım 2 dizinin
 #     varlığını AÇIKÇA yoklar ve adım 5(b) probu kırıklığı `HERMES-RW-KIRIK` diye adlandırır.
 ReadWritePaths=/opt/meridian /home/ubuntu/.cache -/home/ubuntu/.hermes
-# hermes_composite.py:330 `/tmp/prescreen-<id>` kullanıyor; PrivateTmp bunu KIRMAZ (özel ad alanı
+# `hermes_composite.py::spawn_pending` `/tmp/prescreen-<id>` kullanıyor; PrivateTmp bunu KIRMAZ (özel ad alanı
 # yazılabilir) ama operatör SSH kabuğundan o dizini GÖREMEZ — RUNBOOK'ta nasıl bakılacağı yazılı.
 PrivateTmp=true
 ProtectKernelTunables=true
@@ -203,11 +203,11 @@ SystemCallArchitectures=native
 #   modülleri koşula bağlı `ctypes` yükler; libffi trampolini W+X ister. ASIL SEBEP ARIZA ŞEKLİ:
 #   ihlal AÇILIŞTA değil, o kod yoluna İLK GİRİLDİĞİNDE SIGSYS ile öldürür — yani aşağıdaki
 #   "başlat + healthz" doğrulaması bunu YAKALAYAMAZ. Tur-3 kalemi: 24 saat canlı gözlemle ölç.
-# PrivateDevices          : /dev kullanımı kodda yok (grep: 0 isabet) ama reflect.py:1059 süreç
+# PrivateDevices          : /dev kullanımı kodda yok (grep: 0 isabet) ama `reflect.py::_parallel_prefill_probes` süreç
 #   havuzu multiprocessing semaforları için /dev/shm ister; PrivateDevices'ın verdiği /dev/shm
 #   ÖZELdir ve havuz–ebeveyn eşleşmesi bu turda ölçülmedi. Tur-3 kalemi.
 # PrivateUsers / ProtectProc=invisible / ProcSubset=pid : ProcSubset /proc/meminfo,cpuinfo,stat'ı
-#   gizler; os.cpu_count() (reflect.py:1059, sprint.py:290) sysconf üzerinden okur ve bunun
+#   gizler; os.cpu_count() (`reflect.py::_havuz_tavani`, `sprint.py::_workers`) sysconf üzerinden okur ve bunun
 #   aarch64/glibc'de /sys mi /proc mu kullandığı ÖLÇÜLMEDİ. Yanlışsa işçi sayısı sessizce 2'ye
 #   düşer — sessiz bozulma sınıfı. Tur-3 kalemi.
 # IPAddressDeny/IPAddressAllow : Alpaca/FMP/Anthropic/Nous uç noktalarının IP kümesi SABİT DEĞİL

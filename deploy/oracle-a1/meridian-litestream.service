@@ -42,15 +42,15 @@ User=ubuntu
 Group=ubuntu
 # WorkingDirectory=/opt/meridian YAZILMADI: `uv`/venv yok, tüm yollar config'te MUTLAK. Çalışma
 # dizini vermek, o dizinin varlığını gereksiz bir açılış koşuluna çevirirdi.
-# Yapılandırma yolu AÇIK yazıldı. Varsayılanla (main_notwindows.go:12 → /etc/litestream.yml) aynı
+# Yapılandırma yolu AÇIK yazıldı. Varsayılanla (v0.5.15 `cmd/litestream/main_notwindows.go` `defaultConfigPath` → /etc/litestream.yml) aynı
 # ama örtük bırakılmadı: birim dosyasını okuyan mühendis hangi dosyanın yürürlükte olduğunu
 # systemd'nin kaynağından okumalı, litestream'in sürüm notlarından değil.
 ExecStart=/usr/local/bin/litestream replicate -config /etc/litestream.yml
 Restart=always
 RestartSec=30
-# SIGTERM yeterli: litestream SIGINT/SIGTERM'i yakalar (cmd/litestream/main_notwindows.go:20
-# `signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)`) ve kapanışta bekleyen senkronları
-# tamamlamaya çalışır (varsayılan shutdown-sync-timeout 30sn, db.go:40). Bu yüzden aşağıdaki
+# SIGTERM yeterli: litestream SIGINT/SIGTERM'i yakalar (v0.5.15 `cmd/litestream/main_notwindows.go`,
+# `signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)` çağrısı) ve kapanışta bekleyen senkronları
+# tamamlamaya çalışır (varsayılan shutdown-sync-timeout 30sn, v0.5.15 `db.go` varsayılanı). Bu yüzden aşağıdaki
 # TimeoutStopSec o bütçeden BÜYÜK seçildi — systemd, litestream'i son senkronunun ORTASINDA
 # öldürürse son işlemler replica'ya hiç geçmez ve "RPO 10 saniye" cümlesi yalan olur.
 TimeoutStopSec=45

@@ -7,7 +7,7 @@
 # doğru karşılığı ayrı bir systemd birimidir: meridian restart olsa da arşivci koşmaya devam eder.
 # (Yereldeki nohup+pidfile deseninin yerini systemd alır; pidfile mantığı burada gereksizdir.)
 #
-# REDIS YOKSA NE OLUR (kodda doğrulandı, varsayım değil — barsarchive.py:343 poll / :413 run):
+# REDIS YOKSA NE OLUR (kodda doğrulandı, varsayım değil — `barsarchive.py::BarsArchiver.poll` / `barsarchive.py::BarsArchiver.run`):
 #   poll() Redis'e ulaşamazsa None döner ("yazacak bar yoktu" ile AYNI ŞEY DEĞİLDİR, YASA 4) ve
 #   run() döngüsü ÇIKMAZ: idle_s (varsayılan 5 sn) uyur ve yeniden dener — Redis'i saniyede bir
 #   yeniden bağlanma denemesiyle dövmemek için. Yani süreç ölmez, sessizce boşa döner. Bu yüzden
@@ -27,7 +27,7 @@ Wants=network-online.target redis-server.service
 Type=simple
 User=ubuntu
 WorkingDirectory=/opt/meridian
-# PYTHONPATH=. — ops/barsarchive-run.sh:45 ile AYNI sözleşme (modül depo kökünden çözülür).
+# PYTHONPATH=. — ops/barsarchive-run.sh `start)` dalındaki `PYTHONPATH=. nohup` satırı ile AYNI sözleşme (modül depo kökünden çözülür).
 Environment=PYTHONPATH=/opt/meridian
 Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
 # .env varsa yüklenir (ops betiği de `. ./.env` yapıyor). DİKKAT: systemd yalnız KEY=VALUE satırı
@@ -58,8 +58,8 @@ CapabilityBoundingSet=
 ProtectSystem=strict
 ProtectHome=read-only
 # --- AYRIŞMA 1/3 — ReadWritePaths ARŞİVCİDE DAHA DAR: `~/.hermes` YOK. ÖLÇÜLDÜ: barsarchive.py
-#     tek yazar olduğu dizini `archive_dir()` (:96-99) = `config.STATE / "bars_intraday"` üzerinden
-#     açar (:168 mkdir, :169 open(...,"a")) ve `~/.hermes`i ne okur ne yazar — modül hermes'i
+#     tek yazar olduğu dizini `barsarchive.py::archive_dir` = `config.STATE / "bars_intraday"` üzerinden
+#     açar (`barsarchive.py::_DayIndex._handle`: mkdir + open(...,"a")) ve `~/.hermes`i ne okur ne yazar — modül hermes'i
 #     import bile etmez. Ajanla konuşan süreç meridian.service'tir, bu değil.
 #  /opt/meridian       : state/bars_intraday/ + `uv run`ın .venv doğrulaması + import anında
 #                        yazılan __pycache__. state'e daraltmak `uv run`ı ve bytecode yazımını
