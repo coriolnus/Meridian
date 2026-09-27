@@ -179,9 +179,9 @@ ssh -i $K $A1 'set -e
              /etc/systemd/system/meridian-barsarchive.service.d/sertlestirme.conf
   sudo rmdir /etc/systemd/system/meridian.service.d \
              /etc/systemd/system/meridian-barsarchive.service.d 2>/dev/null || true
-  # (c) TOKEN KAPISI — .dash.env yerinde mi? (yoksa pano token'sız açılır)
+  # (c) TOKEN KAPISI — .dash.env yerinde mi? (yoksa pano tokensız açılır)
   sudo test -s /opt/meridian/.dash.env && echo "  ✓ .dash.env var" || echo "  !! .dash.env YOK — Bölüm B adım 3"
-  # (c2) AJAN DİZİNİ KAPISI — `~/.hermes` ReadWritePaths'te `-` önekiyle YAZILIDIR (installer
+  # (c2) AJAN DİZİNİ KAPISI — `~/.hermes` ReadWritePaths içinde `-` önekiyle YAZILIDIR (installer
   #      düşmüş olabilir, Bölüm D). Dizin yoksa yol SESSİZCE atlanır ve ajan yazımları tur-1
   #      kırıklığında kalır; birim yine de açılır. Burada GÖRÜNÜR yapılır:
   test -d /home/ubuntu/.hermes && echo "  ✓ ~/.hermes var — yazma yolu açılacak" \
@@ -227,12 +227,12 @@ ssh -i $K $A1 'sudo systemd-run --uid=ubuntu --pipe --wait --collect \
 # (c) TİCK AKIŞI — "is-active" ilerlemeyi kanıtlamaz (asılı-tick vakası, 2026-07-30).
 #     scheduler_status.updated TAZELENİYOR mu: iki ölçüm arasında damga DEĞİŞMELİ.
 ssh -i $K $A1 'cd /opt/meridian && export PATH=$HOME/.local/bin:$PATH
-  for i in 1 2; do uv run python -c "from meridian import store; \
+  for i in 1 2; do uv run --frozen --no-dev python -c "from meridian import store; \
     print(store.read_json(\"scheduler_status.json\",{}).get(\"updated\"))"; sleep 90; done'
 
 # (d) BAR AKIŞI — arşivcinin ölçüsü `is-active` DEĞİL, satır sayısıdır (Redis düşse de aktif görünür)
 ssh -i $K $A1 'cd /opt/meridian && export PATH=$HOME/.local/bin:$PATH
-  uv run python -m meridian.barsarchive --ozet --gun 2'
+  uv run --frozen --no-dev python -m meridian.barsarchive --ozet --gun 2'
 ```
 
 ### 6) YEDEK BİRİMİ ELLE TETİKLE + skorları ÖLÇ
@@ -339,7 +339,7 @@ kaybında kayıptır — en kötü hâlde bir tam işlem günü. Litestream bu a
 K=~/.ssh/oci-a1.key; A1=ubuntu@130.61.126.87
 # Defterin çevrimiçi tutarlı kopyası (yedek biriminin kullandığı yolun aynısı) — geri dönüş noktası
 ssh -i $K $A1 'export PATH=$HOME/.local/bin:$PATH; cd /opt/meridian && \
-  uv run python -c "from meridian import storage; storage.backup_to(\"/home/ubuntu/backups/meridian.db.h10-oncesi\")" && \
+  uv run --frozen --no-dev python -c "from meridian import storage; storage.backup_to(\"/home/ubuntu/backups/meridian.db.h10-oncesi\")" && \
   ls -la /home/ubuntu/backups/meridian.db.h10-oncesi'
 ```
 
@@ -384,7 +384,7 @@ ssh -i $K $A1 'date -u; find /home/ubuntu/replica -type f -newermt "-5 minutes" 
 ssh -i $K $A1 'litestream databases -config /etc/litestream.yml; litestream ltx -config /etc/litestream.yml /opt/meridian/state/meridian.db 2>&1 | tail -5'
 
 # (e) BEKLENEN YAN ETKİ — iki yeni tablo görünecek (arıza DEĞİL, yukarıdaki uyarı)
-ssh -i $K $A1 'cd /opt/meridian && sqlite3 state/meridian.db "SELECT name FROM sqlite_master WHERE type=\"table\" ORDER BY 1;" 2>/dev/null || echo "(sqlite3 yok — uv run python -c ile bak)"'
+ssh -i $K $A1 'cd /opt/meridian && sqlite3 state/meridian.db "SELECT name FROM sqlite_master WHERE type=\"table\" ORDER BY 1;" 2>/dev/null || echo "(sqlite3 yok — uv run --frozen --no-dev python -c ile bak)"'
 
 # (f) DEFTER HÂLÂ İLERLİYOR MU (çoğaltma yazarları bloklamadı mı)
 ssh -i $K $A1 'curl -s localhost:8080/healthz | head -c 200; echo'
@@ -405,7 +405,7 @@ ssh -i $K $A1 'litestream restore -config /etc/litestream.yml \
   ls -la /tmp/tatbikat-meridian.db'
 
 # SAYILAR CANLIYLA TUTUYOR MU (H7'nin "64/64 JSON sağlam" adımının SQLite karşılığı)
-ssh -i $K $A1 'cd /opt/meridian && uv run python -c "
+ssh -i $K $A1 'cd /opt/meridian && uv run --frozen --no-dev python -c "
 import sqlite3
 for yol in (\"state/meridian.db\", \"/tmp/tatbikat-meridian.db\"):
     c = sqlite3.connect(yol)
@@ -457,7 +457,7 @@ ssh -i $K $A1 'set -x
 DURMUŞKEN** yapılır (CLAUDE.md §5: canlı worker koşarken state'e yazma):
 ```bash
 # BAKIM PENCERESİ — worker durmuş olmalı
-ssh -i $K $A1 'sudo systemctl stop meridian && cd /opt/meridian && uv run python -c "
+ssh -i $K $A1 'sudo systemctl stop meridian && cd /opt/meridian && uv run --frozen --no-dev python -c "
 import sqlite3; c=sqlite3.connect(\"state/meridian.db\")
 c.execute(\"DROP TABLE IF EXISTS _litestream_seq\"); c.execute(\"DROP TABLE IF EXISTS _litestream_lock\")
 c.commit(); c.close(); print(\"düşürüldü\")" && sudo systemctl start meridian'
@@ -536,7 +536,8 @@ redis-cli ping                       # PONG
 curl -s localhost:8080/healthz       # 200=taze · 503=BAYAT ama süreç canlı (/healthz api.py:478'de VAR)
 curl -s localhost:8080/api/today     # 200 + JSON
 journalctl -u meridian -f            # canlı log
-uv run python -m pytest -q           # tüm testler yeşil (aarch64'te de geçmeli)
+# tam suite A1'de KOŞULMAZ (TSK-230): pytest DEV grubundadır ve A1'e kurulmaz (A0 `--no-dev`);
+# kurmak bir sonraki dağıtımda "VENV DEĞİŞTİ" üretir. Test hükmü yerelde, Rol-1'dedir (CLAUDE.md §6).
 ```
 Reboot testi: `sudo reboot` → tekrar SSH → `systemctl is-active meridian` **active** olmalı
 (launchd'nin Mac'te yapamadığı şey).
@@ -548,10 +549,10 @@ yeşilken bunların hepsi ölü olabilir; o yüzden ayrı liste.
 | # | ne beklenir | nasıl ölçülür | taşıma anındaki taban |
 |---|---|---|---|
 | a | `validation_ledger`'a **`pencere_id:"R1"`** damgalı satır AKMAYA başlar | `grep -c '"pencere_id": *"R1"' state/validation_ledger.jsonl` | **0** (204 satırın hepsi `pencere_id=null`; R1 bugün, 2026-07-30 açıldı) |
-| b | **PBO tabanı birikmeye** başlar (PBO YALNIZ `pencere_id==R1` satırlarını sayar) | `uv run python -c "from meridian import validation,store,dataset; d=store.read_jsonl('validation_ledger.jsonl',limit=validation.LEDGER_CAP); print(validation.pbo_cscv([r for r in d if r.get('pencere_id')==dataset.ROTATION_ID]))"` → `durum` `olculemedi`→`olculdu` | `olculemedi` (aday yok) |
+| b | **PBO tabanı birikmeye** başlar (PBO YALNIZ `pencere_id==R1` satırlarını sayar) | `uv run --frozen --no-dev python -c "from meridian import validation,store,dataset; d=store.read_jsonl('validation_ledger.jsonl',limit=validation.LEDGER_CAP); print(validation.pbo_cscv([r for r in d if r.get('pencere_id')==dataset.ROTATION_ID]))"` → `durum` `olculemedi`→`olculdu` | `olculemedi` (aday yok) |
 | c | `hotstate_down` **çırpınması A1'de yeniden ölçülür** — Redis artık *aynı makinede* (yerelde bu tek olay olay defterinin %91'ini yiyordu) | `grep -c hotstate_down state/events.jsonl` (7 gün sonra tekrar) | yerel taban: **15.860/hafta** |
 | d | `events.jsonl`'da **scheduler'ın nous kadansı** görünür | `grep -E 'nous_eval\|haftalik' state/events.jsonl \| tail` | henüz yok — kadans **restart'la** iner |
-| e | bar arşivi gerçekten yazıyor (yalnız `is-active` YETMEZ) | `uv run python -m meridian.barsarchive --ozet --gun 5` | `satir` artıyor olmalı |
+| e | bar arşivi gerçekten yazıyor (yalnız `is-active` YETMEZ) | `uv run --frozen --no-dev python -m meridian.barsarchive --ozet --gun 5` | `satir` artıyor olmalı |
 | f | günlük yedek düştü mü | `ls -la /home/ubuntu/backups/` | ilk atış: kurulumdan sonraki 23:30 UTC |
 
 ## Geri dönüş

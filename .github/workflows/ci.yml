@@ -28,9 +28,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install uv
         run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      # `--frozen` (TSK-230): bayraksız `uv sync` pyproject ↔ uv.lock ayrışmasında kilidi SESSİZCE
+      # yeniden yazar — duman kapısının [0/4] kilit kontrolü sonra koşar ve yeniden yazılmış kilidi
+      # "taze" görürdü (kapı CI'da kör). Kilit olduğu gibi kurulur; ayrışmayı [0/4] KIRMIZI bildirir.
       - name: Sync deps (Python 3.11 = beyan edilen taban)
         run: |
           ~/.local/bin/uv python install 3.11
-          ~/.local/bin/uv sync --extra dev --python 3.11
-      - name: Duman kapısı (compileall + lint-imports + audit + pytest duman)
+          ~/.local/bin/uv sync --frozen --extra dev --python 3.11
+      - name: Duman kapısı (kilit tazeliği + compileall + lint-imports + audit + pytest duman)
         run: UV=~/.local/bin/uv ./ops/ci_duman.sh

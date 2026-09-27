@@ -272,7 +272,7 @@ ansible-lint deploy/ansible/dagit.yml
 | Kapı | Ne sorar | Düşürür mü |
 |---|---|---|
 | `[0a]` | dağıtım kaynağı **ana checkout** mu; çalışma ağacı temiz mi; **dağıtılan tepe (`DAGIT_SHA`) burada donar** | evet (`-e worktree_gec=true` / `-e kirli_gec=true` ile beyanlı geçilir) |
-| `[0b]` | `uv audit` — tedarik zinciri | evet |
+| `[0b]` | `uv lock --check --offline` — kilit tazeliği (pyproject ↔ uv.lock; her `uv` görevinden ÖNCE) · `uv audit` — tedarik zinciri | evet (kilit: rc 1 ayrışık · rc 2 ölçülemedi — ikisi de) |
 | `[0c]` | `uv run lint-imports` — mimari sözleşmeler | evet |
 | `[0d]` | `ops/import_tarama.py` — dev-daraltması hâlâ güvenli mi | evet (rc 2 = ölçülemedi de ENGEL) |
 | `[5c]` | pano artefaktı kaynağından taze mi (`ops/artefakt_tazelik.py`) | rc 1 evet (kuru koşumda UYARI) · **rc 2 = ölçülemedi, sürer** |
@@ -370,6 +370,12 @@ modülleri (`systemd_service`, `copy`) check-mode'da hiçbir şeyi değiştirmez
    BEDEL ÖDENDİ ve yazıldı: operatör "hangi dosya ayrık"ı görür, "nerede ayrık"ı görmez —
    `diff` elle koşulur. Gövdenin sızdırmayan bir özetiyle (bayt sayısı / hangi taraf yeni)
    değiştirilmesi Rol-1 kalemidir.
+12. **`[0b]` kilit tazeliği kapısı** (TSK-230, 2026-09-27) dagit.sh'ta YOKTU. `uv lock --check
+   --offline` Play 1'in ilk `uv` görevidir: `uv audit` ve bayraksız `uv run` (`[0c]`/`[0d]`/`[5c]`)
+   bayat kilidi SESSİZCE yeniden yazar (ölçüldü — audit düştüğü koşumda bile), yani eski sırada
+   `[0a]`nın temiz bulduğu ağaç kirlenir ve commit'lenmemiş bir kilit A1'e giderdi. rc 1 (ayrışık)
+   ve rc 2 (uv koşamadı) İKİSİ DE durdurur (`[0d]` sözleşmesi). Aynı komut CI dumanında `[0/4]`
+   (orada sürümü `--check` bilmeyen uv ÖLÇÜLEMEDİ'dir, kırmızı değil). Çivi: v566 E3.
 
 > Bu liste ile davranış arasındaki bağ ÖLÇÜLÜR: her maddenin playbook'ta bir `# BEYANLI-FARK n`
 > şerhi vardır ve kıyas İKİ YÖNLÜDÜR (v452 `test_B18_…`) — listeden madde düşerse de, playbook'a
