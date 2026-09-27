@@ -165,6 +165,14 @@ def _warmup_sprint() -> None:
     try:
         from . import hermes, reflect, dataset
         from . import watchdog as _wd8
+        # ISINMA DA KALP ATAR (TSK-233 tur 2): ısınma döngünün KENDİ ipliğinde 1-5 sa sürer ve o süre boyunca poll
+        # dönmez. Kalp yalnız poll başında atılsaydı 15 dk'dan (KALP_PAY × poll) uzun her NORMAL ısınmada pano birimi
+        # ölü sanır, operatörün "düşün" isteğini reddederdi. Başlangıçta işaret + kalp diske iner (pano ilk saniyeden
+        # "ısınma sürüyor" diyebilsin); ilerledikçe `_nabiz` → `_kalp_tazele` kalbi taze tutar. İşaret CANLILIK
+        # DEĞİLDİR — yalnız mesajın içeriğidir; canlılığın tek ölçüsü kalptir (`_dongu_canliligi`).
+        _tavan = _warmup_tavan_dk()
+        _state["isinma_suruyor"] = {"basladi": _now(), "tavan_dk": _tavan}
+        _kalp_vur()
         bars, index = dataset.load()
         # önce sıradaki muhtemel yansımaların incumbent'ları (global + canlı + ufku dolu arka plan
         # rejimi) — yansıma anında kapı beklemesin; sonra sonda ısınması.
@@ -186,6 +194,7 @@ def _warmup_sprint() -> None:
             Nabız yazımı `store.write_json`dur (birkaç ms); en sık HAVUZ_NABIZ_SN'de bir atılır."""
             _wd8.beat("warmup_sprint")     # ısınmanın KENDİ kadansı ilerliyor
             _wd8.beat("hermes_poll")       # poll ipliği MEŞGUL ama CANLI — sahte alarm burada biter
+            _kalp_tazele()                 # panonun canlılık ölçüsü de (kalp) aynı ilerlemeden beslenir (TSK-233)
 
         try:
             trades = store.read_jsonl("trades.jsonl")
@@ -196,7 +205,6 @@ def _warmup_sprint() -> None:
             reflect.prefill_incumbents(bars, index, [None, live, bg], canlilik=_nabiz)
         except Exception as e:
             obs.warn("incumbent_prefill_failed", error=f"{type(e).__name__}: {e}")
-        _tavan = _warmup_tavan_dk()
         # `record_session=False`: "Nothing ships" beyanı artık DEFTER tarafında da
         # doğru. Isınma her 12 poll'da bir koşar ve sonda başına resmî kayıt düşerken tek bir gecede
         # aşınma sayacını yüzlerle besliyordu (`EROSION_QUERY_LIMIT=20` ilk ısınma gecesinde aşılıyor,
@@ -246,6 +254,8 @@ def _warmup_sprint() -> None:
                 butce=_wb["budget"], butce_carpani=_wb["carpan"], k_max=_wb["k_max"])
     except Exception as e:
         _state["last_warmup"] = {"at": _now(), "error": type(e).__name__}
+    finally:
+        _state.pop("isinma_suruyor", None)   # ısınma bitti/düştü: işaret kalkar (poll sonu `_persist`i diske taşır)
 
 _lock = threading.Lock()            # guards thread start/stop
 _reflect_lock = threading.Lock()    # guarantees only ONE reflection runs at a time
@@ -260,9 +270,15 @@ _state: dict = {"reflections": 0, "last_reflection": None, "last_poll": None,
                 "last_reflect_at": None}
 
 
+def _simdi() -> dt.datetime:
+    """Şimdiki UTC anı — bu modülün TEK saati: damgalar (`_now`) ve yaş ölçümleri (`_kalp_canliligi`, `_yas_s`) aynı
+    saatten okur; iki saat olsaydı damga ile yaşı ayrı saatlerden ölçülen bir kalp sessizce "gelecekte" kalabilirdi."""
+    return dt.datetime.now(dt.timezone.utc)
+
+
 def _now() -> str:
     """Şimdiki UTC zamanı, saniye çözünürlüklü ISO dizgesi olarak (tüm damgaların tek kaynağı)."""
-    return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    return _simdi().isoformat(timespec="seconds")
 
 
 def _brain() -> str:
@@ -574,13 +590,39 @@ KALP_PAY = 3
 
 
 def _kalp_vur() -> None:
-    """Döngünün "hâlâ buradayım" damgası + kalıcılaştırma. YALNIZ `_run` çağırır: `_persist`in
-    içine konsaydı `reflect_now` (döngüsüz bir süreçten elle tetikleme) de kalp atardı ve pano,
-    döngü başka süreçte ölü olsa bile onu CANLI görürdü — ölçmediğimiz şeyi iddia etmiş olurduk.
-    Pano isteğinin kabul kapısı da (`yansima_istegi_karari`) bu damgaya bakar: kalp yalanlasaydı
-    istek ölü bir kuyruğa düşerdi."""
+    """Döngünün "hâlâ buradayım" damgası + kalıcılaştırma. YALNIZ bekleme döngüsünün İPLİĞİ çağırır
+    (`_run` poll başı + ısınmanın başı ve nabzı, `_kalp_tazele`): `_persist`in içine konsaydı
+    `reflect_now` (döngüsüz bir süreçten elle tetikleme) de kalp atardı ve pano, döngü başka süreçte
+    ölü olsa bile onu CANLI görürdü — ölçmediğimiz şeyi iddia etmiş olurduk. Pano isteğinin kabul
+    kapısı da (`yansima_istegi_karari`) bu damgaya bakar: kalp yalanlasaydı istek ölü bir kuyruğa
+    düşerdi."""
     _state["kalp"] = _now()
     _persist()
+
+
+def _kalp_tazele() -> None:
+    """UZUN ISINMANIN İÇİNDEN KALP (TSK-233 tur 2) — ısınma nabzı (`_warmup_sprint._nabiz`) çağırır.
+
+    KADANS YENİ BİR SAYI DEĞİL: kalp en son `poll_seconds` (döngünün kendi kalp kadansı) kadar önce atıldıysa yeniden
+    atılır. Normal (havuz) yolda nabız `reflect.HAVUZ_NABIZ_SN` (60 sn) aralıkla ve her sonda sonunda gelir; kalbin
+    yaşı böylece ≈ poll + 60 sn'yi aşmaz, tolerans (`KALP_PAY × poll`) içinde kalır. SINIR (dürüst): havuz ölüp sıralı
+    hesaba düşülen BOZULMUŞ yolda nabız yalnız her walk-forward sonunda gelir (ölçülmüş: 2 walk-forward 5065 sn, v302
+    vakası) — o pencerede kalp bayatlar ve pano "ilerlemiyor" der; bu ısınmanın normali değil anomalisidir. Kısma şart:
+    `_persist` beyin/zincir olgularını da okur ve önbellekten dönen sondalar nabzı saniyede defalarca atar.
+
+    Poll aralığı bilinmiyorsa (döngü dışı çağrı) hiçbir şey yazılmaz — o hâlde kalbin bir toleransı da yoktur.
+    Yazım düşerse ısınma DURMAZ (nabız bir telemetridir), ama sessiz de kalmaz."""
+    poll = int(_state.get("poll_seconds") or 0)
+    if poll <= 0:
+        return
+    yas, _neden = _yas_s(_state.get("kalp"))
+    if yas is not None and yas < poll:
+        return
+    try:
+        _kalp_vur()
+    except Exception as e:
+        obs.warn("hermes_isinma_kalbi_yazilamadi", error=f"{type(e).__name__}: {e}"[:300],
+                 detail="ısınma sürerken kalp diske yazılamadı — pano birimi ölü sanabilir; ısınma sürüyor")
 
 
 def _kalp_canliligi(disk: dict) -> tuple[bool | None, str | None]:
@@ -600,7 +642,7 @@ def _kalp_canliligi(disk: dict) -> tuple[bool | None, str | None]:
         # Burada "durdu" demek uydurma olur — yaş gerçekten ölçülemez.
         return None, "kayıt var ama kalp damgası/poll aralığı yok — canlılık ÖLÇÜLEMEDİ"
     try:
-        yas = (_dt.datetime.now(_dt.timezone.utc) - _dt.datetime.fromisoformat(kalp)).total_seconds()
+        yas = (_simdi() - _dt.datetime.fromisoformat(kalp)).total_seconds()
     except (TypeError, ValueError):  # sessiz-yutma: bozuk damga YUTULMUYOR, canlılık None ("ölçülemedi") olarak dönüyor — "durdu" demek uydurma olurdu, pano ikisini ayrı gösterir
         return None, f"kalp damgası çözümlenemedi: {kalp!r}"
     if yas <= KALP_PAY * poll:
@@ -646,7 +688,7 @@ def _yas_s(damga, simdi: str | None = None) -> tuple[float | None, str | None]:
         return None, "damga yok"
     try:
         t0 = dt.datetime.fromisoformat(str(damga))
-        t1 = dt.datetime.fromisoformat(simdi) if simdi else dt.datetime.now(dt.timezone.utc)
+        t1 = dt.datetime.fromisoformat(simdi) if simdi else _simdi()
         return max(0.0, round((t1 - t0).total_seconds(), 1)), None
     except (TypeError, ValueError) as e:  # sessiz-yutma: çözümlenemeyen damga YUTULMUYOR — yaş None + neden olarak çağırana (olaya/yanıta) dönüyor
         return None, f"damga çözümlenemedi: {str(damga)[:40]!r} ({type(e).__name__})"
@@ -676,6 +718,29 @@ def _elle_yansima_govdesi() -> None:
         _state["last_result"] = f"error: {type(e).__name__}"
 
 
+def _istek_ttl(poll_seconds) -> dict:
+    """ELLE İSTEĞİN SÜRE AŞIMI (TSK-233 tur 2) — `{"ttl_s", "formul"}`. UYGULAYANI öğrenme döngüsüdür
+    (`_yansima_istegini_isle`); döngü değerini `_state["istek_ttl"]` ile diske YAYIMLAR, pano yanıtı oradan okur — iki
+    süreç iki ayrı ortamdan iki ayrı TTL hesaplamasın (tek kaynak).
+
+    TÜRETME: pano isteği yalnız döngü kalp atarken kabul eder; kabul edilmiş bir isteğin MEŞRU en uzun bekleyişi,
+    döngünün o an koştuğu en uzun işin bitmesi + bir sonraki poll'dur. Döngünün en uzun SINIRLI işi ısınmadır, sınırı
+    `_warmup_tavan_dk()` (anomali sınırı: bu süreyi aşan koşum tanım gereği artık nominal değildir); yansıma aramaları
+    ölçülmüş 1s55dk–3s14dk (2026-08-16) ile bu bandın içindedir. Poll payı olarak kabul kapısının AYNI toleransı
+    (`KALP_PAY × poll_seconds`) eklenir: TTL = tavan_dk × 60 + KALP_PAY × poll (varsayılan 300 dk + 15 dk = 5 sa 15 dk).
+    Bunu aşmış istek hiçbir meşru bekleyişle açıklanamaz — birim kapalı ya da takılıydı ve operatörün o anki niyetinin
+    bağlamı (defter, ufuk) bayatladı: koşmak yerine düşürülür, yeni tıklama taze bağlamla koşar.
+    `MERIDIAN_SEARCH_MAX_MIN` BİLEREK taban alınmadı: o tavan duvar saatini bağlamaz, yalnız taze sonda hesaplarını
+    atlatır (`reflect.coordinate_descent_search` docstring'i) — üst sınır olarak okunamaz.
+    Poll aralığı bilinmiyorsa TTL None: tolerans uydurulmaz, süre aşımı denetlenmez (uydurma yasağı)."""
+    poll = int(poll_seconds or 0)
+    if poll <= 0:
+        return {"ttl_s": None, "formul": "poll_seconds bilinmiyor — süre aşımı uygulanmaz"}
+    tavan = _warmup_tavan_dk()
+    return {"ttl_s": tavan * 60 + KALP_PAY * poll,
+            "formul": f"ısınma tavanı {tavan:g} dk × 60 + KALP_PAY {KALP_PAY} × poll {poll} sn"}
+
+
 def yansima_istegi_karari(kaynak: str) -> dict:
     """PANO SÜRECİ (TSK-233): "şimdi düşün" isteği KABUL edilebilir mi? YAZMAZ — istek dosyasını pano ucu yazar
     (`api.api_hermes_reflect`, dosyanın TEK yazanı); burası öğrenme döngüsünün durumunu DİSKTEN okur ve karar verir.
@@ -693,17 +758,27 @@ def yansima_istegi_karari(kaynak: str) -> dict:
     bekleyen = store.read_json(YANSIMA_ISTEGI_FILE, None)
     if bekleyen is not None:
         b = bekleyen if isinstance(bekleyen, dict) else {}
-        yas, _n = _yas_s(b.get("istek_at"))
+        yas, yas_neden = _yas_s(b.get("istek_at"))
         son = taban.get("son_elle_istek") or {}
         isleniyor = (son.get("durum") == "kosuyor" and b.get("istek_id") is not None
                      and son.get("istek_id") == b.get("istek_id"))
+        # TTL'i UYGULAYAN yayımlar (`_istek_ttl`); yayımlanmamışsa (eski sürüm/hiç koşmamış döngü) None — uydurulmaz.
+        ttl = taban.get("istek_ttl") if isinstance(taban.get("istek_ttl"), dict) else {}
+        ttl_s = ttl.get("ttl_s") if isinstance(ttl.get("ttl_s"), (int, float)) else None
+        bayat = (yas > ttl_s) if (yas is not None and ttl_s is not None) else None
+        if bayat:
+            durum_metni = (f" — süre aşımı (TTL {ttl_s:.0f} sn) AŞILDI: öğrenme süreci alınca KOŞMADAN düşürecek; "
+                           "birim yeniden poll edince tekrar dene")
+        elif isleniyor:
+            durum_metni = " — öğrenme süreci onu ŞU AN işliyor"
+        else:
+            durum_metni = " — öğrenme süreci bir sonraki poll'unda alacak"
         return {"status": "busy", "neden": "bekleyen_istek",
                 "bekleyen": dict(bekleyen) if isinstance(bekleyen, dict) else bekleyen,
+                "bekleyen_yas_s": yas, "bekleyen_yas_neden": yas_neden, "ttl_s": ttl_s, "bayat": bayat,
                 "detail": ("zaten bir düşünme isteği var"
-                           + (f" ({yas:.0f} sn önce bırakıldı)" if yas is not None else "")
-                           + (" — öğrenme süreci onu ŞU AN işliyor" if isleniyor
-                              else " — öğrenme süreci bir sonraki poll'unda alacak")
-                           + "; ikinci istek bırakılmadı")}
+                           + (f" ({yas:.0f} sn önce bırakıldı)" if yas is not None else " (yaşı ölçülemedi)")
+                           + durum_metni + "; ikinci istek bırakılmadı")}
     try:
         from . import hermes
         okuma = hermes.search_progress_oku(ayni_surec=icerde)
@@ -718,8 +793,8 @@ def yansima_istegi_karari(kaynak: str) -> dict:
                else "öğrenme birimi çalışmıyor ya da poll etmiyor")
         return {"status": "unavailable", "neden": "ogrenme_dongusu_poll_etmiyor", "canlilik_neden": neden,
                 "detail": (f"{bas} — istek alınmadı ({neden or 'durum kaydı yok: döngü bu kurulumda hiç koşmamış'}). "
-                           "Döngü durmuş ya da uzun bir iş (ısınma) onu tutuyor olabilir; istek bırakılmadı, "
-                           "birim yeniden poll ettiğinde tekrar dene.")}
+                           "Döngü ısınma sürerken de kalp atar; kalp bayatsa döngü durmuş ya da ilerlemiyor. "
+                           "İstek bırakılmadı, birim yeniden kalp attığında tekrar dene.")}
     hz = yansima_kapisi(taban)["horizon"]
     notu = _ufuk_notu(hz)
     poll = int(taban.get("poll_seconds") or 0)
@@ -729,15 +804,40 @@ def yansima_istegi_karari(kaynak: str) -> dict:
     istek = {"istek_id": uuid.uuid4().hex, "istek_at": _now(), "kaynak": str(kaynak)[:80],
              "ufuk_hazir": bool(hz.get("ready")),
              "ufuk_notu": notu.strip(" ·") or None}
+    # ISINMA SÜRÜYORSA (döngünün yayımladığı işaret — canlılık DEĞİL, yalnız mesajın içeriği): istek ısınma bitince,
+    # bir sonraki poll'da koşar. Operatör saatler sürebilecek bekleyişi BİLEREK görsün.
+    isinma = taban.get("isinma_suruyor") if isinstance(taban.get("isinma_suruyor"), dict) else None
+    if isinma:
+        i_yas, _in = _yas_s(isinma.get("basladi"))
+        tavan_dk = isinma.get("tavan_dk")
+        detay = ("istek bırakıldı — ısınma sürüyor"
+                 + (f" ({i_yas / 60:.0f} dk'dır" if i_yas is not None else " (süresi ölçülemedi")
+                 + (f", tavanı {tavan_dk:g} dk)" if isinstance(tavan_dk, (int, float)) else ")")
+                 + ": istek ısınma bitince, döngünün bir sonraki poll'unda koşar" + notu)
+    else:
+        detay = ("istek bırakıldı — öğrenme süreci bir sonraki poll'unda"
+                 + (f" (≤{poll} sn)" if poll > 0 else "")
+                 + " alıp koşacak; süren bir yansıma varsa o bittikten sonra" + notu)
     return {"status": "queued", "horizon_ready": bool(hz.get("ready")), "istek": istek,
-            "detail": ("istek bırakıldı — öğrenme süreci bir sonraki poll'unda"
-                       + (f" (≤{poll} sn)" if poll > 0 else "")
-                       + " alıp koşacak; süren bir iş (ısınma) varsa o bittikten sonra" + notu)}
+            "isinma_suruyor": bool(isinma), "detail": detay}
 
 
 def _yansima_istegini_sil() -> None:
-    """İşlenen isteği siler. Silinemezse (izin/disk) SESSİZ değil: uyarı düşer ve aynı istek bir sonraki poll'da
-    `son_elle_istek` eşleşmesiyle TANINIR, yeniden koşmaz (`_yansima_istegini_isle`)."""
+    """İşlenen (ya da süresi aşılıp düşürülen) isteği siler. Silinemezse (izin/disk) SESSİZ değil: uyarı düşer ve aynı
+    istek bir sonraki poll'da `son_elle_istek` kimlik eşleşmesiyle TANINIR, yeniden koşmaz (`_yansima_istegini_isle`).
+
+    NEDEN KİLİTSİZ (`store.file_lock` ALINMAZ) VE NEDEN GÜVENLİ — doğrusallaştırılabilirlik (linearizability):
+      1. Pano (TEK yazan) yeni isteği YALNIZ dosya YOKKEN yazar; "yok mu?" denetimi ile yazım aynı dosya kilidi altında,
+         tek atomik adımdır (`api.api_hermes_reflect`).
+      2. Bu fonksiyon yalnız bu sürecin az önce OKUDUĞU isteği siler; o istek okunduğu andan silindiği ana dek dosyada
+         kesintisiz durur (öğrenme tarafı dosyayı yeniden yazmaz, yalnız siler).
+      3. Dolayısıyla o aralıkta panonun her "yok mu?" denetimi dosyayı GÖRÜR ve reddeder; yeni bir istek ancak bu
+         silme GÖZLEMLENEBİLİR biçimde TAMAMLANDIKTAN sonra (`unlink` atomiktir) yazılabilir. Silme hiçbir zaman
+         henüz işlenmemiş YENİ bir isteği yutamaz.
+    Kilit bu yüzden güvenlik EKLEMEZ, yalnız risk ekler: bu fonksiyon `_reflect_lock` TUTULURKEN çağrılır; buraya dosya
+    kilidi koymak "yansıma kilidi → dosya kilidi" sırasını doğurur. Bugün pano dosya kilidi altında yansıma kilidini
+    yalnız GÖZLER (`locked()`), ALMAZ — döngü yok; ama yarın o gözlem bir `acquire`a dönerse sessiz bir kilit-sırası
+    terslenmesi (deadlock) doğar. Kazancı olmayan riski almıyoruz."""
     try:
         (config.STATE / YANSIMA_ISTEGI_FILE).unlink(missing_ok=True)
     except OSError as e:
@@ -770,11 +870,25 @@ def _yansima_istegini_isle() -> bool:
         ist = ham if isinstance(ham, dict) else {}
         onceki = _state.get("son_elle_istek") or {}
         if ist.get("istek_id") is not None and onceki.get("istek_id") == ist.get("istek_id") \
-                and onceki.get("durum") == "bitti":
-            _yansima_istegini_sil()          # silinemeyip kalmış, ZATEN koşmuş istek — ikinci yansıma YOK
+                and onceki.get("durum") in ("bitti", "bayat"):
+            _yansima_istegini_sil()          # silinemeyip kalmış, ZATEN karara bağlanmış istek — ikinci yansıma YOK
             return False
         alindi = _now()
         gecikme, gecikme_neden = _yas_s(ist.get("istek_at"), simdi=alindi)
+        # SÜRE AŞIMI (tur 2): meşru en uzun bekleyişi aşmış istek KOŞMAZ, yaşıyla düşürülür (türetme `_istek_ttl`).
+        # Yaşı ölçülemeyen istek düşürülmez — yaş uydurulmaz; alınış olayı `gecikme_neden` taşır.
+        ttl = _istek_ttl(_state.get("poll_seconds"))
+        if ttl["ttl_s"] is not None and gecikme is not None and gecikme > ttl["ttl_s"]:
+            _state["son_elle_istek"] = {"istek_id": ist.get("istek_id"), "istek_at": ist.get("istek_at"),
+                                        "kaynak": ist.get("kaynak"), "durum": "bayat", "yas_s": gecikme,
+                                        "ttl_s": ttl["ttl_s"], "dusuruldu_at": alindi}
+            obs.warn("hermes_yansima_istegi_bayat", istek_id=ist.get("istek_id"), istek_at=ist.get("istek_at"),
+                     kaynak=ist.get("kaynak"), yas_s=gecikme, ttl_s=ttl["ttl_s"], ttl_formul=ttl["formul"],
+                     detail="elle yansıma isteği süre aşımını geçmiş — KOŞMADAN düşürüldü (birim kapalı/takılıydı); "
+                            "operatör yeniden tıklarsa taze bağlamla koşar")
+            _yansima_istegini_sil()
+            _persist()
+            return False
         kayit = {"istek_id": ist.get("istek_id"), "istek_at": ist.get("istek_at"), "kaynak": ist.get("kaynak"),
                  "alindi_at": alindi, "gecikme_s": gecikme, "durum": "kosuyor"}
         _state["son_elle_istek"] = kayit
@@ -825,6 +939,7 @@ def _run(poll_seconds: int) -> None:
         if geri:
             _state["bg_reflect_by_regime"] = geri
     _state.update(started_at=_now(), poll_seconds=poll_seconds)
+    _state["istek_ttl"] = _istek_ttl(poll_seconds)   # UYGULAYAN yayımlar, pano okur (TSK-233 tur 2)
     _persist()
     while not _stop.is_set():
         try:

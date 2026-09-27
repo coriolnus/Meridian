@@ -390,3 +390,156 @@ def test_10_silinemeyen_istek_ayni_surecte_YENIDEN_KOSMAZ(ogrenme, monkeypatch):
     assert len(cagrilar) == 1, f"silinemeyen istek yeniden koştu: {cagrilar}"
     assert _istek() == ist, "sahte düşen silme dosyayı silmiş olamaz — sahne kurulmadı"
     assert len(silme_denemesi) >= 3, "kalan istek için silme yeniden denenmiyor"
+
+
+# =================================================================================================
+# TUR 2 (Rol-1 hükümleri, 2026-09-27) — R1 ısınma kalbi · R2 istek TTL'i
+# =================================================================================================
+class _Saat:
+    """`hermes_runtime._simdi` yerine: her yaş ölçümü (kalp, istek, ısınma işareti) AYNI sahte saatten okunur."""
+
+    def __init__(self):
+        self.t = dt.datetime.now(dt.timezone.utc)
+
+    def __call__(self) -> dt.datetime:
+        return self.t
+
+    def ileri(self, saniye: float) -> None:
+        self.t += dt.timedelta(seconds=saniye)
+
+
+@pytest.fixture
+def saat(monkeypatch):
+    s = _Saat()
+    monkeypatch.setattr(hr, "_simdi", s)
+    monkeypatch.delenv("HERMES_WARMUP_MAX_MIN", raising=False)       # tavan = varsayılan 300 dk (TTL türetimi)
+    return s
+
+
+def _ttl_beklenen() -> float:
+    """Kararın türetimi (tur 2 R2): ısınma tavanı (anomali sınırı) + kalp toleransı. Testte YAZILIR ki formül
+    sessizce değişirse (ör. yalnız poll aralığı) çivi ötsün."""
+    return hr.WARMUP_MAX_MIN_DEFAULT * 60 + hr.KALP_PAY * POLL
+
+
+def _pano_sureci_gibi(fn):
+    """`fn`i PANO SÜRECİNİN gözüyle koşar: kendi (boş) belleği, kendi kilidi, bellekte arama yok. Döngü ile AYNI
+    Python sürecinde çalışan çivi, bu olmadan döngünün kilidini/belleğini görürdü — canlıda iki ayrı süreçtir."""
+    with pytest.MonkeyPatch.context() as mp:
+        mp.setattr(hr, "_state", _ilk_state())
+        mp.setattr(hr, "_reflect_lock", threading.Lock())
+        mp.setattr(hermes, "SEARCH_PROGRESS", {})
+        return fn()
+
+
+# -------------------------------------------------------------------------------------------------
+# (11) R1 — 15 dk'yı aşan NORMAL ısınma sürerken istek KABUL edilir (ısınma bitince koşar); pano birimi canlı görür
+# -------------------------------------------------------------------------------------------------
+def test_11_uzun_isinma_surerken_istek_KABUL_isinma_bitince_KOSAR(ogrenme, saat, monkeypatch):
+    from meridian import dataset, reflect
+    bas, kos, cagrilar = ogrenme
+    _canli_ogrenme_diski()
+    monkeypatch.setenv("MERIDIAN_WARMUP_SPRINTS", "1")
+    monkeypatch.setattr(hr, "WARMUP_EVERY_POLLS", 1)                 # ısınma her poll'da (sahnenin konusu)
+    monkeypatch.setattr(dataset, "load", lambda *a, **k: (None, None))
+    monkeypatch.setattr(hermes, "warmup_budget", lambda: {"budget": 6, "k_max": 1, "carpan": 1, "formul": "çivi"})
+    monkeypatch.setattr(hermes, "warmup_budget_feedback", lambda _res: None)
+    goruldu: dict = {}
+
+    def _prefill(*_a, canlilik=None, **_k):
+        # Isınmanın İLK anı: işaret + kalp diskte olmalı (pano ilk saniyeden "ısınma sürüyor" diyebilsin).
+        disk = store.read_json(hr.STATUS_FILE, {})
+        goruldu.setdefault("baslangic", {"isaret": bool(disk.get("isinma_suruyor")), "kalp": disk.get("kalp"),
+                                         "simdi": hr._now()})
+        return {"computed": 0, "cached": 0}
+
+    def _uzun_arama(*_a, on_probe=None, canlilik=None, **_k):
+        for i in range(1, 7):                                        # 6 × 10 dk = 60 dk'lık ısınma
+            saat.ileri(600)
+            on_probe(i, 6, None, None, None, None, None, None)
+            if i == 2 and "yanit" not in goruldu:                    # ısınmanın 20. dakikası (> 15 dk kalp payı)
+                goruldu["yanit"] = _pano_sureci_gibi(lambda: api.api_hermes_reflect(types.SimpleNamespace()))
+                goruldu["durum"] = _pano_sureci_gibi(hr.status)
+        return {"evaluated": 6, "cleared": 0, "best": None, "trace": [], "kesildi": False}
+
+    monkeypatch.setattr(reflect, "prefill_incumbents", _prefill)
+    monkeypatch.setattr(reflect, "coordinate_descent_search", _uzun_arama)
+    kos([lambda: None])                                              # poll 1: ısınma · poll 2: istek alınır
+    assert goruldu["baslangic"]["isaret"] and goruldu["baslangic"]["kalp"] == goruldu["baslangic"]["simdi"], \
+        goruldu["baslangic"]
+    yanit = goruldu["yanit"]
+    assert yanit["status"] == "queued", f"normal ısınma sürerken düğme reddetti: {yanit}"
+    assert yanit.get("isinma_suruyor") is True and "ısınma" in yanit["detail"] and "bitince" in yanit["detail"], yanit
+    assert goruldu["durum"]["active"] is True, "ısınma sürerken pano birimi ölü gösteriyor"
+    assert [(c["rejim"], c["arka_plan"]) for c in cagrilar] == [("auto", False)], cagrilar
+    assert _istek() is None
+    disk = store.read_json(hr.STATUS_FILE, {})
+    assert "isinma_suruyor" not in disk, "ısınma bitti ama işaret diskte kaldı"
+    assert (disk.get("son_elle_istek") or {}).get("durum") == "bitti"
+
+
+# -------------------------------------------------------------------------------------------------
+# (12) R1 — GERÇEKTEN ÖLÜ birim: kalp bayat; diskte kalmış ısınma işareti canlılık SAYILMAZ → açık ret
+# -------------------------------------------------------------------------------------------------
+def test_12_olu_birim_isinma_isareti_kalsa_da_ACIK_RET(pano):
+    bas, cagrilar = pano
+    _canli_ogrenme_diski(kalp_yasi_s=hr.KALP_PAY * POLL + 300)
+    disk = store.read_json(hr.STATUS_FILE, {})
+    disk["isinma_suruyor"] = {"basladi": _iso(hr.KALP_PAY * POLL + 400), "tavan_dk": 300}   # ısınma ortasında öldü
+    store.write_json(hr.STATUS_FILE, disk)
+    out = bas()
+    assert out["status"] == "unavailable" and "istek alınmadı" in out["detail"], out
+    assert _istek() is None and cagrilar == []
+
+
+# -------------------------------------------------------------------------------------------------
+# (13) R2 — TTL'i aşmış istek KOŞMAZ: düşürülür, `hermes_yansima_istegi_bayat` yaşıyla; TTL diske yayımlanır
+# -------------------------------------------------------------------------------------------------
+def test_13_ttl_asan_istek_DUSURULUR_bayat_olayi_yasiyla(ogrenme, saat):
+    bas, kos, cagrilar = ogrenme
+    _canli_ogrenme_diski()
+    ist = bas()
+    ttl = _ttl_beklenen()
+    saat.ileri(ttl + 60)                                             # birim TTL'den uzun süre kapalıydı
+    kos()
+    assert cagrilar == [], f"TTL'i aşmış istek koştu: {cagrilar}"
+    assert _istek() is None, "bayat istek düşürülmedi — her poll yeniden değerlendirilir"
+    olay = _olaylar("hermes_yansima_istegi_bayat")
+    assert len(olay) == 1 and olay[0]["istek_id"] == ist["istek_id"], olay
+    assert olay[0]["yas_s"] == ttl + 60 and olay[0]["ttl_s"] == ttl, olay[0]
+    assert _olaylar(OLAY_ALINDI) == []
+    disk = store.read_json(hr.STATUS_FILE, {})
+    assert (disk.get("son_elle_istek") or {}).get("durum") == "bayat"
+    assert (disk.get("istek_ttl") or {}).get("ttl_s") == ttl, "uygulayan süreç TTL'ini yayımlamıyor (pano okuyamaz)"
+
+
+def test_14_ttl_icindeki_gec_istek_KOSAR(ogrenme, saat):
+    """Sınırın öbür yüzü: meşru en uzun bekleyişten (ısınma tavanı) hemen önce alınan istek düşürülmez."""
+    bas, kos, cagrilar = ogrenme
+    _canli_ogrenme_diski()
+    bas()
+    saat.ileri(_ttl_beklenen() - 60)
+    kos()
+    assert [(c["rejim"], c["arka_plan"]) for c in cagrilar] == [("auto", False)], cagrilar
+    assert _olaylar("hermes_yansima_istegi_bayat") == []
+
+
+# -------------------------------------------------------------------------------------------------
+# (15) R2 — bekleyen istek varken pano yanıtı isteğin YAŞINI ve (uygulayanın yayımladığı) TTL'i taşır
+# -------------------------------------------------------------------------------------------------
+def test_15_bekleyen_istek_yaniti_YASI_ve_TTLi_tasir(pano, saat):
+    bas, _cagrilar = pano
+    _canli_ogrenme_diski()
+    ttl = _ttl_beklenen()
+    disk = store.read_json(hr.STATUS_FILE, {})
+    disk["istek_ttl"] = {"ttl_s": ttl, "formul": "öğrenme süreci yayımladı"}
+    store.write_json(hr.STATUS_FILE, disk)
+    assert bas()["status"] == "queued"
+    saat.ileri(120)
+    out = bas()
+    assert out["status"] == "busy" and out["neden"] == "bekleyen_istek", out
+    assert 120 <= out["bekleyen_yas_s"] < 121 and out["ttl_s"] == ttl and out["bayat"] is False, out
+    assert "sn önce" in out["detail"], out
+    saat.ileri(ttl)
+    out = bas()
+    assert out["bayat"] is True and "TTL" in out["detail"], out
