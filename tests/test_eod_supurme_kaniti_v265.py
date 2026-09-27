@@ -2,7 +2,7 @@
 
 ÖLÇÜLEN BOŞLUK ("DAVRANIŞSAL EOD KANITI HÂLÂ KAYITSIZ" — ROADMAP.md §8 ARŞİV → "SB-2
 drift_sinifi · davranışsal EOD süpürme kanıtı" satırı, H6 ✅ KAPANDI 2026-08-22 v265; TSK-083,
-2026-09-03: satır çapası ROADMAP :503 çürümüştü, sembole çevrildi): v220+v221 fixli süpürücü
+2026-09-03: satır çapası ROADMAP :503 çürümüştü, sembole çevrildi) [çapa-mezar-taşı]: v220+v221 fixli süpürücü
 GERÇEK EOD süpürmelerinde koşuyor — canlı ölçüm (research/olcumler/wp2_eod_supurme_2026-08-22):
 son 10 işlenen seansın 10'unda `mirror_stale_entries_cancelled` olayı var (20:31-20:50 UTC),
 10'unda da cancelled=0 / kept=3-4 (koruma sınıfı DOKUNULMADI; `mirror_cancel_sinif_dokumu`

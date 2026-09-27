@@ -35,8 +35,8 @@ TUR BAŞI ÖLÇÜM (2026-09-27, taban df0c590b; codelaw çekirdeğiyle, pytest i
     modül-biçimli eşleşme bu dosyada ÖLÇÜLMEZ (gerekçe `MODUL_BICIMI_KAPALI`).
   * Atlanan (beyanlı) yüzeylerdeki dosya-biçimli çürük, GÖRÜNÜRLÜK için (bu dosya düzeltmez): ROADMAP 4 · tarihçe 10 ·
     üretilmiş RUNBOOK 3 (iç içe tanım: `codelaw._modul_adlari` yalnız modül ve sınıf düzeyini toplar) · birim 0 ·
-    tsx 0. `.py` kör noktası: `ops/`+`deploy/` `.py` yorumları üçüncü beslemede değil — 50 dosya, 3 dosya-biçimli
-    çürük (TSK-239 raporu; bu dosyanın kapsamı `.py` DIŞIdır).
+    tsx 0. `.py` kör noktası (`ops/`+`deploy/` `.py` yorumları üçüncü beslemede değil — 50 dosya, 3 dosya-biçimli
+    çürük) TSK-242'de kapandı: `tests/test_ops_py_yorum_capa_v574.py` bu dosyanın hüküm gövdesini o metinle çağırır.
 
 SÖZLEŞME:
   * Çürük (`curuyen`: modül var, sembol yok) → KIRMIZI. Taban YOK (codelaw beşinci dünya emsali: sembol çürümesi
@@ -98,9 +98,9 @@ BEYANLI_ATLANAN: dict[str, str] = {
         "dahil) v563'ün `test_birim_SEMBOL_capalari_COZULUR_curuyen_YOK` çivisinde AYNI çekirdekten geçer."),
     "py_kaynagi": (
         "PYTHON KAYNAĞI — `meridian/`+`tests/` yorum/docstring metni codelaw ÜÇÜNCÜ BESLEMESİNDE ölçülür "
-        "(`report()` alanı yorum_sembol_curume, ok'u düşürür). `ops/`/`deploy/`/kök `.py` yorumları BUGÜN hiçbir "
-        "beslemede değil (codelaw'ın bilinçli asimetrisi; ölçüldü 2026-09-27: 50 dosya, 3 çürük) — bu dosyanın "
-        "kapsamı `.py` DIŞIdır, açık körlük TSK-239 raporunda."),
+        "(`report()` alanı yorum_sembol_curume, ok'u düşürür); `ops/`+`deploy/`+kök `.py` yorum/docstring metni "
+        "TSK-242'den beri tests/test_ops_py_yorum_capa_v574.py'de AYNI hüküm gövdesiyle (bu dosyanın sembol_hukmu) "
+        "ölçülür. Bu dosyanın kapsamı `.py` DIŞIdır."),
     "tsx_beslemesi": (
         "PANO KAYNAĞI (tsx/ts) — `ui/src` `.ts`/`.tsx` codelaw İKİNCİ BESLEMESİNDE ölçülür (`report()` alanı "
         "sembol_capa_curume, v373); aynı çapayı burada ikinci kez ölçmek aynı iddiayı iki yerde tutardı. "
@@ -211,21 +211,26 @@ _COZULEMEYEN_SINIFLARI = frozenset({"harici", "arsiv"})
 # =================================================================================================
 
 def sembol_hukmu(metinler, py_kokler: tuple[str, ...] | None = None, cozulemeyen_beyan=None,
-                 alan_adi_beyan=None) -> dict:
+                 alan_adi_beyan=None, atlanan_sinif=None) -> dict:
     """`(rel yol, metin)` çiftleri → hüküm. Sınıflama bu dosyada, çözüm codelaw çekirdeğinde (iki çağrı: modül
     biçimi açık ve kapalı yüzeyler).
+
+    `atlanan_sinif`: yüzey sınıflayıcısı (varsayılan bu dosyanınki). `tests/test_ops_py_yorum_capa_v574.py` AYNI
+    hüküm gövdesini `ops/`+`deploy/`+kök `.py` yorum metniyle çağırır — bu dosyanın sınıflayıcısı `.py`yi atladığı
+    için kendi sınıflayıcısını geçer (ikinci bir hüküm gövdesi yazılmadı — tek kaynak).
 
     Dönüş: `ihlal` (tür: curuk · beyansiz_cozulemeyen) · `cozulen` (kaynak, çapa) listesi · `alan_adi` ·
     `beyanli_cozulemeyen` sayıları · `kullanilan_alan`/`kullanilan_cozulemeyen` (bayat beyan ölçümü) ·
     `atlanan` {sınıf: çapa} · `atlanan_dosya` {sınıf: dosya} · `taranan` (rel listesi)."""
     py_kokler = _py_kokleri() if py_kokler is None else py_kokler
+    atlanan_sinif = _atlanan_sinif if atlanan_sinif is None else atlanan_sinif
     cozulemeyen_beyan = BEYANLI_COZULEMEYEN if cozulemeyen_beyan is None else cozulemeyen_beyan
     alan_adi_beyan = MODUL_BICIMI_ALAN_ADI if alan_adi_beyan is None else alan_adi_beyan
     out = {"ihlal": [], "cozulen": [], "alan_adi": 0, "beyanli_cozulemeyen": 0, "kullanilan_alan": set(),
            "kullanilan_cozulemeyen": set(), "atlanan": Counter(), "atlanan_dosya": Counter(), "taranan": []}
     acik, kapali = [], []
     for rel, metin in metinler:
-        sinif = _atlanan_sinif(rel)
+        sinif = atlanan_sinif(rel)
         if sinif is not None:
             out["atlanan_dosya"][sinif] += 1
             out["atlanan"][sinif] += len(codelaw._SEMBOL_CAPA_DESENI.findall(metin))

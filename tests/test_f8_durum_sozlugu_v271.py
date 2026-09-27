@@ -11,7 +11,7 @@ zincirini GÖREMEZ (tasarım §T2 sınır beyanı). Bu dosya o zincirin dört ha
      sayaç artar (ölüm tarihi ölçümü); kanonik okuma sayaç OYNATMAZ (pozitif kontrol).
   3. DÖRT RAPORUN SERVİS YOLU — üretim ÖLÇÜLDÜ, dördü de CANLI (ölü-beyan GEREKMEDİ):
      kitap_damga/mutabakat/onayli_gonderim scheduler.py::advance_once → watchdog.check_and_alarm
-     zincirinde (300 sn poll, watchdog.py :320/:326/:334), goal_failure
+     zincirinde (300 sn poll; `watchdog.py::check_and_alarm` üçünü ayrı try'da çağırır), goal_failure
      check_integrity_and_alarm içinde (loop.py, `check_integrity_and_alarm`). Yüzey: /api/diagnostics
      `bekci_durumlari` (v261 çivileri) + bu turun `durum_sozlugu` bloğu.
   4. POZİTİF KONTROL — sayı-`ok`tan hüküm TÜRETİLMEZ (T3.1 · A4 Rol-1'de), tanınmayan kol adı

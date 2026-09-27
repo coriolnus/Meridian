@@ -38,7 +38,7 @@ EŞDEĞER — ÖLDÜRÜLEMEZ: YOK. Ama 7 için ŞERH (YASA 4 ruhu: yutulan hiçb
     yollar da `fill_entry` ile aynadır.
     ÇAPALAR SEMBOLE ÇEVRİLDİ (2026-09-03, TSK-030 adım-3): burada `broker.py:136` ve  [çapa-mezar-taşı]
     `broker.py:334` yazıyordu [çapa-mezar-taşı]. `:136` `entry_law`i gösteriyordu ve bu turda `broker.py`ye eklenen
-    iki satırla BOŞ BİR SATIRA kaydı (`codelaw` aynı turda yakaladı); `:334` ise ÖLÇÜLDÜĞÜNDE
+    iki satırla BOŞ BİR SATIRA kaydı (`codelaw` aynı turda yakaladı); `:334` [çapa-mezar-taşı] ise ÖLÇÜLDÜĞÜNDE
     ZATEN yanlış yeri gösteriyordu — `derisk_ramp` gövdesine düşüyor, yani cümlenin anlattığı
     şeyle ilgisi yok. Satır çapasının iki çürüme biçimi de tek cümlede görüldü.
 

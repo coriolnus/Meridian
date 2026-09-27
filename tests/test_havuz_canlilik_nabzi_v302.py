@@ -11,7 +11,7 @@ soruşturma (5 bulucu + 3 şüpheci; üç şüphecinin ÜÇÜ de ilk hipotezi ç
       (2) atalet sonrası sıralı incumbent yedeği (canlıda ölçülen: 5065 sn)
       (3) `_parallel_prefill_probes` havuz bekleyişi — 1800 sn daha
     (1) YAPISAL olarak yamanamıyordu: `prefill_incumbents` hermes_runtime.py::_warmup_sprint içinde
-    çağrılıyor, `_nabiz` ise :170'te TANIMLANIYOR — nabız daha doğmamış.
+    çağrılıyor, `_nabiz` ise :170'te [çapa-mezar-taşı] TANIMLANIYOR — nabız daha doğmamış.
   · `HAVUZ_ATALET_SN = 1800` (reflect.py) ile `EXPECTED["hermes_poll"] = 1800`
     (watchdog.py) BİREBİR EŞİT → havuz ataleti her çarptığında pencere TANIM GEREĞİ
     tam olarak doluyor; bayat-geçiş garanti.

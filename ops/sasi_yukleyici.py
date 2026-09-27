@@ -31,7 +31,7 @@ anılır, `edg032c_kunye_tazeleme_2026-08-24/RAPOR.md` onu künyedeki `sasi.sha2
 doğrular. Düzeltme bu yüzden YÜKLEYİCİ tarafındadır. Kapı:
 `tests/test_bayat_bytecode_v334.py` §C.
 
-TEK UYGULAMA: `tests/conftest.py::betikten_modul_yukle` de buraya devreder. İki kopya iki
+TEK UYGULAMA: conftest'in `betikten_modul_yukle`si `ops/sasi_yukleyici.py::kaynaktan_yukle`nin ithal takma adıdır. İki kopya iki
 sürüklenme yüzeyi olurdu — bu deponun tekrar eden "iki kopya sessizce ayrışır" sınıfı.
 """
 

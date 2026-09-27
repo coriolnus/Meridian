@@ -2861,7 +2861,7 @@ def _slippage_measured(trades: list[dict], goal: dict) -> dict:
     gerekçesi açık: "real-world slippage vs the model is measurable". Ama ölçülen sapmayı
     `goal.slippage_bps`e (ya da herhangi bir kalibrasyon raporuna) geri besleyen tüketici YOKTU —
     döngünün kapanan ucu hiç kurulmamıştı. Model tarafı sabit: goal.yaml `slippage_bps: 5` anahtarı
-    (A17: eski `:27` çapası bayattı — satır kaydı, değer değişmedi).
+    (A17: eski `:27` çapası bayattı — satır kaydı, değer değişmedi) [çapa-mezar-taşı].
 
     UYDURMA YASAĞI: ayna henüz hiçbir satırı yamamadı (canlı sayım 2026-07-30: 0/95). O yüzden
     `measured_bps` None döner — 0.0 dönmek "ölçtük ve slipaj yok" gibi okunurdu, oysa doğru cümle
@@ -3968,7 +3968,7 @@ def _sessiz_hat(wd: dict, hb: dict) -> dict:
 
     # F8 ÇİFT-ALAN GEÇİŞİ (WP8-C · T1.4): sapma satırlarının `detay`ı kanonik `neden` adıyla DA
     # taşınır; `detay` dönem sonuna dek eşanlamlı kalır (okuyucu-ölümü durum_sozlugu sayaçlarıyla
-    # ölçülür, düşürme Rol-1'de). Askıda satırları ZATEN iki adı da taşıyor (:3010 civarı).
+    # ölçülür, düşürme Rol-1'de). Askıda satırları ZATEN iki adı da taşıyor (bekçiler segmentinin `askida` listesi, yukarıda).
     # `saglikli` alanı KALIR-şerhlidir: bilinçli İKİ değerli, fail-closed (docstring sözleşmesi) —
     # sözlük onu yeniden adlandırmaz, şerhiyle kaydeder (meridian/durum_sozlugu.py).
     for _seg in segmentler:

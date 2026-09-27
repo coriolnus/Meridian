@@ -242,7 +242,7 @@ def test_exec_sapmasi_icra_etiketi(sandbox_state, monkeypatch):
 
 
 def test_184_ayna_cikisi_kapatilamadi_cikis_yetimi_etiketi(sandbox_state, monkeypatch, seans_acik):
-    """`_mirror_exit_sync` (kaynak :184): iç defter KAPALI, ayna kapatılamadı → `cikis_yetimi`."""
+    """`loop.py::_mirror_exit_sync`: iç defter KAPALI, ayna kapatılamadı → `cikis_yetimi`."""
     monkeypatch.setattr(config, "BROKER", "alpaca_paper")
     monkeypatch.setattr(alpaca, "paper_available", lambda: True)
     monkeypatch.setattr(alpaca, "close_engine_position",
