@@ -25,9 +25,9 @@ geçemez ("ulaştı ≠ gördü").
 "ölçülemedi" yazılır (olay defteri o pencereyi artık taşımıyor olabilir) — sayı yine basılır.
 
 KULLANIM:
-    uv run python ops/alarm_backlog_digest.py             # KURU KOŞU: mesajı basar, göndermez
-    uv run python ops/alarm_backlog_digest.py --uygula    # gönder + damga (kanal yoksa reddeder)
-    MERIDIAN_ROOT=/yol/kopya ...                          # sandbox'ta dene
+    uv run --frozen --no-dev python ops/alarm_backlog_digest.py           # KURU KOŞU: mesajı basar, göndermez
+    uv run --frozen --no-dev python ops/alarm_backlog_digest.py --uygula  # gönder + damga (kanal yoksa reddeder)
+    MERIDIAN_ROOT=/yol/kopya ...                                          # sandbox'ta dene
 
 ÇIKIŞ KODU: 0 = gönderildi ya da gönderilecek yeni birikme yok · 1 = gönderim düştü (damga
 basılmadı; sonraki koşum yeniden dener) · 2 = kanal yapılandırılmamış / sayaç okunamadı.

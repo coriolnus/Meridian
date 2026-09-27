@@ -89,9 +89,9 @@ ardışık sessizlik sayacı) + `state/events.jsonl`. Teslimat YALNIZ `meridian.
     GÜVENMEZ.
 
 KULLANIM:
-    uv run python ops/bekci_brifingi.py             # KURU KOŞU: mesajı basar, göndermez, damgalamaz
-    uv run python ops/bekci_brifingi.py --uygula    # gönder + operatöre ULAŞAN kalemleri damgala
-    HERMES_HOME=... HERMES_WRITE_SAFE_ROOT=...      # zamanlanmış koşumda systemd birimi verir
+    uv run --frozen --no-dev python ops/bekci_brifingi.py           # KURU KOŞU: mesajı basar, göndermez, damgalamaz
+    uv run --frozen --no-dev python ops/bekci_brifingi.py --uygula  # gönder + operatöre ULAŞAN kalemleri damgala
+    HERMES_HOME=... HERMES_WRITE_SAFE_ROOT=...                      # zamanlanmış koşumda systemd birimi verir
 
 ÇIKIŞ KODU: 0 = teslim edildi ya da gönderilecek bir şey yok · 1 = gönderim düştü (damga
 BASILMADI; sonraki koşum yeniden dener) · 2 = kanal yapılandırılmamış.
@@ -1177,7 +1177,7 @@ def _paketle(metin: str, kaynak: str, ham: dict) -> tuple[str, list[str]]:
 
     def _erteleme_beyani(n: int) -> str:
         return (f"⏭ Bu mesaja SIĞMADI ve DAMGALANMADI: {n} kalem — yarın yeniden bildirilecek "
-                f"(tam liste: `uv run python ops/bekci_tarama.py`).")
+                f"(tam liste: `uv run --frozen --no-dev python ops/bekci_tarama.py`).")
 
     def _uzunluk(satirlar: list[str], ertelenen_var: bool) -> int:
         p = [bas, LISTE_BASLIGI + "\n" + "\n".join(satirlar)]

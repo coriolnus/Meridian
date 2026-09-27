@@ -217,6 +217,16 @@ barsarchive süreçleri eski kodla; restart bakım penceresine ait" satırını 
 ETMEZ: `deploy.sh` 15'in koşulsuz restart'ı A0'a bilerek geçmedi, o hâlde riskin okunur bir
 çıktısı olmak zorundadır (Yasa 6).
 
+**A1 kabuk ortamı (TSK-238):** `venv.yml`in son görevi `/etc/environment`e `defaults::uv_kabuk_ortami`
+satırlarını (`UV_FROZEN=1`, `UV_NO_DEV=1`) `lineinfile` ile ekler — öteki satırlara ve dosyanın
+sahip/iznine dokunmaz, aynı adın elle yazılmış çelişik atamasını tekilleştirir. Amaç: ssh ile A1'de
+koşulan (sshd PAM'i `pam_env` kullanır — etkileşimsiz komut dahil) bayraksız `uv run|sync` A0 semantiğiyle
+(`--frozen --no-dev`) koşsun; unutulan bir öğüt dev grubunu geri kurmasın, bayat kilidi yeniden yazmasın.
+systemd birimleri bu dosyayı OKUMAZ (birimler zaten bayraklı). Kuru koşumda yalnız bu iki satırın
+eklenişi görünür. **Bedel:** bu ortamda `uv lock --check` yalnız geçerlilik denetler ve `--locked`
+reddedilir — kilit tazeliği kapıları A1'de KOŞMAZ (dagit `[0b]` localhost, CI dumanı GitHub); çivi
+`tests/test_a1_kabuk_uv_ortami_v570.py`. Etki `site.yml` koşumuyla gelir (dagit bu dosyaya dokunmaz).
+
 ---
 
 # `dagit.yml` — dağıtım playbook'u (TSK-176 Faz A1)

@@ -30,7 +30,12 @@ KIRMIZI=0
 baslik() { printf '\n=== %s ===\n' "$1"; }
 
 baslik "[1/3] lint-imports — mimari sözleşmeler"
-if "$UV" run lint-imports; then
+# `--frozen` HER uv adımında (TSK-238): bu kapı kilit tazeliği kapısı TAŞIMAZ ve bayraksız `uv run` /
+# `uv audit` pyproject ↔ uv.lock ayrışmasında kilidi SESSİZCE yeniden yazar (TSK-230 ölçümü) — kapı
+# koşturuldu diye geliştiricinin ağacı kirlenir, yeniden yazılmış kilit bir sonraki commit'e karışırdı.
+# Kilit OLDUĞU GİBİ kurulur; tazeliği CI dumanı [0/4] ve dagit [0b] ölçer. `--no-dev` BİLEREK YOK:
+# kapı dev araçlarını (import-linter, pytest, hypothesis) koşar — A1 semantiği burada kapıyı öldürürdü.
+if "$UV" run --frozen lint-imports; then
   echo "  ✓ sözleşmeler KORUNDU"
 else
   echo "!! MİMARİ SÖZLEŞME KIRILDI — yeni bir yukarı-yön bağımlılık ya da döngü doğdu."
@@ -48,7 +53,7 @@ baslik "[2/3] uv audit — tedarik zinciri"
 # ihlalidir. Alt-komut VARSA ve gerçek açık bulursa hüküm yine KIRMIZI'dır; yoksa ÖLÇÜLEMEDİ
 # ADIYLA ekrana düşer — sessizce yeşile yazılmaz.
 if "$UV" audit --help >/dev/null 2>&1; then
-  if "$UV" audit --preview-features audit-command; then
+  if "$UV" audit --frozen --preview-features audit-command; then
     echo "  ✓ bilinen açık YOK"
   else
     echo "!! TEDARİK ZİNCİRİ KIRMIZI — bağımlılıkta bilinen açık var. Dağıtım YOK."
@@ -68,7 +73,7 @@ else
   baslik "[3/3] pytest kapsamı — anayasa property paketi + doğrudan komşular"
   # Dosya listesi ELLE ve DAR tutulur: bu kapının değeri HIZINDA. Genişletme isteği geldiğinde
   # doğru cevap genelde "tam suite'i Rol-1'de koş"tur — yavaşlayan bir kapı, atlanan bir kapıdır.
-  if "$UV" run pytest -q \
+  if "$UV" run --frozen pytest -q \
       tests/test_anayasa_hypothesis_v143.py \
       tests/test_warmup_tavani_v143.py \
       tests/test_storage_v142.py \
@@ -78,7 +83,7 @@ else
     echo "  ✓ anayasa kapsamı YEŞİL"
   else
     echo "!! ANAYASA KAPSAMI KIRMIZI — bir yasa ihlal edildi. Tam grep ile bak:"
-    echo "   uv run pytest -q tests/ 2>&1 | grep -E 'FAILED|ERROR'"
+    echo "   uv run --frozen pytest -q tests/ 2>&1 | grep -E 'FAILED|ERROR'"
     KIRMIZI=1
   fi
 fi

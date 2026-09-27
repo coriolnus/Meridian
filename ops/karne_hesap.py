@@ -120,7 +120,7 @@ karşılaştırdığı için eksiği yapısal olarak göremiyordu. Bugün `test_
 İLK ÜÇÜ VE SON İKİSİ YASA 4'ün sesidir — susturulmaları körlük olurdu; dördüncüsü depolama
 katmanının bakımıdır. Son ikisi A1'de ATEŞLEMEZ (DB var, anahtar çekili değil) ama bu araç aynı
 zamanda operatörün ELLE koştuğu bir CLI'dır: `meridian.db`si olmayan bir makinede
-`uv run python ops/karne_hesap.py` `state/events.jsonl`e YAZAR — CLAUDE.md §2'nin adını koyduğu
+`uv run --frozen --no-dev python ops/karne_hesap.py` `state/events.jsonl`e YAZAR — CLAUDE.md §2'nin adını koyduğu
 "ajan pytest-dışı state yazımı" sınıfının aynısı. Altısı da burada beyan edilmeseydi, "yazmaz"
 sözü ölçülmemiş bir iddia olarak kalırdı.
 TARAMANIN KAPSAMI DÜRÜSTÇE DARDIR (çivinin kendi beyanı): yalnız BEYAN EDİLEN modül kümesi

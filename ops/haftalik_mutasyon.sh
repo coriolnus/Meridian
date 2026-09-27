@@ -27,6 +27,9 @@ TARIH="$(date +%F)"
 CIKTI_DIZIN="docs/mutasyon"
 CIKTI="${CIKTI_DIZIN}/${TARIH}.md"
 UV="${UV:-uv}"
+# Her `"$UV" run` `--frozen` taşır (TSK-238): betik ELLE, geliştirici ağacında koşar ve kilit tazeliği
+# kapısı taşımaz — bayraksız `uv run` pyproject ↔ uv.lock ayrışmasında kilidi SESSİZCE yeniden yazar
+# (TSK-230 ölçümü). `--no-dev` YOK: mutmut dev grubundadır.
 KOK="$(pwd)"
 # Kısa doğrulamanın kapsamı: GERÇEK hedeflerden EN KÜÇÜĞÜ + onun kendi denetim testi. Yapay bir
 # oyuncak modül seçilmedi — kısa mod, tam koşumun küçültülmüş hâli olmalı, benzeri değil.
@@ -40,7 +43,7 @@ KISA_TEST="${KISA_TEST:-tests/test_score_audit_v40.py}"
 # Yapılandırmanın GÖRÜLDÜĞÜNÜ iddia etmek yetmez — ölçülür.
 oz_test() {
   echo "=== öz-test: mutmut yapılandırmayı görüyor mu? ==="
-  "$UV" run python - <<'PY'
+  "$UV" run --frozen python - <<'PY'
 import sys
 from mutmut.configuration import Config
 
@@ -212,7 +215,7 @@ BASLANGIC="$(date -u +%FT%TZ)"
 # SONUCUdur — betik onu yutmaz ama üstüne de düşmez: rapor her hâlükârda yazılır, çıkış kodu
 # raporun sonunda dürüstçe taşınır.
 set +e
-"$UV" run mutmut run 2>&1 | tee "${CIKTI_DIZIN}/.${TARIH}.ham.log"
+"$UV" run --frozen mutmut run 2>&1 | tee "${CIKTI_DIZIN}/.${TARIH}.ham.log"
 KOSUM_KODU=${PIPESTATUS[0]}
 set -e
 # MUTMUT'UN SESSİZ YALANI (2026-08-01, ikinci kırık): temiz-koşum/istatistik toplama düşse bile
@@ -240,7 +243,7 @@ BITIS="$(date -u +%FT%TZ)"
   echo "## Skor"
   echo
   echo '```'
-  "$UV" run mutmut results 2>&1 | tail -60 || echo "(mutmut results okunamadı — ham log: .${TARIH}.ham.log)"
+  "$UV" run --frozen mutmut results 2>&1 | tail -60 || echo "(mutmut results okunamadı — ham log: .${TARIH}.ham.log)"
   echo '```'
   echo
   echo "## Hayatta kalan mutantlar (test borcu)"
@@ -250,9 +253,9 @@ BITIS="$(date -u +%FT%TZ)"
   echo "geçilir. Sessizce bırakmak, kapsamı sınama sanmaktır."
   echo
   echo '```'
-  "$UV" run mutmut browse --help >/dev/null 2>&1 && \
-    echo "(ayrıntılı gezinti: \`uv run mutmut browse\` — bu betik etkileşimli TUI açmaz)"
-  "$UV" run mutmut results 2>&1 | grep -iE "survived|hayatta" | head -80 || echo "(hayatta kalan mutant listesi boş ya da okunamadı)"
+  "$UV" run --frozen mutmut browse --help >/dev/null 2>&1 && \
+    echo "(ayrıntılı gezinti: \`uv run --frozen mutmut browse\` — bu betik etkileşimli TUI açmaz)"
+  "$UV" run --frozen mutmut results 2>&1 | grep -iE "survived|hayatta" | head -80 || echo "(hayatta kalan mutant listesi boş ya da okunamadı)"
   echo '```'
 } > "$CIKTI"
 

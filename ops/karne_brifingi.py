@@ -119,9 +119,9 @@ dört hüküm) + `state/events.jsonl`. Teslimat YALNIZ `meridian.notify.send`.
     pytest içinde çivilendi (`test_UYGULA_GERCEKTEN_GONDERIR`); kabuk koşumu Rol-1'e devredildi.
 
 KULLANIM:
-    uv run python ops/karne_brifingi.py             # KURU KOŞU: mesajı basar, göndermez, damgalamaz
-    uv run python ops/karne_brifingi.py --uygula    # gönder + teslim edilen dört hükmü damgala
-    HERMES_HOME=... HERMES_WRITE_SAFE_ROOT=...      # zamanlanmış koşumda systemd birimi verir
+    uv run --frozen --no-dev python ops/karne_brifingi.py           # KURU KOŞU: mesajı basar, göndermez, damgalamaz
+    uv run --frozen --no-dev python ops/karne_brifingi.py --uygula  # gönder + teslim edilen dört hükmü damgala
+    HERMES_HOME=... HERMES_WRITE_SAFE_ROOT=...                      # zamanlanmış koşumda systemd birimi verir
 
 ÇIKIŞ KODU: 0 = teslim edildi (KALDI bir BULGUdur, koşum hatası değil) · 1 = gönderim düştü
 (damga BASILMADI; sonraki koşum yeniden dener) · 2 = kanal yapılandırılmamış.
@@ -1018,7 +1018,7 @@ def _kapsam_satiri(ham: dict) -> str:
         # KIRPILAN, kapsamın STATİK kuyruğudur (`GOREMEDIGIM` — haftadan haftaya değişmeyen
         # tasarım kör noktaları); ÖLÇÜLEN başı (defter · örneklem · pencere · sessizlik) tam
         # gider. Kayıp ADIYLA beyan edilir ve tamamına giden yol yazılır.
-        isaret = "… (KIRPILDI — tamamı: `uv run python ops/karne_hesap.py --json`)"
+        isaret = "… (KIRPILDI — tamamı: `uv run --frozen --no-dev python ops/karne_hesap.py --json`)"
         metin = metin[:max(KAPSAM_TAVANI - len(isaret), 120)] + isaret
     return ham.setdefault("kapsam_satiri", KAPSAM_ONEKI + metin)
 
@@ -1583,7 +1583,7 @@ def _paketle(metin: str, kaynak: str, ham: dict, bas: str | None = None) -> tupl
         # bırakılmaz, çünkü 4096'yı aşan bir gövdeyi Telegram REDDEDER ve teslimat TÜMDEN düşer
         # (yani susma-yok sözü zarf tarafından delinirdi). Kırpma ADIYLA deftere geçer.
         fazla = len(govde) - MESAJ_TAVAN
-        isaret = "… (kapsam KIRPILDI — tamamı: `uv run python ops/karne_hesap.py --json`)"
+        isaret = "… (kapsam KIRPILDI — tamamı: `uv run --frozen --no-dev python ops/karne_hesap.py --json`)"
         kisa = kapsam[:max(len(kapsam) - fazla - len(isaret) - 4, 80)] + isaret
         # DAL GÖVDEYİ UZATAMAZ (denetim LOW-1). İlk hâl kapsam kısaysa 80'lik tabana 72
         # karakterlik işareti EKLİYOR ve sonrasında YENİDEN ÖLÇMÜYORDU — yani "Telegram
@@ -1649,7 +1649,7 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as e:
         bas = (f"{BASLIK} — ⚠ ZORUNLU BAŞ KURULAMADI · {repr(e)[:200]} — bu bir MEKANİZMA "
                f"ARIZASIDIR, 'değişen bir şey yok' DEĞİL; ham hükümler için "
-               f"`uv run python ops/karne_hesap.py`")
+               f"`uv run --frozen --no-dev python ops/karne_hesap.py`")
         obs.log("karne_brifingi_zorunlu_bas_kurulamadi", hata=repr(e)[:300],
                 detail="zorunlu baş patladı — yerine minimum baş kondu, hafta SUSMUYOR")
     # PAYLAŞIM DA BU BAŞI OKUR: `sun()` prompt'u kurarken `_zarf_paylasimi`ye gider ve orada
@@ -1671,7 +1671,7 @@ def main(argv: list[str] | None = None) -> int:
                 detail="paketleme düştü — yalnız zorunlu baş gönderiliyor, hafta SUSMUYOR")
         govde, giren, kaynak = (f"{bas}\n\n⚠ MESAJ KURULAMADI · {repr(e)[:200]} — "
                                 f"ölçülen karne bu hafta BİÇİMLENDİRİLEMEDİ; ham hükümler için "
-                                f"`uv run python ops/karne_hesap.py`"), [], "ham"
+                                f"`uv run --frozen --no-dev python ops/karne_hesap.py`"), [], "ham"
     print(f"--- MESAJ (sunum kaynağı: {kaynak}) ---")
     print(govde)
     print("-------------")

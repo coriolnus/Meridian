@@ -34,12 +34,12 @@ yapar: KİLİT ALTINDA YAMA, tam-belge ezme DEĞİL. `peak_equity` DIŞARIDADIR 
 `yeni_kitap`ta): monoton bir büyüklüktür ve geriye çekmek yazılı bir af ister.
 
 KULLANIM:
-    uv run python ops/sermaye_beyani_iade.py                    # KURU KOŞU (varsayılan)
-    uv run python ops/sermaye_beyani_iade.py --uygula           # YAZ (worker DURMUŞ olmalı)
-    uv run python ops/sermaye_beyani_iade.py --yedek <tar.gz|db>     # başka bir yedekten oku
-    uv run python ops/sermaye_beyani_iade.py --kayit-dosyasi <json>  # kaydı dosyadan al (A1'de
+    uv run --frozen --no-dev python ops/sermaye_beyani_iade.py                         # KURU KOŞU (varsayılan)
+    uv run --frozen --no-dev python ops/sermaye_beyani_iade.py --uygula                # YAZ (worker DURMUŞ olmalı)
+    uv run --frozen --no-dev python ops/sermaye_beyani_iade.py --yedek <tar.gz|db>     # başka bir yedekten oku
+    uv run --frozen --no-dev python ops/sermaye_beyani_iade.py --kayit-dosyasi <json>  # kaydı dosyadan al (A1'de
         yedek tarball'ı yoktur; kuru koşu kaydı JSON olarak basar, operatör onu taşıyabilir)
-    MERIDIAN_ROOT=/yol/kopya uv run python ops/sermaye_beyani_iade.py   # sandbox kopyada dene
+    MERIDIAN_ROOT=/yol/kopya uv run --frozen --no-dev python ops/sermaye_beyani_iade.py  # sandbox kopyada dene
 
 ÇIKIŞ KODU: 0 = ok (ya da zaten beyanlı) · 1 = engel/doğrulama düştü · 2 = kaynak okunamadı /
 canlı worker koşuyor.
@@ -336,7 +336,7 @@ def main(argv: list[str] | None = None) -> int:
     for r in rapor.get("recompute", []):
         print(f"  recompute[{r['check']:18s}] {'TUTUYOR' if r['ok'] else 'KIRIK'} — {r['detail']}")
     if not a.uygula and not eng:
-        print("  → uygulamak için: uv run python ops/sermaye_beyani_iade.py --uygula "
+        print("  → uygulamak için: uv run --frozen --no-dev python ops/sermaye_beyani_iade.py --uygula "
               "(worker DURDURULMUŞ olmalı)")
     return _cikis(eng, bool(a.uygula))
 
