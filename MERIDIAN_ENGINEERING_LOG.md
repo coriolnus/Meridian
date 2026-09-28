@@ -4051,3 +4051,20 @@ canlıyla aynı (ilk "FARKLI" ölçümüm süreç ikamesindeki stdin hatasıydı
   pencerede Rol-1). Opus uygulayıcı suite penceresi kapanınca sevk edildi (worktree tsk020-kademe-c, taban 88bab81b).
 - **Kendi hatam:** TSK-168 notuna sıkıştırma özetinden devraldığım "07:1xZ" yazdım, ölçülen 06:5xZ idi (e342b11c). Ders hafızaya: sıkıştırma
   özeti saati taşımaz.
+
+- **§36 eki — öğleden sonra (2026-09-28 10:1x→17:1xZ, model Opus 5.5):**
+  - **DAĞITIM #80** (Kademe C kodu, faa12617; operatör dagit 10:17Z): iki defter HÂLÂ dosyadan (D2 kapısı) — davranış değişmedi. Yeniden başlatmada learn
+    durdurması 120 sn'yi aşıp SIGKILL'e düştü → kök neden kodda: havuz kırılınca incumbent ön-hesabı SIRALI walk-forward yoluna düşüyor ve durdurma bayrağına
+    bakmıyordu → **TSK-246** (işbirlikçi iptal, ölçülen ~5 sn) + **TSK-248** (operatör kararı "kesilen yansıma turu hiç sayılmasın"; `search_and_submit` durdurmayı
+    HİÇ iletmiyordu; ölçülen iniş 0,025 sn). İkisi de ana dalda (suite 15509/0 ve 15574/0 + KILL#1).
+  - **TSK-020 UYGULA-9 (Prometheus + Grafana)**: operatör "paralelde yap" → ölçüm (APISIX :9091 zaten gecikme histogramı yayınlıyor, kimse okumuyordu; KILL#1 döngü p95
+    canlıda HİÇ ölçülmüyordu; 9090 DOLU) → tasarım → onay (Docker, yalnız SSH tüneli) → Faz A (güvenlik incelemesi: Grafana parolası rotasyon dışı ama İZİN-DENETİMLİ
+    ayrı kapı) → **DAĞITIM #81** (operatör 12:12Z) → site.yml (Rol-1, sınıflandırıcı bu kez geçirdi) → parola Vault'a (OPERATÖR; değer görülmedi) → **CANLI**.
+    **Grafana 256M tavanda OOM** (ilk açılış ~324 MB memcg; kararlı ~222 MiB) → 512M düzeltme turu → sağlıklı (~200 MiB). Ders: konteyner bellek tavanı TAHMİNLE
+    değil ilk açılışta ÖLÇÜLEREK seçilir; memcg dosya önbelleğini de sayar. Faz B (sıfır bağımlılık motor histogramları, `outcome` etiketi — seans dışı µs dönüşleri
+    p95'i yanlı çekmesin) ana dalda.
+  - **TSK-247**: mevcut docker birimlerinde `MemoryMax`/`CPUQuota` yalnız `docker run` İSTEMCİSİNİ sınırlıyordu (A1: HostConfig.Memory=0, NanoCpus=0) → `--memory` +
+    `--cpus` iki katman + genel çivi v587; uygulama bu gece bakım penceresinde (etcd → apisix → hindsight-cp).
+  - **TSK-225 düzeltme**: EDG-085 pilotu canlıda AÇIK ama kayıt YALNIZ emir penceresinde yazılır — "seans açılınca dosya doğar" öncülüm yanlıştı.
+  - **Araç tuzağı**: `gh run list --branch main --limit N` varsayılan sırada 09-13'ün eski kırmızı koşumunu en üste koyabiliyor — CI hükmü SHA ile okunur (memory).
+  - **TSK-200** sayacı 13/40 (en erken ~10-20). Yeni kalemler: TSK-246/247/248 (üçü de aynı gün açılıp ana dala girdi).
