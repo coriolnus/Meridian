@@ -7,6 +7,14 @@
 # etcd'ye bağımlı: apisix-etcd.service ÖNCE ayakta olmalı.
 # ROTALARIN SSoT'u deploy/apisix/routes.yaml — Admin API'ye elle CRUD kalıcı DEĞİLDİR;
 # uygulama ops/apisix_uygula.py ile (idempotent + drift denetimi; ?ttl= YASAK).
+#
+# BELLEK TAVANI İKİ KATMANDA (TSK-247, 2026-09-28): `MemoryMax=` bu birimin cgroup'unu, yani YALNIZ `docker run`
+# İSTEMCİSİNİ sınırlar (A1: MemoryCurrent ~9–12 MB) — konteyner dockerd'nin cgroup'unda koşar ve o satırdan
+# etkilenmez. Konteynerin gerçek tavanı `--memory`dir. Rol-1 A1 ölçümü 2026-09-28: `docker inspect`
+# HostConfig.Memory = 0 → tavan makinenin tamamıydı (23,41 GiB); kullanım 89 MiB. 512m ≈ ölçülen kullanımın 5,7×'ü
+# (LLM akışı + FMP + pano girişi aynı kapıdan geçer; pay bilerek geniş). İkisi aynı değeri taşır (512m ↔ 512M);
+# eşitliği tüm docker birimleri için tests/test_konteyner_bellek_tavani_v587.py ölçer. Swap bayrağı yok (telemetri
+# emsali). 50-vault-yan-dosya.conf ExecStart'ı YENİDEN YAZAR: bayrak orada da var (v491 C6 jeton eşitliği).
 [Unit]
 Description=APISIX tek-kapı (yalnız 127.0.0.1:9080; admin 9180 anahtarlı)
 After=docker.service apisix-etcd.service
@@ -17,6 +25,7 @@ Type=simple
 EnvironmentFile=/opt/apisix/.env-apisix
 ExecStartPre=-/usr/bin/docker rm -f apisix-kapi
 ExecStart=/usr/bin/docker run --rm --name apisix-kapi --network host \
+  --memory=512m \
   --env-file /opt/apisix/.env-apisix \
   -v /opt/apisix/config.yaml:/usr/local/apisix/conf/config.yaml:ro \
   apache/apisix:3.18.0-debian

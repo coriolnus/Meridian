@@ -752,3 +752,62 @@ altında kalır; silmek operatör kararıdır. Bedel (tasarım §5): üç loopba
 meridian-node-exporter 64M + meridian-grafana 512M = 1088M — Grafana 256M'den 512M'e canlı ölçümle çıktı
 (2026-09-28: ilk açılış göçü ~324 MB → OOM; kararlı 222,5 MiB / 256 MiB); node_exporter ev sahibinin
 dünyaya-okunur dosyalarını görebilir (0400/0600 sır dosyalarını göremez).
+
+---
+
+## Docker konteyner bellek tavanı — TSK-247 (2026-09-28)
+
+**Ne:** `apisix`, `apisix-etcd` ve `hindsight-cp` birimlerindeki `MemoryMax=` YALNIZ `docker run` istemcisini
+sınırlıyordu; konteyner dockerd'nin cgroup'unda koşar. Rol-1 A1 ölçümü (2026-09-28): `docker inspect`
+`HostConfig.Memory` = 0 → üç konteynerin tavanı makinenin tamamıydı (23,41 GiB). Düzeltme: `docker run`a
+`--memory=<MemoryMax ile aynı>` — apisix-kapi 512m · apisix-etcd 256m · hindsight-cp 512m (aynı ölçümde kullanım
+89 / 13 / 43 MiB). Telemetri birimleri bu biçimi zaten taşıyordu. Eşitliği tüm docker birimlerinde (drop-in'le
+birleşik hâl dahil) `tests/test_konteyner_bellek_tavani_v587.py` ölçer; apisix'in `50-vault-yan-dosya.conf` drop-in'i
+ExecStart'ı yeniden yazdığı için bayrak orada da vardır.
+
+**Yürürlük RESTART ister:** bayrak konteyner AÇILIRKEN uygulanır. `site.yml` dosyaları kopyalar ve `daemon-reload`
+yapar, hiçbir birimi yeniden başlatmaz. Restart BAKIM PENCERESİNDE yapılır: APISIX yeniden başlarken kapının bütün
+yüzeyi (LLM egress `9080`, FMP rotası, pano girişi `9443`) birkaç saniye kesilir. `dagit` `[F9]` içerik aynası
+`site.yml` koşana dek bu üç birimi ayrık raporlar (engellemez).
+
+**1. A0 rolü** — birimler ve apisix drop-in'i kopyalanır:
+
+```bash
+ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/site.yml --check --diff
+ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/site.yml
+```
+
+Beklenen fark: `apisix.service`, `apisix-etcd.service`, `hindsight-cp.service` ve
+`apisix.service.d/50-vault-yan-dosya.conf` içinde yalnız `--memory=…` satırı ve şerhi. Başka dosya değişiyorsa DUR.
+
+**2. Yeniden başlat** — tek komut, sıra etcd önce:
+
+```bash
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo systemctl restart apisix-etcd apisix hindsight-cp'
+```
+
+`apisix.service` `Requires=` + `After=apisix-etcd.service` taşır: systemd tek işlemde önce etcd'yi, sonra apisix'i
+açar. etcd'nin restart'ı apisix'i zaten yeniden başlatır — iki ayrı komut kapıyı İKİ kez keserdi.
+
+**3. Doğrulama** (her satırın beklenen çıktısı altında):
+
+```bash
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'systemctl is-active apisix-etcd apisix hindsight-cp'
+# active ×3
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo docker inspect -f "{{.Name}} {{.HostConfig.Memory}}" apisix-etcd apisix-kapi hindsight-cp'
+# beklenen: /apisix-etcd 268435456 · /apisix-kapi 536870912 · /hindsight-cp 536870912
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo docker stats --no-stream --format "{{.Name}} {{.MemUsage}}" apisix-etcd apisix-kapi hindsight-cp'
+# tavan sütunu 256MiB / 512MiB / 512MiB — "23.41GiB" GÖRÜNMEMELİ
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'curl -s 127.0.0.1:2379/health; curl -s -o /dev/null -w " kapi=%{http_code}\n" 127.0.0.1:9080/healthz'
+# {"health":"true"…} kapi=200   (502: kapı açık ama pano kapalı · 000: kapı açılmadı)
+```
+
+Son satırın kapı yarısı ÖLÇÜLMEDİ: `/healthz` isteği `pano-ingress` rotasının `/*` eşleşmesiyle panoya gider (depodaki
+`routes.yaml` okuması). Farklı bir kod dönerse hüküm ilk iki satırdır. `inspect` `0` gösterirse düzeltme konteynere
+inmemiştir: birim kopyalandı ama restart yapılmadı ya da KOŞAN komut eski — `systemctl cat apisix` birleşik hâli
+(drop-in dahil) gösterir.
+
+**Tavan aşılırsa** çekirdek konteyneri öldürür (`docker events`: `oom` → `die 137`) ve `Restart=on-failure` birimi
+yeniden açar. Tavan ÖLÇEREK yükseltilir (Grafana emsali: memcg dosya önbelleğini de sayar); değer birimde, apisix
+drop-in'inde, bu cetvelde ve v587'de birlikte değişir. **Geri alma:** `--memory` satırı kaldırılır → `site.yml` →
+aynı restart.
