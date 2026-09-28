@@ -26,7 +26,11 @@ BU süreçte, bekleme döngüsünün `_reflect_lock`u altında koşar — iki ya
 öğrenme durumunun (hermes_status.json) tek yazanı bu süreçtir.
 
 DURDURMA: systemd SIGTERM yollar → `_isaret` kancası `hermes_runtime.stop()` çağırır → döngü
-bayrağını görür ve turunu bitirip çıkar. `TimeoutStopSec` dolmadan inemezse systemd SIGKILL atar;
+bayrağını görür ve turunu bitirip çıkar. Isınmanın uzun hesabı (incumbent ön-hesabı + koordinat araması)
+bayrağı KONTROL NOKTALARINDA okur ve kısmi ilerlemeyi diske yazıp iner (TSK-246; ölçüm v586: ≈ bir
+`reflect.DURDURMA_KONTROL_SN`). Kapsanmayan: hermes ipliğinin kendisinde koşan TEK bir walk-forward ve
+canlı/arka plan yansıma araması (`hermes.reflect_once`) — onlar turun bitişini bekler.
+`TimeoutStopSec` dolmadan inemezse systemd SIGKILL atar;
 o hâlde bile yarım kalan yansıma `_ProcessLock`u bırakır (flock süreç ölümünde çekirdek tarafından
 serbest bırakılır) ve `SEARCH_PROGRESS` diskte `running=True` DONAR — bu bilinçli: `sprint`in
 bayatlık yasası (`ARAMA_BAYAT_SAAT`) donmuş bayrağı zaten yakalar ve temizler.
@@ -41,10 +45,17 @@ from . import hermes_runtime, obs
 
 def _isaret(imza, _cerceve) -> None:
     """SIGTERM/SIGINT kancası: döngüye dur bayrağını koyar. Süreci BURADA öldürmez — koşan bir
-    yansımanın yarıda kesilmesi bir öğrenme turunu çöpe atar; döngü turunu bitirip kendisi iner."""
-    obs.log("learn_run_durdurma_istegi", imza=int(imza),
-             detail="dur bayrağı kondu — koşan yansıma turunu bitirip inecek")
+    yansımanın yarıda kesilmesi bir öğrenme turunu çöpe atar; döngü turunu bitirip kendisi iner.
+
+    BAYRAK ÖNCE, OLAY SONRA (TSK-246): `KillMode=control-group` SIGTERM'i önce ana sürece, hemen ardından
+    havuz işçilerine yollar (systemd'nin öldürme sırası — kaynak okuması, A1'de ÖLÇÜLMEDİ); işçiler ölünce havuz kırılır ve hermes ipliği sıralı yola girmeden ÖNCE dur
+    bayrağını okur (`reflect.prefill_incumbents`). Olay yazımı (disk G/Ç) bayraktan önce gelseydi o
+    pencerede havuz kırılması bayraktan ÖNCE görülebilir, iplik bayrak kurulmadan tam bir walk-forward'a
+    girerdi (2026-09-28 durdurmasında olay ile havuz arızası AYNI saniyedeydi). Çivi: v586."""
     hermes_runtime.stop()
+    obs.log("learn_run_durdurma_istegi", imza=int(imza),
+             detail="dur bayrağı kondu — koşan yansıma turunu bitirip inecek; uzun hesap (ısınma ön-hesabı "
+                    "ve araması) bayrağı kontrol noktalarında okuyup iner")
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -57,12 +57,26 @@ EnvironmentFile=-/opt/meridian/.dash.env
 
 ExecStart=/opt/meridian/.venv/bin/python -m meridian.learn_run
 
-# DURDURMA: SIGTERM → `learn_run._isaret` → `hermes_runtime.stop()` → döngü turunu bitirip iner.
-# Koşan bir yansıma DAKİKALAR sürebilir (ölçülen arama süreleri 1s55dk-3s14dk), ama `stop()` yalnız
-# bayrak koyar ve döngü bir sonraki kontrol noktasında görür — bu yüzden 120 sn yeterli tampon.
-# Süre dolarsa SIGKILL: yarım yansıma `.reflect.lock`u bırakır (flock süreç ölümünde çekirdekçe
-# serbest bırakılır) ve `search_progress.json` `running=True` DONAR — bilinçli, çünkü sprint'in
-# bayatlık yasası (`ARAMA_BAYAT_SAAT`) donmuş bayrağı zaten yakalayıp temizler.
+# DURDURMA: SIGTERM → `learn_run._isaret` → `hermes_runtime.stop()` (bayrak, olay yazımından ÖNCE) →
+# döngü turunu bitirip iner.
+# ESKİ İDDİA ÖLÇÜMLE ÇÜRÜDÜ (A1 journal, 2026-09-28, dağıtım #80): burada "stop() yalnız bayrak koyar …
+# 120 sn yeterli tampon" yazıyordu. 10:15:27Z dur bayrağı + AYNI saniyede `incumbent_prefill_pool_failed`
+# (BrokenProcessPool — `KillMode=control-group` SIGTERM'i havuz işçilerine de yollar) → ön-hesap eksikleri
+# SIRALI yola aldı (her biri TAM walk-forward — `reflect` ölçüm tablosu: 2279-3185 sn) ve bayrağa bakmadı → 10:17:27Z `stop-sigterm timed
+# out` → SIGKILL. Bayrak ancak onu OKUYAN bir kontrol noktası varsa işe yarar.
+# BUGÜN (TSK-246): ısınmanın uzun hesabı işbirlikçi iptal taşır — havuz bekleyişi en çok
+# `reflect.DURDURMA_KONTROL_SN`de bir bayrağı okur, sıralı ön-hesap ve sonda döngüsü her adımdan önce
+# okur; durunca havuz öldürülür, biten iş diske iner, beyanlı olay düşer. ÖLÇÜLDÜ (v586, sentetik):
+# asılı havuz ortasındaki SIGTERM'den ısınma inişine 5,01 sn (2026-09-28) — 120 sn tavanının çok altında.
+# KAPSANMAYAN (beyan): hermes ipliğinin KENDİSİNDE koşan tek bir walk-forward (bölünemez) ve canlı/arka
+# plan yansıma araması (`hermes.reflect_once` yolu — yüklem henüz oraya geçirilmiyor). O fazlarda 120 sn
+# yine dolabilir: SIGKILL'de yarım yansıma `.reflect.lock`u bırakır (flock süreç ölümünde çekirdekçe
+# serbest bırakılır) ve `search_progress.json` `running=True` DONAR — sprint'in bayatlık yasası
+# (`ARAMA_BAYAT_SAAT`) donmuş bayrağı yakalayıp temizler.
+# `KillMode=control-group` BİLEREK KORUNDU (`mixed` REDDEDİLDİ): `mixed` havuz işçilerini SIGTERM'den
+# ayırırdı ama bu süreç `hermes` CLI alt süreçleri de koşar (`subprocess.run(timeout=…)`); `mixed`te
+# onlar SIGTERM almaz ve hermes ipliği bir LLM çağrısının zaman aşımını beklerdi — sınıf başka yere
+# taşınırdı. Havuz kırılmasının sıralı yola sızması artık bayrakla kapalı (`learn_run._isaret` şerhi).
 KillMode=control-group
 TimeoutStopSec=120
 
