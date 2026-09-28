@@ -6,7 +6,8 @@ veri üzerinde DAKİKALARDA ve dürüstçe kapatır: `start()` canlı state'i `s
 kopyalar (`_kur_kum_havuzu`; SKIP_COPY + SKIP_COPY_PATTERNS barları/sırları ve SIR YEDEKLERİNİ/pano
 kimlik kaydını/HALT'ı/SQLite artefaktını, TSK-209b'den beri atomik yazımın GEÇİCİ ARTIKLARINI da
 dışarıda tutar — karar tek yerde, `_atlanir`;
-bars + skills symlink'lenir), defterleri düz kitaba sıfırlar ve `sprint_run` çocuğunu KENDİ
+bars + skills symlink'lenir), canlıda DB'den okunan öğrenme defterlerini kanonik dosya olarak
+indirir (`store.kum_havuzuna_maddelestir`, Kademe C D4), defterleri düz kitaba sıfırlar ve `sprint_run` çocuğunu KENDİ
 MERIDIAN_ROOT'uyla ayrı süreçte doğurur — canlı defter, karne ve koşan zamanlayıcıya dokunulmaz.
 Koşum yolu önce ayrı systemd birimidir (`meridian-sprint@.service`; worker restart'ı sprinti
 öldürmesin diye), kullanılamazsa ADLI sebeple `Popen`a düşülür (`kosum_yolu` damgası).
@@ -27,7 +28,8 @@ ASLA karışmaz; üretim kapısı bypass edilmez. `kum_havuzunda()` süreç-dı�
 OKUR: canlı `state/` (kopya kaynağı), `hermes.SEARCH_PROGRESS` (meşguliyet), `hypotheses.jsonl`
 (taze-aday tabanı), kum havuzlarındaki `sprint_runs.jsonl`. YAZAR: canlı `sprint_status.json`
 (etiketli okuma-modeli, öğrenme defteri DEĞİL), kum havuzu ağacı (kurulum/budama) ve canlı olay
-defteri (`obs`; kurulumun desenle atladığı girdileri ADIYLA bildiren bilgi satırı dâhil)."""
+defteri (`obs`; kurulumun desenle atladığı girdileri ADIYLA bildiren bilgi satırı ve kum havuzuna
+indirilen öğrenme defterlerini sayısıyla bildiren `sprint_kum_havuzu_maddelestirildi` satırı dâhil)."""
 from __future__ import annotations
 import datetime as dt
 import json
@@ -63,7 +65,7 @@ STATUS_FILE = "sprint_status.json"    # written LIVE — a labeled read-model, N
 # yazar (meridian-barsarchive birimi); SPRINT ÇOCUĞUNUN YOLUNDA OKUYUCULARI YOK, kopya yalnız disk
 # yakıyordu. Dizin yokluğu taze-kurulum hâline eşdeğerdir: okuyucular yokluğu sahte bir "yolunda" ile
 # değil BEYANLA karşılıyor (`barsarchive.render_summary` — "arşivi YOK ... henüz hiç tur koşmadı").
-# DEPOLAMA ARTEFAKTI DA ATLANIR — SINIFI BOYUT DEĞİL İZOLASYON (ölçüldü). Altı defter, `state/meridian.db` VARSA SQLite'tan okunur (`store.db_backed` →
+# DEPOLAMA ARTEFAKTI DA ATLANIR — SINIFI BOYUT DEĞİL İZOLASYON (ölçüldü). Kayıttaki defterler (`storage.ENTITIES`), `state/meridian.db` VARSA SQLite'tan okunur (`store.db_backed` →
 # `storage.active`; yol her çağrıda `config.STATE`ten türer). DB kum havuzuna kopyalanınca
 # `_reset_sandbox_state`in HAM DOSYA yazımları çocuğun store okumalarına GÖRÜNMEZ olur: çocuk
 # canlının `portfolio.json`unu DB kopyasından okur, `last_date="2026-07-31"` görür ve
@@ -482,7 +484,20 @@ def _kur_kum_havuzu(sid: str) -> Path:
             sklink.symlink_to(config.SKILLS.resolve(), target_is_directory=True)
     except (OSError, NotImplementedError):  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
         pass
+    # KADEME C D4 (TSK-020, 2026-09-28) — SIFIRLAMADAN ÖNCE: kum havuzu DB'siz doğar (izolasyon, SKIP_COPY),
+    # ama göçten sonra canlıda `validation_ledger.jsonl` `.migrated` adını alır ve kopyada kanonik defter
+    # KALMAZ → kapının DSR deneme örneklemi boş başlar, PBO tabanı sıfırlanır (R3). Canlı DB'nin o anki
+    # içeriği kanonik adla iner; `_reset_sandbox_state` sonra `hypotheses.jsonl`i bugünkü gibi ezer.
+    madde = store.kum_havuzuna_maddelestir(sbstate)
     _reset_sandbox_state(sbstate)
+    indirilen = [{"varlik": m["varlik"], "n": m["n"]} for m in madde if m["durum"] == "maddelestirildi"]
+    if indirilen:
+        # OKUYUCUSU (YASA 6): olay defteri → pano + `obs.recent` (`sprint_kum_havuzu_atlandi` ile AYNI
+        # teşhis yüzeyi). Boşken YAZILMAZ: göç öncesi (defter canlıda dosyadan) indirilen bir şey yoktur.
+        from . import obs
+        obs.log("sprint_kum_havuzu_maddelestirildi", sid=sid, varliklar=indirilen,
+                detail="canlı DB'deki öğrenme defterleri kum havuzuna kanonik dosya olarak indi "
+                       "(Kademe C D4); hypotheses sıfırlamayla ezildi")
     if yalniz_desenle_atlanan or alt_dizin_atlanan:
         # YALNIZ AD — içerik/değer/hash YAZILMAZ: olay defteri panoya ve `ops/` sorgularına açıktır,
         # bir sır dosyasının içeriği oraya sızmamalıdır. Boşken satır YAZILMAZ: atlanacak şey yoksa

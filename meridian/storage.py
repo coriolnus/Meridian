@@ -1,15 +1,17 @@
-"""storage.py — altı defter varlığının SQLite arka ucu: `state/meridian.db` varlık kaydı + WAL + tek transaction.
+"""storage.py — defter varlıklarının (`ENTITIES` kaydı) SQLite arka ucu: `state/meridian.db` + WAL + tek transaction.
 
-NE YAPAR. `trades.jsonl`, `trade_plans.jsonl`, `scoreboard.json`, `portfolio.json`,
-`equity_curve.json`, `shadow_books.json` varlıklarını (ENTITIES kaydı: kanonik ad → tablo + tür
-rows/doc/series) SQLite'ta tutar. Dosya çağında iki sınıf açıktı: süreçler-arası oku-değiştir-yaz
+NE YAPAR. `ENTITIES` kaydındaki varlıkları (kanonik ad → tablo + tür rows/doc/series; sayı ve adlar
+YALNIZ kayıtta yazılıdır — Kademe A+B'nin defter çekirdeği + Kademe C'nin iki öğrenme defteri)
+SQLite'ta tutar. Dosya çağında iki sınıf açıktı: süreçler-arası oku-değiştir-yaz
 yarışı (RLock yalnız aynı süreçte anlam taşır; canlı worker + pano API + sprint aynı dosyaya
 yazabiliyordu) ve atomik olmayan JSONL ekleme (çökme yarım satır bırakır). SQLite ikisini
 YAPISAL olarak kapatır: kazanç ŞEMA değil, atomiklik + süreçler-arası kilittir (WAL +
 busy_timeout). Uygulama kodu bu modülü DOĞRUDAN çağırmaz; `store.py` yönlendirir ve çağıranlar
 aynı dict/list yapılarını alır — depolama migrasyonu, davranış migrasyonu değil.
 
-KİLİT GİRİŞLER. `active(ad)` anahtarlama kapısı: DB dosyası/şeması yoksa her şey dosyadan sürer.
+KİLİT GİRİŞLER. `active(ad)` anahtarlama kapısı: DB dosyası/şeması yoksa her şey dosyadan sürer;
+şemaya SONRADAN giren bir varlık (`DAMGA_KAPILI`) ayrıca kendi `migrated_at` damgasını ister — damga
+dolana dek dosyadan okunur (Kademe C R1: DB'nin var olduğu bir makinede yeni varlığın BOŞ okunma penceresi).
 `connect()` (yol başına tek bağlantı; `create=False` SİGORTADIR — sqlite3.connect olmayan yolu
 sessizce yaratır ve boş doğan bir DB defterleri boş okuturdu; yaratma yetkisi yalnız
 `ensure_schema`/dbmigrate yolunda). `read_entity`/`write_entity` ortak yüzeyi; `read_rows`/
@@ -22,7 +24,7 @@ DEĞİŞMEZLER. Tip koruma (parite sözleşmesi): tipli kolonlar sorgulanabilirl
 kaynağı değil — tipi uymayan alan (−0.0 dahil: REAL kolon işaret bitini kaybeder) ayrıca
 `extra_json`a yazılır ve okumada extra KAZANIR; SQLite tip afinitesi veriyi sessizce değiştiremez.
 `MERIDIAN_DB=off` TEK BAŞINA GERİ DÖNÜŞ DEĞİLDİR (eski "acil geri dönüş anahtarı" beyanı
-YANLIŞLANDI): kaynaklar `.migrated` adında dururken anahtarı çeken operatör altı defteri BOŞ okur
+YANLIŞLANDI): kaynaklar `.migrated` adında dururken anahtarı çeken operatör o defterleri BOŞ okur
 ve ilk yazımda ayrışık ikinci bir kitap doğar — geri dönüş kolu `dbmigrate --geri-al`dır; yarım
 hâl varsayılmaz, ÖLÇÜLÜR ve süreç başına bir kez beyan edilir (`db_off_kaynaklar_arsivde`).
 SİMETRİĞİ (P2): DB dosyası hiç YOKKEN kanonik defter dosyaları duruyorsa süreç başına bir kez
@@ -44,7 +46,10 @@ from typing import Any
 from . import config
 
 DB_NAME = "meridian.db"
-SCHEMA_VERSION = 1
+# 1: Kademe A+B defter çekirdeği (2026-07-31). 2: Kademe C öğrenme defterleri (TSK-020, 2026-09-28) —
+# yeni tablolar `CREATE IF NOT EXISTS` ile doğar, eski tablolara dokunulmaz; sürüm satırı `apply_schema`
+# içinde (yani çağıranın transaction'ında) eklenir, düşen migrasyon onu da geri alır.
+SCHEMA_VERSION = 2
 # Taşınmış kaynak dosyanın son eki. TEK KAYNAK BURADADIR: `dbmigrate` bunu içe aktarır. İki yerde
 # iki sabit olsaydı, biri değiştiğinde `MERIDIAN_DB=off` uyarısı arşivleri sessizce göremez olurdu.
 MIGRATED_SUFFIX = ".migrated"
@@ -60,6 +65,9 @@ SCOREBOARD = "scoreboard.json"
 PORTFOLIO = "portfolio.json"
 EQUITY = "equity_curve.json"
 SHADOW_BOOKS = "shadow_books.json"
+# Kademe C (TSK-020, 2026-09-28): öğrenme katmanının iki defteri.
+HYPOTHESES = "hypotheses.jsonl"
+VALIDATION = "validation_ledger.jsonl"
 
 # Tipli kolonlar. Tipler CANLI defterden ÖLÇÜLDÜ (state/trades.jsonl 95 satır ×
 # state/trade_plans.jsonl 390 satır — her alanın tipi tek değerliydi), uydurulmadı. Ölçüm dışı
@@ -96,16 +104,67 @@ _COLS: dict[str, tuple[tuple[str, str], ...]] = {
         ("dormant_setup", "BOOL"), ("exploration", "BOOL"), ("p_win_shadow", "REAL"),
     ),
     EQUITY: (("ts", "TEXT"), ("equity", "REAL")),
+    # KADEME C KOLONLARI — A1 canlı defterinden ÖLÇÜLDÜ (Rol-1, 2026-09-28: hypotheses 60 satır/25 anahtar,
+    # validation_ledger 398 satır/32 anahtar, 0 bozuk). Kural: HER satırda bulunan ve tek tipli (None'a
+    # izinli) skaler alan tipli kolon olur. Kolona ZORLANMAYANLAR `extra_json`da yaşar:
+    #   * tipi KARIŞIK — `old`/`new` (float + int + None): REAL kolon int'i float'a çevirir, parite düşerdi;
+    #   * İÇ İÇE — reject_reasons/backtest/realized_detail/vs_benchmark_at_ship · degisen_params/oos_ozet/
+    #     oos_components (sqlite3 liste/sözlük bağlayamaz; `seri` istisnası aşağıda);
+    #   * SEYREK / SONRADAN DOĞAN — hyp: status_ts, note, overfit_suspect, realized_delta, calibration_hit,
+    #     outcome_ts; val: yasa_surumu, oos_para, incumbent_para, dd_ok, candidate_dd, incumbent_dd,
+    #     pencere_id, dd_mtm_* ve `ret_seri`/`ret_n` (TSK-077: kod yazıyor, canlıda 2026-09-28'de HENÜZ YOK —
+    #     ölçülmemiş bir alanın tipini kolona dondurmak uydurma olurdu; extra_json hiçbir şey kaybettirmez).
+    # None'a izinli kolonlar (hyp `version_to` None58/int2; val `eval_regime`, `oos_score`,
+    # `incumbent_oos`, `sharpe_gozlem`, `dsr`, `varyans_kaynagi`) güvenlidir: `_matches(None, …)` False
+    # döner, anahtar `extra_json`a `null` olarak da yazılır ve okumada extra KAZANIR — anahtarın varlığı korunur.
+    # TEK İSTİSNA `seri` ("JSON" kolon): iç içe ama SÖZLEŞMEDE ZORUNLU (`ledgers.CONTRACTS` — PBO'nun ortak
+    # takvim ızgarası anahtarı). `watchdog.EQUIVALENT_TRUTHS["defter_sema_kapsami"]` her zorunlu alanın
+    # tipli bir kolonu olmasını ister; extra_json'a gömülse dedektör AYRIK derdi. JSON kolonu değeri
+    # `json.dumps` metni olarak taşır (TEXT afinitesi; `json_extract` ile sorgulanır) — JSON gidiş-dönüşü
+    # int/float/-0.0/None ayrımını korur, parite digesti değişmez.
+    HYPOTHESES: (
+        ("id", "TEXT"), ("ts", "TEXT"), ("variable", "TEXT"), ("rationale", "TEXT"),
+        ("predicted_direction", "TEXT"), ("predicted_delta", "REAL"), ("confidence", "REAL"),
+        ("regime", "TEXT"), ("source", "TEXT"), ("version_from", "INTEGER"),
+        ("version_to", "INTEGER"), ("status", "TEXT"), ("market_regime", "TEXT"),
+    ),
+    VALIDATION: (
+        ("ts", "TEXT"), ("fingerprint", "TEXT"), ("etiket", "TEXT"), ("eval_regime", "TEXT"),
+        ("oos_score", "REAL"), ("incumbent_oos", "REAL"), ("passes", "BOOL"),
+        ("gate_law", "TEXT"), ("fold_wins", "TEXT"), ("tail_ok", "BOOL"),
+        ("k_probes", "INTEGER"), ("erosion_queries", "INTEGER"), ("n_trials", "INTEGER"),
+        ("sharpe_gozlem", "REAL"), ("dsr", "REAL"), ("varyans_kaynagi", "TEXT"), ("beyan", "TEXT"),
+        ("seri", "JSON"),
+    ),
 }
+# Mantıksal tip → SQLite kolon tipi. BOOL ve JSON SQLite'ta yoktur: BOOL 0/1 INTEGER, JSON `json.dumps`
+# metni (TEXT). Okumada `_cols_to_row` mantıksal tipi geri kurar.
+_SQL_TIP = {"BOOL": "INTEGER", "JSON": "TEXT"}
 
 _TABLE = {TRADES: "trades", PLANS: "trade_plans", SCOREBOARD: "scoreboard",
-          PORTFOLIO: "portfolio", EQUITY: "equity_curve", SHADOW_BOOKS: "shadow_books"}
+          PORTFOLIO: "portfolio", EQUITY: "equity_curve", SHADOW_BOOKS: "shadow_books",
+          HYPOTHESES: "hypotheses", VALIDATION: "validation_ledger"}
 _KIND = {TRADES: "rows", PLANS: "rows", EQUITY: "series",
-         SCOREBOARD: "doc", PORTFOLIO: "doc", SHADOW_BOOKS: "doc"}
+         SCOREBOARD: "doc", PORTFOLIO: "doc", SHADOW_BOOKS: "doc",
+         HYPOTHESES: "rows", VALIDATION: "rows"}
 
-ENTITIES: tuple[str, ...] = (TRADES, PLANS, SCOREBOARD, PORTFOLIO, EQUITY, SHADOW_BOOKS)
+ENTITIES: tuple[str, ...] = (TRADES, PLANS, SCOREBOARD, PORTFOLIO, EQUITY, SHADOW_BOOKS,
+                             HYPOTHESES, VALIDATION)
 ROW_ENTITIES = tuple(n for n in ENTITIES if _KIND[n] == "rows")
 DOC_ENTITIES = tuple(n for n in ENTITIES if _KIND[n] == "doc")
+
+# VARLIĞIN DOĞDUĞU ŞEMA SÜRÜMÜ — kayıtta olmayan 1'dir (Kademe A+B: DB ile AYNI koşuda doğdular).
+# NEDEN BİR KAPI GEREKİYOR (Kademe C R1, tasarım 2026-09-28): `active()` DB DÜZEYİNDE karar verir — DB
+# dosyası + şema varsa kayıttaki HER ad için True. Şemaya SONRADAN giren bir varlık için bu, kodun
+# dağıtıldığı an (veri henüz taşınmadan) okumaların DB'ye gitmesi demektir: tablo yoksa istisna, tablo
+# `CREATE IF NOT EXISTS` ile doğmuşsa BOŞ defter — öğrenme geçmişi "yok" görünür. Kademe A+B'de bu
+# pencere YOKTU, çünkü o varlıklar DB ile aynı migrasyon koşusunda doğdu.
+# NEDEN ESKİLERE UYGULANMAZ: kapı genel olsaydı `kaynak_yok` diye taşınan (damgasız ama DB'de YAZILAN)
+# bir eski varlık dosyaya dönerdi — göçten sonra DB'ye yazılmış kayıtlar görünmez olur, ayrışık ikinci
+# kitap doğardı (`test_bayat_defter_kalintisi_v234` gocsuz çivisi bu davranışı çiviler). A1'de altısı
+# damgalı (ölçüldü 2026-09-28) ama ortam bağımsız garanti "eskiler hiç kapıya girmez"dir.
+_DOGDUGU_SURUM: dict[str, int] = {HYPOTHESES: 2, VALIDATION: 2}
+DAMGA_KAPILI: tuple[str, ...] = tuple(n for n in ENTITIES if _DOGDUGU_SURUM.get(n, 1) > 1)
 
 
 def table_of(name: str) -> str | None:
@@ -126,8 +185,14 @@ _CONNS: dict[str, sqlite3.Connection] = {}
 _GUARD = threading.RLock()
 _SCHEMA_OK: set = set()
 # `MERIDIAN_DB=off` uyarısı YOL BAŞINA BİR KEZ ölçülür (C5). `active()` her okumada çağrılır;
-# ölçümü önbelleğe almasaydık her `read_json` altı `stat()` ve potansiyel bir olay satırı üretirdi.
+# ölçümü önbelleğe almasaydık her `read_json` varlık başına bir `stat()` ve potansiyel bir olay satırı üretirdi.
 _OFF_OLCULDU: set = set()
+# D2 DAMGA ÖNBELLEĞİ — (db yolu, varlık) çiftleri, YALNIZ damga DOLUYKEN ve COMMIT edilmiş okumada
+# girer. Damgasız sonuç ÖNBELLEĞE ALINMAZ: göç (`dbmigrate --uygula`) BAŞKA bir süreçte COMMIT edilir ve
+# bu süreç bir sonraki okumada onu görmelidir (bedeli: damgasız varlığın her okuması tek `entity_meta`
+# sorgusu — v579 bedel çivisi ölçer). Damga geri ALINMAZ (yalnız `--geri-al` DB'yi kenara alır → dosya
+# yok dalı önbelleği düşürür; `close_connections` da temizler).
+_DAMGA_OK: set = set()
 # `yerel_donmus_defter` damgası da YOL BAŞINA BİR KEZ (P2 — `db_off`un simetriği, aynı gerekçe).
 _YEREL_OLCULDU: set = set()
 _SUREC_BASI = time.time()   # fotoğraf şartının çapası: bu süreç doğduğunda duvar saati
@@ -203,6 +268,7 @@ def close_connections() -> None:
                 pass
         _CONNS.clear()
         _SCHEMA_OK.clear()
+        _DAMGA_OK.clear()               # aynı gerekçe: disk gerçeği değişti, damga ölçümü taşınmaz
         # `_OFF_OLCULDU` DA TEMİZLENİR: bu çağrı disk gerçeğinin DEĞİŞTİĞİ anlarda yapılır
         # (`--geri-al`, karantina, test sökümü) — ölçümü taşımak, önbelleği diskteki gerçeğin
         # ötesinde tutmak olurdu (`_SCHEMA_OK` ile aynı gerekçe).
@@ -211,8 +277,9 @@ def close_connections() -> None:
 
 # ---- ŞEMA --------------------------------------------------------------------------------------
 def _ddl() -> list[str]:
-    """Şemanın tüm DDL ifadelerini üretir: `schema_version`, `entity_meta`, altı varlık tablosu
-    ve indeksler. Hepsi `IF NOT EXISTS` — idempotenttir, var olan veriye dokunmaz."""
+    """Şemanın tüm DDL ifadelerini üretir: `schema_version`, `entity_meta`, `ENTITIES` kaydındaki
+    her varlığın tablosu ve indeksler. Hepsi `IF NOT EXISTS` — idempotenttir, var olan veriye dokunmaz
+    (v1 DB'de yalnız Kademe C tabloları doğar)."""
     out = ["CREATE TABLE IF NOT EXISTS schema_version ("
            "  version INTEGER NOT NULL,"
            "  applied_at REAL NOT NULL)",
@@ -238,7 +305,7 @@ def _ddl() -> list[str]:
                        f"  doc_json TEXT NOT NULL,"
                        f"  updated_at REAL NOT NULL)")
             continue
-        cols = ",".join(f'  "{c}" {t if t != "BOOL" else "INTEGER"}' for c, t in _COLS[name])
+        cols = ",".join(f'  "{c}" {_SQL_TIP.get(t, t)}' for c, t in _COLS[name])
         out.append(f"CREATE TABLE IF NOT EXISTS {tbl} ("
                    f"  seq INTEGER PRIMARY KEY,"
                    f"{cols},"
@@ -271,7 +338,10 @@ def apply_schema(conn: sqlite3.Connection) -> None:
     for stmt in _ddl():
         conn.execute(stmt)
     row = conn.execute("SELECT MAX(version) AS v FROM schema_version").fetchone()
-    if row is None or row["v"] is None:
+    # SÜRÜM YÜKSELTMESİ DE BURADA (Kademe C): eskiden yalnız "hiç sürüm yok" dalı vardı — v1 bir DB'ye
+    # yeni tablolar eklenir ama sürüm 1'de kalırdı ve `--durum` şemanın gerçeğini söylemezdi. Satır
+    # EKLENİR (güncellenmez): `schema_version` bir geçmiştir, hangi sürümün NE ZAMAN geldiğini taşır.
+    if row is None or row["v"] is None or int(row["v"]) < SCHEMA_VERSION:
         conn.execute("INSERT INTO schema_version(version, applied_at) VALUES (?, ?)",
                      (SCHEMA_VERSION, time.time()))
     for name in ENTITIES:
@@ -359,7 +429,7 @@ def _yerel_defter_beyani(p: Path) -> None:
 
     `db_off_kaynaklar_arsivde`nin SİMETRİĞİ (denetim P2; envanter 2026-08-22 §4.2-#4): o beyan
     "DB dünyasında defterler arşivde, boş okunuyor" yarım hâlini anlatır; bu damga TERSİNİ —
-    süreç `meridian.db` OLMAYAN bir makinede altı defteri DOSYADAN kanonik okuyor. Süreç-içi
+    süreç `meridian.db` OLMAYAN bir makinede kayıttaki defterleri DOSYADAN kanonik okuyor. Süreç-içi
     hiçbir dedektör bunu ayrışma olarak GÖREMEZ: kendi gördüğü tek kitap zaten bu dosyalar
     ("göç hiç olmamış" dünyasından ayırt edilemez). Ölçülen vaka (08-22): yerel `trades.jsonl`
     95 satır / `portfolio.last_date` 2026-07-28'de DONUK, canlı DB başka makinede 97/409 —
@@ -407,7 +477,13 @@ def _yerel_defter_beyani(p: Path) -> None:
 
 
 def active(name: str | None = None) -> bool:
-    """Bu varlık ŞU AN DB'den mi okunuyor? (DB dosyası yoksa: HAYIR — davranış birebir bugünkü.)"""
+    """Bu varlık ŞU AN DB'den mi okunuyor? (DB dosyası yoksa: HAYIR — davranış birebir bugünkü.)
+
+    İKİ DÜZEY. `active()` (adsız) DB-DÜZEYİ sorudur: DB dosyası + şema var ve anahtar açık mı. Ad
+    verilirse ek olarak: kayıtta mı, ve `DAMGA_KAPILI` bir varlıksa (şemaya sonradan girdi) DB'de
+    `migrated_at` damgası DOLU mu (D2, Kademe C R1). Damga dolana dek o varlık DOSYADAN okunur; göç
+    COMMIT'i onu tek hamlede DB'ye geçirir — arada boş okuma anı yoktur. Eski varlıklar kapıdan muaftır
+    (gerekçe `_DOGDUGU_SURUM` üstünde)."""
     if name is not None and name not in _TABLE:
         return False
     if disabled_by_env():
@@ -417,16 +493,59 @@ def active(name: str | None = None) -> bool:
     key = str(p)
     if not p.exists():
         _SCHEMA_OK.discard(key)
+        for n in DAMGA_KAPILI:
+            _DAMGA_OK.discard((key, n))
         _yerel_defter_beyani(p)     # P2 damgası: DB'siz dünyada dosyalar kanonik — donmuş fotoğraf olabilir
         return False
-    if key in _SCHEMA_OK:
+    if key not in _SCHEMA_OK:
+        if schema_version(connect(p)) is None:
+            return False
+        if len(_SCHEMA_OK) > 64:    # sandbox'lar süreç ömrü boyunca birikmesin
+            _SCHEMA_OK.clear()
+        _SCHEMA_OK.add(key)
+    if name is None or name not in DAMGA_KAPILI:
         return True
-    if schema_version(connect(p)) is None:
+    return _damgali(p, name)
+
+
+def _damgali(p: Path, name: str) -> bool:
+    """D2 kapısının ölçümü: varlığın `entity_meta.migrated_at` damgası DOLU mu?
+
+    SORGU İSTİSNASI YUTULMAZ: `entity_meta` okunamıyorsa DB bozuktur ve eski varlıkların okuması da
+    düşecektir; burada False dönüp dosyaya düşmek, damgalı bir varlığı `.migrated` arşivinin yanındaki
+    BOŞ kanonik yoldan okutmak — yani R1'in kendisini — üretirdi. Satır YOKSA (v1 DB: Kademe C tabloları
+    ve damga satırları henüz doğmadı) cevap dürüstçe "damgasız"dır.
+
+    ÖNBELLEK YALNIZ COMMIT EDİLMİŞ DAMGAYA: bağlantı süreç-içi paylaşımlıdır ve açık bir transaction
+    (dbmigrate'in tek transaction'ı) kendi COMMIT edilmemiş damgasını görür. O an önbelleğe yazılan bir
+    damga ROLLBACK'ten sonra SİLİNMİŞ bir gerçeği taşırdı ve süreç varlığı boş tablodan okurdu
+    (v579 çivisi). Transaction içindeyken cevap verilir ama önbelleğe yazılmaz."""
+    key = (str(p), name)
+    if key in _DAMGA_OK:
+        return True
+    c = connect(p)
+    with _GUARD:
+        rec = c.execute("SELECT migrated_at FROM entity_meta WHERE entity=?", (name,)).fetchone()
+        islemde = c.in_transaction
+    damgali = bool(rec and rec.get("migrated_at"))
+    if damgali and not islemde:
+        if len(_DAMGA_OK) > 256:    # sandbox'lar süreç ömrü boyunca birikmesin (_SCHEMA_OK deseni)
+            _DAMGA_OK.clear()
+        _DAMGA_OK.add(key)
+    return damgali
+
+
+def table_exists(name: str, conn: sqlite3.Connection | None = None) -> bool:
+    """Varlığın tablosu DB'de VAR mı? v1 bir DB'de (Kademe C göçünden önce) iki öğrenme defterinin
+    tablosu YOKTUR — onları okumaya kalkan rapor (`dbmigrate.db_state`) istisnayla çökerdi; soru önce sorulur."""
+    tbl = _TABLE.get(name)
+    if tbl is None:
         return False
-    if len(_SCHEMA_OK) > 64:        # sandbox'lar süreç ömrü boyunca birikmesin
-        _SCHEMA_OK.clear()
-    _SCHEMA_OK.add(key)
-    return True
+    c = conn or connect()
+    with _GUARD:
+        rec = c.execute("SELECT 1 AS x FROM sqlite_master WHERE type='table' AND name=?",
+                        (tbl,)).fetchone()
+    return rec is not None
 
 
 # ---- SATIR ↔ KOLON ÇEVİRİSİ --------------------------------------------------------------------
@@ -456,13 +575,16 @@ def _isaretli_sifir(val: Any) -> bool:
 
 def _matches(val: Any, typ: str) -> bool:
     """Değer kolonun tipine SADAKATLE sığıyor mu? `bool`/`int` ayrımı korunur ve `-0.0` REAL'e
-    uymuyor sayılır (işaret biti kolonda kaybolur) — uymayan alan `extra_json`a düşürülür."""
+    uymuyor sayılır (işaret biti kolonda kaybolur) — uymayan alan `extra_json`a düşürülür. JSON
+    kolonu yalnız liste/sözlük taşır (skaler/None → extra_json)."""
     if typ == "BOOL":
         return isinstance(val, bool)
     if typ == "INTEGER":
         return isinstance(val, int) and not isinstance(val, bool)
     if typ == "REAL":
         return isinstance(val, float) and not _isaretli_sifir(val)
+    if typ == "JSON":
+        return isinstance(val, (list, dict))
     return isinstance(val, str)
 
 
@@ -485,11 +607,14 @@ def _row_to_cols(name: str, row: dict) -> tuple[list, str | None]:
             continue
         v = row[col]
         if _matches(v, typ):
-            vals.append(int(v) if typ == "BOOL" else v)
+            vals.append(int(v) if typ == "BOOL" else
+                        json.dumps(v, ensure_ascii=False) if typ == "JSON" else v)
         else:
             # Tip uyuşmuyor: kolona (sorgulanabilirlik için) skalerse yine yaz, DOĞRULUĞU
             # extra_json taşısın. Skaler değilse kolon NULL kalır — sqlite3 liste/sözlük kabul etmez.
-            vals.append(v if _scalar(v) and not isinstance(v, bool) else None)
+            # JSON kolonu uyuşmayan değerde HEP NULL: kolon yalnız `json.dumps` metni taşısın ki okuma
+            # onu belirsizliksiz geri kurabilsin (ham bir dizge JSON'a benzeyip yanlış çözülebilirdi).
+            vals.append(v if typ != "JSON" and _scalar(v) and not isinstance(v, bool) else None)
             extra[col] = v
     return vals, (json.dumps(extra, ensure_ascii=False) if extra else None)
 
@@ -502,6 +627,12 @@ def _cols_to_row(name: str, rec: dict) -> dict:
     for col, typ in spec:
         v = rec.get(col)
         if v is None:
+            continue
+        if typ == "JSON":
+            try:
+                out[col] = json.loads(v)
+            except (TypeError, json.JSONDecodeError):  # sessiz-yutma: SESSİZ DEĞİL — JSON kolonunu yalnız `_row_to_cols` doldurur (`json.dumps` metni); çözülemeyen değer dış müdahaledir, alan düşer ve `dbmigrate` parite digesti bunu koşuda ölçüp migrasyonu düşürür (bozuk extra_json ile aynı sınıf)
+                pass
             continue
         out[col] = bool(v) if typ == "BOOL" else v
     raw = rec.get("extra_json")
@@ -544,18 +675,52 @@ def _touch(conn, name: str, *, n: int, present: bool = True, env: dict | None = 
                  (1 if present else 0, time.time(), int(n), env_json, name))
 
 
+def _select_rows(c: sqlite3.Connection, name: str, limit: int | None = None) -> list[dict]:
+    """Satırları `seq` sırasıyla seçer ve defter sözlüğüne çevirir — TRANSACTION YÖNETMEZ, `_GUARD`
+    ALMAZ (çağıran alır). `read_rows` ile `update_rows` AYNI okumayı paylaşsın diye ayrıldı: iki kopya
+    sessizce ayrışan iki okuma olurdu."""
+    tbl = _TABLE[name]
+    if limit:
+        recs = c.execute(f"SELECT * FROM {tbl} ORDER BY seq DESC LIMIT ?", (int(limit),)).fetchall()
+        recs.reverse()
+    else:
+        recs = c.execute(f"SELECT * FROM {tbl} ORDER BY seq").fetchall()
+    return [_cols_to_row(name, r) for r in recs]
+
+
 def read_rows(name: str, limit: int | None = None) -> list[dict]:
     """Satır defterini ekleme sırasıyla (`seq`) okur. `limit` verilirse SON `limit` satır alınır
     ve sıra yeniden eskiden yeniye çevrilir — `store.read_jsonl(limit=…)` sözleşmesiyle aynı."""
-    tbl = _TABLE[name]
     c = connect()
     with _GUARD:
-        if limit:
-            recs = c.execute(f"SELECT * FROM {tbl} ORDER BY seq DESC LIMIT ?", (int(limit),)).fetchall()
-            recs.reverse()
-        else:
-            recs = c.execute(f"SELECT * FROM {tbl} ORDER BY seq").fetchall()
-    return [_cols_to_row(name, r) for r in recs]
+        return _select_rows(c, name, limit)
+
+
+def update_rows(name: str, fn) -> list[dict]:
+    """ATOMİK OKU-DEĞİŞTİR-YAZ (Kademe C D3): oku → `fn(satırlar)` → (True dönerse) tamamını yaz, üçü
+    TEK `BEGIN IMMEDIATE` içinde; `fn` istisna atarsa ROLLBACK.
+
+    NEDEN (R2, tasarım 2026-09-28). `store.read_jsonl` + `store.write_jsonl` çifti iki AYRI adımdı: okuma
+    transaction DIŞINDA, yazma "hepsini sil + yaz". Arada başka bir süreç (öğrenme: `memory.record`)
+    satır eklerse yeniden yazım onu SİLER. `BEGIN IMMEDIATE` yazma kilidini okumadan ÖNCE alır: diğer
+    yazarın eklemesi `busy_timeout` boyunca BEKLER ve COMMIT'ten SONRA iner — kaybolmaz.
+
+    SÖZLEŞME `store.update_jsonl` ile aynı: `fn` satır listesini YERİNDE değiştirir, True dönerse yazılır
+    (False → yazım yok, damga ilerlemez). Dönüş: `fn`in gördüğü (ve değiştirdiği) liste. `fn` içinde
+    G/Ç yapılmamalıdır — yazma kilidi `fn` boyunca tutulur (obs uyarısı gibi yan etkiler çağıranda,
+    transaction'dan SONRA)."""
+    c = connect()
+    with _GUARD:
+        c.execute("BEGIN IMMEDIATE")
+        try:
+            rows = _select_rows(c, name)
+            if fn(rows):
+                do_replace_rows(c, name, rows)
+            c.execute("COMMIT")
+        except BaseException:
+            c.execute("ROLLBACK")
+            raise
+    return rows
 
 
 def append_row(name: str, row: dict) -> None:
@@ -580,7 +745,7 @@ def append_row(name: str, row: dict) -> None:
 
 
 def do_replace_rows(c: sqlite3.Connection, name: str, rows: list[dict]) -> int:
-    """TRANSACTION YÖNETMEZ — çağıran açar/kapatır. `dbmigrate` altı varlığı TEK transaction'da
+    """TRANSACTION YÖNETMEZ — çağıran açar/kapatır. `dbmigrate` kayıttaki varlıkları TEK transaction'da
     taşıyabilsin diye ayrıldı: parite digesti tutmazsa hepsi birlikte geri alınır."""
     tbl = _TABLE[name]
     cols = [c2 for c2, _ in _COLS[name]]
@@ -789,3 +954,19 @@ def mark_migrated(name: str, *, digest: str, conn: sqlite3.Connection | None = N
     c = conn or connect()
     c.execute("UPDATE entity_meta SET migrated_at=?, source_digest=? WHERE entity=?",
               (time.time(), digest, name))
+
+
+def unmark_migrated(name: str, *, conn: sqlite3.Connection | None = None) -> None:
+    """`mark_migrated`in tersi: `migrated_at` + `source_digest` temizlenir — okuma kapısı (`active`) varlığı
+    DOSYAYA döndürür (Kademe C tur 2 F1, `dbmigrate --geri-al --varlik`). TRANSACTION YÖNETMEZ; tablo
+    satırlarına DOKUNMAZ (kanıt olarak kalır).
+
+    YALNIZ `DAMGA_KAPILI` VARLIK — aksi `ValueError`. Eski varlığın okuma kapısı YOKTUR: damgasını sökmek
+    okumayı dosyaya döndürmez, ama bir sonraki `--uygula` onu "taşınmamış" sayıp tablosunu kaynak dosyayla
+    EZER — sessiz veri kaybı yolu. Politika `dbmigrate`te de reddeder; bu satır mekanizmanın kendi sigortası."""
+    if name not in DAMGA_KAPILI:
+        raise ValueError(f"{name}: damga yalnız şemaya sonradan giren (kapılı) varlıklarda sökülebilir "
+                         f"— kapılılar: {list(DAMGA_KAPILI)}")
+    c = conn or connect()
+    c.execute("UPDATE entity_meta SET migrated_at=NULL, source_digest=NULL WHERE entity=?", (name,))
+    _DAMGA_OK.discard((str(db_path()), name))   # erken düşürmek güvenli taraftır (en kötü: bir sorgu fazla)

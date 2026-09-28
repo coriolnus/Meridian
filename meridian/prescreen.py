@@ -189,18 +189,31 @@ def _sandbox(workdir: pathlib.Path, live: pathlib.Path, log=print) -> pathlib.Pa
     çivi `tests/test_prescreen_kum_havuzu_sir_v533.py` (T1) bugün, TSK-215 yarın.
 
     `symlinks=False` KORUNUR (mevcut davranış, bu turda ölçülmedi): `bars` gibi symlink'ler içerik
-    olarak kopyalanır."""
+    olarak kopyalanır.
+
+    KADEME C D4 (TSK-020, 2026-09-28) — ÖĞRENME DEFTERLERİ. Kopya `meridian.db`yi de TAŞIR (yukarıdaki
+    `SKIP_COPY` kaçınması; ölçüldü): iki öğrenme defteri göçten sonra kum havuzunda o kopyadan okunur,
+    damga kopyada da doludur — geçmiş görünür. Maddeleştirme yardımcısı yine ÇAĞRILIR ve kararı loga
+    düşer (`kum_havuzu_db_tasiyor`): ön-eleme bir gün DB'yi kopyalamamaya karar verirse (izolasyon)
+    canlı DB içeriği kanonik adla kendiliğinden iner — sprint kum havuzunun R3 kapanışıyla AYNI yol.
+    `store` burada canlı `config.STATE`e bakar (bu fonksiyon `run()`ın `config.STATE = state`
+    atamasından ÖNCE çağrılır); `live` farklı bir kök ise yardımcı hiçbir şey okumaz, beyan eder."""
     hedef = workdir / "state"
     if hedef.exists():
         return hedef
     workdir.mkdir(parents=True, exist_ok=True)
-    from . import sprint
+    from . import sprint, store
     atlanan: list[str] = []
     shutil.copytree(live, hedef, symlinks=False,
                     ignore=sprint._alt_dizin_suzgeci(live, atlanan))
     if atlanan:
         log(f"[sandbox] kopyalanmayan (sır/geçici artık, TSK-214): {len(atlanan)} — "
             + ", ".join(sorted(atlanan)))
+    madde = store.kum_havuzuna_maddelestir(hedef, canli_state=live)
+    if madde:
+        log("[sandbox] öğrenme defterleri (Kademe C D4): "
+            + ", ".join(f"{m['varlik']}={m['durum']}" + (f"({m['n']})" if m["n"] is not None else "")
+                        for m in madde))
     return hedef
 
 

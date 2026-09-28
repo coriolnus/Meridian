@@ -361,8 +361,11 @@ def annotated_handlers(root=URETIM_KOKLERI) -> list[dict]:
 # (6) ARTEFAKT TÜKETİM GRAFİĞİ
 # ---------------------------------------------------------------------------
 
+# `update_rows` (TSK-020 Kademe C D3, 2026-09-28): yeni yazım fiili — listede olmasaydı onunla yazan bir
+# modül artefakt grafiğinde yazar olarak GÖRÜNMEZDİ (memory bugün `append_jsonl` ile de görünüyor; yarınki
+# ikinci kullanıcı görünmezdi). `ledgers._WRITE_CALLS` aynı fiili taşır.
 WRITE_CALLS = frozenset({"write_json", "write_jsonl", "append_jsonl", "update_json",
-                         "update_jsonl", "merge_dated_jsonl"})
+                         "update_jsonl", "merge_dated_jsonl", "update_rows"})
 READ_CALLS = frozenset({"read_json", "read_jsonl"})
 
 # Kodda BAŞKA BİR MODÜLDEN doğrudan okuyucusu olmaması meşru olan artefaktlar. Beyan edilmemiş bir

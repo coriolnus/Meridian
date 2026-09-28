@@ -45,8 +45,16 @@ SB = {"current_version": 3, "versions": {"3": {"n_trades": 95}}}
 EQ = {"version": 4, "points": [["2026-01-02", 100000.0]]}
 SHB = {"variants": {"v9": {"n": 3}}}
 
+# TSK-020 Kademe C (2026-09-28): iki öğrenme defteri `storage.ENTITIES`e girdi — çivi 1 bu yüzden
+# KENDİLİĞİNDEN genişledi (tasarımı buydu); içerikleri burada, türleri "rows".
+HYP = {"id": "H00001", "ts": "2026-08-01T10:00:00+00:00", "variable": "entry.min_score",
+       "old": 60, "new": 62.5, "status": "proposed"}
+VAL = {"ts": "2026-08-01T10:00:00+00:00", "fingerprint": "fp", "etiket": "k=1", "passes": True,
+       "seri": [["2026-01-02", 1.5]], "sharpe_gozlem": 0.5, "n_trials": 3}
+
 _DOC = {"trades.jsonl": TRADE, "trade_plans.jsonl": PLAN, "scoreboard.json": SB,
-        "portfolio.json": BOOK, "equity_curve.json": EQ, "shadow_books.json": SHB}
+        "portfolio.json": BOOK, "equity_curve.json": EQ, "shadow_books.json": SHB,
+        "hypotheses.jsonl": HYP, "validation_ledger.jsonl": VAL}
 
 
 def _seed(state, adlar=None):

@@ -131,7 +131,12 @@ CONTRACTS: dict[str, Contract] = {
              "(kapı istatistiği 'backtest neyi eliyor?' sorusunu cevaplar ve süreç reddi o soruya "
              "girmez). Damgalar ZORUNLU alan DEĞİLDİR ve olmayacaktır: v130 öncesi satırlarda "
              "yokturlar ve retro damga yasağı gereği doldurulmazlar — damgasız satır 'sert kapı "
-             "öncesi' demektir"),
+             "öncesi' demektir. "
+             "DEPOLAMA (TSK-020 Kademe C, 2026-09-28): defter `storage.ENTITIES` kaydındadır; "
+             "`dbmigrate --uygula` damgayı basınca `state/meridian.db` `hypotheses` tablosunda yaşar "
+             "(damgaya kadar DOSYADAN — `storage.active` varlık kapısı). Tam yeniden yazım yolu "
+             "(`memory.update_status`/`writeback_outcome`) `store.update_rows`tur: DB'de oku+yaz tek "
+             "transaction, araya giren `memory.record` eklemesi kaybolmaz (R2)"),
     # TÜKETİCİ LİSTESİ EKSİKTİ: `notify.inbox` ve
     # `analytics.autonomy_ladder`ın devre-kesici sayacı (`analytics.py` → `_breaker_trips_since`) da bu
     # defteri okuyor. Sözleşmenin
@@ -277,8 +282,16 @@ CONTRACTS: dict[str, Contract] = {
              "VARSA ve BOŞSA []/0 yazılır — None ile boş liste AYRI GERÇEKLERDİR, biri 'ölçülmedi' "
              "biri 'ölçüldü, sıfır çıktı' der. BEDEL: satır başına ~n_işlem ek float (kapı serilerinin "
              "çoğu 70-110 işlem taşır, validation.DSR_MIN_N kalibrasyon notu); LEDGER_CAP bu "
-             "büyümeyi SINIRLAMAZ (yalnız okuma penceresi — dosya sınırsız büyür, bugün de öyle); "
-             "kırpma/compact bu turun kapsamı DIŞINDA, ayrı ROADMAP kalemi"),
+             "büyümeyi SINIRLAMAZ (yalnız okuma penceresi); kırpma/compact bu turun kapsamı DIŞINDA, "
+             "ayrı ROADMAP kalemi. "
+             "DEPOLAMA (TSK-020 Kademe C, 2026-09-28): defter `storage.ENTITIES` kaydındadır ve "
+             "`dbmigrate --uygula` `migrated_at` damgasını bastığı AN `state/meridian.db` "
+             "`validation_ledger` tablosunda yaşar (damgaya kadar DOSYADAN — `storage.active` varlık "
+             "kapısı; kaynak `.migrated` adıyla durur). Tablo da sınırsız büyür — `seri`/`ret_seri`/"
+             "`degisen_params` gibi iç içe ve sonradan doğan alanlar `extra_json`dadır; TSK-128 kırpması "
+             "DB'de bir sorgu olur (dosya yeniden yazımı değil), kalem GATED kalır. Satır okuması "
+             "`cat`/`grep` ile değil `store.read_jsonl`/`validation.ledger` ya da salt-okur DB "
+             "sorgusuyladır (`deploy/oracle-a1/RUNBOOK.md` taşıma-sonrası tablosu)"),
     # İKİ İNTRADAY DEFTERİ SÖZLEŞMEYE GİRİYOR. Faz 4a/4b defterleri bugüne kadar
     # sözleşme yasasının TAMAMEN dışındaydı: `watchdog.parity_report` yalnız CONTRACTS'ı gezer, ve
     # CONTRACTS 8 eski defterle sınırlıydı. Yani yedi hatayı doğuran "sözleşmesiz
@@ -430,7 +443,7 @@ CONTRACTS: dict[str, Contract] = {
 }
 
 _WRITE_CALLS = ("write_json", "write_jsonl", "append_jsonl", "merge_dated_jsonl",
-                "update_json", "update_jsonl")
+                "update_json", "update_jsonl", "update_rows")   # update_rows: TSK-020 Kademe C D3
 
 
 def validate_row(ledger: str, row: dict) -> list[str]:
