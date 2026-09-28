@@ -1796,6 +1796,38 @@ HAVUZ_ATALET_SN = float(os.environ.get("MERIDIAN_HAVUZ_ATALET_SN",
 # çözünürlüğünün beş katı sık — tespit penceresinde her zaman en az bir nabız bulunur.
 HAVUZ_NABIZ_SN = float(os.environ.get("MERIDIAN_HAVUZ_NABIZ_SN", "60"))
 
+# ---- İŞBİRLİKÇİ İPTAL: DURDURMA YÜKLEMİ (TSK-246, 2026-09-28) --------------------------------------
+# ÖLÇÜLEN ARIZA (A1 journal, dağıtım #80): `meridian-learn` durdurması 10:15:27Z'de dur bayrağını kurdu,
+# AYNI SANİYEDE `incumbent_prefill_pool_failed` BrokenProcessPool düştü (`KillMode=control-group` SIGTERM'i
+# havuz işçilerine de yollar) ve `prefill_incumbents` eksikleri SIRALI yola aldı — her biri TAM bir
+# walk-forward (bu dosyanın ölçümü: 2 iş / 5065 sn). Sıralı döngü bayrağa BAKMIYORDU: 120 sn sonra SIGKILL.
+# YASA: uzun hesap yolları çağırandan ENJEKTE edilen argümansız `durdurma()` yüklemini KONTROL
+# NOKTALARINDA okur (havuz bekleyişinin her kuantumu, sıralı incumbent döngüsünün her adımı, aramanın
+# incumbent yürüyüşünden önce ve sondalar arası). Durunca: kısmi ilerleme diske iner, havuz öldürülür,
+# beyanlı olayla dönülür. Yüklem ENJEKTE edilir çünkü bayrağın sahibi (`hermes_runtime._stop`) bu modülün
+# üst katmanıdır — `reflect` onu içe aktarsaydı import grafiğine yeni bir kenar girerdi (çivi v586).
+# Verilmezse (None) davranış BİREBİR eskisidir: sprint, `search_and_submit` ve testler yüklemsiz çağırır.
+# SINIR (beyan): TEK bir walk-forward bölünemez — hermes ipliğinin KENDİSİ bir walk-forward hesaplarken
+# gelen istek o hesabın bitişini bekler (sonda döngüsünün "TAVAN KONTROLÜ SONDALAR ARASINDA" gerekçesi).
+#
+# KONTROL KUANTUMU: yüklem verildiğinde havuz bekleyişi `HAVUZ_NABIZ_SN` (60) yerine en çok bu kadar
+# sürer — durdurma gecikmesinin tavanı budur (hedef ≤30 sn, `TimeoutStopSec` 120; v586 ölçer). BEDEL:
+# kuantum kısalınca `_cf.wait` 60 yerine 5 sn'de bir uyanır (uyanış bir koşul-değişkeni dönüşüdür, hesap
+# değil) ama NABIZ kadansı DEĞİŞMEZ — nabız birikimle atılır, uyanış başına değil (disk yazımı çoğalmaz;
+# v586 `test_kisa_kuantum_NABZI_cogaltmaz` ölçer).
+DURDURMA_KONTROL_SN = 5.0
+# Kesinti damgasındaki `sebep` değeri — süre tavanının "sure_tavani"sinden AYRI: durdurma bir ÖLÇÜM
+# değildir (`hermes.warmup_budget_feedback` süre tavanını duvar sayar; durdurma oraya işlenmez).
+DURDURMA_SEBEBI = "durdurma_istegi"
+
+
+class _DurdurmaIstegi(RuntimeError):
+    """Havuz bekleyişinde durdurma yüklemi kuruldu: bekleyiş kontrol noktasında KESİLDİ (arıza değil)."""
+    def __init__(self, bekleyen: int, biten: int):
+        """İstisnayı sayılabilir olguyla kurar (`_HavuzAtaleti` ile aynı alanlar: `bekleyen`/`biten`)."""
+        super().__init__(f"durdurma istendi (biten {biten}, bekleyen {bekleyen})")
+        self.bekleyen, self.biten = bekleyen, biten
+
 
 class _HavuzAtaleti(RuntimeError):
     """Havuz toplam-atalet tavanına çarptı: son bitenden beri HAVUZ_ATALET_SN geçti, hiçbir iş bitmedi."""
@@ -1807,7 +1839,7 @@ class _HavuzAtaleti(RuntimeError):
         self.bekleyen, self.biten = bekleyen, biten
 
 
-def _havuz_sonuclari(ex, jobs: list[dict], canlilik=None):
+def _havuz_sonuclari(ex, jobs: list[dict], canlilik=None, durdurma=None):
     """`ex.map` YERİNE toplam-atalet bekçili sonuç akışı. Tamamlanma SIRASI korunmaz ve bu
     ÖNEMSİZDİR: iki tüketici de sonucu ANAHTARLI önbelleğe yazar (_PROBE_CACHE/_INC_CACHE —
     `_havuz_tavani` docstring'indeki determinizm beyanı anahtara dayanır, sıraya değil). Bir işçi
@@ -1815,23 +1847,34 @@ def _havuz_sonuclari(ex, jobs: list[dict], canlilik=None):
 
     `canlilik`: bekleyişin İÇİNDEN, HAVUZ_NABIZ_SN'de bir ateşlenen geri-çağırma (v302).
     "Bir iş bitti" DEMEZ — "bu iplik canlı ve bekliyor" der; bekçinin gerçekte sorduğu soru budur.
-    Verilmezse davranış eskisiyle birebir aynıdır (geriye uyum: testler, diğer tüketiciler)."""
+    `durdurma`: argümansız yüklem (TSK-246). Her bekleyiş kuantumundan ÖNCE okunur; kuruluysa
+    `_DurdurmaIstegi` fırlar (biten/bekleyen sayımlarıyla) — havuzu öldürmek ve kısmi sonucu yazmak
+    ÇAĞIRANIN işidir (atalet dalıyla aynı iş bölümü). Verilince kuantum `DURDURMA_KONTROL_SN`ye kısılır.
+    İkisi de verilmezse davranış eskisiyle birebir aynıdır (geriye uyum: testler, diğer tüketiciler)."""
     import concurrent.futures as _cf
     kalan = {ex.submit(_pool_probe_job, j) for j in jobs}
     biten = 0
     while kalan:
         # Bekleyiş kuantumlara BÖLÜNÜR ama tavan TOPLAM-ATALETTİR: `atalet` yalnız hiçbir iş
         # bitmediğinde birikir, biten ilk iş onu sıfırlar (yasa dosya başında, değişmedi).
-        atalet, done = 0.0, set()
+        atalet, done, nabiz_birikimi = 0.0, set(), 0.0
         while True:
+            if durdurma is not None and durdurma():
+                raise _DurdurmaIstegi(bekleyen=len(kalan), biten=biten)
             kuantum = min(HAVUZ_NABIZ_SN, HAVUZ_ATALET_SN - atalet)
             if kuantum <= 0:
                 break
+            if durdurma is not None:
+                kuantum = min(kuantum, DURDURMA_KONTROL_SN)
             done, kalan = _cf.wait(kalan, timeout=kuantum, return_when=_cf.FIRST_COMPLETED)
             if done:
                 break
             atalet += kuantum
-            if canlilik is not None:
+            nabiz_birikimi += kuantum
+            # NABIZ KADANSI kuantumdan BAĞIMSIZ: yüklemsiz yolda kuantum zaten HAVUZ_NABIZ_SN'dir (her
+            # kuantumda nabız — eski davranış birebir); yüklemli yolda kısa kuantumlar biriktirilir.
+            if canlilik is not None and (durdurma is None or nabiz_birikimi >= HAVUZ_NABIZ_SN):
+                nabiz_birikimi = 0.0
                 try:
                     canlilik()
                 except Exception:  # sessiz-yutma: nabız yazımı bir TELEMETRİ işidir; disk/kilit hatası aramanın kendisini öldürmemeli, ölçülmüş sonucu telemetri arızasına kurban etmek YASA 4'ün tersidir
@@ -1841,6 +1884,17 @@ def _havuz_sonuclari(ex, jobs: list[dict], canlilik=None):
         for f in done:
             biten += 1
             yield f.result()
+
+
+def _havuz_durduruldu_olayi(yer: str, d: "_DurdurmaIstegi") -> None:
+    """Durdurma isteğiyle kesilen havuzun beyanı (TSK-246; YASA 4 — kesinti sessiz olamaz). Alarm DEĞİL
+    `log`: durdurma operatörün/systemd'nin İSTEDİĞİ şeydir, arıza değil. Okuyucu: olay defteri
+    (`ops/olay_sorgu.py`, journal) — "durdurma neden X sn sürdü / hangi hesap yarıda kaldı" sorusunun
+    cevabı `biten`/`bekleyen` sayımlarıdır."""
+    from . import obs as _obs
+    _obs.log("arama_havuzu_durduruldu", yer=yer, biten=d.biten, bekleyen=d.bekleyen,
+             detail="durdurma istendi: havuz bekleyişi kontrol noktasında kesildi, işçiler öldürüldü, "
+                    "biten işler diske yazıldı; kalanlar SIRALI yola DÜŞÜRÜLMEDİ (süreç iniyor)")
 
 
 def _havuzu_oldur(ex) -> None:
@@ -1872,9 +1926,12 @@ def _havuzu_oldur(ex) -> None:
         pass
 
 
-def _parallel_prefill_probes(probes, current, version, goal, w, regime, canlilik=None) -> None:
+def _parallel_prefill_probes(probes, current, version, goal, w, regime, canlilik=None,
+                             durdurma=None) -> None:
     """Sonda walk-forward'larını havuzda ÖNCEDEN hesaplayıp _PROBE_CACHE'e doldurur; ana döngü
-    değişmeden (deterministik sıra + K-ceza + erken-en-iyi seçimi) önbellekten tüketir."""
+    değişmeden (deterministik sıra + K-ceza + erken-en-iyi seçimi) önbellekten tüketir.
+    `durdurma` (TSK-246): havuz bekleyişine geçirilir; kurulunca havuz öldürülür, biten sondalar diske
+    iner ve dönülür — ana döngünün kendi kontrol noktası kalan sondaları başlatmaz."""
     if os.environ.get("MERIDIAN_PARALLEL_PROBES") != "1" or len(probes) < 2:
         return
     ex = None
@@ -1899,12 +1956,16 @@ def _parallel_prefill_probes(probes, current, version, goal, w, regime, canlilik
         # sonsuza dek bekler — asılı-arama vakasının mekanizmasının ta kendisi. Kapatma üç yolda da
         # AÇIK: normal (bekle — işler bitti, join anlık), atalet (öldür), istisna (öldür + yeniden fırlat).
         ex = ProcessPoolExecutor(max_workers=workers, mp_context=ctx, initializer=_pool_worker_init)
-        for key, wf in _havuz_sonuclari(ex, jobs, canlilik=canlilik):
+        for key, wf in _havuz_sonuclari(ex, jobs, canlilik=canlilik, durdurma=durdurma):
             _PROBE_CACHE[key] = wf
         ex.shutdown()
         _probe_disk_save()
         from . import obs as _obs
         _obs.log("parallel_probes_prefilled", n=len(jobs), workers=workers)
+    except _DurdurmaIstegi as d:
+        _havuzu_oldur(ex)                   # işçiler yalnız HESAPLAR — öldürmek yazım kesmez (`_havuzu_oldur`)
+        _probe_disk_save()                  # BİTEN sondalar kaybolmaz — kısmi ilerleme diske iner
+        _havuz_durduruldu_olayi("probe_prefill", d)
     except _HavuzAtaleti as z:
         _havuzu_oldur(ex)
         _probe_disk_save()                  # BİTEN sondalar kaybolmaz — kısmi ilerleme diske iner
@@ -1931,11 +1992,17 @@ def _parallel_prefill_probes(probes, current, version, goal, w, regime, canlilik
 
 
 def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
-                       windows: tuple | None = None, canlilik=None) -> dict:
+                       windows: tuple | None = None, canlilik=None, durdurma=None) -> dict:
     """Boşta incumbent ön-hesabı: sıradaki muhtemel yansımaların (global + canlı rejim + ufku dolu
     arka plan rejimi) incumbent walk'ları ÖNCEDEN hesaplanıp diske yazılır. Yansıma tetiklendiğinde
     kapı sıfır beklemeyle açılır; boş CPU bileşik çalışır. Havuz açıksa varyantlar paralel; değilse
-    sıralı (_wf_cached zaten diske yazar). Dönüş: {hesaplanan, önbellekte} — çağıran görmezden gelir."""
+    sıralı (_wf_cached zaten diske yazar). Dönüş: {hesaplanan, önbellekte, durduruldu} — çağıran
+    görmezden gelir. `durduruldu`: None = durdurulmadı · "havuz" / "sirali" = hangi bacakta kesildi.
+
+    `durdurma` (TSK-246): havuz bekleyişinde ve sıralı döngünün HER adımından önce okunur. Kurulunca
+    havuz öldürülür, biten incumbent'lar diske iner ve sıralı yola DÜŞÜLMEZ — 2026-09-28 durdurmasında
+    havuz SIGTERM'le kırılınca eksikler tam walk-forward'larla sıralı hesaplanıyordu ve süreç SIGKILL'le
+    indi (ölçüm `DURDURMA_KONTROL_SN` bloğunda)."""
     goal = goal or config.goal()
     w = windows or _default_windows()
     current = config.load_strategy()
@@ -1944,6 +2011,7 @@ def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
     variants = [r if r in config.VALID_REGIMES else None for r in dict.fromkeys(regimes)]
     variants = list(dict.fromkeys(variants))
     computed = cached = 0
+    durduruldu = None                       # hangi bacakta kesildi: None | "havuz" | "sirali"
     _inc_disk_load()
     missing = []
     for er in variants:
@@ -1966,11 +2034,16 @@ def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
             # blokla AYNI: bu havuz da hermes iş parçacığını sonsuza dek bekletebiliyordu.
             ex = ProcessPoolExecutor(max_workers=min(len(jobs), _havuz_tavani(3)), mp_context=ctx,
                                      initializer=_pool_worker_init)
-            for key, wf in _havuz_sonuclari(ex, jobs, canlilik=canlilik):
+            for key, wf in _havuz_sonuclari(ex, jobs, canlilik=canlilik, durdurma=durdurma):
                 _INC_CACHE[key] = wf
                 computed += 1
             ex.shutdown()
             _inc_disk_save()
+        except _DurdurmaIstegi as d:
+            _havuzu_oldur(ex)
+            _inc_disk_save()                # biten incumbent'lar kaybolmaz — kısmi ilerleme diske iner
+            _havuz_durduruldu_olayi("incumbent_prefill", d)
+            durduruldu, missing = "havuz", []   # sıralı yola DÜŞÜLMEZ: her adımı tam bir walk-forward'dır
         except _HavuzAtaleti as z:
             _havuzu_oldur(ex)
             _inc_disk_save()                # biten incumbent'lar kaybolmaz — kısmi ilerleme diske iner
@@ -1996,7 +2069,20 @@ def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
             from . import obs as _obs
             _obs.warn("incumbent_prefill_pool_failed", error=f"{type(e).__name__}: {e}")
             missing = [(k, er) for k, er in missing if k not in _INC_CACHE]
-    for _k, er in missing:
+    for _i, (_k, er) in enumerate(missing):
+        # KONTROL NOKTASI (TSK-246): her adım bir TAM walk-forward'dır ve başladıktan sonra bölünemez —
+        # istek ancak iki adımın ARASINDA görülebilir. Havuz SIGTERM'le kırıldığında akış tam buraya
+        # düşer; bayrak okunmasaydı durdurma walk-forward'ların bitişini bekler ve SIGKILL'le biterdi.
+        if durdurma is not None and durdurma():
+            durduruldu = "sirali"
+            _inc_disk_save()                # havuzdan önce gelmiş sonuçlar da diske iner (genel-istisna dalı yazmıyor)
+            from . import obs as _obs
+            _obs.log("incumbent_prefill_durduruldu", asama="sirali", computed=computed,
+                     kalan=len(missing) - _i,
+                     detail="durdurma istendi: incumbent ön-hesabının sıralı döngüsü kontrol noktasında "
+                            "kesildi — kalan varyantlar hesaplanmadı (her biri tam bir walk-forward); "
+                            "biten sonuçlar diskte, bir sonraki koşum önbellekten devam eder")
+            break
         if _k not in _INC_CACHE:
             # (2) NUMARALI KÖR FAZ (v302): havuz atalete çarpınca akış BURAYA düşer ve her
             # `_wf_cached` bir TAM walk-forward'dır. Canlıda ölçüldü: 02:00:08 → 03:24:33
@@ -2013,7 +2099,7 @@ def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
         from . import obs as _obs
         _obs.log("incumbents_prefilled", computed=computed, cached=cached,
                  regimes=[r or "global" for r in variants])
-    return {"computed": computed, "cached": cached}
+    return {"computed": computed, "cached": cached, "durduruldu": durduruldu}
 
 
 def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows: tuple | None = None,
@@ -2022,6 +2108,7 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
                               max_minutes: float | None = None,
                               deadline_ts: float | None = None,
                               canlilik=None,
+                              durdurma=None,
                               record_session: bool = True) -> dict:
     """Walk the incumbent ONCE, then probe up to `budget` single-variable candidates (magnitude-first,
     breadth across UCB-ranked knobs) through the SAME OOS gate. Returns the best gate-CLEARING probe (or
@@ -2053,6 +2140,13 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
     K SAYIMI DOKUNULMAZ: kapıya giden K = PLANLANAN toplam sonda sayısıdır (`total`), değerlendirilen
     değil. Kesinti K'yı küçültseydi kazananın-laneti cezası hafifler ve tavan, kapıyı GEVŞETEN bir
     kolaylık hâline gelirdi — süre tavanının kalite üzerinde yetkisi yoktur.
+
+    DURDURMA YÜKLEMİ — `durdurma` (TSK-246), VARSAYILAN YOK. Süre tavanıyla AYNI kibar-iptal sözleşmesi,
+    iki farkla: (1) incumbent yürüyüşünden ÖNCE de okunur (süreç iniyorsa aramanın en pahalı tek adımı
+    hiç başlamaz — o erken dönüşte `planlanan_sonda`/`kalan_sonda` None'dır: plan hiç kurulmadı, sayı
+    UYDURULMAZ); (2) damgadaki `sebep` = `DURDURMA_SEBEBI`. Durdurma bir ÖLÇÜM DEĞİLDİR — "bu genişlik
+    tavana sığmadı" demez; çağıran (`hermes_runtime._warmup_sprint`) onu bütçe merdivenine işlemez. Her
+    iki kesinti koşulu birden doğarsa durdurma kazanır (süreç iniyor; tavan hükmü anlamsızlaşır).
 
     ---- RESMÎ KAYIT: OTURUM BAŞINA BİR --------------------------------------------------------
     `record_session` — oturum sonunda TEK resmî değerlendirme kaydı düşürülür mü?
@@ -2109,7 +2203,11 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
         kesilmez. Saat incumbent yürüyüşü DAHİL en başta başlatılmıştır."""
         return _tavan_ts is not None and _time.time() > _tavan_ts
 
-    def _kesinti(evaluated: int, kalan: int) -> dict:
+    def _durdurma_istendi() -> bool:
+        """Durdurma yüklemi kuruldu mu? Yüklem verilmemişse (None) daima False — yüklemsiz arama kesilmez."""
+        return durdurma is not None and bool(durdurma())
+
+    def _kesinti(evaluated: int, kalan: int | None, sebep: str = "sure_tavani") -> dict:
         """Kesinti damgası + YASA 4 kaydı (gerekçe ≥20 karakter): sessiz bir kesinti, kısa bir
         aramadan ayırt edilemez ve okuyucu aramanın eksik olduğunu ASLA öğrenemez.
 
@@ -2117,18 +2215,30 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
         AYNI ŞEY DEĞİLDİR ve olmamalıdır: aradaki fark `skipped_wallclock`tur — o sondalara ULAŞILDI
         (ve K sayımında dururlar), yalnız taze hesapları `MERIDIAN_SEARCH_MAX_MIN` yüzünden
         atlandı. İkisini tek sayıya indirmek, iki farklı eksikliği (hiç bakılmadı / bakıldı ama
-        hesaplanmadı) ayırt edilemez kılardı."""
+        hesaplanmadı) ayırt edilemez kılardı. `kalan` None = plan hiç kurulmadı (incumbent öncesi
+        durdurma) — sayı uydurulmaz.
+
+        `sebep`: "sure_tavani" (ölçüm: bu genişlik tavana sığmadı) ya da `DURDURMA_SEBEBI` (süreç
+        iniyor — ölçüm DEĞİL). İki sebep AYRI olay adıyla yazılır ki defteri okuyan onları karıştırmasın."""
         gecen = round((_time.time() - _t_basla) / 60.0, 2)
-        damga = {"kesildi": True, "sebep": "sure_tavani",
+        _kalan = None if kalan is None else int(kalan)
+        damga = {"kesildi": True, "sebep": sebep,
                  "tavan_dk": (round((_tavan_ts - _t_basla) / 60.0, 2) if _tavan_ts else None),
-                 "gecen_dk": gecen, "kalan_sonda": int(kalan)}
+                 "gecen_dk": gecen, "kalan_sonda": _kalan}
+        if sebep == DURDURMA_SEBEBI:
+            olay = "search_durdurma_istegiyle_kesildi"
+            detay = ("koordinat araması DURDURMA İSTEĞİYLE kesildi (süreç iniyor) — biten sondalarla "
+                     "dönüldü, kalanlar değerlendirilmedi; bu bir ölçüm DEĞİLDİR (bütçe merdivenine "
+                     "işlenmez), K sayımı planlanan toplam sonda üzerinden DEĞİŞMEDEN kaldı")
+        else:
+            olay = "search_sure_tavani_kesildi"
+            detay = ("koordinat araması süre tavanına takıldı ve KİBARCA kesildi — biten "
+                     "sondalarla dönüldü, kalanlar hiç değerlendirilmedi; K sayımı "
+                     "planlanan toplam sonda üzerinden DEĞİŞMEDEN kaldı")
         try:
             from . import obs as _obs_k
-            _obs_k.log("search_sure_tavani_kesildi", evaluated=evaluated, kalan_sonda=int(kalan),
-                       gecen_dk=gecen, tavan_dk=damga["tavan_dk"], regime=regime,
-                       detail="koordinat araması süre tavanına takıldı ve KİBARCA kesildi — biten "
-                              "sondalarla dönüldü, kalanlar hiç değerlendirilmedi; K sayımı "
-                              "planlanan toplam sonda üzerinden DEĞİŞMEDEN kaldı")
+            _obs_k.log(olay, evaluated=evaluated, kalan_sonda=_kalan,
+                       gecen_dk=gecen, tavan_dk=damga["tavan_dk"], regime=regime, detail=detay)
         except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; kesinti damgası ZATEN dönüş sözlüğünde taşınıyor ve kayıt denemesi çağıranı düşüremez
             pass
         return damga
@@ -2143,6 +2253,13 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
     tried = set() if tried is None else tried
     regime = regime if regime in config.VALID_REGIMES else None
     overrides = (current.get("params_by_regime") or {}).get(regime, {}) if regime else {}
+    if _durdurma_istendi():
+        # İNCUMBENT ÖNCESİ KONTROL NOKTASI (TSK-246): incumbent yürüyüşü aramanın en pahalı tek adımıdır
+        # ve başladıktan sonra bölünemez. Plan henüz kurulmadı → plan sayıları None (uydurulmaz).
+        return {"incumbent_oos": None, "evaluated": 0, "cleared": 0, "fresh": 0, "cached_hits": 0,
+                "skipped_wallclock": 0, "best": None, "trace": [], "regime": regime,
+                "planlanan_sonda": None, "hayalet_suzulen": None, "oturum_kaydi": None,
+                **_kesinti(0, kalan=None, sebep=DURDURMA_SEBEBI)}
     inc = _wf_cached(params, version, bars, index, goal, current.get("params_by_regime"), windows=w,
                      eval_regime=regime)
     inc_oos = inc.get("oos_score")
@@ -2190,7 +2307,8 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
             planned.append(sig)
             fresh_planned += 1
     probes = planned
-    _parallel_prefill_probes(probes, current, version, goal, w, regime, canlilik=canlilik)
+    _parallel_prefill_probes(probes, current, version, goal, w, regime, canlilik=canlilik,
+                             durdurma=durdurma)
     _t0 = _time.time()
     _max_min = float(os.environ.get("MERIDIAN_SEARCH_MAX_MIN", "35"))
     _fresh_done = _skipped_fresh = 0
@@ -2217,6 +2335,10 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
         # TAVAN KONTROLÜ SONDALAR ARASINDA (sondanın İÇİNDE değil): tek bir walk-forward bölünemez;
         # ortasından kesmek yarım bir ölçüm bırakırdı ve yarım ölçüm, ölçüm değildir. Kesinti noktası
         # her zaman iki tam sondanın arasıdır — dönen `trace` bu yüzden hep tutarlı satırlar taşır.
+        # DURDURMA ÖNCE (TSK-246): ikisi birden doğarsa süreç iniyordur; tavan hükmü anlamsızlaşır.
+        if _durdurma_istendi():
+            kesinti = _kesinti(evaluated, kalan=total - (i - 1), sebep=DURDURMA_SEBEBI)
+            break
         if _tavan_asildi():
             kesinti = _kesinti(evaluated, kalan=total - (i - 1))
             break

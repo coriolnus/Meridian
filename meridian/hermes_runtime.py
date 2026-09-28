@@ -202,7 +202,10 @@ def _warmup_sprint() -> None:
             live = store.read_json("regime.json", {}).get("regime")
             live = live if live in config.VALID_REGIMES else None
             bg = _bg_ready_regime(trades, every, live)
-            reflect.prefill_incumbents(bars, index, [None, live, bg], canlilik=_nabiz)
+            # DUR YÜKLEMİ (TSK-246): `_stop.is_set` iki uzun çağrıya da ENJEKTE edilir — `reflect` bu
+            # modülü tanımaz (import grafiği değişmez). SIGTERM → `learn_run._isaret` → `stop()` →
+            # bayrak; uzun hesap onu kontrol noktalarında okuyup iner (ölçülen gecikme: v586).
+            reflect.prefill_incumbents(bars, index, [None, live, bg], canlilik=_nabiz, durdurma=_stop.is_set)
         except Exception as e:
             obs.warn("incumbent_prefill_failed", error=f"{type(e).__name__}: {e}")
         # `record_session=False`: "Nothing ships" beyanı artık DEFTER tarafında da
@@ -218,18 +221,24 @@ def _warmup_sprint() -> None:
         res = reflect.coordinate_descent_search(bars, index, budget=int(_wb["budget"]),
                                                 k_max=int(_wb["k_max"]), max_minutes=_tavan,
                                                 on_probe=_nabiz, canlilik=_nabiz,
+                                                durdurma=_stop.is_set,
                                                 record_session=False)
         _wd8.beat("warmup_sprint")         # sonda HİÇ koşmadıysa da ısınma turladı: kadans nabzı düşmez
         _wd8.beat("hermes_poll")
-        try:
-            hermes.warmup_budget_feedback(res)   # sonuç merdivene işlenir (bir sonraki koşumun kolu)
-        except Exception as e:
-            # YASA 4: merdiven yazımı düşerse bütçe SESSİZCE tabanda donar ve "kural koşuyor"
-            # yanılsaması sürer. Ama koşumun KENDİSİ başarılıydı — kaydını bir defter hatasına
-            # kurban etmek, ölçülmüş bir sonucu telemetri arızasıyla silmek olurdu.
-            obs.warn("warmup_budget_feedback_failed", error=f"{type(e).__name__}: {e}",
-                     detail="ısınma bütçe merdiveni güncellenemedi — sonraki koşum aynı bütçeyle "
-                            "koşar (oto-ölçekleme bu tur ilerlemedi)")
+        # DURDURMA BİR ÖLÇÜM DEĞİLDİR (TSK-246): `warmup_budget_feedback` `kesildi`yi SÜRE TAVANI sayar —
+        # çarpanı yarıya indirir ve seviyeyi DUVAR olarak çakar. Süreç iniyor diye kesilen bir koşum
+        # "bu genişlik pencereye sığmadı" demez; merdivene işlenseydi her dağıtım sahte bir duvar çakardı.
+        _durduruldu = res.get("sebep") == reflect.DURDURMA_SEBEBI
+        if not _durduruldu:
+            try:
+                hermes.warmup_budget_feedback(res)   # sonuç merdivene işlenir (bir sonraki koşumun kolu)
+            except Exception as e:
+                # YASA 4: merdiven yazımı düşerse bütçe SESSİZCE tabanda donar ve "kural koşuyor"
+                # yanılsaması sürer. Ama koşumun KENDİSİ başarılıydı — kaydını bir defter hatasına
+                # kurban etmek, ölçülmüş bir sonucu telemetri arızasıyla silmek olurdu.
+                obs.warn("warmup_budget_feedback_failed", error=f"{type(e).__name__}: {e}",
+                         detail="ısınma bütçe merdiveni güncellenemedi — sonraki koşum aynı bütçeyle "
+                                "koşar (oto-ölçekleme bu tur ilerlemedi)")
         _state["last_warmup"] = {"at": _now(), "evaluated": res.get("evaluated"),
                                  "cleared": res.get("cleared"),
                                  "best": (res.get("best") or {}).get("variable"),
@@ -249,7 +258,9 @@ def _warmup_sprint() -> None:
         obs.log("warmup_sprint", evaluated=res.get("evaluated"), cleared=res.get("cleared"),
                 neden_dagilim=_nd,
                 best=(res.get("best") or {}).get("variable"),
-                kesildi=bool(res.get("kesildi")), tavan_dk=_tavan,
+                # `durduruldu`: kesinti süre tavanı DEĞİL durdurma isteğiydi → merdivene işlenmedi (TSK-246).
+                # Okuyucu: olay defteri (`ops/olay_sorgu.py`) — "bu koşum neden merdiveni oynatmadı?"
+                kesildi=bool(res.get("kesildi")), durduruldu=_durduruldu, tavan_dk=_tavan,
                 kalan_sonda=res.get("kalan_sonda"),
                 butce=_wb["budget"], butce_carpani=_wb["carpan"], k_max=_wb["k_max"])
     except Exception as e:
