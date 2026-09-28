@@ -120,7 +120,14 @@ def test_notify_tokens_are_derived_from_the_alarm_constants():
     ULAŞILAMADIĞI hâldir; eylemi "servisi ve dinleme adresini ölç"tür, "mührü aç" değil. Kapsam
     BÜYÜDÜ, daralmadı; teslim zinciri değişmedi — türetme jetonları `obs.py`ye eklendiği an
     kendiliğinden kapsadı, bu literal güncellemesi o KARARIN kaydıdır. Üretici:
-    `ops/vault_sagligi.py` (vault-sagligi.timer)."""
+    `ops/vault_sagligi.py` (vault-sagligi.timer).
+
+    ENDEKS_CIKISI_ACIK_POZISYON 2026-09-28 kasıtlı kapsam kararı (18 → 19, TSK-207 (b), operatör
+    kararı "sadece uyar, kararı ben veririm"): açık pozisyonlu bir sembol S&P 500'den çıkınca bar
+    akışı durur ve stop/çıkış o sembolde fiyatsız kalabilir. TSK-207 (a) bunu yalnız `warn` olarak
+    yazıyordu — warn bildirim zincirini tetiklemez, kayıt operatöre HİÇ ulaşmıyordu. Kapsam
+    BÜYÜDÜ, daralmadı; sistem pozisyona/bar çekimine/evrene dokunmaz, yalnız haber verir. Bu
+    literal güncellemesi o kararın kaydıdır. Üretici: `watchdog.check_olu_isim_and_alarm`."""
     assert obs.NOTIFY_TOKENS == {
         "ARMING_READY", "TRAIL_DESYNC", "DATA_QUALITY", "CIRCUIT_BREAKER", "MIRROR_DRIFT",
         "BROKER_REJECT", "MECHANISM_STALE", "HALT_ACTIVE", "ROLLBACK", "HEARTBEAT_STALE",
@@ -151,7 +158,10 @@ def test_notify_tokens_are_derived_from_the_alarm_constants():
         # SIR KASASI SINIFI (2026-09-14, TSK-064 Faz-2): kasıtlı kapsam kararı (16 → 18) —
         # gerekçe yukarıda, üretici `ops/vault_sagligi.py`. İKİ jeton çünkü iki hâl AYRI
         # operatör eylemi ister; tek jeton "mührü aç" ile "servisi ölç"ü karıştırırdı.
-        "VAULT_SEALED", "VAULT_DOWN"}
+        "VAULT_SEALED", "VAULT_DOWN",
+        # POZİSYON-VERİ SINIFI (2026-09-28, TSK-207 (b)): kasıtlı kapsam kararı (18 → 19) —
+        # gerekçe yukarıda, çivisi `tests/test_endeks_cikisi_acik_poz_alarm_v578.py`.
+        "ENDEKS_CIKISI_ACIK_POZISYON"}
 
 
 def test_every_alarm_constant_reaches_the_operator_by_construction():
