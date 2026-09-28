@@ -24,6 +24,11 @@
 # Sonraki değişiklik (Vault'ta döndürme) hesabı DEĞİŞTİRMEZ; döndürme reçetesi RUNBOOK'ta (grafana cli).
 #
 # BELLEK TAVANI İKİ KATMANDA (MemoryMax istemciyi, `--memory` konteyneri sınırlar — meridian-prometheus şerhi).
+# 512M — CANLI ÖLÇÜMLE (Rol-1, A1, 2026-09-28 12:20–12:21Z; önceki değer 256M, tasarım T1): ilk açılışta veritabanı
+# göçü sırasında memcg ~324 MB saydı (çekirdek OOM satırı: anon-rss 144424 kB + file-rss 180208 kB — memcg dosya
+# önbelleğini de sayar) ve 256M tavanda konteyner öldü (docker `oom` → `die 137`); göç bittikten sonraki kararlı hâl
+# `docker stats` 222,5 MiB / 256 MiB (%86,9) idi ve yine düştü. 512M ≈ kararlı hâlin 2,3×'ü, ilk açılış göçünün
+# ~1,6×'ı. A1 boş RAM ~19,8 GB. Tavan birim ↔ v584 `BIRIMLER` ↔ RUNBOOK arasında ayrışamaz (v584 A1/A5).
 # KURULUM: A0 rolü KOPYALAR, ETKİNLEŞTİRMEZ; parola Vault'a konmadan birim AÇILAMAZ (LoadCredential kaynağı yok →
 # systemd başlatmaz). Elle başlat + test-ateşle (CLAUDE.md §9).
 [Unit]
@@ -37,7 +42,7 @@ RuntimeDirectory=meridian-grafana
 RuntimeDirectoryMode=0700
 ExecStartPre=-/usr/bin/docker rm -f meridian-grafana
 ExecStart=/usr/bin/docker run --rm --name meridian-grafana --network host \
-  --memory=256m \
+  --memory=512m \
   -e GF_SERVER_HTTP_ADDR=127.0.0.1 \
   -e GF_SERVER_HTTP_PORT=3000 \
   -e GF_AUTH_ANONYMOUS_ENABLED=false \
@@ -56,7 +61,7 @@ ExecStart=/usr/bin/docker run --rm --name meridian-grafana --network host \
 ExecStop=/usr/bin/docker stop meridian-grafana
 Restart=on-failure
 RestartSec=5
-MemoryMax=256M
+MemoryMax=512M
 
 [Install]
 WantedBy=multi-user.target
