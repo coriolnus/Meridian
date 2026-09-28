@@ -1,6 +1,6 @@
 # TASARIM — Gecikme telemetrisi: Prometheus + Grafana (TSK-020 UYGULA-9)
 
-Durum: **TASLAK — operatör onayı bekliyor** (sıra: ölçüm ✔ → bu belge → onay → kod). Yazan: Rol-1, 2026-09-28 09:0xZ.
+Durum: **ONAYLI** — operatör 2026-09-28 09:2xZ (AskUserQuestion: tasarım 'Onaylıyorum' Faz A→B, Faz C ayrı kart; kurulum 'Docker'; erişim 'Yalnız SSH tüneli'). Sıra: ölçüm ✔ → belge ✔ → onay ✔ → kod. Yazan: Rol-1, 2026-09-28 09:0xZ.
 Operatör talebi (2026-09-28, sohbet): "prometheus'u da paralelde yapamaz mısın" → Kademe C ile paralel. ROADMAP satırı: "gecikme telemetrisi —
 Prometheus+Grafana (pano-SQLite alternatifi elendi); kill-kriteri yeniden çapalama AYRI KART ister."
 Envanter: `…/scratchpad/tsk020-9-envanter.md` (salt-okur ajan) + A1 ölçümü (Rol-1, salt-okur, 2026-09-28 08:54Z ve 09:0xZ).
