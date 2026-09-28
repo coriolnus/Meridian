@@ -30,7 +30,11 @@ kalır, yalnız listelenen DAMGA KAPILI varlıkların damgası sökülür ve ar�
 kapısı onları dosyaya çevirir, tablo satırları kanıt olarak kalır. Canlı worker VEYA öğrenme süreci
 (`meridian-learn`) koşarken `--uygula` VE `--geri-al` (iki kip) REDDEDİLİR (`--zorla` ezer).
 
-KULLANIM: `python -m meridian.dbmigrate` (kuru koşu) · `--json` · `--uygula` · `--durum` ·
+EZME ONAYI (tur 3): taşınacak varlığın tablosu DOLUYSA (kısıtlı geri almadan kalan kanıt) kuru koşu
+`[EZİLECEK: N satır]` + UYARI basar ve `--uygula` `--ezmeyi-onayla` olmadan hiçbir şeyi taşımadan reddeder
+(çıkış 2); `--zorla` bu onayı VERMEZ.
+
+KULLANIM: `python -m meridian.dbmigrate` (kuru koşu) · `--json` · `--uygula` [`--ezmeyi-onayla`] · `--durum` ·
 `--geri-al` [`--varlik a,b`]. Okur/yazar: state/ altındaki kaynak dosyalar + `state/meridian.db`; olaylar obs'a.
 """
 from __future__ import annotations
@@ -122,6 +126,32 @@ def digest(payload: Any) -> str:
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:32]
 
 
+# ---- EZİLECEK KANIT (Kademe C tur 3, F3) ---------------------------------------------------------
+# NEDEN. Kısıtlı geri alma (`--geri-al --varlik`) göç-sonrası DB satırlarını tabloda KANIT olarak bırakır;
+# `apply()` damgasız bir varlığı "sil + yaz" ile taşır ve o tabloyu kaynak dosyayla EZER — geri dönüşsüz.
+# Tur 2'de sayı yalnız COMMIT'ten SONRA raporlanıyordu. Artık KURU KOŞU aynı sayıyı önceden basar ve
+# `apply()` dolu tablo gördüğünde `ezmeyi_onayla` (CLI `--ezmeyi-onayla`) olmadan HİÇBİR varlığı taşımaz.
+# Ölçüm TEK yerde: kuru koşu ile uygulama aynı sayıyı aynı sorguyla üretir (tek-kaynak yasası).
+EZME_RET = "EZME_ONAYI_YOK"
+
+
+def _tablo_satir_sayisi(c, name: str) -> int:
+    """Varlığın DB tablosundaki mevcut satır sayısı (`SELECT COUNT(*)`); tablo yoksa 0 (v1 DB — ilk göç).
+    TRANSACTION YÖNETMEZ; hem kuru koşunun salt-okur bağlantısında hem `apply()`in açık transaction'ında çağrılır."""
+    if not storage.table_exists(name, c):
+        return 0
+    with storage._GUARD:
+        return int(c.execute(f"SELECT COUNT(*) AS n FROM {storage.table_of(name)}").fetchone()["n"])
+
+
+def _ezme_hatasi(ezilecek: list[dict]) -> str:
+    """Ret metni — kuru koşu uyarısı ve `apply()` reddi AYNI cümleyi kurar (varlık + satır sayısı + kol)."""
+    return ("EZME: yeniden göç bu satırları kaynak dosyayla EZER — "
+            + ", ".join(f"{e['varlik']}: {e['n']} satır" for e in ezilecek)
+            + "; önce dışa al (kısıtlı geri almadan kalan KANIT ya da damgasız ama dolu tablo). Bilerek "
+              "ezmek için `--uygula --ezmeyi-onayla` (`--zorla` bu onayı VERMEZ).")
+
+
 # ---- PLAN (kuru koşu) --------------------------------------------------------------------------
 def plan() -> dict:
     """Ne taşınacak? Hiçbir bayt yazılmaz, DB açılmaz (yoksa yaratılmaz)."""
@@ -140,6 +170,7 @@ def plan() -> dict:
     out = {"db": str(db), "db_var": db_var, "sema_surumu": None, "varliklar": varliklar,
            "toplam_satir": sum(v["n"] for v in varliklar)}
     damgali: set = set()
+    c = None
     if db_var:
         c = storage.connect(db)
         out["sema_surumu"] = storage.schema_version(c)
@@ -154,6 +185,13 @@ def plan() -> dict:
                          "tasinacak" if v["kaynak_var"] else "kaynak_yok")
     out["tasinacak"] = sum(1 for v in varliklar if v["beklenen"] == "tasinacak")
     out["zaten_tasindi"] = sum(1 for v in varliklar if v["beklenen"] == "zaten_tasindi")
+    # EZİLECEK (F3): yalnız TAŞINACAK varlığın tablosu ezilir; `zaten_tasindi`/`kaynak_yok` dokunulmaz → 0.
+    # Şemasız/DB'siz dünyada ölçülecek tablo yoktur → 0 (ilk göç).
+    sema_var = c is not None and out["sema_surumu"] is not None
+    for v in varliklar:
+        v["ezilecek"] = (_tablo_satir_sayisi(c, v["varlik"])
+                         if sema_var and v["beklenen"] == "tasinacak" else 0)
+    out["ezilecek"] = [{"varlik": v["varlik"], "n": v["ezilecek"]} for v in varliklar if v["ezilecek"]]
     return out
 
 
@@ -253,8 +291,14 @@ def _karantina(rapor: dict, db_yeni: bool, sebep: str) -> None:
 
 
 # ---- UYGULA ------------------------------------------------------------------------------------
-def apply() -> dict:
-    """TEK TRANSACTION + PARİTE KANITI. Digest tutmazsa hiçbir varlık taşınmaz."""
+def apply(ezmeyi_onayla: bool = False) -> dict:
+    """TEK TRANSACTION + PARİTE KANITI. Digest tutmazsa hiçbir varlık taşınmaz.
+
+    EZME ONAYI (Kademe C tur 3, F3): taşınacak (damgasız + kaynaklı) bir varlığın tablosu DOLUYSA
+    `ezmeyi_onayla=True` olmadan HİÇBİR varlık taşınmaz — rapor `ok=False`, `ret=EZME_ONAYI_YOK`,
+    `ezilecek=[{varlik, n}]`; transaction ROLLBACK (şema yükseltmesi dahil), karantina YOK (bu bir arıza
+    değil, onay eksikliği). Onayla bugünkü davranış: ezer ve `ezilen` raporlanır. İlk göç (tablo yok/boş)
+    ve `zaten_tasindi` varlıklar etkilenmez."""
     # DB BU KOŞUDA MI DOĞUYOR? ÖLÇÜM, ilk `connect(create=True)`dan ÖNCE alınır — sonrasında
     # sorulsaydı cevap HER ZAMAN "var" olurdu ve hata yolu, taşınmış defter içeren bir DB'yi de
     # kenara alabilirdi (bkz. `_karantina`).
@@ -282,7 +326,22 @@ def apply() -> dict:
             storage.apply_schema(c)
             onceki = {n: (storage.meta(n) or {}) for n in storage.ENTITIES}
             tasinan = []
+            # EZİLECEK ÖLÇÜMÜ YAZIMDAN ÖNCE, AYNI TRANSACTION'DA (F3): kuru koşudaki `_tablo_satir_sayisi`nin
+            # aynısı. Onay yoksa ROLLBACK — tek bayt yazılmadan (tablo, damga, dosya, şema sürümü aynı).
             ezilen: dict = {}
+            for name in storage.ENTITIES:
+                if (onceki.get(name) or {}).get("migrated_at") or not kaynaklar[name]["present"]:
+                    continue
+                k = _tablo_satir_sayisi(c, name)
+                if k:
+                    ezilen[name] = k
+            if ezilen and not ezmeyi_onayla:
+                c.execute("ROLLBACK")
+                rapor["ok"] = False
+                rapor["ret"] = EZME_RET
+                rapor["ezilecek"] = [{"varlik": n, "n": k} for n, k in ezilen.items()]
+                rapor["hata"] = "REDDEDİLDİ (hiçbir varlık taşınmadı): " + _ezme_hatasi(rapor["ezilecek"])
+                return rapor
             for name in storage.ENTITIES:
                 m = onceki.get(name) or {}
                 src = kaynaklar[name]
@@ -307,14 +366,9 @@ def apply() -> dict:
                                      f"taşınmadı. Önce kaynağı onar.")
                     _karantina(rapor, db_yeni, "KAYNAK_BOZUK")
                     return rapor
-                # EZİLEN KANIT ÖLÇÜLÜR (Kademe C tur 2): damgasız bir varlığın tablosu BOŞ olmayabilir — kısıtlı
-                # geri almadan (`--geri-al --varlik`) sonra göç-sonrası DB satırları tabloda KANIT olarak kalır
-                # ve aşağıdaki "sil + yaz" onları kaynak dosyayla EZER. Davranış değişmez (parite dosyaya karşı
-                # ölçülür); ama ezilen satır sayısı rapora ve obs olayına girer — sessiz kayıp olmasın.
-                onceki_n = c.execute(
-                    f"SELECT COUNT(*) AS n FROM {storage.table_of(name)}").fetchone()["n"]
-                if onceki_n:
-                    ezilen[name] = int(onceki_n)
+                # EZİLEN KANIT (tur 2 → tur 3): sayı döngüden ÖNCE ölçüldü (`ezilen`) ve onaysız koşu orada
+                # reddedildi; buraya yalnız onaylı (ya da boş tablolu) koşu gelir. Aşağıdaki "sil + yaz" tabloyu
+                # kaynak dosyayla ezer; sayı rapora ve obs olayına girer.
                 kind = storage.kind_of(name)
                 if kind == "rows":
                     storage.do_replace_rows(c, name, src["payload"])
@@ -719,7 +773,8 @@ def _print(rapor: dict) -> None:
     """Plan/uygula raporunu insan-okur tabloya basar: mod (kuru koşu/uygulandı), DB yolu ve şema
     sürümü, varlık başına satır+digest, parite satırları, arşivlenen kaynaklar, hata ve karantina
     hükmü. Yalnız BASAR — hiçbir karar vermez, hiçbir bayt yazmaz."""
-    mod = ("UYGULANDI" if rapor.get("yazildi") else
+    mod = ("REDDEDİLDİ — ezme onayı yok, hiçbir varlık taşınmadı" if rapor.get("ret") == EZME_RET else
+           "UYGULANDI" if rapor.get("yazildi") else
            ("UYGULAMA İSTENDİ ama taşınacak varlık yok" if rapor.get("applied")
             else "KURU KOŞU (hiçbir bayt yazılmadı)"))
     print(f"[dbmigrate] {mod}")
@@ -729,9 +784,13 @@ def _print(rapor: dict) -> None:
         print(f"  {v['varlik']:24s} {v['n']:>7d}  {str(v['kaynak_var']):>6s}  "
               f"{v.get('beklenen', '-'):14s} {v['kaynak_digest'] or '-'}"
               + (f"  [BOZUK SATIR: {v['bozuk_satir']}]" if v["bozuk_satir"] else "")
-              + ("  [arşiv var]" if v["arsiv_var"] else ""))
+              + ("  [arşiv var]" if v["arsiv_var"] else "")
+              + (f"  [EZİLECEK: {v['ezilecek']} satır]" if v.get("ezilecek") else ""))
     print(f"  toplam satır: {rapor['toplam_satir']}, taşınacak varlık: {rapor['tasinacak']}, "
           f"zaten taşınmış: {rapor.get('zaten_tasindi')}")
+    if rapor.get("ezilecek") and not rapor.get("yazildi") and not rapor.get("ret"):
+        # KURU KOŞUDA ÖNCEDEN (F3): geri dönüşsüz ezme operatörün önüne COMMIT'ten ÖNCE gelir.
+        print(f"  UYARI: {_ezme_hatasi(rapor['ezilecek'])}")
     for p in rapor.get("parite") or []:
         isaret = "OK " if p.get("ok") else "!! "
         print(f"   {isaret}{p['varlik']:24s} {p['durum']:16s} "
@@ -798,8 +857,9 @@ def _print_geri_al(rapor: dict) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     """Komut satırı girişi: `--durum` / `--geri-al` [`--varlik a,b`] / `--uygula` (varsayılan kuru koşu),
-    `--json`, `--zorla`. Çelişkili niyet (`--uygula` + `--geri-al`), `--geri-al`sız `--varlik`, geçersiz
-    varlık listesi ve canlı worker YA DA öğrenme süreci görülen yazan koşular REDDEDİLİR (çıkış 2).
+    `--json`, `--zorla`, `--ezmeyi-onayla`. Çelişkili niyet (`--uygula` + `--geri-al`), `--geri-al`sız
+    `--varlik`, `--uygula`sız `--ezmeyi-onayla`, geçersiz varlık listesi, canlı worker YA DA öğrenme süreci
+    görülen yazan koşular ve onaysız EZME (dolu tablolu taşıma) REDDEDİLİR (çıkış 2).
     Dönüş: 0 başarı, 1 raporun `ok=False` hükmü, 2 ret."""
     ap = argparse.ArgumentParser(
         prog="python -m meridian.dbmigrate",
@@ -816,12 +876,20 @@ def main(argv: list[str] | None = None) -> int:
                           + ",".join(storage.DAMGA_KAPILI)))
     ap.add_argument("--zorla", action="store_true",
                     help="canlı süreç görülse de taşı/geri al (riski sen alırsın)")
+    ap.add_argument("--ezmeyi-onayla", dest="ezmeyi_onayla", action="store_true",
+                    help=("--uygula ile: taşınacak varlığın DOLU tablosunu (kısıtlı geri almadan kalan kanıt) "
+                          "kaynak dosyayla EZMEYİ onayla — `--zorla`dan AYRI anahtar"))
     a = ap.parse_args(argv)
     if a.uygula and a.geri_al:
         # ÇELİŞKİLİ NİYET SESSİZCE SIRALANMAZ: hangisinin önce koştuğuna bağlı olarak sonuç
         # "taşındı" ya da "geri alındı" olurdu ve operatör hangisini istediğini raporda göremezdi.
         print("[dbmigrate] REDDEDİLDİ: --uygula ile --geri-al aynı koşuda verilemez (çelişkili "
               "niyet). Önce birini koş, raporu oku, sonra karar ver.", file=sys.stderr)
+        return 2
+    if a.ezmeyi_onayla and not a.uygula:
+        # İKİ ANLAM TEK BAYRAĞA BİNMEZ (F3): ezme onayı YALNIZ taşımanın; kuru koşu zaten sayıyı gösterir,
+        # geri alma hiçbir tabloyu ezmez. Sessizce yok saymak "onayladım, bir şey olmadı" sandırırdı.
+        print("[dbmigrate] REDDEDİLDİ: --ezmeyi-onayla yalnız --uygula ile anlamlıdır.", file=sys.stderr)
         return 2
     if a.varlik is not None and not a.geri_al:
         # KAPSAM KISITI YALNIZ GERİ ALMANIN: `--uygula` zaten artımlıdır (damgalıyı atlar); `--varlik`i
@@ -867,11 +935,15 @@ def main(argv: list[str] | None = None) -> int:
         else:
             _print_geri_al(rapor)
         return 0 if rapor.get("ok", True) else 1
-    rapor = apply() if a.uygula else plan()
+    rapor = apply(ezmeyi_onayla=a.ezmeyi_onayla) if a.uygula else plan()
     if a.json:
         print(json.dumps(rapor, ensure_ascii=False, indent=1, default=str))
     else:
         _print(rapor)
+    if rapor.get("ret") == EZME_RET:
+        # RET (çıkış 2), ARIZA (1) DEĞİL: hiçbir şey denenmedi, eksik olan operatörün açık onayı.
+        print(f"[dbmigrate] {rapor['hata']}", file=sys.stderr)
+        return 2
     return 0 if rapor.get("ok", True) else 1
 
 

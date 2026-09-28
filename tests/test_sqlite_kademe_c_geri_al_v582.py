@@ -221,7 +221,10 @@ def test_cli_kisitli_geri_al_ve_tekrar_goc_parite_ile_gecer(db_sandbox, monkeypa
     assert any(s.split()[:1] == [VAL] and " 3 " in f" {s} " and " 2 " in f" {s} " for s in out.splitlines())
     assert "DB'de duruyor" in out
 
-    r = dbmigrate.apply()
+    # TUR 3 (F3, v583): tablolar DOLU → onaysız yeniden göç HİÇBİR şeyi taşımadan reddedilir; onayla geçer.
+    r0 = dbmigrate.apply()
+    assert r0["ok"] is False and r0["ret"] == "EZME_ONAYI_YOK"
+    r = dbmigrate.apply(ezmeyi_onayla=True)
     assert r["ok"] is True, r.get("hata")
     p = {x["varlik"]: x for x in r["parite"]}
     for ad in YENI:
