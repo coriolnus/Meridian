@@ -203,11 +203,44 @@ def _adv(df: pd.DataFrame, d, window: int = 20) -> float | None:
         return None
 
 
+# ---- GÜN BAŞI DURDURMA KONTROL NOKTASI (TSK-248, operatör ONAYLI 2026-09-28) ---------------------------
+# Tasarım: `docs/TASARIM-OGRENME-DURDURMA-2026-09-28.md` §2 Seçenek 1. TSK-246 uzun hesap yollarını iki
+# walk-forward ARASINDA kesilebilir yaptı; TEK bir walk-forward (üretim penceresinde ~90 sn, ~1150 takvim
+# günü) bölünemiyordu ve öğrenme sürecinin durdurması onun bitişini bekliyordu. Çağıran (öğrenme ipliği)
+# argümansız bir `durdurma()` yüklemi ENJEKTE eder; `replay` onu HER takvim gününün BAŞINDA bir kez okur.
+# Kurulunca `ReplayDurduruldu` fırlar — KISMİ SONUÇ DÖNDÜRÜLMEZ (yarım ölçüm ölçüm değildir); tamamlanan
+# günler değişmez, determinizm korunur. Önbelleğe yazmamak çağıranın işidir ve istisnanın doğal sonucudur:
+# `reflect._wf_cached`/`_probe_wf` sonucu yalnız walk-forward DÖNERSE yazar. Yüklem YOKSA (varsayılan) çağrı
+# yüzeyi ve sonuç BİREBİR eskisi (v588 bit-özdeşlik çivisi). Maliyet ölçüldü: v588 `test_OLCUM_gun_basi_…`.
+class ReplayDurduruldu(RuntimeError):
+    """`replay` gün başı kontrol noktasında durdurma yüklemini kurulu buldu — hesap KESİLDİ (arıza değil).
+
+    `tamamlanan_gun`: bitmiş takvim günü sayısı · `toplam_gun`: takvim boyu · `tarih`: hiç işlenmeyen
+    (kesilen) günün tarihi. Okuyucu: yakalayan katmanın beyanlı olayı (`reflect` — "neresi yarıda kaldı")."""
+
+    def __init__(self, tamamlanan_gun: int, toplam_gun: int, tarih: str | None):
+        self.tamamlanan_gun = int(tamamlanan_gun)
+        self.toplam_gun = int(toplam_gun)
+        self.tarih = tarih
+        super().__init__(f"replay durdurma isteğiyle kesildi ({tamamlanan_gun}/{toplam_gun} gün tamam, "
+                         f"kesilen gün {tarih})")
+
+
+def durdurma_kw(durdurma) -> dict:
+    """Durdurma yüklemini İLETME yasası — TEK kaynak (backtest/reflect/hermes çağrı yerleri buradan okur).
+
+    Yüklem None ise BOŞ sözlük: anahtar hiç geçirilmez, yani yüklemsiz çağrı yüzeyi BİREBİR eskisidir —
+    `durdurma` parametresini tanımayan sahte/casus çağrılabilirler ve eski çağıranlar (baseline/run/sprint,
+    tmux `hermes.loop`) davranış olarak değil ÇAĞRI olarak da etkilenmez."""
+    return {} if durdurma is None else {"durdurma": durdurma}
+
+
 def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame,
            goal: dict, start: str, end: str, strategy_version: int = 1,
            params_by_regime: dict | None = None,
            with_gate_detail: bool = False,
-           uyelik: Callable[[str], set[str]] | None = None) -> BacktestResult:
+           uyelik: Callable[[str], set[str]] | None = None,
+           durdurma: Callable[[], bool] | None = None) -> BacktestResult:
     """`start`–`end` arasını gün gün yeniden oynatır ve `BacktestResult` üretir.
 
     Her seans üç fazda işlenir — OPEN(D): bekleyen çıkışlar ve D-1'de silahlanan girişler;
@@ -230,6 +263,10 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
     `tests/test_replay_uyelik_suzgeci_v427.py`). ASİMETRİ BEYANI: `uyelik` üye-olmayanı
     düşürebilir ama o tarihte üye olup barı artık evrende bulunmayan (delist) bir sembolü GERİ
     GETİREMEZ — PIT-süzülmüş bir tohum bu yüzden hâlâ ÜST SINIRDIR, tam eşleşme değildir.
+
+    `durdurma` (TSK-248) — opsiyonel argümansız yüklem. Verilirse HER takvim gününün BAŞINDA (OPEN fazından
+    önce) BİR kez okunur; kuruluysa `ReplayDurduruldu` fırlar, kısmi sonuç dönmez. `durdurma=None` bugünkü
+    davranışla BİREBİR AYNIDIR (v588). Gerekçe ve maliyet `ReplayDurduruldu` bloğunda.
 
     SAF HESAP: state'e yazmaz; yalnız bar ve hedef sözleşmesi okur.
     """
@@ -333,6 +370,9 @@ def replay(params: dict, bars: dict[str, pd.DataFrame], index_bars: pd.DataFrame
         return {t: per[t].loc[d, "open"] for t in broker.positions if d in per[t].index}
 
     for bar_i, d in enumerate(calendar):
+        # ---- 0. GÜN BAŞI DURDURMA KONTROL NOKTASI (TSK-248) — gün İÇİNDE değil başında: yarım gün yok ----
+        if durdurma is not None and durdurma():
+            raise ReplayDurduruldu(bar_i, len(calendar), str(d.date()))
         # ---- 1. OPEN(D): pending exits, then armed entries ----
         for t, reason in list(pending_exits.items()):
             if t in broker.positions and t in per and d in per[t].index:
@@ -993,7 +1033,8 @@ def walk_forward(params: dict, bars: dict, index_bars: pd.DataFrame, goal: dict,
                  is_start: str, oos_start: str, oos_end: str, holdout_end: str,
                  strategy_version: int = 1, oos_folds: list | None = None, embargo_days: int = 0,
                  params_by_regime: dict | None = None, eval_regime: str | None = None,
-                 uyelik: Callable[[str], set[str]] | None = None) -> dict:
+                 uyelik: Callable[[str], set[str]] | None = None,
+                 durdurma: Callable[[], bool] | None = None) -> dict:
     """Replay once over [is_start, holdout_end]. Two-part gate:
       * MAGNITUDE — the full OOS window's composite score (min_sample-gated; None below the floor).
       * ROBUSTNESS — per-fold avg_r across SEVERAL purged+embargoed folds, so the edge can't hinge on
@@ -1005,9 +1046,11 @@ def walk_forward(params: dict, bars: dict, index_bars: pd.DataFrame, goal: dict,
     noisy small-sample verdict. The caller must use the same eval_regime for incumbent AND candidate.
     `uyelik` (TSK-159/EDG-2026-082) — tek `replay` çağrısına AYNEN geçirilir (bkz. `replay`
     docstring'i); varsayılan None = bugünkü davranış BİREBİR. Diğer çağıranlar (reflect/öneri
-    yolları) bu parametreyi hiç kullanmaz ve DOKUNULMAZ."""
+    yolları) bu parametreyi hiç kullanmaz ve DOKUNULMAZ.
+    `durdurma` (TSK-248) — tek `replay` çağrısına YALNIZ verilmişse geçirilir (`durdurma_kw`); kurulunca
+    `ReplayDurduruldu` buradan da AYNEN yukarı çıkar (kısmi skor üretilmez)."""
     res = replay(params, bars, index_bars, goal, is_start, holdout_end, strategy_version,
-                 params_by_regime=params_by_regime, uyelik=uyelik)
+                 params_by_regime=params_by_regime, uyelik=uyelik, **durdurma_kw(durdurma))
     graded = _regime_slice(res.trades, eval_regime)
     is_d = segment_score(graded, goal, is_start, oos_start, mtm_equity=res.equity)
     oos_d = segment_score(graded, goal, oos_start, oos_end, embargo_days, mtm_equity=res.equity)

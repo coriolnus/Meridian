@@ -458,8 +458,9 @@ def _persist() -> None:
                                    "brain_degraded": brain == "deterministic"})
 
 
-def _record(res: dict, *, arka_plan: bool) -> None:
-    """Biten bir yansımanın sonucunu `_state`e işler (sayaç, zaman damgası, durum, değişken).
+def _record(res: dict, *, arka_plan: bool) -> bool:
+    """Biten bir yansımanın sonucunu `_state`e işler (sayaç, zaman damgası, durum, değişken). Dönüş: sonuç
+    İŞLENDİ mi — durdurmayla KESİLEN tur işlenmez (False; aşağıdaki TSK-248 paragrafı).
 
     CANLI ve ELLE yansımada (`arka_plan=False`) geri sayım tabanını (`last_reflect_at`) da güncel
     defter uzunluğuna çeker: elle tetiklenen yansıma da bekleme döngüsünün tetiğini ileri iter, aynı
@@ -472,16 +473,48 @@ def _record(res: dict, *, arka_plan: bool) -> None:
     (A) vadeyi hiç görmez. Arka plan turunun KENDİ tabanı çağrı yerinde taşınır
     (`bg_reflect_by_regime[rejim]`, `_bg_ready_regime` okur). Parametre ZORUNLU ve yalnız-ADLA: yeni
     bir çağrı yeri türünü beyan etmeden yazılamaz — varsayılan olsaydı beyansız bir arka plan yolu
-    canlı tabanı yine sessizce taşırdı (kusurun sınıfı)."""
+    canlı tabanı yine sessizce taşırdı (kusurun sınıfı).
+
+    KESİLEN TUR SAYILMAZ (TSK-248, operatör kararı A, 2026-09-28): sonuç `reflect.DURDURULDU_STATUS`
+    taşıyorsa (öğrenme süreci durdurulurken tur `_gate_eval`den önce kesildi — hiçbir deftere yazılmadı)
+    HİÇBİR alan oynamaz — sayaç, damga, sonuç, değişken, taban; beyanlı olay düşer, False döner. Ya hep ya
+    hiç: kısmi güncelleme yok, durum dosyası turdan ÖNCEKİ hâliyle tutarlı kalır. Taban ilerleseydi yeniden
+    başlayan süreç aynı kanıtı YOK sayardı; sayaç ilerleseydi pano hiç olmamış bir yansıma gösterirdi. Süreç
+    yeniden başlayınca taban diskten geri yüklenir (`_restored_baseline`) ve aynı kanıtla yeniden denenir —
+    sonsuz tekrar yok, tekrar yalnız yeniden başlatmada olur.
+    NEDEN BURADA (çağrı yerinde "çağırma" değil): üç çağrı yeri de (canlı · arka plan · elle) bu fonksiyondan
+    geçer — kural TEK yerde yaşar, yarın eklenecek bir çağrı yeri onu unutamaz; TSK-227'nin çağrı-yeri beyan
+    çivisi (`_record(hermes.reflect_once(...), arka_plan=...)` biçimi, v560 test_5) de aynen korunur. Arka plan
+    rejim tabanı çağrı yerinde taşındığı için çağıran dönüşe bakar."""
+    if _tur_kesildi(res, arka_plan=arka_plan):
+        return False
     _state["reflections"] += 1
     _state["last_reflection"] = _now()
     _state["last_result"] = res.get("status")
     _state["last_variable"] = (res.get("hypothesis") or {}).get("variable")
     if arka_plan:
-        return
+        return True
     # reset the countdown baseline. A MANUAL reflection must push the standby trigger out too — otherwise
     # the loop would immediately re-reflect on the very same trades.
     _state["last_reflect_at"] = len(store.read_jsonl("trades.jsonl"))
+    return True
+
+
+def _tur_kesildi(res, *, arka_plan: bool) -> bool:
+    """Yansıma sonucu durdurma isteğiyle KESİLMİŞ mi (TSK-248)? Kesildiyse beyanlı olayı düşürür ve True döner.
+
+    Okuyucu: olay defteri (`ops/olay_sorgu.py`, journal) — "durdurmada hangi tur yarıda kaldı, taban neydi?"
+    Kesintinin NEREDE olduğunu (`asama`) sonuç taşır; reflect katmanı kendi olayını ayrıca düşürür
+    (`submit_durdurma_istegiyle_kesildi` / `search_durdurma_istegiyle_kesildi`)."""
+    from . import reflect
+    if not (isinstance(res, dict) and res.get("status") == reflect.DURDURULDU_STATUS):
+        return False
+    obs.log("yansima_turu_sayilmadi", arka_plan=bool(arka_plan), asama=res.get("asama"), sebep=res.get("sebep"),
+            last_reflect_at=_state.get("last_reflect_at"),
+            detail="yansıma turu DURDURMA İSTEĞİYLE kesildi (süreç iniyor) — K/aşınma ve hipotez defterine "
+                   "yazılmadı, ship yok; tur SAYILMADI: sayaç ve tabanlar İLERLEMEDİ, süreç yeniden "
+                   "başlayınca aynı kanıtla yeniden dener (TSK-248)")
+    return True
 
 
 def _restored_baseline() -> int:
@@ -716,17 +749,23 @@ def _ufuk_notu(hz: dict) -> str:
             f"{hz.get('span_days', 0)}/{hz.get('min_days', '?')} gün) — elle tetikleme bunu bilerek atlar")
 
 
-def _elle_yansima_govdesi() -> None:
+def _elle_yansima_govdesi(durdurma=None) -> bool:
     """ELLE yansımanın TEK gövdesi — `reflect_now` (süreç-içi/CLI) ve pano isteği (`_yansima_istegini_isle`, öğrenme
     süreci) AYNI gövdeyi koşar; iki kopya ayrışırdı. Kilit ÇAĞIRANDA tutulur ve orada bırakılır.
 
     `arka_plan=False`: elle yansıma canlı geri sayımı (`last_reflect_at`) taşır — döngü aynı işlemler üzerinde hemen
-    yeniden yansımasın (TSK-227 kararı). Hata `last_result`a sınıf adıyla düşer; döngüyü/çağıranı düşürmez."""
-    from . import hermes
+    yeniden yansımasın (TSK-227 kararı). Hata `last_result`a sınıf adıyla düşer; döngüyü/çağıranı düşürmez.
+
+    `durdurma` (TSK-248): YALNIZ öğrenme döngüsünün iş parçacığındaki istek yolu verir (`_stop.is_set`). `reflect_now`
+    VERMEZ: döngüsüz koşabilir ve o an `_stop` önceki bir `stop()`tan kurulu kalmış olabilir — yüklem geçseydi elle
+    yansıma başlamadan "kesilirdi". Dönüş: tur durdurmayla KESİLDİ mi (`_record` işlemedi — TSK-248)."""
+    from . import hermes, reflect
     try:
-        _record(hermes.reflect_once(), arka_plan=False)
+        # İLETME YASASI TEK KAYNAKTAN: yüklem YOKSA anahtar hiç geçmez (`reflect_now`un çağrı yüzeyi BİREBİR eskisi).
+        return not _record(hermes.reflect_once(**reflect.backtest.durdurma_kw(durdurma)), arka_plan=False)
     except Exception as e:
         _state["last_result"] = f"error: {type(e).__name__}"
+    return False
 
 
 def _istek_ttl(poll_seconds) -> dict:
@@ -870,6 +909,10 @@ def _yansima_istegini_isle() -> bool:
     SİLME YANSIMADAN SONRA: istek dosyası yansıma boyunca durur → pano o sürede ikinci isteği "meşgul" diye reddeder.
     Süreç yansıma ortasında ölürse (SIGKILL, `TimeoutStopSec`) istek kalır ve yeniden başlayan döngü onu koşar —
     operatörün istediği yansıma sessizce kaybolmaz. Aynı süreçte aynı istek (silme düştüyse) ikinci kez KOŞMAZ.
+    DURDURMA (TSK-248): yansıma dur yüklemiyle (`_stop.is_set`) koşar; tur kesilirse SIGKILL'deki beyanın AYNISI
+    uygulanır — istek SİLİNMEZ, kayıt `durum="durduruldu"` olur ("bitti" değil: tur sayılmadı), yeniden başlayan
+    döngü isteği koşar. Pano bu durumu okumaz (yalnız "kosuyor"u karşılaştırır); bekleyen istek "bir sonraki
+    poll'da alınacak" diye görünür — doğru olan da budur.
     HALT/bayat veri denetlenmez: elle tetikleme bunları hiç denetlemedi (`reflect_now` birebir); ship kapısı
     (`reflect.submit`) öğrenme durdurmasını zaten uygular."""
     ham = store.read_json(YANSIMA_ISTEGI_FILE, None)
@@ -903,6 +946,7 @@ def _yansima_istegini_isle() -> bool:
         kayit = {"istek_id": ist.get("istek_id"), "istek_at": ist.get("istek_at"), "kaynak": ist.get("kaynak"),
                  "alindi_at": alindi, "gecikme_s": gecikme, "durum": "kosuyor"}
         _state["son_elle_istek"] = kayit
+        kesildi = False                      # gövde koşmadan istisna çıkarsa bugünkü davranış: istek silinir
         try:
             hz = yansima_kapisi(dict(_state))["horizon"]
             kayit.update(ufuk_hazir=bool(hz.get("ready")), ufuk_notu=_ufuk_notu(hz).strip(" ·") or None)
@@ -912,10 +956,13 @@ def _yansima_istegini_isle() -> bool:
                     ufuk_hazir=kayit["ufuk_hazir"], ufuk_notu=kayit["ufuk_notu"],
                     detail="pano isteği öğrenme sürecinde alındı — elle yansıma bu süreçte koşuyor")
             _persist()                       # "kosuyor" işareti panoya görünsün (uzun yansıma boyunca)
-            _elle_yansima_govdesi()
+            kesildi = _elle_yansima_govdesi(durdurma=_stop.is_set)
         finally:
-            _yansima_istegini_sil()
-            kayit.update(durum="bitti", bitti_at=_now(), sonuc=_state.get("last_result"))
+            if kesildi:
+                kayit.update(durum="durduruldu", durduruldu_at=_now())   # istek KALIR — docstring (TSK-248)
+            else:
+                _yansima_istegini_sil()
+                kayit.update(durum="bitti", bitti_at=_now(), sonuc=_state.get("last_result"))
             _persist()
     finally:
         _reflect_lock.release()
@@ -1000,7 +1047,9 @@ def _run(poll_seconds: int) -> None:
                         # pass the CERTIFIED regime: the search takes minutes, and a regime flip in the
                         # meantime must not retarget the ship into a regime the horizon never certified.
                         _state["_warm_skip"] = "reflect"
-                        _record(hermes.reflect_once(target_regime=live_reg), arka_plan=False)
+                        # DUR YÜKLEMİ (TSK-248): `_stop.is_set` yansıma zincirine ENJEKTE edilir (`_warmup_sprint`
+                        # deseni). Kesilen tur SAYILMAZ: `_record` işlemez, taban sabit kalır.
+                        _record(hermes.reflect_once(target_regime=live_reg, durdurma=_stop.is_set), arka_plan=False)
                     finally:
                         _reflect_lock.release()
                 elif (bg := _bg_ready_regime(trades, every, live_reg)) and \
@@ -1016,8 +1065,10 @@ def _run(poll_seconds: int) -> None:
                         # rejimine zorlar ve global (@'sız) önerileri o turda reddettirir.
                         # `arka_plan=True`: canlı geri sayım (`last_reflect_at`) TAŞINMAZ — bu tur yalnız
                         # kendi rejim tabanını taşır (TSK-227; gerekçe `_record`da).
-                        _record(hermes.reflect_once(target_regime=bg, background=True), arka_plan=True)
-                        _state.setdefault("bg_reflect_by_regime", {})[bg] = len(trades)
+                        # Kesilen arka plan turu da SAYILMAZ: `_record` işlemezse rejim tabanı İLERLEMEZ (TSK-248).
+                        if _record(hermes.reflect_once(target_regime=bg, background=True, durdurma=_stop.is_set),
+                                   arka_plan=True):
+                            _state.setdefault("bg_reflect_by_regime", {})[bg] = len(trades)
                     finally:
                         _reflect_lock.release()
                 elif os.environ.get("MERIDIAN_WARMUP_SPRINTS", "1") == "1" and \

@@ -296,12 +296,16 @@ def _wf_key(params: dict, version: int, goal: dict, by_regime: dict | None,
 
 
 def _wf_cached(params: dict, version: int, bars, index, goal: dict, by_regime: dict | None = None,
-               windows: tuple | None = None, eval_regime: str | None = None) -> dict:
+               windows: tuple | None = None, eval_regime: str | None = None, durdurma=None) -> dict:
     """Walk-forward'ı önbellekli koşar — aynı anahtar bir turda YALNIZ BİR KEZ hesaplanır.
 
     Anahtar `_wf_key`den gelir (paramlar + sürüm + yasa parmak izi + pencere + eval_regime).
     Anahtar başına hesap kilidi: ikinci çağıran bekler, birincinin sonucunu kullanır. Hesap
-    sürerken barlar tazelenirse (revizyon değişti) sonuç ÇAĞIRANA döner ama ÖNBELLEĞE YAZILMAZ."""
+    sürerken barlar tazelenirse (revizyon değişti) sonuç ÇAĞIRANA döner ama ÖNBELLEĞE YAZILMAZ.
+
+    `durdurma` (TSK-248): verilirse replay'in gün başı kontrol noktasına iletilir; kurulunca
+    `backtest.ReplayDurduruldu` ÇAĞIRANA çıkar ve sonuç (yoktur) ÖNBELLEĞE YAZILMAZ — yazım yalnız
+    walk-forward DÖNDÜĞÜNDE olur; anahtar kilidi `with` ile bırakılır (bekleyen iplik kendisi hesaplar)."""
     w = windows or _default_windows()
     key = _wf_key(params, version, goal, by_regime, w, eval_regime)
     _inc_disk_load()
@@ -313,7 +317,8 @@ def _wf_cached(params: dict, version: int, bars, index, goal: dict, by_regime: d
         _rev0 = _wf_rev()
         sonuc = backtest.walk_forward(
             params, bars, index, goal, w[0], w[1], w[2], w[3], strategy_version=version,
-            oos_folds=w[4], embargo_days=w[5], params_by_regime=by_regime, eval_regime=eval_regime)
+            oos_folds=w[4], embargo_days=w[5], params_by_regime=by_regime, eval_regime=eval_regime,
+            **backtest.durdurma_kw(durdurma))
         _rev1 = _wf_rev()
         if _rev1 == _rev0:
             _INC_CACHE[key] = sonuc
@@ -1246,12 +1251,48 @@ class _ProcessLock:
             pass
 
 
-def submit(proposal: dict, goal: dict | None = None, windows: tuple | None = None) -> dict:
+def _replay_kesinti_alanlari(kesinti: "backtest.ReplayDurduruldu | None") -> dict:
+    """Replay ortasında kesilen walk-forward'ın olay alanları (TSK-248) — "hesabın ne kadarı yarıda kaldı"
+    sorusunun cevabı olay defterine iner. Kesinti replay'de değil kontrol noktasında görüldüyse boş."""
+    if kesinti is None:
+        return {}
+    return {"tamamlanan_gun": kesinti.tamamlanan_gun, "toplam_gun": kesinti.toplam_gun,
+            "kesilen_gun": kesinti.tarih}
+
+
+def _submit_durduruldu(asama: str, proposal: dict, kesinti: "backtest.ReplayDurduruldu | None" = None) -> dict:
+    """KESİLEN TUR SAYILMAZ (TSK-248, operatör kararı A, 2026-09-28) — `submit`in durdurma dönüşü.
+
+    Öğrenme süreci durdurulurken (`hermes_runtime._stop` → enjekte `durdurma` yüklemi) boru hattı
+    `_gate_eval`e VARMADAN kesildi: K/aşınma defterine (`validation.record_candidate`), hipotez
+    defterine (`memory.record`) HİÇBİR satır yazılmadı, ship yok. Yarım ölçüm kayıt değildir (uydurma
+    yasağı); SIGKILL'in iki riski — asimetrik defter ve karar yazılmış ama taban eski — bu yüzden
+    doğmaz. Çağıran (`hermes_runtime`) `DURDURULDU_STATUS`u görünce turu SAYMAZ; süreç yeniden
+    başlayınca aynı kanıtla yeniden dener.
+
+    `asama` NEREDE kesildiğini söyler: "giris" · "incumbent_oncesi" · "incumbent" (walk-forward ortası) ·
+    "aday_oncesi" · "aday" (walk-forward ortası) · "kapi_oncesi". Olay okuyucusu: olay defteri
+    (`ops/olay_sorgu.py`, journal) — "durdurma hangi hesabı yarıda bıraktı?" sorusunun kaynağı."""
+    from . import obs as _obs
+    _obs.log("submit_durdurma_istegiyle_kesildi", asama=asama, variable=proposal.get("variable"),
+             source=proposal.get("source"), **_replay_kesinti_alanlari(kesinti),
+             detail="yansıma boru hattı DURDURMA İSTEĞİYLE `_gate_eval`den ÖNCE kesildi (süreç iniyor) — "
+                    "K/aşınma ve hipotez defterine satır YAZILMADI, ship yok; tur SAYILMAZ (TSK-248)")
+    return {"status": DURDURULDU_STATUS, "sebep": DURDURMA_SEBEBI, "asama": asama,
+            "variable": proposal.get("variable"),
+            "beyan": "durdurma isteği — kesilen tur sayılmaz, hiçbir deftere yazılmadı"}
+
+
+def submit(proposal: dict, goal: dict | None = None, windows: tuple | None = None,
+           durdurma=None) -> dict:
     """Ship yetkisinin TEK KAPISI: öğrenme-durdurma bayrağını ve süreçler-arası yansıma kilidini
     kontrol edip asıl boru hattını (`_submit_locked`) çağırır.
 
     LEARN_HALT aktifse hiç ilerlemez ("halt_learning"); kilit başkasındaysa bloklamadan
-    "locked" döner — iki eşzamanlı yansıma strategy.yaml/sürüm durumunu ezemez."""
+    "locked" döner — iki eşzamanlı yansıma strategy.yaml/sürüm durumunu ezemez.
+
+    `durdurma` (TSK-248): öğrenme sürecinin enjekte ettiği argümansız yüklem (`hermes_runtime._stop` bayrağının `is_set`i);
+    verilmezse (None) davranış ve çağrı yüzeyi BİREBİR eskisi. Kontrol noktaları `_submit_locked`te."""
     from . import health as _health, obs as _obs
     if _health.learn_halted():                 # Faz 3: öğrenme durduruldu — işlemler sürer,
         _obs.log("submit_blocked_learn_halt")  # ama YENİ versiyon ship edilemez (operatör bayrağı)
@@ -1264,10 +1305,11 @@ def submit(proposal: dict, goal: dict | None = None, windows: tuple | None = Non
     with _ProcessLock() as pl:
         if not pl.held:
             return {"status": "locked", "detail": "başka bir süreçte yansıma sürüyor — bu öneri atlandı"}
-        return _submit_locked(proposal, goal, windows)
+        return _submit_locked(proposal, goal, windows, **backtest.durdurma_kw(durdurma))
 
 
-def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | None = None) -> dict:
+def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | None = None,
+                   durdurma=None) -> dict:
     """Her hipotezin geçtiği boru hattı — kilit ALINMIŞKEN koşar (yalnız `submit` çağırır).
 
     Sıra: guard (şekil/kara liste; bileşik öneri kuyruğa) → OOS kapısı (incumbent ve aday AYNI
@@ -1276,7 +1318,19 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
 
     Fail-closed: teyit ÖLÇÜLEMEDİĞİNDE (dilimler var ama hüküm yok) ship ENGELLENİR —
     "ölçülemedi" ne "geçti" ne "reddedildi"dir. DSR gerçek-parada sert, kâğıtta damga; PBO
-    ölçülebiliyorsa iki modda da serttir."""
+    ölçülebiliyorsa iki modda da serttir.
+
+    DURDURMA KONTROL NOKTALARI (TSK-248) — yalnız `durdurma` verilmişse okunur, HEPSİ `_gate_eval`den
+    ÖNCE: giriş (guard/beceri notu dahil hiçbir yazım başlamadan) · incumbent öncesi · aday öncesi ·
+    `_gate_eval` öncesi; iki walk-forward'ın İÇİ de replay gün başı noktasıyla kesilir. `_gate_eval`
+    (K/aşınma yazımı) başladıktan sonra kesinti YOK: kalan adımlar (teyit bootstrap'ı, DSR/PBO, ship) kısa
+    hesaplardır ve yarıda bırakmak tam da önlenen asimetrik defteri doğururdu."""
+    def _dur() -> bool:
+        """Durdurma istendi mi? Yüklem verilmemişse (None) daima False — yüklemsiz boru hattı kesilmez."""
+        return durdurma is not None and bool(durdurma())
+
+    if _dur():
+        return _submit_durduruldu("giris", proposal)
     goal = goal or config.goal()
     rec = proposal.get("skill_recommendation")       # Axis-2: record the skill note (operator applies it)
     if isinstance(rec, dict) and rec.get("skill"):
@@ -1328,6 +1382,8 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
     # 2. BACKTEST OOS GATE — purged+embargoed multi-fold, incumbent + candidate through the SAME engine
     # and the SAME windows (w). windows=None → dataset.* → identical to production; the sprint passes a
     # calendar-shifted w so selection stays disjoint from its forward eval window.
+    if _dur():
+        return _submit_durduruldu("incumbent_oncesi", proposal)
     bars, index = dataset.load()
     w = windows or _default_windows()
     candidate = versioning.bump(current, v.variable, v.new, note=proposal.get("rationale", ""))
@@ -1335,12 +1391,26 @@ def _submit_locked(proposal: dict, goal: dict | None = None, windows: tuple | No
     # incumbent AND candidate on the identical slice. The min_sample floor applies to the slice, so a
     # thin regime yields score=None and the gate honestly refuses to ship (no small-sample overfits).
     ereg = _eval_regime_of(v.variable)
-    inc = _wf_cached(params_of(current), int(current.get("version", 1)), bars, index, goal,
-                     current.get("params_by_regime"), windows=w, eval_regime=ereg)
-    cand = backtest.walk_forward(params_of(candidate), bars, index, goal,
-                                 w[0], w[1], w[2], w[3], strategy_version=candidate["version"],
-                                 oos_folds=w[4], embargo_days=w[5],
-                                 params_by_regime=candidate.get("params_by_regime"), eval_regime=ereg)
+    _dk = backtest.durdurma_kw(durdurma)
+    try:
+        inc = _wf_cached(params_of(current), int(current.get("version", 1)), bars, index, goal,
+                         current.get("params_by_regime"), windows=w, eval_regime=ereg, **_dk)
+    except backtest.ReplayDurduruldu as _k:
+        return _submit_durduruldu("incumbent", proposal, _k)
+    if _dur():
+        return _submit_durduruldu("aday_oncesi", proposal)
+    try:
+        cand = backtest.walk_forward(params_of(candidate), bars, index, goal,
+                                     w[0], w[1], w[2], w[3], strategy_version=candidate["version"],
+                                     oos_folds=w[4], embargo_days=w[5],
+                                     params_by_regime=candidate.get("params_by_regime"), eval_regime=ereg,
+                                     **_dk)
+    except backtest.ReplayDurduruldu as _k:
+        return _submit_durduruldu("aday", proposal, _k)
+    # SON KONTROL NOKTASI: `_gate_eval(record_erosion=True)` K/aşınma defterine yazar — ondan sonra
+    # kesinti yok (yukarıdaki docstring). İki walk-forward bitti ama istek geldiyse hüküm VERİLMEZ.
+    if _dur():
+        return _submit_durduruldu("kapi_oncesi", proposal)
 
     k_probes = int(proposal.get("probes_tested", 1) or 1)   # aramadan gelen K → kazanan-laneti cezası
     # RESMÎ KAPI DEĞERLENDİRMESİ — aşınma sayacına DÜŞER (ship yetkisi olan tek yol).
@@ -1654,11 +1724,14 @@ def _probe_key(cand_strat: dict, var: str, new, w: tuple) -> str:
                  var, round(float(new), 6)))
 
 
-def _probe_wf(cand_strat: dict, var: str, new, from_version: int, bars, index, goal: dict, w: tuple) -> dict:
+def _probe_wf(cand_strat: dict, var: str, new, from_version: int, bars, index, goal: dict, w: tuple,
+              durdurma=None) -> dict:
     """Full walk_forward for a probe, cached by (window, from_version, var, val). A cached hit returns the
     FULL result so the caller re-runs the COMPLETE _gate_eval (magnitude AND folds AND tail) — never a
     magnitude-only shortcut (the judge-found cache bug). A var@regime probe is graded on its regime slice
-    (Phase 3); the regime rides in `var`, so the cache key already separates sliced from global results."""
+    (Phase 3); the regime rides in `var`, so the cache key already separates sliced from global results.
+    `durdurma` (TSK-248): replay'e iletilir; `backtest.ReplayDurduruldu` çağırana çıkar ve atama hiç
+    gerçekleşmediği için yarım sonda ÖNBELLEĞE (bellek + disk) YAZILMAZ."""
     wkey = tuple(w[:4]) + (tuple(w[4]), w[5])
     # Key on the FULL parameter world (flat + by_regime digests), not the version number: after a
     # rollback, versioning.bump REUSES the rolled-back version number with different params, so a
@@ -1670,7 +1743,8 @@ def _probe_wf(cand_strat: dict, var: str, new, from_version: int, bars, index, g
         _PROBE_CACHE[key] = backtest.walk_forward(
             params_of(cand_strat), bars, index, goal, w[0], w[1], w[2], w[3],
             strategy_version=cand_strat["version"], oos_folds=w[4], embargo_days=w[5],
-            params_by_regime=cand_strat.get("params_by_regime"), eval_regime=_eval_regime_of(var))
+            params_by_regime=cand_strat.get("params_by_regime"), eval_regime=_eval_regime_of(var),
+            **backtest.durdurma_kw(durdurma))
         _probe_disk_save()
     return _PROBE_CACHE[key]
 
@@ -1806,9 +1880,11 @@ HAVUZ_NABIZ_SN = float(os.environ.get("MERIDIAN_HAVUZ_NABIZ_SN", "60"))
 # incumbent yürüyüşünden önce ve sondalar arası). Durunca: kısmi ilerleme diske iner, havuz öldürülür,
 # beyanlı olayla dönülür. Yüklem ENJEKTE edilir çünkü bayrağın sahibi (`hermes_runtime._stop`) bu modülün
 # üst katmanıdır — `reflect` onu içe aktarsaydı import grafiğine yeni bir kenar girerdi (çivi v586).
-# Verilmezse (None) davranış BİREBİR eskisidir: sprint, `search_and_submit` ve testler yüklemsiz çağırır.
-# SINIR (beyan): TEK bir walk-forward bölünemez — hermes ipliğinin KENDİSİ bir walk-forward hesaplarken
-# gelen istek o hesabın bitişini bekler (sonda döngüsünün "TAVAN KONTROLÜ SONDALAR ARASINDA" gerekçesi).
+# Verilmezse (None) davranış BİREBİR eskisidir: sprint ve testler yüklemsiz çağırır.
+# SINIR KAPANDI (TSK-248, 2026-09-28): TEK bir walk-forward da artık bölünür — yüklem `backtest.replay`in
+# gün başı kontrol noktasına iletilir (`backtest.ReplayDurduruldu`); yarım walk-forward ÖNBELLEĞE YAZILMAZ.
+# Yansıma turu (`hermes.reflect_once` → `submit` / `search_and_submit`) da yüklemi taşır: kesilen tur
+# SAYILMAZ (operatör kararı A) — ayrıntı `submit` ve `_submit_durduruldu` başlıklarında.
 #
 # KONTROL KUANTUMU: yüklem verildiğinde havuz bekleyişi `HAVUZ_NABIZ_SN` (60) yerine en çok bu kadar
 # sürer — durdurma gecikmesinin tavanı budur (hedef ≤30 sn, `TimeoutStopSec` 120; v586 ölçer). BEDEL:
@@ -1819,6 +1895,10 @@ DURDURMA_KONTROL_SN = 5.0
 # Kesinti damgasındaki `sebep` değeri — süre tavanının "sure_tavani"sinden AYRI: durdurma bir ÖLÇÜM
 # değildir (`hermes.warmup_budget_feedback` süre tavanını duvar sayar; durdurma oraya işlenmez).
 DURDURMA_SEBEBI = "durdurma_istegi"
+# Yansıma boru hattının (`submit` / `search_and_submit`; `hermes.reflect_once` aynen taşır) KESİLEN tur
+# statüsü (TSK-248). Bir KARAR DEĞİLDİR: hiçbir deftere yazılmaz; okuyucusu çağıran — `hermes_runtime`
+# bu statüyü görünce turu SAYMAZ (`hermes_runtime._record` işlemez, `last_reflect_at` sabit).
+DURDURULDU_STATUS = "durduruldu"
 
 
 class _DurdurmaIstegi(RuntimeError):
@@ -2069,26 +2149,37 @@ def prefill_incumbents(bars, index, regimes: list, goal: dict | None = None,
             from . import obs as _obs
             _obs.warn("incumbent_prefill_pool_failed", error=f"{type(e).__name__}: {e}")
             missing = [(k, er) for k, er in missing if k not in _INC_CACHE]
+    def _sirali_durdur(kalan: int, replay=None) -> None:
+        """Sıralı döngünün durdurma çıkışı — adım ARASINDA (TSK-246) ya da adımın walk-forward'ının İÇİNDE
+        (TSK-248, replay gün başı; `replay` = `backtest.ReplayDurduruldu`) görülen istek AYNI beyanla iner."""
+        _inc_disk_save()                    # havuzdan önce gelmiş sonuçlar da diske iner (genel-istisna dalı yazmıyor)
+        from . import obs as _obs
+        _obs.log("incumbent_prefill_durduruldu", asama="sirali", computed=computed, kalan=kalan,
+                 **_replay_kesinti_alanlari(replay),
+                 detail="durdurma istendi: incumbent ön-hesabının sıralı döngüsü kontrol noktasında "
+                        "kesildi — kalan varyantlar hesaplanmadı (her biri tam bir walk-forward); "
+                        "biten sonuçlar diskte, bir sonraki koşum önbellekten devam eder")
+
     for _i, (_k, er) in enumerate(missing):
-        # KONTROL NOKTASI (TSK-246): her adım bir TAM walk-forward'dır ve başladıktan sonra bölünemez —
-        # istek ancak iki adımın ARASINDA görülebilir. Havuz SIGTERM'le kırıldığında akış tam buraya
-        # düşer; bayrak okunmasaydı durdurma walk-forward'ların bitişini bekler ve SIGKILL'le biterdi.
+        # KONTROL NOKTASI (TSK-246): istek iki adımın ARASINDA görülür. Havuz SIGTERM'le kırıldığında akış
+        # tam buraya düşer; bayrak okunmasaydı durdurma walk-forward'ların bitişini bekler ve SIGKILL'le
+        # biterdi. TSK-248'den beri adımın KENDİSİ de (tek walk-forward) replay gün başında kesilir.
         if durdurma is not None and durdurma():
             durduruldu = "sirali"
-            _inc_disk_save()                # havuzdan önce gelmiş sonuçlar da diske iner (genel-istisna dalı yazmıyor)
-            from . import obs as _obs
-            _obs.log("incumbent_prefill_durduruldu", asama="sirali", computed=computed,
-                     kalan=len(missing) - _i,
-                     detail="durdurma istendi: incumbent ön-hesabının sıralı döngüsü kontrol noktasında "
-                            "kesildi — kalan varyantlar hesaplanmadı (her biri tam bir walk-forward); "
-                            "biten sonuçlar diskte, bir sonraki koşum önbellekten devam eder")
+            _sirali_durdur(len(missing) - _i)
             break
         if _k not in _INC_CACHE:
             # (2) NUMARALI KÖR FAZ (v302): havuz atalete çarpınca akış BURAYA düşer ve her
             # `_wf_cached` bir TAM walk-forward'dır. Canlıda ölçüldü: 02:00:08 → 03:24:33
             # arası 5065 sn / 2 walk-forward, sıfır nabız. Havuz bekleyişini kuantumlamak bu
             # bacağı KAPSAMAZ — burası havuz değil, sıralı hesap. Her iş bitiminde nabız.
-            _wf_cached(params, version, bars, index, goal, by_regime, windows=w, eval_regime=er)
+            try:
+                _wf_cached(params, version, bars, index, goal, by_regime, windows=w, eval_regime=er,
+                           **backtest.durdurma_kw(durdurma))
+            except backtest.ReplayDurduruldu as _rk:
+                durduruldu = "sirali"
+                _sirali_durdur(len(missing) - _i, replay=_rk)
+                break
             computed += 1
             if canlilik is not None:
                 try:
@@ -2147,6 +2238,10 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
     UYDURULMAZ); (2) damgadaki `sebep` = `DURDURMA_SEBEBI`. Durdurma bir ÖLÇÜM DEĞİLDİR — "bu genişlik
     tavana sığmadı" demez; çağıran (`hermes_runtime._warmup_sprint`) onu bütçe merdivenine işlemez. Her
     iki kesinti koşulu birden doğarsa durdurma kazanır (süreç iniyor; tavan hükmü anlamsızlaşır).
+    TSK-248: yüklem incumbent'ın ve her sondanın walk-forward'ına da (replay gün başı) iletilir — TEK bir
+    walk-forward'ın ortasında gelen istek `backtest.ReplayDurduruldu` ile aynı kesinti damgasına döner;
+    yarım sonda DEĞERLENDİRİLMEMİŞ sayılır (`kalan_sonda`da durur, `tried`e yazılmaz, `fresh`e girmez).
+    DURDURMAYLA kesilen oturum resmî kaydı DÜŞÜRMEZ (aşağıdaki "RESMÎ KAYIT"): kesilen tur sayılmaz.
 
     ---- RESMÎ KAYIT: OTURUM BAŞINA BİR --------------------------------------------------------
     `record_session` — oturum sonunda TEK resmî değerlendirme kaydı düşürülür mü?
@@ -2207,7 +2302,7 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
         """Durdurma yüklemi kuruldu mu? Yüklem verilmemişse (None) daima False — yüklemsiz arama kesilmez."""
         return durdurma is not None and bool(durdurma())
 
-    def _kesinti(evaluated: int, kalan: int | None, sebep: str = "sure_tavani") -> dict:
+    def _kesinti(evaluated: int, kalan: int | None, sebep: str = "sure_tavani", replay=None) -> dict:
         """Kesinti damgası + YASA 4 kaydı (gerekçe ≥20 karakter): sessiz bir kesinti, kısa bir
         aramadan ayırt edilemez ve okuyucu aramanın eksik olduğunu ASLA öğrenemez.
 
@@ -2219,7 +2314,9 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
         durdurma) — sayı uydurulmaz.
 
         `sebep`: "sure_tavani" (ölçüm: bu genişlik tavana sığmadı) ya da `DURDURMA_SEBEBI` (süreç
-        iniyor — ölçüm DEĞİL). İki sebep AYRI olay adıyla yazılır ki defteri okuyan onları karıştırmasın."""
+        iniyor — ölçüm DEĞİL). İki sebep AYRI olay adıyla yazılır ki defteri okuyan onları karıştırmasın.
+        `replay` (TSK-248): kesinti bir walk-forward'ın İÇİNDE görüldüyse `backtest.ReplayDurduruldu` —
+        yarım kalan hesabın gün sayımları olaya iner (damga sözlüğü değişmez)."""
         gecen = round((_time.time() - _t_basla) / 60.0, 2)
         _kalan = None if kalan is None else int(kalan)
         damga = {"kesildi": True, "sebep": sebep,
@@ -2238,7 +2335,8 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
         try:
             from . import obs as _obs_k
             _obs_k.log(olay, evaluated=evaluated, kalan_sonda=_kalan,
-                       gecen_dk=gecen, tavan_dk=damga["tavan_dk"], regime=regime, detail=detay)
+                       gecen_dk=gecen, tavan_dk=damga["tavan_dk"], regime=regime, detail=detay,
+                       **_replay_kesinti_alanlari(replay))
         except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; kesinti damgası ZATEN dönüş sözlüğünde taşınıyor ve kayıt denemesi çağıranı düşüremez
             pass
         return damga
@@ -2260,8 +2358,15 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
                 "skipped_wallclock": 0, "best": None, "trace": [], "regime": regime,
                 "planlanan_sonda": None, "hayalet_suzulen": None, "oturum_kaydi": None,
                 **_kesinti(0, kalan=None, sebep=DURDURMA_SEBEBI)}
-    inc = _wf_cached(params, version, bars, index, goal, current.get("params_by_regime"), windows=w,
-                     eval_regime=regime)
+    try:
+        inc = _wf_cached(params, version, bars, index, goal, current.get("params_by_regime"), windows=w,
+                         eval_regime=regime, **backtest.durdurma_kw(durdurma))
+    except backtest.ReplayDurduruldu as _rk:
+        # INCUMBENT YÜRÜYÜŞÜNÜN ORTASI (TSK-248): yukarıdaki erken dönüşle AYNI şekil — plan kurulmadı.
+        return {"incumbent_oos": None, "evaluated": 0, "cleared": 0, "fresh": 0, "cached_hits": 0,
+                "skipped_wallclock": 0, "best": None, "trace": [], "regime": regime,
+                "planlanan_sonda": None, "hayalet_suzulen": None, "oturum_kaydi": None,
+                **_kesinti(0, kalan=None, sebep=DURDURMA_SEBEBI, replay=_rk)}
     inc_oos = inc.get("oos_score")
     # Ö-48 HAYALET SÜZGECİ: motor-okuyucusuz anahtar sonda listesine hiç girmez; süzülenler hem
     # olayla hem bu fonksiyonun dönüşündeki `hayalet_suzulen` alanıyla görünür (None = ölçülemedi).
@@ -2350,9 +2455,17 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
         if not _is_cached and (_time.time() - _t0) / 60.0 > _max_min:
             _skipped_fresh += 1                # duvar-saati doldu: taze hesap atla (K sayımda kalır → sıkı)
             continue
+        try:
+            cand = _probe_wf(cand_strat, var, new, version, bars, index, goal, w,
+                             **backtest.durdurma_kw(durdurma))
+        except backtest.ReplayDurduruldu as _rk:
+            # SONDANIN ORTASI (TSK-248): yarım sonda değerlendirilmedi — `kalan` onu içerir (i-1 bitti),
+            # `tried`den geri alınır (denenmedi), `fresh` sayacına hiç girmedi (sayım dönüşten SONRA).
+            tried.discard((var, new))
+            kesinti = _kesinti(evaluated, kalan=total - (i - 1), sebep=DURDURMA_SEBEBI, replay=_rk)
+            break
         if not _is_cached:
             _fresh_done += 1
-        cand = _probe_wf(cand_strat, var, new, version, bars, index, goal, w)
         # SONDA DEĞERLENDİRMESİ KAYITSIZDIR. Yasa AYNEN koşar (tam kapı + K-aday
         # kazanan-laneti cezası + yürürlükteki aşınma MARJI); yazılmayan tek şey SAYIM'dır. Buradaki
         # `record_erosion=True` kodun kendi beyanının tam tersini yapıyordu: yorum "oturum pencereye
@@ -2392,8 +2505,12 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
     #                      saymak, aşınma sayacını "kaç kez fonksiyon çağrıldı"ya çevirirdi.
     #   `best is None`   — kapıyı geçen aday varsa resmî kaydı `submit` düşürür (ship otoritesi aynı
     #                      kapıyı aynı K ile yeniden koşar); ikinci satır oturumu iki kez sayardı.
+    # DÖRDÜNCÜ ŞART (TSK-248, operatör kararı A): DURDURMA İSTEĞİYLE kesilen oturum resmî soru SORMADI
+    #                      sayılır — kesilen tur sayılmaz; yarım oturumu K/aşınma defterine yazmak, çağıranın
+    #                      (`search_and_submit`) submit'i atladığı turda defteri tek taraflı ilerletirdi.
     oturum_kaydi = None
-    if record_session and evaluated > 0 and best is None and rep_cand is not None:
+    if (record_session and evaluated > 0 and best is None and rep_cand is not None
+            and kesinti.get("sebep") != DURDURMA_SEBEBI):
         try:
             _gate_eval(inc, rep_cand, k_probes=total, record_erosion=True)
             oturum_kaydi = {"kaydedildi": True, "temsilci_oos": rep_oos, "k_probes": total}
@@ -2418,26 +2535,37 @@ def coordinate_descent_search(bars, index, goal: dict | None = None, *, windows:
             # adları · None = okuyucu kümesi ölçülemedi (fail-open koşuldu, hiçbir anahtar süzülmedi).
             "hayalet_suzulen": hayalet_suzulen,
             # KAYDIN AKIBETİ SONUÇTA GÖRÜNÜR: `None` = bu oturum resmî kayıt düşürmedi (ya kapıyı
-            # geçen aday `submit`e gitti, ya çağıran ship edemez, ya hiç sonda koşmadı). Alanın
+            # geçen aday `submit`e gitti, ya çağıran ship edemez, ya hiç sonda koşmadı, ya da oturum
+            # DURDURMA isteğiyle kesildi — kesinti damgası `sebep`te). Alanın
             # yokluğu ile "yazılamadı" birbirine karışmasın diye her hâlde yazılır.
             "oturum_kaydi": oturum_kaydi,
             **kesinti}
 
 
 def search_and_submit(bars, index, goal: dict | None = None, *, windows: tuple | None = None,
-                      k_max: int = 3, budget: int = 10, on_probe=None, regime: str | None = None) -> dict:
+                      k_max: int = 3, budget: int = 10, on_probe=None, regime: str | None = None,
+                      durdurma=None) -> dict:
     """Search for a gate-clearing candidate, then hand the winner to submit() — which re-runs the identical
     gate and remains the SOLE ship authority. Nothing ships if no probe clears. predicted_delta is the
     MEASURED OOS lift (not a hardcoded 0.03), so a later realized_delta gives an honest calibration hit/miss.
     regime: run a REGIME-TARGETED search (all probes var@regime, graded on that regime's slice — Phase 3);
     submit() re-derives the same eval_regime from the winning variable's @suffix, so search and ship grade
-    on the identical population."""
+    on the identical population.
+
+    `durdurma` (TSK-248): aramaya ve kazananın submit'ine İLETİLİR (bugüne dek iletilmiyordu — yansıma
+    turunun araması durdurmayla hiç kesilmezdi). Arama DURDURMAYLA kesildiyse, bulunmuş bir kazanan olsa
+    bile submit EDİLMEZ: kesilen tur ship etmez ve sayılmaz (operatör kararı A); dönüş
+    `DURDURULDU_STATUS` + `asama="arama"` + arama sözlüğü (kesinti damgası içinde)."""
     goal = goal or config.goal()
     # RESMÎ KAYIT ZİNCİRİ: arama `record_session=True` (varsayılan) ile koşar. Kapıyı geçen aday
     # ÇIKARSA kaydı aşağıdaki `submit` düşürür (ship otoritesi, aynı kapı, aynı K); çıkmazsa aramanın
     # kendisi düşürür. İki dalın toplamı DEĞİŞMEZDİR: oturum başına TAM BİR resmî soru.
+    _dk = backtest.durdurma_kw(durdurma)
     res = coordinate_descent_search(bars, index, goal, windows=windows, k_max=k_max, budget=budget,
-                                    on_probe=on_probe, regime=regime)
+                                    on_probe=on_probe, regime=regime, **_dk)
+    if res.get("sebep") == DURDURMA_SEBEBI:
+        # Kesinti olayı aramanın kendisinde düştü (`search_durdurma_istegiyle_kesildi`); ikinci olay yazılmaz.
+        return {"status": DURDURULDU_STATUS, "sebep": DURDURMA_SEBEBI, "asama": "arama", "search": res}
     best = res.get("best")
     if not best:
         return {"status": "no_clearing_candidate", "search": res}
@@ -2457,7 +2585,7 @@ def search_and_submit(bars, index, goal: dict | None = None, *, windows: tuple |
         "probes_tested": res.get("evaluated", 1),   # submit() kazanan-laneti cezasını buradan okur
         "regime": store.read_json("regime.json", {}).get("regime", "any"),
     }
-    result = submit(prop, goal, windows=windows)
+    result = submit(prop, goal, windows=windows, **_dk)
     result["search"] = res
     return result
 

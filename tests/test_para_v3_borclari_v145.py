@@ -331,7 +331,10 @@ def test_walk_forward_IMZASI_DEGISMEDI():
                  "params_by_regime", "eval_regime",
                  # TSK-159 S2 (2026-09-06, EDG-2026-082): opsiyonel PIT üyelik süzgeci — sona eklendi,
                  # varsayılan None (bugünkü çağıranlar için davranış BİREBİR; v427 çivisi).
-                 "uyelik"]
+                 "uyelik",
+                 # TSK-248 (2026-09-28): opsiyonel durdurma yüklemi (replay gün başı kontrol noktası) — sona
+                 # eklendi, varsayılan None; yüklemsiz çağrı yüzeyi BİREBİR (anahtar hiç geçmez — v588).
+                 "durdurma"]
 
 
 def test_walk_forward_mtm_dd_bloguNU_URETIR_ve_kapi_alanlarina_DOKUNMAZ():

@@ -28,9 +28,15 @@ BU süreçte, bekleme döngüsünün `_reflect_lock`u altında koşar — iki ya
 DURDURMA: systemd SIGTERM yollar → `_isaret` kancası `hermes_runtime.stop()` çağırır → döngü
 bayrağını görür ve turunu bitirip çıkar. Isınmanın uzun hesabı (incumbent ön-hesabı + koordinat araması)
 bayrağı KONTROL NOKTALARINDA okur ve kısmi ilerlemeyi diske yazıp iner (TSK-246; ölçüm v586: ≈ bir
-`reflect.DURDURMA_KONTROL_SN`). Kapsanmayan: hermes ipliğinin kendisinde koşan TEK bir walk-forward ve
-canlı/arka plan yansıma araması (`hermes.reflect_once`) — onlar turun bitişini bekler.
-`TimeoutStopSec` dolmadan inemezse systemd SIGKILL atar;
+`reflect.DURDURMA_KONTROL_SN`). TSK-248'den beri (operatör kararı A, 2026-09-28) canlı / arka plan / pano
+isteği yansıma turu da (`hermes.reflect_once` → `reflect.submit` · `reflect.search_and_submit`) aynı yüklemi
+taşır ve TEK bir walk-forward da `backtest.replay`in gün başı kontrol noktasında bölünür (ölçüm v588: SIGTERM →
+iniş ≈ bir replay günü). Kesilen tur SAYILMAZ: `_gate_eval`den önce kesilir, K/aşınma ve hipotez defterine
+satır yazılmaz, `last_reflect_at` İLERLEMEZ, süreç yeniden başlayınca aynı kanıtla yeniden dener.
+Kapsanmayan (beyan): uçuştaki bir LLM öneri çağrısı (HTTP/CLI zaman aşımı sürer — yalnız öncesinde ve
+sonrasında görülür) ve `_gate_eval` BAŞLADIKTAN sonraki kısa kapanış adımları (teyit bootstrap'ı, DSR/PBO,
+ship — bilerek kesilmez: yarıda bırakmak asimetrik defter doğururdu). `reflect_now` (süreç-içi/CLI) yolu
+yüklem almaz. `TimeoutStopSec` dolmadan inemezse systemd SIGKILL atar;
 o hâlde bile yarım kalan yansıma `_ProcessLock`u bırakır (flock süreç ölümünde çekirdek tarafından
 serbest bırakılır) ve `SEARCH_PROGRESS` diskte `running=True` DONAR — bu bilinçli: `sprint`in
 bayatlık yasası (`ARAMA_BAYAT_SAAT`) donmuş bayrağı zaten yakalar ve temizler.
@@ -44,8 +50,8 @@ from . import hermes_runtime, obs
 
 
 def _isaret(imza, _cerceve) -> None:
-    """SIGTERM/SIGINT kancası: döngüye dur bayrağını koyar. Süreci BURADA öldürmez — koşan bir
-    yansımanın yarıda kesilmesi bir öğrenme turunu çöpe atar; döngü turunu bitirip kendisi iner.
+    """SIGTERM/SIGINT kancası: döngüye dur bayrağını koyar. Süreci BURADA öldürmez — döngü kendisi iner:
+    koşan yansıma turu bayrağı kontrol noktalarında görüp SAYILMADAN (defterlere yazmadan) kesilir (TSK-248).
 
     BAYRAK ÖNCE, OLAY SONRA (TSK-246): `KillMode=control-group` SIGTERM'i önce ana sürece, hemen ardından
     havuz işçilerine yollar (systemd'nin öldürme sırası — kaynak okuması, A1'de ÖLÇÜLMEDİ); işçiler ölünce havuz kırılır ve hermes ipliği sıralı yola girmeden ÖNCE dur
@@ -54,8 +60,8 @@ def _isaret(imza, _cerceve) -> None:
     girerdi (2026-09-28 durdurmasında olay ile havuz arızası AYNI saniyedeydi). Çivi: v586."""
     hermes_runtime.stop()
     obs.log("learn_run_durdurma_istegi", imza=int(imza),
-             detail="dur bayrağı kondu — koşan yansıma turunu bitirip inecek; uzun hesap (ısınma ön-hesabı "
-                    "ve araması) bayrağı kontrol noktalarında okuyup iner")
+             detail="dur bayrağı kondu — uzun hesap (ısınma ön-hesabı ve araması, yansıma turu) bayrağı "
+                    "kontrol noktalarında okuyup iner; kesilen yansıma turu sayılmaz (TSK-248)")
 
 
 def main(argv: list[str] | None = None) -> int:

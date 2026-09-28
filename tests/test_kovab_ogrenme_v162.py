@@ -330,7 +330,9 @@ def test_C16_calisan_kanca_bayragi_TASIYOR(sandbox_state):
     """Kablonun canlı ucu: bekleme döngüsünün bg dalı `background=True` geçirmezse bütün bu kapı
     üretimde hiç devreye girmez (bulgunun kök nedeni tam olarak beyanın kablosuz kalmasıydı)."""
     kaynak = (SRC / "hermes_runtime.py").read_text(encoding="utf-8")
-    assert "reflect_once(target_regime=bg, background=True)" in kaynak
+    # TSK-248 (2026-09-28): bg çağrısı dur yüklemini de taşır (kesilen tur sayılmaz, v588). Kablonun
+    # bu çivinin ölçtüğü ucu (`background=True`) AYNEN durur; dizge yeni anahtarla birlikte BİREBİR aranır.
+    assert "reflect_once(target_regime=bg, background=True, durdurma=_stop.is_set)" in kaynak
 
 
 # =================================================================================================

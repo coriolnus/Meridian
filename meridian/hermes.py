@@ -5046,7 +5046,7 @@ def bg_on_eleme_karnesi(olaylar: list | None = None, n: int = BG_ON_ELEME_PENCER
             "beyan": beyan}
 
 
-def reflect_once(target_regime: str | None = "auto", *, background: bool = False) -> dict:
+def reflect_once(target_regime: str | None = "auto", *, background: bool = False, durdurma=None) -> dict:
     """Tek canlı yansıma — gövde `_reflect_once_govde`de (tasarım gerekçeleri orada).
 
     GÜVENLİK AĞI (2026-08-12 asılı-arama vakası): gövde HANGİ yoldan çıkarsa çıksın —
@@ -5054,15 +5054,21 @@ def reflect_once(target_regime: str | None = "auto", *, background: bool = False
     yolu — bayrak `running=True` BIRAKILAMAZ. Mevcut hata-yolu yazımları DURUYOR; bu ağ yalnız
     onların kaçırdığı bir çıkışta devreye girer (normalde no-op: bayrak zaten temizlenmiştir).
     Kadans tarafındaki bayatlık yasası (`sprint._arama_durumu`) aynı sınıfın SÜREÇ-DIŞI emniyetidir;
-    bu ağ ise bayrağı asılı bırakmamanın SÜREÇ-İÇİ birinci hattıdır."""
+    bu ağ ise bayrağı asılı bırakmamanın SÜREÇ-İÇİ birinci hattıdır.
+
+    `durdurma` (TSK-248): öğrenme sürecinin enjekte ettiği argümansız yüklem (`hermes_runtime._stop` bayrağının `is_set`i;
+    bu modül `hermes_runtime`i yansıma zincirinde içe AKTARMAZ). Verilmezse (tmux `loop`, `--once`,
+    `reflect_now`) anahtar gövdeye HİÇ geçmez — çağrı yüzeyi ve davranış BİREBİR eskisi."""
     try:
-        return _reflect_once_govde(target_regime, background=background)
+        return _reflect_once_govde(target_regime, background=background,
+                                   **reflect.backtest.durdurma_kw(durdurma))
     finally:
         if SEARCH_PROGRESS.get("running"):
             _progress(running=False, phase="error", kaynak="reflect_once_finally_agi")
 
 
-def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool = False) -> dict:
+def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool = False,
+                        durdurma=None) -> dict:
     """One live reflection. A single smart move (Claude, if a key is set) is tried first; if it doesn't
     clear the gate — or there's no key — we fall through to the systematic COORDINATE-DESCENT SEARCH across
     all knobs on the PRODUCTION windows. That is the escape from the ±1 trap that lets the live strategy
@@ -5086,8 +5092,21 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
     yeniden israfa çevirirdi. Zorlama ise beyanı GERÇEK yapar: her sonda `var@{rejim}` olur,
     `versioning.bump` onu `params_by_regime[rejim]`e yazar, canlı davranış rejim dönene dek değişmez.
     Atlama yalnız SON ÇARE olarak kalır: rejim adı geçerli değilse (kapsanamıyorsa) tur koşmaz —
-    çünkü kapsanamayan bir bg turu, tam olarak kapatılan deliğin kendisidir."""
+    çünkü kapsanamayan bir bg turu, tam olarak kapatılan deliğin kendisidir.
+
+    DURDURMA — KESİLEN TUR SAYILMAZ (TSK-248, operatör kararı A, 2026-09-28): `durdurma` verilmişse
+    (öğrenme süreci) üç yerde okunur/iletilir: (1) girişte — istek önceden kurulmuşsa LLM'e bile gidilmez;
+    (2) önerinin `reflect.submit`ine, (3) aramanın `reflect.search_and_submit`ine (orada walk-forward'ların
+    replay gün başına kadar iner). Herhangi biri `reflect.DURDURULDU_STATUS` dönerse tur BURADA biter —
+    kesilen öneri turu aramaya DÜŞMEZ (düşseydi kesilen tur yeni bir arama başlatırdı). Hiçbir deftere
+    yazılmaz; çağıran (`hermes_runtime`) turu saymaz. SINIR (beyan): uçuştaki bir LLM çağrısı işbirlikçi
+    olarak kesilemez (HTTP/CLI zaman aşımı sürer); yalnız öncesinde ve sonrasında (submit girişi) görülür."""
     _progress_temizle()          # kapıdan geçen temizleme — disk aynası da sıfırlanır (Ö-50)
+    # İLETME YASASI TEK KAYNAKTAN (`backtest.durdurma_kw`): yüklem YOKSA anahtar hiç geçmez.
+    _dk = reflect.backtest.durdurma_kw(durdurma)
+    if durdurma is not None and durdurma():
+        return {"status": reflect.DURDURULDU_STATUS, "sebep": reflect.DURDURMA_SEBEBI, "asama": "giris",
+                "beyan": "durdurma isteği yansıma turu başlamadan kuruluydu — LLM'e gidilmedi, tur sayılmaz"}
     # --- K1 DURAKLATMA (EDG-2026-048 NO-GO, 2026-08-23): duraklatılmış rejime SERTİFİKALI arka
     # plan turu HİÇ koşmaz. Koşsaydı hem D2 çivilemesi hem rejim-zorlamalı arama her sondayı
     # `var@chop`a çevirirdi — üretim yasağının tam kendisi. Atlama sessiz değil OLAYDIR
@@ -5178,10 +5197,12 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
             proposal = None                     # fall through to the (paused-regime-free) search
     if proposal is not None:
         obs.log("hermes_proposal", source=proposal.get("source", "llm"), variable=proposal["variable"], new=proposal["new"])
-        result = reflect.submit(proposal)
+        result = reflect.submit(proposal, **_dk)
         obs.log("hermes_result", source=proposal.get("source", "llm"), status=result.get("status"))
         if result.get("status") == "shipped":
             return result
+        if result.get("status") == reflect.DURDURULDU_STATUS:
+            return result                       # kesilen tur aramaya DÜŞMEZ (TSK-248 — docstring)
         # the single idea didn't ship — don't give up, run the systematic search instead
     from . import dataset
     bars, index = dataset.load()
@@ -5243,7 +5264,7 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
     try:
         result = reflect.search_and_submit(bars, index, config.goal(), windows=None,
                                            budget=_sb["tavan"], k_max=SEARCH_KMAX, on_probe=_on_probe,
-                                           regime=search_regime)
+                                           regime=search_regime, **_dk)
     except Exception:
         # never leave the dashboard showing a phantom in-flight search after a crash
         _progress(running=False, phase="error")
@@ -5251,7 +5272,11 @@ def _reflect_once_govde(target_regime: str | None = "auto", *, background: bool 
     s = result.get("search", {})
     obs.log("hermes_search_done", evaluated=s.get("evaluated"), cleared=s.get("cleared"),
             status=result.get("status"), best=s.get("best"))
-    _progress(running=False, phase="done", status=result.get("status"),
+    # KESİLEN ARAMA "done" GÖSTERİLMEZ (TSK-248): pano fazı ham basar ("faz …"); bitmiş ile kesilmiş aynı
+    # etiketi taşısaydı operatör yarım aramayı tamamlanmış sanardı. `running=False` iki hâlde de aynı.
+    _progress(running=False,
+              phase=("durduruldu" if result.get("status") == reflect.DURDURULDU_STATUS else "done"),
+              status=result.get("status"),
               evaluated=s.get("evaluated"), cleared=s.get("cleared"), best=s.get("best"))
     return result
 
