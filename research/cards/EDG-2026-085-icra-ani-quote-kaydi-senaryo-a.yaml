@@ -209,3 +209,12 @@ pilot_olayi_2026_09_25: >
   koştu ama yazımsız bir seansın yükü pilot yükü değildir → fizibilite ölçüsü için de geçersiz sayılır. Ek bağlam: dağıtım #66 seans
   ortasında (15:08Z) worker'ı yeniden başlattı. Pencere sayımı (en çok 20 seans) bu seansı SAYMAZ; ilk geçerli pilot seansı TSK-225
   canlıya indikten sonraki ilk açık seans. Eşik/kill-list DEĞİŞMEDİ.
+
+pilot_kaniti_2026_09_28: >
+  (2026-09-28 17:1xZ, Rol-1, A1 salt-okur — PİLOT KANITI, HÜKÜM DEĞİL) İLK GEÇERLİ PİLOT SEANSI (2026-09-28 RTH, TSK-225 dağıtım #67 sonrası ilk
+  açık seans): `edg085_2026-09-28.jsonl` 211.696 B / 778 satır (772 quote · 4 pencere · 2 dolum; bozuk 0), `edg085_ham_2026-09-28.jsonl` 119.300 B /
+  772 çerçeve (PK-2 ikinci kaynak: quote satırı sayısıyla BİREBİR); kayıt aralığı 13:45:03Z–14:13:21Z, 2 sembol; iki dolum işaret satırının ikisinde
+  de `dolum_fiyat` dolu, `kayip_nedeni` boş (kill#3 — her motor dolumu işaret satırı aldı); bugün `quote_capture_yazim_dustu` 0. Pilot bayrağı
+  canlı süreçte açık (`MERIDIAN_QUOTE_CAPTURE=1`, kayıt dizini ortamdan). Seans içi yeniden başlatma YOK (dağıtım #80 10:17Z ve #81 12:12Z RTH
+  ÖNCESİ). Pencere sayımı: 1 geçerli seans / en çok 20; dolum 2 / n_uygun_alt 30. Not: 13:4xZ'deki ilk okumada dizin boştu — kayıt YALNIZ emir
+  penceresinde yazılır, ilk pencere 13:45:03Z'de açıldı (arıza değil). Eşik/kill-list DEĞİŞMEDİ.
