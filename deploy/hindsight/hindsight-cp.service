@@ -31,6 +31,10 @@
 # gerçek tavanı `--memory`dir (gerekçe apisix.service şerhinde). Rol-1 A1 ölçümü 2026-09-28: HostConfig.Memory = 0
 # (tavansız); kullanım 43 MiB. 512m ≈ ölçülen kullanımın ~12×'i (Next.js; ilk sayfa derlemesi/önbellek dalgalanır).
 # İkisi aynı değeri taşır (512m ↔ 512M); eşitlik çivisi tests/test_konteyner_bellek_tavani_v587.py.
+# CPU TAVANI DA İKİ KATMANDA (TSK-247(b), 2026-09-28): `CPUQuota=` de YALNIZ istemcinin cgroup'unu sınırlar. Rol-1 A1
+# ölçümü 2026-09-28: `systemctl show -p CPUQuotaPerSecUSec hindsight-cp` = 1s (istemci); `docker inspect` NanoCpus=0 /
+# CpuQuota=0 → konteyner CPU'su SINIRSIZDI. `--cpus` = CPUQuota/100 = 1 çekirdek (NanoCpus 1000000000).
+# Eşitlik çivisi aynı dosyanın E bölümü; drop-in (50-vault-yan-dosya.conf) ExecStart'a dokunmaz, bayrak yalnız burada.
 
 [Unit]
 Description=Hindsight Control Plane UI (127.0.0.1:9999, ssh tuneli ile)
@@ -43,6 +47,7 @@ EnvironmentFile=/opt/hindsight/.env-cp
 ExecStartPre=-/usr/bin/docker rm -f hindsight-cp
 ExecStart=/usr/bin/docker run --rm --name hindsight-cp --network host \
   --memory=512m \
+  --cpus=1 \
   -e HINDSIGHT_CP_HOSTNAME=localhost \
   -e HINDSIGHT_CP_PORT=9999 \
   -e HOSTNAME=localhost \
@@ -55,8 +60,8 @@ ExecStop=/usr/bin/docker stop hindsight-cp
 Restart=on-failure
 RestartSec=5
 # kaynak çiti (docs: Next.js hafif — 128-256MB bandı). MemoryMax istemciyi, ExecStart'taki `--memory=512m` konteyneri
-# sınırlar (TSK-247). CPUQuota aynı mekanizmayla YALNIZ istemcinin cgroup'unu sınırlar (çıkarım; A1'de ayrıca
-# ölçülmedi) — konteyner CPU tavanı (`--cpus`) TSK-247 kapsamı dışında, raporda açık kalan.
+# sınırlar (TSK-247). CPUQuota da YALNIZ istemcinin cgroup'unu sınırlar (A1'de ölçüldü 2026-09-28: konteyner NanoCpus=0);
+# konteyner CPU tavanı ExecStart'taki `--cpus` (TSK-247(b)) — ikisi birlikte değişir (v587 E).
 MemoryMax=512M
 CPUQuota=100%
 

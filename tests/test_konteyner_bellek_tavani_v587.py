@@ -1,4 +1,5 @@
-"""v587 — TSK-247: docker birimlerinde KONTEYNER bellek tavanı (`--memory`) = birimin `MemoryMax`ı (2026-09-28).
+"""v587 — TSK-247: docker birimlerinde KONTEYNER bellek tavanı (`--memory`) = birimin `MemoryMax`ı (2026-09-28);
+TSK-247(b): CPU eşi — `CPUQuota` beyan eden birimde konteyner CPU tavanı (`--cpus`) = `CPUQuota`/100 (E bölümü).
 
 OLAY (Rol-1 A1 ölçümü, 2026-09-28, salt-okur): `docker inspect` `HostConfig.Memory` = 0 — apisix-kapi, apisix-etcd,
 hindsight-cp. Üç konteynerin bellek tavanı makinenin tamamıydı (23,41 GiB). Birimlerdeki `MemoryMax=` (512M / 256M /
@@ -35,9 +36,22 @@ RUNBOOK (D). `deploy/oracle-a1/RUNBOOK.md` "Docker konteyner bellek tavanı" bö
 satırı konteyner ADIYLA birimin `--memory` baytına eşittir: tavan birimde değişip doğrulama cetvelinde kalırsa canlı
 doğrulama DOĞRU birimi "ayrık" okur (v584 A5 emsali, Grafana tur 3).
 
+CPU EŞİ (E, TSK-247(b), 2026-09-28). Aynı sınıfın CPU kopyası. Rol-1 A1 ölçümü (salt-okur): `systemctl show -p
+CPUQuotaPerSecUSec hindsight-cp` = 1s — yalnız docker İSTEMCİ süreci; `docker inspect` NanoCpus=0 / CpuQuota=0 →
+konteyner CPU'su SINIRSIZ. KURAL (E): bir görünümde `CPUQuota=` BEYAN EDEN her docker-run komutunda `--cpus` TAM BİR kez
+bulunur ve `CPUQuota/100`e eşittir (nano-CPU olarak: `CPUQuota=100%` ↔ `--cpus=1` ↔ `HostConfig.NanoCpus`
+1000000000). `CPUQuota` beyan ETMEYEN (ya da boş atamayla sıfırlayan) birimde `--cpus` ZORUNLU DEĞİL — bugünkü tasarım:
+yalnız hindsight-cp CPU kotası taşır (telemetri ve apisix birimleri taşımaz). systemd'nin uyarıyla YOK SAYDIĞI kota
+(`0%`, yüzdesiz yazım) bulgudur (niyet yürürlüğe girmez); `‰`/`‱` yazımı da bulgu verir (geçerli ama modellenmedi —
+güvenli yön). `--cpu-quota`/`--cpu-period`/`--cpu-shares` `--cpus` SAYILMAZ. `--cpus` v584 `_DEGERLI` kümesindedir
+(ayrı jetonlu `--cpus 1` imajı kaydırmasın). RUNBOOK cetvelindeki `NanoCpus` beklenen satırı birimin `--cpus`una
+eşittir (D3).
+
 MODELLENMEYEN (bilinçli): `docker compose` (kurulan birimlerde yok; kök `deploy/meridian.service` compose çağının
-kalıntısıdır ve kapsam dışıdır); `--memory-swap` (brief: swap bayrağı eklenmez, emsalle tutarlı); `CPUQuota=` ↔
-`--cpus` (aynı sınıfın CPU eşi — TSK-247 raporunda kaygı, bu kalemin kapsamı dışı).
+kalıntısıdır ve kapsam dışıdır); `--memory-swap` (brief: swap bayrağı eklenmez, emsalle tutarlı); `--cpus` ile
+`--cpu-quota`/`--cpu-period`in BİRLİKTE yazımı (docker kaynağı okumasına göre konteyneri açmaz — ÖLÇÜLMEDİ; açmazsa
+sessiz değil, birim düşer ve RUNBOOK `is-active` satırı görür); `--cpus` taşıyıp `CPUQuota` beyan etmeyen birim
+(konteyner sınırlı, istemci değil — brief: zorunlu değil, yasak da değil).
 
 Numara v587: ana checkout + worktree'lerde boş (ölçüldü 2026-09-28). Bu dosya hiçbir `state/` yolu okumaz/yazmaz;
 sentetik birimler `tmp_path` altında kurulur.
@@ -49,6 +63,7 @@ import glob
 import posixpath
 import re
 import shlex
+from fractions import Fraction
 from pathlib import Path
 
 import pytest
@@ -72,6 +87,9 @@ RUNBOOK_BASLIK = "## Docker konteyner bellek tavanı"
 #: Brief'in ölçtüğü üç konteyner (Rol-1 A1, 2026-09-28) — kapsam LİSTESİ değil, türetilmiş kapsamın KÖR olmadığının
 #: çapası (A0b) ve RUNBOOK doğrulama cetvelinin asgarisi (D1).
 BRIEF_KONTEYNERLERI = frozenset({"apisix-kapi", "apisix-etcd", "hindsight-cp"})
+#: TSK-247(b) brief'inin ölçtüğü CPU kotalı docker birimi (Rol-1 depo + A1, 2026-09-28) — E0 körlük çapası ve RUNBOOK
+#: NanoCpus cetvelinin asgarisi (D3). Kapsam listesi DEĞİL: E1 türetilmiş kümenin tamamını denetler.
+CPU_BRIEF_KONTEYNERLERI = frozenset({"hindsight-cp"})
 
 #: systemd Exec önekleri (systemd.service(5) "Command lines"): `@` `-` `:` `+` `!` `!!` `|`.
 _EXEC_ONEKLERI = "@-:+!|"
@@ -82,6 +100,15 @@ _SYSTEMD_BOYUT = re.compile(r"(\d+(?:\.\d+)?)([KMGTPE]?)")
 #: docker boyut sözdizimi (go-units `RAMInBytes`, 1024 tabanı): `512m` `512M` `512MB` `512MiB` `512 m` `536870912`.
 _DOCKER_BOYUT = re.compile(r"(\d+(?:\.\d+)?) ?([kmgtp]?)i?b?", re.IGNORECASE)
 _CARPAN = {"": 1, "K": 1024, "M": 1024 ** 2, "G": 1024 ** 3, "T": 1024 ** 4, "P": 1024 ** 5, "E": 1024 ** 6}
+#: systemd `CPUQuota=` (config_parse_cpu_quota → parse_permyriad_unbounded): yüzde, en çok iki ondalık. Boş atama kotayı
+#: kaldırır; `0%` ve sözdizimi dışı değer uyarıyla YOK SAYILIR. `‰`/`‱` geçerlidir ama burada modellenmez (bulgu verir).
+#: Kaynak: systemd kaynak kodu OKUMASI — A1'de ÖLÇÜLMEDİ; yanılgı yönü yanlış alarmdır (fazladan bulgu), sessiz yeşil değil.
+_SYSTEMD_CPU = re.compile(r"(\d+(?:\.\d{1,2})?)%")
+#: docker `--cpus` (opts.NanoCPUs → big.Rat × 10^9, tam sayı olmalı): ondalık yazım. `0` = TAVANSIZ (NanoCpus 0).
+#: Kesir (`3/2`) ve üslü yazım docker'da geçerlidir ama burada modellenmez (bulgu verir — güvenli yön). Kaynak: docker
+#: CLI kaynak kodu OKUMASI (A1'de ölçülen tek nokta: `--cpus` yokken NanoCpus=0).
+_DOCKER_CPU = re.compile(r"\d+(?:\.\d+)?|\.\d+")
+_NANO = 10 ** 9
 
 
 # =================================================================================================
@@ -96,6 +123,24 @@ def _systemd_bayt(deger: str) -> int | None:
 def _docker_bayt(deger: str) -> int | None:
     m = _DOCKER_BOYUT.fullmatch(deger.strip())
     return int(float(m[1]) * _CARPAN[m[2].upper()]) if m else None
+
+
+def _nano_tam(oran: Fraction) -> int | None:
+    """Çekirdek oranı → nano-CPU; sıfır/negatif (tavansız) ya da 10^-9'dan ince değer None."""
+    nano = oran * _NANO
+    return int(nano) if nano > 0 and nano.denominator == 1 else None
+
+
+def _cpuquota_nano(deger: str) -> int | None:
+    """`CPUQuota=100%` → 1000000000 nano-CPU (1 çekirdek; docker `NanoCpus` birimi)."""
+    m = _SYSTEMD_CPU.fullmatch(deger.strip())
+    return _nano_tam(Fraction(m[1]) / 100) if m else None
+
+
+def _docker_nano_cpu(deger: str) -> int | None:
+    """`--cpus=1` → 1000000000 nano-CPU (`docker inspect` `HostConfig.NanoCpus`)."""
+    d = deger.strip()
+    return _nano_tam(Fraction(d)) if _DOCKER_CPU.fullmatch(d) else None
 
 
 def _docker_run_argumanlari(deger: str) -> list[str] | None:
@@ -129,16 +174,18 @@ def _imaj_gibi(imaj: str) -> bool:
 
 @dataclasses.dataclass
 class _Gorunum:
-    """Bir birimin bir görünümdeki [Service] komutları (sıfırlamalar uygulanmış) ve MemoryMax'ı."""
+    """Bir birimin bir görünümdeki [Service] komutları (sıfırlamalar uygulanmış), MemoryMax'ı ve CPUQuota'sı."""
     birim: str
     kip: str                                   # "birim" | "birlesik"
     komutlar: list[tuple[str, str, Path]]      # (yönerge, değer, kaynak dosya)
     memory_max: tuple[str, Path] | None        # None: hiç yazılmamış ya da boş atamayla sıfırlanmış
+    cpu_quota: tuple[str, Path] | None = None  # aynı skaler kural (son yazan kazanır; boş atama kotayı kaldırır)
 
 
 def _gorunum(birim: Path, kip: str, kaynaklar: list[Path]) -> _Gorunum:
     komutlar: dict[str, list[tuple[str, Path]]] = {}
     memory_max: tuple[str, Path] | None = None
+    cpu_quota: tuple[str, Path] | None = None
     for kaynak in kaynaklar:
         for bolum, anahtar, deger in _yonergeler(kaynak.read_text(encoding="utf-8")):
             if bolum != "Service":
@@ -150,8 +197,10 @@ def _gorunum(birim: Path, kip: str, kaynaklar: list[Path]) -> _Gorunum:
                     komutlar[anahtar] = []
             elif anahtar == "MemoryMax":
                 memory_max = (deger, kaynak) if deger else None
+            elif anahtar == "CPUQuota":
+                cpu_quota = (deger, kaynak) if deger else None
     duz = [(a, d, k) for a, liste in komutlar.items() for d, k in liste]
-    return _Gorunum(birim.name, kip, duz, memory_max)
+    return _Gorunum(birim.name, kip, duz, memory_max, cpu_quota)
 
 
 def _gorunumler(birim: Path) -> list[_Gorunum]:
@@ -219,6 +268,32 @@ def _bicimle(bulgular: list[dict]) -> str:
     return "\n".join(f"  · {x}" for x in bulgular)
 
 
+def _cpu_bulgulari(birimler: list[Path]) -> list[dict]:
+    """E kuralı. Tanınmayan docker-run ve imaj kayması `_bulgular`da (A1) öter — burada tekrar sayılmaz; kayan bir
+    `--cpus` kapsayıcı argümanına düşer ve `cpus_yok` olarak da öter (güvenli yön)."""
+    b: list[dict] = []
+    for g, anahtar, _deger, kaynak, run in (x for p in birimler for x in _docker_komutlari(p)):
+        if g.cpu_quota is None:
+            continue  # CPUQuota beyan etmeyen görünüm: `--cpus` zorunlu değil (bugünkü tasarım, brief)
+        ortak = {"birim": g.birim, "gorunum": g.kip, "yonerge": anahtar, "kaynak": _goreli(kaynak),
+                 "CPUQuota": g.cpu_quota[0]}
+        kota = _cpuquota_nano(g.cpu_quota[0])
+        if kota is None:
+            b.append({"tur": "cpuquota_gecersiz", **ortak})
+        cpus = [str(d) for a, d in run.secenekler if a == "--cpus"]
+        if not cpus:
+            b.append({"tur": "cpus_yok", **ortak})
+        elif len(cpus) > 1:
+            b.append({"tur": "cpus_coklu", **ortak, "degerler": cpus})
+        else:
+            nano = _docker_nano_cpu(cpus[0])
+            if nano is None:
+                b.append({"tur": "cpus_gecersiz", **ortak, "cpus": cpus[0]})
+            elif kota is not None and nano != kota:
+                b.append({"tur": "cpus_esit_degil", **ortak, "cpus": cpus[0]})
+    return b
+
+
 # =================================================================================================
 # Depo girdileri (tek kaynak: A0 rolü)
 # =================================================================================================
@@ -259,6 +334,25 @@ def _konteyner_bellekleri(birimler: list[Path]) -> dict[str, set[int]]:
             if len(adlar) == 1 and len(bellek) == 1 and _docker_bayt(bellek[0]) is not None:
                 out.setdefault(str(adlar[0]), set()).add(_docker_bayt(bellek[0]))
     return out
+
+
+def _konteyner_cpulari(birimler: list[Path]) -> dict[str, set[int | None]]:
+    """Konteyner adı → birimlerin HER görünümündeki `--cpus` nano-CPU'su (`--cpus`suz görünüm: None)."""
+    out: dict[str, set[int | None]] = {}
+    for p in birimler:
+        for _g, _a, _d, _k, run in _docker_komutlari(p):
+            adlar = [d for a, d in run.secenekler if a == "--name"]
+            cpus = [str(d) for a, d in run.secenekler if a == "--cpus"]
+            if len(adlar) == 1:
+                out.setdefault(str(adlar[0]), set()).add(_docker_nano_cpu(cpus[0]) if len(cpus) == 1 else None)
+    return out
+
+
+def _cpu_kotali_konteynerler(birimler: list[Path]) -> set[str]:
+    """`CPUQuota=` beyan eden görünümlerdeki docker-run komutlarının `--name`leri — `--cpus`tan BAĞIMSIZ (E0 körlük
+    çapası tavan yokken de görmeli)."""
+    return {str(d) for p in birimler for g, *_x, run in _docker_komutlari(p) if g.cpu_quota is not None
+            for a, d in run.secenekler if a == "--name"}
 
 
 # =================================================================================================
@@ -405,9 +499,10 @@ def test_B4_POZITIF_KONTROL_sarmalanmis_docker_run_TANINMAYAN_diye_OTER(tmp_path
 
 
 def test_B5_POZITIF_KONTROL_taninmayan_degerli_bayrak_imaji_kaydirir_ve_OTER(tmp_path):
-    """`--cpus` v584 `_DEGERLI` kümesinde yok → değersiz sayılır → `2` imaj olur, `--memory` kapsayıcı argümanına düşer.
-    Güvenli yön: hem kayma (`imaj_jetonu_supheli`) hem tavan yokluğu öter; sessiz yeşil yok."""
-    birim = _sahte(tmp_path, "kayik", "[Service]\nExecStart=/usr/bin/docker run --rm --cpus 2 --memory=64m img:1\n"
+    """`--cpu-shares` v584 `_DEGERLI` kümesinde yok → değersiz sayılır → `512` imaj olur, `--memory` kapsayıcı
+    argümanına düşer. Güvenli yön: hem kayma (`imaj_jetonu_supheli`) hem tavan yokluğu öter; sessiz yeşil yok.
+    (TSK-247(b)'ye dek örnek `--cpus 2` idi; `--cpus` artık `_DEGERLI`de — E bölümü onu ayrı jetonla da okur.)"""
+    birim = _sahte(tmp_path, "kayik", "[Service]\nExecStart=/usr/bin/docker run --rm --cpu-shares 512 --memory=64m img:1\n"
                                       "MemoryMax=64M\n")
     turler = {x["tur"] for x in _bulgular([birim])}
     assert {"imaj_jetonu_supheli", "memory_yok"} <= turler, turler
@@ -485,3 +580,154 @@ def test_D2_POZITIF_KONTROL_runbook_denetcisi_OTER(kimlik, eski, yeni, beklenen)
     bozuk = _bozuk(RUNBOOK_A1.read_text(encoding="utf-8"), eski, yeni)
     bulgular = _runbook_bulgulari(bozuk, _konteyner_bellekleri(_depo()))
     assert any(beklenen in x for x in bulgular), f"{kimlik}: denetçi ÖTMEDİ: {bulgular}"
+
+
+def _runbook_cpu_bulgulari(metin: str, cpular: dict[str, set[int | None]]) -> list[str]:
+    """RUNBOOK TSK-247 bölümündeki `{{.HostConfig.NanoCpus}}` beklenen satırı ↔ birimin `--cpus`u (nano-CPU)."""
+    bolum = _runbook_bolumu(metin)
+    m = re.search(
+        r'docker inspect -f "\{\{\.Name\}\} \{\{\.HostConfig\.NanoCpus\}\}" ([\w -]+)\'\n# beklenen: ([^\n]+)', bolum)
+    if not m:
+        return ["RUNBOOK: `docker inspect … {{.HostConfig.NanoCpus}}` + `# beklenen:` satırı bulunamadı"]
+    adlar = m.group(1).split()
+    beklenen = {ad: int(n) for ad, n in re.findall(r"/([\w-]+) (\d+)", m.group(2))}
+    b: list[str] = []
+    if sorted(adlar) != sorted(beklenen):
+        b.append(f"RUNBOOK NanoCpus inspect adları ↔ beklenen satırı ayrıştı: {adlar} / {sorted(beklenen)}")
+    if not CPU_BRIEF_KONTEYNERLERI <= set(beklenen):
+        b.append(f"RUNBOOK NanoCpus cetveli brief konteynerini taşımıyor: {sorted(CPU_BRIEF_KONTEYNERLERI - set(beklenen))}")
+    for ad, nano in beklenen.items():
+        birimde = cpular.get(ad)
+        if not birimde:
+            b.append(f"RUNBOOK NanoCpus: {ad} hiçbir docker biriminin `--name`i değil")
+        elif birimde != {nano}:
+            b.append(f"RUNBOOK NanoCpus: {ad} beklenen {nano} != birim `--cpus` nano {sorted(birimde, key=str)}")
+    return b
+
+
+def test_D3_RUNBOOK_NanoCpus_beklenenleri_birim_cpus_ESIT():
+    bulgular = _runbook_cpu_bulgulari(RUNBOOK_A1.read_text(encoding="utf-8"), _konteyner_cpulari(_depo()))
+    assert bulgular == [], "RUNBOOK CPU doğrulama cetveli birimden ayrıştı:\n" + "\n".join(bulgular)
+
+
+RUNBOOK_CPU_MUTASYONLARI = [
+    ("cp_tavansiz_deger", "/hindsight-cp 1000000000", "/hindsight-cp 0", "beklenen 0"),
+    ("cp_iki_cekirdek", "/hindsight-cp 1000000000", "/hindsight-cp 2000000000", "beklenen 2000000000"),
+    ("cp_cetvelden_cikti", "/hindsight-cp 1000000000", "", "ayrıştı"),
+]
+
+
+@pytest.mark.parametrize("kimlik, eski, yeni, beklenen", RUNBOOK_CPU_MUTASYONLARI,
+                         ids=[m[0] for m in RUNBOOK_CPU_MUTASYONLARI])
+def test_D4_POZITIF_KONTROL_runbook_cpu_denetcisi_OTER(kimlik, eski, yeni, beklenen):
+    bozuk = _bozuk(RUNBOOK_A1.read_text(encoding="utf-8"), eski, yeni)
+    bulgular = _runbook_cpu_bulgulari(bozuk, _konteyner_cpulari(_depo()))
+    assert any(beklenen in x for x in bulgular), f"{kimlik}: denetçi ÖTMEDİ: {bulgular}"
+
+
+# =================================================================================================
+# E — CPU eşi (TSK-247(b)): CPUQuota beyan eden docker biriminde `--cpus` = CPUQuota/100
+# =================================================================================================
+
+def test_E0_KORLUK_CAPASI_cpu_kotali_docker_birimleri_GORUNUR():
+    konteynerler = _cpu_kotali_konteynerler(_depo())
+    assert CPU_BRIEF_KONTEYNERLERI <= konteynerler, (
+        f"brief'in ölçtüğü CPU kotalı konteyner kapsamda görünmüyor (E kör): {sorted(CPU_BRIEF_KONTEYNERLERI - konteynerler)}")
+
+
+def test_E1_CPUQuota_beyan_eden_HER_docker_biriminde_konteyner_cpus_ESIT():
+    bulgular = _cpu_bulgulari(_depo())
+    assert not bulgular, (
+        "CPUQuota beyan eden docker birimi konteyner CPU tavanı taşımıyor ya da CPUQuota/100'den ayrışıyor:\n"
+        f"{_bicimle(bulgular)}\n"
+        "ÇARE: `docker run`a `--cpus=<CPUQuota/100>` (CPUQuota=100% ↔ --cpus=1); `CPUQuota=` YALNIZ docker "
+        "istemcisini sınırlar. ExecStart'ı yeniden yazan drop-in varsa bayrak orada da.")
+
+
+CP = DEPLOY / "hindsight" / "hindsight-cp.service"
+CP_DROPIN = DEPLOY / "hindsight" / "hindsight-cp.service.d" / "50-vault-yan-dosya.conf"
+
+CPU_OTEN_MUTASYONLAR = [
+    ("cpus_silindi", [("  --cpus=1 \\\n", "")], "cpus_yok"),
+    ("cpus_iki", [("--cpus=1", "--cpus=2")], "cpus_esit_degil"),
+    ("cpus_yarim", [("--cpus=1", "--cpus=0.5")], "cpus_esit_degil"),
+    ("cpus_sifir_tavansiz", [("--cpus=1", "--cpus=0")], "cpus_gecersiz"),
+    ("cpus_ayrismaz", [("--cpus=1", "--cpus=bir")], "cpus_gecersiz"),
+    ("cpus_ikinci", [("--cpus=1", "--cpus=1 --cpus 1")], "cpus_coklu"),
+    ("cpu_quota_bayragi_cpus_sayilmaz", [("--cpus=1", "--cpu-quota=100000")], "cpus_yok"),
+    ("cpu_shares_cpus_sayilmaz", [("--cpus=1", "--cpu-shares=1024")], "cpus_yok"),
+    ("cpuquota_farkli", [("CPUQuota=100%", "CPUQuota=200%")], "cpus_esit_degil"),
+    ("cpuquota_sifir", [("CPUQuota=100%", "CPUQuota=0%")], "cpuquota_gecersiz"),
+    ("cpuquota_yuzdesiz", [("CPUQuota=100%", "CPUQuota=1")], "cpuquota_gecersiz"),
+]
+
+
+def _cp_bozuk(degisiklikler: list[tuple[str, str]]) -> str:
+    metin = CP.read_text(encoding="utf-8")
+    for eski, yeni in degisiklikler:
+        metin = _bozuk(metin, eski, yeni)
+    return metin
+
+
+@pytest.mark.parametrize("kimlik, degisiklikler, beklenen", CPU_OTEN_MUTASYONLAR, ids=[m[0] for m in CPU_OTEN_MUTASYONLAR])
+def test_E2_POZITIF_KONTROL_bozuk_birimde_cpu_denetcisi_OTER(tmp_path, kimlik, degisiklikler, beklenen):
+    birim = _sahte(tmp_path, "hindsight-cp", _cp_bozuk(degisiklikler))
+    turler = [x["tur"] for x in _cpu_bulgulari([birim])]
+    assert beklenen in turler, f"{kimlik}: denetçi ÖTMEDİ: {turler}"
+
+
+CPU_ESDEGER_YAZIMLAR = [
+    ("ayri_jeton", [("--cpus=1", "--cpus 1")]),
+    ("ondalik", [("--cpus=1", "--cpus=1.0")]),
+    ("yarim_iki_katman", [("--cpus=1", "--cpus=.5"), ("CPUQuota=100%", "CPUQuota=50%")]),
+    ("ondalikli_yuzde", [("--cpus=1", "--cpus=1.505"), ("CPUQuota=100%", "CPUQuota=150.5%")]),
+    ("cpuquota_yok_cpus_zorunlu_degil", [("CPUQuota=100%\n", "")]),
+    ("cpuquota_bos_sifirlama_zorunlu_degil", [("CPUQuota=100%", "CPUQuota=")]),
+]
+
+
+@pytest.mark.parametrize("kimlik, degisiklikler", CPU_ESDEGER_YAZIMLAR, ids=[m[0] for m in CPU_ESDEGER_YAZIMLAR])
+def test_E3_NEGATIF_KONTROL_esdeger_yazimda_cpu_denetcisi_SUSAR(tmp_path, kimlik, degisiklikler):
+    """Ayrı jetonlu `--cpus 1` v584 `_DEGERLI`deki `--cpus`a dayanır: o küme `--cpus`u kaybederse `1` imaj olur ve
+    bu kontrol kırmızıya döner. Bellek denetçisi (A1) de susar — CPU yazımı bellek kuralını bozmaz."""
+    birim = _sahte(tmp_path, "hindsight-cp", _cp_bozuk(degisiklikler))
+    assert _cpu_bulgulari([birim]) == [], f"{kimlik}: eşdeğer yazımda yanlış alarm: {_cpu_bulgulari([birim])}"
+    assert _bulgular([birim]) == [], f"{kimlik}: bellek denetçisi bozuldu: {_bulgular([birim])}"
+
+
+CPU_DROPIN_MUTASYONLARI = [
+    ("dropin_CPUQuota_degistirir", "[Service]\n", "[Service]\nCPUQuota=200%\n", "cpus_esit_degil"),
+    ("dropin_ExecStart_cpussuz", "[Service]\n",
+     "[Service]\nExecStart=\nExecStart=/usr/bin/docker run --rm --name hindsight-cp --memory=512m img:1.0\n", "cpus_yok"),
+]
+
+
+@pytest.mark.parametrize("kimlik, eski, yeni, beklenen", CPU_DROPIN_MUTASYONLARI,
+                         ids=[m[0] for m in CPU_DROPIN_MUTASYONLARI])
+def test_E4_POZITIF_KONTROL_drop_in_BIRLESIK_cpu_gorunumunu_bozar_birim_TEMIZ(tmp_path, kimlik, eski, yeni, beklenen):
+    """hindsight-cp'nin gerçek drop-in'i ExecStart'a dokunmaz (yalnız ortam dosyası); birleşik hâlin CPU tavanı yine de
+    ölçülür — ExecStart'ı ya da kotayı değiştiren bir drop-in yalnız BİRLEŞİK görünümü bozar."""
+    birim = _sahte(tmp_path, "hindsight-cp", CP.read_text(encoding="utf-8"),
+                   dropin=_bozuk(CP_DROPIN.read_text(encoding="utf-8"), eski, yeni))
+    bulgular = _cpu_bulgulari([birim])
+    assert beklenen in [x["tur"] for x in bulgular if x["gorunum"] == "birlesik"], f"{kimlik}: {bulgular}"
+    assert [x for x in bulgular if x["gorunum"] == "birim"] == [], f"{kimlik}: temel birim bozuk görünüyor: {bulgular}"
+
+
+def test_E5_POZITIF_KONTROL_gercek_drop_in_ile_BIRLESIK_gorunum_kotayi_TASIR():
+    """Gerçek hindsight-cp drop-in'i CPUQuota'yı sıfırlamaz: birleşik görünüm temel birimin kotasını görür (E1'in
+    birleşik hâli boş bir kontrol değil)."""
+    birlesik = [g for g in _gorunumler(CP) if g.kip == "birlesik"]
+    assert len(birlesik) == 1 and birlesik[0].cpu_quota is not None and birlesik[0].cpu_quota[1] == CP, birlesik
+
+
+def test_E6_yeni_sahte_CPU_kotali_docker_birimi_GERCEK_globlarla_kapsama_girer_ve_OTER(tmp_path):
+    """C1'in CPU eşi: glob'un kapsadığı dizine konan YENİ bir CPU kotalı docker birimi liste düzenlenmeden E'ye girer."""
+    ansible = tmp_path / "ansible"
+    ansible.mkdir()
+    yeni = _sahte(tmp_path / "hindsight", "sahte-kotali",
+                  "[Service]\nExecStart=/usr/bin/docker run --rm --name sahte-kotali --memory=64m img:1.0\n"
+                  "MemoryMax=64M\nCPUQuota=50%\n")
+    birimler = _birimler(_defaults()["birim_kaynaklari"], ansible)
+    assert yeni.resolve() in birimler, f"yeni birim türetilmiş kapsamda değil: {birimler}"
+    assert [(x["birim"], x["tur"]) for x in _cpu_bulgulari(birimler)] == [("sahte-kotali.service", "cpus_yok")]

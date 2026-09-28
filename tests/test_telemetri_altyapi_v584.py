@@ -110,11 +110,12 @@ PAROLA_ORTAM = "GF_SECURITY_ADMIN_PASSWORD"
 _IMAJ = re.compile(r"(?P<depo>[a-z0-9][a-z0-9./_-]*):(?P<etiket>[A-Za-z0-9._-]+)@sha256:(?P<ozet>[0-9a-f]{64})")
 _TAM_SURUM = re.compile(r"v?\d+\.\d+\.\d+")
 
-#: `docker run` seçeneklerinden DEĞER alanlar (değer ayrı jetonda gelebilir).
+#: `docker run` seçeneklerinden DEĞER alanlar (değer ayrı jetonda gelebilir). `--cpus` TSK-247(b) (2026-09-28): v587 E
+#: bölümü konteyner CPU tavanını bu ayrıştırıcıdan okur — ayrı jetonlu `--cpus 1` imajı kaydırmamalı.
 _DEGERLI = frozenset({
     "--name", "--network", "--net", "-v", "--volume", "--mount", "-e", "--env", "--env-file", "--memory", "-m",
     "-u", "--user", "--pid", "--ipc", "--entrypoint", "--cap-add", "--security-opt", "--userns", "--device",
-    "-p", "--publish", "-w", "--workdir",
+    "-p", "--publish", "-w", "--workdir", "--cpus",
 })
 #: Konteyneri root'a ya da ev sahibi ad alanlarına bağlayan bayraklar — brief: "konteyner kullanıcısı root DEĞİL".
 _AYRICALIK = frozenset({
@@ -411,9 +412,12 @@ def _bayt(deger: str) -> int:
 
 
 def _telemetri_bolumu(metin: str) -> str:
+    """Başlıktan bir sonraki `## ` başlığına kadar (TSK-247 incelemesi: dosya sonuna uzanan dilim, sonraki bir bölümdeki
+    aynı ifadeyi telemetri cetveli sayardı — A7). `### ` alt başlıkları bölümün içindedir."""
     i = metin.find("## Telemetri (Grafana) erişimi")
     assert i >= 0, "RUNBOOK telemetri bölümü yok"
-    return metin[i:]
+    j = metin.find("\n## ", i + 1)
+    return metin[i:] if j < 0 else metin[i:j]
 
 
 def _runbook_bellek_bulgulari(runbook: str, birimler: dict[str, str]) -> list[str]:
@@ -470,11 +474,27 @@ RUNBOOK_BELLEK_MUTASYONLARI = [
 @pytest.mark.parametrize("kimlik, eski, yeni, beklenen", RUNBOOK_BELLEK_MUTASYONLARI,
                          ids=[m[0] for m in RUNBOOK_BELLEK_MUTASYONLARI])
 def test_A6_POZITIF_KONTROL_runbook_bellek_denetcisi_OTER(kimlik, eski, yeni, beklenen):
+    """Mutasyon YALNIZ telemetri bölümünün içinde yapılır: çapa bölümde yoksa `_bozuk` öter (sonraki bir bölümdeki
+    aynı metni bozup "öttü" demek bölüm sınırını ölçmezdi)."""
     metin = RUNBOOK_A1.read_text(encoding="utf-8")
-    i = metin.find("## Telemetri (Grafana) erişimi")
-    bozuk = metin[:i] + _bozuk(metin[i:], eski, yeni)
+    bolum = _telemetri_bolumu(metin)
+    bozuk = metin.replace(bolum, _bozuk(bolum, eski, yeni), 1)
     bulgular = _runbook_bellek_bulgulari(bozuk, _birim_bellekleri())
     assert any(beklenen in x for x in bulgular), f"{kimlik}: denetçi ÖTMEDİ: {bulgular}"
+
+
+def test_A7_POZITIF_KONTROL_telemetri_bolumu_SONRAKI_baslikta_durur():
+    """TSK-247 incelemesi: dilim dosya SONUNA uzanırsa telemetri cetveli bölümünden silinip SONRAKİ bir bölümde kalan
+    ifade bulunur ve denetçi sessizce yeşil kalır. Gerçek RUNBOOK'un inspect satırı + beklenen satırı telemetri
+    bölümünden çıkarılıp dosya sonundaki sahte bir `## ` bölümüne taşınır → denetçi `bulunamadı` der."""
+    metin = RUNBOOK_A1.read_text(encoding="utf-8")
+    bolum = _telemetri_bolumu(metin)
+    m = re.search(r"[^\n]*docker inspect -f \"[^\"]*\" (?:meridian-[\w-]+ ?)+'\n# bellek [^\n]*\n", bolum)
+    assert m, "telemetri bölümünde inspect + `# bellek` satırı yok (çivi bayatlamış)"
+    tasinmis = metin.replace(bolum, bolum.replace(m.group(0), "", 1), 1) + "\n## Sahte sonraki bölüm\n\n" + m.group(0)
+    bulgular = _runbook_bellek_bulgulari(tasinmis, _birim_bellekleri())
+    assert any("bulunamadı" in x for x in bulgular), f"sonraki bölümdeki ifade telemetri cetveli sayıldı: {bulgular}"
+    assert "\n## " not in bolum, "telemetri bölümü bir sonraki `## ` başlığını içeriyor (dilim sınırsız)"
 
 
 # =================================================================================================
