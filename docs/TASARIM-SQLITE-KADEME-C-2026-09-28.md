@@ -108,3 +108,22 @@ yönetir). (c) D2 her okumaya bir kez damga sorgusu ekler (önbellekli). (d) Lit
 1. Tasarım onayı (D1–D6).
 2. Zamanlama: R2 bugün sessiz (öğrenme kapalı). Taşıma TSK-204 öğrenmeyi yeniden açmadan ÖNCE bitmeli — öneri: kod bu hafta, canlı
    göç (D6-2) ilk sakin pencerede (piyasa kapanışından sonra).
+
+## 8. Uygulama sırasında ölçülen düzeltmeler (Rol-1, 2026-09-28 — bu belge tek kaynak kalsın diye)
+
+- **R3 düzeltmesi:** öncül yarı yanlıştı. Sprint kum havuzu `meridian.db`'yi kopyalamaz (doğru), ama ön-eleme kum havuzu (`meridian/prescreen.py::_sandbox`)
+  `SKIP_COPY`'yi bilerek sormaz ve DB'yi (+wal/shm) KOPYALAR → orada iki defter kopyadaki damgayla DB'den okunur, maddeleştirme gereksiz (uygulayıcı
+  Karar-3; çivi v581). Ön-eleme'nin SICAK WAL veritabanını `shutil` ile kopyalaması tutarlı anlık görüntü değildir — önceden var olan sınıf, bu kalemin
+  dışında (TSK-214'e not düşüldü).
+- **D2 kapsamı:** kapı yalnız şemaya sonradan giren varlıklara uygulanır (doğduğu şema sürümü > 1); eski altı muaf. Gerekçe: `dbmigrate.apply`
+  `kaynak_yok` varlığı damgalamaz ama sonraki yazımlar DB'ye gider — genel kapı böyle bir varlığı dosyaya döndürüp DB yazımlarını görünmez yapardı
+  (v234 çivisi). A1'de iki seçenek aynı davranışı verir; muafiyet 'davranış değişmez' şartını HER ortamda sağlar (uygulayıcı Karar-1).
+- **D1 `seri`:** iç içe olduğu halde tipli JSON kolonu — validation sözleşmesinde zorunlu alan ve `watchdog` şema kapsamı dedektörü her zorunlu alan
+  için kolon ister (uygulayıcı Karar-2; JSON gidiş-dönüşü int/float/-0.0/None'ı korur).
+- **D6 geri alma DÜZELTMESİ (ENGEL, düzeltme turu 2):** §4 D6'daki 'Geri alma: `dbmigrate --geri-al`' YANLIŞTI — o kip hepsi-ya-hiçtir ve Kademe A+B'yi
+  de dosyaya döndürür; 07-31'den beri DB'ye yazılan satırlar arşivde yoktur. Canlı göçten önce varlık kısıtlı geri alma (`--varlik`) şarttır; yalnız
+  iki yeni varlığın damgası temizlenir, DB satırları kanıt olarak kalır. Kısıtlı geri almanın kayıpsız olduğu pencere: TSK-204 öğrenmeyi yeniden
+  açmadan önce (sonrasında DB'ye yazılan satırlar arşive yansımaz — rapor bunları 'DB'de duruyor' diye gösterir).
+- **D6-2 ek kapı:** `dbmigrate`'in canlı-süreç kapısı `meridian-learn`i görmüyordu (yalnız API/worker); düzeltme turu 2 ekler. Reçetede learn
+  birimi yine AÇIKÇA durdurulur.
+- **Göç sonrası belge borcu:** `PRODUCT.md` iki defteri 'state dosyası' diye anar — göç sonrası DB varlığı; D6-3 doğrulamasıyla birlikte güncellenir.
