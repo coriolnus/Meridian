@@ -823,6 +823,20 @@ vault_kv:
       - {tur: dosya, dosya: "/opt/hindsight/.key", alan: null, onek: null}
       - {tur: env_satiri, dosya: "/opt/hindsight/.env-cp", alan: HINDSIGHT_CP_DATAPLANE_API_KEY, onek: null}
 
+  # ---- TELEMETRİ (TSK-020 UYGULA-9 Faz A, 2026-09-28) --------------------------------------------
+  # Grafana yönetici parolası — YENİ bir sır: taşınacak eski dosya YOK, `kaynak:` taşımaz (dalga-1 biçimi;
+  # kaynak hedefin kendisidir). İLK değeri Rol-1/operatör doğrudan kasaya koyar (deploy/oracle-a1/RUNBOOK.md
+  # telemetri adım 2 — değer borudan akar, hiçbir çıktıya basılmaz). `rotasyon_siri` YOK, bilinçli: Grafana
+  # değeri YALNIZ veritabanı ilk kurulurken hesaba yazar; dosyayı döndürmek hesabı DEĞİŞTİRMEZ → `sir_rotasyon.sh`
+  # onu taşımaz (v447 `ROTASYON_DISI_KREDENSIYELLER`) ve `zorunlu_sir_dosyalari`na girmez (v565 A2 o listeyi
+  # rotasyona bağlar; birim etkin değildir ve LoadCredential'ın kendisi fail-closed kapıdır).
+  - ad: grafana_admin_parola
+    vault_yolu: "secret/meridian/grafana_admin_parola"
+    hedef: "/etc/meridian/grafana_admin_parola"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "meridian-grafana.service (LoadCredential=grafana_admin_parola → tmpfs kopya → GF_SECURITY_ADMIN_PASSWORD__FILE; Grafana YALNIZ ilk açılışta okur)"
+
 # =================================================================================================
 # VAULT YAN DOSYALARI — sır-yalnız `<dosya>.vault` (TSK-064 Faz-2 DALGA-2, 2026-09-14)
 # =================================================================================================

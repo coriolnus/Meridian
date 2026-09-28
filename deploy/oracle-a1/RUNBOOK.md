@@ -599,3 +599,149 @@ sessizlikti.
 
 **Açtıktan sonra doğrula:** `journalctl -u meridian | grep -i cancel_entries` ve panodaki
 "başarısız/iptal edilen emir" satırı — iptalin GERÇEKTEN çalıştığı görülmeden bayrak güvenilmez.
+
+---
+
+## Telemetri (Grafana) erişimi — TSK-020 UYGULA-9 Faz A (2026-09-28)
+
+**Ne:** Prometheus (`127.0.0.1:9095`) + node_exporter (`127.0.0.1:9100`) + Grafana (`127.0.0.1:3000`); üçü de
+docker, imajlar etiket + dizin özetiyle pinli. Tasarım: `docs/TASARIM-TELEMETRI-PROMETHEUS-2026-09-28.md`
+(operatör onayı 2026-09-28: Faz A→B, docker, yalnız ssh tüneli). Hiçbir port dışarı açık DEĞİL. Birimler, drop-in
+ve yapılandırma `deploy/telemetri/` altında; A0 rolü (`site.yml`) kopyalar, ETKİNLEŞTİRMEZ ve BAŞLATMAZ.
+
+**Tek-kaynak beyanı (tasarım T7):** gecikmenin GEÇMİŞİ (zaman serisi) Grafana'dadır; ANLIK durum panoda kalır
+(`/api/diagnostics` IO çipi, `/api/hermes` LLM p50/p95 — aynı kaynağın iki görünümü, kopya değil). Panoda Grafana
+bağlantısı YOK (tünelle açılır); `/api/gateway` gecikme OKUMAZ (bilinçli — Grafana okur). Alarm TEK kanaldadır
+(`obs` → notify/bekçi): Alertmanager kurulmadı, Grafana uyarıları kapalı — Grafana'da görülen bir eşik aşımı
+alarm DEĞİLDİR. Hiçbir kapı/kill kararı Prometheus'tan okumaz; KILL#1'in canlı çapası ayrı karttır (Faz C).
+
+### Erişim (ssh tüneli)
+
+```bash
+ssh -i ~/.ssh/oci-a1.key -N -L 3000:127.0.0.1:3000 ubuntu@130.61.126.87
+# tarayıcı: http://localhost:3000 — kullanıcı `admin`; Prometheus arayüzü gerekirse ek olarak -L 9095:127.0.0.1:9095
+```
+
+Parola A1'de `/etc/meridian/grafana_admin_parola`dadır (0400 root, Vault Agent render eder). Onu görmek
+operatörün KENDİ terminalindedir (`ssh … 'sudo cat /etc/meridian/grafana_admin_parola'`); hiçbir ajan ya da
+Claude oturumu çıktısına basılmaz.
+
+### İlk kurulum (Rol-1; sıra sözleşmedir)
+
+**0. Önkoşul + kimlik doğrulaması.** Dilim main'de ve `dagit` ile A1'de (yeni `policies/meridian-agent.hcl` ve
+`agent.hcl` `/opt/meridian/deploy/vault/` altına gelir). İmajları önceden çek (ilk `start` çekimi beklemesin) ve
+konteyner kullanıcı kimliklerini ÖLÇ — `defaults/main.yml` `telemetri_*_uid/gid` imaj yapılandırmasından
+okundu (prometheus `nobody`, grafana `472`), passwd'den ölçülmedi:
+
+```bash
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo docker pull prom/node-exporter:v1.12.1@sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0'
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo docker pull prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e'
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo docker pull grafana/grafana:13.2.2@sha256:ac461fb352abc50da10a51c7d02462e9c05488f11f53f14b3ad79a8145f638a0'
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo docker run --rm --entrypoint id prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e'
+# beklenen: uid=65534(nobody) gid=65534(nogroup)
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo docker run --rm --entrypoint id grafana/grafana:13.2.2@sha256:ac461fb352abc50da10a51c7d02462e9c05488f11f53f14b3ad79a8145f638a0'
+# beklenen: uid=472(grafana) gid=0(root)
+```
+
+Farklı çıkarsa DUR: `defaults/main.yml` telemetri kimlikleri + `meridian-grafana.service.d/50-grafana-credential.conf`
+`install -o/-g` aynı değişiklikte düzeltilir (v584 C3/D3 ikisini kıyaslar).
+
+**1. A0 rolü** — birimler, drop-in, yapılandırma ve veri dizinleri (`/var/lib/meridian-telemetri/{prometheus,grafana}`)
+kurulur; hiçbir telemetri birimi etkinleştirilmez ya da başlatılmaz:
+
+```bash
+ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/site.yml --check --diff
+ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/site.yml
+```
+
+Bilinen check-kipi sınırı: yeni `meridian-grafana.service.d` dizini ilk `--check`te henüz yoktur ve "Drop-in
+dosyaları" görevi o öğe için `Destination directory … does not exist` ile düşer (ansible copy modülü check kipinde
+dizin yaratmaz; gerçek koşumda dizin görevi önce koşar). Temiz bir kuru koşum isteniyorsa önce
+`ssh … 'sudo install -d -m 0755 /etc/systemd/system/meridian-grafana.service.d'`. Telemetri yapılandırma kopyası bu
+sınıfa girmez (hedefi `/` ile biter; check kipi "yaratılacak" der).
+
+**2. Parola kasaya** — yeni bir sırdır (`vault_sir_koy.sh` mevcut dosyaları taşır, bunu DEĞİL). Değer yalnız
+borudan akar; hiçbir değişkene, argümana ya da çıktıya girmez. Politika ÖNCE (yoksa Agent yeni yolu okuyamaz),
+değer İKİNCİ, Agent yapılandırması SON:
+
+```bash
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo bash -s' <<'KASA'
+set -euo pipefail
+export VAULT_ADDR=http://127.0.0.1:8200
+trap 'rm -f /root/.vault-token' EXIT
+/usr/local/bin/vault login -no-print - < /etc/vault/admin.token >/dev/null
+/usr/local/bin/vault policy write meridian-agent /opt/meridian/deploy/vault/policies/meridian-agent.hcl
+openssl rand -hex 24 | tr -d '\n' | /usr/local/bin/vault kv put secret/meridian/grafana_admin_parola value=- >/dev/null
+install -o root -g vault -m 0640 /opt/meridian/deploy/vault/agent.hcl /etc/vault/agent.hcl
+systemctl restart vault-agent
+KASA
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo stat -c "%a %U %s" /etc/meridian/grafana_admin_parola'
+# beklenen: 400 root 48   (yalnız izin/sahip/boyut — değer değil)
+```
+
+Agent yeniden başlaması tüketicileri yeniden başlatmaz (her hedef aynı değerle yeniden render edilir).
+
+**3. Elle başlat + test-ateşle** (CLAUDE.md §9 "kurulu ≠ çalışır"; her birim AYRI komut):
+
+```bash
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo systemctl start meridian-node-exporter'
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo systemctl start meridian-prometheus'
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo systemctl start meridian-grafana'
+```
+
+**4. Doğrulama** (her satırın beklenen çıktısı yanında):
+
+```bash
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'systemctl is-active meridian-node-exporter meridian-prometheus meridian-grafana'
+# active ×3
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'curl -s 127.0.0.1:9095/-/ready'
+# Prometheus Server is Ready.
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'curl -s 127.0.0.1:9095/api/v1/targets | jq -r ".data.activeTargets[] | [.labels.job, .health, .lastError] | @tsv"'
+# apisix up · meridian up · node up (lastError boş)
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'curl -s 127.0.0.1:9095/api/v1/status/runtimeinfo | jq -r .data.storageRetention'
+# 30d or 2GiB
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo ss -ltnp | grep -E ":(9095|9100|3000) "'
+# üçü de 127.0.0.1:<port> — 0.0.0.0 ya da [::] GÖRÜNMEMELİ
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'curl -s 127.0.0.1:3000/api/health; curl -s -o /dev/null -w " anonim=%{http_code}\n" 127.0.0.1:3000/api/org'
+# "database": "ok" … anonim=401
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo docker inspect -f "{{.Name}} bellek={{.HostConfig.Memory}} kullanici={{.Config.User}}" meridian-node-exporter meridian-prometheus meridian-grafana'
+# bellek 67108864 / 536870912 / 268435456 ; kullanıcı nobody / nobody / 472
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo stat -c "%a %u" /run/meridian-grafana/grafana_admin_parola'
+# 400 472
+```
+
+Tünelle giriş yapılıp "Meridian — gecikme telemetrisi" panosunun altı paneli veri gösterdiği görülür (geçit p50/p95
+rota başına, LLM p50/p95, CPU, RAM, `/` + `/opt/veri` doluluğu). Ardından test-ateşleme:
+`ssh … 'sudo systemctl restart meridian-grafana'` → sağlık satırı yeniden.
+
+**5. Etkinleştirme** — test-ateşleme temiz geçtikten sonra, AYRI bir değişiklikle: üç birim
+`defaults/main.yml::etkin_birimler`e (ve `tests/test_ansible_a0_v451.py` `UZUN_OMURLU_BIRIMLER` kümesine — rol
+onları asla yeniden başlatmasın) → commit → `site.yml`. O güne kadar birimler reboot'ta AÇILMAZ.
+
+### Yapılandırma değişikliği · imaj yükseltme
+
+Depoda düzenle → `site.yml` (kopyalar, restart ETMEZ) → `ssh … 'sudo systemctl restart meridian-prometheus'` (ya da
+`meridian-grafana`). Panolar arayüzden değiştirilemez (`allowUiUpdates: false`); kaynak
+`deploy/telemetri/grafana/panolar/`dır. İmaj yükseltmesi birimdeki `etiket@sha256:` değerinin değişmesidir: özet iki
+kaynaktan ölçülür (Docker Hub tag API `digest` + registry `Docker-Content-Digest` başlığı) ve eşit olmalıdır;
+`latest` yasak (v584).
+
+### Parola döndürme (Grafana değeri YALNIZ ilk açılışta okur)
+
+Kasadaki değeri değiştirmek yönetici hesabını DEĞİŞTİRMEZ (Grafana `GF_SECURITY_ADMIN_PASSWORD` değerini yalnız
+veritabanı ilk kurulurken hesaba yazar). `sir_rotasyon.sh` bu sırrı bu yüzden TAŞIMAZ (v447
+`ROTASYON_DISI_KREDENSIYELLER`). Sıra: adım 2'nin `openssl rand … | vault kv put …` satırı (login + trap ile) →
+Agent ≤1 dk içinde render eder (`stat -c %y` ile mtime) → hesabı dosyadan güncelle (değer stdin'den):
+
+```bash
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo sh -c "docker exec -i meridian-grafana grafana cli admin reset-admin-password --password-from-stdin < /etc/meridian/grafana_admin_parola"'
+```
+
+ÖLÇÜLMEDİ: `--password-from-stdin` Grafana 13.2.2 CLI kaynağında var; A1'de ilk döndürmede doğrulanır.
+
+### Geri alma · bedel
+
+Durdurmak: üç birim için ayrı ayrı `ssh … 'sudo systemctl stop <birim>'`. Veri `/var/lib/meridian-telemetri`
+altında kalır; silmek operatör kararıdır. Bedel (tasarım §5): üç loopback süreç; disk ≤2GB TSDB + imajlar (`/`
+üstünde; `docker images` ile ölçülür); RAM tavanı 512M + 64M + 256M (konteyner `--memory`); node_exporter ev
+sahibinin dünyaya-okunur dosyalarını görebilir (0400/0600 sır dosyalarını göremez).

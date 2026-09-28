@@ -90,6 +90,22 @@
     or ((kadans_etkin[birim_adi] | default('')) == 'enabled')
   notify: daemon-reload
 
+# TELEMETRİ YAPILANDIRMASI (TSK-020 UYGULA-9 Faz A, 2026-09-28) — telemetri birimlerinin SALT-OKUR bağladığı
+# dosyalar (Prometheus kazıma yapılandırması, Grafana sağlayıcıları, pano). Birim dosyalarıyla AYNI sözleşme:
+# RESTART YOK — yürürlük `systemctl restart meridian-prometheus|meridian-grafana` ile (bakım penceresinin işi).
+# `dest` SONDAKİ `/` İLE BİTER: hedef dizin YOKSA copy modülü onu yaratır (`directory_mode`) ve check kipinde
+# "yaratılacak" der; düz dosya hedefi taze A1'in ilk `--check`inde "Destination directory does not exist" ile
+# DÜŞERDİ (ansible-core copy modülü). Liste tek kaynaktır (`defaults`); ağaçla iki yönlü eşitliği v584 D2 ölçer.
+- name: Telemetri yapılandırması (Prometheus + Grafana sağlayıcıları ve pano; restart YOK)
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../telemetri/{{ item }}"
+    dest: "{{ telemetri_yapilandirma_dizini }}/{{ item | dirname }}/"
+    owner: root
+    group: root
+    mode: "0644"
+    directory_mode: "0755"
+  loop: "{{ telemetri_yapilandirma_dosyalari }}"
+
 # Birim dosyası kopyalandıysa systemd'ye OKUTULMADAN `enable` etmek, systemd'nin diskteki eski
 # görüntüsüyle sembolik bağ kurmak demektir. Handler'ı burada bilerek boşaltıyoruz.
 - name: Handler'ları burada boşalt (daemon-reload, enable'dan ÖNCE)

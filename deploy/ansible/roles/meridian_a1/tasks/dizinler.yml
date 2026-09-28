@@ -111,3 +111,33 @@
     owner: root
     group: root
     mode: "0755"
+
+# TELEMETRİ VERİ DİZİNLERİ (TSK-020 UYGULA-9 Faz A, 2026-09-28). Yazanlar docker konteynerleridir ve imajlarının
+# KENDİ kullanıcısıyla koşarlar (root DEĞİL): sahiplik o kimliğe verilir, yoksa Prometheus TSDB'ye, Grafana
+# veritabanına yazamaz. Birimler bu yolları `--mount` ile bağlar — dizin YOKSA docker DÜŞER (fail-closed; `-v`
+# root sahipli boş bir dizin yaratırdı). ATA ÖNCE: `file` yeni yarattığı ara dizinlere yaprağın sahip/modunu
+# uygular (v553 G gerekçesi). 0700: içerik yalnız o konteynerin. Değerlerin tek kaynağı `defaults/main.yml`
+# telemetri bloğu; birimlerle eşitliği v584 D3 ölçer.
+- name: Telemetri veri kökü (Prometheus TSDB + Grafana veritabanı; `/` üstünde)
+  ansible.builtin.file:
+    path: "{{ telemetri_veri_dizini }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Prometheus TSDB dizini (konteyner kullanıcısı nobody)
+  ansible.builtin.file:
+    path: "{{ telemetri_veri_dizini }}/prometheus"
+    state: directory
+    owner: "{{ telemetri_prometheus_uid }}"
+    group: "{{ telemetri_prometheus_uid }}"
+    mode: "0700"
+
+- name: Grafana veri dizini (konteyner kullanıcısı 472)
+  ansible.builtin.file:
+    path: "{{ telemetri_veri_dizini }}/grafana"
+    state: directory
+    owner: "{{ telemetri_grafana_uid }}"
+    group: "{{ telemetri_grafana_gid }}"
+    mode: "0700"

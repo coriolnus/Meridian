@@ -1,0 +1,45 @@
+# meridian-node-exporter.service — makine baskısı ölçer (CPU/RAM/disk) (TSK-020 UYGULA-9 Faz A).
+# Tasarım: docs/TASARIM-TELEMETRI-PROMETHEUS-2026-09-28.md (T1/T3c). Okuyan: meridian-prometheus (`node` işi) →
+# Grafana "Meridian — gecikme telemetrisi" panosu (CPU · RAM · `/` ve `/opt/veri` doluluğu).
+#
+# DİNLEME 127.0.0.1:9100 (A1'de boş — Rol-1 ölçümü 2026-09-28). `--network host` ağ sayaçlarının EV SAHİBİNİN
+# arayüzlerini göstermesi içindir; bağlama adresi loopback olduğu için port dışarı açılmaz.
+#
+# İMAJ PİNLİ: prom/node-exporter v1.12.1 — GitHub `releases/latest` (2026-07-14) + Docker Hub; liste özeti iki
+# kaynaktan ölçüldü ve AYNI (2026-09-28). Kayan etiket YASAK (v584).
+#
+# EV SAHİBİ YOLLARI SALT-OKUR: `/proc`, `/sys` ve `/` konteynere salt-okur bağlanır, `--path.*` bayrakları o
+# hedefleri gösterir. `--pid host` YOK (Karar, 2026-09-28): filesystem toplayıcısı bağlama tablosunu
+# `<procfs>/1/mountinfo`dan okur (node_exporter v1.12.1 kaynağı); ev sahibinin procfs'i bağlandığında oradaki
+# `1` ev sahibinin init'idir ve etiketler ev sahibi yollarıdır (`/`, `/opt/veri`). Ad alanı paylaşımı bu yüzden
+# gereksiz bir ayrıcalık olurdu. Kök bağlaması `rslave`: sonradan bağlanan bir disk de görünür.
+# BEDEL (beyan): konteyner kullanıcısı (`nobody`) ev sahibinde DÜNYAYA-OKUNUR her dosyayı okuyabilir — 0400/0600
+# sır dosyalarını OKUYAMAZ. node_exporter'ın resmi konteyner reçetesinin bilinen bedelidir.
+#
+# BELLEK TAVANI İKİ KATMANDA (MemoryMax istemciyi, `--memory` konteyneri sınırlar — meridian-prometheus şerhi).
+# KURULUM: A0 rolü KOPYALAR, ETKİNLEŞTİRMEZ; elle başlat + test-ateşle (CLAUDE.md §9).
+[Unit]
+Description=Meridian telemetri — node_exporter (yalnız 127.0.0.1:9100)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStartPre=-/usr/bin/docker rm -f meridian-node-exporter
+ExecStart=/usr/bin/docker run --rm --name meridian-node-exporter --network host \
+  --memory=64m \
+  --mount type=bind,source=/proc,target=/host/proc,readonly \
+  --mount type=bind,source=/sys,target=/host/sys,readonly \
+  --mount type=bind,source=/,target=/rootfs,readonly,bind-propagation=rslave \
+  prom/node-exporter:v1.12.1@sha256:1b4e4438faca4dd7e001dd445d161a4a2091b0fededa84093b3a8dfeae1f1be0 \
+  --path.procfs=/host/proc \
+  --path.sysfs=/host/sys \
+  --path.rootfs=/rootfs \
+  --web.listen-address=127.0.0.1:9100
+ExecStop=/usr/bin/docker stop meridian-node-exporter
+Restart=on-failure
+RestartSec=5
+MemoryMax=64M
+
+[Install]
+WantedBy=multi-user.target

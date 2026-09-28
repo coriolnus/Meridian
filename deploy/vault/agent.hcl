@@ -127,6 +127,14 @@ template {
   error_on_missing_key = true
 }
 
+# grafana_admin_parola — tüketici: meridian-grafana.service (LoadCredential=grafana_admin_parola → tmpfs kopya → GF_SECURITY_ADMIN_PASSWORD__FILE; Grafana YALNIZ ilk açılışta okur)
+template {
+  contents    = "{{ with secret \"secret/data/meridian/grafana_admin_parola\" }}{{ .Data.data.value }}{{ end }}"
+  destination = "/etc/meridian/grafana_admin_parola"
+  perms       = 0400
+  error_on_missing_key = true
+}
+
 # /opt/apisix/.env-apisix.vault — tüketici: apisix.service (docker --env-file, ikinci dosya — drop-in 50-vault-yan-dosya.conf; root okur)
 template {
   contents    = <<EOT

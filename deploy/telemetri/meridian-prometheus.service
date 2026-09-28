@@ -1,0 +1,52 @@
+# meridian-prometheus.service — gecikme telemetrisi: zaman serisi deposu (TSK-020 UYGULA-9 Faz A).
+# Tasarım: docs/TASARIM-TELEMETRI-PROMETHEUS-2026-09-28.md (T1/T2/T3; operatör ONAYI 2026-09-28: docker, yalnız ssh tüneli).
+# Telemetri GÖZLEMDİR, karar yüzeyi DEĞİL: hiçbir kapı/kill kararı buradan okumaz (tasarım §2).
+#
+# DİNLEME 127.0.0.1:9095 — 9090 (APISIX kontrol API'si) ve 9091 (APISIX prometheus eklentisi) A1'de DOLU
+# (Rol-1 ölçümü 2026-09-28); Prometheus'un varsayılanı 9090 ÇAKIŞIRDI. `--network host` + loopback adresi:
+# port dışarı AÇILMAZ, erişim ssh tüneliyle (deploy/oracle-a1/RUNBOOK.md "Telemetri (Grafana) erişimi").
+#
+# İMAJ PİNLİ (etiket + dizin özeti): prom/prometheus v3.15.0 — GitHub `releases/latest` (2026-09-25, prerelease
+# değil) ve Docker Hub; özet iki kaynaktan ÖLÇÜLDÜ ve AYNI (Docker Hub tag API `digest` + registry
+# `Docker-Content-Digest`, 2026-09-28). Özet çok-mimarili LİSTENİN özetidir: docker A1'de arm64 bildirimini seçer.
+# Yükseltme = bu satırın (etiket + özet) değişmesi; kayan etiket (`latest`) YASAK (v584).
+#
+# SAKLAMA TAVANI YAPILANDIRMADA (prometheus.yml storage → tsdb → retention: 30d + 2GB) — BAYRAKTA DEĞİL: 3.15.0'da
+# `--storage.tsdb.retention.time/size` bayrakları `[DEPRECATED]` (cmd/prometheus kaynağı; yapılandırma alanı
+# bayrağa üstün gelir). İkisini birden yazmak aynı gerçeğin iki kopyası olurdu (tek-kaynak yasası).
+# TSDB `/` üstünde (/var/lib/meridian-telemetri/prometheus — A0 `dizinler.yml` kurar, sahibi imajın `nobody`su):
+# `/opt/veri` %82 ve DISK_ESIK alarmı taşıyor (tasarım T2).
+#
+# BELLEK TAVANI İKİ KATMANDA: `MemoryMax=` bu birimin cgroup'unu, yani YALNIZ docker İSTEMCİSİNİ sınırlar —
+# konteyner dockerd'nin cgroup'unda koşar ve o satırdan etkilenmez. Konteynerin gerçek tavanı `--memory`dir.
+# İkisi aynı değeri taşır; v584 eşitliği ölçer. (Emsal apisix.service yalnız MemoryMax taşıyor — aynı sınıf.)
+#
+# BAĞLAMALAR `--mount`: `-v` kaynak yolu YOKSA onu root sahipli bir DİZİN olarak yaratır ve konteyner yanlış
+# şeyle açılır; `--mount` aynı durumda DÜŞER (fail-closed). Yapılandırma salt-okur; yalnız TSDB yazılabilir.
+#
+# KURULUM: A0 rolü (site.yml) birimi KOPYALAR, ETKİNLEŞTİRMEZ (Vault emsali, tasarım T6). Elle başlat +
+# test-ateşle (CLAUDE.md §9) → sonra `etkin_birimler`e ayrı değişiklikle. Yapılandırma değişince yürürlük için
+# `systemctl restart meridian-prometheus` (rol restart ETMEZ).
+[Unit]
+Description=Meridian telemetri — Prometheus (yalnız 127.0.0.1:9095; ssh tüneli)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+ExecStartPre=-/usr/bin/docker rm -f meridian-prometheus
+ExecStart=/usr/bin/docker run --rm --name meridian-prometheus --network host \
+  --memory=512m \
+  --mount type=bind,source=/etc/meridian-telemetri/prometheus/prometheus.yml,target=/etc/prometheus/prometheus.yml,readonly \
+  --mount type=bind,source=/var/lib/meridian-telemetri/prometheus,target=/prometheus \
+  prom/prometheus:v3.15.0@sha256:efd719c99d83b060d9daefdcf00360461adf279f45ef5391f8d111892118753e \
+  --config.file=/etc/prometheus/prometheus.yml \
+  --storage.tsdb.path=/prometheus \
+  --web.listen-address=127.0.0.1:9095
+ExecStop=/usr/bin/docker stop meridian-prometheus
+Restart=on-failure
+RestartSec=5
+MemoryMax=512M
+
+[Install]
+WantedBy=multi-user.target

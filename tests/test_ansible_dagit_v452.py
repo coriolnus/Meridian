@@ -437,8 +437,8 @@ def test_A2c_f9_canli_yollari_MUTLAK():
     assert not goreli, f"`f9_ciftleri` canlı yolu mutlak değil: {goreli}"
 
 
-#: `f9_ciftleri`nin DONMUŞ SÖZLEŞMESİ — 47 (repo yolu, canlı yol) çifti (39 ölçüldü
-#: 2026-09-08; +8 TSK-064 Faz-2 Vault, 2026-09-14).
+#: `f9_ciftleri`nin DONMUŞ SÖZLEŞMESİ — 54 (repo yolu, canlı yol) çifti (39 ölçüldü
+#: 2026-09-08; +8 TSK-064 Faz-2 Vault, 2026-09-14; +7 TSK-020 UYGULA-9 Faz A telemetri, 2026-09-28).
 #: Gerekçe A1c ile aynı sınıf (tek-kaynak yasası, CLAUDE.md §4: kopya kaçınılmazsa türetme +
 #: ayrışma çivisi): kıyasın öteki ucu dagit.sh'ın `F9_LISTE` dizgesiydi, silindi. ÖLÇÜLDÜ
 #: (inceleme bulgusu B2, 2026-09-08): `deploy/apisix/apisix-etcd.service` çifti listeden
@@ -507,6 +507,18 @@ F9_CIFTLERI_SOZLESMESI = (
     ('deploy/vault/vault_admin_yenile.sh', '/opt/vault/bin/vault_admin_yenile.sh'),
     ('deploy/vault/vault-admin-yenile.service', '/etc/systemd/system/vault-admin-yenile.service'),
     ('deploy/vault/vault-admin-yenile.timer', '/etc/systemd/system/vault-admin-yenile.timer'),
+    # TSK-020 UYGULA-9 Faz A (2026-09-28) — telemetri: üç birim + dört yapılandırma, yedisini de A0 rolü
+    # taşır. Kurulum gününe kadar "canlıda YOK" raporlanır; [F9] raporlar, engellemez.
+    ('deploy/telemetri/meridian-prometheus.service', '/etc/systemd/system/meridian-prometheus.service'),
+    ('deploy/telemetri/meridian-node-exporter.service', '/etc/systemd/system/meridian-node-exporter.service'),
+    ('deploy/telemetri/meridian-grafana.service', '/etc/systemd/system/meridian-grafana.service'),
+    ('deploy/telemetri/prometheus/prometheus.yml', '/etc/meridian-telemetri/prometheus/prometheus.yml'),
+    ('deploy/telemetri/grafana/provisioning/datasources/meridian-prometheus.yaml',
+     '/etc/meridian-telemetri/grafana/provisioning/datasources/meridian-prometheus.yaml'),
+    ('deploy/telemetri/grafana/provisioning/dashboards/meridian.yaml',
+     '/etc/meridian-telemetri/grafana/provisioning/dashboards/meridian.yaml'),
+    ('deploy/telemetri/grafana/panolar/meridian-gecikme.json',
+     '/etc/meridian-telemetri/grafana/panolar/meridian-gecikme.json'),
 )
 
 
