@@ -43,7 +43,7 @@ gecikmesi, (3) makine baskısı (CPU/RAM/disk — `/opt/veri` %82).
 **T1 — Bileşenler (Docker, pinli imaj + digest).** Prometheus `127.0.0.1:9095` · node_exporter `127.0.0.1:9100` · Grafana `127.0.0.1:3000`.
 Emsal: `deploy/apisix/apisix.service` (docker `--network host`, pinli sürüm, `MemoryMax`, `Restart=on-failure`). Gerekçe: A1'de docker zaten
 işletimde; resmi arm64 imajları; yükseltme = etiket değişikliği. Alternatif (native ikili + sha256, Vault deseni) §5'te.
-Bellek tavanları: Prometheus 512M · Grafana 256M · node_exporter 64M.
+Bellek tavanları: Prometheus 512M · Grafana ~~256M~~ **512M** (2026-09-28 canlı ölçüm düzeltmesi, §7) · node_exporter 64M.
 
 **T2 — Veri saklama (disk tavanı zorunlu).** TSDB `/` altında (21G boş; `/opt/veri` %82 ve DISK_ESIK alarmı var) — `--storage.tsdb.retention.time=30d`
 ve `--storage.tsdb.retention.size=2GB` (hangisi önce dolarsa). Kazıma aralığı 30 s. Beklenen hacim: ~3 hedef, birkaç bin seri → 30 günde yüzlerce MB.
@@ -89,3 +89,9 @@ RUNBOOK'ta. `/api/gateway` gecikme okumaz (bilinçli; Grafana okur).
 1. Tasarım onayı (T1–T7, fazlar A→B; C ayrı kart).
 2. Kurulum biçimi: docker (öneri) mi, native ikili mi?
 3. Grafana'ya erişim: yalnız ssh tüneli (öneri) — dışarıdan erişim istenirse ayrı karar.
+
+## 7. Canlı kurulumda ölçülen düzeltmeler (Rol-1, 2026-09-28)
+
+- **Grafana bellek tavanı 256M → 512M.** İlk başlatma 12:20:57Z'de veritabanı göçü sırasında çekirdek memcg OOM'u (anon 144 MB + dosya 180 MB ≈ 324 MB;
+  memcg dosya önbelleğini de sayar); ikinci açılışta kararlı ~222 MiB (%87) ve yine OOM (`NRestarts=2`) → birim durduruldu, tavan düzeltme turuna gitti.
+  Prometheus (32 MiB / 512M) ve node_exporter (7 MiB / 64M) tavanları ölçümle yeterli. Ders: tasarımdaki tavan TAHMİNDİ; konteyner tavanı ilk açılışta ölçülür.
