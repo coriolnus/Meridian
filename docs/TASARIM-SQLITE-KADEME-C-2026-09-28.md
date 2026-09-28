@@ -1,6 +1,6 @@
 # TASARIM — SQLite Kademe C: `hypotheses.jsonl` + `validation_ledger.jsonl` → `meridian.db` (TSK-020 UYGULA-1)
 
-Durum: **TASLAK — operatör onayı bekliyor** (sıra: ölçüm ✔ → bu belge → onay → kod). Yazan: Rol-1, 2026-09-28 07:0xZ.
+Durum: **ONAYLI** — operatör 2026-09-28 07:2xZ (AskUserQuestion: tasarım 'Onaylıyorum'; canlı göç 'ilk sakin pencerede, Rol-1 yapar'). Sıra: ölçüm ✔ → bu belge ✔ → onay ✔ → kod. Yazan: Rol-1, 2026-09-28 07:0xZ.
 Operatör kararı (2026-09-28, AskUserQuestion): "SQLite taşımasını sıraya al". Kaynak: `meridian/storage.py` docstring'i
 ve ROADMAP TSK-020 kaydı — "Öğrenme-katmanı dosyaları (hypotheses/validation_ledger) Kademe C'ye ertelendi."
 hafıza: A1 recall bu turda TSK-168 için koşuldu; Kademe C'ye özgü önceki karar kaydı yok (ROADMAP TSK-020 + TSK-128 notları okundu).
