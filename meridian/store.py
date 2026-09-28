@@ -10,12 +10,15 @@ değer 0.0 diye yazılmaz). Bozuk dosya/satır varsayılana düşer ama SESSİZ 
 
 KİLİT GİRİŞLER. `write_json`/`read_json`, `append_jsonl`/`read_jsonl`/`write_jsonl`, `write_text`
 (JSON olmayan defterler için AYNI kapı), `update_json`/`update_jsonl`/`merge_dated_jsonl` (kilitli
-oku-değiştir-yaz — kayıp-güncelleme yapısal olarak imkânsız), `file_lock(ad)` (süreç-içi RLock +
+oku-değiştir-yaz — kayıp-güncelleme yapısal olarak imkânsız), `update_rows` (aynı sözleşme; DB'ye
+giden adda oku+değiştir+yaz TEK SQLite transaction'ı — süreçler-arası eklemeyi de korur, Kademe C D3),
+`file_lock(ad)` (süreç-içi RLock +
 süreçler-arası `fcntl.flock`; RLock tek başına YETMİYORDU — yalnız aynı süreçte anlam taşır, kilit
 dosyası `state/.locks/<ad>.lock`tur çünkü veri dosyası os.replace ile inode değiştirir),
-`db_backed(ad)` (altı defter adı `state/meridian.db` varsa storage.py'ye yönlenir; depolama
-migrasyonudur, davranış migrasyonu değil), `stamp`/`mtime` (arka-uç bağımsız tazelik damgası),
-`kilit_budamasi`, `io_stats`.
+`db_backed(ad)` (`storage.ENTITIES` kaydındaki ad, `storage.active(ad)` evet derse storage.py'ye
+yönlenir; depolama migrasyonudur, davranış migrasyonu değil), `stamp`/`mtime` (arka-uç bağımsız
+tazelik damgası), `kum_havuzuna_maddelestir` (DB'siz kum havuzuna canlı DB içeriğini kanonik dosya
+olarak indirir, Kademe C D4), `kilit_budamasi`, `io_stats`.
 
 DEĞİŞMEZLER. Kilit çağıranın elinde değil KAPININ İÇİNDEdir — kilitsiz yazmak store'u bypass
 etmeyi gerektirir. DB'ye giden adda flock ALINMAZ: o adlar SQLite'ın kendi kilidiyle (WAL +
@@ -23,7 +26,8 @@ busy_timeout) korunur; iki kilit rejimini üst üste koymak iki farklı sırayla
 yani kilitlenme demekti. DB devredeyken kanonik adda kalan göç-edilmiş bayat dosya `.migrated`
 disiplinine çekilir (hiçbir şey silinmez/ezilmez); göçü kanıtsız dosyaya `.migrated` denMEZ,
 yalnız beyan edilir. Okur/yazar: yalnız state/ altı defterler + `state/.locks/`; DB devredeyken
-altı varlık storage.py üzerinden `state/meridian.db`.
+kayıttaki varlıklar storage.py üzerinden `state/meridian.db`; kum havuzu kurulurken (yalnız
+`kum_havuzuna_maddelestir`) çağıranın verdiği kum havuzu `state/` dizini.
 """
 from __future__ import annotations
 import fcntl
@@ -104,6 +108,12 @@ def _bayat_defter_suzgeci() -> None:
         try:
             p = _state() / name
             if not p.exists():
+                continue
+            if not storage.active(name):
+                # DOSYA OTORİTER (Kademe C D2): şemaya sonradan giren varlık damgası dolana dek dosyadan
+                # okunur. Onun kanonik dosyası "kalıntı" değil DEFTERİN KENDİSİDİR — arşive çekmek defteri
+                # yok eder, `db_aktif_kanonik_dosya_gocsuz` ("store okuyucularına görünmez") demek YANLIŞ
+                # olurdu. Eski varlıklar için `active` burada her zaman True'dur (kapıdan muaf).
                 continue
             m = storage.meta(name)
             if not (m and m.get("migrated_at")):
@@ -442,6 +452,32 @@ def update_jsonl(name: str, fn) -> list:
         if changed:
             write_jsonl(name, rows)
         return rows
+
+
+def update_rows(name: str, fn) -> list:
+    """SÜREÇLER-ARASI atomik oku-değiştir-yaz (Kademe C D3) — sözleşme `update_jsonl` ile aynı: `fn(rows)`
+    satırları yerinde değiştirir, True dönerse yazılır; dönüş `fn`in gördüğü liste.
+
+    NEDEN `update_jsonl` YETMİYOR. O yol DB'ye giden adda flock + iki AYRI SQLite adımıdır (okuma
+    transaction dışında, yazma "hepsini sil + yaz"); flock'u almayan bir yazarın (`append_jsonl` —
+    O_APPEND kararı gereği kilitsiz, `tests/test_wph_store_kapi.py`) araya düşen eklemesi yeniden yazımda
+    SİLİNİR (R2, tasarım 2026-09-28). Burada DB yolu `storage.update_rows`tur: oku+fn+yaz tek
+    `BEGIN IMMEDIATE` — araya giren ekleme BEKLER, kaybolmaz. Dosya yolu `update_jsonl`in KENDİSİDİR
+    (kopya değil): okuma+yazma tek dosya kilidi altında; kilitsiz eklemeyle yarış yalnız DB'siz
+    kiplerde (kum havuzu tek süreçtir; `MERIDIAN_DB=off` acil kipi) kalır ve tasarım D3'te BEYANLA kabul
+    edildi. `update_jsonl` bilerek DEĞİŞTİRİLMEDİ: eski defterlerin çağıranları (plan defteri görüş
+    damgası) bu turun kapsamı dışında — davranışları bit-bit aynı.
+
+    SANİTİZE: DB yolunda `fn`in değiştirdiği satırlar yazımdan ÖNCE `sanitize` edilir (numpy/NaN) —
+    `write_jsonl`in iki arka ucta da yaptığının aynısı."""
+    if db_backed(name):
+        def _fn(rows):
+            changed = fn(rows)
+            if changed:
+                rows[:] = [sanitize(r) for r in rows]
+            return changed
+        return storage.update_rows(name, _fn)
+    return update_jsonl(name, fn)
 
 
 def _atomic_write(path: Path, data: str) -> None:
@@ -801,6 +837,59 @@ def write_jsonl(name: str, rows: list[dict]) -> None:
     path = _path(name)
     with file_lock(name):        # gerekçe write_json'ın üstündeki blokta
         _atomic_write(path, "".join(json.dumps(sanitize(r)) + "\n" for r in rows))
+
+
+# ---- KUM HAVUZU MADDELEŞTİRMESİ (Kademe C D4, TSK-020 2026-09-28) ------------------------------
+def kum_havuzuna_maddelestir(kum_state: Path | str, canli_state: Path | str | None = None) -> list[dict]:
+    """Canlıda DB'den okunan kapılı varlıkları (`storage.DAMGA_KAPILI`) DB'siz kum havuzuna KANONİK dosya
+    adıyla indirir. Dönüş: varlık başına karar `{varlik, durum, n}` — çağıran onu kayda geçirir.
+
+    NEDEN (R3). Sprint kum havuzu `meridian.db`'yi BİLEREK kopyalamaz (izolasyon: `sprint.SKIP_COPY`
+    şerhi) ve dosyayla çalışır. Göçten sonra canlıda `validation_ledger.jsonl` `.migrated` adını alır;
+    kum havuzunda kanonik defter kalmaz → kapının DSR deneme örneklemi (`validation.ledger`, son 200)
+    boş başlar, PBO tabanı sıfırlanır — kum havuzu kapısı canlıdan farklı karar verir, uyarı yok.
+
+    DÖRT DURUM (öncelik sırasıyla):
+      `kum_havuzu_db_tasiyor`   — kum havuzunda `meridian.db` VAR: çocuk defteri oradan okur (kopyadaki
+                                  damga canlıyla aynı). Yanına kanonik dosya yazmak DB-otoriter bir
+                                  varlığa bayat kalıntı eklemek olurdu (süzgeç `.migrated-<ts>`e çeker,
+                                  olay gürültüsü). Ölçüldü 2026-09-28: `prescreen._sandbox` DB'yi kopyalar.
+      `canli_kok_config_disinda` — canlı kök `config.STATE` DEĞİL: DB okuması `config.STATE`ten türer,
+                                  yanlış kitabı indirmemek için hiçbir şey okunmaz (`n=None` — ölçülmedi).
+      `canli_dosyadan`          — canlı bu varlığı DOSYADAN okuyor (damgasız / DB yok / `MERIDIAN_DB=off`):
+                                  kanonik dosya zaten kopyalandı, doğru olan odur.
+      `maddelestirildi`         — canlı DB'nin O ANKİ içeriği (`storage.read_rows`: tek SELECT = tutarlı
+                                  anlık görüntü) kum havuzuna atomik yazıldı; `n` satır sayısı.
+
+    ESKİ VARLIKLARA UYGULANMAZ (tasarım D4 açık sorusu): `trade_plans`/`equity_curve`/`shadow_books`
+    kum havuzunda bugün nasıl başlıyor ve bu bilinçli mi ölçülmedi; onları da indirmek sprint davranışını
+    değiştirirdi — ayrı ölçüm kalemi.
+
+    KİLİT ALINMAZ: kum havuzu henüz hiçbir sürecin elinde değildir; `file_lock` kilidi `config.STATE`
+    (canlı) altına mutlak-yol adlı bir `.locks` girdisi bırakırdı. Yazım yine `_atomic_write`tir.
+
+    CANLIYA YAN ETKİ YOK: karar `db_backed` ile DEĞİL `storage.active` ile sorulur ve DB dosyası/anahtar
+    ÖNCE ölçülür — `db_backed` bayat-defter süzgecini (canlı dosya yeniden adlandırma + olay), DB'siz
+    dünyada `active` `yerel_donmus_defter` beyanını tetiklerdi. `prescreen._sandbox` bu fonksiyonu canlı
+    `config.STATE` altında çağırır ve canlı olay defterine yazmama sözü vardır (docstring'i)."""
+    kum = Path(kum_state)
+    canli = Path(canli_state) if canli_state is not None else Path(_state())
+    db_var = (kum / storage.DB_NAME).exists()
+    kok_ayni = canli.resolve() == Path(_state()).resolve()
+    canli_db_devrede = storage.db_path().exists() and not storage.disabled_by_env()
+    out: list[dict] = []
+    for name in storage.DAMGA_KAPILI:
+        if db_var:
+            out.append({"varlik": name, "durum": "kum_havuzu_db_tasiyor", "n": None})
+        elif not kok_ayni:
+            out.append({"varlik": name, "durum": "canli_kok_config_disinda", "n": None})
+        elif not (canli_db_devrede and storage.active(name)):
+            out.append({"varlik": name, "durum": "canli_dosyadan", "n": None})
+        else:
+            rows = storage.read_rows(name)
+            _atomic_write(kum / name, "".join(json.dumps(r) + "\n" for r in rows))
+            out.append({"varlik": name, "durum": "maddelestirildi", "n": len(rows)})
+    return out
 
 
 # ---- TAZELİK DAMGASI (dosya mtime'ının arka-uç bağımsız karşılığı) ------------------------------

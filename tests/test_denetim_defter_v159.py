@@ -342,7 +342,8 @@ def test_c4_basarili_yol_REGRESYONSUZ(db_sandbox):
     for ad in ("trades.jsonl", "portfolio.json", "scoreboard.json"):
         assert esles[ad]["durum"] == "tasindi", esles[ad]
         assert esles[ad]["kaynak_digest"] == esles[ad]["db_digest"], ad
-    assert store.db_backed("trades.jsonl") is True and storage.schema_version() == 1
+    # sürüm 2: TSK-020 Kademe C (2026-09-28) — şema sürümü kayıttaki sabitin kendisidir
+    assert store.db_backed("trades.jsonl") is True and storage.schema_version() == storage.SCHEMA_VERSION == 2
     sonra = {"trades": store.read_jsonl("trades.jsonl"),
              "pf": store.read_json("portfolio.json", {}),
              "sb": store.read_json("scoreboard.json", {})}

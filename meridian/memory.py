@@ -21,7 +21,9 @@ dönüş REDDEDİLİR ve status_ts yalnız gerçek geçişte damgalanır (nötr 
 kota izini yeniden yazamaz); promoted bir hipotezin kaydedilmiş sonucu tek yönlü kilitlidir
 (sonraki piyasa sürüklenmesi kalibrasyonu ileri-geri çeviremez); defterin bütün mutasyonları tek
 kilit (_HYP_LOCK) altındadır — append ile tam-dosya yeniden yazım ayrı daemon thread'lerde yarışır
-ve kilitsiz araya girme yeni ship'lenmiş bir satırı kalıcı silebilirdi. Okur/yazar:
+ve kilitsiz araya girme yeni ship'lenmiş bir satırı kalıcı silebilirdi. SÜREÇLER arası aynı yarış
+(öğrenme süreci ekler, worker yeniden yazar) `store.update_rows` ile kapanır: DB'de oku+yaz tek
+transaction (TSK-020 Kademe C D3); dosya kipinde (DB'siz) kilitsiz eklemeyle yarış beyanla açıktır. Okur/yazar:
 hypotheses.jsonl, hypothesis_id_hwm.json, lessons.md (atomik tek kapı: store)."""
 from __future__ import annotations
 import datetime as dt
@@ -119,26 +121,36 @@ def update_status(hyp_id: str, status: str, **extra) -> Optional[dict]:
                  legal=sorted(LEGAL_STATUS),
                  detail="tanınmayan statü REDDEDİLDİ — defter uydurma durum taşıyamaz")
         return None
+    # SÜREÇLER-ARASI ATOMİKLİK (TSK-020 Kademe C D3, 2026-09-28): eskiden `all_hypotheses()` ile tam oku →
+    # değiştir → `store.write_jsonl` ile tam yaz idi; `_HYP_LOCK` yalnız BU süreçte anlam taşır ve
+    # öğrenme süreci (`record`, kilitsiz ekleme) arada satır eklerse yeniden yazım onu SİLERDİ (R2).
+    # Oku+değiştir+yaz artık `store.update_rows`un tek transaction'ı; iş mantığı AYNEN `_gecir`in içinde.
+    # Uyarı transaction'dan SONRA basılır: yazma kilidi tutulurken G/Ç yapılmaz.
     with _HYP_LOCK:
-        rows = all_hypotheses()
-        updated = None
-        for r in rows:
-            if r.get("id") == hyp_id:
-                _cur = r.get("status")
-                if _cur in TERMINAL_STATUS and status != _cur:
-                    # TERMİNAL DURUM GERİ ALINMAZ: `promoted → proposed` öğrenme geçmişini yeniden
-                    # yazardı ve aynı değişiklik ikinci kez kotadan slot yakardı.
-                    obs.warn("illegal_status_transition", hyp_id=hyp_id, **{"from": _cur, "to": status},
-                             detail="terminal durumdan geri dönüş REDDEDİLDİ")
-                    return None
-                if _cur != status:
-                    r["status_ts"] = now_iso()   # stamp TRANSITIONS only — a neutral-hold refresh must
-                r["status"] = status             # not re-date the ship (it burned a monthly-quota slot
-                r.update(extra)                  # forever and destroyed the audit trail)
-                updated = r
-        if updated is not None:
-            store.write_jsonl(HYP, rows)
-        return updated
+        sonuc: dict = {"updated": None, "red": None}
+
+        def _gecir(rows: list) -> bool:
+            for r in rows:
+                if r.get("id") == hyp_id:
+                    _cur = r.get("status")
+                    if _cur in TERMINAL_STATUS and status != _cur:
+                        # TERMİNAL DURUM GERİ ALINMAZ: `promoted → proposed` öğrenme geçmişini yeniden
+                        # yazardı ve aynı değişiklik ikinci kez kotadan slot yakardı.
+                        sonuc["red"] = _cur
+                        return False
+                    if _cur != status:
+                        r["status_ts"] = now_iso()   # stamp TRANSITIONS only — a neutral-hold refresh must
+                    r["status"] = status             # not re-date the ship (it burned a monthly-quota slot
+                    r.update(extra)                  # forever and destroyed the audit trail)
+                    sonuc["updated"] = r
+            return sonuc["updated"] is not None
+
+        store.update_rows(HYP, _gecir)
+        if sonuc["red"] is not None:
+            obs.warn("illegal_status_transition", hyp_id=hyp_id, **{"from": sonuc["red"], "to": status},
+                     detail="terminal durumdan geri dönüş REDDEDİLDİ")
+            return None
+        return sonuc["updated"]
 
 
 def accepted_this_month(ts: Optional[str] = None) -> int:
@@ -153,32 +165,40 @@ def accepted_this_month(ts: Optional[str] = None) -> int:
 
 def writeback_outcome(version_to: int, realized_delta: float, realized_detail: dict) -> Optional[dict]:
     """Once min_sample trades have run under a version, write the realized score delta back onto
-    the hypothesis that shipped it. This closes the loop — the entire point."""
+    the hypothesis that shipped it. This closes the loop — the entire point.
+
+    Oku+değiştir+yaz `store.update_rows`un TEK transaction'ı (TSK-020 Kademe C D3 — gerekçe
+    `update_status`ta); iş mantığı aynen `_yaz`ın içinde."""
     with _HYP_LOCK:
-        rows = all_hypotheses()
-        target = None
-        for r in rows:
-            if r.get("version_to") == version_to and r.get("status") in ("live", "promoted"):
-                target = r
-        if target is None:
-            return None
-        if target.get("status") == "promoted" and target.get("realized_delta") is not None:
-            # Promotion is a one-way ratchet — its recorded outcome must be too. Rewriting a promoted
-            # hypothesis's realized_delta/calibration_hit with every later market drift flip-flopped the
-            # autonomy ladder's calibration gate and lessons.md while 'promoted' stayed frozen.
-            return target
-        predicted = target.get("predicted_delta")
-        target["realized_delta"] = round(realized_delta, 4)
-        target["realized_detail"] = realized_detail
-        # Telemetry: market_regime must be a TOP-LEVEL, greppable field on the hypothesis row (the
-        # eval-window regime the realized delta was measured in), not only nested inside realized_detail.
-        if isinstance(realized_detail, dict) and realized_detail.get("market_regime"):
-            target["market_regime"] = realized_detail["market_regime"]
-        if predicted is not None:
-            target["calibration_hit"] = bool((predicted > 0) == (realized_delta > 0))
-        target["outcome_ts"] = now_iso()
-        store.write_jsonl(HYP, rows)
-        return target
+        sonuc: dict = {"target": None}
+
+        def _yaz(rows: list) -> bool:
+            target = None
+            for r in rows:
+                if r.get("version_to") == version_to and r.get("status") in ("live", "promoted"):
+                    target = r
+            sonuc["target"] = target
+            if target is None:
+                return False
+            if target.get("status") == "promoted" and target.get("realized_delta") is not None:
+                # Promotion is a one-way ratchet — its recorded outcome must be too. Rewriting a promoted
+                # hypothesis's realized_delta/calibration_hit with every later market drift flip-flopped the
+                # autonomy ladder's calibration gate and lessons.md while 'promoted' stayed frozen.
+                return False
+            predicted = target.get("predicted_delta")
+            target["realized_delta"] = round(realized_delta, 4)
+            target["realized_detail"] = realized_detail
+            # Telemetry: market_regime must be a TOP-LEVEL, greppable field on the hypothesis row (the
+            # eval-window regime the realized delta was measured in), not only nested inside realized_detail.
+            if isinstance(realized_detail, dict) and realized_detail.get("market_regime"):
+                target["market_regime"] = realized_detail["market_regime"]
+            if predicted is not None:
+                target["calibration_hit"] = bool((predicted > 0) == (realized_delta > 0))
+            target["outcome_ts"] = now_iso()
+            return True
+
+        store.update_rows(HYP, _yaz)
+        return sonuc["target"]
 
 
 # --- TAHMİN↔GERÇEKLEŞEN ÇİFTİ NEDEN AZ: TEŞHİS (2026-08-25) ----------------------------------

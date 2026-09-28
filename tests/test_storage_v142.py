@@ -64,7 +64,8 @@ def test_pragmalar_iddia_degil_olcum(db_sandbox):
     assert p["synchronous"] == 1          # NORMAL
     assert p["busy_timeout"] == 5000
     assert p["foreign_keys"] == 1
-    assert storage.schema_version() == storage.SCHEMA_VERSION == 1
+    # 1 → 2: TSK-020 Kademe C (2026-09-28) iki öğrenme defteri tablosunu ekledi (v579 çiviler)
+    assert storage.schema_version() == storage.SCHEMA_VERSION == 2
 
 
 def test_db_yolu_cagri_aninda_cozulur(db_sandbox, tmp_path, monkeypatch):
