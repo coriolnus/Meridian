@@ -76,6 +76,7 @@ ENVANTER = DEPLOY / "sir_envanteri.yaml"
 AGENT_HCL = DEPLOY / "vault" / "agent.hcl"
 AGENT_POLITIKA = DEPLOY / "vault" / "policies" / "meridian-agent.hcl"
 SIR_DENETIMI_YML = ROL / "tasks" / "sir_denetimi.yml"
+RUNBOOK_A1 = DEPLOY / "oracle-a1" / "RUNBOOK.md"
 AGENT_BIRIMI = DEPLOY / "vault" / "vault-agent.service"
 API_PY = KOK / "meridian" / "api.py"
 PROMETHEUS_YML = TELEMETRI / "prometheus" / "prometheus.yml"
@@ -89,10 +90,14 @@ OLCULEN_DOLU_PORTLAR = frozenset({9090, 9091})
 OLCULEN_BOS_PORTLAR = frozenset({3000, 9092, 9093, 9095, 9100, 9101})
 
 #: Tasarım T1 + brief: birim adı → (imaj deposu, bellek tavanı).
+#: Grafana 256M → 512M (tur 3, CANLI ÖLÇÜM Rol-1 A1 2026-09-28 12:20–12:21Z): ilk açılışta veritabanı göçü memcg'de
+#: ~324 MB (anon-rss 144424 kB + file-rss 180208 kB) → 256M tavanda OOM (`die 137`); kararlı hâl 222,5 MiB / 256 MiB
+#: (%86,9) ve yine düştü. 512M ≈ kararlı hâlin 2,3×'ü. Prometheus (32,4 MiB / 512 MiB) ve node-exporter (7,3 MiB /
+#: 64 MiB) aynı ölçümde yeterli — dokunulmadı. Tasarım belgesindeki 256M Rol-1 düzeltmesini bekliyor.
 BIRIMLER: dict[str, tuple[str, str]] = {
     "meridian-prometheus": ("prom/prometheus", "512M"),
     "meridian-node-exporter": ("prom/node-exporter", "64M"),
-    "meridian-grafana": ("grafana/grafana", "256M"),
+    "meridian-grafana": ("grafana/grafana", "512M"),
 }
 GRAFANA = "meridian-grafana"
 PROMETHEUS = "meridian-prometheus"
@@ -393,6 +398,83 @@ def test_A4_node_exporter_ev_sahibi_yollari_SALT_OKUR_ve_yol_bayraklari_baglamal
     for bayrak, kaynak in (("--path.procfs", "/proc"), ("--path.sysfs", "/sys"), ("--path.rootfs", "/")):
         deger = [x.split("=", 1)[1] for x in run.argumanlar if x.startswith(bayrak + "=")]
         assert deger == [_hedef(baglar[kaynak])], f"{bayrak} bağlama hedefini göstermiyor: {deger}"
+
+
+_BIRIM_CARPAN = {"K": 1024, "M": 1024 ** 2, "G": 1024 ** 3}
+
+
+def _bayt(deger: str) -> int:
+    """`512M`/`512m`/`64M` → bayt (docker ve systemd ikisi de 1024 tabanlı)."""
+    m = re.fullmatch(r"(\d+)([KMGkmg])", deger.strip())
+    assert m, f"bellek değeri ayrıştırılamadı: {deger!r}"
+    return int(m.group(1)) * _BIRIM_CARPAN[m.group(2).upper()]
+
+
+def _telemetri_bolumu(metin: str) -> str:
+    i = metin.find("## Telemetri (Grafana) erişimi")
+    assert i >= 0, "RUNBOOK telemetri bölümü yok"
+    return metin[i:]
+
+
+def _runbook_bellek_bulgulari(runbook: str, birimler: dict[str, str]) -> list[str]:
+    """Birimdeki konteyner tavanı (`--memory`) ↔ RUNBOOK'un beklediği iki yazım: `docker inspect` bayt satırı ve bedel
+    satırındaki ADLI toplam. RUNBOOK operatörün doğrulama cetvelidir — tavan birimde değişip orada kalırsa canlı
+    doğrulama DOĞRU birimi "ayrık" diye okur (tur 3: 256M → 512M)."""
+    b: list[str] = []
+    bolum = _telemetri_bolumu(runbook)
+    m = re.search(r'docker inspect -f "[^"]*" ((?:meridian-[\w-]+ ?)+)\'\n# bellek ([\d /]+);', bolum)
+    if not m:
+        return ["RUNBOOK: `docker inspect` + beklenen `# bellek …` satırı bulunamadı"]
+    adlar = m.group(1).split()
+    degerler = [int(x) for x in m.group(2).split("/")]
+    if sorted(adlar) != sorted(birimler) or len(adlar) != len(degerler):
+        b.append(f"RUNBOOK inspect birim kümesi ayrıştı: {adlar} / {degerler}")
+    for ad, deger in zip(adlar, degerler):
+        if ad in birimler and deger != _bayt(birimler[ad]):
+            b.append(f"RUNBOOK inspect: {ad} bellek {deger} != birim {birimler[ad]} ({_bayt(birimler[ad])})")
+    satir = re.search(r"RAM tavanı[^\n]*(?:\n[^\n]*)?", bolum)
+    ciftler = dict(re.findall(r"(meridian-[\w-]+) (\d+[KMG])", satir.group(0))) if satir else {}
+    if set(ciftler) != set(birimler):
+        b.append(f"RUNBOOK 'RAM tavanı' satırı birimleri ADIYLA saymıyor/ayrıştı: {sorted(ciftler)}")
+    for ad, deger in ciftler.items():
+        if ad in birimler and _bayt(deger) != _bayt(birimler[ad]):
+            b.append(f"RUNBOOK RAM tavanı: {ad} {deger} != birim {birimler[ad]}")
+    toplam = re.search(r"= (\d+[KMG])", satir.group(0)) if satir else None
+    if not toplam or _bayt(toplam.group(1)) != sum(_bayt(v) for v in birimler.values()):
+        b.append(f"RUNBOOK RAM tavanı toplamı ayrıştı: {toplam and toplam.group(1)}")
+    return b
+
+
+def _birim_bellekleri() -> dict[str, str]:
+    out = {}
+    for ad in BIRIMLER:
+        mem = [d for a, d in _run(ad).secenekler if a in ("--memory", "-m")]
+        assert len(mem) == 1, f"{ad}: --memory TEK değil"
+        out[ad] = str(mem[0])
+    return out
+
+
+def test_A5_bellek_tavani_BIRIM_TEST_RUNBOOK_arasinda_ayrismaz():
+    """Birim ↔ test (`BIRIMLER`, A1 `_birim_bulgulari`) zaten eşit; bu çivi RUNBOOK'u da bağlar."""
+    bulgular = _runbook_bellek_bulgulari(RUNBOOK_A1.read_text(encoding="utf-8"), _birim_bellekleri())
+    assert bulgular == [], "bellek tavanı RUNBOOK'ta ayrıştı:\n" + "\n".join(bulgular)
+
+
+RUNBOOK_BELLEK_MUTASYONLARI = [
+    ("inspect_eski_256", "/ 536870912 ;", "/ 268435456 ;", "RUNBOOK inspect"),
+    ("ram_satiri_eski", "meridian-grafana 512M", "meridian-grafana 256M", "RAM tavanı"),
+    ("ram_toplami", "= 1088M", "= 832M", "toplamı"),
+]
+
+
+@pytest.mark.parametrize("kimlik, eski, yeni, beklenen", RUNBOOK_BELLEK_MUTASYONLARI,
+                         ids=[m[0] for m in RUNBOOK_BELLEK_MUTASYONLARI])
+def test_A6_POZITIF_KONTROL_runbook_bellek_denetcisi_OTER(kimlik, eski, yeni, beklenen):
+    metin = RUNBOOK_A1.read_text(encoding="utf-8")
+    i = metin.find("## Telemetri (Grafana) erişimi")
+    bozuk = metin[:i] + _bozuk(metin[i:], eski, yeni)
+    bulgular = _runbook_bellek_bulgulari(bozuk, _birim_bellekleri())
+    assert any(beklenen in x for x in bulgular), f"{kimlik}: denetçi ÖTMEDİ: {bulgular}"
 
 
 # =================================================================================================
@@ -784,7 +866,7 @@ BIRIM_MUTASYONLARI = [
     ("dolu_port", PROMETHEUS, "--web.listen-address=127.0.0.1:9095", "--web.listen-address=127.0.0.1:9090", "DOLU"),
     ("digest_yok", PROMETHEUS, "prom/prometheus:v3.15.0@sha256:", "prom/prometheus:v3.15.0@", "pinli değil"),
     ("latest", NODE, ":v1.12.1@", ":latest@", "tam sürüm"),
-    ("bellek_bayragi_yok", GRAFANA, "--memory=256m ", "", "--memory"),
+    ("bellek_bayragi_yok", GRAFANA, "--memory=512m ", "", "--memory"),
     ("memorymax_yanlis", NODE, "MemoryMax=64M", "MemoryMax=640M", "MemoryMax"),
     ("root_kullanici", GRAFANA, "--name meridian-grafana --network host",
      "--name meridian-grafana --network host --user 0", "kullanıcı/ayrıcalık"),

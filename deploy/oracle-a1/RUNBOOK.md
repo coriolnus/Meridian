@@ -710,7 +710,7 @@ ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo ss -ltnp | grep -E ":(9095|9
 ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'curl -s 127.0.0.1:3000/api/health; curl -s -o /dev/null -w " anonim=%{http_code}\n" 127.0.0.1:3000/api/org'
 # "database": "ok" … anonim=401
 ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo docker inspect -f "{{.Name}} bellek={{.HostConfig.Memory}} kullanici={{.Config.User}}" meridian-node-exporter meridian-prometheus meridian-grafana'
-# bellek 67108864 / 536870912 / 268435456 ; kullanıcı nobody / nobody / 472
+# bellek 67108864 / 536870912 / 536870912 ; kullanıcı nobody / nobody / 472
 ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo stat -c "%a %u" /run/meridian-grafana/grafana_admin_parola'
 # 400 472
 ```
@@ -748,5 +748,7 @@ ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo sh -c "docker exec -i meridi
 
 Durdurmak: üç birim için ayrı ayrı `ssh … 'sudo systemctl stop <birim>'`. Veri `/var/lib/meridian-telemetri`
 altında kalır; silmek operatör kararıdır. Bedel (tasarım §5): üç loopback süreç; disk ≤2GB TSDB + imajlar (`/`
-üstünde; `docker images` ile ölçülür); RAM tavanı 512M + 64M + 256M (konteyner `--memory`); node_exporter ev
-sahibinin dünyaya-okunur dosyalarını görebilir (0400/0600 sır dosyalarını göremez).
+üstünde; `docker images` ile ölçülür); RAM tavanı (konteyner `--memory`) meridian-prometheus 512M +
+meridian-node-exporter 64M + meridian-grafana 512M = 1088M — Grafana 256M'den 512M'e canlı ölçümle çıktı
+(2026-09-28: ilk açılış göçü ~324 MB → OOM; kararlı 222,5 MiB / 256 MiB); node_exporter ev sahibinin
+dünyaya-okunur dosyalarını görebilir (0400/0600 sır dosyalarını göremez).
