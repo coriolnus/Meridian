@@ -765,6 +765,11 @@ sınırlıyordu; konteyner dockerd'nin cgroup'unda koşar. Rol-1 A1 ölçümü (
 birleşik hâl dahil) `tests/test_konteyner_bellek_tavani_v587.py` ölçer; apisix'in `50-vault-yan-dosya.conf` drop-in'i
 ExecStart'ı yeniden yazdığı için bayrak orada da vardır.
 
+**CPU eşi (TSK-247(b), 2026-09-28):** `CPUQuota=` de yalnız istemciyi sınırlar. Rol-1 A1 ölçümü: `hindsight-cp`
+`CPUQuotaPerSecUSec` = 1s (istemci), `docker inspect` `NanoCpus` = 0 → konteyner CPU'su sınırsızdı. Düzeltme:
+`hindsight-cp` `docker run`ına `--cpus=<CPUQuota/100>` (100% → 1 çekirdek). CPU kotası YALNIZ bu birimde var; kota
+beyan eden her docker biriminde eşitliği v587 E bölümü ölçer. Aynı restart'la yürürlüğe girer.
+
 **Yürürlük RESTART ister:** bayrak konteyner AÇILIRKEN uygulanır. `site.yml` dosyaları kopyalar ve `daemon-reload`
 yapar, hiçbir birimi yeniden başlatmaz. Restart BAKIM PENCERESİNDE yapılır: APISIX yeniden başlarken kapının bütün
 yüzeyi (LLM egress `9080`, FMP rotası, pano girişi `9443`) birkaç saniye kesilir. `dagit` `[F9]` içerik aynası
@@ -778,7 +783,8 @@ ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/site.yml
 ```
 
 Beklenen fark: `apisix.service`, `apisix-etcd.service`, `hindsight-cp.service` ve
-`apisix.service.d/50-vault-yan-dosya.conf` içinde yalnız `--memory=…` satırı ve şerhi. Başka dosya değişiyorsa DUR.
+`apisix.service.d/50-vault-yan-dosya.conf` içinde yalnız `--memory=…` satırı ve şerhi; `hindsight-cp.service`te ek
+olarak `--cpus=…` satırı ve şerhi. Başka dosya değişiyorsa DUR.
 
 **2. Yeniden başlat** — tek komut, sıra etcd önce:
 
@@ -798,6 +804,8 @@ ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo docker inspect -f "{{.Name}}
 # beklenen: /apisix-etcd 268435456 · /apisix-kapi 536870912 · /hindsight-cp 536870912
 ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo docker stats --no-stream --format "{{.Name}} {{.MemUsage}}" apisix-etcd apisix-kapi hindsight-cp'
 # tavan sütunu 256MiB / 512MiB / 512MiB — "23.41GiB" GÖRÜNMEMELİ
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo docker inspect -f "{{.Name}} {{.HostConfig.NanoCpus}}" hindsight-cp'
+# beklenen: /hindsight-cp 1000000000   (0: CPU tavanı konteynere inmemiş)
 ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'curl -s 127.0.0.1:2379/health; curl -s -o /dev/null -w " kapi=%{http_code}\n" 127.0.0.1:9080/healthz'
 # {"health":"true"…} kapi=200   (502: kapı açık ama pano kapalı · 000: kapı açılmadı)
 ```
@@ -809,5 +817,6 @@ inmemiştir: birim kopyalandı ama restart yapılmadı ya da KOŞAN komut eski �
 
 **Tavan aşılırsa** çekirdek konteyneri öldürür (`docker events`: `oom` → `die 137`) ve `Restart=on-failure` birimi
 yeniden açar. Tavan ÖLÇEREK yükseltilir (Grafana emsali: memcg dosya önbelleğini de sayar); değer birimde, apisix
-drop-in'inde, bu cetvelde ve v587'de birlikte değişir. **Geri alma:** `--memory` satırı kaldırılır → `site.yml` →
-aynı restart.
+drop-in'inde, bu cetvelde ve v587'de birlikte değişir. CPU tavanı öldürmez, KISAR (throttle); `--cpus` değeri
+birimin `CPUQuota=`su ve bu cetvelin `NanoCpus` satırıyla birlikte değişir. **Geri alma:** `--memory` (ve/veya
+`--cpus`) satırı kaldırılır → `site.yml` → aynı restart.
