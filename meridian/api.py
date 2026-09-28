@@ -46,6 +46,7 @@ from starlette.middleware.gzip import GZipMiddleware, GZipResponder, IdentityRes
 from . import auth
 
 from . import store, storage, config, analytics, health, memory, obs, secrets as secrets_mod
+from . import gecikme
 from . import topviews as topviews_mod
 
 def _auth_posture_check() -> None:
@@ -1868,7 +1869,9 @@ def metrics(request: Request):
     GİZLİLİK SINIRI: bu uç YETKİSİZDİ ve öz sermaye, günlük P&L, açık
     pozisyon sayısı, LLM harcaması gibi HESAP BİLGİLERİNİ herkese açıyordu. Yerelde sorun değil, ama
     /halt sayfası bilinçli olarak tünelden açılıyor — tünel tüm uygulamayı dışarı verir. Artık:
-    yerel istek VEYA doğru token → tam set; uzak+yetkisiz → yalnız CANLILIK (up/heartbeat/halted)."""
+    yerel istek VEYA doğru token → tam set; uzak+yetkisiz → yalnız CANLILIK (up/heartbeat/halted).
+    Tam set, gauge'lardan sonra süreç-içi gecikme HİSTOGRAMLARINI da taşır (`gecikme.ifade`, TSK-020 Faz B) —
+    A1'de Prometheus bu ucu yerelden kazır (`deploy/telemetri/prometheus/prometheus.yml`, job `meridian`)."""
     full = _local_request(request)
     if not full:
         try:
@@ -1908,7 +1911,21 @@ def metrics(request: Request):
         g("meridian_hermes_spend_usd", _spend_summary()["spent_usd"], "Hermes LLM spend this month (USD)"),
         g("meridian_hermes_budget_over", _spend_summary()["over_budget"], "monthly LLM budget exhausted"),
     ])
-    return out
+    # GECİKME HİSTOGRAMLARI (TSK-020 UYGULA-9 Faz B) — YALNIZ tam sette: yukarıdaki `if not full` dönüşünden SONRA
+    # eklenir, yani uzak+yetkisiz ya da vekilli istek bunları GÖRMEZ (gizlilik sınırı, v585 C). Telemetri GÖZLEMDİR —
+    # hiçbir kapı/kill kararı bunlardan okumaz (tasarım §2).
+    return out + gecikme.ifade(*_gecikme_histogramlari())
+
+
+def _gecikme_histogramlari() -> tuple:
+    """`/metrics`in yayınladığı gecikme histogramları, SABİT sırada: karar döngüsü turu, gün döngüsü fazı, atomik
+    yazım. Her histogram ölçümün sahibi modülde doğar (`intraday_cycle.DONGU_SURESI`, `skills.BORU_HATTI_SURESI`,
+    `store.YAZIM_SURESI`); burada yalnız TOPLANIR. `intraday_cycle` tembel içe aktarılır: normalde yalnız `_autostart`
+    piyasa akışını kurunca yüklenir — ama seri kümesi yükleme sırasına bağlı olmamalı (sıfır sayımlı seriler baştan
+    yayınlanır ki ilk gözlem `increase()`te kaybolmasın). Motorda tanımlı her histogramın burada olduğunu v585 D3
+    tarar."""
+    from . import intraday_cycle, skills
+    return (intraday_cycle.DONGU_SURESI, skills.BORU_HATTI_SURESI, store.YAZIM_SURESI)
 
 
 def _spend_summary():

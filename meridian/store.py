@@ -40,6 +40,7 @@ from typing import Any
 import numpy as np
 
 from . import config
+from . import gecikme
 from . import storage
 
 
@@ -198,15 +199,31 @@ def sanitize(obj: Any) -> Any:
 
 
 # Faz 1 (öneri 4c): atomik yazım gecikme telemetrisi. Disk darboğazı mkstemp+os.replace süresini
-# uzatır — bu sessiz kalmamalı. Son 200 yazımın süresi tutulur; p95 > 50 ms olursa BİR KEZ uyarılır
-# (obs kendisi de buradan yazar — warned bayrağı özyinelemeyi keser).
+# uzatır — bu sessiz kalmamalı. Son 200 yazımın süresi tutulur; p95 > `IO_P95_UYARI_MS` olursa BİR KEZ
+# uyarılır (obs kendisi de buradan yazar — warned bayrağı özyinelemeyi keser).
 import time as _time
 _IO = {"n": 0, "recent": [], "warned": False}
+IO_P95_UYARI_MS = 50.0           # `io_latency_high` eşiği — histogramın bir kova sınırı da BUDUR (v585 D4)
+
+# AYNI ÖLÇÜMÜN İKİNCİ GÖRÜNÜMÜ (TSK-020 UYGULA-9 Faz B, tasarım T4/T7): `_record_io`ya gelen her süre ayrıca
+# süreç-içi histograma işlenir ve `/metrics` tam setinde ZAMAN SERİSİ olur (Prometheus kazır, Grafana gösterir).
+# Anlık görünüm (`io_stats` → `/api/diagnostics` IO çipi) DEĞİŞMEZ — iki görünüm, tek kaynak; kopya değil.
+# GÖZLEMDİR: hiçbir kapı bu histogramdan okumaz; alarm yine tek kanalda (`io_latency_high` → obs).
+# KOVALAR (saniye): 100 µs … 2,5 s, 1-2,5-5 dizisi. Tabanın altı fsync'siz ekleme (`append_jsonl`), üst uç
+# disk darboğazı; uyarı eşiği TÜRETİLMİŞ bir sınırdır → "eşik üstü yazım payı" histogramdan KESİN okunur
+# (kova içi ara değerleme gerekmez). Eşik değişirse sınır onunla gelir.
+YAZIM_SURESI = gecikme.Histogram(
+    "meridian_store_write_seconds",
+    "state write duration through the store gate (same measurement as /api/diagnostics io_stats)",
+    kovalar=tuple(sorted({0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
+                          IO_P95_UYARI_MS / 1000.0, 0.1, 0.25, 0.5, 1.0, 2.5})))
 
 
 def _record_io(ms: float) -> None:
-    """Bir yazımın süresini (ms) telemetriye işler; son 200 ölçüm tutulur. p95 > 50 ms olursa
-    SÜREÇ BAŞINA BİR KEZ `io_latency_high` uyarısı basar (bayrak özyinelemeyi de keser)."""
+    """Bir yazımın süresini (ms) telemetriye işler; son 200 ölçüm tutulur ve aynı süre `YAZIM_SURESI`
+    histogramına (saniye) işlenir. p95 > `IO_P95_UYARI_MS` olursa SÜREÇ BAŞINA BİR KEZ
+    `io_latency_high` uyarısı basar (bayrak özyinelemeyi de keser)."""
+    YAZIM_SURESI.gozlemle(ms / 1000.0)
     _IO["n"] += 1
     r = _IO["recent"]
     r.append(ms)
@@ -214,7 +231,7 @@ def _record_io(ms: float) -> None:
         del r[:len(r) - 200]
     if not _IO["warned"] and len(r) >= 20:
         srt = sorted(r)
-        if srt[int(len(srt) * 0.95) - 1] > 50.0:
+        if srt[int(len(srt) * 0.95) - 1] > IO_P95_UYARI_MS:
             _IO["warned"] = True
             try:
                 from . import obs
