@@ -4026,3 +4026,28 @@ brief'in codelaw genişletmesiyle çelişti; ajan test tarafını seçti, kabul 
 canlıyla aynı (ilk "FARKLI" ölçümüm süreç ikamesindeki stdin hatasıydı); tek seferlik eşitleme sınıflandırıcıya takıldı → operatöre komut.
 **TSK-243** (2026-09-27 akşam): `codelaw.report()` artık `ops/`+`deploy/`+kök `.py` yorumlarındaki sembol çapası çürümesini de hükme bağlıyor (CI duman `report()["ok"]` üzerinden görür); kapsam v574 ile tek kaynak. Brief "~1 satır" dedi, motor diff'i 5 nokta (+76/−45) — inceleme her noktayı brief'in kendi şartlarına bağladı (önbellek anahtarı, tek kaynak). Canlı yol etkilenmiyor (canlı kod yalnız `artifact_graph` çağırıyor — grep ile doğrulandı); `report()` soğuk +0,26 s. Yan bulgu: `geridolum.py::_bos_disk_bayt` ölü çapası `deploy` çözücü kök olmadığı için görünmüyordu → TSK-244.
 **TSK-244 + TSK-233 UI metni** (2026-09-27/28 gece): (a) ölü `geridolum.py::_bos_disk_bayt` çapası — ad git tarihinde HİÇ yok, fonksiyon `bos_bayt`; TSK-131 şerhi 09-05'te yanlış adla yazılmıştı, düzeltildi. (b) `deploy` codelaw sembol çözücü köküne girdi — ADIM-0 karar kuralı (çürük ≤5, yeni çakışma yok) önceden brief'e yazıldı, ölçüm çürük 0 / çakışma 0 verdi, uygulandı; 7 çapa yeni çözüldü. Aynı körlük metin çapası dünyasında (`_TEXT_HEDEF_KOKLERI`) kaldı → TSK-245. TSK-233'ün görünür pano metni ("yansıma turu başlatır" → "İSTEĞİ bırakır") düzeltildi; UI build + yerel stub panoda görsel doğrulama (uygulama yüklenmeden; stub betiği `/api/session` sahte oturumu ister). Pazartesi kanıtları için üç tek-seferlik oturum-içi hatırlatıcı kuruldu.
+
+### 36. PAZARTESİ SABAHI: OPERATÖR KARARLARI + TSK-207(b) ALARMI + TSK-020 KADEME C TASARIMI (2026-09-28, model Opus 5.5)
+
+- **Operatör kararları (06:5xZ, AskUserQuestion — "Benden bekleyenleri sor"):** TSK-207(b) "sadece uyar, kararı ben veririm" · TSK-240 komutu operatör
+  koşar · ajan git beyaz listesine `ls-files`/`describe` (CLAUDE.md §2/§3) · Mac açık kalır (pazartesi hatırlatıcıları) · TSK-020 SQLite taşıması
+  sıraya (ölçüm → tasarım → onay → kod) · TSK-142 EDG-2026-103 bitene kadar GATED. Kayıt b1038cf6.
+- **Triyaj:** CI yeşil; 6 servis active, healthz 200. Pazar 20:49Z/21:00Z `bars_archive_read_failed` + `hotstate_down` ("UNBLOCKED the stream key no
+  longer exists") KÖK NEDEN ölçüldü: dakikalık bar akışlarının 2 günlük TTL'i (`BARS_TTL_S=172800`) cuma kapanışından ~48 sa sonra, pazar akşamı
+  doluyor; bloklu XREADGROUP anahtar silinince bu hatayı veriyor. HER PAZAR tekrarlıyor (09-13: 9, 09-20: 11, 09-27: 8 satır) ve pazartesi
+  kendiliğinden toparlıyor (09-21 arşivi 9,6 MB). Zararsız sınıf — kalem açılmadı. Açık küçük not: `hotstate_down` bu hatada "Redis erişilemez"
+  der (yanlış etiket; Redis ayakta), olay defteri gürültüsü.
+- **TSK-168** ACTIVE → GATED(EDG-2026-103): retain akışı 4/4 gece başarılı, kurulum işi bitti; sürdür/sök TSK-060 kararında (9b2e3053).
+- **TSK-207(b)** (Opus uygulayıcı → Sonnet inceleme ONAY 0/0): `obs.ALARM_ENDEKS_CIKISI_ACIK_POZISYON`, günde en çok 1, sade Türkçe mesaj
+  (sembol + adet/yön + iki seçenek), eski warn alarmla birleşti; v578 8 çivi, 8/8 mutasyon. A1 ölçümü: bugün kesişim BOŞ (açık AMD/BIIB/META/
+  TMO/WBD ↔ beyanlı çıkış CAG/ENPH/MTCH/VFC) → dağıtım günü alarm ateşlenmez. Birleştirme 6884357a, tur kapanışı 88bab81b (günlük KALICI
+  RİSKLER maddesi → RUNBOOK Çözüm alanı dolu). Suite 15308 passed / 0 failed / 21 skipped (HEAD eşit, 15:44) + KILL#1 geçti; CI yeşil.
+  **DAĞITIM #79**: Rol-1'in `dagit.sh --uygula` çağrısı sınıflandırıcıda engellendi → operatör 08:50Z koştu; `deployed_sha` 88bab81b, a1 ok=62
+  changed=5 failed=0, silme 0; üç birim NRestarts 0, healthz 200, imzalar A1'de, 6 dk uyarı 0. TSK-207 DONE → §8.H.2.
+- **TSK-020 Kademe C:** envanter (salt-okur ajan) + A1 ölçümü → `docs/TASARIM-SQLITE-KADEME-C-2026-09-28.md`. Ölçümün bulduğu dört risk:
+  R1 `storage.active` DB bazında → iki yeni ad `_TABLE`'a girdiği an (göçten önce) okumalar tabloya gider (tablo yok → istisna) · R2
+  süreçler-arası kayıp güncelleme (`update_status` defteri transaction dışında okuyor; taşıma tek başına kapatmaz) · R3 kum havuzları DB
+  kopyalamadığı için validation geçmişini sessizce kaybeder · R4 RUNBOOK grep satırı. Operatör ONAYI 07:2xZ (tasarım + canlı göç ilk sakin
+  pencerede Rol-1). Opus uygulayıcı suite penceresi kapanınca sevk edildi (worktree tsk020-kademe-c, taban 88bab81b).
+- **Kendi hatam:** TSK-168 notuna sıkıştırma özetinden devraldığım "07:1xZ" yazdım, ölçülen 06:5xZ idi (e342b11c). Ders hafızaya: sıkıştırma
+  özeti saati taşımaz.
