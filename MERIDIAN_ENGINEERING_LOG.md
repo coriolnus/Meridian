@@ -1075,6 +1075,7 @@ dagit.sh koşusu, log kapanışı = Rol-1 (bu oturum) · pencere saati onayı + 
 
 ## KALICI RİSKLER / DERSLER
 
+- **ENDEKS_CIKISI_ACIK_POZISYON — açık pozisyonlu sembol S&P 500'den çıktı (TSK-207 (b), operatör kararı 2026-09-28 "sadece uyar, kararı ben veririm").** Beyanlı endeks çıkışından sonra sembolün bar akışı durur; o sembolde açık pozisyonun stop/çıkışı fiyatsız kalabilir. Sistem pozisyona, bar çekimine ve evrene HİÇBİR şey yapmaz — alarm günde en çok bir kez (UTC günü) operatöre gider ve karar verilene kadar her gün tekrar eder. Operatörün iki seçeneği: (1) **veri çekmeye devam** — sembolün barlarını pozisyon kapanana kadar çekmek evren/bar çekimi değişikliğidir, kodda hazır anahtarı YOK → Rol-1'e kalem olarak ver; (2) **zorla kapat** — pozisyonu elle kapat. Kesişim ölçülemezse alarm çıkmaz, neden `SEMBOL_ENDEKS_CIKISI` bilgi satırında kalır. Kod yolu: `meridian/watchdog.py::check_olu_isim_and_alarm`; çiviler v578 + v525.
 - **"DOCS-ONLY PUSH" DİYE BİR ŞEY YOKTUR — PUSH DAL TAŞIR (2026-08-31, Rol-1 ihlali).** Ajan-A
   dalga commit'i (motor `api.py` dahil) suite hükmü beklerken yerelde dururken, ÜSTÜNE atılan
   bir belge commit'inin push'u alttaki dalga commit'ini de origin'e taşıdı — suite o an KIRMIZI

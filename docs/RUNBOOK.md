@@ -37,13 +37,13 @@ der ve nerede aradığını söyler — o cümle bir eksiğin ADIDIR, doldurulac
 
 ## Envanter özeti {#envanter}
 
-- **18 alarm jetonu** (`meridian/obs.py`) — hepsi bildirim beyaz-listesinde
+- **19 alarm jetonu** (`meridian/obs.py`) — hepsi bildirim beyaz-listesinde
   (`NOTIFY_TOKENS` ALARM_ sabitlerinden TÜRETİLİR, elle liste değil)
 - **17 bekçi mekanizması** (`meridian/watchdog.py::EXPECTED`)
 - **5 sessiz-hat sapma adı** (`meridian/api.py::_sessiz_hat`; bekçi segmentinin
   adları değişkendir ve yukarıdaki mekanizma listesinden gelir)
 - **29 ops betiği** başlığıyla okundu
-- **98 günlük maddesi** üç bölümden toplandı
+- **99 günlük maddesi** üç bölümden toplandı
 
 ---
 
@@ -396,6 +396,23 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 ### Çözüm / betik
 
 - `deploy/oracle-a1/deploy.sh` — başlığında `VAULT_DOWN` geçiyor.
+
+## ENDEKS_CIKISI_ACIK_POZISYON {#endeks_cikisi_acik_pozisyon}
+
+### Belirti
+
+- açık pozisyonlu sembol endeksten çıktı — bar akışı durdu, karar operatörün *(kaynak: `meridian/obs.py` — `ALARM_ENDEKS_CIKISI_ACIK_POZISYON`)*
+- Neden ayrı bir sınıf: TSK-207 (b) (2026-09-28, operatör kararı "sadece uyar, kararı ben veririm"): AÇIK POZİSYONLU bir sembol S&P 500'den çıktı (beyanlı endeks çıkışı). Canlı evren endeks üyeliğine bağlı olduğu için o sembolün bar akışı DURUR — fiyat güncellenmez, stop/çıkış o sembolde fiyatsız kalabilir. TSK-207 (a) bu kesişimi yalnız `warn` olarak yazıyordu ve warn bildirim zincirini tetiklemez: kayıt vardı, operatöre ULAŞMIYORDU. Kendi jetonunu hak eder: DATA_QUALITY "veri bozuk", MECHANISM_STALE "mekanizma üretmiyor", NAKED_POSITION "broker'da stop yok" der; hiçbiri "pozisyon açıkken veri akışı BİLEREK durdu" demez. Günde en çok bir kez (DISK_ESIK deseni). Üretici: `watchdog.check_olu_isim_and_alarm`. SİSTEM HİÇBİR ŞEY YAPMAZ — pozisyona, bar çekimine ve evrene dokunulmaz. Operatör prosedürü: alarm gövdesi sembolü, pozisyonu (adet/yön; okunamazsa neden) ve beyan gerekçesini taşır; iki seçenekten birini sen seçersin — (1) veri çekmeye devam: sembolün barları pozisyon kapanana kadar çekilmeye devam etsin (evren/bar çekimi değişikliği, Rol-1 işi); (2) zorla kapat: pozisyonu elle kapat. Karar verilene kadar alarm her gün bir kez tekrar eder. *(kaynak: `meridian/obs.py`)*
+
+### Teşhis adımları
+
+- Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
+  - `meridian/watchdog.py::check_olu_isim_and_alarm` → mesaj şablonu: `f"Açık pozisyonlu {len(kesisim)} sembol S&P 500'den çıktı: " f"{_pozisyon_metni(kesisim, ozet)}. Bu sembolde bar akışı durdu — fiyat " "güncellenmiyor, stop/çıkış bu sembolde fiyatsız kalabilir. Sistem kendisi " "hiçbir şey yapmaz; karar senin: (1) veri çekmeye devam — pozisyon kapanana " "kadar bu sembolün barları çekilmeye devam etsin; (2) zorla kapat — pozisyonu " "elle kapat."`
+- Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
+
+### Çözüm / betik
+
+- **KALICI RİSKLER / DERSLER** → **ENDEKS_CIKISI_ACIK_POZISYON — açık pozisyonlu sembol S&P 500'den çıktı (TSK-207 (b), operatör kararı 2026-09-28 "sadece uyar, kararı ben veririm").** Beyanlı endeks çıkışından sonra sembolün bar akışı durur; o sembolde açık pozisyonun stop/çıkışı fiyatsız kalabilir. Sistem pozisyona, bar çekimine ve evrene HİÇBİR şey yapmaz — alarm günde en çok bir kez (UTC günü) operatöre gider ve karar verilene kadar her gün tekrar eder. Operatörün iki seçeneği: (1) **veri çekmeye devam** — sembolün barlarını pozisyon kapanana kadar çekmek evren/bar çekimi değişikliğidir, kodda hazır anahtarı YOK → Rol-1'e kalem olarak ver; (2) **zorla kapat** — pozisyonu elle kapat. Kesişim ölçülemezse alarm çıkmaz, neden `SEMBOL_ENDEKS_CIKISI` bilgi satırında kalır. Kod yolu: `meridian/watchdog.py::check_olu_isim_and_alarm`; çiviler v578 + v525.
 
 ---
 
@@ -2233,6 +2250,7 @@ olabilir: bu depoda tekrar eden şey tek tek hatalar değil, HATA SINIFLARIDIR.
 
 ## KALICI RİSKLER / DERSLER {#kalici-riskler}
 
+- **ENDEKS_CIKISI_ACIK_POZISYON — açık pozisyonlu sembol S&P 500'den çıktı (TSK-207 (b), operatör kararı 2026-09-28 "sadece uyar, kararı ben veririm").** Beyanlı endeks çıkışından sonra sembolün bar akışı durur; o sembolde açık pozisyonun stop/çıkışı fiyatsız kalabilir. Sistem pozisyona, bar çekimine ve evrene HİÇBİR şey yapmaz — alarm günde en çok bir kez (UTC günü) operatöre gider ve karar verilene kadar her gün tekrar eder. Operatörün iki seçeneği: (1) **veri çekmeye devam** — sembolün barlarını pozisyon kapanana kadar çekmek evren/bar çekimi değişikliğidir, kodda hazır anahtarı YOK → Rol-1'e kalem olarak ver; (2) **zorla kapat** — pozisyonu elle kapat. Kesişim ölçülemezse alarm çıkmaz, neden `SEMBOL_ENDEKS_CIKISI` bilgi satırında kalır. Kod yolu: `meridian/watchdog.py::check_olu_isim_and_alarm`; çiviler v578 + v525.
 - **"DOCS-ONLY PUSH" DİYE BİR ŞEY YOKTUR — PUSH DAL TAŞIR (2026-08-31, Rol-1 ihlali).** Ajan-A dalga commit'i (motor `api.py` dahil) suite hükmü beklerken yerelde dururken, ÜSTÜNE atılan bir belge commit'inin push'u alttaki dalga commit'ini de origin'e taşıdı — suite o an KIRMIZI (v323 ×4) idi ve §8 tam bunu yasaklar; CI kırmızı gördü. Kural: motor-dokunan commit yerelde suite bekliyorsa, O DALDAN HİÇBİR push atılmaz — belge partisi de bekler ya da suite-öncesi ayrı pencerede push'lanır. Telafi aynı akşam: düzeltme partisi + bileşim hükmü ile kapandı.
 - **PANO/UI DALGASININ ZORUNLU KAPSAM AİLESİ v323'ü İÇERİR (2026-08-31).** T2 pano görevi kendi ailesini yeşil koştu ama `test_arayuz_dili_v323` (arayüz-dili yasası: `neden` insan cümlesidir, iç ayrıntı `teknik=`e) kapsamda değildi — tam suite 4 kırmızıyla yakaladı. UI dizgesi üreten her görev brief'ine v323 kapsam şartı yazılır; `.tsx/.ts` dizge değişikliği = v323 koşulur.
 - **ÖNCEDEN-DOĞRU DURUM, KOŞUMUN KANITI DEĞİLDİR (2026-08-31, Rol-1 kanıt hatası).** `profil-guncelle --uygula` ilk gerçek koşumunda "canlı config repo ile md5-özdeş" bulgusunu başarı kanıtı saydım — oysa özdeşlik koşumdan ÖNCE de vardı (dry-run sabah BİREBİR demişti); gerçekte güncelleme hiç koşmamıştı (etkileşimsiz ssh PATH'inde `hermes` yok, RC=127) ve aracın kendi hükmü bunu KIRMIZI basmıştı. Kural: koşum kanıtı, koşumun DEĞİŞTİRDİĞİ ya da ÜRETTİĞİ şeyden gelir (taze yedek, damga, hüküm satırı); koşumdan bağımsız da doğru olacak bir gözlem kanıt sepetine girmez. Araç haklıydı, ben acele ettim — hüküm satırı sorulmadan kapanış yazılmaz.
