@@ -660,6 +660,11 @@ dizin yaratmaz; gerçek koşumda dizin görevi önce koşar). Temiz bir kuru ko�
 `ssh … 'sudo install -d -m 0755 /etc/systemd/system/meridian-grafana.service.d'`. Telemetri yapılandırma kopyası bu
 sınıfa girmez (hedefi `/` ile biter; check kipi "yaratılacak" der).
 
+Bu ilk koşumda parola henüz kasada olmadığı için sır denetiminin İZİN-DENETİMLİ kapısı
+`İZİN DENETİMİ ATLANDI (dosya YOK): /etc/meridian/grafana_admin_parola` satırını basar — beklenen hâl, playbook durmaz.
+Adım 2'den sonraki her `site.yml` koşumu dosyayı root:root 0400 olarak denetler ve farklıysa DURUR
+(`defaults/main.yml::izin_denetimli_sir_dosyalari`; rotasyon dışı ≠ denetim dışı).
+
 **2. Parola kasaya** — yeni bir sırdır (`vault_sir_koy.sh` mevcut dosyaları taşır, bunu DEĞİL). Değer yalnız
 borudan akar; hiçbir değişkene, argümana ya da çıktıya girmez. Politika ÖNCE (yoksa Agent yeni yolu okuyamaz),
 değer İKİNCİ, Agent yapılandırması SON:

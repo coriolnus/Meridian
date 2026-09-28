@@ -829,7 +829,8 @@ vault_kv:
   # telemetri adım 2 — değer borudan akar, hiçbir çıktıya basılmaz). `rotasyon_siri` YOK, bilinçli: Grafana
   # değeri YALNIZ veritabanı ilk kurulurken hesaba yazar; dosyayı döndürmek hesabı DEĞİŞTİRMEZ → `sir_rotasyon.sh`
   # onu taşımaz (v447 `ROTASYON_DISI_KREDENSIYELLER`) ve `zorunlu_sir_dosyalari`na girmez (v565 A2 o listeyi
-  # rotasyona bağlar; birim etkin değildir ve LoadCredential'ın kendisi fail-closed kapıdır).
+  # rotasyona bağlar; birim etkin değildir ve LoadCredential'ın kendisi fail-closed kapıdır). İzin biçimi yine
+  # denetlenir: A0 `izin_denetimli_sir_dosyalari` (yoksa beyanla geç, varsa sahip/grup/mod DUR — v584 F).
   - ad: grafana_admin_parola
     vault_yolu: "secret/meridian/grafana_admin_parola"
     hedef: "/etc/meridian/grafana_admin_parola"

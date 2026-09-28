@@ -59,3 +59,58 @@
   loop: "{{ sir_stat.results }}"
   loop_control:
     label: "{{ item.item.yol }}"
+
+# ---------------------------------------------------------------------------------------------
+# İZİN-DENETİMLİ KAPI (TSK-020 UYGULA-9 Faz A tur 2, inceleme O-1) — ROTASYON DIŞI sırlar
+# ---------------------------------------------------------------------------------------------
+# `izin_denetimli_sir_dosyalari` (defaults şerhi): rotasyon tablosuna ait OLMAYAN ama izin biçimi yine de
+# bekçilik isteyen dosyalar (bugün: Grafana yönetici parolası — değeri yalnız ilk açılışta okunur, dosya
+# döndürmeyle DÖNMEZ). İki dal, ikisi de AYRI görev ve ikisi de okunur:
+#   YOKSA → beyan satırı (ilk kurulumda parola kasada değil; birimin kendi `LoadCredential`ı onu zaten açmaz),
+#   VARSA → sahip/grup/mod kapısı; farklıysa playbook DURUR — credential drop-in'leri kurulmadan önce.
+# `register` adı `sir_stat` İÇERMEZ: zorunlu kapının tekil-görev süzgeçleri (v451/v565) o alt dizgeyle arar.
+- name: İzin-denetimli sır dosyaları — stat (İÇERİK OKUNMAZ; checksum/mime/attr KAPALI)
+  ansible.builtin.stat:
+    path: "{{ item.yol }}"
+    get_checksum: false
+    get_mime: false
+    get_attributes: false
+  loop: "{{ izin_denetimli_sir_dosyalari }}"
+  loop_control:
+    label: "{{ item.yol }}"
+  register: izin_denetim_sonucu
+  no_log: true
+
+- name: İzin-denetimli sır dosyaları — YOKSA geç (beyan satırı, Yasa 6)
+  ansible.builtin.debug:
+    msg: >-
+      İZİN DENETİMİ ATLANDI (dosya YOK): {{ item.item.yol }} — ilk kurulumda beklenen hâl (değer henüz
+      kasaya konmadı; tüketici birim `LoadCredential=` kaynağı olmadan AÇILMAZ). Kasaya konduktan sonraki
+      ilk koşumda bu dosya sahip={{ item.item.sahip }} grup={{ item.item.grup }} mod={{ item.item.mod }}
+      ile denetlenir. Reçete: deploy/oracle-a1/RUNBOOK.md "Telemetri (Grafana) erişimi" adım 2.
+  loop: "{{ izin_denetim_sonucu.results }}"
+  loop_control:
+    label: "{{ item.item.yol }}"
+  when: not item.stat.exists
+
+# `no_log` BİLEREK YOK (zorunlu kapıyla aynı gerekçe): basılan yol/mod/sahip/grup depoda açık yazılıdır, DEĞER değildir.
+- name: İzin-denetimli sır dosyaları — VARSA sahip + grup + mod kapısı
+  ansible.builtin.assert:
+    that:
+      - item.stat.mode == item.item.mod
+      - item.stat.pw_name == item.item.sahip
+      - item.stat.gr_name == item.item.grup
+    fail_msg: >-
+      İZİN DENETİMİ DÜŞTÜ: {{ item.item.yol }} — beklenen sahip={{ item.item.sahip }}
+      grup={{ item.item.grup }} mod={{ item.item.mod }}; ölçülen sahip={{ item.stat.pw_name }}
+      grup={{ item.stat.gr_name }} mod={{ item.stat.mode }}. SONUCU: credential drop-in'leri KURULMADI.
+      Bu dosya bir Vault Agent RENDER HEDEFİDİR ve izni şablondan gelir (`deploy/vault/agent.hcl` `perms`;
+      agent root koşar). REÇETE: (1) canlı `/etc/vault/agent.hcl` depodakiyle aynı mı — dagit [F9] raporu;
+      (2) aynıysa izni bozan bir elle müdahale vardır: nedenini bul, sonra `systemctl restart vault-agent`
+      (yeniden render şablonun izniyle yazar). Değer rotasyon tablosunda DEĞİLDİR (rotasyon dışı sır —
+      döndürme reçetesi RUNBOOK telemetri bölümünde).
+    success_msg: "{{ item.item.yol }}: {{ item.item.mod }} {{ item.item.sahip }}:{{ item.item.grup }}"
+  loop: "{{ izin_denetim_sonucu.results }}"
+  loop_control:
+    label: "{{ item.item.yol }}"
+  when: item.stat.exists

@@ -27,6 +27,10 @@ NE ÖLÇÜLÜR — her bölüm bir iddia; beklenen değerler DEPODAN türetilir 
      ve ata önce; birimlerdeki literal yollar/kimlikler defaults ile eşit (birimler ŞABLONSUZ kopyalanır — kopya
      kaçınılmaz, bu bölüm ayrışma çivisidir); [F9] içerik aynası birim + yapılandırma çiftlerini taşır.
   E. Pozitif kontrol. Her denetçi, gerçek dosyanın bellekte bozulmuş kopyasında ÖTER — çivi yeşili kanıt değildir.
+  F. İzin-denetimli sır kapısı (tur 2, inceleme O-1). Rotasyon dışı bırakılan (v447 `ROTASYON_DISI_KREDENSIYELLER`) her
+     credential kaynağı A0 `izin_denetimli_sir_dosyalari` listesindedir — rotasyon dışı ≠ denetim dışı; liste ile
+     `sir_denetimi.yml`deki kapı eşleşir (dosya YOKSA beyan satırıyla geç, VARSA sahip/grup/mod DUR); beklenen
+     mod/sahip/grup Vault Agent şablonunun ürettiğiyle (agent.hcl `perms` + envanter + agent biriminin kimliği) AYNI.
 
 BİLİNEN SINIR (dürüst beyan): A1'e bağlantı YOK. Konteyner kullanıcı kimlikleri (prometheus/node-exporter `nobody`,
 grafana `472`) imaj YAPILANDIRMASINDAN okundu (Docker Hub registry, arm64 bildirimi, 2026-09-28); `nobody`nun 65534
@@ -54,6 +58,11 @@ import yaml
 from tests.test_sertlesmis_birim_yazim_yolu_v553 import _yonergeler
 # Tek-kaynak: [F9] çiftlerinin sökücüsü v452'de yaşar (v451 de oradan ithal eder).
 from tests.test_ansible_dagit_v452 import f9_ciftleri as _f9_ciftleri
+# Tek-kaynak: rotasyon dışı credential beyanı ve drop-in `LoadCredential` haritası v447'de yaşar (F bölümü).
+from tests.test_sir_rotasyon_v447 import (  # noqa: E402
+    KRED_KAYNAKLARI as _KRED_KAYNAKLARI,
+    ROTASYON_DISI_KREDENSIYELLER as _ROTASYON_DISI,
+)
 
 KOK = pathlib.Path(__file__).resolve().parent.parent
 DEPLOY = KOK / "deploy"
@@ -66,6 +75,8 @@ DIZINLER_YML = ROL / "tasks" / "dizinler.yml"
 ENVANTER = DEPLOY / "sir_envanteri.yaml"
 AGENT_HCL = DEPLOY / "vault" / "agent.hcl"
 AGENT_POLITIKA = DEPLOY / "vault" / "policies" / "meridian-agent.hcl"
+SIR_DENETIMI_YML = ROL / "tasks" / "sir_denetimi.yml"
+AGENT_BIRIMI = DEPLOY / "vault" / "vault-agent.service"
 API_PY = KOK / "meridian" / "api.py"
 PROMETHEUS_YML = TELEMETRI / "prometheus" / "prometheus.yml"
 GRAFANA_DROPIN_DIZINI = TELEMETRI / "meridian-grafana.service.d"
@@ -621,6 +632,142 @@ def test_D4_F9_icerik_aynasi_birim_ve_yapilandirma_ciftlerini_TASIR():
     beklenen |= {(f"deploy/telemetri/{r}", f"{yk}/{r}") for r in _defaults()["telemetri_yapilandirma_dosyalari"]}
     eksik = sorted(beklenen - ciftler)
     assert eksik == [], f"[F9] telemetri çiftleri eksik (dinleme adresinin sessiz ayrışması ölçülmez): {eksik}"
+
+
+# =================================================================================================
+# F — izin-denetimli sır kapısı (tur 2, inceleme O-1)
+# =================================================================================================
+
+def _izin_listesi() -> list[dict]:
+    liste = _defaults().get("izin_denetimli_sir_dosyalari")
+    assert isinstance(liste, list) and liste, "defaults'ta `izin_denetimli_sir_dosyalari` yok/boş"
+    return liste
+
+
+def _agent_sablon_bloklari(metin: str) -> dict[str, str]:
+    """agent.hcl `template { … }` gövdeleri → {destination: gövde}. Yalnız tek-değer ve yan dosya blokları."""
+    out: dict[str, str] = {}
+    for govde in re.findall(r"^template \{\n(.*?)^\}", metin, re.M | re.S):
+        m = re.search(r'^\s*destination\s*=\s*"([^"]+)"', govde, re.M)
+        if m:
+            out[m.group(1)] = govde
+    return out
+
+
+def _agent_kimligi(birim_metni: str) -> tuple[str, str]:
+    """Agent'ın render ettiği dosyanın sahibi/grubu: şablon `user`/`group` taşımıyorsa sürecin kimliğidir —
+    birimde `User=`/`Group=` yoksa root (systemd varsayılanı)."""
+    kullanici = _tek(birim_metni, "User") or "root"
+    grup = _tek(birim_metni, "Group") or ("root" if kullanici == "root" else kullanici)
+    return kullanici, grup
+
+
+def _izin_ayrisma_bulgulari(liste: list[dict], agent_metni: str, kv: list[dict], agent_birim_metni: str) -> list[str]:
+    """Beklenen mod/sahip/grup, Vault Agent'ın o dosyayı GERÇEKTE nasıl yazdığıyla ayrışıyor mu."""
+    b: list[str] = []
+    bloklar = _agent_sablon_bloklari(agent_metni)
+    hedefler = {g.get("hedef"): g for g in kv if "hedef" in g}
+    a_kul, a_grup = _agent_kimligi(agent_birim_metni)
+    for e in liste:
+        yol = e.get("yol")
+        govde = bloklar.get(yol)
+        if govde is None:
+            b.append(f"{yol}: agent.hcl'de render şablonu yok (izin kaynağı yok)")
+            continue
+        perms = re.search(r"^\s*perms\s*=\s*(0?[0-7]{3,4})\s*$", govde, re.M)
+        if not perms or perms.group(1).rjust(4, "0") != str(e.get("mod")):
+            b.append(f"{yol}: şablon perms {perms and perms.group(1)} != beklenen mod {e.get('mod')}")
+        s_kul = re.search(r'^\s*user\s*=\s*"([^"]+)"', govde, re.M)
+        s_grup = re.search(r'^\s*group\s*=\s*"([^"]+)"', govde, re.M)
+        if (s_kul.group(1) if s_kul else a_kul) != e.get("sahip"):
+            b.append(f"{yol}: render sahibi {s_kul.group(1) if s_kul else a_kul} != beklenen {e.get('sahip')}")
+        if (s_grup.group(1) if s_grup else a_grup) != e.get("grup"):
+            b.append(f"{yol}: render grubu {s_grup.group(1) if s_grup else a_grup} != beklenen {e.get('grup')}")
+        g = hedefler.get(yol)
+        if g is None:
+            b.append(f"{yol}: envanter vault_kv hedefi değil")
+        elif (g.get("mod"), g.get("sahip")) != (e.get("mod"), e.get("sahip")):
+            b.append(f"{yol}: envanter mod/sahip {(g.get('mod'), g.get('sahip'))} ayrıştı")
+    return b
+
+
+def test_F1_ROTASYON_DISI_her_kredansiyel_IZIN_DENETIMLI_listede():
+    """Rotasyon dışı ≠ denetim dışı: v447 istisnasına giren her `LoadCredential` kaynağı izin kapısındadır.
+    Aksi hâlde bir sır İKİ kapıdan birden (zorunlu denetim + rotasyon) sessizce çıkmış olurdu."""
+    assert _ROTASYON_DISI, "v447 rotasyon dışı beyanı boş — çivi kör"
+    yollar = {e["yol"] for e in _izin_listesi()}
+    kaynaklar = {(b, k): _KRED_KAYNAKLARI.get(b, {}).get(k) for b, k in _ROTASYON_DISI}
+    curuk = sorted(str(c) for c, v in kaynaklar.items() if v is None)
+    assert curuk == [], f"rotasyon dışı beyan hiçbir drop-in `LoadCredential` çiftine çözülmüyor: {curuk}"
+    eksik = sorted(v for v in kaynaklar.values() if v not in yollar)
+    assert eksik == [], f"rotasyon dışı ama izin denetimi DIŞI kaynak(lar): {eksik}"
+    zorunlu = {e["yol"] for e in _defaults()["zorunlu_sir_dosyalari"]}
+    assert not (yollar & zorunlu), f"iki kapıda birden (anlamları çelişir — biri varlık ister): {sorted(yollar & zorunlu)}"
+    for e in _izin_listesi():
+        assert set(e) == {"yol", "sahip", "grup", "mod"}, f"izin girdisi şeması: {sorted(e)}"
+
+
+def _gorevler_sir() -> list[dict]:
+    return yaml.safe_load(SIR_DENETIMI_YML.read_text(encoding="utf-8"))
+
+
+def test_F2_kapi_gorevi_LISTEYLE_eslesir_YOKSA_gec_VARSA_dur():
+    gorevler = _gorevler_sir()
+    stat = [g for g in gorevler if "ansible.builtin.stat" in g and g.get("loop") == "{{ izin_denetimli_sir_dosyalari }}"]
+    assert len(stat) == 1, "izin-denetimli liste üzerinde dönen TEK stat görevi yok"
+    st = stat[0]
+    assert st.get("no_log") is True and st["ansible.builtin.stat"].get("get_checksum") is False, (
+        "stat içerik okumamalı (get_checksum false) ve çıktısı gizli olmalı (no_log)")
+    kayit = st.get("register")
+    assert kayit and "sir_stat" not in kayit, f"register adı zorunlu kapının süzgecine takılır: {kayit!r}"
+    sonuclar = f"{{{{ {kayit}.results }}}}"
+    kullanan = [g for g in gorevler if g.get("loop") == sonuclar]
+    yoksa = [g for g in kullanan if "ansible.builtin.debug" in g]
+    varsa = [g for g in kullanan if "ansible.builtin.assert" in g]
+    assert len(yoksa) == 1 and len(varsa) == 1 and len(kullanan) == 2, "iki dal (yoksa-geç · varsa-dur) TEK ve AYRI değil"
+    assert str(yoksa[0].get("when", "")).replace(" ", "") == "notitem.stat.exists", f"yoksa dalı: {yoksa[0].get('when')!r}"
+    assert "ATLANDI" in str(yoksa[0]["ansible.builtin.debug"].get("msg", "")), "atlama beyan satırı yok (Yasa 6)"
+    assert str(varsa[0].get("when", "")).replace(" ", "") == "item.stat.exists", f"varsa dalı: {varsa[0].get('when')!r}"
+    assert varsa[0].get("no_log") is not True, "kapı çıktısı gizlenirse hangi dosyanın düştüğü okunamaz"
+    that = {str(x).replace(" ", "") for x in varsa[0]["ansible.builtin.assert"]["that"]}
+    assert that == {"item.stat.mode==item.item.mod", "item.stat.pw_name==item.item.sahip",
+                    "item.stat.gr_name==item.item.grup"}, f"kapı koşulları: {sorted(that)}"
+    # Sıra: kapı drop-in'lerden ÖNCE koşan dosyada (zincir v451'de çivili) ve zorunlu kapıdan SONRA.
+    konum = {id(g): i for i, g in enumerate(gorevler)}
+    zorunlu_kapi = [g for g in gorevler if "ansible.builtin.assert" in g and "sir_stat" in str(g.get("loop", ""))]
+    assert len(zorunlu_kapi) == 1 and konum[id(zorunlu_kapi[0])] < konum[id(st)], "izin kapısı zorunlu kapıdan önce"
+
+
+def test_F3_beklenen_mod_sahip_grup_VAULT_SABLONUYLA_ayrismaz():
+    kv = yaml.safe_load(ENVANTER.read_text(encoding="utf-8"))["vault_kv"]
+    bulgular = _izin_ayrisma_bulgulari(_izin_listesi(), AGENT_HCL.read_text(encoding="utf-8"), kv,
+                                       AGENT_BIRIMI.read_text(encoding="utf-8"))
+    assert bulgular == [], "izin beklentisi Vault Agent render'ından ayrıştı:\n" + "\n".join(bulgular)
+
+
+IZIN_MUTASYONLARI = [
+    ("perms_0440", "  destination = \"/etc/meridian/grafana_admin_parola\"\n  perms       = 0400",
+     "  destination = \"/etc/meridian/grafana_admin_parola\"\n  perms       = 0440", "perms"),
+    ("sablon_yok", "destination = \"/etc/meridian/grafana_admin_parola\"", "destination = \"/etc/meridian/baska\"",
+     "şablonu yok"),
+    ("sablon_grup", "  destination = \"/etc/meridian/grafana_admin_parola\"\n",
+     "  destination = \"/etc/meridian/grafana_admin_parola\"\n  group = \"vault\"\n", "grubu"),
+]
+
+
+@pytest.mark.parametrize("kimlik, eski, yeni, beklenen", IZIN_MUTASYONLARI, ids=[m[0] for m in IZIN_MUTASYONLARI])
+def test_F4_POZITIF_KONTROL_izin_ayrisma_denetcisi_OTER(kimlik, eski, yeni, beklenen):
+    kv = yaml.safe_load(ENVANTER.read_text(encoding="utf-8"))["vault_kv"]
+    bozuk = _bozuk(AGENT_HCL.read_text(encoding="utf-8"), eski, yeni)
+    bulgular = _izin_ayrisma_bulgulari(_izin_listesi(), bozuk, kv, AGENT_BIRIMI.read_text(encoding="utf-8"))
+    assert any(beklenen in x for x in bulgular), f"{kimlik}: denetçi ÖTMEDİ: {bulgular}"
+
+
+def test_F5_POZITIF_KONTROL_agent_birimi_kullanici_degisirse_OTER():
+    kv = yaml.safe_load(ENVANTER.read_text(encoding="utf-8"))["vault_kv"]
+    birim = _bozuk(AGENT_BIRIMI.read_text(encoding="utf-8"), "[Service]\n", "[Service]\nUser=vault\n")
+    bulgular = _izin_ayrisma_bulgulari(_izin_listesi(), AGENT_HCL.read_text(encoding="utf-8"), kv, birim)
+    assert any("sahibi" in x for x in bulgular), f"agent kimliği değişince denetçi ÖTMEDİ: {bulgular}"
 
 
 # =================================================================================================

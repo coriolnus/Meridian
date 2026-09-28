@@ -88,6 +88,22 @@ zorunlu_sir_dosyalari:
   # dash jetonu yalnız LoadCredential (/etc/meridian/dash_token, Vault Agent üretir); dosya A1'de yok — beklenti bayattı
   # ve A0 koşumunu düşürüyordu. Kalan .dash.env izleri dalga-2 iki-kanal temizliğinde (TSK-064 (d), ≥2026-09-17).
 
+# --- izin-denetimli sır dosyaları (sir_denetimi.yml İKİNCİ kapısı; TSK-020 UYGULA-9 Faz A tur 2, inceleme O-1) ---
+# ROTASYON DIŞI ≠ DENETİM DIŞI. Buradaki dosyalar `zorunlu_sir_dosyalari`na GİREMEZ (o liste v565 A2 ile rotasyon
+# alt komutuna bağlıdır ve eksik dosyada BÜTÜN playbook'u durdurur) ama izin/sahiplik biçimleri yine denetlenir:
+#   · dosya YOKSA → geçilir ve bu bir satırla BEYAN edilir (ilk kurulumda parola henüz kasada değildir; site.yml durmaz);
+#   · dosya VARSA → sahip/grup/mod beklenenden farklıysa playbook DURUR (drop-in'lerden ÖNCE).
+# `LoadCredential=` yalnız kaynak YOKLUĞUNDA fail-closed'dır, YANLIŞ İZİNDE değil — boşluk tam buydu.
+# Beklenen değerler Vault Agent'ın dosyayı GERÇEKTE nasıl yazdığıdır: `mod` = `deploy/vault/agent.hcl` şablonunun
+# `perms`i (= envanter `vault_kv` `mod`), `sahip`/`grup` = agent sürecinin kimliği (`vault-agent.service`te `User=`/
+# `Group=` yok → root:root). Kopya kaçınılmaz (rol envanteri okumaz); ayrışma çivisi v584 F3. Kapsam çivisi v584 F1:
+# v447 `ROTASYON_DISI_KREDENSIYELLER`deki her credential kaynağı bu listededir.
+izin_denetimli_sir_dosyalari:
+  - yol: /etc/meridian/grafana_admin_parola
+    sahip: root
+    grup: root
+    mod: "0400"
+
 # ==============================================================================================
 # Task 2 (görev dosyaları) eklemeleri — 2026-09-08. Değerlerin kaynağı ADIYLA yazılıdır:
 #   "deploy.sh N"  → deploy/oracle-a1/deploy.sh'ın o adımı (davranış birebir taşınıyor)
