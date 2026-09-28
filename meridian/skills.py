@@ -35,7 +35,7 @@ import re
 import threading
 from contextlib import contextmanager
 
-from . import config, store
+from . import config, gecikme, store
 
 REGISTRY = "skills_registry.json"
 # Kayıt defteri oku-değiştir-yaz ile güncelleniyor ve BUNU İKİ DAEMON İŞ PARÇACIĞI yapıyor
@@ -174,6 +174,20 @@ PIPELINES = {
     "P5_LEARN": ["weekly-performance-digest", "edge-pipeline-orchestrator", "backtest-expert",
                  "strategy-pivot-designer"],
 }
+
+# GÜN DÖNGÜSÜ FAZ SÜRESİ (TSK-020 UYGULA-9 Faz B, tasarım T4): `pipeline_run` gövdesinin süresi, boru hattı adı
+# etiketiyle. Etiket kümesi `PIPELINES`in anahtarlarıdır (TÜRETİLMİŞ — kopya yok); beyan dışı bir ad `other`a düşer,
+# yani seri sayısı en çok beş + bir. GÖZLEMDİR: hiçbir kapı okumaz. `pipeline_runs.jsonl`in `started`/`finished`
+# damgaları saniye çözünürlüklüdür ve süre saklanmaz — bu histogram süreyi ZAMAN SERİSİ olarak taşır (Grafana).
+# KOVALAR (saniye): 0,1 s … 5000 s, 1-2,5-5 dizisi. ÖLÇÜLMEDİ: canlı faz süreleri (A1 `pipeline_runs.jsonl` saniye
+# damgalarından Rol-1 okuyabilir); aralık bilinçli GENİŞ — rejim/plan saniyeler, tarama/öğrenme dakikalar; üst uç
+# tick-watchdog'un 45 dk'lık bayatlık tavanını (2700 s) içine alır. Gün döngüsü günde bir koştuğu için panel kantil
+# değil `increase(_sum)/increase(_count)` (pencere ortalaması) okur.
+BORU_HATTI_SURESI = gecikme.Histogram(
+    "meridian_pipeline_run_seconds",
+    "daily-cycle phase duration per skills.pipeline_run body, by pipeline (P1_REGIME..P5_LEARN)",
+    kovalar=(0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0, 100.0, 250.0, 500.0, 1000.0, 2500.0, 5000.0),
+    etiket="pipeline", etiket_degerleri=tuple(PIPELINES))
 
 
 def registry() -> dict:
@@ -812,7 +826,10 @@ def pipeline_run(pipeline: str, artifact: str | None = None):
            "finished": None, "skills_invoked": invoked, "skills_declared_not_run": declared,
            "skills_skipped": dis, "artifacts": [artifact] if artifact else [], "status": "running", "error": None}
     try:
-        yield run
+        # FAZ SÜRESİ: yalnız GÖVDE ölçülür (defter/registry yazımı hariç); istisna yolunda da kaydedilir ve istisna
+        # `sure_olc`tan AYNEN geçer (yutmaz) — aşağıdaki `except` bugünkü gibi yakalar, işaretler, yeniden yükseltir.
+        with gecikme.sure_olc(BORU_HATTI_SURESI, pipeline):
+            yield run
         run["status"] = "ok"
     except Exception as e:  # stop-on-failure: a bad pipeline is logged, not hidden
         run["status"] = "error"

@@ -1,7 +1,7 @@
 {
   "uid": "meridian-gecikme",
   "title": "Meridian — gecikme telemetrisi",
-  "description": "TSK-020 UYGULA-9 Faz A. Gecikme GEÇMİŞİNİN kanonik yüzeyi; anlık durum Meridian panosunda. Kaynak: deploy/telemetri/grafana/panolar (arayüzden değiştirilemez).",
+  "description": "TSK-020 UYGULA-9 Faz A (geçit/LLM/makine) + Faz B (motor: karar döngüsü turu, gün döngüsü fazı, atomik yazım — meridian /metrics histogramları). Gecikme GEÇMİŞİNİN kanonik yüzeyi; anlık durum Meridian panosunda. Kaynak: deploy/telemetri/grafana/panolar (arayüzden değiştirilemez).",
   "tags": [
     "meridian",
     "telemetri"
@@ -347,6 +347,257 @@
           },
           "expr": "1 - node_filesystem_avail_bytes{mountpoint=~\"/|/opt/veri\"} / node_filesystem_size_bytes{mountpoint=~\"/|/opt/veri\"}",
           "legendFormat": "{{mountpoint}}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Karar döngüsü turu p50 / p95 / p99 — işlenen olaylar (s)",
+      "description": "meridian `/metrics` `meridian_intraday_cycle_seconds` (Faz B): bir barfeed olayının TAMAMI (`IntradayConsumer.on_barfeed_event`, v217 KILL#1 düzeneğiyle aynı sınır). Yalnız outcome=processed — seans/pencere/HALT kapısında dönen olaylar `skipped` serisindedir, karışsalar p95'i aşağı çekerdi. Olaylar dakikada ~1 geldiği için pencere 30 dk (~30 olay; p99 fiilen en kötü olaya yakındır). Kova içi ara değerleme: kantil YAKLAŞIK. GÖZLEMDİR — KILL#1 hükmü buradan OKUNMAZ (canlı çapa ayrı kart, Faz C).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "meridian-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "meridian-prometheus"
+          },
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(meridian_intraday_cycle_seconds_bucket{outcome=\"processed\"}[30m])))",
+          "legendFormat": "p50"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "meridian-prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(meridian_intraday_cycle_seconds_bucket{outcome=\"processed\"}[30m])))",
+          "legendFormat": "p95"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "meridian-prometheus"
+          },
+          "expr": "histogram_quantile(0.99, sum by (le) (rate(meridian_intraday_cycle_seconds_bucket{outcome=\"processed\"}[30m])))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Karar döngüsü olay hızı — sonuca göre (olay/dk)",
+      "description": "`meridian_intraday_cycle_seconds_count` sonuç etiketine göre: processed (işlendi), skipped (seans/pencere/HALT kapısı), error (`_handle` istisnası yutuldu — `intraday_event_failed` olayı obs'ta). Alarm TEK kanalda (obs → notify/bekçi); bu panel yalnız geçmiş.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "meridian-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 24,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "meridian-prometheus"
+          },
+          "expr": "sum by (outcome) (rate(meridian_intraday_cycle_seconds_count[5m])) * 60",
+          "legendFormat": "{{outcome}}"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Gün döngüsü faz süresi — boru hattı başına (s, 24 saat ortalaması)",
+      "description": "`meridian_pipeline_run_seconds` (`skills.pipeline_run` gövdesi; P1_REGIME…P5_LEARN, beyan dışı ad `other`). Faz günde bir koşar — kantil anlamsız olur; ifade son 24 saatteki koşuların ORTALAMA süresidir (increase(_sum)/increase(_count)). Koşu yoksa değer yok (0 değil). Aynı koşuların satırları `pipeline_runs.jsonl`dedir (saniye damgalı; süre saklamaz).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "meridian-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "meridian-prometheus"
+          },
+          "expr": "sum by (pipeline) (increase(meridian_pipeline_run_seconds_sum[1d])) / sum by (pipeline) (increase(meridian_pipeline_run_seconds_count[1d]))",
+          "legendFormat": "{{pipeline}}"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Atomik yazım süresi p50 / p95 (s)",
+      "description": "`meridian_store_write_seconds` — `store._record_io`nun ölçtüğü AYNI süre (anlık p50/p95 panoda `/api/diagnostics` IO çipi; bu panel ZAMAN SERİSİDİR, tek-kaynak beyanı RUNBOOK'ta). Kırmızı çizgi 50 ms = `io_latency_high` uyarı eşiği (aynı zamanda bir kova sınırı). Alarm TEK kanalda (obs); Grafana uyarısı kapalı — çizgi yalnız görseldir.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "meridian-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 32,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "spanNulls": false,
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 0.05
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "meridian-prometheus"
+          },
+          "expr": "histogram_quantile(0.5, sum by (le) (rate(meridian_store_write_seconds_bucket[5m])))",
+          "legendFormat": "p50"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "meridian-prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(meridian_store_write_seconds_bucket[5m])))",
+          "legendFormat": "p95"
         }
       ]
     }

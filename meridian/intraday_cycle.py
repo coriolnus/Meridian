@@ -36,7 +36,7 @@ hotstate, intraday_shadow, loop."""
 from __future__ import annotations
 import os
 
-from . import barclock, config, hotstate, store, obs
+from . import barclock, config, gecikme, hotstate, store, obs
 from . import health as _health
 
 INTRADAY_LOOKBACK = 390          # ~1 seans dakikası; read_bars tavanı
@@ -49,6 +49,27 @@ ENABLED = os.environ.get("MERIDIAN_INTRADAY", "1") != "0"
 # ayrıştırmak dakikalık kadansta gereksiz G/Ç'dir; mtime anahtarı yüzünden EOD turu dosyayı
 # tazelediği an önbellek kendiliğinden düşer (zaman aşımı yok — bayatlık değil, doğruluk).
 _PLANS_CACHE: tuple | None = None
+
+# KARAR DÖNGÜSÜ TURU SÜRESİ (TSK-020 UYGULA-9 Faz B, tasarım T4) — `on_barfeed_event`in TAMAMI (v217'nin KILL#1
+# düzeneğinin ölçtüğü "döngü" ile aynı sınır), olay başına bir gözlem. Kart EXE-2026-003 "p95 döngü enstrümanı yok"
+# diyordu; bu alet CANLIDA veri biriktirir — ama GÖZLEMDİR: KILL#1 hükmü buradan OKUNMAZ, canlı çapa ayrı karttır
+# (Faz C, tasarım §2).
+# SONUÇ ETİKETİ (beyanlı, sabit küme; kullanıcı girdisinden türemez): `processed` = kapıları geçip işlenen olay
+# (`events_handled` arttı), `skipped` = seans/pencere/HALT kapısında dönen olay (µs mertebesi), `error` = `_handle`
+# istisnası yutuldu. Ayrım ŞART: kapı-önü dönüşler seans dışında ve pencere öncesinde olay akışının büyük kısmıdır;
+# tek seride karışsalar p95'i işlenen olayların maliyetinden AŞAĞI çekerler — ölçüm aleti eşikten GEÇME yönünde sapar.
+# KOVALAR (saniye): 250 µs … 10 s. Ölçek ÖLÇÜLDÜ (v217 KILL#1 düzeneği, 2026-09-28, bu ağaç, M3): 5 sembollük
+# sentetik olay p95 1,17–1,46 ms, en kötü olay 5,0 ms — canlıda ilgi kümesi ~10+ sembol ve Redis okuması → işlenen
+# olay beklenen bandı 1–25 ms; bu bantta sınırlar ~1,5–2× sık. Üst uç ağ dalları (`_pencere_gonderim`/`_faz4b` Alpaca
+# REST) için 10 s. Kova içi ara değerleme kantili yaklaşık yapar; +%10'luk bir kaymayı `histogram_quantile`
+# ÇÖZEMEZ — Faz C kartı istatistiğini buna göre kurar (ör. sabit sınır üstü pay).
+DONGU_SONUCLARI = ("processed", "skipped", "error")
+DONGU_SURESI = gecikme.Histogram(
+    "meridian_intraday_cycle_seconds",
+    "intraday decision-cycle turn duration per barfeed event (IntradayConsumer.on_barfeed_event), by outcome",
+    kovalar=(0.00025, 0.0005, 0.001, 0.002, 0.003, 0.005, 0.0075, 0.01, 0.015, 0.025, 0.05, 0.1, 0.25, 0.5,
+             1.0, 2.5, 5.0, 10.0),
+    etiket="outcome", etiket_degerleri=DONGU_SONUCLARI)
 
 
 def reset_plans_cache() -> None:
@@ -151,12 +172,20 @@ class IntradayConsumer:
 
     def on_barfeed_event(self, fields: dict) -> None:
         """barfeed daemon thread'inden çağrılır. HATA YUTULUR: bir sembolün/olayın hatası tur/thread'i
-        düşürmez (barfeed zaten ACK'ler; tüketici de kendi içinde savunur — kurt masalı değil, kaydeder)."""
-        try:
-            self._handle(fields)
-        except Exception as e:  # sessiz-yutma DEĞİL: barfeed thread'i korunur, hata kaydedilir ve health'te görünür
-            self.last_error = f"{type(e).__name__}: {e}"[:160]
-            obs.warn("intraday_event_failed", error=self.last_error)
+        düşürmez (barfeed zaten ACK'ler; tüketici de kendi içinde savunur — kurt masalı değil, kaydeder).
+
+        TUR SÜRESİ `DONGU_SURESI`ne işlenir (sonuç etiketiyle). Sarma davranışı DEĞİŞTİRMEZ: dönüş, sayaçlar ve
+        yutma sözleşmesi aynı; `except` dalının kendisi yükseltirse (ör. uyarı kanalı düştü) istisna `sure_olc`tan
+        AYNEN geçer ve süre yine `error` etiketiyle kaydedilir."""
+        with gecikme.sure_olc(DONGU_SURESI, "error") as olcum:
+            n0 = self.events_handled
+            try:
+                self._handle(fields)
+            except Exception as e:  # sessiz-yutma DEĞİL: barfeed thread'i korunur, hata kaydedilir ve health'te görünür
+                self.last_error = f"{type(e).__name__}: {e}"[:160]
+                obs.warn("intraday_event_failed", error=self.last_error)
+            else:
+                olcum.etiket_degeri = "processed" if self.events_handled != n0 else "skipped"
 
     def _handle(self, fields: dict) -> None:
         """Tek bir barfeed olayını işler: seans/HALT kapılarını geçer, ilgi kümesini kurar ve olaydaki
