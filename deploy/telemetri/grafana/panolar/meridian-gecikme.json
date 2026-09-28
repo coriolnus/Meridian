@@ -1,0 +1,354 @@
+{
+  "uid": "meridian-gecikme",
+  "title": "Meridian — gecikme telemetrisi",
+  "description": "TSK-020 UYGULA-9 Faz A. Gecikme GEÇMİŞİNİN kanonik yüzeyi; anlık durum Meridian panosunda. Kaynak: deploy/telemetri/grafana/panolar (arayüzden değiştirilemez).",
+  "tags": [
+    "meridian",
+    "telemetri"
+  ],
+  "timezone": "utc",
+  "editable": false,
+  "graphTooltip": 1,
+  "refresh": "1m",
+  "schemaVersion": 39,
+  "version": 1,
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "timeseries",
+      "title": "Geçit gecikmesi p50 — rota başına (ms)",
+      "description": "APISIX `apisix_http_latency` (type=request: istemciden görülen toplam süre). Kaynak: APISIX prometheus eklentisi, 127.0.0.1:9091. Rota etiketi rota kimliğidir.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "meridian-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "meridian-prometheus"
+          },
+          "expr": "histogram_quantile(0.5, sum by (le, route) (rate(apisix_http_latency_bucket{type=\"request\"}[5m])))",
+          "legendFormat": "{{route}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "Geçit gecikmesi p95 — rota başına (ms)",
+      "description": "APISIX `apisix_http_latency` (type=request) p95. Upstream payı için aynı metriğin type=upstream kırılımı sorgulanabilir.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "meridian-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "meridian-prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le, route) (rate(apisix_http_latency_bucket{type=\"request\"}[5m])))",
+          "legendFormat": "{{route}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "LLM gecikmesi p50 / p95 — model başına (ms)",
+      "description": "APISIX `apisix_llm_latency` (type=total: yanıtın tamamı). Anlık p50/p95 panoda `/api/hermes` (agent_telemetry) — bu panel ZAMAN SERİSİDİR (tek-kaynak beyanı RUNBOOK'ta).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "meridian-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "spanNulls": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "meridian-prometheus"
+          },
+          "expr": "histogram_quantile(0.5, sum by (le, llm_model) (rate(apisix_llm_latency_bucket{type=\"total\"}[5m])))",
+          "legendFormat": "p50 {{llm_model}}"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "meridian-prometheus"
+          },
+          "expr": "histogram_quantile(0.95, sum by (le, llm_model) (rate(apisix_llm_latency_bucket{type=\"total\"}[5m])))",
+          "legendFormat": "p95 {{llm_model}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "CPU kullanımı (makine)",
+      "description": "node_exporter: boşta OLMAYAN CPU payı, bütün çekirdeklerin ortalaması.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "meridian-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "spanNulls": false
+          },
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "meridian-prometheus"
+          },
+          "expr": "1 - avg(rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))",
+          "legendFormat": "cpu"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Bellek kullanımı (makine)",
+      "description": "node_exporter: 1 - MemAvailable / MemTotal.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "meridian-prometheus"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "spanNulls": false
+          },
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "meridian-prometheus"
+          },
+          "expr": "1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes",
+          "legendFormat": "ram"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Disk doluluğu — / ve /opt/veri",
+      "description": "node_exporter: 1 - avail / size. `/` TSDB'yi (≤2GB) ve docker imajlarını taşır; `/opt/veri` DISK_ESIK alarmının diskidir (alarm tek kanalda kalır — bu panel yalnız geçmiş).",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "meridian-prometheus"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 16,
+        "w": 12,
+        "h": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": {
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "spanNulls": false
+          },
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "meridian-prometheus"
+          },
+          "expr": "1 - node_filesystem_avail_bytes{mountpoint=~\"/|/opt/veri\"} / node_filesystem_size_bytes{mountpoint=~\"/|/opt/veri\"}",
+          "legendFormat": "{{mountpoint}}"
+        }
+      ]
+    }
+  ]
+}

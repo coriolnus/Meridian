@@ -190,6 +190,25 @@ f9_ciftleri:
     canli: "/etc/systemd/system/vault-admin-yenile.service"
   - repo: "deploy/vault/vault-admin-yenile.timer"
     canli: "/etc/systemd/system/vault-admin-yenile.timer"
+  # ---- TSK-020 UYGULA-9 Faz A · telemetri (2026-09-28) -----------------------------------------
+  # Üç docker birimi + dört yapılandırma dosyası; YEDİSİNİ de A0 rolü taşır (`birim_kaynaklari` glob'u +
+  # `telemetri_yapilandirma_dosyalari`), yani `f9_rol_disi`ye girmezler. Kurulum gününe kadar "canlıda
+  # YOK" raporlanır (Vault emsali; [F9] raporlar, engellemez). Gerekçe Vault'unkiyle aynı: dinleme adresi
+  # (127.0.0.1) ya da kazıma hedefi depoda başka, canlıda başka olursa bunu ancak bu içerik aynası görür.
+  - repo: "deploy/telemetri/meridian-prometheus.service"
+    canli: "/etc/systemd/system/meridian-prometheus.service"
+  - repo: "deploy/telemetri/meridian-node-exporter.service"
+    canli: "/etc/systemd/system/meridian-node-exporter.service"
+  - repo: "deploy/telemetri/meridian-grafana.service"
+    canli: "/etc/systemd/system/meridian-grafana.service"
+  - repo: "deploy/telemetri/prometheus/prometheus.yml"
+    canli: "/etc/meridian-telemetri/prometheus/prometheus.yml"
+  - repo: "deploy/telemetri/grafana/provisioning/datasources/meridian-prometheus.yaml"
+    canli: "/etc/meridian-telemetri/grafana/provisioning/datasources/meridian-prometheus.yaml"
+  - repo: "deploy/telemetri/grafana/provisioning/dashboards/meridian.yaml"
+    canli: "/etc/meridian-telemetri/grafana/provisioning/dashboards/meridian.yaml"
+  - repo: "deploy/telemetri/grafana/panolar/meridian-gecikme.json"
+    canli: "/etc/meridian-telemetri/grafana/panolar/meridian-gecikme.json"
 
 # =================================================================================================
 # [5a] doğrulama-token anahtar kontrolü uçları (TSK-148 — dağıtım #13 vakası, 2026-09-04 20:04Z)

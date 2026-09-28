@@ -1,0 +1,14 @@
+# Grafana pano sağlayıcısı (TSK-020 UYGULA-9 Faz A). Panolar DEPODAN gelir ve arayüzden değiştirilemez
+# (`allowUiUpdates: false`, `disableDeletion: true`): tek kaynak `deploy/telemetri/grafana/panolar/`dır.
+# `path` meridian-grafana biriminin panolar bağlamasının konteyner hedefiyle AYNI (v584 C4).
+apiVersion: 1
+providers:
+  - name: meridian
+    orgId: 1
+    folder: Meridian
+    type: file
+    disableDeletion: true
+    allowUiUpdates: false
+    updateIntervalSeconds: 60
+    options:
+      path: /etc/grafana/panolar

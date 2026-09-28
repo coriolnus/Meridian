@@ -94,14 +94,16 @@ HERMES_ENV_KOPYALARI = (
     "/home/ubuntu/.hermes/.env",
 )
 
-#: AGENT ŞABLON SAYISI — DONUK. `template { … }` blokları: `vault_kv`nin kendi yolu olan 12
-#: girdisi + üç yan dosya. Sayı ELLE durur çünkü B2/B3 hedefleri envanterden TÜRETİR ve envanter
+#: AGENT ŞABLON SAYISI — DONUK. `template { … }` blokları: `vault_kv`nin kendi yolu olan 13
+#: girdisi (2026-09-28'e kadar 12) + üç yan dosya. Sayı ELLE durur çünkü B2/B3 hedefleri envanterden TÜRETİR ve envanter
 #: küçüldüğünde onlarla birlikte sessizce küçülürdü — "kaç şablon" sorusu bir kez, burada,
 #: ölçülmüş bir sayıyla cevaplanır.
 #: NOT — ROADMAP/günlükteki "20 → 16" sayımı `template_config` bloğunu da sayar (`^template`
 #: öneki); bu sabit YALNIZ `template { … }` bloklarını sayar. İki sayım aynı dosyayı anlatır,
 #: farkı `template_config`tir ve aşağıda ADIYLA ölçülür (B8).
-AGENT_SABLON_SAYISI = 15
+#: KARAR 2026-09-28 (TSK-020 UYGULA-9 Faz A): 15 → 16 — `vault_kv`ye `grafana_admin_parola` girdi (kendi yolu olan
+#: 13. tek-değer girdi; yan dosya sayısı 3 aynı). Tüketicisi `meridian-grafana.service` (LoadCredential).
+AGENT_SABLON_SAYISI = 16
 
 #: AGENT BİRİMİNİN YETENEK KÜMESİ — DONUK, SIRALI ve TEK kalemli. Liste burada ELLE durur (yan
 #: dosya listesiyle aynı gerekçe): birimden türetilseydi çivi birimin söylediğini tekrarlar,

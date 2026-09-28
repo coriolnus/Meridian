@@ -1,0 +1,14 @@
+# Grafana veri kaynağı sağlayıcısı (TSK-020 UYGULA-9 Faz A). A1: /etc/meridian-telemetri/grafana/provisioning/
+# datasources/ → konteyner /etc/grafana/provisioning/datasources (salt-okur). URL meridian-prometheus biriminin
+# dinleme adresiyle AYNI (v584 C4); `uid` panodaki her panelin veri kaynağı referansıdır.
+apiVersion: 1
+datasources:
+  - name: Prometheus (Meridian)
+    uid: meridian-prometheus
+    type: prometheus
+    access: proxy
+    url: http://127.0.0.1:9095
+    isDefault: true
+    editable: false
+    jsonData:
+      timeInterval: 30s

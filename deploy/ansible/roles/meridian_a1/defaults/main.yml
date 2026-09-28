@@ -35,6 +35,12 @@ birim_kaynaklari:
   # `deploy/vault/vault_kur.sh --uygula` koşar (o betik enable eder) → canary.
   - "{{ playbook_dir }}/../vault/*.service"
   - "{{ playbook_dir }}/../vault/*.timer"
+  # TSK-020 UYGULA-9 Faz A (2026-09-28): telemetri birimleri (Prometheus · node_exporter · Grafana; docker,
+  # yalnız 127.0.0.1). ROL YALNIZ KOPYALAR — üçü de `etkin_birimler`de DEĞİLDİR (Vault emsali): Grafana
+  # parolası kasaya konmadan birim AÇILAMAZ (LoadCredential kaynağı yok) ve "kurulu ≠ çalışır" (CLAUDE.md §9).
+  # Sıra: rol kopyalar → parola kasaya → elle başlat + test-ateşle → AYRI değişiklikle `etkin_birimler`e.
+  # Reçete: deploy/oracle-a1/RUNBOOK.md "Telemetri (Grafana) erişimi". Çivi: tests/test_telemetri_altyapi_v584.py.
+  - "{{ playbook_dir }}/../telemetri/*.service"
 
 # --- drop-in dizinleri (basename; Task 2'de her biri için with_fileglob `*.conf`) ---
 dropin_dizinleri:
@@ -54,6 +60,9 @@ dropin_dizinleri:
   # satır GEREKMEZ ve eklenmemelidir (v451 iki yönlü eşitlik ölçer: fazladan bir dizin de kırmızı).
   - apisix.service.d
   - hindsight-cp.service.d
+  # TSK-020 UYGULA-9 Faz A (2026-09-28): Grafana yönetici parolasının credential kanalı (drop-in birimin
+  # yanında, `deploy/telemetri/`). Birim etkin değildir; kaynak yokken kurulması çalışan hiçbir şeyi durdurmaz.
+  - meridian-grafana.service.d
 
 # --- zorunlu sır dosyaları (Task 2 denetim.yml: yalnız stat+assert, DEĞER üretmez/okumaz) ---
 zorunlu_sir_dosyalari:
@@ -78,6 +87,22 @@ zorunlu_sir_dosyalari:
   # /opt/meridian/.dash.env LİSTEDEN ÇIKTI (2026-09-15): faz-2 drop-in (51-dash-env-kaldir.conf) ortam kanalını kapattı,
   # dash jetonu yalnız LoadCredential (/etc/meridian/dash_token, Vault Agent üretir); dosya A1'de yok — beklenti bayattı
   # ve A0 koşumunu düşürüyordu. Kalan .dash.env izleri dalga-2 iki-kanal temizliğinde (TSK-064 (d), ≥2026-09-17).
+
+# --- izin-denetimli sır dosyaları (sir_denetimi.yml İKİNCİ kapısı; TSK-020 UYGULA-9 Faz A tur 2, inceleme O-1) ---
+# ROTASYON DIŞI ≠ DENETİM DIŞI. Buradaki dosyalar `zorunlu_sir_dosyalari`na GİREMEZ (o liste v565 A2 ile rotasyon
+# alt komutuna bağlıdır ve eksik dosyada BÜTÜN playbook'u durdurur) ama izin/sahiplik biçimleri yine denetlenir:
+#   · dosya YOKSA → geçilir ve bu bir satırla BEYAN edilir (ilk kurulumda parola henüz kasada değildir; site.yml durmaz);
+#   · dosya VARSA → sahip/grup/mod beklenenden farklıysa playbook DURUR (drop-in'lerden ÖNCE).
+# `LoadCredential=` yalnız kaynak YOKLUĞUNDA fail-closed'dır, YANLIŞ İZİNDE değil — boşluk tam buydu.
+# Beklenen değerler Vault Agent'ın dosyayı GERÇEKTE nasıl yazdığıdır: `mod` = `deploy/vault/agent.hcl` şablonunun
+# `perms`i (= envanter `vault_kv` `mod`), `sahip`/`grup` = agent sürecinin kimliği (`vault-agent.service`te `User=`/
+# `Group=` yok → root:root). Kopya kaçınılmaz (rol envanteri okumaz); ayrışma çivisi v584 F3. Kapsam çivisi v584 F1:
+# v447 `ROTASYON_DISI_KREDENSIYELLER`deki her credential kaynağı bu listededir.
+izin_denetimli_sir_dosyalari:
+  - yol: /etc/meridian/grafana_admin_parola
+    sahip: root
+    grup: root
+    mod: "0400"
 
 # ==============================================================================================
 # Task 2 (görev dosyaları) eklemeleri — 2026-09-08. Değerlerin kaynağı ADIYLA yazılıdır:
@@ -158,6 +183,30 @@ uv_installer_dizini: /usr/local/lib/meridian
 # kaçınılmaz; bu değer ya da görev metnindeki bayraklar değişirse dört birim AYNI değişiklikte güncellenir,
 # yoksa tests/test_birim_uv_run_v558.py (ayrışma çivisi) kırmızı.
 uv_sync_bayrak: "--no-dev"
+
+# --- telemetri (TSK-020 UYGULA-9 Faz A, 2026-09-28) — `dizinler.yml` + `birimler.yml` TÜKETİR ---
+# TEK KAYNAK — ama birimler ŞABLONSUZ kopyalanır: bu yollar ve kimlikler `deploy/telemetri/*.service` ile
+# Grafana drop-in'inde LİTERAL tekrarlanır. Kopya kaçınılmaz; ayrışma çivisi tests/test_telemetri_altyapi_v584.py
+# (C3 · D2 · D3). Veri kökü `/` üstünde (TSDB ≤2GB + Grafana veritabanı): `/opt/veri` %82 ve DISK_ESIK alarmı
+# taşıyor (tasarım T2; A1 ölçümü 2026-09-28: `/` 21G boş).
+telemetri_veri_dizini: /var/lib/meridian-telemetri
+telemetri_yapilandirma_dizini: /etc/meridian-telemetri
+# Konteyner kullanıcı kimlikleri — imaj YAPILANDIRMASINDAN okundu (Docker Hub registry, arm64 bildirimi,
+# 2026-09-28): prom/prometheus `User: nobody` (busybox tabanında 65534), grafana/grafana `User: 472` (birincil
+# grubu 0 — Grafana belgesi). passwd dosyasından ÖLÇÜLMEDİ: Rol-1 A1'de ilk çekimde `docker run --rm
+# --entrypoint id <imaj>` ile doğrular (RUNBOOK telemetri adım 0); farklıysa bu üç değer + drop-in `install
+# -o/-g` AYNI değişiklikte düzeltilir.
+telemetri_prometheus_uid: 65534
+telemetri_grafana_uid: 472
+telemetri_grafana_gid: 0
+# Yapılandırma dosyaları: `deploy/telemetri/<göreli yol>` → `{{ telemetri_yapilandirma_dizini }}/<göreli yol>`.
+# Liste ELLE yazılır ama `deploy/telemetri` ağacıyla (birim ve drop-in HARİÇ her dosya) İKİ YÖNLÜ eşitliğini
+# v584 D2 ölçer — yeni bir dosya listeye girmeden A1'e hiç gitmezdi.
+telemetri_yapilandirma_dosyalari:
+  - prometheus/prometheus.yml
+  - grafana/provisioning/datasources/meridian-prometheus.yaml
+  - grafana/provisioning/dashboards/meridian.yaml
+  - grafana/panolar/meridian-gecikme.json
 
 # --- A1 kabuk ortamı (venv.yml son görevi; TSK-238, 2026-09-27) ---
 # NEDEN: ssh ile A1'de koşulan (elle ya da betikle) BAYRAKSIZ `uv run|sync` dev grubunu geri kurar ve bayat
@@ -253,6 +302,7 @@ dropin_kaynaklari:
   # adıyla BİREBİR aynı olmak zorundadır (v451 o eşitliği ölçer).
   - "{{ playbook_dir }}/../apisix/apisix.service.d/*.conf"
   - "{{ playbook_dir }}/../hindsight/hindsight-cp.service.d/*.conf"
+  - "{{ playbook_dir }}/../telemetri/meridian-grafana.service.d/*.conf"
 
 # --- polkit kuralları (deploy.sh 6g + A1 ölçümü: /etc/polkit-1/rules.d'de 50 ve 51) ---
 polkit_kaynaklari:

@@ -3141,6 +3141,19 @@ def _birim_oneshot_mu(birim: str) -> bool:
     return any(dizin.parent.glob(f"{taban}.timer"))
 
 
+#: ROTASYON DIŞI KREDENSİYELLER — BEYANLI, GEREKÇELİ (≥20 karakter) ve ÇÜRÜMEZ (TSK-020 UYGULA-9 Faz A,
+#: 2026-09-28). Anahtar (birim, kimlik) drop-in `LoadCredential=` çiftidir. Buraya YALNIZ değeri döndürmenin
+#: kaynak dosyayı yeniden yazmakla OLMADIĞI bir sır girer: rotasyon tablosuna koymak "döndü" diye YALAN bir
+#: kanıt üretirdi. P6 bu çiftleri iki yönlü eşitlikten ve ⊆ kuralından DÜŞER; P6b beyanın kendisini ölçer
+#: (çift bugün bir drop-in'de VAR · betik tablolarında YOK · envanterde kasa bağı `rotasyon_siri` YOK).
+ROTASYON_DISI_KREDENSIYELLER: dict[tuple[str, str], str] = {
+    ("meridian-grafana.service", "grafana_admin_parola"):
+        "Grafana yönetici parolası YALNIZ veritabanı ilk kurulurken hesaba yazılır; kaynak dosyayı döndürmek "
+        "hesabı DEĞİŞTİRMEZ. Döndürme `grafana cli admin reset-admin-password --password-from-stdin` ile "
+        "(deploy/oracle-a1/RUNBOOK.md telemetri bölümü) — kasadaki değer yalnız ilk açılışın tohumudur.",
+}
+
+
 def test_P6_KREDENSIYEL_tablosu_DROPINLERLE_AYRISMAZ():
     """ORTA-7. Şerh "Kimlikler drop-in'lerdeki `LoadCredential=<kimlik>:<kaynak>` ile BİREBİR
     aynıdır" diyor ama bunu bir ÇİVİ değil, inceleme eliyle doğrulamıştı. Ayrışmanın belirtisi
@@ -3158,7 +3171,7 @@ def test_P6_KREDENSIYEL_tablosu_DROPINLERLE_AYRISMAZ():
 
     ÜÇÜNCÜ AYAK: drop-in'in KAYNAK YOLU kopya tablosunda bir `dosya`/`url` hedefi olmalı — yoksa
     rotasyon systemd'nin okuduğu dosyayı hiç yazmaz ve credential ESKİ değerde kalır."""
-    dropin = {(b, k) for b, d in KRED_KAYNAKLARI.items() for k in d}
+    dropin = {(b, k) for b, d in KRED_KAYNAKLARI.items() for k in d} - set(ROTASYON_DISI_KREDENSIYELLER)
     betik_uzun = _betik_kredensiyelleri()
     oneshot_tablo = _betik_oneshot_kredensiyelleri()
     betik_oneshot = {(b, k) for b, d in oneshot_tablo.items() for k in d}
@@ -3180,7 +3193,8 @@ def test_P6_KREDENSIYEL_tablosu_DROPINLERLE_AYRISMAZ():
             f"'{kimlik}' ONESHOT tabloda (_oneshot_kredensiyeller) — restart+/run/credentials "
             "doğrulamasından GEREKSİZ YERE kaçırılıyor")
     hedefler = {x["yol"] for x in _betik_kopyalari() if x["tur"] in ("dosya", "url")}
-    kaynaklar = {k for d in KRED_KAYNAKLARI.values() for k in d.values()}
+    kaynaklar = {k for b, d in KRED_KAYNAKLARI.items() for kim, k in d.items()
+                 if (b, kim) not in ROTASYON_DISI_KREDENSIYELLER}
     assert kaynaklar <= hedefler, f"rotasyonun YAZMADIĞI credential kaynağı: {kaynaklar - hedefler}"
     # oneshot tablonun KAYNAK sütunu da aynı ⊆ kurala tabidir — yoksa rotasyon bu birimin okuduğu
     # dosyayı hiç yazmaz ve kaynak ESKİ değerde donar (oneshot birim restart olmadığı için bu
@@ -3189,6 +3203,25 @@ def test_P6_KREDENSIYEL_tablosu_DROPINLERLE_AYRISMAZ():
     oneshot_kaynaklar = {k for d in oneshot_tablo.values() for k in d.values()}
     assert oneshot_kaynaklar <= hedefler, \
         f"rotasyonun YAZMADIĞI oneshot credential kaynağı: {oneshot_kaynaklar - hedefler}"
+
+
+def test_P6b_ROTASYON_DISI_beyan_GEREKCELI_CURUMEZ_ve_ENVANTERLE_tutarli():
+    """P6'nın istisnası bir SUSTURUCU olamaz: her beyan (a) bugün gerçekten bir drop-in çiftidir (çürümüş
+    beyan kapsamı sessizce genişletir), (b) ≥20 karakter gerekçe taşır, (c) betiğin iki tablosunda da YOKTUR
+    (hem "döndürmüyorum" hem "döndürüyorum" diyen çift çelişkidir), (d) kaynağı envanterde bir `vault_kv`
+    hedefidir ve o girdi kasa bağı (`rotasyon_siri`) TAŞIMAZ — envanter "rotasyonla döner" derken burada
+    "dönmez" demek aynı gerçeğin iki zıt kopyası olurdu."""
+    envanter = yaml.safe_load((KOK_DEPO / "deploy" / "sir_envanteri.yaml").read_text(encoding="utf-8"))
+    hedef_girdisi = {g["hedef"]: g for g in envanter["vault_kv"] if "hedef" in g}
+    tablolar = _betik_kredensiyelleri() | {(b, k) for b, d in _betik_oneshot_kredensiyelleri().items() for k in d}
+    for (birim, kimlik), gerekce in ROTASYON_DISI_KREDENSIYELLER.items():
+        assert kimlik in KRED_KAYNAKLARI.get(birim, {}), f"çürümüş beyan: {(birim, kimlik)} hiçbir drop-in'de yok"
+        assert len(gerekce.strip()) >= 20, f"gerekçe kısa: {(birim, kimlik)}"
+        assert (birim, kimlik) not in tablolar, f"{(birim, kimlik)} hem beyanlı rotasyon-dışı hem betik tablosunda"
+        kaynak = KRED_KAYNAKLARI[birim][kimlik]
+        assert kaynak in hedef_girdisi, f"{kaynak} bir vault_kv hedefi değil"
+        assert not hedef_girdisi[kaynak].get("rotasyon_siri"), (
+            f"{kaynak}: envanter kasa bağı (rotasyon_siri) taşıyor ama burada rotasyon-dışı beyanlı")
 
 
 # --- P7-P9: kuru raporun ve şerhin operatöre söyledikleri -----------------------------------------

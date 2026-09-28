@@ -1,0 +1,38 @@
+# prometheus.yml — Meridian gecikme telemetrisi kazıma yapılandırması (TSK-020 UYGULA-9 Faz A).
+# Tasarım: docs/TASARIM-TELEMETRI-PROMETHEUS-2026-09-28.md (T2/T3). A1 yolu: /etc/meridian-telemetri/prometheus/
+# prometheus.yml (A0 rolü kopyalar; birim salt-okur bağlar). Değişiklik yürürlüğe `systemctl restart
+# meridian-prometheus` ile girer (rol restart ETMEZ).
+#
+# İKİNCİ ALARM KANALI YOK (tasarım §2): `alerting:` ve `rule_files:` bu dosyaya GİRMEZ, Alertmanager kurulmaz.
+# Alarmlar tek kanalda kalır (`obs` → notify/bekçi). Telemetri GÖZLEMDİR, hiçbir kapı buradan okumaz. (v584 B)
+global:
+  scrape_interval: 30s
+  scrape_timeout: 10s
+
+# SAKLAMA TAVANI — hangisi önce dolarsa (tasarım T2; beklenen hacim birkaç bin seri → 30 günde yüzlerce MB).
+# Bayrak DEĞİL, yapılandırma alanı: 3.15.0'da `--storage.tsdb.retention.time/size` `[DEPRECATED]` ve bu alan
+# onlara üstün gelir — iki yere yazmak aynı gerçeğin iki kopyası olurdu.
+storage:
+  tsdb:
+    retention:
+      time: 30d
+      size: 2GB
+
+# HEDEFLER — üçü de loopback; her biri TEK KAYNAĞINA eşit tutulur (v584 B2):
+#   apisix   → meridian/api.py `KAPI_PROMETHEUS_URL` (APISIX prometheus eklentisi; geçit + LLM gecikme
+#              histogramları — `apisix_http_latency`, `apisix_llm_latency`; bugün başka okuyanı YOK)
+#   meridian → A0 `saglik_url` soketi; mevcut `/metrics` (14 gauge). YEREL istek tam seti alır — gizlilik sınırı
+#              motor tarafında aynen korunur. Histogramlar Faz B'de bu uca eklenir (motor değişikliği).
+#   node     → meridian-node-exporter biriminin dinleme adresi.
+scrape_configs:
+  - job_name: apisix
+    metrics_path: /apisix/prometheus/metrics
+    static_configs:
+      - targets: ["127.0.0.1:9091"]
+  - job_name: meridian
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["127.0.0.1:8080"]
+  - job_name: node
+    static_configs:
+      - targets: ["127.0.0.1:9100"]

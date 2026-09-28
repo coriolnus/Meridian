@@ -70,3 +70,8 @@ path "secret/data/meridian/pano_giris_parola" {
 path "secret/data/meridian/hindsight_cp_access_key" {
   capabilities = ["read"]
 }
+
+# grafana_admin_parola → /etc/meridian/grafana_admin_parola
+path "secret/data/meridian/grafana_admin_parola" {
+  capabilities = ["read"]
+}
