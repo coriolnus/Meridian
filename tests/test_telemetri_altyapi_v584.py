@@ -651,12 +651,15 @@ def _glob(desenler: list[str]) -> set[pathlib.Path]:
     return out
 
 
-def test_D1_birimler_KOPYALANIR_ama_ilk_gun_ETKIN_DEGIL():
+def test_D1_birimler_KOPYALANIR_ve_ADIM5_sonrasi_ETKIN():
+    # 2026-09-28 20:5xZ Rol-1 — T6 sözleşmesinin İKİNCİ yarısı: ilk gün kopyalanır ama etkinleştirilmez; elle başlatma +
+    # test-ateşleme temiz geçtikten (12:33Z → 8,5 sa NRestarts 0, grafana OOM sayacı sabit) SONRA etkin_birimler'e girer.
+    # Önceki hâli "ilk gün ETKİN DEĞİL"i çiviliyordu (adım 0–4); adım 5 yapıldı, çivi yeni durumu taşır.
     d = _defaults()
     kapsam = _glob(d["birim_kaynaklari"])
     for ad in BIRIMLER:
         assert (TELEMETRI / f"{ad}.service").resolve() in kapsam, f"{ad} birim_kaynaklari'nda değil"
-        assert f"{ad}.service" not in d["etkin_birimler"], f"{ad} ilk gün etkinleştirilemez (T6)"
+        assert f"{ad}.service" in d["etkin_birimler"], f"{ad} adım 5 sonrası etkin_birimler'de olmalı (T6)"
     assert "meridian-grafana.service.d" in d["dropin_dizinleri"]
     confs = {p.resolve() for p in GRAFANA_DROPIN_DIZINI.glob("*.conf")}
     assert confs and confs <= _glob(d["dropin_kaynaklari"]), "grafana drop-in'i dropin_kaynaklari'nda değil"

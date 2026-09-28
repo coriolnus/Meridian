@@ -105,6 +105,10 @@ UZUN_OMURLU_BIRIMLER = {
     "apisix.service",
     "apisix-etcd.service",
     "meridian-litestream.service",
+    # TSK-020 UYGULA-9 Faz A adım 5 (2026-09-28): telemetri birimleri — rol onları asla yeniden başlatmasın
+    "meridian-node-exporter.service",
+    "meridian-prometheus.service",
+    "meridian-grafana.service",
 }
 SYSTEMD_MODUL_ANAHTARLARI = (
     "systemd",

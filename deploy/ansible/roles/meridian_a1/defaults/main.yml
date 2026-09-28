@@ -243,6 +243,11 @@ etkin_birimler:
   - apisix-etcd.service
   - hindsight-api.service
   - hindsight-cp.service
+  # TSK-020 UYGULA-9 Faz A adım 5 (2026-09-28 20:5xZ): test-ateşleme 12:33Z sonrası 8,5 sa NRestarts 0, grafana OOM sayacı 2'de sabit
+  # (sabahki 256M olayı), cgroup tepe grafana 425/512 MiB · prometheus 50/512 · node 10/64 — deploy/oracle-a1/RUNBOOK.md telemetri §5.
+  - meridian-node-exporter.service
+  - meridian-prometheus.service
+  - meridian-grafana.service
 
 # --- enable + started timer'lar (A1 ölçümü: 11 timer `enabled`) ---
 etkin_timerlar:
