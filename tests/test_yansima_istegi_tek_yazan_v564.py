@@ -100,7 +100,8 @@ def _ortak_sahteler(monkeypatch, cagrilar: list) -> None:
     # İplik açan eski yol geri konursa sahte yansıma çivinin İÇİNDE koşsun (belirlenimci) ve iplik sızmasın.
     monkeypatch.setattr(hr, "threading", types.SimpleNamespace(Thread=_EsZamanliIplik, Lock=threading.Lock))
 
-    def _sahte_yansima(target_regime="auto", *, background=False):
+    def _sahte_yansima(target_regime="auto", *, background=False, durdurma=None):
+        # `durdurma`: TSK-248 imzası — döngü `_stop.is_set` yüklemini iletir; bu çivinin konusu değil (v588 ölçer).
         cagrilar.append({"rejim": target_regime, "arka_plan": background, "defter": _defter_n()})
         return {"status": "rejected_by_backtest", "hypothesis": {"variable": "exit.trail_atr_mult"}}
 

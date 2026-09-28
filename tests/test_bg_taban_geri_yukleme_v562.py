@@ -81,7 +81,8 @@ def taze_surec(sandbox_state, monkeypatch):
     monkeypatch.setenv("MERIDIAN_WARMUP_SPRINTS", "0")               # ısınma dalı bu çivinin konusu değil
     cagrilar: list[dict] = []
 
-    def _sahte_yansima(target_regime="auto", *, background=False):
+    def _sahte_yansima(target_regime="auto", *, background=False, durdurma=None):
+        # `durdurma`: TSK-248 imzası — döngü `_stop.is_set` yüklemini iletir; bu çivinin konusu değil (v588 ölçer).
         cagrilar.append({"rejim": target_regime, "arka_plan": background, "defter": _defter_n()})
         return {"status": "rejected_by_backtest", "hypothesis": {"variable": f"exit.trail_atr_mult@{target_regime}"}}
 
