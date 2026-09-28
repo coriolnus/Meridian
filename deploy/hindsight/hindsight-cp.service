@@ -27,6 +27,10 @@
 # satırında sır adlı değişken genişlemesi YASAK). Yan etki: değişken iki dosyada da yoksa docker onu
 # konteynere HİÇ koymaz (eski biçim BOŞ dize koyardı) — ikisi de "anahtarsız" demektir.
 # Erişim: ssh -i ~/.ssh/oci-a1.key -N -L 9999:127.0.0.1:9999 ubuntu@130.61.126.87
+# BELLEK TAVANI İKİ KATMANDA (TSK-247, 2026-09-28): `MemoryMax=` YALNIZ `docker run` istemcisini sınırlar; konteynerin
+# gerçek tavanı `--memory`dir (gerekçe apisix.service şerhinde). Rol-1 A1 ölçümü 2026-09-28: HostConfig.Memory = 0
+# (tavansız); kullanım 43 MiB. 512m ≈ ölçülen kullanımın ~12×'i (Next.js; ilk sayfa derlemesi/önbellek dalgalanır).
+# İkisi aynı değeri taşır (512m ↔ 512M); eşitlik çivisi tests/test_konteyner_bellek_tavani_v587.py.
 
 [Unit]
 Description=Hindsight Control Plane UI (127.0.0.1:9999, ssh tuneli ile)
@@ -38,6 +42,7 @@ Type=simple
 EnvironmentFile=/opt/hindsight/.env-cp
 ExecStartPre=-/usr/bin/docker rm -f hindsight-cp
 ExecStart=/usr/bin/docker run --rm --name hindsight-cp --network host \
+  --memory=512m \
   -e HINDSIGHT_CP_HOSTNAME=localhost \
   -e HINDSIGHT_CP_PORT=9999 \
   -e HOSTNAME=localhost \
@@ -49,7 +54,9 @@ ExecStart=/usr/bin/docker run --rm --name hindsight-cp --network host \
 ExecStop=/usr/bin/docker stop hindsight-cp
 Restart=on-failure
 RestartSec=5
-# kaynak çiti (docs: Next.js hafif — 128-256MB bandı)
+# kaynak çiti (docs: Next.js hafif — 128-256MB bandı). MemoryMax istemciyi, ExecStart'taki `--memory=512m` konteyneri
+# sınırlar (TSK-247). CPUQuota aynı mekanizmayla YALNIZ istemcinin cgroup'unu sınırlar (çıkarım; A1'de ayrıca
+# ölçülmedi) — konteyner CPU tavanı (`--cpus`) TSK-247 kapsamı dışında, raporda açık kalan.
 MemoryMax=512M
 CPUQuota=100%
 

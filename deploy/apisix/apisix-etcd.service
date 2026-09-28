@@ -9,6 +9,11 @@
 # İmaj PİNLİ: quay.io/coreos/etcd:v3.5.21 (arm64; "latest" kaymaz).
 # Admin API'ye ?ttl= YASAK (TSK-089: kaynağı sessizce siler) — bu birim değil apply betiği
 # zorlar; buraya not, iki kopya olmasın diye kural oradadır.
+#
+# BELLEK TAVANI İKİ KATMANDA (TSK-247, 2026-09-28): `MemoryMax=` YALNIZ `docker run` istemcisini sınırlar; konteynerin
+# gerçek tavanı `--memory`dir (gerekçe ve A1 ölçümü apisix.service şerhinde). Rol-1 A1 ölçümü 2026-09-28: HostConfig.Memory
+# = 0 (tavansız); kullanım 13 MiB. 256m ≈ ölçülen kullanımın ~20×'i — tek düğüm, yalnız rota yapılandırması taşır.
+# İkisi aynı değeri taşır (256m ↔ 256M); eşitlik çivisi tests/test_konteyner_bellek_tavani_v587.py.
 [Unit]
 Description=APISIX etcd config deposu (tek düğüm, yalnız 127.0.0.1)
 After=docker.service network-online.target
@@ -18,6 +23,7 @@ Requires=docker.service
 Type=simple
 ExecStartPre=-/usr/bin/docker rm -f apisix-etcd
 ExecStart=/usr/bin/docker run --rm --name apisix-etcd --network host \
+  --memory=256m \
   -v /opt/apisix/etcd-data:/etcd-data \
   quay.io/coreos/etcd:v3.5.21 /usr/local/bin/etcd \
   --name apisix-etcd --data-dir /etcd-data \
