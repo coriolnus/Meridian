@@ -67,7 +67,7 @@ Kurallar burada tetiklenir. Sol sütundaki şeyi yapmak üzereysen sağ sütunu 
 | pytest DIŞI bir betik/komut koşmak | `meridian.obs`'a ulaşabilir mi? Ulaşıyorsa canlı yerel deftere YAZAR (3 vaka, 2026-08-30). Davranış görmek istiyorsan `sandbox_state`'li çivi yaz. |
 | `monkeypatch.undo()` | Hiçbir zaman — autouse fixture'ları (`sandbox_state` dahil) da geri alır (vaka 2026-08-30). |
 | `sleep`, `while`, `until`, `watch` | Bekleme döngüsü mü kuruyorum? Yasak (§7) — ön planda da arka planda da. |
-| `git` (HERHANGİ komut) | Rol-1 miyim? YAN oturum için salt-okunur dahil yasak (tırmanma vakası 2026-08-26). AJAN yalnız BEYAZ LİSTE okur: `log·show·blame·diff·rev-parse·status` — `stash` dahil mutasyon yapan HER ŞEY yasak (stash okuma DEĞİLDİR). Gevşetme 2026-08-31: 2 zararsız-itiraf + inceleme kalitesi ölçümüyle, operatör onayı. |
+| `git` (HERHANGİ komut) | Rol-1 miyim? YAN oturum için salt-okunur dahil yasak (tırmanma vakası 2026-08-26). AJAN yalnız BEYAZ LİSTE okur: `log·show·blame·diff·rev-parse·status·ls-files·describe` — `stash` dahil mutasyon yapan HER ŞEY yasak (stash okuma DEĞİLDİR). Gevşetme 2026-08-31: 2 zararsız-itiraf + inceleme kalitesi ölçümüyle, operatör onayı; `ls-files`/`describe` 2026-09-28 operatör kararı (iki zararsız salt-okur kullanım itiraf edildi). |
 | `git add -A` / `git add .` | Hiçbir zaman (vaka a94d425). |
 | `dagit.sh` / `ansible-playbook … dagit.yml` (kuru koşum dahil) | Rol-1 miyim? `git status --porcelain` boş mu? Worker durdu mu? `ansible.posix` koleksiyonu kurulu mu? Kip bayrağı TEK mi (çelişen çift → çıkış 2, playbook çağrılmaz)? |
 | "Dağıtıma hazır" cümlesi | Rol-1 değilsem yazmam. |
@@ -115,7 +115,7 @@ Rol-1 sanıp otoriter suite/push başlatır.
 | Tam suite | ✔ | ✘ | ✘ |
 | Kapsam testi | ✔ | ✔ | ✔ (ardışık) |
 | git — yazan her komut | ✔ | ✘ | ✘ |
-| git salt-okunur beyaz liste (`log·show·blame·diff·rev-parse·status`) | ✔ | ✘ | ✔ (2026-08-31) |
+| git salt-okunur beyaz liste (`log·show·blame·diff·rev-parse·status·ls-files·describe`) | ✔ | ✘ | ✔ (2026-08-31; +ls-files·describe 2026-09-28) |
 | Dağıtım ve dağıtım önermek | ✔ | ✘ | ✘ |
 | Ölçüm kartına hüküm | ✔ | ✘ | ✘ |
 | `state/`'e yazmak | worker durmuşken | ✘ | ✘ |
