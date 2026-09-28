@@ -4854,6 +4854,42 @@ const OLAY_YUZEYLERI = {
     cozum: null,
     eylemler: [["Alarm gelen kutusu →", "saglik#operasyon"]],
   },
+  endeks_cikisi: {
+    // TSK-207 (b) (2026-09-28, operatör kararı "sadece uyar, kararı ben veririm"):
+    // ENDEKS_CIKISI_ACIK_POZISYON hiçbir mevcut sınıfa uymuyor — gerekçe `kapasite`/`sir_kasasi`
+    // ile AYNI KALIP. `mutabakat` iç defter ile broker AYRIŞMASINI anlatır (burada iki defter
+    // aynı şeyi söylüyor), `butunluk` bir sözleşme İHLALİNİ (veri kuralını çiğnemedi — akış
+    // BİLEREK durdu, evren endekse bağlı), `besleme` bir mekanizmanın SUSMASINI (bekçi canlı).
+    // Olgu: pozisyon AÇIKKEN o sembolün fiyat verisi kesildi. Evsiz kalsaydı alarm üretilir ama
+    // panoda kartı olmazdı (v154 paritesi tam bunu ölçer).
+    ad: "Endeks çıkışı · açık pozisyon",
+    ozet: "Açık pozisyonlu bir sembol S&P 500'den çıktı — bar akışı durdu, karar SENDE.",
+    jetonlar: ["ENDEKS_CIKISI_ACIK_POZISYON"],
+    neOldu: "Açık pozisyon taşıyan bir sembol beyanlı S&P 500 çıkışıdır. Canlı evren endeks " +
+            "üyeliğine bağlı olduğu için o sembolün bar akışı DURDU: fiyat güncellenmiyor, " +
+            "stop/çıkış mantığı bu sembolde fiyatsız kalabilir. Sistem kendisi HİÇBİR ŞEY " +
+            "YAPMAZ — pozisyona, bar çekimine ve evrene dokunmaz; iki seçenekten birini sen " +
+            "seçersin: <b>veri çekmeye devam</b> (pozisyon kapanana kadar barlar çekilmeye " +
+            "devam etsin) ya da <b>zorla kapat</b> (pozisyonu elle kapat).",
+    kaynak: "meridian/obs.py::ALARM_ENDEKS_CIKISI_ACIK_POZISYON · meridian/watchdog.py::check_olu_isim_and_alarm",
+    degerler: () => [
+      // Kesişim panonun teşhis ucuna BAĞLANMADI (TSK-207 (b) kapsamı alarm zinciriydi): alan
+      // gelmediği için UYDURMA YASAĞI gereği null basılır ("—"). Değer alarm gövdesindedir.
+      ["Açık pozisyon ∩ endeks çıkışı", null],
+    ],
+    adimlar: [
+      "Alarm gövdesi kendi kanıtını taşır: <code>semboller</code>, <code>pozisyonlar</code> " +
+      "(adet/yön — okunamazsa <code>null</code> + neden), <code>beyanlar</code> (çıkış gerekçesi) " +
+      "ve <code>secenekler</code>.",
+      "Günde en fazla BİR kez ateşlenir (mandal, <code>state/watchdog_alarm_gunluk.json</code>); " +
+      "karar verilene kadar ertesi gün yeniden ateşlenir, bastırılan tekrarlar orada SAYILIDIR.",
+      "Pozisyon defteri okunamazsa kesişim ÖLÇÜLEMEDİ sayılır ve alarm ÜRETİLMEZ — neden, " +
+      "<code>SEMBOL_ENDEKS_CIKISI</code> bilgi satırında alan olarak görünür.",
+    ],
+    cozum: null,
+    eylemler: [["Kitap · şu an →", "karar#brifing"],
+               ["Alarm gelen kutusu →", "saglik#operasyon"]],
+  },
 };
 // JETON → SINIF: TÜRETİLİR, elle yazılmaz. İkinci bir liste ilk düzenlemede ayrışırdı ve bir
 // alarm jetonu iki yüzeye birden düşerdi (ya da hiçbirine — sessiz kayıp).

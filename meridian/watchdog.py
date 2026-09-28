@@ -22,7 +22,8 @@ pozisyon → NAKED_POSITION), `kitap_damga_report`, `mutabakat_tazelik_report`,
 `universe_audit_report`, `eod_supurme_report`/`check_eod_supurme_and_alarm` (EOD süpürme
 kanıtı — A4), `uyuyan_iddia_tara`, `veri_disk_report`/`check_veri_disk_and_alarm` (A1 /opt/veri
 kapasite eşiği — TSK-131 alt-iş), `olu_isim_adaylari`/`check_olu_isim_and_alarm` (son bar yaşı ile
-ölü-isim/delist adayı sensörü, alarm DEĞİL warn — TSK-153).
+ölü-isim/delist adayı sensörü, alarm DEĞİL warn — TSK-153; açık pozisyonlu endeks çıkışı
+→ ENDEKS_CIKISI_ACIK_POZISYON alarmı — TSK-207 (b)).
 
 DEĞİŞMEZLER. Bekçi YALNIZ GÖZLEMdir: hiçbir mekanizmayı yeniden başlatmaz, hiçbir kararı
 etkilemez — amber satır üretir, teşhisi operatöre bırakır. Nabız yazılamazsa sessiz kalınmaz
@@ -467,8 +468,9 @@ def check_and_alarm() -> None:
                  detail="/opt/veri disk eşiği bekçisi bu poll'da hüküm veremedi — ölçülemeyen "
                         "hüküm 'disk eşik altında' sayılmaz")
     # TSK-153: ÖLÜ-İSİM (delist) ADAY SENSÖRÜ — son bar yaşı. Bu poll'un kadansında ve KENDİ
-    # try'ında, akranlarıyla aynı yalıtım disiplini. Kendisi ALARM değil WARN üretir (emeklilik
-    # kararı operatörün — bkz. bölüm başlığı); bu try yalnız SENSÖRÜN KENDİSİNİN düşmesini yakalar.
+    # try'ında, akranlarıyla aynı yalıtım disiplini. Ölü-isim adayı için ALARM değil WARN üretir
+    # (emeklilik kararı operatörün — bkz. bölüm başlığı); TEK ALARMI açık pozisyonlu endeks
+    # çıkışıdır (TSK-207 (b)). Bu try yalnız SENSÖRÜN KENDİSİNİN düşmesini yakalar.
     try:
         check_olu_isim_and_alarm()
     except Exception as e:
@@ -4433,11 +4435,22 @@ def check_veri_disk_and_alarm() -> dict:
 #
 # AÇIK POZİSYON KESİŞİMİ (TSK-207 (a)): beyanlı çıkış AÇIK bir pozisyonla kesişiyorsa bu artık
 # sessiz bir "beklenen davranış" DEĞİLDİR — bar akışı duran sembolde fiyat güncellenmez ve çıkış
-# mantığı KÖR kalabilir; o kesişim günde bir kez `SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON` WARN'ı
-# üretir. KAPSAM SINIRI BİLİNÇLİDİR: bu tur YALNIZ ÖLÇER VE HABER VERİR — çıkış mantığına, bar
-# çekimine ve evren tanımına DOKUNULMADI (TSK-207 (b), operatör kararı).
+# mantığı KÖR kalabilir. TSK-207 (a) bu kesişimi günde bir kez `SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON`
+# WARN'ı olarak yazıyordu — ama warn bildirim zincirini TETİKLEMEZ, yani kayıt operatöre HİÇ
+# ULAŞMIYORDU. TSK-207 (b) (2026-09-28, operatör kararı "sadece uyar, kararı ben veririm"): kesişim
+# artık günde bir kez `obs.ALARM_ENDEKS_CIKISI_ACIK_POZISYON` ALARMIDIR (DISK_ESIK deseni; jeton
+# NOTIFY_TOKENS türetmesine kendiliğinden girer). Mesaj sembolü, pozisyonu (adet/yön — okunamazsa
+# `None` + neden) ve İKİ karar seçeneğini ("veri çekmeye devam" / "zorla kapat") taşır.
+# TEK KAYIT: eski warn KALDIRILDI, alarmla BİRLEŞTİ — alarm satırı warn'ın bütün alanlarını
+# (semboller/n/esik/beyanlar) taşır; ikisini birden basmak aynı olgu için iki satır olurdu.
+# BEDEL: `SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON` olay ADI deftere artık düşmez — okuyucusu yoktu
+# (depo geneli grep 2026-09-28: yalnız bu dosya + v525); `bekci_tarama` olayları ada göre GENEL
+# grupladığı için alarm satırı taramaya kendiliğinden girer.
+# KAPSAM SINIRI DEĞİŞMEDİ: sistem YALNIZ ÖLÇER VE HABER VERİR — çıkış mantığına, bar çekimine ve
+# evren tanımına DOKUNULMAZ; iki seçenek operatörün kararıdır, kod hiçbirini kendiliğinden yapmaz.
 # Kesişim ÖLÇÜLEMEZSE (defter yok/bozuk ya da `positions` alanı yok) hüküm `None` + nedendir
-# (UYDURMA YASAĞI) ve SESSİZ GEÇMEZ: neden o günün bildirim satırında alan olarak görünür.
+# (UYDURMA YASAĞI), ALARM ÜRETİLMEZ ve SESSİZ GEÇMEZ: neden o günün bildirim satırında alan
+# olarak görünür.
 #
 # ÖLÇÜLEMEYEN SEMBOL UYARI ÜRETMEZ (UYDURMA YASAĞI): arşiv yok/boş/okunamaz ya da takvim
 # okunamazsa (`_sessions()` boş frozenset) o sembol `olculemedi` listesine `neden` ile düşer —
@@ -4487,7 +4500,13 @@ _OLU_ISIM_MEK_ADI = "olu_isim_adayi"
 # `DISK_ESIK` de WARN'dır ve aynı anahtarda sayılır); üçüncü bir anahtar açmak defterin şemasını
 # ikiye bölerdi ve genel okuyucu yeni yarıyı GÖRMEZDİ — ölçülmüş bedel, ölçülmemiş körlükten iyidir.
 _OLU_ISIM_ENDEKS_MEK_ADI = "olu_isim_endeks_cikisi"
-_OLU_ISIM_ENDEKS_POZ_MEK_ADI = "olu_isim_endeks_cikisi_acik_pozisyon"
+# TSK-207 (b): mandal ADI warn→alarm terfisinde YENİLENDİ (`_alarm` soneki). Eski ad aynı UTC
+# gününde WARN'ı saymış olabilir; aynı anahtar kalsaydı dağıtım günü ilk GERÇEK alarm, o günün
+# warn sayacı yüzünden sessizce bastırılırdı (`bastirilan`a düşer, operatöre bir gün geç
+# ulaşırdı). Defter her UTC gününde sıfırlandığı için eski ad ertesi gün kendiliğinden kaybolur;
+# okuyucu (`api._alarm_gunluk`) mekanizma adına göre GENELDİR, yeni ad EK KOD OLMADAN görünür.
+_OLU_ISIM_ENDEKS_POZ_MEK_ADI = "olu_isim_endeks_cikisi_acik_pozisyon_alarm"
+ENDEKS_CIKISI_SECENEKLERI = ("veri çekmeye devam", "zorla kapat")   # operatörün İKİ kararı (TSK-207 (b)) — kod hiçbirini kendiliğinden YAPMAZ
 
 
 def _son_bar_tarihi(ticker: str) -> tuple[str | None, str | None]:
@@ -4545,6 +4564,57 @@ def _acik_pozisyon_kesisimi(cikislar: list[str]) -> tuple[list[str] | None, str 
         return None, (f"portfolio.json `positions` alanı sözlük değil ({type(poz).__name__}) — "
                       "açık pozisyon kesişimi ÖLÇÜLEMEDİ")
     return sorted(set(cikislar) & {str(t).upper() for t in poz}), None
+
+
+def _acik_pozisyon_ozeti(semboller: list[str]) -> dict[str, dict]:
+    """Kesişen her sembol için `{adet, yon, neden}` — alarm mesajının pozisyon kısmı.
+
+    UYDURMA YASAĞI: değer defterde YOKSA `None` olur ve `neden` hangi alanın olmadığını ADIYLA
+    söyler (ALAN VARLIĞI `in` ile ölçülür — `.get` None ≠ anahtar yok). Defter kesişimden SONRA
+    ayrıca okunur: iki okuma arasında pozisyon kapanmışsa bu da uydurulmaz, nedeniyle `None`
+    döner. Salt-okunur: pozisyon defterine YAZMAZ (operatör kararı — sistem hiçbir şey yapmaz)."""
+    pf = store.read_json("portfolio.json", {})
+    poz = pf["positions"] if isinstance(pf, dict) and "positions" in pf else None
+    if not isinstance(poz, dict):
+        return {t: {"adet": None, "yon": None,
+                    "neden": "portfolio.json `positions` ikinci okumada okunamadı — adet/yön ÖLÇÜLEMEDİ"}
+                for t in semboller}
+    buyuk = {str(k).upper(): v for k, v in poz.items()}
+    out: dict[str, dict] = {}
+    for t in semboller:
+        kayit = buyuk.get(t)
+        if not isinstance(kayit, dict):
+            out[t] = {"adet": None, "yon": None,
+                      "neden": f"{t} pozisyon kaydı defterde yok ya da sözlük değil — adet/yön ÖLÇÜLEMEDİ"}
+            continue
+        eksik: list[str] = []
+        adet = kayit["qty"] if "qty" in kayit else None
+        if "qty" not in kayit:
+            eksik.append("`qty` alanı yok")
+        elif isinstance(adet, bool) or not isinstance(adet, (int, float)):
+            eksik.append(f"`qty` sayı değil ({type(adet).__name__})")
+            adet = None
+        yon = kayit["side"] if "side" in kayit else None
+        if "side" not in kayit:
+            eksik.append("`side` alanı yok")
+        elif not isinstance(yon, str) or not yon.strip():
+            eksik.append(f"`side` geçersiz ({type(yon).__name__})")
+            yon = None
+        out[t] = {"adet": adet, "yon": yon, "neden": "; ".join(eksik) or None}
+    return out
+
+
+def _pozisyon_metni(kesisim: list[str], ozet: dict[str, dict]) -> str:
+    """Alarm mesajının pozisyon parçası: `CAG (12 adet, long); …`. Okunamayan değer metinde de
+    "okunamadı" + nedenle yazılır — sessizce atlanmaz (UYDURMA YASAĞI)."""
+    parcalar = []
+    for t in kesisim:
+        o = ozet.get(t) or {}
+        adet_s = f"{o['adet']} adet" if o.get("adet") is not None else "adet okunamadı"
+        yon_s = str(o["yon"]) if o.get("yon") is not None else "yön okunamadı"
+        neden_s = f" — neden: {o['neden']}" if o.get("neden") else ""
+        parcalar.append(f"{t} ({adet_s}, {yon_s}{neden_s})")
+    return "; ".join(parcalar)
 
 
 def olu_isim_adaylari() -> dict:
@@ -4613,10 +4683,12 @@ def check_olu_isim_and_alarm() -> dict:
          varken. Emsal `constituents.universe_drift` şerhindeki `hic_uye_canlida`: beyanlı sapma
          ALARM ÜRETMEZ ama GÖRÜNÜR kalır. BEDEL YASASI bu satırdır — uyarıyı kaldırmanın
          bedeli körlük olmasın diye kayıt yerinde durur.
-      3. `SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON` WARN — beyanlı çıkış AÇIK POZİSYONLA kesişiyorsa.
-         TSK-207 (b)'nin adlandırdığı risk sınıfı budur (bar akışı duran sembolde çıkış mantığı
-         kör kalabilir). BU TUR YALNIZ ÖLÇER VE HABER VERİR: çıkış mantığı, bar çekimi ve evren
-         tanımı DEĞİŞMEDİ (operatör kararı).
+      3. `ENDEKS_CIKISI_ACIK_POZISYON` ALARMI (`obs.ALARM_ENDEKS_CIKISI_ACIK_POZISYON`) — beyanlı
+         çıkış AÇIK POZİSYONLA kesişiyorsa (TSK-207 (b), 2026-09-28: eski WARN operatöre
+         ulaşmıyordu, alarmla BİRLEŞTİ — tek kayıt). Bar akışı duran sembolde çıkış mantığı kör
+         kalabilir; mesaj pozisyonu ve İKİ karar seçeneğini taşır. SİSTEM YALNIZ HABER VERİR:
+         çıkış mantığı, bar çekimi ve evren tanımı DEĞİŞMEDİ (operatör kararı "sadece uyar").
+         Kesişim ÖLÇÜLEMEZSE (`None`) alarm YOK — neden 2. satırda alan olarak görünür.
 
     Hiç aday ve hiç beyanlı çıkış yoksa defter AÇILMAZ (ölçülemedi/zaten emekli/eşik altı bir
     "bulgu" değildir)."""
@@ -4677,12 +4749,19 @@ def check_olu_isim_and_alarm() -> dict:
                        "Bu bir uyarı değil KAYITTIR — beyan kalkarsa sembol kendiliğinden ölü-isim "
                        "aday sınıfına geri döner")
     if at_poz:
-        obs.warn("SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON",
-                 semboller=kesisim, n=len(kesisim), esik=OLU_ISIM_SEANS_ESIGI,
-                 beyanlar={c["ticker"]: c["beyan"] for c in rep["endeks_cikisi"]
-                           if c["ticker"] in set(kesisim)},
-                 detail=f"{len(kesisim)} AÇIK POZİSYONLU sembol beyanlı endeks çıkışıdır: bar "
-                        "akışı durdu, yani fiyat güncellenmiyor ve çıkış mantığı bu sembolde KÖR "
-                        "kalabilir. DAVRANIŞ DEĞİŞMEDİ — bu satır yalnız ölçer ve haber verir; "
-                        "çıkış mantığı/bar çekimi/evren kararı operatörün (TSK-207 (b))")
+        ozet = _acik_pozisyon_ozeti(kesisim)
+        # Mesaj şablonu ÇAĞRI YERİNDE literal durur: RUNBOOK üreticisi ateşleme yerinin
+        # şablonunu operatöre gösterir — telefona düşen cümlenin aynısı. Seçenek adları
+        # `ENDEKS_CIKISI_SECENEKLERI` ile AYNI olmalı (ayrışma çivisi: v578 mesaj testi).
+        obs.alarm(obs.ALARM_ENDEKS_CIKISI_ACIK_POZISYON,
+                  f"Açık pozisyonlu {len(kesisim)} sembol S&P 500'den çıktı: "
+                  f"{_pozisyon_metni(kesisim, ozet)}. Bu sembolde bar akışı durdu — fiyat "
+                  "güncellenmiyor, stop/çıkış bu sembolde fiyatsız kalabilir. Sistem kendisi "
+                  "hiçbir şey yapmaz; karar senin: (1) veri çekmeye devam — pozisyon kapanana "
+                  "kadar bu sembolün barları çekilmeye devam etsin; (2) zorla kapat — pozisyonu "
+                  "elle kapat.",
+                  semboller=kesisim, n=len(kesisim), esik=OLU_ISIM_SEANS_ESIGI,
+                  beyanlar={c["ticker"]: c["beyan"] for c in rep["endeks_cikisi"]
+                            if c["ticker"] in set(kesisim)},
+                  pozisyonlar=ozet, secenekler=list(ENDEKS_CIKISI_SECENEKLERI))
     return rep

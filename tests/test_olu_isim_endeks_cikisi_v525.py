@@ -18,10 +18,12 @@ SÖZLEŞME (bu dosya çiviler):
     korunur: (a) gerçek `adaylar` varken atılan `SEMBOL_OLU_ADAY` payload'ına çıkış adları AYRI
     alanla girer (`semboller`e ve `detail` metnine KARIŞMAZ); (b) yalnız çıkış varken günde bir
     kez `obs.log("SEMBOL_ENDEKS_CIKISI", ...)` BİLGİ satırı.
-  * AÇIK POZİSYON KESİŞİMİ WARN'DIR: `endeks_cikisi` ∩ açık pozisyonlar ≠ ∅ ise
-    `obs.warn("SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON", ...)`. TSK-207 (b)'nin adlandırdığı risk
-    sınıfı budur; bu tur YALNIZ ÖLÇER VE HABER VERİR — çıkış mantığı/bar çekimi/evren
-    DEĞİŞMEDİ (operatör kararı).
+  * AÇIK POZİSYON KESİŞİMİ ALARMDIR (TSK-207 (b), 2026-09-28 — bu dosyanın ilk hâlinde WARN'dı
+    ve operatöre ULAŞMIYORDU): `endeks_cikisi` ∩ açık pozisyonlar ≠ ∅ ise
+    `obs.alarm(obs.ALARM_ENDEKS_CIKISI_ACIK_POZISYON, ...)`, eski warn alarmla BİRLEŞTİ (tek
+    kayıt). Alarm sözleşmesinin ayrıntısı (mesaj, seçenekler, uçtan uca teslim) v578'dedir;
+    burada yalnız üç mandalın birbiriyle ilişkisi çivilidir. Sistem YALNIZ HABER VERİR — çıkış
+    mantığı/bar çekimi/evren DEĞİŞMEDİ (operatör kararı "sadece uyar").
   * UYDURMA YASAĞI: kesişim ölçülemezse (`portfolio.json` yok/bozuk ya da `positions` alanı yok)
     `acik_pozisyon_kesisim=None` + `acik_pozisyon_neden` döner — "kesişim yok" DEĞİLDİR. Bu
     hükümsüzlük SESSİZ GEÇMEZ: aynı günün bildirim satırında alan olarak görünür.
@@ -50,6 +52,10 @@ from tests.test_olu_isim_adayi_v416 import (  # noqa: F401 — fikstür ithali p
     takvim,
     warnlar,
 )
+# TSK-207 (b): kesişim artık ALARM — `obs.alarm` yakalayıcısı v414'ten (tek kaynak, kopya değil).
+from tests.test_veri_disk_esigi_v414 import alarmlar  # noqa: F401 — fikstür ithali pytest'e görünürlük içindir
+
+POZ_JETON = "ENDEKS_CIKISI_ACIK_POZISYON"
 
 # Sentetik gerekçe metinleri — canlı sözlüğün BİREBİR kopyası DEĞİL (canlı metin değişirse bu
 # dosya kırılmamalı); ölçülen şey metnin KENDİSİNİN taşınması, içeriği değil.
@@ -225,9 +231,9 @@ def test_aday_varken_warn_atilir_cikis_ayri_alanda(takvim, monkeypatch, warnlar,
         "aday varken ayrıca BİLGİ satırı atılmaz — tek satır, iki alan"
 
 
-# ---- (5a) çıkış ∩ açık pozisyon ≠ ∅ → WARN ---------------------------------------------------
+# ---- (5a) çıkış ∩ açık pozisyon ≠ ∅ → ALARM (TSK-207 (b); ilk hâlinde WARN'dı) ----------------
 
-def test_cikis_acik_pozisyonla_kesisirse_warn(takvim, monkeypatch, warnlar, loglar):
+def test_cikis_acik_pozisyonla_kesisirse_alarm(takvim, monkeypatch, warnlar, loglar, alarmlar):
     from meridian.adapters import data
     _beyanli_kur(monkeypatch, {"CIK": CIKIS_BEYAN, "CIK2": CIKIS_BEYAN})
     monkeypatch.setattr(data, "LIVE_UNIVERSE", [])
@@ -241,13 +247,14 @@ def test_cikis_acik_pozisyonla_kesisirse_warn(takvim, monkeypatch, warnlar, logl
     rep = watchdog.check_olu_isim_and_alarm()
 
     assert rep["acik_pozisyon_kesisim"] == ["CIK"] and rep["acik_pozisyon_neden"] is None
-    poz = [w for w in warnlar if w["event"] == "SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON"]
-    assert len(poz) == 1, "kesişim WARN sınıfıdır (TSK-207 (b)'nin adlandırdığı risk)"
+    poz = [a for a in alarmlar if a["token"] == POZ_JETON]
+    assert len(poz) == 1, "kesişim ALARM sınıfıdır (TSK-207 (b), operatör kararı 2026-09-28)"
     assert poz[0]["semboller"] == ["CIK"], "yalnız KESİŞEN sembol — CIK2 pozisyonsuz"
     assert "BASKA" not in str(poz[0]), "pozisyon defterinin tamamı satıra dökülmez"
+    assert [w["event"] for w in warnlar] == [], "tek kayıt: eski warn alarmla BİRLEŞTİ"
 
     watchdog.check_olu_isim_and_alarm()        # AYNI gün — mandal
-    assert len([w for w in warnlar if w["event"] == "SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON"]) == 1
+    assert len([a for a in alarmlar if a["token"] == POZ_JETON]) == 1
     doc = store.read_json(watchdog.ALARM_GUNLUK_FILE, {})
     assert doc["mekanizmalar"][watchdog._OLU_ISIM_ENDEKS_POZ_MEK_ADI]["bastirilan"] == 1
 
@@ -322,13 +329,14 @@ def test_bos_positions_olculmus_sayilir(takvim, monkeypatch, warnlar, loglar):
 
 # ---- (5e) ÜÇ MANDAL AYNI ÇAĞRIDA: aday + beyanlı çıkış + açık pozisyon kesişimi ---------------
 
-def test_aday_cikis_ve_pozisyon_ucu_birlikte(takvim, monkeypatch, warnlar, loglar):
+def test_aday_cikis_ve_pozisyon_ucu_birlikte(takvim, monkeypatch, warnlar, loglar, alarmlar):
     """ÜÇLÜ SENARYO (TSK-207a inceleme notu, 2026-09-21): mevcut çiviler üç mandalı İKİŞER
     ölçüyordu — (4) aday+çıkış, (5a) çıkış+pozisyon. Üçünün AYNI çağrıda birlikte olduğu hâl
     ÖLÇÜLMEMİŞTİ, yani "iki satır mı, üç satır mı" sorusunun cevabı koddan OKUNUYORDU,
     çividen değil.
 
-    DONDURULAN SÖZLEŞME — İKİ WARN, SIFIR BİLGİ SATIRI:
+    DONDURULAN SÖZLEŞME — BİR WARN + BİR ALARM, SIFIR BİLGİ SATIRI (TSK-207 (b), 2026-09-28:
+    ilk hâlinde İKİ WARN'dı; kesişim satırı alarma terfi etti, sayı ve sıra aynı kaldı):
       * `at_aday`  → `SEMBOL_OLU_ADAY` WARN atılır; çıkış VE kesişim bu satırda AYRI ALANLAR
         olarak taşınır (tek satır, iki alan tasarımı — (4)'ün kuralı kesişim eklenince de
         BOZULMAZ),
@@ -336,7 +344,7 @@ def test_aday_cikis_ve_pozisyon_ucu_birlikte(takvim, monkeypatch, warnlar, logla
         HİÇ AÇILMAZ (kısa devre — `(not rep["adaylar"])` koşulu `_mandal`a ulaşmadan keser;
         satır açılsaydı o gün gerçekten yalnız-çıkış hâli doğduğunda bilgi satırı SESSİZCE
         bastırılırdı, yani körlük bir sonraki güne taşınırdı),
-      * `at_poz`   → `SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON` WARN'ı AYRICA atılır: aday satırındaki
+      * `at_poz`   → `ENDEKS_CIKISI_ACIK_POZISYON` ALARMI AYRICA atılır: aday satırındaki
         ALAN, kendi başına bir RİSK SATIRI değildir (TSK-207 (b) sınıfı), ikisi birbirini
         YUTMAZ.
 
@@ -360,10 +368,11 @@ def test_aday_cikis_ve_pozisyon_ucu_birlikte(takvim, monkeypatch, warnlar, logla
     assert _ad(rep["endeks_cikisi"]) == {"CIK", "CIK2"}
     assert rep["acik_pozisyon_kesisim"] == ["CIK"] and rep["acik_pozisyon_neden"] is None
 
-    # --- İKİ warn, bu sırayla; BİLGİ satırı YOK
-    assert [w["event"] for w in warnlar] == [
-        "SEMBOL_OLU_ADAY", "SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON"], \
-        "üçlü hâlde İKİ warn beklenir — aday satırı kesişim satırını YUTMAZ, tersi de olmaz"
+    # --- BİR warn + BİR alarm; BİLGİ satırı YOK
+    assert [w["event"] for w in warnlar] == ["SEMBOL_OLU_ADAY"], \
+        "aday satırı WARN kalır — kesişim satırını YUTMAZ, tersi de olmaz"
+    assert [a["token"] for a in alarmlar] == [POZ_JETON], \
+        "kesişim satırı AYRICA alarm olarak atılır (TSK-207 (b))"
     assert [g["event"] for g in loglar] == [], \
         "aday VARKEN bilgi satırı atılmaz (tek satır, iki alan) — (4) kuralı kesişimle bozulmaz"
 
@@ -377,7 +386,7 @@ def test_aday_cikis_ve_pozisyon_ucu_birlikte(takvim, monkeypatch, warnlar, logla
     assert "CIK" not in aday["detail"], "çıkış/kesişim adları 'delist adayı' metnine SIZMAMALI"
 
     # --- kesişim satırı: yalnız KESİŞEN sembol, beyanı da yalnız onun
-    poz = warnlar[1]
+    poz = alarmlar[0]
     assert poz["semboller"] == ["CIK"] and poz["n"] == 1
     assert poz["beyanlar"] == {"CIK": CIKIS_BEYAN}, "pozisyonsuz CIK2 bu satıra girmez"
     assert "BASKA" not in str(poz), "pozisyon defterinin tamamı satıra dökülmez"
@@ -395,9 +404,9 @@ def test_aday_cikis_ve_pozisyon_ucu_birlikte(takvim, monkeypatch, warnlar, logla
     # --- ikinci çağrı: açılan iki mandal bastırır, üçüncüsü hâlâ kapalı
     watchdog.check_olu_isim_and_alarm()
 
-    assert [w["event"] for w in warnlar] == [
-        "SEMBOL_OLU_ADAY", "SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON"], \
+    assert [w["event"] for w in warnlar] == ["SEMBOL_OLU_ADAY"], \
         "AYNI gün ikinci çağrı yeni satır ÜRETMEMELİ (üç mandal da günlük tavana tabidir)"
+    assert [a["token"] for a in alarmlar] == [POZ_JETON], "kesişim alarmı da günde BİR"
     assert [g["event"] for g in loglar] == []
     mek2 = store.read_json(watchdog.ALARM_GUNLUK_FILE, {})["mekanizmalar"]
     assert mek2[watchdog._OLU_ISIM_MEK_ADI]["bastirilan"] == 1, \
@@ -428,12 +437,17 @@ def test_cikis_yokken_kesisim_portfoysuz_da_olculur(takvim, monkeypatch):
 
 def test_yeni_olay_adlari_bildirim_jetonu_degildir():
     """`obs.NOTIFY_TOKENS` EL LİSTESİ DEĞİL TÜRETMEdir: yalnız `ALARM_*` sabitleri girer (v98).
-    Yeni iki ad `warn`/`log` sınıfındadır, yani operatörün telefonuna DÜŞMEZ — mevcut
+    Bu iki ad `warn`/`log` sınıfındadır, yani operatörün telefonuna DÜŞMEZ — mevcut
     `SEMBOL_OLU_ADAY` emsaliyle AYNI karar (emeklilik/endeks hükmü operatörün, "bak" demenin
     kendisi alarm SEVİYESİNDE aciliyet taşımaz). Bu çivi kararı DONDURUR: biri bu satırları
-    `obs.alarm`a çevirirse jeton türetmesi değişir ve burası kırılır."""
+    `obs.alarm`a çevirirse jeton türetmesi değişir ve burası kırılır.
+
+    KARAR DEĞİŞTİ, BİR AD İÇİN (TSK-207 (b), operatör 2026-09-28 "sadece uyar, kararı ben
+    veririm"): açık pozisyon kesişimi bu listeden ÇIKTI — artık `ENDEKS_CIKISI_ACIK_POZISYON`
+    ALARMIDIR ve bildirim kapsamındadır (çivisi v578 + v98 literali). Liste yerinde düzeltildi,
+    çünkü dondurduğu karar operatör kararıyla değişti; kalan iki ad için karar AYNEN geçerli."""
     from meridian import obs
-    for ad in ("SEMBOL_OLU_ADAY", "SEMBOL_ENDEKS_CIKISI", "SEMBOL_ENDEKS_CIKISI_ACIK_POZISYON"):
+    for ad in ("SEMBOL_OLU_ADAY", "SEMBOL_ENDEKS_CIKISI"):
         assert ad not in obs.NOTIFY_TOKENS, f"{ad} bildirim jetonu SINIFINA girmemeli"
         assert not hasattr(obs, f"ALARM_{ad}")
     # `durum_sozlugu` (v271) KANONİK DURUM adlarını dondurur (goal_failure/kitap_damga/…) —

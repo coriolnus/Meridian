@@ -78,8 +78,13 @@ ESKI_DERIN_ADRESLER = ["kosu#adaylar", "kosu#kapilar", "portfoy#brifing", "portf
 # (mekanizma susmadı), `butunluk`e (sözleşme ihlali yok) ve `kill`e (kol çekilmedi) uymuyor —
 # sır KANALI kesildi ve bu sınıfın imzası SESSİZLİKtir (Agent render'ı durur, dosyalar kalır).
 # Son sırada: app.js'te `kapasite`den SONRA eklendi.
+# 2026-09-28 (TSK-207 (b)): DOKUZ sınıf ON oldu — `endeks_cikisi` eklendi
+# (ENDEKS_CIKISI_ACIK_POZISYON). GEREKÇE yine AYNI KALIP: jeton `mutabakat`a (iç defter ile broker
+# ayrışmadı), `butunluk`e (veri kuralını çiğnemedi — akış BİLEREK durdu) ve `besleme`ye (bekçi
+# canlı) uymuyor; olgu "pozisyon AÇIKKEN fiyat verisi kesildi, karar operatörün". Son sırada:
+# app.js'te `sir_kasasi`nden SONRA eklendi.
 OLAY_SINIFLARI = ["besleme", "teslimat", "mutabakat", "kill", "butunluk", "yetki", "kota",
-                  "kapasite", "sir_kasasi"]
+                  "kapasite", "sir_kasasi", "endeks_cikisi"]
 
 
 def _sozluk(ad: str) -> dict[str, str]:

@@ -118,6 +118,20 @@ ALARM_DISK_ESIK = "DISK_ESIK"  # /opt/veri kullanımı operatör tavanına yakla
 # kendiliğinden girer — aşağıdaki kural gereği, elle liste YOK.
 ALARM_VAULT_SEALED = "VAULT_SEALED"  # kasa cevap veriyor ama sır veremiyor — render DURMUŞ
 ALARM_VAULT_DOWN = "VAULT_DOWN"      # kasaya ulaşılamıyor / tanınmayan sağlık cevabı
+# TSK-207 (b) (2026-09-28, operatör kararı "sadece uyar, kararı ben veririm"): AÇIK POZİSYONLU
+# bir sembol S&P 500'den çıktı (beyanlı endeks çıkışı). Canlı evren endeks üyeliğine bağlı
+# olduğu için o sembolün bar akışı DURUR — fiyat güncellenmez, stop/çıkış o sembolde fiyatsız
+# kalabilir. TSK-207 (a) bu kesişimi yalnız `warn` olarak yazıyordu ve warn bildirim zincirini
+# tetiklemez: kayıt vardı, operatöre ULAŞMIYORDU. Kendi jetonunu hak eder: DATA_QUALITY "veri
+# bozuk", MECHANISM_STALE "mekanizma üretmiyor", NAKED_POSITION "broker'da stop yok" der; hiçbiri
+# "pozisyon açıkken veri akışı BİLEREK durdu" demez. Günde en çok bir kez (DISK_ESIK deseni).
+# Üretici: `watchdog.check_olu_isim_and_alarm`. SİSTEM HİÇBİR ŞEY YAPMAZ — pozisyona, bar
+# çekimine ve evrene dokunulmaz. Operatör prosedürü: alarm gövdesi sembolü, pozisyonu (adet/yön;
+# okunamazsa neden) ve beyan gerekçesini taşır; iki seçenekten birini sen seçersin — (1) veri
+# çekmeye devam: sembolün barları pozisyon kapanana kadar çekilmeye devam etsin (evren/bar çekimi
+# değişikliği, Rol-1 işi); (2) zorla kapat: pozisyonu elle kapat. Karar verilene kadar alarm her
+# gün bir kez tekrar eder.
+ALARM_ENDEKS_CIKISI_ACIK_POZISYON = "ENDEKS_CIKISI_ACIK_POZISYON"  # açık pozisyonlu sembol endeksten çıktı — bar akışı durdu, karar operatörün
 
 # also mirror events to state/events.jsonl so the dashboard/tests can read them without a log scraper
 _EVENTS = "events.jsonl"
