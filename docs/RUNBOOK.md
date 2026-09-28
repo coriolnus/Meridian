@@ -1569,6 +1569,19 @@ VAULT_DOWN alarmları; üretici ops/vault_sagligi.py)
 PERİYODİK yönetici jetonunu yeniler — tur-4)
 - deploy/vault/vault-admin-yenile.service → /etc/systemd/system/  (oneshot, root; jeton yokken atlanır)
 - deploy/vault/vault-admin-yenile.timer   → /etc/systemd/system/  (haftalık tetik, Persistent)
+* TELEMETRİ (TSK-020 UYGULA-9 Faz A, 2026-09-28) — YEDİ dosya. KURULUM BU BETİKTE DEĞİL: A0 rolü
+(`site.yml`) yedisini de kopyalar ama birimleri ETKİNLEŞTİRMEZ; parola kasaya konup birimler elle
+başlatılır + test-ateşlenir (deploy/oracle-a1/RUNBOOK.md "Telemetri (Grafana) erişimi"). [F9]
+dinleme adresi ya da kazıma hedefi sessizce ayrışırsa RAPORLAR:
+- deploy/telemetri/meridian-prometheus.service    → /etc/systemd/system/  (docker; 127.0.0.1:9095)
+- deploy/telemetri/meridian-node-exporter.service → /etc/systemd/system/  (docker; 127.0.0.1:9100)
+- deploy/telemetri/meridian-grafana.service       → /etc/systemd/system/  (docker; 127.0.0.1:3000)
+- deploy/telemetri/prometheus/prometheus.yml      → /etc/meridian-telemetri/prometheus/
+- deploy/telemetri/grafana/provisioning/datasources/meridian-prometheus.yaml
+→ /etc/meridian-telemetri/grafana/provisioning/datasources/
+- deploy/telemetri/grafana/provisioning/dashboards/meridian.yaml
+→ /etc/meridian-telemetri/grafana/provisioning/dashboards/
+- deploy/telemetri/grafana/panolar/meridian-gecikme.json → /etc/meridian-telemetri/grafana/panolar/
 KISALTMA YASAK: "X.service + .timer" biçimi `.timer` dosyasının ADINI hiç yazmaz ve o ad
 listeden düşse başlık aynı kalırdı — yukarıdaki çivi tam olarak bunu reddediyor.
 ```
