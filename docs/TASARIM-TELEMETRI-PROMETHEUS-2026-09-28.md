@@ -78,7 +78,7 @@ RUNBOOK'ta. `/api/gateway` gecikme okumaz (bilinçli; Grafana okur).
 
 ## 5. Bedel yasası — ne kaybediyoruz / alternatifler
 
-(a) Üç yeni süreç (loopback) — saldırı yüzeyi ve bakım (imaj yükseltmeleri). (b) Disk ≤2 GB (`/`) + imajlar ~0,5 GB. (c) RAM ≤~0,8 GB tavanlı.
+(a) Üç yeni süreç (loopback) — saldırı yüzeyi ve bakım (imaj yükseltmeleri). (b) Disk ≤2 GB (`/`) + imajlar ~0,5 GB. (c) RAM ≤~1,1 GB tavanlı (512M + 512M + 64M = 1088M; Grafana düzeltmesi §7).
 (d) İki yüzey gecikme gösterir (T7 beyanıyla). (e) Faz B'de `/metrics` gövdesi büyür (kazıma 30 s'de bir, yerel).
 **Alternatif — native ikili (Vault deseni):** docker bağımlılığı yok, bellek biraz daha az; ama sha256'lı indirici + sürüm takibi üç ikili için elle.
 Öneri docker (T1), çünkü A1'de docker zaten zorunlu (APISIX).
