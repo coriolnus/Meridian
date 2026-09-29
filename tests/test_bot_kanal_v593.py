@@ -35,6 +35,11 @@ def _defter():
     return store.read_jsonl(bk.DEFTER)
 
 
+#: Görev 1'den (Parça 1b-ön) beri `HermesTasiyici` sohbet POST'undan SONRA oturum dökümünü GET eder. Yalnız
+#: sohbet isteğini ölçen çiviler GET'e bu araçsız, verisiz turu döner (ölçüm dışı; sayım çivileri aşağıda).
+_ARACSIZ_TUR = {"data": [{"role": "user", "content": "soru"}, {"role": "assistant", "content": "tamam"}]}
+
+
 def test_normal_soru_tasiyiciya_gider_ve_deftere_yazilir(sandbox_state):
     t = SahteTasiyici("rejim risk-on")
     assert bk.bota_sor("bekci", "durum?", "telegram", "tg-bekci-1", tasiyici=t, simdi=SIMDI) == "rejim risk-on"
@@ -138,10 +143,15 @@ def test_defter_yazim_hatasi_cevabi_dusurmez(sandbox_state, monkeypatch):
     assert any(e.get("event") == "bot_defter_yazim_hatasi" for e in obs.recent(20))
 
 
-def test_hermes_tasiyici_istek_bicimi_ve_jetonsuz_hata():
+def test_hermes_tasiyici_istek_bicimi_ve_jetonsuz_hata(sandbox_state):
+    # Görev 1 (uygulayıcı, 2026-09-30): `HermesTasiyici.sor` artık sayım düşerse `obs.warn` yazar. Taşıyıcıyı
+    # koşan her çivi `sandbox_state` alır — gerileme anında olay CANLI yerel `events.jsonl`e düşmesin (ölçüldü:
+    # mutasyon koşumlarında fikstürsüz çiviler bekçiye takıldı ve satırlar ağacın state/'inde kaldı).
     gorulen = {}
 
     def cagir(url, govde, basliklar, zaman_asimi):
+        if not url.endswith("/chat/completions"):
+            return _ARACSIZ_TUR
         gorulen.update(url=url, govde=govde, basliklar=basliklar, zaman_asimi=zaman_asimi)
         return {"choices": [{"message": {"content": "tamam"}}]}
 
@@ -208,11 +218,13 @@ class _Cevap(io.BytesIO):
         self.close()
 
 
-def test_hermes_varsayilan_cagri_zaman_asimli_post(monkeypatch):
+def test_hermes_varsayilan_cagri_zaman_asimli_post(sandbox_state, monkeypatch):
     # Review Focus 1: taşıyıcı asılırsa Telegram döngüsü de asılır — zaman aşımı urlopen'a GİDER.
     gorulen = {}
 
     def urlopen(istek, timeout=None):
+        if istek.get_method() == "GET":
+            return _Cevap(json.dumps(_ARACSIZ_TUR).encode())
         gorulen.update(istek=istek, timeout=timeout)
         return _Cevap(json.dumps({"choices": [{"message": {"content": "tamam"}}]}).encode())
 
@@ -355,6 +367,8 @@ def test_uretim_yolu_varsayilan_tasiyici_sonlu_sabit_zaman_asimi_gecirir(sandbox
     monkeypatch.setattr(bk.secrets, "credential_oku", lambda ad: "K" * 32 if ad == "API_SERVER_KEY" else None)
 
     def urlopen(istek, timeout=None):
+        if istek.get_method() == "GET":
+            return _Cevap(json.dumps(_ARACSIZ_TUR).encode())
         gorulen.update(timeout=timeout, url=istek.full_url)
         return _Cevap(json.dumps({"choices": [{"message": {"content": "tamam"}}]}).encode())
 
@@ -364,3 +378,248 @@ def test_uretim_yolu_varsayilan_tasiyici_sonlu_sabit_zaman_asimi_gecirir(sandbox
     assert isinstance(z, (int, float)) and not isinstance(z, bool) and math.isfinite(z) and z > 0
     assert z == 300 == inspect.signature(bk.HermesTasiyici).parameters["zaman_asimi_s"].default
     assert gorulen["url"] == "http://127.0.0.1:8642/p/bekci/v1/chat/completions"
+
+
+# ---- Parça 1b-ön Görev 1: araçsız-veri uyarısı (Parça 0 EN AĞIR BULGU) -----------------------------------
+# Araç katmanı bağlı olmayan bot bir araç çağrısı ve SONUCU uydurup operatöre gerçek veri gibi sundu
+# (oturumda `tool_calls` yoktu). Savunma modele güvenmez: taşıyıcı GERÇEK araç sayısını ölçer, sayı 0 iken
+# veri taşıyan cevap uyarı öneki alır; sayı ölçülemezse AYRI uyarı (uydurma yasağı: None ≠ 0).
+
+@pytest.mark.parametrize("cevap,beklenen", [
+    ("Rejim neutral, bütçe %100", True), ("kaynak: risk/state.json", True), ("Bugün 3 kalem var", True),
+    ("Merhaba, nasıl yardımcı olabilirim?", False), ("", False)])
+def test_veri_iceriyor(cevap, beklenen):
+    assert bk.veri_iceriyor(cevap) is beklenen
+
+
+class SayacliTasiyici(SahteTasiyici):
+    def __init__(self, metin, arac):
+        super().__init__(metin); self.arac = arac
+    def sor(self, bot, mesaj, oturum):
+        self.cagrilar.append((bot, mesaj, oturum))
+        return bk.TasiyiciSonuc(self.metin, arac_cagrilari=self.arac, model_cagrilari=1)
+
+
+def test_aracsiz_veri_uyarisi_ve_defter(sandbox_state):
+    c = bk.bota_sor("bekci", "rejim?", "telegram", "o", tasiyici=SayacliTasiyici("Rejim neutral, bütçe %100", 0), simdi=SIMDI)
+    assert c.startswith(bk.UYARI_ARACSIZ) and "Rejim neutral" in c
+    s = _defter()[-1]
+    assert s["arac_siz_veri"] is True and s["cevap"].startswith(bk.UYARI_ARACSIZ)
+
+
+def test_aracli_veri_uyarisiz(sandbox_state):
+    c = bk.bota_sor("bekci", "rejim?", "telegram", "o", tasiyici=SayacliTasiyici("Rejim neutral", 2), simdi=SIMDI)
+    assert not c.startswith("⚠️") and _defter()[-1]["arac_siz_veri"] is False
+
+
+def test_verisiz_aracsiz_cevap_uyarisiz(sandbox_state):
+    c = bk.bota_sor("sef", "selam", "pano", "o", tasiyici=SayacliTasiyici("Merhaba!", 0), simdi=SIMDI)
+    assert c == "Merhaba!"
+
+
+def test_arac_sayisi_olculemediyse_ayri_uyari(sandbox_state):
+    c = bk.bota_sor("karne", "getiri?", "pano", "o", tasiyici=SayacliTasiyici("Getiri %2", None), simdi=SIMDI)
+    assert c.startswith(bk.UYARI_OLCULEMEDI) and _defter()[-1]["arac_olculemedi"] is True
+
+
+def test_uyari_cift_eklenmez(sandbox_state):
+    c = bk.bota_sor("bekci", "x", "pano", "o", tasiyici=SayacliTasiyici(bk.UYARI_ARACSIZ + "\n3 kalem", 0), simdi=SIMDI)
+    assert c.count(bk.UYARI_ARACSIZ) == 1
+
+
+def test_hermes_tasiyici_bu_turun_arac_cagrilarini_sayar(sandbox_state):
+    oturum_mesajlari = {"data": [
+        {"role": "user", "content": "eski"}, {"role": "assistant", "tool_calls": [{"function": {"name": "a"}}]},
+        {"role": "tool", "content": "x"}, {"role": "assistant", "content": "eski cevap"},
+        {"role": "user", "content": "yeni"}, {"role": "assistant", "content": "yeni cevap"}]}
+    def cagir(url, govde, basliklar, zaman_asimi):
+        if url.endswith("/chat/completions"):
+            return {"choices": [{"message": {"content": "yeni cevap"}}]}
+        assert url.endswith("/p/bekci/api/sessions/o-1/messages") and govde is None
+        return oturum_mesajlari
+    s = bk.HermesTasiyici(_cagir=cagir, _anahtar=lambda: "K" * 32).sor("bekci", "yeni", "o-1")
+    assert s.arac_cagrilari == 0
+
+
+def test_hermes_tasiyici_oturum_okunamazsa_none(sandbox_state):
+    # RULING (uygulayıcı, 2026-09-30, ölçüldü): brief çivisi `sandbox_state` almıyordu; brief Step 3'ün
+    # istediği `obs.warn` olayı canlı `state/events.jsonl`e düşüyor ve conftest canlı-yazım bekçisi testi
+    # düşürüyordu. Fikstür eklendi — iddia brief'teki gibi.
+    def cagir(url, govde, basliklar, zaman_asimi):
+        if url.endswith("/chat/completions"):
+            return {"choices": [{"message": {"content": "c"}}]}
+        raise OSError("okunamadı")
+    assert bk.HermesTasiyici(_cagir=cagir, _anahtar=lambda: "K" * 32).sor("bekci", "m", "o").arac_cagrilari is None
+
+
+# ---- Görev 1 brief dışı ek çiviler (uygulayıcı) -----------------------------------------------------------
+
+def test_uyari_metinleri_donuk():
+    # Plan "Global Constraints": iki metin DONUK — ölçüm kartı ve operatör bu metinleri tanır.
+    assert bk.UYARI_ARACSIZ == "⚠️ Bu cevap hiçbir araç çağrısına dayanmıyor — içindeki veri doğrulanmadı."
+    assert bk.UYARI_OLCULEMEDI == "⚠️ Bu cevabın araç kullanımı doğrulanamadı."
+
+
+def test_hermes_tasiyici_bu_turdaki_arac_cagrilarini_gercekten_sayar(sandbox_state):
+    # POZİTİF KONTROL: her zaman 0 dönen bir sayım brief çivilerini yeşil bırakırdı. Önceki turun 1 aracı
+    # SAYILMAZ; bu turun iki asistan mesajındaki 2 + 1 araç sayılır; `tool_calls: None` 0 sayılır → 3.
+    d = {"data": [
+        {"role": "user", "content": "eski"}, {"role": "assistant", "tool_calls": [{"function": {"name": "a"}}]},
+        {"role": "tool", "content": "x"}, {"role": "assistant", "content": "eski cevap"},
+        {"role": "user", "content": "yeni"},
+        {"role": "assistant", "tool_calls": [{"function": {"name": "b"}}, {"function": {"name": "c"}}]},
+        {"role": "tool", "content": "y"}, {"role": "tool", "content": "z"},
+        {"role": "assistant", "tool_calls": [{"function": {"name": "d"}}]}, {"role": "tool", "content": "w"},
+        {"role": "assistant", "content": "yeni cevap", "tool_calls": None}]}
+
+    def cagir(url, govde, basliklar, zaman_asimi):
+        if url.endswith("/chat/completions"):
+            return {"choices": [{"message": {"content": "yeni cevap"}}]}
+        return d
+    assert bk.HermesTasiyici(_cagir=cagir, _anahtar=lambda: "K" * 32).sor("bekci", "yeni", "o-1").arac_cagrilari == 3
+
+
+@pytest.mark.parametrize("govde", [
+    {}, [], {"data": "x"}, {"data": None},
+    {"data": [{"role": "assistant", "content": "c"}]},                      # kullanıcı mesajı yok → bu tur bulunamaz
+    {"data": [{"role": "user"}, {"role": "assistant", "tool_calls": "bozuk"}]},
+    {"data": [{"role": "user"}, {"role": "assistant", "tool_calls": {"a": 1}}]},
+    {"data": [{"role": "user"}, "bozuk"]},
+])
+def test_hermes_oturum_bicimi_beklenmedikse_arac_sayisi_none_ve_olay(sandbox_state, govde):
+    # Biçimi tanınmayan oturum dökümü 0 SAYILMAZ (uydurma yasağı) — None + sınıf adlı olay.
+    def cagir(url, govde_, basliklar, zaman_asimi):
+        if url.endswith("/chat/completions"):
+            return {"choices": [{"message": {"content": "c"}}]}
+        return govde
+    s = bk.HermesTasiyici(_cagir=cagir, _anahtar=lambda: "K" * 32).sor("bekci", "m", "o")
+    assert s.metin == "c" and s.arac_cagrilari is None
+    assert any(e.get("event") == "bot_arac_sayimi_olculemedi" and e.get("bot") == "bekci" and e.get("sinif")
+               for e in obs.recent(20))
+
+
+@pytest.mark.parametrize("oturum", ["../x", "a/b", "..", "o?k=1", "o#f", "o o", ""])
+def test_hermes_oturum_kimligi_url_yoluna_uygun_degilse_get_atilmaz_none(sandbox_state, oturum):
+    # Oturum kimliği artık URL YOLUNA girer (bot adıyla aynı sınıf, Tur 2): yol dışına taşan kimlik
+    # başka bir uca istek attırırdı. İstek atılmaz, sayım ölçülemedi (None) — sohbet cevabı düşmez.
+    urller = []
+
+    def cagir(url, govde, basliklar, zaman_asimi):
+        urller.append(url)
+        return {"choices": [{"message": {"content": "c"}}]}
+    s = bk.HermesTasiyici(_cagir=cagir, _anahtar=lambda: "K" * 32).sor("bekci", "m", oturum)
+    assert s.metin == "c" and s.arac_cagrilari is None
+    assert [u for u in urller if not u.endswith("/chat/completions")] == []
+
+
+def test_hermes_oturum_okunamazsa_olay_sinif_adiyla_yazilir(sandbox_state):
+    def cagir(url, govde, basliklar, zaman_asimi):
+        if url.endswith("/chat/completions"):
+            return {"choices": [{"message": {"content": "c"}}]}
+        raise OSError("okunamadı")
+    assert bk.HermesTasiyici(_cagir=cagir, _anahtar=lambda: "K" * 32).sor("bekci", "m", "o").arac_cagrilari is None
+    assert any(e.get("event") == "bot_arac_sayimi_olculemedi" and e.get("bot") == "bekci"
+               and e.get("sinif") == "OSError" for e in obs.recent(20))
+
+
+def test_hermes_varsayilan_cagri_oturum_mesajlarini_zaman_asimli_get_ile_okur(sandbox_state, monkeypatch):
+    # Varsayılan HTTP yolu: sohbet POST'undan SONRA oturum dökümü GET ile, AYNI zaman aşımıyla, anahtar
+    # yalnız `Authorization` başlığında, gövdesiz.
+    istekler = []
+
+    def urlopen(istek, timeout=None):
+        istekler.append((istek, timeout))
+        if istek.get_method() == "POST":
+            return _Cevap(json.dumps({"choices": [{"message": {"content": "tamam"}}]}).encode())
+        return _Cevap(json.dumps({"data": [
+            {"role": "user", "content": "soru"},
+            {"role": "assistant", "tool_calls": [{"function": {"name": "meridian_rejim"}}]},
+            {"role": "tool", "content": "{}"}, {"role": "assistant", "content": "tamam"}]}).encode())
+
+    monkeypatch.setattr(bk.urllib.request, "urlopen", urlopen)
+    s = bk.HermesTasiyici(_anahtar=lambda: "K" * 32, zaman_asimi_s=9).sor("bekci", "soru", "tg-bekci-7")
+    assert s.metin == "tamam" and s.arac_cagrilari == 1
+    assert [i.get_method() for i, _ in istekler] == ["POST", "GET"]
+    get, z = istekler[1]
+    assert get.full_url == "http://127.0.0.1:8642/p/bekci/api/sessions/tg-bekci-7/messages"
+    assert get.data is None and z == 9 and get.get_header("Authorization") == "Bearer " + "K" * 32
+
+
+def test_hermes_oturum_okuma_http_hatasi_yalniz_kod_tasir_anahtar_sizmaz(sandbox_state, monkeypatch):
+    anahtar = "GIZLIANAHTAR" + "Y" * 20
+
+    def urlopen(istek, timeout=None):
+        if istek.get_method() == "POST":
+            return _Cevap(json.dumps({"choices": [{"message": {"content": "tamam"}}]}).encode())
+        raise urllib.error.HTTPError(f"{istek.full_url}?key={anahtar}", 404, f"Not Found {anahtar}", {}, None)
+
+    monkeypatch.setattr(bk.urllib.request, "urlopen", urlopen)
+    assert bk.HermesTasiyici(_anahtar=lambda: anahtar).sor("bekci", "x", "o").arac_cagrilari is None
+    olaylar = [e for e in obs.recent(20) if e.get("event") == "bot_arac_sayimi_olculemedi"]
+    assert olaylar and olaylar[-1]["sinif"] == "RuntimeError" and anahtar not in json.dumps(obs.recent(50))
+    # GET dalında da hata çevirisi: yalnız KOD, URL/mesaj/anahtar yok, zincir bastırılmış.
+    with pytest.raises(RuntimeError) as e:
+        bk.HermesTasiyici._cagir_varsayilan("http://127.0.0.1:8642/p/bekci/api/sessions/o/messages", None,
+                                            {"Authorization": f"Bearer {anahtar}"}, 5)
+    assert str(e.value) == "api_server HTTP 404"
+    assert e.value.__cause__ is None and e.value.__suppress_context__ is True
+
+
+def test_olculemeyen_arac_sayisi_arac_siz_veri_alanini_uydurmaz(sandbox_state):
+    # Sayı ölçülemediyse "araçsız veri mi" sorusunun cevabı da BİLİNMİYOR: False yazmak "temiz" demek olurdu.
+    bk.bota_sor("karne", "getiri?", "pano", "o", tasiyici=SayacliTasiyici("Getiri %2", None), simdi=SIMDI)
+    s = _defter()[-1]
+    assert s["arac_siz_veri"] is None and s["arac_olculemedi"] is True and s["arac_cagrilari"] is None
+    assert s["cevap"] == bk.UYARI_OLCULEMEDI + "\nGetiri %2"
+
+
+def test_olculemeyen_arac_sayisinda_verisiz_cevap_da_uyari_alir(sandbox_state):
+    # Brief: `n is None` → önek KOŞULSUZ (veri içeriğine bakılmaz).
+    c = bk.bota_sor("sef", "selam", "pano", "o", tasiyici=SayacliTasiyici("Merhaba!", None), simdi=SIMDI)
+    assert c == bk.UYARI_OLCULEMEDI + "\nMerhaba!"
+
+
+def test_aracsiz_veri_onek_bicimi_ve_olculmus_alanlar(sandbox_state):
+    c = bk.bota_sor("bekci", "kaç?", "pano", "o", tasiyici=SayacliTasiyici("3 kalem", 0), simdi=SIMDI)
+    assert c == bk.UYARI_ARACSIZ + "\n3 kalem"
+    s = _defter()[-1]
+    assert s["arac_siz_veri"] is True and s["arac_olculemedi"] is False and s["cevap"] == c
+    bk.bota_sor("sef", "selam", "pano", "o", tasiyici=SayacliTasiyici("Merhaba!", 0), simdi=SIMDI)
+    s = _defter()[-1]
+    assert s["arac_siz_veri"] is False and s["arac_olculemedi"] is False and s["cevap"] == "Merhaba!"
+
+
+@pytest.mark.parametrize("cevap,beklenen", [
+    ("Bütçe %yüz", True),                    # yalnız `%` (rakamsız)
+    ("KAYNAK belirtilmedi", True),           # yalnız `kaynak`, katlanarak
+    ("SOURCE: meridian", True),              # yalnız `source`, katlanarak
+    ("bkz. risk/state.JSONL", True),         # yalnız `.json` (`.jsonl`yi kapsar), katlanarak
+    ("Rejim nötr, bütçe tam", False),
+])
+def test_veri_iceriyor_her_isaret_tek_basina_yeter(cevap, beklenen):
+    # RULING (uygulayıcı, 2026-09-30, ölçüldü): brief'in parametrik çivisinde `%` taşıyan tek girdi
+    # ("bütçe %100") rakam da taşıyor — `%` dalını silen mutasyon (brief Step 5 iii) onu kırmızıya
+    # ÇEVİREMEZ. Her işaret burada TEK BAŞINA ölçülür.
+    assert bk.veri_iceriyor(cevap) is beklenen
+
+
+def test_hermes_uretilen_telegram_oturum_kimlikleri_desene_uyar_get_atilir(sandbox_state):
+    # memory `kimlik-uzayi-olculmeden-duvar-yok`: ret deseni meşru kimlik uzayını kırmamalı. Uzayın bugünkü TEK
+    # üreticisi `telegram_dinleyici.oturum_kimligi` (pano/claude kanal kimlikleri henüz yok) — kimlikler oradan
+    # TÜRETİLİR, elle yazılmaz; üretici biçim değiştirirse bu çivi öter.
+    from meridian import telegram_dinleyici as td
+    kimlikler = [td.oturum_kimligi("bekci", {}, "20260929"),
+                 td.oturum_kimligi("karne", {"reply_to_message": {"message_id": 4711, "text": "x"}}, "20260929"),
+                 td.oturum_kimligi("sef", {"reply_to_message": {"message_id": 5, "text": "💬 @sef · tg-sef-r3"}},
+                                   "20260929")]
+    assert kimlikler == ["tg-bekci-20260929", "tg-karne-r4711", "tg-sef-r3"]
+    for oturum in kimlikler:
+        urller = []
+
+        def cagir(url, govde, basliklar, zaman_asimi):
+            urller.append(url)
+            if url.endswith("/chat/completions"):
+                return {"choices": [{"message": {"content": "c"}}]}
+            return _ARACSIZ_TUR
+        s = bk.HermesTasiyici(_cagir=cagir, _anahtar=lambda: "K" * 32).sor("bekci", "m", oturum)
+        assert s.arac_cagrilari == 0 and urller[-1].endswith(f"/api/sessions/{oturum}/messages")

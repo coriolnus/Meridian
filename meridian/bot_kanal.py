@@ -6,7 +6,7 @@ sorar. Sıra DONUKTUR: (1) kanal `KANALLAR` içinde mi; (2) bot kadroda VE `akti
 (`kadro.bot_bul`); (3) `hatırla:` / `unut:` öneki mi — öyleyse MODELE GİTMEZ, deterministik işlenir;
 (4) bot başına UTC günlük kota (kadro satırının `gunluk_tavan` alanı; `None` = tavan yok ama SAYILIR);
 (5) taşıyıcı çağrısı (`Tasiyici` protokolü; varsayılan `HermesTasiyici` = Hermes api_server);
-(6) her dönüş `state/bot_sohbet.jsonl` defterine bir satır.
+(6) araçsız-veri uyarısı (aşağıda); (7) her dönüş `state/bot_sohbet.jsonl` defterine bir satır.
 
 DEĞİŞMEZLER.
   * GEÇERSİZ GİRDİ SESSİZ VARSAYILANA DÜŞMEZ: bilinmeyen kanal, kadroda olmayan ya da `aktif`
@@ -30,6 +30,13 @@ DEĞİŞMEZLER.
     `cevap` `CEVAP_TAVANI`na kesilir (ters sıra yarım kesilmiş bir anahtarı desenin dışına itip
     sızdırırdı); `kesildi` alanı her satırda. `API_SERVER_KEY` yalnız `Authorization` başlığındadır;
     HTTP hatası yalnız DURUM KODUYLA `RuntimeError`a çevrilir, zincir bastırılır (`from None`).
+  * ARAÇSIZ VERİ İŞARETLENİR, MODELE GÜVENİLMEZ (Parça 0 EN AĞIR BULGU, 2026-09-29: araç katmanı bağlı
+    olmayan bot bir araç çağrısı VE sonucunu uydurup gerçek veri gibi sundu; oturumda `tool_calls` yoktu).
+    Taşıyıcı bu turun GERÇEK araç çağrı sayısını `TasiyiciSonuc.arac_cagrilari`na koyar; sayı 0 iken cevap
+    veri taşıyorsa (`veri_iceriyor`) `UYARI_ARACSIZ` öneki + defter `arac_siz_veri: true`; sayı ÖLÇÜLEMEDİYSE
+    (`None`) `UYARI_OLCULEMEDI` öneki + `arac_olculemedi: true` ve `arac_siz_veri: None` (0 ile "bilmiyorum"
+    aynı şey değildir — uydurma yasağı). Önek cevap zaten onunla başlıyorsa eklenmez; defterdeki `cevap`
+    operatörün gördüğü (önekli) metindir. Uyarı taşıyıcıdan BAĞIMSIZ burada uygulanır.
 
 YASA 6 — OKUYUCU BEYANI. `bot_sohbet.jsonl`in bugünkü tek okuyucusu bu modülün kendi
 `gunluk_sayim`idir (kota); aynı modül olduğu için statik graf dış tüketiciyi göremez. Planlı
@@ -64,6 +71,15 @@ _HAFIZA_BAGLI_DEGIL = "Hafızam henüz bağlı değil (Parça 0 ölçümü bekle
 _HAFIZA_YAZILAMADI = "Not YAZILAMADI (hafıza hatası), kayda geçti."
 _UNUT_HAZIR_DEGIL = ("`unut` henüz hazır değil — hafızadan geri alma yöntemi ölçülüyor (Parça 0 f); "
                      "hiçbir şey silinmedi.")
+#: Araçsız-veri uyarıları — DONUK (plan 2026-09-29 Parça 1b-ön): ölçüm kartı ve operatör bu metinleri tanır.
+UYARI_ARACSIZ = "⚠️ Bu cevap hiçbir araç çağrısına dayanmıyor — içindeki veri doğrulanmadı."
+UYARI_OLCULEMEDI = "⚠️ Bu cevabın araç kullanımı doğrulanamadı."
+#: "Veri içeriyor" DETERMİNİSTİK: rakam ya da `%`; ya da katlanmış metinde kaynak jetonu (`.json`, `.jsonl`yi kapsar).
+_VERI_ISARETI = re.compile(r"[\d%]")
+_VERI_JETONLARI = ("kaynak", "source", ".json")
+#: Oturum kimliği oturum dökümü GET'inde URL YOLUNA girer (bot adıyla aynı sınıf): `/`, `..`, `?`, `#`
+#: yolu başka bir uca taşırdı. Desene uymayan kimlikte GET ATILMAZ, sayım ölçülemedi (`None`) olur.
+_OTURUM_DESENI = re.compile(r"[A-Za-z0-9_-]{1,128}")
 
 
 @dataclass(frozen=True)
@@ -88,8 +104,11 @@ class HermesTasiyici:
     yoksa istek HİÇ atılmaz. Zaman aşımı ZORUNLUDUR: asılı bir api_server Telegram döngüsünü de
     asardı — kurucu sonlu ve > 0 olmayan değeri (`None`, 0, negatif, inf, nan, bool, dizge) `ValueError`
     ile REDDEDER; `urlopen(timeout=None)` soketi sonsuz bloklardı (Tur 3, son inceleme I-1). Sınır soket
-    İŞLEMİ başınadır, duvar saati değil (park: son inceleme M-4). `arac_cagrilari`/`model_cagrilari` bu yolda ÖLÇÜLMÜYOR (`None`): api_server cevabının
-    bu sayıları taşıyıp taşımadığı Parça 0 (b) ölçümünü bekler (uydurma yasağı)."""
+    İŞLEMİ başınadır, duvar saati değil (park: son inceleme M-4). `arac_cagrilari` sohbet çağrısından SONRA
+    `GET {taban}/p/<bot>/api/sessions/<oturum>/messages` dökümünden ölçülür (`_bu_turun_arac_cagrilari`, AYNI
+    zaman aşımı ve anahtar hijyeni); okunamaz ya da biçimi tanınmazsa `None` + `bot_arac_sayimi_olculemedi`
+    olayı — sohbet cevabı düşmez. `model_cagrilari` bu yolda ÖLÇÜLMÜYOR (`None`): api_server cevabının bu
+    sayıyı taşıyıp taşımadığı Parça 0 (b)/(g) ölçümünü bekler (uydurma yasağı)."""
 
     def __init__(self, taban_url: str = "http://127.0.0.1:8642", zaman_asimi_s: float = 300.0,
                  _cagir=None, _anahtar=None):
@@ -104,9 +123,13 @@ class HermesTasiyici:
         self._anahtar = _anahtar or (lambda: secrets.credential_oku("API_SERVER_KEY"))
 
     @staticmethod
-    def _cagir_varsayilan(url: str, govde: dict, basliklar: dict, zaman_asimi: float) -> dict:
-        istek = urllib.request.Request(url, data=json.dumps(govde).encode(), method="POST",
-                                       headers={"Content-Type": "application/json", **basliklar})
+    def _cagir_varsayilan(url: str, govde: dict | None, basliklar: dict, zaman_asimi: float) -> dict:
+        """`govde` varsa JSON POST (sohbet), `None` ise gövdesiz GET (oturum dökümü)."""
+        if govde is None:
+            istek = urllib.request.Request(url, method="GET", headers=dict(basliklar))
+        else:
+            istek = urllib.request.Request(url, data=json.dumps(govde).encode(), method="POST",
+                                           headers={"Content-Type": "application/json", **basliklar})
         try:
             with urllib.request.urlopen(istek, timeout=zaman_asimi) as y:
                 return json.load(y)
@@ -129,7 +152,58 @@ class HermesTasiyici:
             raise RuntimeError(f"api_server cevabı beklenmeyen biçimde ({type(e).__name__})") from None
         if not isinstance(metin, str):
             raise RuntimeError("api_server cevabında metin yok")
-        return TasiyiciSonuc(metin)
+        return TasiyiciSonuc(metin, arac_cagrilari=self._arac_sayisi(bot, oturum, anahtar))
+
+    def _arac_sayisi(self, bot: str, oturum: str, anahtar: str) -> int | None:
+        """Bu turun GERÇEK araç çağrı sayısı (Hermes oturum dökümü); ölçülemezse `None` — 0 UYDURULMAZ."""
+        try:
+            if not _OTURUM_DESENI.fullmatch(oturum or ""):
+                raise ValueError("oturum kimliği URL yoluna uygun değil")
+            d = self._cagir(f"{self.taban_url}/p/{bot}/api/sessions/{oturum}/messages", None,
+                            {"Authorization": f"Bearer {anahtar}"}, self.zaman_asimi_s)
+            return _bu_turun_arac_cagrilari(d)
+        except Exception as e:  # sinyalli: olay (yalnız sınıf adı) + None → bota_sor UYARI_OLCULEMEDI ekler; sohbet cevabı düşmez
+            obs.warn("bot_arac_sayimi_olculemedi", bot=bot, sinif=type(e).__name__)
+            return None
+
+
+def _bu_turun_arac_cagrilari(dokum) -> int:
+    """Hermes oturum dökümünde (`{"data": [{"role", "content", "tool_calls"}, ...]}`) SON `role == "user"`
+    mesajından SONRAKİ mesajların `tool_calls` öğe sayısı. Önceki turların araçları SAYILMAZ: sayılsaydı
+    geçmişte araç kullanmış bir oturumda bu turun araçsız cevabı uyarısız geçerdi (plan Review Focus 1).
+    Biçim tanınmazsa ya da tur bulunamazsa `ValueError` (içerik basılmaz) — çağıran `None`a çevirir."""
+    mesajlar = dokum.get("data") if isinstance(dokum, dict) else None
+    if not isinstance(mesajlar, list) or not all(isinstance(m, dict) for m in mesajlar):
+        raise ValueError("oturum dökümü beklenen biçimde değil")
+    son_kullanici = max((i for i, m in enumerate(mesajlar) if m.get("role") == "user"), default=None)
+    if son_kullanici is None:
+        raise ValueError("oturum dökümünde kullanıcı mesajı yok — bu tur bulunamadı")
+    toplam = 0
+    for m in mesajlar[son_kullanici + 1:]:
+        cagrilar = m.get("tool_calls")
+        if cagrilar is None:
+            continue
+        if not isinstance(cagrilar, list):
+            raise ValueError("oturum dökümünde tool_calls liste değil")
+        toplam += len(cagrilar)
+    return toplam
+
+
+def veri_iceriyor(metin: str) -> bool:
+    """Cevap veri/sayı/kaynak taşıyor mu — DETERMİNİSTİK, modele sorulmaz: rakam ya da `%`, ya da katlanmış
+    (`kadro.ad_katla`) metinde `kaynak` / `source` / `.json`. Bilerek geniş: yanlış pozitif yalnız bir uyarı
+    satırı, yanlış negatif operatöre doğrulanmamış veri demektir."""
+    if _VERI_ISARETI.search(metin or ""):
+        return True
+    katli = _kadro.ad_katla(metin)
+    return any(j in katli for j in _VERI_JETONLARI)
+
+
+def _onekle(metin: str, onek: str | None) -> str:
+    """`onek + "\\n" + metin`; önek yoksa ya da cevap zaten onunla başlıyorsa metin olduğu gibi."""
+    if onek is None or metin.startswith(onek):
+        return metin
+    return f"{onek}\n{metin}"
 
 
 def _utc(simdi: datetime | None) -> datetime:
@@ -238,7 +312,13 @@ def bota_sor(bot: str, mesaj: str, kanal: str, oturum: str, *, tasiyici: Tasiyic
         _defter_yaz(_satir(an, b.ad, kanal, oturum, "hata", mesaj, None, hata=type(e).__name__,
                            sure_s=round(time.monotonic() - t0, 3), kota_bugun=n))
         raise
-    _defter_yaz(_satir(an, b.ad, kanal, oturum, "sohbet", mesaj, sonuc.metin,
-                       sure_s=round(time.monotonic() - t0, 3), arac_cagrilari=sonuc.arac_cagrilari,
+    arac = sonuc.arac_cagrilari
+    arac_olculemedi = arac is None
+    # Sayı ölçülemediyse "araçsız veri mi" de BİLİNMEZ: False yazmak "temiz" demek olurdu (uydurma yasağı).
+    arac_siz_veri = None if arac_olculemedi else (arac == 0 and veri_iceriyor(sonuc.metin))
+    cevap = _onekle(sonuc.metin, UYARI_OLCULEMEDI if arac_olculemedi else UYARI_ARACSIZ if arac_siz_veri else None)
+    _defter_yaz(_satir(an, b.ad, kanal, oturum, "sohbet", mesaj, cevap,
+                       sure_s=round(time.monotonic() - t0, 3), arac_cagrilari=arac,
+                       arac_siz_veri=arac_siz_veri, arac_olculemedi=arac_olculemedi,
                        model_cagrilari=sonuc.model_cagrilari, kota_bugun=n + 1))
-    return sonuc.metin
+    return cevap
