@@ -1506,8 +1506,8 @@ Faz-1 2026-08-31; /opt/hindsight/.env F9'DA DEĞİL — sır taşır, repoda yal
 * deploy/hindsight/hindsight-yedek.service    → /etc/systemd/system/  (gecelik pg_dump yedeği)
 * deploy/hindsight/hindsight-yedek.timer      → /etc/systemd/system/  (o yedeğin tetiği 03:30 UTC)
 * deploy/hindsight/hindsight-cp.service       → /etc/systemd/system/  (CP UI, EDG-2026-067
-2026-09-01; docker 0.9.2-pinli, YALNIZ 127.0.0.1:9999 + ssh tüneli; /opt/hindsight/.env-cp
-de .env gibi F9-DIŞI sırdır)
+2026-09-01; docker 0.9.2-pinli, YALNIZ 127.0.0.1:9999 + ssh tüneli; sırları Vault yan dosyası
+/opt/hindsight/.env-cp.vault (Agent render eder, F9-DIŞI) — /opt/hindsight/.env-cp 2026-09-29'da kaldırıldı)
 * deploy/apisix/config.yaml                   → /opt/apisix/config.yaml  (TSK-089 tek-kapı;
 sırsız şablon — admin anahtarı $env'den; .env-apisix F9-DIŞI sır)
 * deploy/apisix/apisix.service                → /etc/systemd/system/  (kapı; yalnız loopback)
