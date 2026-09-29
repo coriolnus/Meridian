@@ -325,6 +325,65 @@ def _no_production_global_mutation():
                         f"sessizce etkiler ve suite'i SIRA BAĞIMLI yapar")
 
 
+# ---- MERIDIAN_ROOT ORTAM SIZINTISI BEKÇİSİ (2026-09-29) -----------------------------------------
+# VAKA (tam suite f3d21402, `-n 4 --dist worksteal`, iki kırmızı): `research/olcumler/
+# edg091_r_paydasi/olc.py::kos` `os.environ["MERIDIAN_ROOT"]`u KALICI yazar — komut satırı için
+# doğru, süreç biter. `tests/test_edg091_r_paydasi_v479.py` onu SÜREÇ İÇİNDE çağırıyordu; xdist
+# işçisinin ortamı test sonunda silinen sahte bir köke işaret ederek kaldı ve aynı işçide sonra
+# koşan `spawn` testlerinin çocukları (`tests/test_is_istek_v594.py`) o kökün altında olmayan
+# `deploy/hermes/kadro.yaml`i aradı. Kırmızı KURBANDA görünür, sızdıran YEŞİLDİR: sonuç sıraya ve
+# işçi dağılımına bağlıdır. `research/olcumler/**` içinde bu ortamı kalıcı yazan betik tek değil;
+# sınıf örnek düzeltmesiyle kapanmaz, bekçi SIZDIRANI adıyla düşürür.
+#
+# KENDİ ANLIK GÖRÜNTÜSÜNÜ ALIR — `monkeypatch` FİKSTÜRÜNÜ PAYLAŞMAZ (bu dosyadaki komşu bekçilerin
+# dersi). SIRA GARANTİSİ: autouse fikstürler test-düzeyi `monkeypatch`ten ÖNCE kurulur ve ters
+# sırada sökülür; dolayısıyla `monkeypatch.setenv/delenv` ile yapılan değişiklik bekçi ölçmeden
+# geri alınmıştır ve bekçiye TAKILMAZ. Sıra `tests/test_kok_sizinti_v595.py` K4'te çivili.
+# KAPSAMIN DÜRÜST SINIRI: yalnız fonksiyon kapsamı ölçülür. Toplama anında (modül düzeyinde)
+# yazan bir betik ya da modül/oturum kapsamlı bir fikstür bu bekçiye görünmez.
+_KOK_ORTAM_ADI = "MERIDIAN_ROOT"
+
+
+def _kok_sizinti_denetle(once: str | None, sonra: str | None) -> str | None:
+    """Saf yüklem: test öncesi/sonrası değer AYNIYSA None, değilse okunur bir mesaj.
+    Boş dizge TANIMSIZ DEĞİLDİR (`os.environ.get` ikisini ayırır; bekçi de ayırır)."""
+    if once == sonra:
+        return None
+
+    def _goster(deger: str | None) -> str:
+        return "(tanımsız)" if deger is None else repr(deger)
+
+    return (f"{_KOK_ORTAM_ADI} test sonunda değişik kaldı: önce={_goster(once)} "
+            f"sonra={_goster(sonra)} — süreç ortamı kalıcı yazıldı; sonraki testler ve onların "
+            f"alt süreçleri (spawn) bu kökü devralır. `monkeypatch.setenv({_KOK_ORTAM_ADI!r}, …)` "
+            f"kullan (doğrudan yazan bir betiği çağırmadan ÖNCE de: monkeypatch özgün durumu "
+            f"kaydeder ve sökümde betiğin yazımını da geri alır)")
+
+
+def _kok_sizinti_sokum(once: str | None, kimlik: str, ortam=None) -> None:
+    """Bekçinin söküm eylemi. Sızıntı varsa ÖNCE eski değeri geri koyar (önce tanımsızsa siler),
+    SONRA testi düğüm kimliğiyle düşürür — geri yükleme sonraki testleri kirli kökten korur,
+    kırmızı sızdıranı adlandırır. `ortam` verilmezse gerçek süreç ortamı (`os.environ`)."""
+    ortam = os.environ if ortam is None else ortam
+    mesaj = _kok_sizinti_denetle(once, ortam.get(_KOK_ORTAM_ADI))
+    if mesaj is None:
+        return None
+    if once is None:
+        ortam.pop(_KOK_ORTAM_ADI, None)
+    else:
+        ortam[_KOK_ORTAM_ADI] = once
+    pytest.fail(f"ORTAM SIZINTISI ({kimlik}): {mesaj}")
+
+
+@pytest.fixture(autouse=True)
+def _kok_sizinti_bekcisi(request):
+    """MERIDIAN_ROOT'u kalıcı değiştiren testi ADIYLA düşür ve ortamı geri yükle (gerekçe:
+    yukarıdaki blok)."""
+    once = os.environ.get(_KOK_ORTAM_ADI)
+    yield
+    _kok_sizinti_sokum(once, request.node.nodeid)
+
+
 def _kancalari_kur(kayit) -> list:
     """Yazım BOĞAZLARINI sarar; geri alma listesi döndürür. Hepsi ÇAĞRI ANINDA yolu çözer:
     `sandbox_state` config.STATE'i tmp'ye çevirdiği için sandbox'lı testlerin yazımları canlı

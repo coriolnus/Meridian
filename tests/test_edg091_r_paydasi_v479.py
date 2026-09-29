@@ -22,6 +22,7 @@ FORMÜLÜ doğrular. Motorun davranışı ayrı bir yüzeydir ve kod-okuması ç
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import shutil
 import sys
@@ -46,6 +47,20 @@ DONMUS_SHA = OLCUM / "girdi" / "SHA256SUMS"
 N_ISLEM = 24
 N_PLANSIZ = 5
 SIFIR_R_ISLEMLER = {"T00892", "T00896", "T00899", "T00901"}   # |r_multiple| < R_MULTIPLE_ALT
+
+
+@pytest.fixture(autouse=True)
+def _kok_ortami_geri_alinir(monkeypatch):
+    """`olc.kos` `os.environ["MERIDIAN_ROOT"]`u KALICI yazar (komut satırı için doğru; betiğe
+    dokunulmaz — EDG-091 kartına bağlı ölçüm kodu). Süreç İÇİNDE çağrılınca yazım testten sonra da
+    kalıyor ve aynı işçide sonra koşan `spawn` testleri silinmiş sahte kökü devralıyordu
+    (vaka 2026-09-29, `tests/test_is_istek_v594.py`; bekçi `tests/conftest.py::_kok_sizinti_bekcisi`).
+
+    `setenv` monkeypatch'e ÖZGÜN durumu kaydettirir; sökümde `kos`un doğrudan yazımı da geri
+    alınır. `delenv(raising=False)` YETMEZDİ: anahtar yoksa monkeypatch hiçbir şey kaydetmez ve
+    sonradan doğan değer sökümde silinmez. Değer önemsizdir (`kos` üzerine yazar); tanımsızsa
+    `config.ROOT`un zaten varsayılanı olan depo kökü konur."""
+    monkeypatch.setenv("MERIDIAN_ROOT", os.environ.get("MERIDIAN_ROOT", str(KOK)))
 
 
 @pytest.fixture()
