@@ -1,0 +1,221 @@
+"""bot_kanal.py — konuşan bot filosunun ORTAK GİRİŞ NOKTASI: `bota_sor(bot, mesaj, kanal, oturum) -> str`
+(spec docs/superpowers/specs/2026-09-29-konusan-bot-filosu-design.md §3.4, §3.5, §3.7, §4).
+
+NE YAPAR. Üç kanal (Telegram dinleyicisi, pano, Claude uygulaması) bir bota soruyu YALNIZ buradan
+sorar. Sıra DONUKTUR: (1) kanal `KANALLAR` içinde mi; (2) bot kadroda VE `aktif` mi
+(`kadro.bot_bul`); (3) `hatırla:` / `unut:` öneki mi — öyleyse MODELE GİTMEZ, deterministik işlenir;
+(4) bot başına UTC günlük kota (kadro satırının `gunluk_tavan` alanı; `None` = tavan yok ama SAYILIR);
+(5) taşıyıcı çağrısı (`Tasiyici` protokolü; varsayılan `HermesTasiyici` = Hermes api_server);
+(6) her dönüş `state/bot_sohbet.jsonl` defterine bir satır.
+
+DEĞİŞMEZLER.
+  * GEÇERSİZ GİRDİ SESSİZ VARSAYILANA DÜŞMEZ: bilinmeyen kanal, kadroda olmayan ya da `aktif`
+    olmayan bot → `ValueError`. Saat dilimsiz `simdi` de `ValueError` — kota günü UTC'dir ve
+    dilimsiz bir an yerel saat sanılıp günü sessizce kaydırırdı.
+  * `hatırla:` / `unut:` (Türkçe harf katlamalı, büyük/küçük harf duyarsız — `kadro.ad_katla`)
+    modele GİTMEZ. `hatırla` gövdesi `notify.scrub`'dan geçip `Hafiza.yaz`a gider (etiket
+    `sabit_not`, `bot:<ad>`, `kanal:<kanal>`); hafıza bağlı değilse bunu AÇIKÇA söyler ve
+    `bot_hafiza_bagli_degil` olayı yazar. `unut` bugün HİÇBİR ŞEY SİLMEZ — yöntem Parça 0 (f)
+    ölçümünü bekler; bunu söyler ve `bot_unut_hazir_degil` olayı yazar. Kalıcı silme bu modülde YOK.
+  * KOTA SESSİZ DEĞİL: tavan doluysa bot "bugünlük kotam doldu (n/tavan)" der, taşıyıcı ÇAĞRILMAZ,
+    defter `tur: kota_doldu` satırı alır. Sayım defterin `tur == "sohbet"` satırlarından
+    (`gunluk_sayim`); tavan sayısı Parça 0 (g) ölçümünden gelir — burada UYDURULMAZ.
+  * TAŞIYICI HATASI YUTULMAZ: defter `tur: hata` + sınıf adı, istisna YUKARI fırlar (Telegram
+    dinleyicisi `bot_sohbet_hatasi` yolunda yakalar ve operatöre sınıf adıyla söyler).
+  * DEFTER YAZIMI CEVABI DÜŞÜRMEZ: `store.append_jsonl` düşerse `bot_defter_yazim_hatasi` olayı
+    (sinyalli) — operatörün cevabı yine döner.
+  * SIR DEFTERE/İSTİSNAYA DÜŞMEZ: defterdeki `mesaj`/`cevap` `notify.scrub`'dan ÖNCE geçer, SONRA
+    `cevap` `CEVAP_TAVANI`na kesilir (ters sıra yarım kesilmiş bir anahtarı desenin dışına itip
+    sızdırırdı); `kesildi` alanı her satırda. `API_SERVER_KEY` yalnız `Authorization` başlığındadır;
+    HTTP hatası yalnız DURUM KODUYLA `RuntimeError`a çevrilir, zincir bastırılır (`from None`).
+
+YASA 6 — OKUYUCU BEYANI. `bot_sohbet.jsonl`in bugünkü tek okuyucusu bu modülün kendi
+`gunluk_sayim`idir (kota); aynı modül olduğu için statik graf dış tüketiciyi göremez. Planlı
+okuyucular (@ayna, @butce, pano bot sayacı, EDG ölçüm kartı) Parça 1 dağıtımında gelir — beyan
+`codelaw.DECLARED_SINKS`te gerekçesiyle durur.
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import re
+import time
+import urllib.error
+import urllib.request
+from dataclasses import dataclass
+from datetime import datetime, timezone
+from typing import Protocol
+
+from . import kadro as _kadro, notify, obs, secrets, store
+
+KANALLAR = ("telegram", "pano", "claude")
+DEFTER = "bot_sohbet.jsonl"
+CEVAP_TAVANI = 4000
+#: Komut öneki: ilk kelime (yalnız harf) + isteğe bağlı boşluk + `:`. Kelime `kadro.ad_katla` ile
+#: katlanıp `hatirla` / `unut` ile kıyaslanır — GÖVDE katlanmaz (not operatörün yazdığı gibi kalır).
+_KOMUT = re.compile(r"^([^\W\d_]+)\s*:(.*)$", re.S)
+_HATIRLA_BOS = "Neyi hatırlayayım? `hatırla: <not>` biçiminde yaz."
+_HAFIZA_BAGLI_DEGIL = "Hafızam henüz bağlı değil (Parça 0 ölçümü bekleniyor); not ALINMADI."
+_HAFIZA_YAZILAMADI = "Not YAZILAMADI (hafıza hatası), kayda geçti."
+_UNUT_HAZIR_DEGIL = ("`unut` henüz hazır değil — hafızadan geri alma yöntemi ölçülüyor (Parça 0 f); "
+                     "hiçbir şey silinmedi.")
+
+
+@dataclass(frozen=True)
+class TasiyiciSonuc:
+    metin: str
+    arac_cagrilari: int | None = None
+    model_cagrilari: int | None = None
+
+
+class Tasiyici(Protocol):
+    def sor(self, bot: str, mesaj: str, oturum: str) -> TasiyiciSonuc: ...
+
+
+class Hafiza(Protocol):
+    def yaz(self, bot: str, metin: str, etiketler: tuple[str, ...]) -> bool: ...
+
+
+class HermesTasiyici:
+    """Hermes api_server (v0.19.0, A1 kaynağında ölçüldü): `POST {taban}/p/<bot>/v1/chat/completions`,
+    `Authorization: Bearer <API_SERVER_KEY>`, oturum sürekliliği `X-Hermes-Session-Id`. Anahtar HER
+    çağrıda `secrets.credential_oku` ile okunur (LoadCredential kanalı; argv/ortam/log'a düşmez) —
+    yoksa istek HİÇ atılmaz. Zaman aşımı ZORUNLUDUR: asılı bir api_server Telegram döngüsünü de
+    asardı. `arac_cagrilari`/`model_cagrilari` bu yolda ÖLÇÜLMÜYOR (`None`): api_server cevabının
+    bu sayıları taşıyıp taşımadığı Parça 0 (b) ölçümünü bekler (uydurma yasağı)."""
+
+    def __init__(self, taban_url: str = "http://127.0.0.1:8642", zaman_asimi_s: float = 300.0,
+                 _cagir=None, _anahtar=None):
+        self.taban_url = taban_url.rstrip("/")
+        self.zaman_asimi_s = zaman_asimi_s
+        self._cagir = _cagir or self._cagir_varsayilan
+        self._anahtar = _anahtar or (lambda: secrets.credential_oku("API_SERVER_KEY"))
+
+    @staticmethod
+    def _cagir_varsayilan(url: str, govde: dict, basliklar: dict, zaman_asimi: float) -> dict:
+        istek = urllib.request.Request(url, data=json.dumps(govde).encode(), method="POST",
+                                       headers={"Content-Type": "application/json", **basliklar})
+        try:
+            with urllib.request.urlopen(istek, timeout=zaman_asimi) as y:
+                return json.load(y)
+        except urllib.error.HTTPError as e:  # sinyalli: yalnız HTTP KODU yukarı gider; e.url/e.msg/str(e) BASILMAZ, zincir bastırılır
+            raise RuntimeError(f"api_server HTTP {e.code}") from None
+
+    def sor(self, bot: str, mesaj: str, oturum: str) -> TasiyiciSonuc:
+        if not _kadro.AD_DESENI.fullmatch(bot or ""):
+            raise ValueError("HermesTasiyici: bot adı [a-z_] olmalı (URL yoluna girer)")
+        anahtar = self._anahtar()
+        if not anahtar:
+            raise RuntimeError("API_SERVER_KEY credential yok")
+        d = self._cagir(f"{self.taban_url}/p/{bot}/v1/chat/completions",
+                        {"model": "hermes-agent", "messages": [{"role": "user", "content": mesaj}]},
+                        {"Authorization": f"Bearer {anahtar}", "X-Hermes-Session-Id": oturum},
+                        self.zaman_asimi_s)
+        try:
+            metin = d["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError) as e:  # sinyalli: biçim hatası sınıf adıyla yukarı; gövde basılmaz
+            raise RuntimeError(f"api_server cevabı beklenmeyen biçimde ({type(e).__name__})") from None
+        if not isinstance(metin, str):
+            raise RuntimeError("api_server cevabında metin yok")
+        return TasiyiciSonuc(metin)
+
+
+def _utc(simdi: datetime | None) -> datetime:
+    if simdi is None:
+        return datetime.now(timezone.utc)
+    if simdi.tzinfo is None:
+        raise ValueError("bota_sor: `simdi` saat dilimli olmalı (kota günü UTC)")
+    return simdi.astimezone(timezone.utc)
+
+
+def gunluk_sayim(bot: str, gun: str) -> int:
+    """`bot`un `gun` (UTC `YYYY-MM-DD`) içindeki `tur == "sohbet"` defter satırı sayısı. Defterin
+    TAMAMI okunur: kuyruk okuması (`limit`) yoğun bir günde eksik sayıp kotayı sessizce aşardı."""
+    return sum(1 for s in store.read_jsonl(DEFTER)
+               if s.get("bot") == bot and s.get("tur") == "sohbet" and str(s.get("ts", "")).startswith(gun))
+
+
+def _defter_yaz(satir: dict) -> None:
+    try:
+        store.append_jsonl(DEFTER, satir)
+    except Exception as e:  # sinyalli: olay + cevap düşmez — defter kaybı görünür, operatörün cevabı kaybolmaz
+        obs.warn("bot_defter_yazim_hatasi", bot=satir.get("bot"), tur=satir.get("tur"), sinif=type(e).__name__)
+
+
+def _satir(an: datetime, bot: str, kanal: str, oturum: str, tur: str, mesaj: str,
+           cevap: str | None, **ek) -> dict:
+    temiz_mesaj = notify.scrub(mesaj)
+    temiz_cevap = notify.scrub(cevap) if cevap is not None else None
+    return {
+        "ts": an.isoformat(timespec="seconds"), "bot": bot, "kanal": kanal, "oturum": oturum, "tur": tur,
+        "mesaj": temiz_mesaj, "mesaj_sha": hashlib.sha256(temiz_mesaj.encode()).hexdigest()[:16],
+        "cevap": temiz_cevap[:CEVAP_TAVANI] if temiz_cevap is not None else None,
+        "cevap_uzunluk": len(cevap) if cevap is not None else None,
+        "kesildi": temiz_cevap is not None and len(temiz_cevap) > CEVAP_TAVANI,
+        **ek,
+    }
+
+
+def _komut(bot: str, mesaj: str, kanal: str, oturum: str, an: datetime, hafiza: Hafiza | None) -> str | None:
+    """`hatırla:` / `unut:` dalı. Komut değilse `None` (soru modele gider)."""
+    m = _KOMUT.match(mesaj.strip())
+    if not m:
+        return None
+    ad = _kadro.ad_katla(m.group(1))
+    if ad not in ("hatirla", "unut"):
+        return None
+    govde = m.group(2).strip()
+    if ad == "unut":
+        obs.warn("bot_unut_hazir_degil", bot=bot, kanal=kanal)
+        _defter_yaz(_satir(an, bot, kanal, oturum, "unut", mesaj, _UNUT_HAZIR_DEGIL, hafiza_durumu="hazir_degil"))
+        return _UNUT_HAZIR_DEGIL
+    if not govde:
+        cevap, durum = _HATIRLA_BOS, "bos_govde"
+    elif hafiza is None:
+        obs.warn("bot_hafiza_bagli_degil", bot=bot, kanal=kanal)
+        cevap, durum = _HAFIZA_BAGLI_DEGIL, "bagli_degil"
+    else:
+        temiz = notify.scrub(govde)
+        try:
+            yazildi = bool(hafiza.yaz(bot, temiz, ("sabit_not", f"bot:{bot}", f"kanal:{kanal}")))
+        except Exception as e:  # sinyalli: olay + "YAZILAMADI" cevabı; hafıza istisnası sohbet hatasına dönmez
+            obs.warn("bot_hafiza_yazim_hatasi", bot=bot, sinif=type(e).__name__)
+            yazildi = False
+        if yazildi:
+            cevap, durum = f"Not aldım: {temiz}", "yazildi"
+        else:
+            obs.warn("bot_hafiza_yazilamadi", bot=bot, kanal=kanal)
+            cevap, durum = _HAFIZA_YAZILAMADI, "yazilamadi"
+    _defter_yaz(_satir(an, bot, kanal, oturum, "hatirla", mesaj, cevap, hafiza_durumu=durum))
+    return cevap
+
+
+def bota_sor(bot: str, mesaj: str, kanal: str, oturum: str, *, tasiyici: Tasiyici | None = None,
+             hafiza: Hafiza | None = None, simdi=None, kadro=None) -> str:
+    """Kanal → bot → komut → kota → taşıyıcı → defter (modül başlığındaki DONUK sıra)."""
+    if kanal not in KANALLAR:
+        raise ValueError(f"bota_sor: kanal {kanal!r} izinli değil {KANALLAR}")
+    b = _kadro.bot_bul(bot, kadro)
+    if b is None or b.durum != "aktif":
+        raise ValueError(f"bota_sor: {bot!r} kadroda aktif bir bot değil")
+    an = _utc(simdi)
+    komut_cevabi = _komut(b.ad, mesaj, kanal, oturum, an, hafiza)
+    if komut_cevabi is not None:
+        return komut_cevabi
+    n = gunluk_sayim(b.ad, an.strftime("%Y-%m-%d"))
+    if b.gunluk_tavan is not None and n >= b.gunluk_tavan:
+        cevap = f"@{b.ad} bugünlük kotam doldu ({n}/{b.gunluk_tavan}); yarın (UTC) yeniden."
+        _defter_yaz(_satir(an, b.ad, kanal, oturum, "kota_doldu", mesaj, cevap, kota_bugun=n))
+        return cevap
+    tasiyici = tasiyici or HermesTasiyici()
+    t0 = time.monotonic()
+    try:
+        sonuc = tasiyici.sor(b.ad, mesaj, oturum)
+    except Exception as e:  # sinyalli: defter `tur: hata` + sınıf adı, istisna YUKARI fırlar
+        _defter_yaz(_satir(an, b.ad, kanal, oturum, "hata", mesaj, None, hata=type(e).__name__,
+                           sure_s=round(time.monotonic() - t0, 3), kota_bugun=n))
+        raise
+    _defter_yaz(_satir(an, b.ad, kanal, oturum, "sohbet", mesaj, sonuc.metin,
+                       sure_s=round(time.monotonic() - t0, 3), arac_cagrilari=sonuc.arac_cagrilari,
+                       model_cagrilari=sonuc.model_cagrilari, kota_bugun=n + 1))
+    return sonuc.metin

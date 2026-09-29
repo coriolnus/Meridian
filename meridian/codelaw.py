@@ -399,6 +399,12 @@ DECLARED_SINKS: dict[str, str] = {
         "ama henüz onaylanmamış güncelleme (sunucuda 24 saate kadar durur) süreç yeniden "
         "başladığında ofset kaybolursa YENİDEN gelir ve operatörün aynı mesajına İKİNCİ kez cevap "
         "gider (çift bot çağrısı, çift kota)",
+    "bot_sohbet.jsonl": "Konuşan filo konuşma defteri (spec 2026-09-29 §3.5/§3.7, v593). Yazan "
+        "`bot_kanal.bota_sor` (`bot_kanal._defter_yaz` üzerinden), bugünkü tek okuyan "
+        "`bot_kanal.gunluk_sayim` (bot başına UTC günlük kota) — AYNI modül, statik graf dış "
+        "tüketiciyi göremiyor (pool_exhausted_seen.json sınıfı). okuyucu @ayna/@butce/pano + EDG "
+        "ölçüm kartı; Parça 1 dağıtımında okuyucu kodu gelir — o gün dış okuyucu grafta görünür "
+        "olur ve bu beyan `stale_sinks` kuralıyla KALKAR",
     # NOT: `finviz_universe.json` buradan ÇIKARILDI. Beyanı doğruydu — okuyucusu
     # yalnız kendi modülündeydi, statik graf onu göremiyordu. Artık DIŞ bir okuyucusu var:
     # `marketview.build` keşfedilen evreni bars'ta olmayan semboller için satır üretmekte

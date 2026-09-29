@@ -610,6 +610,11 @@ SINK_TABANI = frozenset({
     # (pool_exhausted_seen.json sınıfı). Kalıcılık gerekçesi codelaw.DECLARED_SINKS'te yazılı:
     # işlenmiş ama onaylanmamış güncelleme restart'ta YENİDEN gelir → operatöre çift cevap.
     "telegram_ofset.json",
+    # v593'TE BEYANLI GÜNCELLENDİ (2026-09-29, konuşan filo Parça 1a Görev 1) — TEK yeni muafiyet:
+    # `bot_sohbet.jsonl`. Konuşma defteri; yazan `bot_kanal.bota_sor`, bugünkü tek okuyan aynı
+    # modülün `gunluk_sayim`ı (kota) — statik graf dış tüketiciyi göremiyor. Planlı dış okuyucular
+    # (@ayna/@butce/pano + EDG ölçüm kartı) Parça 1 dağıtımında gelir; gelince beyan KALKAR.
+    "bot_sohbet.jsonl",
     # v503'TE BEYANLI DÜŞÜRÜLDÜ (2026-09-15, TSK-070 Task 1) — İKİ muafiyet KAPANDI:
     # `watchdog_alarmed.json` ve `integrity_alarmed.json`. Bu tabanın iki yönü vardır ve bu
     # DÜŞÜŞ yönüdür: muafiyet, artefakt öldüğü için değil, GERÇEK BİR DIŞ OKUYUCU DOĞDUĞU için
