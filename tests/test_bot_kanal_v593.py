@@ -248,3 +248,88 @@ def test_hermes_anahtarsiz_istek_atilmaz():
     with pytest.raises(RuntimeError) as e:
         bk.HermesTasiyici(_cagir=cagir, _anahtar=lambda: None).sor("karne", "x", "o")
     assert "API_SERVER_KEY" in str(e.value)
+
+
+# ---- Tur 2 (inceleme I-1 + yeniden derecelenen M-2) -------------------------------------------------
+
+#: komut_oneki'nin DONUK hüküm tablosu — Telegram katmanı ile bota_sor aynı tespiti kullanır (tek kaynak).
+KOMUT_TABLOSU = [
+    ("hatırla: not", ("hatirla", "not")),
+    ("HATIRLA : not", ("hatirla", "not")),
+    ("hatirla: not", ("hatirla", "not")),
+    ("Hatırla:çok satırlı\nnot", ("hatirla", "çok satırlı\nnot")),
+    ("unut: not", ("unut", "not")),
+    ("Unut : not", ("unut", "not")),
+    ("hatırla:", ("hatirla", "")),
+    ("hatırlatma: not", None),
+    ("unutma: not", None),
+    ("unutma", None),
+    ("hatırla bunu", None),
+    ("<<<VERI:yanitlanan_mesaj>>>\nx\n<<<VERI-SON:yanitlanan_mesaj>>>\nhatırla: not", None),
+]
+
+
+@pytest.mark.parametrize("metin,beklenen", KOMUT_TABLOSU)
+def test_komut_oneki_tablosu_ve_bota_sor_dagitimi_AYNI_hukmu_verir(sandbox_state, metin, beklenen):
+    # AYRIŞMA ÇİVİSİ: tespit fonksiyonu ile bota_sor'un dağıtımı iki ayrı regex'e bölünürse bir girdi
+    # bir yerde komut, öbüründe soru sayılır (I-1 sınıfı). Hüküm DAVRANIŞTAN ölçülür: taşıyıcı çağrıldı
+    # mı, çağrılmadıysa defter satırının `tur`u ne.
+    assert bk.komut_oneki(metin) == beklenen
+    t = SahteTasiyici()
+    bk.bota_sor("sef", metin, "pano", "o", tasiyici=t, hafiza=SahteHafiza(), simdi=SIMDI)
+    dagitim = "model" if t.cagrilar else _defter()[-1]["tur"]
+    assert dagitim == (beklenen[0] if beklenen else "model")
+
+
+def test_bota_sor_komut_tespitini_YALNIZ_komut_oneki_ile_yapar():
+    # Tek kaynak YAPISAL: davranışı birebir aynı özel bir kopya bugün tabloyu geçer ama yarın ayrışır.
+    # `_komut` komut_oneki'yi çağırır ve kendi regex/`re` çağrısı taşımaz; `_KOMUT` yalnız komut_oneki'de.
+    import ast
+    import inspect
+    agac = ast.parse(inspect.getsource(bk))
+    fonk = {n.name: n for n in agac.body if isinstance(n, ast.FunctionDef)}
+    cagrilar = {c.func.id for c in ast.walk(fonk["_komut"]) if isinstance(c, ast.Call)
+                and isinstance(c.func, ast.Name)}
+    assert "komut_oneki" in cagrilar
+    assert not any(isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == "re"
+                   for n in ast.walk(fonk["_komut"]))
+    kullananlar = {f for f, n in fonk.items() for d in ast.walk(n)
+                   if isinstance(d, ast.Name) and d.id == "_KOMUT"}
+    assert kullananlar == {"komut_oneki"}
+
+
+@pytest.mark.parametrize("ad", ["../x", "a/b", "bekci/../karne", "Bekci", "", "bekci?k=1"])
+def test_hermes_bot_adi_http_oncesi_reddedilir(ad):
+    cagrilar = []
+
+    def cagir(*a):
+        cagrilar.append(a)
+        return {"choices": [{"message": {"content": "x"}}]}
+
+    with pytest.raises(ValueError):
+        bk.HermesTasiyici(_cagir=cagir, _anahtar=lambda: "K" * 32).sor(ad, "x", "o")
+    assert cagrilar == []
+
+
+@pytest.mark.parametrize("govde", [
+    {}, {"choices": []}, {"choices": [{"message": {}}]}, {"choices": [{"message": {"content": None}}]},
+    {"choices": "gizli-govde-XYZ"},
+])
+def test_hermes_beklenmeyen_cevap_bicimi_sinif_adli_hata_ve_defter_hata(sandbox_state, govde):
+    t = bk.HermesTasiyici(_cagir=lambda *a: govde, _anahtar=lambda: "K" * 32)
+    with pytest.raises(RuntimeError) as e:
+        bk.bota_sor("bekci", "x", "telegram", "o", tasiyici=t, simdi=SIMDI)
+    assert str(e.value).startswith("api_server cevab") and "gizli" not in str(e.value)
+    s = _defter()[-1]
+    assert s["tur"] == "hata" and s["hata"] == "RuntimeError"
+
+
+def test_hatirla_hafiza_istisnasi_yazilamadi_der_ve_olay_yazar(sandbox_state):
+    class Patlayan:
+        def yaz(self, bot, metin, etiketler):
+            raise ConnectionError("hindsight kapalı")
+
+    cevap = bk.bota_sor("sef", "hatırla: x", "pano", "o", hafiza=Patlayan(), simdi=SIMDI)
+    assert "YAZILAMADI" in cevap and _defter()[-1]["hafiza_durumu"] == "yazilamadi"
+    assert any(e.get("event") == "bot_hafiza_yazim_hatasi" and e.get("sinif") == "ConnectionError"
+               for e in obs.recent(20))

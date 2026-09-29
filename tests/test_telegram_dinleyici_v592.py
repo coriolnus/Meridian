@@ -420,3 +420,43 @@ def test_send_davranisi_degismedi(monkeypatch):
                                                             "TELEGRAM_CHAT_ID": YETKILI}.get(ad))
     monkeypatch.setattr(notify, "_post", lambda url, payload, timeout=8.0: giden.update(payload) or True)
     assert notify.send("x") is True and "reply_to_message_id" not in giden
+
+
+# ---- Tur 2 (Parça 1a Görev 1 incelemesi I-1): yanıt içinde hatırla:/unut: çitin ARKASINDA kaybolmaz ----
+# Komut tespiti `bot_kanal.komut_oneki` (TEK kaynak) ile, çit KURULMADAN ÖNCE operatörün kendi sözleri
+# üzerinde yapılır; komutsa bota ÇİTSİZ çıplak söz gider. `hatırla` + yanıt + dolu gövde → deterministik
+# kaynak etiketi ` (yanıt: <yanıtlanan ilk satır, scrub, ≤80>)` (Rol-1 kararı); `unut` etiketsiz.
+
+def test_isle_bekci_raporuna_yanit_hatirla_citsiz_ve_kaynak_etiketli(sandbox_state):
+    neden, cagrilar, _ = _isle("hatırla: yarın 10'da toplantı", yanit="🔭 Meridian bekçi\n1. TAKILI x")
+    bot, mesaj, _, _ = cagrilar[0]
+    assert (neden, bot) == ("imza", "bekci")
+    assert mesaj == "hatırla: yarın 10'da toplantı (yanıt: 🔭 Meridian bekçi)" and "<<<VERI" not in mesaj
+
+
+def test_isle_yanitta_unut_ciplak_soz_gider(sandbox_state):
+    _, cagrilar, _ = _isle("Unut : eski not", yanit=RAPOR)
+    assert cagrilar[0][1] == "Unut : eski not"
+
+
+def test_isle_yanitta_bos_hatirla_etiketsiz_gider(sandbox_state):
+    # Gövdesiz `hatırla:` etiketle "dolu" görünmesin — bota_sor "Neyi hatırlayayım?" diye sorabilsin.
+    _, cagrilar, _ = _isle("hatırla:", yanit=RAPOR)
+    assert cagrilar[0][1] == "hatırla:"
+
+
+def test_isle_yanitsiz_hatirla_etiketsiz_ve_komut_olmayan_yanit_citli_kalir(sandbox_state):
+    _, c1, _ = _isle("@bekci hatırla: x")
+    _, c2, _ = _isle("hatırlatma: x", yanit=RAPOR)
+    assert c1[0][1] == "hatırla: x"
+    assert c2[0][1] == _veri_bloku(td.ALINTI_CIT_ADI, RAPOR) + "\n" + "hatırlatma: x"
+
+
+def test_isle_kaynak_etiketi_scrub_sonra_80_tavan(sandbox_state):
+    anahtar = "sk-or-v1-" + "d" * 64
+    # anahtar 80. karakter sınırını ortadan keser: ÖNCE kesilseydi yarım anahtar desene uymaz, sızardı.
+    _, c1, _ = _isle("@bekci hatırla: x", yanit="z" * 60 + " " + anahtar + "\nikinci satır")
+    _, c2, _ = _isle("@bekci hatırla: x", yanit="u" * 200)
+    assert "sk-or-v1-" not in c1[0][1] and "ikinci" not in c1[0][1]
+    etiket = c2[0][1].split(" (yanıt: ", 1)[1][:-1]
+    assert etiket == "u" * 80

@@ -17,6 +17,8 @@ DEĞİŞMEZLER.
     `sabit_not`, `bot:<ad>`, `kanal:<kanal>`); hafıza bağlı değilse bunu AÇIKÇA söyler ve
     `bot_hafiza_bagli_degil` olayı yazar. `unut` bugün HİÇBİR ŞEY SİLMEZ — yöntem Parça 0 (f)
     ölçümünü bekler; bunu söyler ve `bot_unut_hazir_degil` olayı yazar. Kalıcı silme bu modülde YOK.
+    Tespitin TEK kaynağı `komut_oneki`dir; Telegram dinleyicisi de onu çağırır (yanıt kipinde
+    komut, VERİ çitinin arkasında kaybolmasın diye çit kurulmadan ÖNCE — Tur 2, inceleme I-1).
   * KOTA SESSİZ DEĞİL: tavan doluysa bot "bugünlük kotam doldu (n/tavan)" der, taşıyıcı ÇAĞRILMAZ,
     defter `tur: kota_doldu` satırı alır. Sayım defterin `tur == "sohbet"` satırlarından
     (`gunluk_sayim`); tavan sayısı Parça 0 (g) ölçümünden gelir — burada UYDURULMAZ.
@@ -54,6 +56,8 @@ CEVAP_TAVANI = 4000
 #: Komut öneki: ilk kelime (yalnız harf) + isteğe bağlı boşluk + `:`. Kelime `kadro.ad_katla` ile
 #: katlanıp `hatirla` / `unut` ile kıyaslanır — GÖVDE katlanmaz (not operatörün yazdığı gibi kalır).
 _KOMUT = re.compile(r"^([^\W\d_]+)\s*:(.*)$", re.S)
+#: Deterministik komutlar (katlanmış ad). Tespit YALNIZ `komut_oneki`de.
+KOMUTLAR = ("hatirla", "unut")
 _HATIRLA_BOS = "Neyi hatırlayayım? `hatırla: <not>` biçiminde yaz."
 _HAFIZA_BAGLI_DEGIL = "Hafızam henüz bağlı değil (Parça 0 ölçümü bekleniyor); not ALINMADI."
 _HAFIZA_YAZILAMADI = "Not YAZILAMADI (hafıza hatası), kayda geçti."
@@ -156,15 +160,26 @@ def _satir(an: datetime, bot: str, kanal: str, oturum: str, tur: str, mesaj: str
     }
 
 
-def _komut(bot: str, mesaj: str, kanal: str, oturum: str, an: datetime, hafiza: Hafiza | None) -> str | None:
-    """`hatırla:` / `unut:` dalı. Komut değilse `None` (soru modele gider)."""
-    m = _KOMUT.match(mesaj.strip())
+def komut_oneki(metin: str) -> tuple[str, str] | None:
+    """`hatırla:` / `unut:` komut TESPİTİNİN TEK KAYNAĞI: `("hatirla" | "unut", gövde)` ya da `None`.
+
+    Hem `bota_sor` (dağıtım) hem Telegram dinleyicisi (`telegram_dinleyici.isle`, VERİ çiti
+    kurulmadan ÖNCE operatörün kendi sözleri üzerinde) BUNU çağırır — iki ayrı regex ayrışır ve bir
+    girdi bir yerde komut, öbüründe soru sayılır (Tur 2, inceleme I-1). Önek metnin BAŞINDA aranır;
+    çit burada AYRIŞTIRILMAZ: sahte bir çit, alıntılanan veriden komut enjekte etmenin kapısı olurdu."""
+    m = _KOMUT.match((metin or "").strip())
     if not m:
         return None
     ad = _kadro.ad_katla(m.group(1))
-    if ad not in ("hatirla", "unut"):
+    return (ad, m.group(2).strip()) if ad in KOMUTLAR else None
+
+
+def _komut(bot: str, mesaj: str, kanal: str, oturum: str, an: datetime, hafiza: Hafiza | None) -> str | None:
+    """`hatırla:` / `unut:` dalı. Komut değilse `None` (soru modele gider)."""
+    komut = komut_oneki(mesaj)
+    if komut is None:
         return None
-    govde = m.group(2).strip()
+    ad, govde = komut
     if ad == "unut":
         obs.warn("bot_unut_hazir_degil", bot=bot, kanal=kanal)
         _defter_yaz(_satir(an, bot, kanal, oturum, "unut", mesaj, _UNUT_HAZIR_DEGIL, hafiza_durumu="hazir_degil"))
