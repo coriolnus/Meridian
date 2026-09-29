@@ -847,7 +847,9 @@ def test_A5_ROTASYON_BLOGU_v439_un_dosyalar_blogunu_BOZMAZ():
     # anlatılamaz. `/opt/hindsight/.key` HÂLÂ dışarıda (§2'nin donuk sözlüğünde sınıfı yok).
     # D9 (TSK-064 (d-1), 2026-09-17): 7 → 6. `/opt/meridian/.dash.env` A1'de 2026-09-14'te SİLİNDİ;
     # spec §1 satırı ve envanter girdisi AYNI turda çıktı (v439 E0 aynı sayıyı elle taşır).
-    assert len(env["dosyalar"]) == 6, "v439 E2 spec §1 ile BİREBİR eşitlik istiyor"
+    # D10 (TSK-064 iki-kanal kapanışı, 2026-09-29 11:32Z): 6 → 5. `/opt/hindsight/.env-cp` A1'den kaldırıldı
+    # (yedek dizinine taşındı); girdi ve spec §1 satırı AYNI turda çıktı, tarihçe `emekli_kopyalar`da (v590 C9).
+    assert len(env["dosyalar"]) == 5, "v439 E2 spec §1 ile BİREBİR eşitlik istiyor"
     assert env["rotasyon_kopyalari"]["kaynak_betik"] == "deploy/oracle-a1/sir_rotasyon.sh"
     assert env["rotasyon_kopyalari"]["olcum"], "ölçüm tarihi yok — sayı taşıyan satır tarih taşır"
 
@@ -3856,8 +3858,13 @@ def test_S2_envanter_CP_metinleri_TEK_kanal_ifadesini_tasir():
     bayat = [yer for yer, m in metinler
              if CP_KANAL_METNI not in m or "env-file" in m or "ikame" in m]
     assert not bayat, f"envanterde CP kanalını yanlış söyleyen metin: {bayat}"
-    emekli = next(d for d in env["dosyalar"] if d["yol"] == "/opt/hindsight/.env-cp")
-    assert emekli["kanal_bugun"].startswith("EMEKLİ"), "`.env-cp` girdisi hâlâ CP kanalı gibi anlatılıyor"
+    # 2026-09-29 11:32Z (TSK-064 iki-kanal kapanışı, A1 uygulaması): `.env-cp` A1'den KALDIRILDI → `dosyalar:`
+    # girdisi ÇIKTI (09-29 sabahı "EMEKLİ" hücresiyle duruyordu); tarihçe `rotasyon_kopyalari.emekli_kopyalar`da
+    # (v590 C9). Burada kalırsa "bugün hangi sır nerede yaşıyor" cevabı yalan olurdu.
+    assert "/opt/hindsight/.env-cp" not in {d["yol"] for d in env["dosyalar"]}, \
+        "kaldırılmış `.env-cp` hâlâ `dosyalar:` bloğunda"
+    emekli = {e["yol"] for e in env["rotasyon_kopyalari"]["emekli_kopyalar"]}
+    assert "/opt/hindsight/.env-cp" in emekli, "`.env-cp` tarihçesi emekli kayıtlardan da düşmüş"
 
 
 def test_S3_spec_tablosu_CP_satiri_ayni_kanal_ifadesini_tasir():
@@ -3865,11 +3872,14 @@ def test_S3_spec_tablosu_CP_satiri_ayni_kanal_ifadesini_tasir():
     tabloyla envanteri AD düzeyinde kıyaslar, kanal sütununu kıyaslamaz — bu çivi CP satırında kıyaslar."""
     satirlar = [s for s in SPEC_BELGESI.read_text(encoding="utf-8").splitlines()
                 if s.startswith("| `/opt/hindsight/.env-cp` |")]
-    assert len(satirlar) == 1, f"spec tablosunda CP satırı {len(satirlar)} kez"
-    kanal = [h.strip() for h in satirlar[0].strip().strip("|").split("|")][-1]
-    # 2026-09-29 (TSK-064 iki-kanal kapanışı, spec madde 7): satır DURUR (dosya operatör kaldırana dek diskte),
-    # kanal hücresi EMEKLİLİĞİ söyler; "docker -e AD" kanalı madde 6'da tarihçe, bugün yan dosyanındır (S2).
-    assert kanal.startswith("EMEKLİ") and "env-file" not in kanal, "spec §1 CP satırının kanal hücresi bayat"
-    madde7 = "7. **`/opt/hindsight/.env-cp` EMEKLİ"
+    # 2026-09-29 sabahı (spec madde 7) satır EMEKLİ hücresiyle duruyordu; 11:32Z'de dosya A1'den KALDIRILDI
+    # (yedek dizinine taşındı) ve satır ÇIKTI (spec madde 8, madde 5 emsali: "dosya yok" → satır yok).
+    assert not satirlar, f"kaldırılmış `.env-cp` spec §1 tablosunda {len(satirlar)} kez duruyor"
     metin = SPEC_BELGESI.read_text(encoding="utf-8")
+    # Madde 7 TARİHÇEDİR ve kanalı adıyla anmaya devam eder: "docker -e AD" kanalı bugün yan dosyanındır (S2).
+    madde7 = "7. **`/opt/hindsight/.env-cp` EMEKLİ"
     assert madde7 in metin and CP_KANAL_METNI in metin.split(madde7, 1)[1][:1200], "madde 7 kanalı adıyla anmıyor"
+    madde8 = "8. **`/opt/hindsight/.env-cp` SATIRI ÇIKTI"
+    assert madde8 in metin, "spec'te satırın neden çıktığını söyleyen madde 8 yok"
+    govde8 = metin.split(madde8, 1)[1][:1200]
+    assert "/root/sir-yedek-" in govde8 and "--envanter" in govde8, "madde 8 kaldırmanın kanıtını/yedeğini anmıyor"

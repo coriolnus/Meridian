@@ -344,8 +344,13 @@ def test_E0_spec_ayristirici_POZITIF_KONTROL():
     # A1'de 2026-09-14 17:46Z operatör kararıyla SİLİNDİ ve `--envanter`de `test -e` → YOK; spec §1
     # satırı ve envanter girdisi AYNI turda çıktı ("dosya yok" — D8'in "dosyada sır yok"undan AYRI
     # gerçek: orada dosya kaldı, burada satır çıktı). Çapa ELLE düşürüldü, türetilmedi (şerhin gerekçesi).
-    assert len(spec) == 6, spec
-    assert sum(len(v) for v in spec.values()) == 24
+    # D10 (TSK-064 iki-kanal kapanışı, 2026-09-29 11:32Z Rol-1 A1 uygulaması): 6 → 5 dosya, 24 → 22 ad.
+    # `/opt/hindsight/.env-cp` A1'den kaldırıldı (root-only yedek dizinine TAŞINDI, kalıcı silme yok) ve
+    # `--envanter` "emekli kopya → YOK" dedi; spec §1 satırı (iki ad: HINDSIGHT_CP_ACCESS_KEY ·
+    # HINDSIGHT_CP_DATAPLANE_API_KEY) ve envanter girdisi AYNI turda çıktı — D9 emsali ("dosya yok").
+    assert len(spec) == 5, spec
+    assert sum(len(v) for v in spec.values()) == 22
+    assert "/opt/hindsight/.env-cp" not in spec, "kaldırılmış dosya spec §1 tablosunda duruyor"
     assert ayar == 29 and siniflar == {"A", "B", "C", "D"}
     # SIR süzgecinin kendisi de pozitif kontrol ister: `sir` her yerde False dönseydi (regex
     # bozulsa) aşağıdaki "motor `.env`te sır YOK" ölçümü yanlış sebeple yeşil kalırdı.

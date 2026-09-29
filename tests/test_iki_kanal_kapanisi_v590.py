@@ -23,8 +23,10 @@ BÖLÜMLER
      çıkış 1, istek/kayıt yok · ezme verilince sudo ÇAĞRILMAZ · CR/LF kırpması aynı
   C  rotasyon + envanter — tabloda emekli yol yok · envanter `emekli_kopyalar` üç satır, tarihli · kasa
      `kopya_kaynaklari` temiz · betiğin emekli listesi ↔ envanter · `--envanter` emekli kopyayı bağırır/YOK der ·
-     `--tenant` ve `--cp --vault` eski dosyalara YAZMAZ · `dosyalar:`/spec `.env-cp` satırı EMEKLİ
-  D  RUNBOOK operatör adımı — dosyanın SONUNDA, sıra: A0 → restart → doğrulama → yedek → kaldırma → son doğrulama
+     `--tenant` ve `--cp --vault` eski dosyalara YAZMAZ · `dosyalar:`/spec `.env-cp` satırı ÇIKTI (A1'den kaldırıldı
+     2026-09-29 11:32Z), emekli kayıtlar kaldırma anını + yedek dizinini taşır
+  D  RUNBOOK operatör adımı — dosyanın SONUNDA, sıra: A0 → restart → doğrulama → yedek → kaldırma → son doğrulama;
+     kaldırma TAŞIMADIR (`<yedek>/orijinal/`, kalıcı silme yok) ve UYGULANDI notu envanterle ayrışmaz
 
 SIR DEĞERİ YOK: bütün değerler SAHTE (v447/v547 tohumları). Çıktı disiplini: iddia mesajları süreç tablosunu,
 ortamı ya da değeri basmaz (yalnız ad/yol).
@@ -80,8 +82,15 @@ BEKLENEN_EMEKLI = {
     ("tenant", "HINDSIGHT_API_TENANT_API_KEY", "env", ENV_CP, "HINDSIGHT_CP_DATAPLANE_API_KEY"),
     ("cp", "HINDSIGHT_CP_ACCESS_KEY", "env", ENV_CP, "HINDSIGHT_CP_ACCESS_KEY"),
 }
-#: `rotasyon_kopyalari.kopyalar` satır şeması (v447 A4) + emekliliğin iki alanı.
-EMEKLI_SEMA = {"alt_komut", "sir", "tur", "yol", "alan", "mod", "sahip", "tuketici", "onek", "not", "emekli"}
+#: `rotasyon_kopyalari.kopyalar` satır şeması (v447 A4) + emekliliğin iki alanı + A1'den kaldırmanın iki alanı
+#: (`kaldirildi` · `yedek_dizini` — 2026-09-29 11:32Z uygulamasından beri; YALNIZ yol/zaman, değer yok).
+EMEKLI_SEMA = {"alt_komut", "sir", "tur", "yol", "alan", "mod", "sahip", "tuketici", "onek", "not", "emekli",
+               "kaldirildi", "yedek_dizini"}
+#: A1 UYGULAMASI (Rol-1 olgusu, 2026-09-29 11:32Z): iki eski dosya `rm` ile DEĞİL, root-only yedek dizininin
+#: `orijinal/` alt dizinine TAŞINARAK kaldırıldı (kalıcı silme yok). Elle yazılı DIŞ ÇAPA (v439 E0 gerekçesi):
+#: envanter ve RUNBOOK birbirinden türetilseydi ikisi birlikte bayatlayıp "uyuşuyor" derdi.
+KALDIRMA_ANI = "2026-09-29 11:32Z"
+YEDEK_DIZINI = "/root/sir-yedek-20260929T113217Z-ikikanal/"
 
 
 def _envanter() -> dict:
@@ -440,15 +449,25 @@ def test_C8_CP_KASA_YOLU_eski_kanal_YOK_der_env_cp_ye_YAZMAZ(tmp_path):
     assert v556._etkin(kok) == v556._kasa(durum)[-1], "CP yeni anahtarla açılmadı"
 
 
-def test_C9_DOSYALAR_blogu_ve_SPEC_env_cp_EMEKLI():
-    """`dosyalar:` "bugün hangi sır nerede yaşıyor"u söyler: `.env-cp` A1'de operatör kaldırana dek DURUR (girdi
-    silinmez — v439 E2/E3 spec eşitliği), ama okuyucusu yoktur. Spec §1 satırı aynı gerçeği taşır."""
-    g = next(d for d in _envanter()["dosyalar"] if d["yol"] == ENV_CP)
-    assert g["kanal_bugun"].startswith("EMEKLİ"), g["kanal_bugun"]
-    assert g["tuketici"].startswith("YOK"), g["tuketici"]
+def test_C9_DOSYALAR_blogu_ve_SPEC_env_cp_CIKTI_emekli_kayit_KALDIRMAYI_tasir():
+    """`dosyalar:` "bugün hangi sır nerede yaşıyor"u söyler. 2026-09-29 sabahı `.env-cp` orada EMEKLİ hücresiyle
+    duruyordu (dosya diskteydi, okuyucusu yoktu); 11:32Z'de A1'den KALDIRILDI → girdi ve spec §1 satırı AYNI turda
+    çıktı (d-1 `.dash.env` emsali; v439 E0/E2/E3, v447 A5/S2/S3). Tarihçe SİLİNMEZ: `emekli_kopyalar` kayıtları
+    kaldırma anını ve yedek dizinini (YOL — değer değil) taşır; kaldırılmış bir dosyanın kaydı bu iki alanı
+    taşımıyorsa "nereye gitti, geri alma neyle yapılır" sorusunun cevabı yalnız bir oturum dökümünde kalırdı."""
+    env = _envanter()
+    assert ENV_CP not in {d["yol"] for d in env["dosyalar"]}, "kaldırılmış `.env-cp` hâlâ `dosyalar:` bloğunda"
     satir = [s for s in SPEC.read_text(encoding="utf-8").splitlines() if s.startswith(f"| `{ENV_CP}` |")]
-    assert len(satir) == 1
-    assert "EMEKLİ" in satir[0].strip().strip("|").split("|")[-1], "spec §1 kanal hücresi emekliliği söylemiyor"
+    assert not satir, "kaldırılmış `.env-cp` spec §1 tablosunda duruyor"
+    emekli = env["rotasyon_kopyalari"]["emekli_kopyalar"]
+    kaldirilan = {e["yol"] for e in emekli if e.get("kaldirildi")}
+    assert kaldirilan == set(EMEKLI_YOLLAR), f"kaldırma kaydı eksik/fazla: {sorted(kaldirilan)}"
+    for e in emekli:
+        if e["yol"] in EMEKLI_YOLLAR:
+            assert e["kaldirildi"] == KALDIRMA_ANI, e["yol"]
+            assert e.get("yedek_dizini") == YEDEK_DIZINI, e["yol"]
+        # Genel kural (yeni emekli kayıtlar için de): biri varsa öteki de var — yedeksiz kaldırma kaydı yok.
+        assert bool(e.get("kaldirildi")) == bool(e.get("yedek_dizini")), e["yol"]
 
 
 def test_C10_VAULT_DONGUSU_tenant_TEK_KANAL_der(tmp_path):
@@ -490,7 +509,9 @@ ADIMLAR = [
     ("**3. Doğrulama — kaldırmadan ÖNCE**", ["systemctl show -p EnvironmentFiles hindsight-cp", "/api/auth/login",
                                              "~/bin/sayfa_oku.sh", "~/bin/hafiza_sor.sh"]),
     ("**4. Yedek**", ["/root/sir-yedek-", "-ikikanal", "install -m 0600 -o root -g root", "cmp -s"]),
-    ("**5. Kaldırma**", [f"rm -f {ESKI_KEY} {ENV_CP}"]),
+    # 2026-09-29 11:32Z UYGULAMASI: `rm -f` DEĞİL — yedek dizininin `orijinal/` alt dizinine TAŞIMA (D3).
+    ("**5. Kaldırma**", ['sudo test -d "$Y"', 'install -d -m 0700 -o root -g root "$Y/orijinal"',
+                         f'mv {ESKI_KEY} {ENV_CP} "$Y/orijinal/"']),
     ("**6. Son doğrulama — kaldırmadan SONRA**", ["sudo systemctl restart hindsight-cp", "--envanter"]),
     ("**GERİ ALMA**", ["51-env-cp-kaldir.conf", "daemon-reload", "install -m 0600 -o ubuntu -g ubuntu"]),
 ]
@@ -521,3 +542,26 @@ def test_D2_RUNBOOK_komutlari_DEGER_BASMAZ():
                            r"/opt/hindsight/\.key|/opt/hindsight/\.env-cp\S*)\s*['\"]?\s*$", s)]
     assert not ciplak, ciplak
     assert "--data-binary @-" in bolum
+
+
+def _adim_govdesi(baslik: str, sonraki: str) -> str:
+    bolum = RUNBOOK.read_text(encoding="utf-8").split(BASLIK, 1)[1]
+    return bolum[bolum.index(baslik):bolum.index(sonraki)]
+
+
+def test_D3_KALDIRMA_UYGULANDI_notu_TASIMA_kalici_silme_YOK_ve_ENVANTERLE_ayrismaz():
+    """Reçete gerçeği anlatır: 2026-09-29 11:32Z'de 5. adım `rm` ile DEĞİL, root-only yedek dizininin `orijinal/`
+    alt dizinine TAŞIMAYLA uygulandı (kalıcı silme yok). (1) adımın komut bloklarında `rm` YOK; (2) UYGULANDI notu
+    anı ve dizini söyler; (3) aynı iki gerçek envanterin emekli kayıtlarında da yaşar — ikisi AYRIŞMAZ
+    (tek-kaynak yasası: kaçınılmaz kopya + ayrışma çivisi; dış çapa C9'daki sabitler)."""
+    govde = _adim_govdesi("**5. Kaldırma**", "**6. Son doğrulama")
+    kod = "\n".join(re.findall(r"```bash\n(.*?)```", govde, re.S))
+    assert kod.strip(), "5. adımda komut bloğu yok"
+    assert not re.search(r"\brm\b", kod), "5. adım hâlâ kalıcı silme (rm) reçetesi taşıyor"
+    an = re.search(r"\*\*UYGULANDI (\d{4}-\d\d-\d\d \d\d:\d\dZ)\*\*", govde)
+    dizin = re.search(r"`(/root/sir-yedek-\d{8}T\d{6}Z-ikikanal/)orijinal/`", govde)
+    assert an and dizin, "5. adımda UYGULANDI notu (an + `<yedek>/orijinal/`) yok"
+    assert (an.group(1), dizin.group(1)) == (KALDIRMA_ANI, YEDEK_DIZINI)
+    kayit = {(e.get("kaldirildi"), e.get("yedek_dizini"))
+             for e in _envanter()["rotasyon_kopyalari"]["emekli_kopyalar"] if e["yol"] in EMEKLI_YOLLAR}
+    assert kayit == {(an.group(1), dizin.group(1))}, "RUNBOOK UYGULANDI notu envanterin kaldırma kaydıyla AYRIŞTI"

@@ -14,7 +14,6 @@ adımı operatörde — bu belge o adımı GEREKTİRMEZ, ondan önceki basamakt�
 | | | HINDSIGHT_API_CONSOLIDATION_LLM_1_API_KEY · HINDSIGHT_API_CONSOLIDATION_LLM_2_API_KEY · HINDSIGHT_API_CONSOLIDATION_LLM_3_API_KEY | SIR ×3 (aynı zincirin konsolidasyon yüzeyi) | hindsight-api.service | EnvironmentFile |
 | | | diğer 29 (LLM/embedder/reranker/DB havuzu/…) | yapılandırma | hindsight-api.service | EnvironmentFile |
 | `/etc/hindsight/creds/<AD>` | 0400 / root | HINDSIGHT_API_DATABASE_URL · HINDSIGHT_API_LLM_API_KEY · HINDSIGHT_API_TENANT_API_KEY | SIR ×3 (dosyanın ADI değişkenin adıdır) | hindsight-api.service (LoadCredential + ExecStart sarmalayıcı) · meridian.service (pano vekili, yalnız TENANT) | LoadCredential |
-| `/opt/hindsight/.env-cp` | 600 / root | HINDSIGHT_CP_ACCESS_KEY · HINDSIGHT_CP_DATAPLANE_API_KEY | SIR | YOK — hindsight-cp okumaz (madde 7) | EMEKLİ 2026-09-29 — okuyucusuz; CP'nin tek kanalı `.env-cp.vault` (madde 7) |
 | `/opt/apisix/.env-apisix` | **640** / root | APISIX_ADMIN_KEY · OPENROUTER_API_KEY · OPENROUTER_AUTH · PANO_GIRIS_PAROLA · BOT_KEY_{BEKCI,KARNE,SEF,MERIDIAN} | SIR ×8 | apisix.service (docker, `$env://` çözümü) · `ops/apisix_uygula.py` (admin anahtarı) | EnvironmentFile → docker run env |
 | `~/.hermes/profiles/<bekci,karne,sef>/.env` | (ölçülmedi) | BOT_KEY_<AD> · OPENROUTER_API_KEY | SIR | hermes bot birimleri (timer'lı oneshot) | HERMES_HOME/.env (hermes env_loader) |
 
@@ -67,6 +66,15 @@ kaynak, ayrışma çivisini "her şey uyuşuyor" diye yeşil tutar:
    turda satır ve `deploy/sir_envanteri.yaml` girdisi AYNI turda çıkar (madde 5 emsali). Aynı kapanışta kiracı
    anahtarının düz kopyası `/opt/hindsight/.key` de emekli oldu (bu tabloda hiç satırı yoktu — envanterin
    `rotasyon_kopyalari.emekli_kopyalar` bloğu). Çivi: v590 C9 (envanter + bu satır), v447 S2/S3.
+8. **`/opt/hindsight/.env-cp` SATIRI ÇIKTI (2026-09-29 11:32Z, TSK-064 iki-kanal kapanışı — A1 uygulaması; Rol-1,
+   operatör "sen çalıştır").** Madde 7'nin beklediği adım yapıldı: dosya `.key` ile birlikte A1'den kaldırıldı —
+   `rm` DEĞİL, root-only yedek dizininin `orijinal/` alt dizinine TAŞIMA (`/root/sir-yedek-20260929T113217Z-ikikanal/`,
+   kalıcı silme yok); `hindsight-cp` yalnız `.env-cp.vault` ile açıldı (CP girişi 200/401), hafıza araçları çalışıyor ve
+   `sir_rotasyon.sh --envanter` iki emekli kopya için "→ YOK (kaldırılmış)" dedi. Madde 5 emsali ("dosya yok" → satır
+   yok): tablo satırı ve `deploy/sir_envanteri.yaml` `dosyalar:` girdisi AYNI turda çıktı — tablo 5 dosya / 22 ad
+   (v439 E0 elle taşır). İki ad (HINDSIGHT_CP_ACCESS_KEY · HINDSIGHT_CP_DATAPLANE_API_KEY) ortam değişkeni ADI olarak
+   bugün YALNIZ kasa yan dosyasında geçer (`vault_dosyalar`; değerlerin kanonik kopyaları rotasyon tablosunda); tarihçe envanterin `emekli_kopyalar` kayıtlarında `kaldirildi` +
+   `yedek_dizini` alanlarıyla durur. Madde 6 ve 7 tarihçedir. Çivi: v590 C9/D3, v447 S2/S3.
 
 **ÖLÇÜLMEYEN, DOLAYISIYLA DEĞİŞTİRİLMEYEN TEK SATIR (uydurma yasağı):** `diğer 29` ayar
 sayısı 2026-09-03 ölçümüdür ve 2026-09-08'de YENİDEN SAYILMADI — yalnız sır ADLARININ varlığı
