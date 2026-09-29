@@ -18,10 +18,11 @@ edilebilmelidir. "Operatöre ulaştı" ile "operatör GÖRDÜ" ayrı şeylerdir;
 kanıtlar. Kapıyı geçen plan (`new_plan`) alarm değil BİLGİ sınıfıdır — obs alarm zinciri onu
 asla itmez, tetiği üretim döngüsüdür.
 
-GİRİŞLER: `configured()`, `send()`, `inbox()`, `scrub()`, `breaker`/`rollback`/`halted`/
-`new_plan`. Yapılandırma (env ya da sır deposu): TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID ve/veya
-MERIDIAN_WEBHOOK_URL. Okur: `events.jsonl`; yazar: yalnız ağ kanalları (dosyaya yazmaz;
-`alerts_ack.json`u yazan pano ucudur)."""
+GİRİŞLER: `configured()`, `send()`, `yanitla()` (operatör mesajına Telegram YANITI — konuşan
+filo; `send` ile aynı `_telegram_gonder` yolu ve aynı `scrub`), `inbox()`, `scrub()`,
+`breaker`/`rollback`/`halted`/`new_plan`. Yapılandırma (env ya da sır deposu):
+TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID ve/veya MERIDIAN_WEBHOOK_URL. Okur: `events.jsonl`; yazar:
+yalnız ağ kanalları (dosyaya yazmaz; `alerts_ack.json`u yazan pano ucudur)."""
 from __future__ import annotations
 import json
 import re
@@ -206,6 +207,21 @@ def scrub(text: str) -> str:
     return out
 
 
+def _telegram_gonder(text: str, reply_to: int | None = None) -> bool | None:
+    """Telegram teslimatının TEK yolu (`send` ve `yanitla` ikisi de buradan geçer — konuşan filo,
+    spec 2026-09-29 §3.5). Dönüş ÜÇ DEĞERLİDİR: `None` = kanal yapılandırılmamış (deneme YOK),
+    `True`/`False` = denendi, teslim edildi/edilmedi. `reply_to` verilirse mesaj o mesaja YANIT
+    olarak gider (`reply_to_message_id`); verilmezse gövde `send`in eski gövdesiyle birebir aynıdır.
+    Metni TEMİZLEMEZ — `scrub` çağıranın işidir (iki giriş de ilk satırda uygular)."""
+    tok, chat = secrets.get("TELEGRAM_BOT_TOKEN"), secrets.get("TELEGRAM_CHAT_ID")
+    if not (tok and chat):
+        return None
+    payload = {"chat_id": chat, "text": text, "disable_web_page_preview": True}
+    if reply_to is not None:
+        payload["reply_to_message_id"] = reply_to
+    return _post(f"https://api.telegram.org/bot{tok}/sendMessage", payload)
+
+
 def send(text: str) -> bool:
     """Deliver `text` to whichever channels are configured. Returns True if at least one succeeded.
 
@@ -213,10 +229,8 @@ def send(text: str) -> bool:
     aksi halde 'telefonuma bildirim gelmedi' ile 'zaten alarm yoktu' ayırt edilemez (turu 19)."""
     text = scrub(text)
     ok, tried = False, []
-    tok, chat = secrets.get("TELEGRAM_BOT_TOKEN"), secrets.get("TELEGRAM_CHAT_ID")
-    if tok and chat:
-        r = _post(f"https://api.telegram.org/bot{tok}/sendMessage",
-                  {"chat_id": chat, "text": text, "disable_web_page_preview": True})
+    r = _telegram_gonder(text)
+    if r is not None:
         ok, _ = (ok or r), tried.append(("telegram", r))
     hook = secrets.get("MERIDIAN_WEBHOOK_URL")
     if hook:
@@ -230,6 +244,21 @@ def send(text: str) -> bool:
         except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci bir kanal yok; kayıt denemesi çağıranı düşüremez
             pass
     return ok
+
+
+def yanitla(text: str, reply_to: int | None = None) -> bool:
+    """Operatörün Telegram mesajına YANIT olarak gönderir (konuşan filo, spec 2026-09-29 §3.5).
+    `send` ile AYNI teslimat yolu ve AYNI `scrub`; webhook'a gitmez (yanıt yalnız Telegram sohbetine anlamlı).
+    Başarısızlık `send` gibi kayda geçer."""
+    text = scrub(text)
+    r = _telegram_gonder(text, reply_to)
+    if r is False:
+        try:
+            from . import obs
+            obs.warn("notify_delivery_failed", channels="telegram", delivered=False, yanit=True)
+        except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü — ikinci kanal yok, çağıran düşürülmez
+            pass
+    return bool(r)
 
 
 # convenience wrappers keyed to the alarm classes (safe no-op if unconfigured)
