@@ -4191,7 +4191,7 @@ def coverage_breakage_counters(days: int = TELEMETRY_EVENT_DAYS) -> dict:
     PENCERE TARİH TABANLIDIR (satır limiti DEĞİL): `hotstate_down` seli defterin %60'ını tek olaya
     çevirdi ve satır-limitli her tüketici geçmişe kör kaldı — bkz. `watchdog.events_since`.
     Defter AYNI TURDA BİR KEZ okunur: ham satırlar sensöre elden verilir (`olaylar=ev`)."""
-    from . import watchdog as _wd
+    from . import watchdog as _wd, hotstate as _hsm
     ev = _wd.events_since(days)
     say: dict[str, int] = {}
     kapsama_degerleri = []
@@ -4232,12 +4232,19 @@ def coverage_breakage_counters(days: int = TELEMETRY_EVENT_DAYS) -> dict:
             # (`alt_sinir`, `*_neden`) taşımayı unutabilecek ikinci bir şema demekti.
             "defter": _hs["defter"],
             "capraz_surec": _hs["capraz_surec"],
+            # HAFTA SONU TTL DOLUMU (TSK-249): pazar akşamı akış anahtarlarının silinmesi eskiden
+            # `hotstate_down` diye basılıyor ve bu blokta o sayıma giriyordu. Kopuş olmadığı için
+            # oradan AYRILDI — ama okuyucusunu kaybetmesin diye (bedel yasası) AYNI blokta ADIYLA
+            # sayılır. Anahtar üreticinin olay sabitidir (tek kaynak); `hotstate_down`a KATILMAZ.
+            _hsm.AKIS_SURESI_DOLDU_OLAY: say.get(_hsm.AKIS_SURESI_DOLDU_OLAY, 0),
             "beyan": ("İKİ YARIM, İKİ AYRI SORU — tek kaynak `watchdog.hotstate_health_report`: "
                       "`surec_ici_sayac` = `hotstate.health().reassert_suppressed`, YALNIZ bu "
                       "paketi üreten sürecin gördüğü (süreç-içi ve her emisyonda sıfırlanır; "
                       "dokunulmamışsa None + `surec_ici_neden`). `defter` = olay defterindeki "
                       "`hotstate_down` satırları, yani BÜTÜN süreçler — sayaç süreç sınırını "
-                      "yalnız orada geçer ve alan taşımayan satırlar 0 SAYILMAZ"),
+                      "yalnız orada geçer ve alan taşımayan satırlar 0 SAYILMAZ. "
+                      "`akis_anahtari_suresi_doldu` = TTL'li akış anahtarının (hafta sonu) "
+                      "silinme olayı; KOPUŞ DEĞİLDİR, `hotstate_down` sayımına katılmaz"),
         },
         "en_sik_olaylar": [{"olay": k, "n": v} for k, v in
                            sorted(say.items(), key=lambda kv: -kv[1])[:GATE_TALLY_CAP]],

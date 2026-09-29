@@ -232,8 +232,12 @@ def test_hotstate_yuzeyi_salt_okunur_ve_barfeed_api_si_hic_cagrilmaz():
     barfeed'in akış/grup/ACK API'sinden HİÇBİRİ listede değildir; kullanılanların hepsi salt-okunur
     sabit ya da ayrıştırıcıdır (tek 'bağlantı' `_blocking_redis`, o da yalnız istemci döndürür)."""
     used = _attrs_of("hotstate")
+    # TSK-249 (2026-09-29): iki ad eklendi, ikisi de bu testin kategorisinde — SAF ayrıştırıcı
+    # (`akis_yasam_dongusu_hatasi`: istisnayı sınıflar, ağa uzanmaz) ve salt-okunur SABİT (olay adı).
+    # Sınıflandırma üreticide durur (TTL'i koyan modül); arşivci onu kopyalamaz, TÜRETİR.
     assert used == {"PREFIX", "_BAR_FIELDS", "_bar_parse", "_blocking_redis",
-                    "BLOCKING_SOCKET_TIMEOUT"}, f"hotstate yüzeyi genişledi: {sorted(used)}"
+                    "BLOCKING_SOCKET_TIMEOUT", "akis_yasam_dongusu_hatasi",
+                    "AKIS_SURESI_DOLDU_OLAY"}, f"hotstate yüzeyi genişledi: {sorted(used)}"
     for yasak in ("BARFEED", "read_barfeed", "ack_barfeed", "ensure_barfeed_group",
                   "claim_and_drop_stale_barfeed", "barfeed_pending", "append_bar", "ingest_bars"):
         assert yasak not in used, f"barsarchive barfeed/yazma yüzeyine dokunuyor: {yasak}"
