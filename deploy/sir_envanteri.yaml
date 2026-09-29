@@ -954,16 +954,21 @@ vault_dosyalar:
       - {alan: HINDSIGHT_API_CONSOLIDATION_LLM_3_API_KEY, sir: openrouter_api_key, onek: null}
 
   # KONTROL PANELİ — birim docker koşar ama sırları `--env-file` ile DEĞİL, systemd ortamından
-  # DEĞERSİZ `-e AD` ile alır: docker istemcisi değeri kendi ortamından okur, o ortamı iki
-  # `EnvironmentFile=` satırı doldurur (TSK-226, 2026-09-25; 2026-09-14 ölçümündeki `-e AD=${AD}`
+  # DEĞERSİZ `-e AD` ile alır: docker istemcisi değeri kendi ortamından okur, o ortamı
+  # `EnvironmentFile=` doldurur (TSK-226, 2026-09-25; 2026-09-14 ölçümündeki `-e AD=${AD}`
   # ikamesi değeri ExecStart'a genişletip argv'ye koyuyordu). Yani
-  # bu tüketicinin ikinci kaynağı bir `EnvironmentFile=`dır, ikinci bir `--env-file` DEĞİL:
+  # bu tüketicinin kasa kaynağı bir `EnvironmentFile=`dır, bir `--env-file` DEĞİL:
   # spec §1'in "docker → ikinci --env-file" cümlesi APISIX'in ölçülen biçimidir ve buraya
   # kopyalanamaz. Ölçmeden genellemek, sırrın konteynere HİÇ ulaşmadığı bir geçiş üretirdi.
+  # İKİ-KANAL BU TÜKETİCİDE BİTTİ (TSK-064, 2026-09-29): 2026-09-14..29 arasında bu yan dosya İKİNCİ
+  # `EnvironmentFile=`dı (drop-in 50, opsiyonel; ilki temel birimin `.env-cp` satırı). Bugün drop-in
+  # `51-env-cp-kaldir.conf` listeyi sıfırlar ve bu dosyayı TEK ve ZORUNLU kaynak yapar; `.env-cp` A1'den
+  # kaldırıldı (kayıt: `rotasyon_kopyalari.emekli_kopyalar`). Yukarıdaki "eski kanalla devam eder" geri
+  # alımı bu tüketicide GEÇMEZ — geri alma reçetesi 51'in şerhindedir.
   - yol: "/opt/hindsight/.env-cp.vault"
     mod: "0400"
     sahip: "root"
-    tuketici: "hindsight-cp.service (EnvironmentFile → docker -e AD, değer ortamdan — argv'de yok; ikinci dosya — drop-in 50-vault-yan-dosya.conf; systemd PID 1 olarak root okur)"
+    tuketici: "hindsight-cp.service (EnvironmentFile → docker -e AD, değer ortamdan — argv'de yok; TEK ve ZORUNLU dosya — drop-in 51-env-cp-kaldir.conf (2026-09-14..29 ikinci dosyaydı, drop-in 50); systemd PID 1 olarak root okur)"
     yeniden_baslat: "hindsight-cp.service"
     satirlar:
       - {alan: HINDSIGHT_CP_ACCESS_KEY, sir: hindsight_cp_access_key, onek: null}
