@@ -358,6 +358,13 @@ def test_A8_yan_dosya_ASIL_dosyanin_YANINDA_ve_asil_dosya_envanterde_TANINIR():
     veri = _envanter()
     bilinen = {d["yol"] for d in veri["dosyalar"]}
     bilinen |= {k["yol"] for k in veri["rotasyon_kopyalari"]["kopyalar"]}
+    # 2026-09-29 (TSK-064 iki-kanal kapanışı): yan dosya TEK kanal olunca asıl dosya EMEKLİ edildi ve A1'den
+    # KALDIRILDI (`.env-cp` → yedek dizinine taşındı, 11:32Z). "Bugün yaşıyor" bloklarından çıkar ama envanter onu
+    # GÖRMEYE devam eder: `emekli_kopyalar` kaydı kaldırma anını + yedek dizinini taşır ve `--envanter` diskteki
+    # varlığını her koşumda ölçer. YALNIZ kaldırılmış (`kaldirildi` + `yedek_dizini`) emekli kayıt sayılır —
+    # tarihsiz bir "emekli" beyanı asıl dosyayı envanterden sessizce düşürmenin yolu olmasın.
+    bilinen |= {e["yol"] for e in veri["rotasyon_kopyalari"].get("emekli_kopyalar") or []
+                if e.get("kaldirildi") and e.get("yedek_dizini")}
     for d in _vault_dosyalar():
         asil = d["yol"][: -len(".vault")]
         assert asil in bilinen, (

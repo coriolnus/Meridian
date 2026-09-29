@@ -893,12 +893,20 @@ ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'Y=/root/sir-yedek-$(date -u +%Y%m
 # yedek EŞİT: /opt/hindsight/.key · yedek EŞİT: /opt/hindsight/.env-cp · yedek dizini: /root/sir-yedek-<UTC>-ikikanal
 ```
 
-**5. Kaldırma** (OPERATÖR — yalnız 3. ve 4. adım temizse):
+**5. Kaldırma** (OPERATÖR — yalnız 3. ve 4. adım temizse). Kaldırma `rm` DEĞİL, TAŞIMADIR: asıl dosyalar 4. adımın
+yedek dizininde `orijinal/` alt dizinine gider (sahip/izinleriyle; kalıcı silme YOK). `Y`, 4. adımın bastığı
+`yedek dizini` satırıdır; dizin yoksa (`sudo test -d` düşer) hiçbir şey taşınmaz:
 
 ```bash
-ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo rm -f /opt/hindsight/.key /opt/hindsight/.env-cp; ls -A /opt/hindsight | grep -E "^\.key$|^\.env-cp$" || echo "iki dosya da YOK"'
-# iki dosya da YOK   (.env-cp.vault ve .env YERİNDE kalır)
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'Y=/root/sir-yedek-<UTC>-ikikanal; sudo test -d "$Y" && sudo install -d -m 0700 -o root -g root "$Y/orijinal" && sudo mv /opt/hindsight/.key /opt/hindsight/.env-cp "$Y/orijinal/" && { ls -A /opt/hindsight | grep -E "^\.key$|^\.env-cp$" || echo "iki dosya da YOK"; }'
+# iki dosya da YOK   (.env-cp.vault ve .env YERİNDE kalır; asıl dosyalar $Y/orijinal/ altında, 4. adımın kopyaları $Y/opt/hindsight/ altında)
 ```
+
+**UYGULANDI 2026-09-29 11:32Z** (Rol-1, operatör "sen çalıştır"): `rm` yerine yedek dizinine TAŞIMA — asıl dosyalar
+`/root/sir-yedek-20260929T113217Z-ikikanal/orijinal/` altında (root-only); kalıcı silme yok. 6. adım temiz:
+hindsight-cp yalnız `.env-cp.vault` ile açıldı (CP girişi 200/401), iki araç çalışıyor, `--envanter` iki emekli kopya
+için "→ YOK (kaldırılmış)". Aynı an ve dizin `deploy/sir_envanteri.yaml` `rotasyon_kopyalari.emekli_kopyalar`
+kayıtlarında (`kaldirildi` · `yedek_dizini`) yaşar — ikisi ayrışırsa v590 D3 öter.
 
 **6. Son doğrulama — kaldırmadan SONRA** (CP'nin eski dosya olmadan AÇILDIĞI burada kanıtlanır):
 
@@ -914,7 +922,9 @@ ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'cd /opt/meridian && sudo ./deploy
 
 - *2–3. adım düştü (dosyalar yerinde):* drop-in'i kaldır → `sudo rm /etc/systemd/system/hindsight-cp.service.d/51-env-cp-kaldir.conf && sudo systemctl daemon-reload && sudo systemctl restart hindsight-cp`. Temel birimin `.env-cp` satırı ve 50'nin opsiyonel yan dosya satırı geri gelir. Bir sonraki `site.yml` drop-in'i YENİDEN kurar: depodaki kapanış commit'i de geri alınmalıdır (Rol-1).
 - *Araçlar düştü (sudo borusu):* dosyalar yerindeyse geçici çare `HAFIZA_ANAHTAR_DOSYASI=/opt/hindsight/.key ~/bin/hafiza_sor.sh …` (ezme arayüzü korunur); kalıcı çare depo geri alımı + `dagit`.
-- *5. adımdan sonra:* dosyaları yedekten ESKİ sahip/izinleriyle geri koy, SONRA drop-in'i yukarıdaki gibi kaldır:
+- *5. adımdan sonra:* dosyaları ESKİ sahip/izinleriyle geri koy, SONRA drop-in'i yukarıdaki gibi kaldır. Asıl dosyalar
+  `$Y/orijinal/` altında sahip/izinleriyle durur → `sudo mv "$Y/orijinal/.key" "$Y/orijinal/.env-cp" /opt/hindsight/`;
+  `orijinal/` yoksa 4. adımın kopyalarından:
   `sudo install -m 0600 -o ubuntu -g ubuntu $Y/opt/hindsight/.key /opt/hindsight/.key` ·
   `sudo install -m 0600 -o root -g root $Y/opt/hindsight/.env-cp /opt/hindsight/.env-cp`.
   Yedek alındığı andan beri bir rotasyon (`--tenant`/`--cp`) koştuysa geri konan dosyalar BAYATTIR: geri alınmış

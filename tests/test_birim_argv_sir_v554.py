@@ -491,7 +491,8 @@ def _docker_e(jetonlar: list[str]) -> list[str]:
 def _cp_envanter_sirlari() -> set[str]:
     """CP'nin sır adları — birimin OKUDUĞU dosyadan: 2026-09-29'a kadar `dosyalar:` bloğunun `.env-cp` girdisi,
     iki-kanal kapanışından (drop-in 51) beri TEK kaynak olan kasa yan dosyasının satırları (`vault_dosyalar`).
-    `.env-cp` girdisi `dosyalar:`da EMEKLİ olarak durur (operatör kaldırana dek) ve okunmaz."""
+    `.env-cp` 2026-09-29 11:32Z'de A1'den kaldırıldı; girdisi `dosyalar:`dan çıktı, tarihçesi
+    `rotasyon_kopyalari.emekli_kopyalar`da (v590 C9)."""
     d = next(x for x in _envanter()["vault_dosyalar"] if x["yol"] == CP_ENV_VAULT)
     return {s["alan"] for s in d["satirlar"]}
 
