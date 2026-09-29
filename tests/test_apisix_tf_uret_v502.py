@@ -82,7 +82,7 @@ def test_e_provider_blogu_anahtarsiz_ve_pinli():
     prov = (ROOT / "altyapi/apisix/provider.tf").read_text(encoding="utf-8")
     assert "api_key" not in prov and "endpoint" not in prov, "değerler ortamdan; HCL'de sır/uç yok"
     ver = (ROOT / "altyapi/apisix/versions.tf").read_text(encoding="utf-8")
-    assert 'required_version = "= 1.16.2"' in ver and 'version = "= 1.8.1"' in ver and "rework-space-com/apisix" in ver
+    assert 'required_version = "= 1.16.4"' in ver and 'version = "= 1.8.1"' in ver and "rework-space-com/apisix" in ver
     back = (ROOT / "altyapi/apisix/backend.tf").read_text(encoding="utf-8")
     assert 'backend "local"' in back and "/opt/veri/altyapi/apisix/terraform.tfstate" in back
 

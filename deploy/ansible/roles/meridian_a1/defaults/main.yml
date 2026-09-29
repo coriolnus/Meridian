@@ -141,12 +141,14 @@ docker_grubu: docker
 # terraform_surumu }}` ile kurar, `saglik.yml` kapısı beklenen sürümü aynı değişkenden türetir
 # (`-<revizyon>` soneki regex ile atılır). İki yerde yazılsaydı yükseltme turunda biri sessizce
 # geride kalır ve "kurulu" ile "beklenen" ayrışırdı — tek-kaynak yasasının aynı sınıfı (`uv_surum`).
-# APT REVİZYONU DEĞERİN PARÇASIDIR: HashiCorp deposunda paket sürümü `1.16.2-1` biçimindedir ve
-# `apt` `name=terraform=1.16.2` ile EŞLEŞMEZ; kapı ise ikili sürümü (`1.16.2`) ölçer, bu yüzden
+# APT REVİZYONU DEĞERİN PARÇASIDIR: HashiCorp deposunda paket sürümü `1.16.4-1` biçimindedir ve
+# `apt` `name=terraform=1.16.4` ile EŞLEŞMEZ; kapı ise ikili sürümü (`1.16.4`) ölçer, bu yüzden
 # kıyas öncesi sonek atılır.
 # SÜRÜM SEÇİMİ BİR KARARDIR, ölçüm değil (plan Tech Stack; lisans BUSL 1.1 beyanı ROADMAP
 # TSK-176 Ref'te): yükseltme = bu satırın değişmesi + playbook koşumu; apt'ye BIRAKILMAZ.
-terraform_surumu: "1.16.2-1"
+# 2026-09-28 21:2xZ 1.16.2-1 → 1.16.4-1: operatör A1'de 17:29Z elle `apt upgrade` koştu (terraform dahil) ve
+# AskUserQuestion'da "1.16.4'e geçelim" dedi — pin kurulu sürüme çekildi; ayna: altyapi/apisix/versions.tf.
+terraform_surumu: "1.16.4-1"
 
 # --- uv (venv.yml) ---
 # SÜRÜM PİNİ: resmi installer sürümsüz URL'den çekilirse her koşum farklı uv kurabilir (tedarik
