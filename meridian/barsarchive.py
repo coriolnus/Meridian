@@ -20,6 +20,8 @@ etmez). barfeed'den tam izole: farklı anahtar + grup durumu Redis'te grup baş�
 yalnız SCAN / XGROUP CREATE / XREADGROUP / XACK koşar, hiçbir XADD/DEL/EXPIRE yok — canlı worker'ın
 akışına dokunmaz. TTL'li anahtarda grup ölümü (hafta sonu anahtar silinir, ilk bar grubu olmadan
 yeniden yaratır) NOGROUP onarımıyla kendini toparlar; onarım sayılır ve uyarıyla görünür kılınır.
+TTL'in bloklu okuma ORTASINDA dolması (Redis 7.0 UNBLOCKED yanıtı) kopuş değildir: grup kayıtları
+önden düşürülür, `stream_expiries` sayılır ve bilgi olayı basılır (TSK-249).
 `t`siz giriş kimliksizdir: sayılır, ACK'lenir (sonsuz yeniden-teslim kilidi olmasın). Seans dışında
 bekleme sunucu tarafındadır (XREADGROUP BLOCK); hiç akış yokken ucuz `idle_s` uykusu vardır.
 
@@ -184,6 +186,7 @@ class BarsArchiver:
         self.acked = 0
         self.write_failures = 0
         self.group_resets = 0               # NOGROUP onarımı kaç kez işledi (YASA 4: sessiz onarım yok)
+        self.stream_expiries = 0            # bloklu okumada TTL dolumu (UNBLOCKED) kaç kez işlendi (TSK-249)
         self.last_error: str = ""
         self.last_write_at: str | None = None
 
@@ -250,6 +253,39 @@ class BarsArchiver:
                  resolved_from_error=bool([k for k in keys if k in str(err)]),
                  detail="NOGROUP — TTL'li anahtarda grup öldü (hafta sonu/flush); grup kaydı düşürüldü, "
                         "sonraki tur id=0 ile yeniden kurar ve ring'de duran barlar arşive girer")
+        return hit
+
+    def _forget_expired(self, err: Exception, keys: list[str]) -> list[str]:
+        """TTL DOLUMU BLOK ORTASINDA (TSK-249) — NOGROUP onarımının ÖNCÜLÜ.
+
+        VAKA: pazar akşamı akış anahtarlarının TTL'i dolarken arşivci o anahtarlarda XREADGROUP BLOCK
+        ile bekliyordur; Redis 7.0 bekleyene "UNBLOCKED the stream key no longer exists" yanıt
+        hatasını döner. Bu tur bugüne dek `bars_archive_read_failed` UYARISI basıyor ve "Redis yok"
+        (None) dönüyordu — oysa Redis CEVAP VERMİŞTİ. Silinen anahtarların grup kaydı da kümede
+        kalıyor, pazartesi ilk bar anahtarı grupsuz yeniden yaratınca bir NOGROUP hata turu
+        (`_forget_nogroup`) yaşanıyordu.
+
+        ONARIM: sınıflandırma üreticiden (`hotstate.akis_yasam_dongusu_hatasi`) — YALNIZ "unblocked".
+        NOGROUP biçimi (Redis ≥7.2'de aynı olay) BİLEREK mevcut `_forget_nogroup` yolunda kalır.
+        UNBLOCKED metni anahtar adı TAŞIMAZ → turdaki tüm canlı anahtarlar unutulur (NOGROUP
+        onarımının muhafazakâr yedeğiyle aynı gerekçe: gereksiz XGROUP CREATE bedava, BUSYGROUP
+        zararsız; kaçırılmış kurulum ise pazartesi bir hata turu). Sonraki tur hâlâ var olanları
+        yeniden kaydeder, silinenler pazartesi ilk barla id=0 ile kurulur.
+
+        SESSİZ DEĞİL: `stream_expiries` sayacı + BİLGİ seviyesi olay (kopuş olmadığı için uyarı
+        değil). Olay adı üreticinin sabitinden gelir; okuyucusu hotstate'in olayıyla aynıdır."""
+        if hotstate.akis_yasam_dongusu_hatasi(err) != "unblocked":
+            return []
+        hit = list(keys)
+        for k in hit:
+            self._groups.discard(k)
+            self._drained.discard(k)
+        self.stream_expiries += 1
+        obs.log(hotstate.AKIS_SURESI_DOLDU_OLAY, kaynak="barsarchive", sinif="unblocked",
+                streams=len(hit), toplam=self.stream_expiries, pid=os.getpid(), error=self.last_error,
+                detail="bloklu okumada TTL'li akış anahtarı silindi (hafta sonu dolumu) — Redis CEVAP "
+                       "VERDİ, kopuş değil; turdaki grup kayıtları düşürüldü, var olanlar sonraki turda "
+                       "yeniden kaydedilir, silinenler ilk barla id=0 ile kurulur")
         return hit
 
     def _consume(self, r, batch, ack: bool = True) -> None:
@@ -369,11 +405,15 @@ class BarsArchiver:
                 self._consume(r, batch)
         except Exception as e:
             self.last_error = f"{type(e).__name__}: {str(e)[:120]}"
-            if not self._forget_nogroup(e, live):
-                obs.warn("bars_archive_read_failed", error=self.last_error,
-                         detail="XREADGROUP başarısız — bu turda bar okunmadı; girişler ring'de/PEL'de "
-                                "durur, sonraki tur yeniden dener")
-            return None
+            if not self._forget_expired(e, live):
+                if not self._forget_nogroup(e, live):
+                    obs.warn("bars_archive_read_failed", error=self.last_error,
+                             detail="XREADGROUP başarısız — bu turda bar okunmadı; girişler ring'de/PEL'de "
+                                    "durur, sonraki tur yeniden dener")
+                return None
+            # TTL DOLUMU (TSK-249): Redis CEVAP VERDİ — None ("Redis yok") dönmek YASA 4'ün üçüncü
+            # hâlini bozardı. Aşağıdaki TUR DELTASI dürüst ölçümdür (PEL tahliyesi bu turda bir şey
+            # yazdıysa o da görünür kalır).
         d_read = self.read - before[0]
         return {"streams": len(live), "read": d_read, "written": self.written - before[1],
                 "duplicate": self.duplicate - before[2],
@@ -419,12 +459,13 @@ class BarsArchiver:
 
     def snapshot(self) -> dict:
         """KÜMÜLATİF sayaçların anlık görüntüsü (tur deltaları `poll()`ün döndürdüğü sözlüktedir):
-        okunan/yazılan/çift/ACK'li giriş, yazım başarısızlığı, NOGROUP onarım sayısı, son yazım ve
-        son hata."""
+        okunan/yazılan/çift/ACK'li giriş, yazım başarısızlığı, NOGROUP onarım sayısı, bloklu okumada
+        TTL dolumu sayısı (TSK-249), son yazım ve son hata."""
         return {"group": GROUP, "consumer": self.consumer, "polls": self.polls, "read": self.read,
                 "written": self.written, "duplicate": self.duplicate,
                 "skipped_no_t": self.skipped_no_t, "acked": self.acked,
                 "write_failures": self.write_failures, "group_resets": self.group_resets,
+                "stream_expiries": self.stream_expiries,
                 "last_write_at": self.last_write_at,
                 "last_error": self.last_error or None}
 

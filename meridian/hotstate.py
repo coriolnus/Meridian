@@ -23,7 +23,9 @@ JSON/JSONL defterlerinde yaşar; Redis tamamen silinse hiçbir kalıcı gerçek 
 backtest/recompute'a ASLA girmez; kalıcı öğrenme kaynağı EOD immutable dosya barlarıdır.
 (2) GRACEFUL DEGRADATION: Redis yoksa okuma None (çağıran dosyaya düşer), yazma no-op — ama görünür:
 down olayı yazılır, süregelen kopuş DOWN_REASSERT_S'te bir yeniden basılır (bastırılanlar sayılır;
-çırpınma eşiği aşılırsa DATA_QUALITY alarmı). (3) SAĞLIK SAYAÇLARI SÜREÇ-İÇİDİR: `health()` yalnız
+çırpınma eşiği aşılırsa DATA_QUALITY alarmı). TTL'li akış anahtarının silinmesi (pazar dolumu,
+bloklu okumada yanıt hatası) KOPUŞ DEĞİLDİR: `akis_yasam_dongusu_hatasi` dar sınıflar, beyanlı
+`akis_anahtari_suresi_doldu` bilgi olayı basılır (TSK-249). (3) SAĞLIK SAYAÇLARI SÜREÇ-İÇİDİR: `health()` yalnız
 çağıran sürecin gördüğünü anlatır ve sayacı ARTIRAN süreç (worker) ile onu OKUYAN süreç (pano —
 `state`i salt-okunur bağlar; ayrıca barsarchive birimi) aynı değildir. Sayaç süreç sınırını
 YALNIZ `hotstate_down` olayıyla geçer (pid + down_emits + suppressed_total alanları); okuyucusu
@@ -213,6 +215,88 @@ def _maybe_reassert_down() -> None:
         _emit_down(reassert=True)
 
 
+# ---------------- AKIŞ ANAHTARI YAŞAM DÖNGÜSÜ (TSK-249) — KOPUŞ DEĞİL ----------------
+# VAKA: `mrd:bars:*` ve `mrd:barfeed` her yazımda BARS_TTL_S (2 gün) ile yeniden süreli kılınır.
+# Cuma kapanışındaki son yazımdan ~48 sa sonra, PAZAR akşamı, anahtar süresi dolup SİLİNİR; o anda
+# bloklu XREADGROUP'ta bekleyen istemciye Redis bir YANIT HATASI döner. Bu hata `_note_down`a
+# düşüyor ve "Redis sıcak katmanı erişilemez" diye `hotstate_down` basılıyordu → pazartesi akşam
+# döngüsünde MAKULLÜK `hotstate_sustained_down` alarmı (2026-08-10'dan beri her pazartesi, altı kez).
+# Redis AYAKTAYDI: bir yanıt hatası, sunucunun CEVAP VERDİĞİNİN kanıtıdır.
+# ÖLÇÜLEN İKİ BİÇİM (izole redis-server + redis-py 8.0.1, TSK-249 sondası, 2026-09-29):
+#   Redis 7.0 (A1'in canlı hatası)  : "UNBLOCKED the stream key no longer exists"
+#   Redis ≥7.2 (ölçülen 8.8.0), AYNI olay (blok ortasında DEL ya da TTL dolumu):
+#                                     "NOGROUP No such key '<anahtar>' or consumer group '<grup>' ..."
+# İkisi de redis-py'de düz ResponseError'dır: kod, kütüphanenin bilinen-kod sözlüğünde YOK →
+# status_code None ve mesaj kodu da taşır. Yalnız UNBLOCKED'u tanımak, A1'in Redis'i yükseldiği
+# gün (paketler unattended-upgrades altında) aynı yanlış alarmı sessizce geri getirirdi.
+# DARLIK (fail-loud): yalnız bu iki biçim. Bilinmeyen HER ResponseError — aynı UNBLOCKED kodunu
+# taşıyan CLIENT UNBLOCK / rol değişimi nedenleri dahil — bugünkü gibi `hotstate_down` yolunda kalır;
+# bağlantı/zaman aşımı istisnaları ResponseError'ın alt sınıfı değildir, tip kapısından geçemez.
+AKIS_SURESI_DOLDU_OLAY = "akis_anahtari_suresi_doldu"
+_UNBLOCKED_ANAHTAR_YOK = "UNBLOCKED the stream key no longer exists"
+_LAST_EXPIRY_EMIT: float | None = None
+
+
+def akis_yasam_dongusu_hatasi(exc: BaseException) -> str | None:
+    """Bir istisna TTL'li akış anahtarının YAŞAM DÖNGÜSÜ mü (kopuş DEĞİL)? SAF — ağa uzanmaz.
+
+    Döner: "unblocked" (Redis 7.0: blok sırasında anahtar silindi) · "nogroup" (Redis ≥7.2'de aynı
+    olay; ya da anahtar var ama grup yok — ikisi de grubun yeniden kurulmasıyla toparlanır) · None
+    (sınıflanmadı → çağıran bugünkü kopuş yolunu izler). Tüketici KENDİ bağlamında karar verir:
+    arşivci NOGROUP'u kendi onarım yolunda tutar, yalnız "unblocked"ı buraya bağlar.
+
+    Kod normalizasyonu: redis-py bir hata kodunu bilinen-kod sözlüğüne alırsa kodu mesajdan AYIRIP
+    `status_code`a koyar; bu gün gelirse iki biçim aynı olay olarak okunur (kod gövdeye geri eklenir)."""
+    try:
+        from redis.exceptions import ResponseError
+    except ImportError:  # sessiz-yutma: redis-py kurulu değilse Redis yanıt hatası da doğamaz — sınıflanacak şey yok, None çağıranı bugünkü kopuş yoluna bırakır
+        return None
+    if not isinstance(exc, ResponseError):
+        return None
+    govde = str(exc).strip()
+    kod = getattr(exc, "status_code", None)
+    if kod and not govde.startswith(f"{kod} "):
+        govde = f"{kod} {govde}"
+    if govde == _UNBLOCKED_ANAHTAR_YOK:
+        return "unblocked"
+    if govde.startswith("NOGROUP "):
+        return "nogroup"
+    return None
+
+
+def _note_stream_expired(exc: BaseException, sinif: str, anahtar: str, kaynak: str) -> None:
+    """Akış anahtarı yaşam döngüsünü işler — KOPUŞ DEĞİL: istemci BIRAKILMAZ, `ok` DÜŞMEZ, `fails`
+    ARTMAZ. Görünürlük iki katmanlıdır (YASA 4 — sessiz onarım yok):
+      `stream_expired_total`      — süreç ömrü boyunca artan sayaç (health() ile süreç-içi okunur),
+      `akis_anahtari_suresi_doldu`— BİLGİ seviyesi olay; sayacı süreç sınırından geçiren TEK yer
+                                    (pid + toplam + bastirilan). Okuyucusu (YASA 6):
+                                    `analytics.coverage_breakage_counters` hotstate bloğu + genel
+                                    olay okuyucuları (ops/olay_sorgu.py `--sorgu tip`, /api/events).
+    SEL KISITI eski yolla (`_note_down`) AYNI pencere, DOWN_REASSERT_S: patolojik tekrar (anahtarı
+    durmadan silen bir süreç) bilgi olayı seline dönmesin. Pencere içindeki tekrar
+    `stream_expired_suppressed`a SAYILIR ve bir sonraki basımda `bastirilan` olarak görünür."""
+    global _LAST_EXPIRY_EMIT
+    _HEALTH["stream_expired_total"] = int(_HEALTH.get("stream_expired_total", 0)) + 1
+    simdi = time.monotonic()
+    if _LAST_EXPIRY_EMIT is not None and (simdi - _LAST_EXPIRY_EMIT) < DOWN_REASSERT_S:
+        _HEALTH["stream_expired_suppressed"] = int(_HEALTH.get("stream_expired_suppressed", 0)) + 1
+        return
+    _LAST_EXPIRY_EMIT = simdi
+    bastirilan = int(_HEALTH.get("stream_expired_suppressed", 0))
+    _HEALTH["stream_expired_suppressed"] = 0
+    try:
+        from . import obs
+        obs.log(AKIS_SURESI_DOLDU_OLAY, kaynak=kaynak, anahtar=anahtar, sinif=sinif,
+                error=f"{type(exc).__name__}: {str(exc)[:120]}", pid=os.getpid(),
+                toplam=int(_HEALTH["stream_expired_total"]), bastirilan=bastirilan,
+                detail="TTL'li akış anahtarı silindi (hafta sonu BARS_TTL_S dolumu) — Redis CEVAP "
+                       "VERDİ, bu bir kopuş DEĞİL; tüketici grubu yeniden kurar, ilk yazım anahtarı "
+                       "yeniden yaratır" + (f"; ARADA {bastirilan} tekrar BASTIRILDI "
+                                            f"(pencere {DOWN_REASSERT_S}s)" if bastirilan else ""))
+    except Exception:  # sessiz-yutma: kayıt kanalının kendisi düştü; ikinci kanal yok, telemetri asıl okuma yolunu düşüremez
+        pass
+
+
 def _mask(url: str) -> str:
     """Redis URL'ini kayda basılabilir hâle getirir: `redis://user:pass@host` içindeki PAROLAYI `***`
     ile değiştirir (sır asla olay defterine girmez)."""
@@ -240,7 +324,10 @@ def health() -> dict:
     çırpınma" diye okunurdu; oysa o süreç hiç ölçmemiştir. Anahtar YOK = o olay hiç yaşanmadı:
       `reassert_suppressed` — son basımdan BERİ bastırılan kopma (her basımda sıfırlanır),
       `suppressed_total`    — aynı sayacın sıfırlanmayan kümülatif ikizi,
-      `down_emits`          — bu süreçte basılan `hotstate_down` kenarı (kümülatif)."""
+      `down_emits`          — bu süreçte basılan `hotstate_down` kenarı (kümülatif).
+    AYNI YOKLUK KURALIYLA iki YAŞAM DÖNGÜSÜ alanı (TSK-249 — kopuş DEĞİL, `ok`u etkilemez):
+      `stream_expired_total`     — TTL'li akış anahtarı silinme olayı (kümülatif),
+      `stream_expired_suppressed`— son bilgi olayı basımından BERİ bastırılan tekrar."""
     return dict(_HEALTH)
 
 
@@ -524,6 +611,13 @@ def read_barfeed(group: str, consumer: str, count: int = 50, block_ms: int = 200
                 out.append((_id, fields))
         return out
     except Exception as e:
+        sinif = akis_yasam_dongusu_hatasi(e)
+        if sinif is not None:
+            # TSK-249: pazar TTL dolumu `mrd:barfeed`i bloklu okuma ORTASINDA siler — Redis cevap
+            # verdi, kopuş değil. None dönüşü AYNI kalır: tüketici döngüsü (barfeed) None'da grubu
+            # MKSTREAM ile yeniden kurar; `hotstate_down` yalnız gerçek erişim arızasına kalır.
+            _note_stream_expired(e, sinif, anahtar=BARFEED, kaynak="barfeed")
+            return None
         _note_down(e)
         return None
 
