@@ -604,6 +604,12 @@ SINK_TABANI = frozenset({
     # tüketici zinciri codelaw.DECLARED_SINKS gerekçesinde yazılı — `durum_sozlugu.esanlamli_okumalar`
     # + `durum_sozlugu.esanlamli_pencere` → `api._durum_sozlugu` → /api/diagnostics → pano.
     "durum_sozlugu_sayac.json",
+    # v592'DE BEYANLI GÜNCELLENDİ (2026-09-29, konuşan filo Parça 1 Görev 2) — TEK yeni muafiyet:
+    # `telegram_ofset.json`. Telegram `getUpdates` ofsetinin KALICI nüshası; yazan ve okuyan
+    # `telegram_dinleyici.dongu` — aynı modül, statik graf dış tüketiciyi göremiyor
+    # (pool_exhausted_seen.json sınıfı). Kalıcılık gerekçesi codelaw.DECLARED_SINKS'te yazılı:
+    # işlenmiş ama onaylanmamış güncelleme restart'ta YENİDEN gelir → operatöre çift cevap.
+    "telegram_ofset.json",
     # v503'TE BEYANLI DÜŞÜRÜLDÜ (2026-09-15, TSK-070 Task 1) — İKİ muafiyet KAPANDI:
     # `watchdog_alarmed.json` ve `integrity_alarmed.json`. Bu tabanın iki yönü vardır ve bu
     # DÜŞÜŞ yönüdür: muafiyet, artefakt öldüğü için değil, GERÇEK BİR DIŞ OKUYUCU DOĞDUĞU için

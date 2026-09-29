@@ -391,6 +391,14 @@ DECLARED_SINKS: dict[str, str] = {
         "fonksiyonlardan geçer: `durum_sozlugu.esanlamli_okumalar` + "
         "`durum_sozlugu.esanlamli_pencere` → `api._durum_sozlugu` → /api/diagnostics → pano "
         "sözlük kartı (f8SozlukSatiri)",
+    "telegram_ofset.json": "Telegram `getUpdates` ofsetinin KALICI nüshası (konuşan filo, spec "
+        "2026-09-29 §3.5, v592). Yazan da okuyan da `telegram_dinleyici.dongu` — AYNI modül, "
+        "statik graf dış tüketiciyi göremiyor (pool_exhausted_seen.json sınıfı). Modülün KENDİ "
+        "işletim durumudur, dışarıdan okunması anlamsız: kalıcı olmak ZORUNDA çünkü Telegram bir "
+        "güncellemeyi ancak DAHA BÜYÜK ofsetli bir sonraki yoklamada onaylanmış sayar; işlenmiş "
+        "ama henüz onaylanmamış güncelleme (sunucuda 24 saate kadar durur) süreç yeniden "
+        "başladığında ofset kaybolursa YENİDEN gelir ve operatörün aynı mesajına İKİNCİ kez cevap "
+        "gider (çift bot çağrısı, çift kota)",
     # NOT: `finviz_universe.json` buradan ÇIKARILDI. Beyanı doğruydu — okuyucusu
     # yalnız kendi modülündeydi, statik graf onu göremiyordu. Artık DIŞ bir okuyucusu var:
     # `marketview.build` keşfedilen evreni bars'ta olmayan semboller için satır üretmekte
