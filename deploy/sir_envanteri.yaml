@@ -122,15 +122,23 @@ dosyalar:
         sir: true
 
   # ---- DOCKER SARMALI (B sınıfı — yarım kazanım, beyanlı) ---------------------------------------
+  # EMEKLİ (TSK-064 iki-kanal kapanışı, 2026-09-29; Rol-1 kararı, dash-token Faz-2 emsali): hindsight-cp
+  # `51-env-cp-kaldir.conf` ile bu dosyayı ARTIK OKUMAZ — boş `EnvironmentFile=` temel birimin satırını
+  # sıfırlar, CP'nin tek (ZORUNLU) kaynağı Vault yan dosyası `/opt/hindsight/.env-cp.vault`tır
+  # (`vault_dosyalar`). GİRDİ SİLİNMEDİ: dosya A1'de operatör yedekleyip kaldırana dek DURUR ve iki sır
+  # adını hâlâ taşır — bu blok "bugün hangi sır nerede yaşıyor"u söyler (spec §1 ile BİREBİR, v439 E2/E3).
+  # Operatör kaldırdığı turda girdi ve spec §1 satırı AYNI turda çıkar (d-1 `.dash.env` emsali). Rotasyon
+  # bu dosyaya 2026-09-29'dan beri YAZMAZ (`rotasyon_kopyalari.emekli_kopyalar`); `--envanter` varlığını ölçer.
+  # TSK-226 (2026-09-25) tarihçesi: "docker env-file" YANLIŞTI — birim sırları `-e AD=${AD}` ile ExecStart'a
+  # genişletiyordu; birim değersiz `-e AD`ye çevrildi ve kanal "EnvironmentFile → docker -e AD, değer
+  # ortamdan — argv'de yok" oldu. O kanal bugün YALNIZ yan dosyanındır (`vault_dosyalar` tüketici metni).
   - yol: "/opt/hindsight/.env-cp"
     mod: "600"
     sahip: "root"
-    tuketici: "hindsight-cp.service (docker)"
+    tuketici: "YOK — EMEKLİ 2026-09-29: hindsight-cp drop-in 51-env-cp-kaldir.conf ile bu dosyayı okumaz"
     sinif: "B"
-    # TSK-226 (2026-09-25): "docker env-file" YANLIŞTI — birim sırları `-e AD=${AD}` ile ExecStart'a
-    # genişletiyordu (argv'de, herkese açık; Rol-1 A1 ölçümü). Birim değersiz `-e AD`ye çevrildi.
-    kanal_bugun: "EnvironmentFile → docker -e AD, değer ortamdan — argv'de yok"
-    kanal_hedef: "LoadCredential + ExecStart sarmalayıcı"
+    kanal_bugun: "EMEKLİ — okuyucusuz; operatör yedekleyip kaldırır (deploy/oracle-a1/RUNBOOK.md son bölüm)"
+    kanal_hedef: "KALDIRMA — CP'nin tek kanalı /opt/hindsight/.env-cp.vault (Vault Agent)"
     degiskenler:
       - ad: HINDSIGHT_CP_ACCESS_KEY
         sir: true
@@ -204,14 +212,16 @@ dosyalar:
 #
 # AÇIK KALEM (2026-09-07 · KISMEN KAPANDI 2026-09-08): hermes profillerindeki `OPENROUTER_API_KEY`
 # artık `dosyalar:` bloğunda ve §1 tablosunda (spec "ÖLÇÜM GÜNCELLEMESİ" notu). AÇIK KALAN TEK
-# SATIR `/opt/hindsight/.key`tir: §2'nin DONUK sınıf sözlüğünde (A/B/C/D) karşılığı yoktur — bir
+# SATIR `/opt/hindsight/.key`ti: §2'nin DONUK sınıf sözlüğünde (A/B/C/D) karşılığı yoktur — bir
 # kabuk okuyucusunun (`~/bin/hafiza_sor.sh`; 2026-09-25'ten beri `~/bin/sayfa_oku.sh` de — ikisi de
 # `deploy/hindsight/` bağı, TSK-222) düz dosyası ne systemd-doğal (A), ne docker (B), ne
-# hermes profili (C), ne de ayar (D). Sözlüğü esnetmek yerine burada beyanla duruyor; sınıf
-# ataması spec turunun işidir (Rol-1).
+# hermes profili (C), ne de ayar (D). Sözlüğü esnetmek yerine burada beyanla duruyordu.
+# KAPANDI 2026-09-29 (TSK-064 iki-kanal kapanışı): araçlar anahtarı Vault render hedefinden
+# `sudo -n cat` borusuyla okur; satır `kopyalar`dan `emekli_kopyalar`a taşındı (aşağıda). Sınıf sorusu
+# böylece HİÇ sorulmadan düştü: dosyanın okuyucusu kalmadı, sözlük esnetilmedi.
 
 rotasyon_kopyalari:
-  olcum: "2026-09-07 22:0xZ — A1, elle rotasyon penceresi (yalnız AD ve YOL okundu; değer basılmadı) · EK 2026-09-08 08:0xZ — /opt/hindsight/.env failover ÜYE anahtarları (altı satır) ölçüldü ve eklendi · EK 2026-09-26 (TSK-226b) — CP erişim anahtarının iki satırı DEPODAN türetildi (birim EnvironmentFile + vault_kv.hedef); A1'de yol/ad ÖLÇÜLMEDİ — ilk `--envanter` ölçer"
+  olcum: "2026-09-07 22:0xZ — A1, elle rotasyon penceresi (yalnız AD ve YOL okundu; değer basılmadı) · EK 2026-09-08 08:0xZ — /opt/hindsight/.env failover ÜYE anahtarları (altı satır) ölçüldü ve eklendi · EK 2026-09-26 (TSK-226b) — CP erişim anahtarının iki satırı DEPODAN türetildi (birim EnvironmentFile + vault_kv.hedef); A1'de yol/ad ÖLÇÜLMEDİ — ilk `--envanter` ölçer · EK 2026-09-29 (TSK-064 iki-kanal kapanışı) — `/opt/hindsight/.key` ve iki `/opt/hindsight/.env-cp` satırı `emekli_kopyalar`a taşındı (Rol-1 A1 ölçümü 2026-09-29: `.env-cp.vault` 0400 root, `.env-cp` ile AYNI iki ad)"
   kaynak_betik: "deploy/oracle-a1/sir_rotasyon.sh"
 
   kopyalar:
@@ -245,24 +255,11 @@ rotasyon_kopyalari:
       # bu birim `Type=oneshot` + timer-tetiklidir ve rotasyon penceresinde restart EDİLMEZ —
       # taze anahtarı bir sonraki tetikte kaynaktan okur (tablosu: `_oneshot_kredensiyeller`).
       tuketici: "hindsight-api.service (50-creds) · meridian.service (54 drop-in) ·
-        meridian-defter-ozeti-retain (timer'lı oneshot, 54 drop-in — restart YOK) — AYNI dosya"
-    - alt_komut: tenant
-      sir: HINDSIGHT_API_TENANT_API_KEY
-      tur: dosya
-      yol: "/opt/hindsight/.key"
-      alan: null
-      mod: "600"
-      sahip: "ubuntu"
-      tuketici: "~/bin/hafiza_sor.sh · ~/bin/sayfa_oku.sh (kabuk okuyucular, deploy/hindsight/ bağları; her çağrıda dosyayı okur, restart yok)"
-      not: "spec §1 tablosunda YOK — açık kalem (yukarıdaki şerh)"
-    - alt_komut: tenant
-      sir: HINDSIGHT_API_TENANT_API_KEY
-      tur: env
-      yol: "/opt/hindsight/.env-cp"
-      alan: HINDSIGHT_CP_DATAPLANE_API_KEY
-      mod: null                # korunur
-      sahip: null
-      tuketici: "hindsight-cp.service (EnvironmentFile → docker -e AD, değer ortamdan — argv'de yok)"
+        meridian-defter-ozeti-retain (timer'lı oneshot, 54 drop-in — restart YOK) · ~/bin/hafiza_sor.sh +
+        ~/bin/sayfa_oku.sh (sudo -n cat borusu, 2026-09-29) — AYNI dosya · hindsight-cp.service (DATAPLANE
+        değeri AYNI kasa yolunun yan dosyasından: .env-cp.vault → docker -e AD, değer ortamdan — argv'de yok;
+        Agent render eder, restart GEREKİR — 2026-09-29'a kadar ayrı `.env-cp` satırındaydı)"
+      not: "TEK KOPYA (2026-09-29, TSK-064 iki-kanal kapanışı): `/opt/hindsight/.key` dosya satırı ve `/opt/hindsight/.env-cp` [HINDSIGHT_CP_DATAPLANE_API_KEY] satırı ÇIKTI → `emekli_kopyalar`. CP bu değeri yan dosyadan (`.env-cp.vault`, takma ad `hindsight_cp_dataplane_api_key`) alır; rotasyon yan dosyaya YAZMAZ (Agent render eder, restart listesi hindsight-cp'yi taşır)"
 
     - alt_komut: db
       sir: HINDSIGHT_DB_PAROLA
@@ -495,9 +492,10 @@ rotasyon_kopyalari:
     # (`vault_kv` girdisi `rotasyon_siri: null` taşıyordu). Alt komut `sir_rotasyon.sh --cp` (+ `--vault`).
     # REFERANS Vault Agent'ın KANONİK tek-değer kopyasıdır (d-1 emsali, `OPENROUTER_API_KEY` ·
     # `APISIX_ADMIN_KEY`): `--envanter` kasadaki değeri referans alır, `--esitle` kasa değerini eski kanala
-    # taşır — tersi DEĞİL. `.env-cp` satırı ESKİ KANAL kopyasıdır. Kasa yan dosyası (`.env-cp.vault`)
-    # TABLODA YOK: onu yalnız Agent yazar (emsal `.env-apisix.vault` · `.env.vault`), rotasyon render'ı
-    # kanonik kopyadan ölçer; oraya yazmak Agent'la yarışmak olurdu.
+    # taşır — tersi DEĞİL. `.env-cp` satırı 2026-09-29'a kadar ESKİ KANAL kopyasıydı; iki-kanal kapanışında
+    # `emekli_kopyalar`a taşındı. Kasa yan dosyası (`.env-cp.vault`) TABLODA YOK: onu yalnız Agent yazar
+    # (emsal `.env-apisix.vault` · `.env.vault`), rotasyon render'ı kanonik kopyadan ölçer; oraya yazmak
+    # Agent'la yarışmak olurdu.
     - alt_komut: cp
       sir: HINDSIGHT_CP_ACCESS_KEY
       tur: dosya
@@ -505,16 +503,50 @@ rotasyon_kopyalari:
       alan: null
       mod: "400"
       sahip: "root"
-      tuketici: "Vault Agent kanonik tek-değer kopyası — sir_rotasyon.sh --cp --vault render kanıtı ve --envanter/--esitle REFERANSI (birim DEĞİL, restart yok; CP bu dosyayı OKUMAZ)"
-      not: "REFERANS kopya: vault_kv.hindsight_cp_access_key.hedef (Agent render hedefi). Konteyner değeri .env-cp.vault yan dosyasından ortamla alır"
+      tuketici: "Vault Agent kanonik tek-değer kopyası — sir_rotasyon.sh --cp --vault render kanıtı ve --envanter/--esitle REFERANSI (CP bu dosyayı OKUMAZ) · hindsight-cp.service değeri AYNI kasa yolunun yan dosyasından alır: .env-cp.vault → docker -e AD, değer ortamdan — argv'de yok (Agent render eder, restart GEREKİR — 2026-09-29'a kadar ayrı `.env-cp` satırındaydı)"
+      not: "REFERANS ve TEK kopya (2026-09-29, TSK-064 iki-kanal kapanışı: `.env-cp` satırı ÇIKTI → `emekli_kopyalar`): vault_kv.hindsight_cp_access_key.hedef (Agent render hedefi). Konteyner değeri YALNIZ .env-cp.vault yan dosyasından (drop-in 51, zorunlu) ortamla alır"
+
+  # =================================================================================================
+  # EMEKLİ KOPYALAR — TSK-064 iki-kanal kapanışı (2026-09-29; Rol-1 kararı, dash-token (d-1) üslubu)
+  # =================================================================================================
+  # Bu satırlar `kopyalar`dan ÇIKTI ama SİLİNMEDİ: rotasyon onları ARTIK YAZMAZ ve hiçbir tüketici okumaz;
+  # tarihçe (hangi sırrın hangi dosyada, hangi izinle, kimin için yaşadığı) burada tarihli durur. `kopyalar`
+  # listesinde KALAMAZLAR: o liste `sir_rotasyon.sh --kopyalar` ile BİREBİR eşittir (v447 A1/A2) ve rotasyonun
+  # YAZDIĞI kopyaları söyler. Dosyaların diskteki VARLIĞINI `--envanter` ölçer (`_emekli_kopyalar` — yol kümesi
+  # buradan türetilemediği için betikte kopya + ayrışma çivisi v590 C4). Kaldırma KODUN işi değil, operatör
+  # adımıdır: yedek (`/root/sir-yedek-<UTC>-ikikanal/`) → kaldır → doğrula (deploy/oracle-a1/RUNBOOK.md son bölüm).
+  # Şema: `kopyalar` satırı + `emekli` (tarih) + `not` (neden, ≥20 karakter) — v590 C2.
+  emekli_kopyalar:
+    - alt_komut: tenant
+      sir: HINDSIGHT_API_TENANT_API_KEY
+      tur: dosya
+      yol: "/opt/hindsight/.key"
+      alan: null
+      mod: "600"
+      sahip: "ubuntu"
+      tuketici: "YOK — ~/bin/hafiza_sor.sh · ~/bin/sayfa_oku.sh anahtarı 2026-09-29'dan beri `sudo -n cat /etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY` borusundan okur"
+      emekli: "2026-09-29"
+      not: "Kiracı anahtarının düz kopyasıydı; Vault render hedefi 0400 root olduğu için ubuntu-okur araçlar içindi. Agent `template`inde sahiplik alanı YOK, `exec chown` DİLİM-3'te emekli, ACL her atomik render'da kaybolur → araçlar sudo borusuna geçti (seçenek B)"
+    - alt_komut: tenant
+      sir: HINDSIGHT_API_TENANT_API_KEY
+      tur: env
+      yol: "/opt/hindsight/.env-cp"
+      alan: HINDSIGHT_CP_DATAPLANE_API_KEY
+      mod: null
+      sahip: null
+      tuketici: "YOK — hindsight-cp 51-env-cp-kaldir.conf ile bu dosyayı okumaz; değer .env-cp.vault'tan (takma ad hindsight_cp_dataplane_api_key)"
+      emekli: "2026-09-29"
+      not: "CP temel biriminin EnvironmentFile'ıydı; drop-in 51 boş EnvironmentFile= ile sıfırlar ve yan dosyayı ZORUNLU tek kaynak yapar"
     - alt_komut: cp
       sir: HINDSIGHT_CP_ACCESS_KEY
       tur: env
       yol: "/opt/hindsight/.env-cp"
       alan: HINDSIGHT_CP_ACCESS_KEY
-      mod: null                # korunur (dosya 600 root — `dosyalar:` bloğunda ölçülü)
+      mod: null
       sahip: null
-      tuketici: "hindsight-cp.service (EnvironmentFile → docker -e AD, değer ortamdan — argv'de yok; drop-in'in .env-cp.vault'u varsa o KAZANIR)"
+      tuketici: "YOK — hindsight-cp 51-env-cp-kaldir.conf ile bu dosyayı okumaz; değer .env-cp.vault'tan (vault_kv.hindsight_cp_access_key)"
+      emekli: "2026-09-29"
+      not: "CP giriş anahtarının eski kanal kopyasıydı (TSK-226b'de tabloya girmişti); iki-kanal kapanışında yan dosya tek kanal oldu"
 
 # =================================================================================================
 # VAULT KV DALGA-1 — TSK-064 Faz-2 (2026-09-14, repo tarafı; A1 kurulumu Rol-1'de)
@@ -794,7 +826,8 @@ vault_kv:
 
   # HİNDSİGHT KONTROL PANELİ — İKİ AYRI SIR, tek dosya. `ACCESS_KEY` CP'nin kendi giriş anahtarı,
   # `DATAPLANE_API_KEY` ise TENANT anahtarının kopyasıdır ve rotasyon tablosunda o sırla YAŞAR — kopya
-  # kümesi oradan türer (üç satır: credential kaynağı · hafıza okuyucusunun düz dosyası · CP env satırı).
+  # kümesi oradan türer (2026-09-29'a kadar üç satır: credential kaynağı · hafıza okuyucusunun düz dosyası ·
+  # CP env satırı; iki-kanal kapanışından beri TEK satır: credential kaynağı — `kopya_kaynaklari` YOK).
   # 2026-09-26 (TSK-226b): `ACCESS_KEY` de rotasyon tablosuna girdi (`sir_rotasyon.sh --cp`, iki satır:
   # bu girdinin `hedef`i REFERANS + `.env-cp` satırı) ve BAĞLANDI (`rotasyon_siri`). `kaynak` artık tablonun
   # REFERANSIDIR (v520 A5 kuralı: kaynak = referans; emsal `openrouter_api_key` · `bot_key_meridian` ·
@@ -802,6 +835,10 @@ vault_kv:
   # BEDEL (bedel yasası): `vault_sir_koy.sh` bu sırrı artık kasadan render edilmiş dosyadan okur — kasa BOŞ
   # bir kurulumda (yeni A1) sıfırdan tohumlayamaz; o hâlde kaynak geçici olarak `.env-cp` satırına çevrilir
   # (emsal: `openrouter_api_key` 2026-09-17 d-1 ile aynı bedeli taşıyor). A1'de kasa 2026-09-14'ten beri dolu.
+  # 2026-09-29 (TSK-064 iki-kanal kapanışı): `.env-cp` satırı `kopya_kaynaklari`ndan DÜŞTÜ (rotasyon tablosuyla
+  # AYNI turda — v491 A5 küme eşitliği; v590 C3). Yukarıdaki "geçici olarak `.env-cp` satırına çevrilir" yolu
+  # BUNDAN SONRA YOK: sıfırdan kurulumda değer kasaya doğrudan konur (`vault kv put … value=-`, STDIN) ve CP
+  # onu yalnız yan dosyadan okur (drop-in 51 — yan dosyasız CP AÇILMAZ).
   - ad: hindsight_cp_access_key
     vault_yolu: "secret/meridian/hindsight_cp_access_key"
     hedef: "/etc/meridian/hindsight_cp_access_key"
@@ -810,18 +847,14 @@ vault_kv:
     tuketici: "vault_dosyalar şablonu (/opt/hindsight/.env-cp.vault) · sir_rotasyon.sh --vault render kanıtı"
     rotasyon_siri: HINDSIGHT_CP_ACCESS_KEY
     kaynak: {tur: dosya, dosya: "/etc/meridian/hindsight_cp_access_key", alan: null, onek: null}
-    kopya_kaynaklari:
-      - {tur: env_satiri, dosya: "/opt/hindsight/.env-cp", alan: HINDSIGHT_CP_ACCESS_KEY, onek: null}
   # `DATAPLANE_API_KEY` TENANT anahtarının kopyasıdır → TAKMA AD (birincil
-  # `HINDSIGHT_API_TENANT_API_KEY`, kasada dalga-1'den beri duruyor).
+  # `HINDSIGHT_API_TENANT_API_KEY`, kasada dalga-1'den beri duruyor). `kopya_kaynaklari` 2026-09-29'da DÜŞTÜ
+  # (`/opt/hindsight/.key` + `.env-cp` DATAPLANE satırı — iki-kanal kapanışı; rotasyon tablosuyla AYNI turda).
   - ad: hindsight_cp_dataplane_api_key
     ayni_deger: HINDSIGHT_API_TENANT_API_KEY
     tuketici: "vault_dosyalar şablonu (/opt/hindsight/.env-cp.vault) — TAKMA AD: kasa yolu ve render kanıtı BİRİNCİLİNDİR (HINDSIGHT_API_TENANT_API_KEY)"
     rotasyon_siri: HINDSIGHT_API_TENANT_API_KEY
     kaynak: {tur: dosya, dosya: "/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY", alan: null, onek: null}
-    kopya_kaynaklari:
-      - {tur: dosya, dosya: "/opt/hindsight/.key", alan: null, onek: null}
-      - {tur: env_satiri, dosya: "/opt/hindsight/.env-cp", alan: HINDSIGHT_CP_DATAPLANE_API_KEY, onek: null}
 
   # ---- TELEMETRİ (TSK-020 UYGULA-9 Faz A, 2026-09-28) --------------------------------------------
   # Grafana yönetici parolası — YENİ bir sır: taşınacak eski dosya YOK, `kaynak:` taşımaz (dalga-1 biçimi;

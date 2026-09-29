@@ -114,7 +114,10 @@ UYE_ALANLARI = tuple(f"HINDSIGHT_API_{yuzey}_LLM_{n}_API_KEY"
 #: 2026-09-26 (TSK-226b): +2 = 27 — `HINDSIGHT_CP_ACCESS_KEY` (`--cp`): Vault Agent'ın kanonik render
 #: hedefi (REFERANS) + `/opt/hindsight/.env-cp` satırı. Sırrın rotasyon yolu YOKTU; değer TSK-226'da
 #: argv'de ve bir tanımlama çıktısında görüldüğü için döndürülmesi gerekiyor (v556).
-KOPYA_SAYISI = 27
+#: 2026-09-29 (TSK-064 iki-kanal kapanışı): −3 = 24 — `tenant … dosya /opt/hindsight/.key`, `tenant … env
+#: /opt/hindsight/.env-cp [DATAPLANE]` ve `cp … env /opt/hindsight/.env-cp [ACCESS]` ÇIKTI (envanterde
+#: `emekli_kopyalar`a taşındı, v590 C). Sebep keşif değil KARAR: araçlar sudo borusuna, CP yan dosyaya geçti.
+KOPYA_SAYISI = 24
 
 
 # =================================================================================================
@@ -644,10 +647,10 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
     # ölçen çivinin İÇİNDE kurulur (I1 · Q1 · P3) — tohum canlıya yaklaştı, hiçbir sahne kaybolmadı.
     (kok / "etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY").write_text(ESKI["or"] + "\n")
     (kok / "etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL").write_text(DSN + "\n")
-    (kok / "opt/hindsight/.key").write_text(ESKI["tenant"] + "\n")
-    (kok / "opt/hindsight/.env-cp").write_text(
-        "HINDSIGHT_CP_ACCESS_KEY=sahte-access\n"
-        f"HINDSIGHT_CP_DATAPLANE_API_KEY={ESKI['tenant']}\n")
+    # `/opt/hindsight/.key` ve `/opt/hindsight/.env-cp` TOHUMDA YOK (TSK-064 iki-kanal kapanışı, 2026-09-29):
+    # kopya tablosundan çıktılar (`emekli_kopyalar`) ve operatör adımıyla A1'den kaldırılırlar — tohum
+    # kapanışın HEDEF hâlidir (D7'nin dersi: sahne canlının varacağı dünyayı modeller). Operatör adımı ÖNCESİ ara
+    # hâl (iki dosya diskte) v590 C5/C7/C8'de o çivinin İÇİNDE kurulur.
     # `/opt/hindsight/.env` İKİ SINIF satır taşır ve ikisi de MODELLENİR (ölçüm 2026-09-08 08:0xZ):
     #   · sır OLMAYAN AYAR satırı (`..._LLM_STRATEGY`) — sözlük DAR olduğu için bağırılmamalı;
     #   · failover zincirinin ALTI ÜYE anahtarı — üye ana anahtarı DEVRALMAZ, her biri
@@ -814,9 +817,13 @@ def test_A2_envanterdeki_YOLLAR_betikte_VAR():
 
 def test_A3_BU_TURUN_iki_yeni_kopyasi_envanterde():
     """Brief'in adıyla istediği iki kopya (bu gece ölçüldü, envanterde YOKTU): hafıza kabuk
-    okuyucusunun `.key`i ve hermes profillerindeki OpenRouter anahtarı."""
+    okuyucusunun `.key`i ve hermes profillerindeki OpenRouter anahtarı.
+    2026-09-29 (TSK-064 iki-kanal kapanışı): `.key` artık `kopyalar`da DEĞİL, `emekli_kopyalar`dadır — envanter
+    onu KAYBETMEDİ (girdi silinmedi, tarihli emekli); rotasyon yazmaz (v590 C1/C2)."""
     yollar = {(x["yol"], x.get("alan")) for x in _envanter_kopyalari()}
-    assert ("/opt/hindsight/.key", None) in yollar
+    emekli = {(x["yol"], x.get("alan")) for x in
+              yaml.safe_load(ENVANTER.read_text(encoding="utf-8"))["rotasyon_kopyalari"]["emekli_kopyalar"]}
+    assert ("/opt/hindsight/.key", None) in emekli and ("/opt/hindsight/.key", None) not in yollar
     for p in ("bekci", "karne", "sef"):
         assert (f"/home/ubuntu/.hermes/profiles/{p}/.env", "OPENROUTER_API_KEY") in yollar
 
@@ -1020,49 +1027,56 @@ def test_D6_kapi_CREDENTIAL_dolulugu_olculur(tmp_path):
 # E) --tenant
 # =================================================================================================
 
-def test_E1_tenant_UC_kopya_ESIT(tmp_path):
-    """Üç kopya (creds dosyası · `.key` · `.env-cp` satırı) AYNI değeri taşımalı. Biri unutulursa
-    `hafiza_sor.sh` ya da hindsight-cp ilk çağrısında 401 alır — ve o çağrı saatler sonra gelir."""
+def test_E1_tenant_TEK_kopya_render_hedefi(tmp_path):
+    """2026-09-29'a kadar ÜÇ kopya (creds dosyası · `.key` · `.env-cp` satırı) AYNI değeri taşımalıydı. TSK-064
+    iki-kanal kapanışında `.key` (araçlar sudo borusuna geçti) ve `.env-cp` satırı (CP yan dosyaya geçti) ÇIKTI:
+    `--tenant` artık TEK kopya yazar ve emekli kopyaları DOĞURMAZ (v590 C7 ara hâlde bayt eşitliğini ölçer)."""
     kok, ortam = _sahte_ortam(tmp_path)
     r = _kos(BETIK, ortam, "--tenant")
     assert r.returncode == 0, r.stdout + r.stderr
     yeni = (kok / "etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY").read_text().strip()
     assert len(yeni) == 64 and re.fullmatch(r"[0-9a-f]{64}", yeni), yeni
-    assert (kok / "opt/hindsight/.key").read_text().strip() == yeni
-    assert _env_alan(kok / "opt/hindsight/.env-cp", "HINDSIGHT_CP_DATAPLANE_API_KEY") == yeni
-    assert "EŞİT" in r.stdout
+    assert not (kok / "opt/hindsight/.key").exists() and not (kok / "opt/hindsight/.env-cp").exists()
+    satirlar = [s for s in r.stdout.splitlines() if s.startswith("  HINDSIGHT_API_TENANT_API_KEY · ")]
+    assert len(satirlar) == 1 and satirlar[0].endswith("→ VAR (referans kopya)"), satirlar
+    assert "altındaki 1 kopyayı geri koy" in r.stdout, r.stdout
 
 
-def test_E2_tenant_key_MOD_ve_SAHIP_korunur(tmp_path):
-    """`.key`i ubuntu okur (`~/bin/hafiza_sor.sh`). 0400 root'a çekmek rotasyonu "başarılı"
-    gösterip okuyucuyu sessizce kırardı — bu yüzden mod/sahip `koru`dur."""
+# E2–E4 2026-09-29'da `--kapi`nin `.env-apisix` satırına TAŞINDI: ölçtükleri sınıflar (`koru` izin/sahip · env
+# satırı tekilliği · çift satırda durma) `--tenant`in emekli kopyalarında (`.key` · `.env-cp`) yaşıyordu ve o
+# kopyalar kapandı. Sınıflar KAPANMADI — env kopyası olan her alt komutta hâlâ geçerli (bedel yasası: çivi
+# düşürülmez, yaşayan bir örneğe taşınır). `koru` DOSYA dalı (tablo bugün hiç `koru` dosya satırı taşımıyor) K7c/K7d.
+
+def test_E2_koru_env_satirinda_MOD_ve_SAHIP_korunur(tmp_path):
+    """`.env-apisix` 640 root (spec §1; faz0 hedefi 600 — ÖLÇÜLMÜŞ izin). Rotasyon izni UYDURMAZ: `koru`
+    mevcut mod/sahibi okur ve AYNEN yazar; 0400 root'a çekmek kapının okuyucusunu sessizce kırabilirdi."""
     kok, ortam = _sahte_ortam(tmp_path)
-    hedef = kok / "opt/hindsight/.key"
-    hedef.chmod(0o600)
+    hedef = kok / "opt/apisix/.env-apisix"
+    hedef.chmod(0o640)
     once = hedef.stat()
-    assert _kos(BETIK, ortam, "--tenant").returncode == 0
+    assert _kos(BETIK, ortam, "--kapi").returncode == 0
     sonra = hedef.stat()
-    assert oct(sonra.st_mode & 0o777) == "0o600"
+    assert oct(sonra.st_mode & 0o777) == "0o640"
     assert (sonra.st_uid, sonra.st_gid) == (once.st_uid, once.st_gid)
 
 
-def test_E3_tenant_env_cp_satiri_TEK_kalir(tmp_path):
-    """İki `HINDSIGHT_CP_DATAPLANE_API_KEY=` satırı en sinsi hâl olurdu: docker sonuncuyu okur,
-    operatör ilkini düzenler ve iki değer sessizce ayrışır."""
+def test_E3_env_satiri_TEK_kalir_komsu_YENMEZ(tmp_path):
+    """İki `BOT_KEY_MERIDIAN=` satırı en sinsi hâl olurdu: docker sonuncuyu okur, operatör ilkini düzenler
+    ve iki değer sessizce ayrışır. Komşu sır satırları (bot anahtarları) DOKUNULMADAN kalır."""
     kok, ortam = _sahte_ortam(tmp_path)
-    assert _kos(BETIK, ortam, "--tenant").returncode == 0
-    ham = (kok / "opt/hindsight/.env-cp").read_text()
-    assert ham.count("HINDSIGHT_CP_DATAPLANE_API_KEY=") == 1, ham
-    assert "HINDSIGHT_CP_ACCESS_KEY=sahte-access" in ham, "komşu satır YENDİ"
+    assert _kos(BETIK, ortam, "--kapi").returncode == 0
+    ham = (kok / "opt/apisix/.env-apisix").read_text()
+    assert ham.count("BOT_KEY_MERIDIAN=") == 1, ham.count("BOT_KEY_MERIDIAN=")
+    assert "BOT_KEY_BEKCI=sahte-bekci" in ham and "PANO_GIRIS_PAROLA=sahte-parola" in ham, "komşu satır YENDİ"
 
 
 def test_E4_alan_IKI_KEZ_varsa_betik_DURUR(tmp_path):
     """`^AD=` satırı 0 ya da >1 ise yazım hedefsizdir. Sessizce "sonuncuyu" yazmak, ayrışmayı
     ROTASYONUN KENDİSİNİN üretmesi demek olurdu."""
     kok, ortam = _sahte_ortam(tmp_path)
-    p = kok / "opt/hindsight/.env-cp"
-    p.write_text(p.read_text() + f"HINDSIGHT_CP_DATAPLANE_API_KEY={ESKI['tenant']}\n")
-    r = _kos(BETIK, ortam, "--tenant")
+    p = kok / "opt/apisix/.env-apisix"
+    p.write_text(p.read_text() + f"BOT_KEY_MERIDIAN='{ESKI['kapi']}'\n")
+    r = _kos(BETIK, ortam, "--kapi")
     assert r.returncode != 0
     assert "2 kez bulundu" in (r.stdout + r.stderr)
 
@@ -1879,25 +1893,35 @@ def test_K7b_MUT_kosulsuz_install_izni_gevsetir(tmp_path):
         "dizin mutasyonu K7a'yı kırmıyor — çivi yanlış sebeple yeşil"
 
 
+#: `koru` DOSYA satırı — 2026-09-29'a kadar tablonun TEK örneği `/opt/hindsight/.key`ti (TSK-064 iki-kanal
+#: kapanışında emekli). Dal betikte SAVUNMA olarak kalır (tabloya yeni bir `koru` dosya satırı girerse izni
+#: uydurmaz); çivi dalı, tabloya o satırı GERİ koyan bir test kopyasıyla ölçer — dal ölü kod değil, örneksizdir.
+KORU_DOSYA_SATIRI = "tenant HINDSIGHT_API_TENANT_API_KEY dosya /opt/hindsight/.key - koru koru -\n"
+TENANT_REFERANS_SATIRI = ("tenant HINDSIGHT_API_TENANT_API_KEY dosya /etc/hindsight/creds/"
+                          "HINDSIGHT_API_TENANT_API_KEY - 0400 root:root -\n")
+
+
 def test_K7c_koru_hedefi_YOKSA_betik_DURUR(tmp_path):
     """`mod=koru` "mevcut izni koru" demektir; hedef yoksa MEVCUT izin OKUNAMAZ. İlk turda hedef
     `tee` ile ön-yaratılıyordu ve yardımcıdaki "dosya YOK → dur" kapısı ÖLÜ KODDU."""
     kok, ortam = _sahte_ortam(tmp_path)
-    (kok / "opt/hindsight/.key").unlink()
-    r = _kos(BETIK, ortam, "--tenant")
+    koru = _mutant(tmp_path, (TENANT_REFERANS_SATIRI, TENANT_REFERANS_SATIRI + KORU_DOSYA_SATIRI),
+                   ad="koru_satirli.sh")
+    assert not (kok / "opt/hindsight/.key").exists()
+    r = _kos(koru, ortam, "--tenant")
     assert r.returncode != 0, r.stdout + r.stderr
     assert "koru ama hedef YOK" in (r.stdout + r.stderr)
     assert not (kok / "opt/hindsight/.key").exists(), "eksik hedef 0644 olarak YENİDEN DOĞDU"
 
 
 def test_K7d_MUT_on_yaratma_geri_gelirse_SIR_0644_dogar(tmp_path):
-    """K7c'nin ısırdığı dal — ve kaybın büyüklüğü: ön-yaratma geri konunca eksik `.key` 0644
+    """K7c'nin ısırdığı dal — ve kaybın büyüklüğü: ön-yaratma geri konunca eksik `koru` hedefi 0644
     olarak doğar, yani rotasyon KORUMAYA çalıştığı izni kendi eliyle gevşetir."""
     kok, ortam = _sahte_ortam(tmp_path)
-    (kok / "opt/hindsight/.key").unlink()
-    m = _mutant(tmp_path, ('case "$mod/$sahip" in',
-                           'sudo test -e "$hedef" || { : | sudo tee "$hedef" >/dev/null; }\n'
-                           '             case "x/x" in'))
+    m = _mutant(tmp_path, (TENANT_REFERANS_SATIRI, TENANT_REFERANS_SATIRI + KORU_DOSYA_SATIRI),
+                ('case "$mod/$sahip" in',
+                 'sudo test -e "$hedef" || { : | sudo tee "$hedef" >/dev/null; }\n'
+                 '             case "x/x" in'))
     assert _kos(m, ortam, "--tenant").returncode == 0
     yeni = kok / "opt/hindsight/.key"
     assert yeni.exists() and oct(yeni.stat().st_mode & 0o777) == "0o644", \
@@ -2668,20 +2692,17 @@ def test_N11_RESTART_ISTEMEYEN_tuketiciler_BEYANLI():
         "brifing/learn/sprint@ birimleri (EnvironmentFile, başlangıçta okunur)",  # aynı sınıf
         "postgres",                                          # parolayı ALTER ROLE ile anında alır
         "meridian yerel sır deposu",                         # meridian sürecinin İÇİ
-        # kabuk okuyucular, birim değil — 2026-09-25 (TSK-064 notu, TSK-222 incelemesi): sayfa_oku.sh
-        # de aynı `.key`i her çağrıda okur; envanter yalnız hafiza_sor.sh'i sayıyordu
-        "~/bin/hafiza_sor.sh · ~/bin/sayfa_oku.sh (kabuk okuyucular, deploy/hindsight/ bağları; her çağrıda dosyayı okur, restart yok)",
+        # 2026-09-25..29: kabuk okuyucuların `.key` satırı burada beyanlıydı; TSK-064 iki-kanal kapanışında satır
+        # `emekli_kopyalar`a taşındı ve araçlar render hedefi satırının tüketicisine girdi (sudo borusu).
         # 2026-09-13 (TSK-181): motorun CLI çağrısı her seferinde dosyayı okur — birim değil,
         # restart yok; atlanınca akşam inceleme 4 gün 401'de kaldı (envantere bu yüzden girdi)
         "hermes CLI GLOBAL env — motorun hermes._agent_call yolu (kind=review/generic; timer'sız, restart gerekmez)",
         # TSK-064 Faz-1C: kaynağı okuyan şey bir BİRİM değil, operatörün eliyle koştuğu ops
         # aracıdır — her koşumda dosyayı yeniden okur, yani restart diye bir kavramı yoktur.
         "ops/apisix_uygula.py (operatör eliyle koşan ops aracı; birim DEĞİL, restart yok)",
-        # TSK-226b (2026-09-26): CP erişim anahtarının REFERANSI Vault Agent'ın kanonik kopyasıdır —
-        # okuyucusu rotasyonun render kanıtı ve envanter/eşitleme kıyasıdır, bir birim DEĞİL (konteyner
-        # değeri yan dosyadan ortamla alır; o satırın tüketicisi `.env-cp` satırında `.service`le yazılı).
-        "Vault Agent kanonik tek-değer kopyası — sir_rotasyon.sh --cp --vault render kanıtı ve "
-        "--envanter/--esitle REFERANSI (birim DEĞİL, restart yok; CP bu dosyayı OKUMAZ)",
+        # TSK-226b (2026-09-26) → 2026-09-29: CP erişim anahtarının REFERANS satırı burada servissiz beyanlıydı
+        # (tüketicisi `.env-cp` satırında `.service`le yazılıydı). İki-kanal kapanışında `.env-cp` satırı çıktı ve
+        # restart tüketicisi (hindsight-cp.service, yan dosya üzerinden) REFERANS satırının kendisine yazıldı (N10).
     }
     servissiz = {k["tuketici"] for k in _envanter_kopyalari()
                  if not re.search(r"[a-z0-9-]+\.service", k["tuketici"])}
@@ -3827,10 +3848,16 @@ def test_S2_envanter_CP_metinleri_TEK_kanal_ifadesini_tasir():
         + [("vault_dosyalar.tuketici", d["tuketici"]) for d in env["vault_dosyalar"]
            if "hindsight-cp.service" in d["tuketici"]])
     # 2026-09-26 (TSK-226b): 3 → 4 — `--cp`nin `.env-cp` kopya satırı (rotasyon_kopyalari) CP'yi anar.
-    assert len(metinler) == 4, f"CP'yi anan envanter metni sayısı değişti: {[y for y, _ in metinler]}"
+    # 2026-09-29 (TSK-064 iki-kanal kapanışı): 4 → 3 — iki `.env-cp` rotasyon satırı ÇIKTI; CP'nin restart
+    # tüketiciliği iki REFERANS satırına (tenant · cp) yazıldı, `dosyalar:` `.env-cp` girdisi EMEKLİ (CP'yi
+    # `.service` adıyla anmaz — okuyucusu yok). Kalan üç metin: tenant ref · cp ref · yan dosya.
+    assert len(metinler) == 3, f"CP'yi anan envanter metni sayısı değişti: {[y for y, _ in metinler]}"
+    assert [y for y, _ in metinler].count("rotasyon_kopyalari.tuketici") == 2
     bayat = [yer for yer, m in metinler
              if CP_KANAL_METNI not in m or "env-file" in m or "ikame" in m]
     assert not bayat, f"envanterde CP kanalını yanlış söyleyen metin: {bayat}"
+    emekli = next(d for d in env["dosyalar"] if d["yol"] == "/opt/hindsight/.env-cp")
+    assert emekli["kanal_bugun"].startswith("EMEKLİ"), "`.env-cp` girdisi hâlâ CP kanalı gibi anlatılıyor"
 
 
 def test_S3_spec_tablosu_CP_satiri_ayni_kanal_ifadesini_tasir():
@@ -3840,4 +3867,9 @@ def test_S3_spec_tablosu_CP_satiri_ayni_kanal_ifadesini_tasir():
                 if s.startswith("| `/opt/hindsight/.env-cp` |")]
     assert len(satirlar) == 1, f"spec tablosunda CP satırı {len(satirlar)} kez"
     kanal = [h.strip() for h in satirlar[0].strip().strip("|").split("|")][-1]
-    assert CP_KANAL_METNI in kanal and "env-file" not in kanal, "spec §1 CP satırının kanal hücresi bayat"
+    # 2026-09-29 (TSK-064 iki-kanal kapanışı, spec madde 7): satır DURUR (dosya operatör kaldırana dek diskte),
+    # kanal hücresi EMEKLİLİĞİ söyler; "docker -e AD" kanalı madde 6'da tarihçe, bugün yan dosyanındır (S2).
+    assert kanal.startswith("EMEKLİ") and "env-file" not in kanal, "spec §1 CP satırının kanal hücresi bayat"
+    madde7 = "7. **`/opt/hindsight/.env-cp` EMEKLİ"
+    metin = SPEC_BELGESI.read_text(encoding="utf-8")
+    assert madde7 in metin and CP_KANAL_METNI in metin.split(madde7, 1)[1][:1200], "madde 7 kanalı adıyla anmıyor"

@@ -20,7 +20,17 @@
 # ORTAMDAN EZİLEBİLEN İKİ DEĞER (varsayılanlar A1'in değerleri; çivi v547 sahte sunucuyla koşar):
 #   HAFIZA_PORT             (8888) — ana bilgisayar SABİT 127.0.0.1: anahtar makineden çıkamaz;
 #                           yalnız rakam kabul edilir (`8888@baska.host` ana bilgisayarı değiştirirdi)
-#   HAFIZA_ANAHTAR_DOSYASI  (/opt/hindsight/.key)
+#   HAFIZA_ANAHTAR_DOSYASI  (varsayılanı YOK — verilmezse anahtar sudo borusundan; aşağıdaki şerh)
+#
+# ANAHTAR KAYNAĞI VAULT RENDER HEDEFİ (TSK-064 iki-kanal kapanışı, 2026-09-29): varsayılan artık düz kopya
+# `/opt/hindsight/.key` DEĞİL (EMEKLİ; operatör yedekleyip kaldırır — deploy/oracle-a1/RUNBOOK.md). Gömülü
+# Python `sudo -n cat /etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY` ALT SÜRECİNİ sabit listeyle (kabuk
+# YOK) çağırır ve değeri onun stdout BORUSUNDAN okur: argv'de yalnız YOL durur, değer ne argv'ye ne ortama
+# girer. Render hedefi 0400 root'tur ve Vault Agent `template` bloğunda sahiplik alanı YOKTUR; ubuntu-okur
+# render `exec chown` isterdi ve o yetki DİLİM-3'te (2026-09-15) emekli edildi — ACL de her atomik render'da
+# kaybolur. ubuntu'nun parolasız sudo'su bugün VAR; yeni yetki açılmadı. `-n` parola gerekiyorsa BEKLEMEDEN
+# düşer: çıkış 1, istek GİTMEZ, stderr'e tek satır (tür + kaynak + sudo'nun kendi mesajı). `HAFIZA_ANAHTAR_DOSYASI`
+# verilirse o dosya düz okunur ve sudo HİÇ çağrılmaz (test/yerel kullanım). Çivi: tests/test_iki_kanal_kapanisi_v590.py B.
 #
 # ANAHTAR SÜREÇ ARGV'SİNDE DURMAZ (TSK-064, 2026-09-25): bash anahtara DOKUNMAZ; gömülü Python
 # `HAFIZA_ANAHTAR_DOSYASI` yolundaki dosyayı KENDİSİ okur. Eskiden anahtar `python3 -`e konumsal
@@ -39,8 +49,8 @@ case "$PORT" in ''|*[!0-9]*) echo "HAFIZA_PORT yalnız rakam olabilir" >&2; exit
 BASE="http://127.0.0.1:${PORT}/v1/default/banks/meridian-arsiv"
 HAFIZA_BETIK="${BASH_SOURCE[0]}" python3 - "${1:-}" "$BASE" <<'PY'
 import sys, json, urllib.request
-# >>> anahtar (TSK-064) — argv'de/ortamda DURMAZ, hiçbir çıktı kanalına BASILMAZ; dosyayı bu süreç okur
-import os, pathlib
+# >>> anahtar (TSK-064) — argv'de/ortamda DURMAZ, hiçbir çıktı kanalına BASILMAZ; değeri bu süreç okur
+import os, pathlib, subprocess
 key = ""
 def arindir(metin):
     """Basılacak hata metninden anahtarı `<anahtar>` ile değiştirir: ham, str-repr ve başlığın bayt-repr
@@ -52,10 +62,23 @@ def arindir(metin):
     return m
 # yakalanmamış istisna ham traceback BASMAZ (mesajı anahtarı taşıyabilir): tür + arındırılmış mesaj, çıkış 1
 sys.excepthook = lambda tur, deger, iz: print(f"{tur.__name__}: {arindir(deger)}", file=sys.stderr)
+# KAYNAK (TSK-064 iki-kanal kapanışı, 2026-09-29): Vault Agent'ın render hedefi, 0400 root. Değer
+# `sudo -n cat` ALT SÜRECİNİN stdout BORUSUNDAN okunur — argv'de yalnız YOL durur, değer değil; kabuk YOK
+# (sabit liste). `-n`: parolasız sudo yoksa BEKLEMEDEN düşer. Ezme (`HAFIZA_ANAHTAR_DOSYASI`) verilirse o
+# dosya düz okunur ve sudo ÇAĞRILMAZ (test/yerel kullanım). Eski düz kopya EMEKLİ (başlık şerhi).
+KAYNAK = "/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY"
+EZME = os.environ.get("HAFIZA_ANAHTAR_DOSYASI")
 try:
-    key = os.fsdecode(pathlib.Path(os.environ.get("HAFIZA_ANAHTAR_DOSYASI") or "/opt/hindsight/.key").read_bytes().rstrip(b"\r\n"))
-except OSError as e:  # sessiz-yutma değil: hata türü + yol stderr'e, çıkış 1, istek GİTMEZ
-    print(f"HAFIZA ANAHTARI OKUNAMADI: {type(e).__name__}: {arindir(e)}", file=sys.stderr); sys.exit(1)
+    if EZME:
+        ham = pathlib.Path(EZME).read_bytes()
+    else:
+        cagri = subprocess.run(["sudo", "-n", "cat", KAYNAK], stdin=subprocess.DEVNULL, capture_output=True, timeout=60)
+        if cagri.returncode != 0:  # sudo'nun kendi mesajı TEK satıra indirilir (stderr sözleşmesi: tek satır)
+            raise OSError(f"çıkış {cagri.returncode}: {' '.join(os.fsdecode(cagri.stderr).split())[:200]}")
+        ham = cagri.stdout
+    key = os.fsdecode(ham.rstrip(b"\r\n"))
+except (OSError, subprocess.SubprocessError) as e:  # sessiz-yutma değil: kaynak + hata türü stderr'e, çıkış 1, istek GİTMEZ
+    print(f"HAFIZA ANAHTARI OKUNAMADI ({EZME or 'sudo -n cat ' + KAYNAK}): {type(e).__name__}: {arindir(e)}", file=sys.stderr); sys.exit(1)
 # <<< anahtar
 ad, base = sys.argv[1], sys.argv[2]
 # >>> okuma kaydı (EDG-2026-103 · TSK-222) — okuma işlevi bu bloğa BAĞLI DEĞİL

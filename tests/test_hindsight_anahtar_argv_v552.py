@@ -9,7 +9,8 @@ ARGÜMAN veriyordu. Anahtar böylece Python sürecinin argv'sinde durur — reca
 makinedeki her kullanıcı `ps` / `/proc/<pid>/cmdline` ile görebilirdi.
 KARAR (Rol-1, 2026-09-25): bash anahtarı OKUMAZ; gömülü Python `HAFIZA_ANAHTAR_DOSYASI` (varsayılan
 `/opt/hindsight/.key`) yolundaki dosyayı KENDİSİ okur. Anahtar ortama da konmaz: `/proc/<pid>/environ`
-aynı kullanıcıya açıktır.
+aynı kullanıcıya açıktır. 2026-09-29 (TSK-064 iki-kanal kapanışı): varsayılan kaynak Vault render hedefi,
+`sudo -n cat` borusundan (davranış çivisi v590 B); bu dosyanın ezmeyle koşan çivileri AYNEN geçerli.
 
 NE ÖLÇÜLÜR:
   E1 DİNAMİK argv — sahte sunucu istek ANINDA (istemci yanıt beklerken) `ps -A -ww -o pid,ppid,args`
@@ -56,7 +57,10 @@ from tests.test_hafiza_okuma_kaydi_v547 import (  # noqa: F401 — `sunucu` fiks
     sunucu,
 )
 
-VARSAYILAN_ANAHTAR_YOLU = "/opt/hindsight/.key"
+#: 2026-09-29 (TSK-064 iki-kanal kapanışı, v590): varsayılan kaynak artık düz kopya `/opt/hindsight/.key`
+#: DEĞİL — Vault render hedefi, `sudo -n cat` borusundan okunur (yol yine YALNIZ Python'da; E3 aynen geçerli).
+VARSAYILAN_ANAHTAR_YOLU = "/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY"
+ESKI_ANAHTAR_YOLU = "/opt/hindsight/.key"
 ANAHTAR_BLOK_BASI = "# >>> anahtar"
 ANAHTAR_BLOK_SONU = "# <<< anahtar"
 
@@ -218,8 +222,11 @@ def test_E3b_anahtar_okuma_blogu_iki_betikte_bayt_ayni_ve_yol_sozlesmesi():
         _, _, py = _bolumler(betik)
         assert py.count(ANAHTAR_BLOK_BASI) == 1 and py.count(ANAHTAR_BLOK_SONU) == 1, betik.name
         blok = py[py.index(ANAHTAR_BLOK_BASI): py.index(ANAHTAR_BLOK_SONU)]
-        assert (f'os.environ.get("HAFIZA_ANAHTAR_DOSYASI") or "{VARSAYILAN_ANAHTAR_YOLU}"'
-                in blok), f"{betik.name}: ezme adı ya da varsayılan yol değişti"
+        # 2026-09-29 (iki-kanal kapanışı): ezme adı AYNI; varsayılan kaynak sudo borusundaki render hedefi.
+        # Sudo sözleşmesinin davranışı v590 B'de ölçülür; burada yalnız yol/ezme sözleşmesi.
+        assert 'os.environ.get("HAFIZA_ANAHTAR_DOSYASI")' in blok, f"{betik.name}: ezme adı değişti"
+        assert f'KAYNAK = "{VARSAYILAN_ANAHTAR_YOLU}"' in blok, f"{betik.name}: varsayılan kaynak değişti"
+        assert ESKI_ANAHTAR_YOLU not in blok, f"{betik.name}: emekli düz kopya yolu blokta"
         # anahtar okuması argv ayrıştırmasından ÖNCE: eski sıra (bash `cat`, sonra Python) korunur —
         # anahtar yokken `k` gibi bir argüman hatası öne geçmez.
         assert py.index(ANAHTAR_BLOK_BASI) < py.index("sys.argv"), betik.name

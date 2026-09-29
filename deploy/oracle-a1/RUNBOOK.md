@@ -820,3 +820,106 @@ yeniden açar. Tavan ÖLÇEREK yükseltilir (Grafana emsali: memcg dosya önbell
 drop-in'inde, bu cetvelde ve v587'de birlikte değişir. CPU tavanı öldürmez, KISAR (throttle); `--cpus` değeri
 birimin `CPUQuota=`su ve bu cetvelin `NanoCpus` satırıyla birlikte değişir. **Geri alma:** `--memory` (ve/veya
 `--cpus`) satırı kaldırılır → `site.yml` → aynı restart.
+
+## TSK-064 iki-kanal kapanışı — kiracı anahtarı ve hindsight-cp yalnız Vault kanalından (2026-09-29)
+
+Hindsight kiracı anahtarının ve CP ortamının ESKİ kopyaları kapanır: `/opt/hindsight/.key` (0600 ubuntu — tek
+okuyucusu Rol-1 hafıza araçlarıydı) ve `/opt/hindsight/.env-cp` (0600 root — hindsight-cp temel biriminin
+`EnvironmentFile=`ı). Değerlerin tek kaynağı kasadır (Vault Agent render hedefleri, 0400 root). **Dosyaların
+kaldırılması KODUN işi değildir — bu bölümün 4–5. adımları operatör komutudur.** Gerekçe ve kararlar:
+`deploy/hindsight/hindsight-cp.service.d/51-env-cp-kaldir.conf` şerhi · `deploy/sir_envanteri.yaml`
+`rotasyon_kopyalari.emekli_kopyalar` · `deploy/hindsight/sayfa_oku.sh` başlığı. Çivi: `tests/test_iki_kanal_kapanisi_v590.py`.
+
+**Ne, A1'e nasıl gider:**
+
+| Parça | Yol | Nasıl |
+|---|---|---|
+| Hafıza araçları (`hafiza_sor.sh`, `sayfa_oku.sh`) — anahtarı `sudo -n cat /etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY` borusundan okur | `/opt/meridian/deploy/hindsight/` | `dagit` (rsync). `~/bin/*.sh` bu dosyalara SEMBOLİK BAĞDIR (2026-09-25, dağıtım #67) — restart gerekmez |
+| Rotasyon tablosu + envanter (`.key`/`.env-cp` satırları emekli) | `/opt/meridian/deploy/oracle-a1/sir_rotasyon.sh` · `/opt/meridian/deploy/sir_envanteri.yaml` | `dagit` (rsync) |
+| hindsight-cp drop-in `51-env-cp-kaldir.conf` (boş `EnvironmentFile=` + ZORUNLU `.env-cp.vault`) | `/etc/systemd/system/hindsight-cp.service.d/` | A0 rolü (`site.yml` → `dropinler.yml`); `dagit` drop-in KURMAZ |
+
+Bedel: araçlar ubuntu'nun PAROLASIZ sudo'suna dayanır (bugün var; yeni yetki açılmadı). sudo parola isterse
+araç BEKLEMEZ (`-n`): çıkış 1 ve stderr'de tek satır `HAFIZA ANAHTARI OKUNAMADI: … sudo: a password is required`.
+
+**Sıra sözleşmedir:** 0 dağıtım → 1 A0 rolü → 2 restart → 3 doğrulama → 4 yedek → 5 kaldırma → 6 son doğrulama.
+Doğrulama düşerse 4–5 YAPILMAZ.
+
+**0. Kod A1'de** (`dagit` Rol-1'in normal reçetesiyle; ardından):
+
+```bash
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'readlink -f ~/bin/hafiza_sor.sh ~/bin/sayfa_oku.sh; grep -c "\"sudo\", \"-n\", \"cat\"" /opt/meridian/deploy/hindsight/hafiza_sor.sh /opt/meridian/deploy/hindsight/sayfa_oku.sh'
+# /opt/meridian/deploy/hindsight/hafiza_sor.sh · /opt/meridian/deploy/hindsight/sayfa_oku.sh · her dosyada 1
+```
+
+**1. A0 rolü** — drop-in kopyalanır, `daemon-reload` yapılır, birim yeniden BAŞLATILMAZ:
+
+```bash
+ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/site.yml --check --diff
+ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/site.yml
+```
+
+Beklenen fark: yeni dosya `hindsight-cp.service.d/51-env-cp-kaldir.conf` ve `50-vault-yan-dosya.conf`un YALNIZ
+şerh satırları (2026-09-29 güncelleme notu). Başka dosya değişiyorsa DUR.
+
+**2. Restart** (bakım penceresi; CP yalnız ssh tüneliyle erişilen yönetim arayüzüdür, motoru etkilemez):
+
+```bash
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo systemctl restart hindsight-cp; systemctl is-active hindsight-cp'
+# active   (failed + "Failed to load environment files" → .env-cp.vault YOK: kasa/Agent'a bak, GERİ ALMA'ya geç)
+```
+
+**3. Doğrulama — kaldırmadan ÖNCE** (her satırın beklenen çıktısı altında):
+
+```bash
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'systemctl show -p EnvironmentFiles hindsight-cp'
+# EnvironmentFiles=/opt/hindsight/.env-cp.vault (ignore_errors=no)   — TEK satır; .env-cp GÖRÜNMEMELİ
+# (özellik adı systemd D-Bus adıdır, A1'de ÖLÇÜLMEDİ: boş dönerse `systemctl cat hindsight-cp | grep EnvironmentFile`
+#  → temel satır, 50'nin `-` satırı, 51'in boş satırı ve 51'in tiresiz .env-cp.vault satırı sırayla görünmeli)
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo sh -c '\''printf "{\"key\":\"%s\"}" "$(cat /etc/meridian/hindsight_cp_access_key)"'\'' | curl -s -o /dev/null -w "%{http_code}\n" -H "Content-Type: application/json" --data-binary @- http://127.0.0.1:9999/api/auth/login'
+# 200   (kasadaki CP anahtarı; değer borudan akar, argv'ye/terminale GİRMEZ — printf kabuk yerleşiğidir)
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'printf "{\"key\":\"yanlis\"}" | curl -s -o /dev/null -w "%{http_code}\n" -H "Content-Type: application/json" --data-binary @- http://127.0.0.1:9999/api/auth/login'
+# 401   (kilit yürürlükte — iki ayak birlikte: yanlış anahtar da 200 dönseydi ilk satır hiçbir şey ölçmezdi; 503 = konteynerde anahtar YOK)
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'HAFIZA_OKUMA_ETIKET=ikikanal-dogrulama ~/bin/sayfa_oku.sh | head -2'
+# "# zihin modelleri: N" + ilk sayfa satırı (çıkış 0; etiket okumayı EDG-2026-103 sayımından ayırır)
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'HAFIZA_OKUMA_ETIKET=ikikanal-dogrulama ~/bin/hafiza_sor.sh "iki kanal kapanışı doğrulama" 1 | head -1'
+# "# recall · bank=meridian-arsiv · … · sonuç N"   (RECALL HATASI / HAFIZA ANAHTARI OKUNAMADI → DUR)
+```
+
+**4. Yedek** — `sir_rotasyon.sh` yedek sözleşmesi üslubu: dizin 0700 root, dosyalar 0600 root, ad saniyeli UTC;
+kıyas yalnız EŞİT/AYRI basar (değer ve hash BASILMAZ). Basılan `yedek dizini` satırını kaydet — geri almanın girdisidir:
+
+```bash
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'Y=/root/sir-yedek-$(date -u +%Y%m%dT%H%M%SZ)-ikikanal; sudo install -d -m 0700 -o root -g root "$Y" && sudo install -d -m 0700 -o root -g root "$Y/opt/hindsight" && for f in /opt/hindsight/.key /opt/hindsight/.env-cp; do sudo install -m 0600 -o root -g root "$f" "$Y$f" && { sudo cmp -s "$f" "$Y$f" && echo "yedek EŞİT: $f" || echo "yedek AYRI: $f — DUR"; }; done; echo "yedek dizini: $Y"'
+# yedek EŞİT: /opt/hindsight/.key · yedek EŞİT: /opt/hindsight/.env-cp · yedek dizini: /root/sir-yedek-<UTC>-ikikanal
+```
+
+**5. Kaldırma** (OPERATÖR — yalnız 3. ve 4. adım temizse):
+
+```bash
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo rm -f /opt/hindsight/.key /opt/hindsight/.env-cp; ls -A /opt/hindsight | grep -E "^\.key$|^\.env-cp$" || echo "iki dosya da YOK"'
+# iki dosya da YOK   (.env-cp.vault ve .env YERİNDE kalır)
+```
+
+**6. Son doğrulama — kaldırmadan SONRA** (CP'nin eski dosya olmadan AÇILDIĞI burada kanıtlanır):
+
+```bash
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo systemctl restart hindsight-cp; systemctl is-active hindsight-cp'
+# active — ardından 3. adımın iki login satırını (200 · 401) ve iki araç satırını AYNEN yeniden koş
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'cd /opt/meridian && sudo ./deploy/oracle-a1/sir_rotasyon.sh --envanter | grep -E "emekli kopya|EMEKLİ KOPYA|/opt/hindsight/\.env-cp \["'
+# emekli kopya: /opt/hindsight/.key → YOK (kaldırılmış) · emekli kopya: /opt/hindsight/.env-cp → YOK (kaldırılmış)
+# ("EMEKLİ KOPYA HÂLÂ VAR" ya da "BEYAN DIŞI KOPYA: /opt/hindsight/.env-cp [...]" satırı GÖRÜNMEMELİ)
+```
+
+**GERİ ALMA** (hangi adımda düştüyse o adımdan geriye):
+
+- *2–3. adım düştü (dosyalar yerinde):* drop-in'i kaldır → `sudo rm /etc/systemd/system/hindsight-cp.service.d/51-env-cp-kaldir.conf && sudo systemctl daemon-reload && sudo systemctl restart hindsight-cp`. Temel birimin `.env-cp` satırı ve 50'nin opsiyonel yan dosya satırı geri gelir. Bir sonraki `site.yml` drop-in'i YENİDEN kurar: depodaki kapanış commit'i de geri alınmalıdır (Rol-1).
+- *Araçlar düştü (sudo borusu):* dosyalar yerindeyse geçici çare `HAFIZA_ANAHTAR_DOSYASI=/opt/hindsight/.key ~/bin/hafiza_sor.sh …` (ezme arayüzü korunur); kalıcı çare depo geri alımı + `dagit`.
+- *5. adımdan sonra:* dosyaları yedekten ESKİ sahip/izinleriyle geri koy, SONRA drop-in'i yukarıdaki gibi kaldır:
+  `sudo install -m 0600 -o ubuntu -g ubuntu $Y/opt/hindsight/.key /opt/hindsight/.key` ·
+  `sudo install -m 0600 -o root -g root $Y/opt/hindsight/.env-cp /opt/hindsight/.env-cp`.
+  Yedek alındığı andan beri bir rotasyon (`--tenant`/`--cp`) koştuysa geri konan dosyalar BAYATTIR: geri alınmış
+  kodla `sudo ./deploy/oracle-a1/sir_rotasyon.sh --tenant --esitle` ve `--cp --esitle` eski kanalı kasadaki değere eşitler.
+
+**Bilinen kalan (açık kalem, bu bölümün kapsamı dışı):** `research/olcumler/edg067_hindsight_faz1/kiyas_kos.py`
+kullanım örneği `--key-file /opt/hindsight/.key` der. Kaldırmadan sonra aynı araç `--key-file <(sudo -n cat
+/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY)` ile koşar (değer argv'ye girmez; `/dev/fd` yolu geçer).

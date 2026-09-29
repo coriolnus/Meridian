@@ -92,7 +92,9 @@
 #                                           GÖRÜNTÜLEME sızıntısıydı, yapıştırma bir yüzey daha açardı),
 #                                           kanıtın NEGATİF ayağı ESKİ değeri KASADAN okur, geri alma reçetesi
 #                                           EVREYE göredir (KV v2 sürümü). Sıra: kasa → render kanıtı → eski
-#                                           kanal (`.env-cp`) → restart → kanıt (CP giriş ucu). `--kuru` ile.
+#                                           kanal → restart → kanıt (CP giriş ucu). `--kuru` ile. Eski kanal
+#                                           2026-09-29'dan beri YOK (`.env-cp` EMEKLİ — TSK-064 iki-kanal):
+#                                           adım kopya tablosundan türer ve "YOK" der.
 #                                           TAKMA AD (`ayni_deger`, Rol-1 hükmü 2026-09-14): aynı değerin
 #                                           TEK kasa yolu vardır; rotasyon BİRİNCİL yola yapılır ve takma
 #                                           adlar onu otomatik izler. Restart listesi kasa YOLUNDAN toplanır
@@ -130,7 +132,7 @@
 # yüzden ÜST DÜZEYDE ve MEKANİKTİR: `id -u` 0 değilse betik ilk satırda durur. İçerideki `sudo`
 # önekleri KALIR — root altında no-op'turlar ve betiği kardeşleriyle (`deploy.sh`, `cutover.sh`)
 # aynı okunur biçimde tutarlar. `mod=koru`/`sahip=koru` satırları (ubuntu sahipli hermes
-# profilleri, `/opt/hindsight/.key`) root altında da MEVCUT sahip ve izinle yazılır: root'un
+# profilleri; 2026-09-29'a dek `/opt/hindsight/.key` de) root altında da MEVCUT sahip ve izinle yazılır: root'un
 # yazıyor olması, dosyayı root'a DEVRETMEK değildir.
 #
 # DEĞER ÜRETİMİ. `--kapi`/`--db`/`--dash`: `openssl rand -base64 36 | tr '+/' '-_'` → 48 karakter
@@ -404,13 +406,21 @@ _gecen_s() { _saat_oku; GECEN_S=$(( (SAAT_MS - $1) / 1000 )); }
 #   · `OPENROUTER_API_KEY` ve `APISIX_ADMIN_KEY`in referansı Vault Agent'ın TEKİL render hedefine
 #     taşındı (aşağıdaki "REFERANS SIRASI" şerhi). `.env-apisix` satırları KOPYA olarak kalır.
 # Çivi: `tests/test_sir_referans_hizasi_v520.py`.
+# TSK-064 İKİ-KANAL KAPANIŞI, 2026-09-29 (Rol-1 kararı; dash-token (d-1) emsali) — ÜÇ satır ÇIKTI:
+#   · `tenant … dosya /opt/hindsight/.key` — tek okuyucusu Rol-1 araçlarıydı (`deploy/hindsight/hafiza_sor.sh`
+#     + `sayfa_oku.sh`); araçlar anahtarı artık `sudo -n cat <render hedefi>` borusundan okur.
+#   · `tenant … env /opt/hindsight/.env-cp [HINDSIGHT_CP_DATAPLANE_API_KEY]` ve `cp … env /opt/hindsight/.env-cp
+#     [HINDSIGHT_CP_ACCESS_KEY]` — hindsight-cp `51-env-cp-kaldir.conf` ile YALNIZ `.env-cp.vault`ı (Agent) okur.
+#   Satırlar kalsaydı rotasyon okuyucusuz dosyaları "tazeleyip" yaşatır, operatör kaldırdıktan sonra da
+#   `--tenant`/`--cp` "hedef dosya YOK" ile yarıda düşerdi. İki sırrın tablodaki TEK satırı artık REFERANS
+#   render hedefidir. Satırlar envanterde SİLİNMEDİ — `rotasyon_kopyalari.emekli_kopyalar`da tarihli durur;
+#   dosyaların diskte kalıp kalmadığını `--envanter` `_emekli_kopyalar` listesiyle ölçer (bedel yasası: satır
+#   çıkınca `.key`i EŞİT/AYRI diye gören tek mekanizma da çıkıyordu). Çivi: tests/test_iki_kanal_kapanisi_v590.py C.
 _kopyalar() {
   cat <<'KOPYA_SON'
 kapi KAPI_APIKEY dosya /etc/meridian/kapi_apikey - 0400 root:root -
 kapi KAPI_APIKEY env /opt/apisix/.env-apisix BOT_KEY_MERIDIAN koru koru -
 tenant HINDSIGHT_API_TENANT_API_KEY dosya /etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY - 0400 root:root -
-tenant HINDSIGHT_API_TENANT_API_KEY dosya /opt/hindsight/.key - koru koru -
-tenant HINDSIGHT_API_TENANT_API_KEY env /opt/hindsight/.env-cp HINDSIGHT_CP_DATAPLANE_API_KEY koru koru -
 db HINDSIGHT_DB_PAROLA sql hindsight - - - -
 db HINDSIGHT_DB_PAROLA url /etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL - koru koru -
 dash MERIDIAN_DASH_TOKEN dosya /etc/meridian/dash_token - 0400 root:root -
@@ -432,17 +442,33 @@ openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/.env OPENROUTER_API_KEY k
 apisix-admin APISIX_ADMIN_KEY dosya /etc/meridian/apisix_admin_key - 0400 root:root -
 apisix-admin APISIX_ADMIN_KEY env /opt/apisix/.env-apisix APISIX_ADMIN_KEY koru koru -
 cp HINDSIGHT_CP_ACCESS_KEY dosya /etc/meridian/hindsight_cp_access_key - 0400 root:root -
-cp HINDSIGHT_CP_ACCESS_KEY env /opt/hindsight/.env-cp HINDSIGHT_CP_ACCESS_KEY koru koru -
 KOPYA_SON
 }
 
 #: `--cp` SATIRLARI (TSK-226b, 2026-09-26). REFERANS Vault Agent'ın kanonik tek-değer kopyasıdır
 #: (`vault_kv.hindsight_cp_access_key.hedef`; d-1 emsali — `--envanter` kasadaki değeri referans alır,
-#: `--esitle` kasa değerini eski kanala taşır, tersi DEĞİL). `.env-cp` satırı ESKİ KANAL kopyasıdır:
-#: birimin İLK `EnvironmentFile=`ıdır ve drop-in'deki yan dosya (`.env-cp.vault`) yoksa ya da satırı
-#: taşımıyorsa konteynerin değeri odur. Yan dosya TABLODA YOK: onu yalnız Agent yazar (emsal
-#: `.env-apisix.vault`, `.env.vault`) ve render'ı kanonik kopyadan ölçülür — rotasyonun oraya yazması
-#: Agent'la yarışmak olurdu (`--db --vault` tasarımının aynı gerekçesi).
+#: `--esitle` kasa değerini eski kanala taşır, tersi DEĞİL). 2026-09-29'a kadar ikinci satır `.env-cp`
+#: ESKİ KANAL kopyasıydı (birimin İLK `EnvironmentFile=`ı); iki-kanal kapanışında ÇIKTI (yukarıdaki şerh) —
+#: CP bugün değeri YALNIZ yan dosyadan (`.env-cp.vault`, drop-in 51 ile ZORUNLU) alır. Yan dosya TABLODA
+#: YOK: onu yalnız Agent yazar (emsal `.env-apisix.vault`, `.env.vault`) ve render'ı kanonik kopyadan
+#: ölçülür — rotasyonun oraya yazması Agent'la yarışmak olurdu (`--db --vault` tasarımının aynı gerekçesi).
+#: SONUÇ: `--cp`nin ESKİ yolu (kasasız) yalnız kanonik kopyayı yazar ve CP onu OKUMAZ — kanıt "YENİ değerle
+#: 401" der ve çıkış 2 verir (yarım rotasyon SESSİZ olamaz); eski yol KESİLMEDİ (Rol-1 kararı: tek rotasyon
+#: yolu kesilmez, uyarı kapı değil), doğru yol `--cp --vault`tır.
+
+#: EMEKLİ KOPYALAR (TSK-064 iki-kanal kapanışı, 2026-09-29) — rotasyonun ARTIK YAZMADIĞI ve hiçbir tüketicinin
+#: OKUMADIĞI dosyalar. Tablodan çıktılar; ama diskte KALIRLARSA eski değeri taşıyan, sahipsiz bir sır kopyasıdırlar
+#: (ilk rotasyondan sonra bayat, yine de okunabilir). `--envanter` her birinin VARLIĞINI ölçer (DEĞER okunmaz) ve
+#: duruyorsa bağırır: kaldırma OPERATÖR adımıdır (yedek → kaldır — deploy/oracle-a1/RUNBOOK.md son bölüm).
+#: KAYNAK: `deploy/sir_envanteri.yaml` → `rotasyon_kopyalari.emekli_kopyalar[].yol`. Kopya KAÇINILMAZ (`--envanter`
+#: PyYAML'sız koşar) → ayrışma çivisi v590 C4. `.env-cp` ayrıca `_taranan_dosyalar`da KALIR (d-1 `.dash.env`
+#: emsali): varlığı buradan, beyan dışı alanları oradan bağırılır — iki ayrı soru.
+_emekli_kopyalar() {
+  cat <<'EMEKLI_SON'
+/opt/hindsight/.key
+/opt/hindsight/.env-cp
+EMEKLI_SON
+}
 
 #: `--apisix-admin`de REFERANS SIRASI TERSTİR (env ÖNCE, credential SONRA) ve bu bir üslup tercihi
 #: değil ÖLÇÜLMÜŞ bir zorunluluktur. Öteki sırlarda ilk satır credential kaynağıdır çünkü O kaynak
@@ -498,7 +524,8 @@ _sir_birimleri() {
     #: `${{APISIX_ADMIN_KEY}}` çözümünü YALNIZ açılışta yapar: reload yetmez, RESTART gerekir.
     APISIX_ADMIN_KEY)             echo "apisix.service" ;;
     #: CP giriş anahtarını YALNIZ kontrol paneli okur: konteyner değeri AÇILIŞTA ortamından alır
-    #: (değersiz `-e AD`, TSK-226) — yan dosyanın render'ı da `.env-cp` yazımı da RESTART ister.
+    #: (değersiz `-e AD`, TSK-226) — yan dosyanın render'ı RESTART ister (2026-09-29'dan beri tek kanal;
+    #: `.env-cp` emekli). Kiracı anahtarının CP tüketicisi de AYNI yan dosyadır (DATAPLANE, takma ad).
     HINDSIGHT_CP_ACCESS_KEY)      echo "hindsight-cp.service" ;;
     *) return 1 ;;
   esac
@@ -609,6 +636,9 @@ _oneshot_yazdir() {
 #: (bedel sıfır; sözlük bedeli ölçümünün dosya kümesi değişmez), geri doğarsa içindeki pano jetonu
 #: artık rotasyonun YAZMADIĞI bir kopyadır ve envanter onu BEYAN DIŞI diye bağırmak zorundadır.
 #: Listeden çıkarmak o geri dönüşü SESSİZ yapardı (çivi: v520 B7/M6).
+#: `/opt/hindsight/.env-cp` AYNI gerekçeyle KALIR (TSK-064 iki-kanal kapanışı, 2026-09-29): kopya tablosundan
+#: çıktı, dosya operatör kaldırana dek diskte durur — iki alanı da (sır kimliği `HINDSIGHT_CP_ACCESS_KEY` ·
+#: sözlüğe uyan `HINDSIGHT_CP_DATAPLANE_API_KEY`) BEYAN DIŞI bağırılır; kaldırılınca `test -f` atlar (v590 C5).
 _taranan_dosyalar() {
   cat <<'TARA_SON'
 /opt/meridian/.env
@@ -1710,7 +1740,8 @@ tenant() {
   _farksal "hindsight /banks" "$ISLIK/yeni" "$ISLIK/eski" \
            "$HINDSIGHT/v1/default/banks" "Authorization" "Bearer" "200" "401 403"
   _envanter_esitlik tenant
-  echo ">> geri alma: $YEDEK altındaki üç kopyayı geri koy ve $(_birimler tenant) yeniden başlat"
+  # Kopya SAYISI yazılmaz, tablodan okunur: 2026-09-29'a kadar "üç kopya"ydı (`.key` + `.env-cp` emekli).
+  echo ">> geri alma: $YEDEK altındaki $(_kopyalar | awk '$1=="tenant"' | wc -l | tr -d ' ') kopyayı geri koy ve $(_birimler tenant) yeniden başlat"
 }
 
 # CP ERİŞİM ANAHTARI — ESKİ YOL (TSK-226b, 2026-09-26). `tenant()` emsali, adım adım: yedek → ESKİ değer
@@ -1718,20 +1749,28 @@ tenant() {
 # Sır kasaya BAĞLIDIR ve uyarı yazımdan ÖNCE `--cp --vault`u gösterir: kasa canlıyken konteyner değeri
 # yan dosyadan (`.env-cp.vault`, SONRAKİ `EnvironmentFile=`) alır ve bu yolun yazdığı `.env-cp` gölgede
 # kalır — kanıt o hâlde "YENİ değerle HTTP 401" der (çıkış 2): yarım rotasyon SESSİZ olamaz (v556 D7).
-# ESKİ DEĞER `.env-cp` YEDEĞİNDEN okunur (`apisix_admin` emsali): o dosya birimin ZORUNLU
-# `EnvironmentFile=`ıdır ve her dünyada vardır; kanonik kopya yalnız kasa kuruluyken vardır.
+# ESKİ DEĞER 2026-09-29'a kadar `.env-cp` YEDEĞİNDEN okunuyordu (o dosya birimin zorunlu `EnvironmentFile=`ıydı ve
+# her dünyada vardı). İki-kanal kapanışından beri CP'nin ZORUNLU tek kaynağı kasa yan dosyasıdır — yani kasa
+# kurulu değilse CP hiç AÇILMAZ ve kanonik kopya CP'nin açılabildiği HER dünyada vardır. Eski değer bu yüzden
+# tablonun REFERANS satırının (kanonik kopya) YEDEĞİNDEN okunur; yol tablodan türer (ikinci liste yok). Referans
+# yoksa ESKİ değer uydurulmaz: yazımdan ÖNCE durulur (yedek alındı, hiçbir kopya yazılmadı).
 cp_erisim() {
+  local ref_yol
   echo "=== ROTASYON: HINDSIGHT_CP_ACCESS_KEY (Hindsight kontrol paneli giriş anahtarı) ==="
   _agent_hedefi_uyarisi cp                # TSK-064 takip (2) — gerekçe `kapi()` şerhinde
   [ "$KURU" = 0 ] || { _kuru_rapor cp; _cp_kanit_plani; return 0; }
   _yedek_al cp
-  py cikar env "$YEDEK/opt/hindsight/.env-cp" HINDSIGHT_CP_ACCESS_KEY - "$ISLIK/eski"
+  ref_yol="$(_kopyalar | awk '$1=="cp" {print $4; exit}')"
+  sudo test -s "$YEDEK$ref_yol" \
+    || die "--cp ESKİ değer okunamadı: referans kopya ($ref_yol) YOK/boş — kasa kurulu değilse CP zaten AÇILMAZ
+     (tek kanal: .env-cp.vault). Hiçbir kopya YAZILMADI. Doğru yol: sudo $0 --cp --vault"
+  py cikar dosya "$YEDEK$ref_yol" - - "$ISLIK/eski"
   _uret hex
   _yaz cp
   _yeniden_baslat cp
   _cp_kanit "$ISLIK/yeni" "$ISLIK/eski"
   _envanter_esitlik cp
-  echo ">> geri alma: $YEDEK altındaki iki kopyayı geri koy ve $(_birimler cp) yeniden başlat"
+  echo ">> geri alma: $YEDEK altındaki $(_kopyalar | awk '$1=="cp"' | wc -l | tr -d ' ') kopyayı geri koy ve $(_birimler cp) yeniden başlat"
 }
 
 #: Kanıt ucunun planı — eski yolun kuru raporu ve kasa yolunun kuru planı AYNI uçtan söz eder.
@@ -2516,8 +2555,28 @@ _render_bekle() {
   _gecen_s "$bas"; RENDER_GECEN="$GECEN_S"
 }
 
+#: KANAL BEYANI — genel döngünün SON satırı (TSK-064 iki-kanal kapanışı, 2026-09-29). `_kanal_beyani <alt> <render
+#: hedefleri>`: alt komutun kopya tablosunda render hedefi OLMAYAN bir satır (asıl dosyadaki sır satırı · motor
+#: deposu) varsa iki kanal AÇIKTIR ve eski metin basılır; yoksa "TEK KANAL" — `--tenant` 2026-09-29'dan beri
+#: (`.key` + `.env-cp` emekli), `--dash` 2026-09-17'den beri (d-1) böyledir ve sabit "İKİ KANAL AÇIK" satırı orada
+#: YALAN olurdu. Tablodan türer (v590 C10).
+_kanal_beyani() {
+  local alt="$1" hedefler="$2" n
+  n="$(_kopyalar | awk -v a="$alt" -v h="$hedefler" '
+    BEGIN { k = split(h, x, " "); for (i = 1; i <= k; i++) H[x[i]] = 1 }
+    $1 == a && !($4 in H) { c++ }
+    END { print c + 0 }')"
+  if [ "$n" -gt 0 ]; then
+    echo ">> İKİ KANAL AÇIK: asıl dosyalardaki sır satırları DOKUNULMADAN duruyor. Kapatma AYRI bir"
+    echo "   adımdır (≥2 gece sonra, yedekli) — geri alım: systemctl stop vault-agent + drop-in kaldır."
+  else
+    echo ">> TEK KANAL: --$alt kopyalarının HEPSİ Agent render hedefi; kapatılacak eski kanal YOK."
+    echo "   Emekli kopyaların diskte kalıp kalmadığını --envanter ölçer."
+  fi
+}
+
 vault_rotasyon() {
-  local alt="$1" bagli ad yol hedef sir birincil poz="" donen="" yazilmadi
+  local alt="$1" bagli ad yol hedef sir birincil poz="" donen="" yazilmadi hedefler=""
   echo "=== ROTASYON (KASADAN): --$alt --vault ==="
   bagli="$(_vault_kv_satirlari $(_alt_sirlari "$alt"))"
   # BAĞSIZ ALT KOMUT (TSK-064, 2026-09-17; `--db` 2026-09-24'ten beri BAĞLI — bugün böyle bir alt
@@ -2614,6 +2673,7 @@ vault_rotasyon() {
      Bak: systemctl status vault-agent · journalctl -u vault-agent -n 50 --no-pager"
     fi
     oldu "render ÖLÇÜLDÜ: $hedef ($RENDER_GECEN s) — kanonik kopya kasadaki değerle BİREBİR"
+    hedefler="$hedefler $hedef"
     # `--uret`: değeri operatör GÖRMEDİ — nerede durduğu söylenir (ör. `--dash`ın pano jetonunu elle eşitleyen
     # okur oradan alır); değerin kendisi BASILMAZ.
     [ "$URET" = 0 ] \
@@ -2666,8 +2726,7 @@ vault_rotasyon() {
 
   adim "kanıt: envanter eşitlik ölçümü (--$alt)"
   _envanter_esitlik "$alt"
-  echo ">> İKİ KANAL AÇIK: asıl dosyalardaki sır satırları DOKUNULMADAN duruyor. Kapatma AYRI bir"
-  echo "   adımdır (≥2 gece sonra, yedekli) — geri alım: systemctl stop vault-agent + drop-in kaldır."
+  _kanal_beyani "$alt" "$hedefler"
 }
 
 #: ROLLBACK DÜŞERSE — YEDEKTEN GERİ KOYMA SATIRI (TSK-237, 2026-09-27). Üç kasa reçetesinin (`_genel_kasa_recetesi` ·
@@ -2997,6 +3056,16 @@ vault_db_rotasyon() {
 # YAN DOSYAYA YAZILMAZ: `.env-cp.vault` Agent'ındır ve kanonik kopyayla AYNI şablon turunda render edilir
 # (tek aralık, `RENDER_ARALIGI`); kanonik kopyanın render'ı ölçülür, yan dosya kanıtın pozitif ayağında
 # (konteyner yeni değeri aldı mı) dolaylı ölçülür.
+# ESKİ KANAL YOK (TSK-064 iki-kanal kapanışı, 2026-09-29): `.env-cp` satırı kopya tablosundan çıktı ve CP onu
+# okumaz (drop-in 51). Adım 6 ve reçetenin 3. satırı SİLİNMEDİ — kopya tablosundan TÜRER ve bugün "YOK" der:
+# numaralı plan (1-8) değişmez, tabloya bir env satırı geri girerse davranış kendiliğinden geri gelir (v590 C8).
+
+#: `_cp_eski_kanal_yok` — kopya tablosunda `cp` env satırı yoksa 0 döner. Adım 6, kuru plan ve reçete AYNI
+#: sorudan okur (tek kaynak: üç yerde üç ayrı awk sessizce ayrışırdı).
+_cp_eski_kanal_yok() {
+  ! _kopyalar | awk '$1=="cp" && $3=="env" {b=1} END{exit !b}'
+}
+CP_ESKI_KANAL_YOK_METNI="YOK — kopya tablosunda cp env satırı yok (TSK-064 iki-kanal kapanışı 2026-09-29: .env-cp EMEKLİ, CP değeri YALNIZ .env-cp.vault'tan alır)"
 
 #: GERİ ALMA REÇETESİ — kasa yolu `--cp` (`_db_kasa_recetesi`nin ikizi). Değer BASILMAZ; eski kanal yolu
 #: kopya tablosundan TÜRETİLİR (ikinci liste yok).
@@ -3004,6 +3073,7 @@ _cp_kasa_recetesi() {
   local birim eski_kanal
   birim="$(_sir_birimleri HINDSIGHT_CP_ACCESS_KEY || echo '(birim listesi ölçülemedi)')"
   eski_kanal="$(_kopyalar | awk -v y="$YEDEK" '$1=="cp" && $3=="env" {printf "sudo cp -p %s%s %s", y, $4, $4; exit}')"
+  [ -n "$eski_kanal" ] || eski_kanal="$CP_ESKI_KANAL_YOK_METNI — geri konacak dosya yok"
   case "$CP_KASA_EVRE" in
     yedek)
       echo ">> GERİ ALMA (--cp --vault): GEREKMEZ — kasaya YAZILMADI, eski kanal YAZILMADI, $birim YENİDEN BAŞLATILMADI (yedek: $YEDEK)." >&2 ;;
@@ -3013,7 +3083,7 @@ _cp_kasa_recetesi() {
 $(_geri_koy_satiri değer "$CP_KASA_YOL")
      2) render hedefi ($CP_KASA_HEDEF) kasadaki ESKİ değere dönene kadar $birim YENİDEN BAŞLATILMAMALI (yan dosya YENİ değeri taşıyabilir)." >&2 ;;
     yayim)
-      echo ">> GERİ ALMA (--cp --vault — eski kanal yazımı BAŞLADI; başarıda da arızada da geçerli; sıra ileri yolun AYNISI):
+      echo ">> GERİ ALMA (--cp --vault — yayım evresi (eski kanal → restart) BAŞLADI; başarıda da arızada da geçerli; sıra ileri yolun AYNISI):
      1) kasa: vault kv rollback -version=$CP_KASA_SURUM $CP_KASA_YOL   (yönetici jetonuyla)
 $(_geri_koy_satiri değer "$CP_KASA_YOL")
      2) render: $CP_KASA_HEDEF kasadaki ESKİ değere BİREBİR olana kadar bekle
@@ -3040,13 +3110,17 @@ _vault_cp_kuru_rapor() {
   echo "  SIRA: kasa → render kanıtı → eski kanal → restart → kanıt (--tenant --vault akışı; değer üretilir, ESKİ değer kasadan, geri alma evreye göre)"
   echo "  1. ön kontrol: kasa oturumu; ESKİ değer KASADAN okunur (render dosyasından DEĞİL): $CP_KASA_YOL"
   echo "  2. yeni değer: betik İÇİNDE üretilir (openssl rand -hex 32 → 64 karakter, uzunluk denetlenir) — SORULMAZ, BASILMAZ; ESKİ değerle AYNI olamaz"
-  echo "  3. yedek: ESKİ değer (KASADAN) 0600 → $KOK/root/sir-yedek-<UTC ts>-cp/vault/$CP_KASA_YOL + eski kanal dosyaları"
+  echo "  3. yedek: ESKİ değer (KASADAN) 0600 → $KOK/root/sir-yedek-<UTC ts>-cp/vault/$CP_KASA_YOL + kopya tablosundaki dosyalar"
   echo "  4. kasaya yazılacak: $CP_KASA_YOL ($sir → $ad); ÖNCE current_version kaydedilir — geri alma: vault kv rollback -version=<o sürüm>"
   echo "  5. render kanıtı: $CP_KASA_HEDEF kanonik kopyası kasadaki YENİ değere BİREBİR (tavan $VAULT_RENDER_TAVAN_S s, aralık $VAULT_RENDER_ARALIK_S s) — aşımda eski kanal YAZILMAZ, CP YENİDEN BAŞLATILMAZ, ÖLÇÜLEMEDİ"
   while IFS=$'\t' read -r yd yb; do
     echo "    · yan dosya: $yd   (Agent render eder — rotasyon YAZMAZ; yeniden başlat: $yb)"
   done < <(_vault_yan_dosyalari "$CP_KASA_YOL")
-  echo "  6. eski kanal (iki-kanal dönemi) AYNI pencerede kasadan gelen değerle yazılır: $(_kopyalar | awk '$1=="cp" && $3=="env" {printf "%s [%s] ", $4, $5}')"
+  if _cp_eski_kanal_yok; then
+    echo "  6. eski kanal: $CP_ESKI_KANAL_YOK_METNI"
+  else
+    echo "  6. eski kanal (iki-kanal dönemi) AYNI pencerede kasadan gelen değerle yazılır: $(_kopyalar | awk '$1=="cp" && $3=="env" {printf "%s [%s] ", $4, $5}')"
+  fi
   # shellcheck disable=SC2086
   echo "  7. yeniden başlatılacak: $(_sirala $birimler)$hazirlik"
   echo "  8. kanıt: POST $CP_KOK/api/auth/login gövde {\"key\": …} — YENİ → 200 · ESKİ → 401/403 (503 = konteynerde anahtar YOK) + envanter eşitliği (--cp)"
@@ -3100,7 +3174,7 @@ vault_cp_rotasyon() {
   _saat_oku "kasaya HİÇBİR ŞEY yazılmadı (saat ön kapısı)"
 
   # ---- 3. YEDEK ------------------------------------------------------------------------------------
-  adim "3/8 yedek: ESKİ değer (KASADAN) + eski kanal dosyaları"
+  adim "3/8 yedek: ESKİ değer (KASADAN) + kopya tablosundaki dosyalar"
   # Evre yedekten ÖNCE: `_yedek_al` yarıda düşerse reçete "GEREKMEZ" der; YEDEK atanmadan düşerse reçete
   # zaten basılmaz (`_geri_alma_recetesi` kapısı).
   CP_KASA_EVRE=yedek
@@ -3128,11 +3202,16 @@ vault_cp_rotasyon() {
      birim düşmüş. Bak: systemctl status vault-agent · journalctl -u vault-agent -n 50 --no-pager"
   oldu "render ÖLÇÜLDÜ: $hedef ($RENDER_GECEN s) — kanonik kopya kasadaki YENİ değerle BİREBİR"
 
-  # ---- 6. ESKİ KANAL (iki-kanal dönemi) -------------------------------------------------------------
-  adim "6/8 eski kanal (iki-kanal dönemi): kopyalar KASADAN gelen değerle yazılır"
+  # ---- 6. ESKİ KANAL (iki-kanal dönemi; 2026-09-29'dan beri YOK — tablodan türer) -------------------
+  # Evre adımın içeriğinden BAĞIMSIZ `yayim`: reçetenin bu evredeki işi restart'ı da kapsar (adım 7).
   CP_KASA_EVRE=yayim
-  # YALNIZ `env` satırları: `dosya` satırı render hedefinin kendisidir — Agent'ındır ve az önce ÖLÇÜLDÜ.
-  _yaz cp "$sir" "$ISLIK/vault_render_kanon" "env"
+  if _cp_eski_kanal_yok; then
+    adim "6/8 eski kanal: $CP_ESKI_KANAL_YOK_METNI"
+  else
+    adim "6/8 eski kanal (iki-kanal dönemi): kopyalar KASADAN gelen değerle yazılır"
+    # YALNIZ `env` satırları: `dosya` satırı render hedefinin kendisidir — Agent'ındır ve az önce ÖLÇÜLDÜ.
+    _yaz cp "$sir" "$ISLIK/vault_render_kanon" "env"
+  fi
 
   # ---- 7. RESTART ---------------------------------------------------------------------------------
   adim "7/8 tüketici yeniden başlat"
@@ -3264,6 +3343,22 @@ _secrets_json_tara() {
   done < <(_aranan_adlar)
 }
 
+# EMEKLİ KOPYA DENETİMİ (TSK-064 iki-kanal kapanışı, 2026-09-29) — `_emekli_kopyalar` şerhi. Yalnız VARLIK
+# (`test -e`): dosya AÇILMAZ, değer okunmaz. Bulgu bir ARIZA değil bir İŞ'tir (operatörün kaldırma adımı) ve
+# envanterin çıkış kodunu DEĞİŞTİRMEZ — `_beyan_disi_tara` ile aynı sözleşme: rapor biter, bulgu adıyla basılır.
+_emekli_denetle() {
+  local y
+  echo "  --- emekli kopyalar (rotasyon YAZMAZ, okuyucusu YOK — yalnız VARLIK, DEĞER OKUNMAZ) ---"
+  while read -r y; do
+    [ -n "$y" ] || continue
+    if sudo test -e "$KOK$y"; then
+      echo "  !! EMEKLİ KOPYA HÂLÂ VAR: $y — rotasyon YAZMIYOR, okuyucusu YOK; yedekle + kaldır (deploy/oracle-a1/RUNBOOK.md son bölüm)"
+    else
+      echo "  emekli kopya: $y → YOK (kaldırılmış)"
+    fi
+  done < <(_emekli_kopyalar)
+}
+
 envanter() {
   echo "=== SIR KOPYA ENVANTERİ (yalnız VARLIK ve EŞİTLİK; DEĞER ve HASH BASILMAZ) ==="
   _envanter_esitlik
@@ -3274,6 +3369,7 @@ envanter() {
   # oneshot LoadCredential drop-in'i yok) ve bu bir arıza değil, bir DURUM beyanıdır.
   if [ -n "$_oneshot_satir" ]; then echo "$_oneshot_satir"; else echo "  oneshot tüketici YOK"; fi
   _beyan_disi_tara
+  _emekli_denetle
   _secrets_json_tara
   echo "  --- yedekler (/root/sir-yedek-*) ---"
   _yedekleri_listele

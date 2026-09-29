@@ -929,7 +929,19 @@ def test_C5_yan_dosya_EnvironmentFile_OPSIYONEL_isaretli():
     """`EnvironmentFile=-<yol>` — eksi işareti GERİ ALIM YOLUDUR: kasa hiç kurulmadan ya da Agent
     durdurulduktan sonra dosya YOKSA birim yine açılır ve eski kanalla koşar (tasarım §6.4).
     İşaretsiz bir satır, yan dosyayı bir AÇILIŞ ÖN ŞARTINA çevirirdi — yani kasanın arızası
-    tüketicinin arızası olurdu."""
+    tüketicinin arızası olurdu.
+
+    BEYANLI İSTİSNA (TSK-064 iki-kanal kapanışı, 2026-09-29; Rol-1 kararı): iki-kanal DÖNEMİ BİTEN tüketicide
+    eksi işaretinin gerekçesi (geri alım = eski kanal) ORTADAN KALKAR — eski kanal yoktur. Orada opsiyonel satır
+    yan dosyasız bir açılışı ANAHTARSIZ bir konteynere çevirirdi (sessiz); zorunlu satır aynı hâli birimin
+    açılmamasına çevirir (gürültülü). İstisna dosya ADIYLA ve gerekçesiyle yazılır, çürümez (kullanılmayan
+    istisna kırmızı); geri alım o drop-in'in kendi şerhindedir."""
+    zorunlu_istisna = {
+        ("hindsight-cp.service.d", "51-env-cp-kaldir.conf"):
+            "iki-kanal kapanışı 2026-09-29: .env-cp emekli, yan dosya CP'nin TEK kaynağı — opsiyonel satır "
+            "anahtarsız açılış olurdu (v590 A)",
+    }
+    kullanilan: set[tuple[str, str]] = set()
     bulundu = 0
     for conf in DROPIN_DIZIN.rglob("*.service.d/*.conf"):
         for satir in conf.read_text(encoding="utf-8").splitlines():
@@ -937,9 +949,15 @@ def test_C5_yan_dosya_EnvironmentFile_OPSIYONEL_isaretli():
             if not s.startswith("EnvironmentFile=") or ".vault" not in s:
                 continue
             bulundu += 1
+            anahtar = (conf.parent.name, conf.name)
+            if anahtar in zorunlu_istisna and not s.startswith("EnvironmentFile=-"):
+                kullanilan.add(anahtar)
+                continue
             assert s.startswith("EnvironmentFile=-"), (
                 f"{conf.name}: yan dosya opsiyonel değil ({s!r}) — kasa arızası tüketiciyi düşürür")
     assert bulundu >= 2, f"yan dosya EnvironmentFile satırı bulunamadı (çivi kör): {bulundu}"
+    assert kullanilan == set(zorunlu_istisna), f"çürümüş istisna: {set(zorunlu_istisna) - kullanilan}"
+    assert all(len(g) >= 20 for g in zorunlu_istisna.values())
 
 
 def _execstart_jetonlari(metin: str) -> list[str]:
