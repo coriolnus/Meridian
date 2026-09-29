@@ -1906,7 +1906,9 @@ DEĞİL, kendi dalı (`vault_cp_rotasyon`): değer betik İÇİNDE
 GÖRÜNTÜLEME sızıntısıydı, yapıştırma bir yüzey daha açardı),
 kanıtın NEGATİF ayağı ESKİ değeri KASADAN okur, geri alma reçetesi
 EVREYE göredir (KV v2 sürümü). Sıra: kasa → render kanıtı → eski
-kanal (`.env-cp`) → restart → kanıt (CP giriş ucu). `--kuru` ile.
+kanal → restart → kanıt (CP giriş ucu). `--kuru` ile. Eski kanal
+2026-09-29'dan beri YOK (`.env-cp` EMEKLİ — TSK-064 iki-kanal):
+adım kopya tablosundan türer ve "YOK" der.
 TAKMA AD (`ayni_deger`, Rol-1 hükmü 2026-09-14): aynı değerin
 TEK kasa yolu vardır; rotasyon BİRİNCİL yola yapılır ve takma
 adlar onu otomatik izler. Restart listesi kasa YOLUNDAN toplanır
@@ -1944,7 +1946,7 @@ rotasyonla kapanır); `--openrouter` negatif kontrolde durur ve rotasyon hiç YA
 yüzden ÜST DÜZEYDE ve MEKANİKTİR: `id -u` 0 değilse betik ilk satırda durur. İçerideki `sudo`
 önekleri KALIR — root altında no-op'turlar ve betiği kardeşleriyle (`deploy.sh`, `cutover.sh`)
 aynı okunur biçimde tutarlar. `mod=koru`/`sahip=koru` satırları (ubuntu sahipli hermes
-profilleri, `/opt/hindsight/.key`) root altında da MEVCUT sahip ve izinle yazılır: root'un
+profilleri; 2026-09-29'a dek `/opt/hindsight/.key` de) root altında da MEVCUT sahip ve izinle yazılır: root'un
 yazıyor olması, dosyayı root'a DEVRETMEK değildir.
 
 DEĞER ÜRETİMİ. `--kapi`/`--db`/`--dash`: `openssl rand -base64 36 | tr '+/' '-_'` → 48 karakter
