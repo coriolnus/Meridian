@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import re
 import time
 import urllib.error
@@ -85,11 +86,18 @@ class HermesTasiyici:
     `Authorization: Bearer <API_SERVER_KEY>`, oturum sürekliliği `X-Hermes-Session-Id`. Anahtar HER
     çağrıda `secrets.credential_oku` ile okunur (LoadCredential kanalı; argv/ortam/log'a düşmez) —
     yoksa istek HİÇ atılmaz. Zaman aşımı ZORUNLUDUR: asılı bir api_server Telegram döngüsünü de
-    asardı. `arac_cagrilari`/`model_cagrilari` bu yolda ÖLÇÜLMÜYOR (`None`): api_server cevabının
+    asardı — kurucu sonlu ve > 0 olmayan değeri (`None`, 0, negatif, inf, nan, bool, dizge) `ValueError`
+    ile REDDEDER; `urlopen(timeout=None)` soketi sonsuz bloklardı (Tur 3, son inceleme I-1). Sınır soket
+    İŞLEMİ başınadır, duvar saati değil (park: son inceleme M-4). `arac_cagrilari`/`model_cagrilari` bu yolda ÖLÇÜLMÜYOR (`None`): api_server cevabının
     bu sayıları taşıyıp taşımadığı Parça 0 (b) ölçümünü bekler (uydurma yasağı)."""
 
     def __init__(self, taban_url: str = "http://127.0.0.1:8642", zaman_asimi_s: float = 300.0,
                  _cagir=None, _anahtar=None):
+        # bool bir int alt sınıfıdır: `True` 1 sn diye sessizce okunmasın (kadro `gunluk_tavan` emsali).
+        if (isinstance(zaman_asimi_s, bool) or not isinstance(zaman_asimi_s, (int, float))
+                or not math.isfinite(zaman_asimi_s) or zaman_asimi_s <= 0):
+            raise ValueError(f"HermesTasiyici: zaman_asimi_s sonlu ve > 0 olmalı, gelen {zaman_asimi_s!r} — "
+                             "sınırsız çağrı Telegram döngüsünü süresiz kilitler")
         self.taban_url = taban_url.rstrip("/")
         self.zaman_asimi_s = zaman_asimi_s
         self._cagir = _cagir or self._cagir_varsayilan

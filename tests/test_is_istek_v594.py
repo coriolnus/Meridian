@@ -70,26 +70,47 @@ def test_red_istek_dosyasina_dokunmaz(sandbox_state):
     assert p.read_text() == once
 
 
-@pytest.mark.parametrize("bot,birim", [("sef", "meridian-brifing"), ("bekci", "meridian-bekci"), ("karne", "meridian-karne")])
-def test_path_birimi_dogru_servisi_ve_dosyayi_izler(bot, birim):
-    metin = (ROOT / "deploy/oracle-a1" / f"meridian-istek-{bot}.path").read_text(encoding="utf-8")
-    assert re.search(rf"^PathChanged=/opt/meridian/state/istek/{bot}\.istek$", metin, re.M)
-    assert re.search(rf"^Unit={birim}\.service$", metin, re.M)
+# ---- `.path` birimleri ↔ kadro: TEK KAYNAK (Görev 2 incelemesi M2, Tur 3) -------------------------------
+# Beklenen (bot, iş) çiftleri SABİT YAZILMAZ — `is_istek.is_listesi()`ten (kadro `zamanli_is`) TÜRER. Sabit
+# çiftle kadroda `zamanli_is` değişince çiviler yeşil kalırdı; oysa `is_iste` `IsSonuc.birim` olarak bir
+# servisi söyler, systemd `.path`in `Unit=`indeki BAŞKA servisi başlatırdı (tek-kaynak yasasının ikinci kopyası).
+BIRIM_DIZINI = ROOT / "deploy/oracle-a1"
+IS_CIFTLERI = sorted(ii.is_listesi().items())
+
+
+def _path_birimleri() -> dict[str, Path]:
+    """`deploy/oracle-a1/meridian-istek-<bot>.path` → `{bot: yol}` (dizinde GERÇEKTEN olanlar)."""
+    return {p.name.removeprefix("meridian-istek-").removesuffix(".path"): p
+            for p in BIRIM_DIZINI.glob("meridian-istek-*.path")}
+
+
+def _degerler(metin: str, anahtar: str) -> list[str]:
+    return re.findall(rf"^{anahtar}=(.*)$", metin, re.M)
+
+
+@pytest.mark.parametrize("bot,is_adi", IS_CIFTLERI, ids=[b for b, _ in IS_CIFTLERI])
+def test_path_birimi_kadrodaki_isi_ve_istek_dosyasini_izler(bot, is_adi):
+    p = BIRIM_DIZINI / f"meridian-istek-{bot}.path"
+    assert p.is_file(), f"@{bot}: kadroda zamanli_is={is_adi} var ama {p.name} yok"
+    metin = p.read_text(encoding="utf-8")
+    assert _degerler(metin, "Unit") == [f"{is_adi}.service"], f"@{bot}: Unit= kadrodaki işten ayrıştı"
+    assert _degerler(metin, "PathChanged") == [f"/opt/meridian/state/istek/{bot}.istek"]
     assert "PathExists=" not in metin  # dosya silinmediği için PathExists sonsuz yeniden tetikler
-    assert (ROOT / "deploy/oracle-a1" / f"{birim}.service").is_file()
+    assert (BIRIM_DIZINI / f"{is_adi}.service").is_file()
 
 
 def test_path_birimleri_kopyalanir_ama_etkin_degil():
+    """Dizindeki HER `meridian-istek-*.path` (ve iş listesinin her botu) rolün `birim_kaynaklari`nda —
+    açık ad ya da onu kapsayan bir glob — ve `etkin_birimler`de DEĞİL (Vault/Grafana emsali)."""
+    import fnmatch
     d = yaml.safe_load((ROOT / "deploy/ansible/roles/meridian_a1/defaults/main.yml").read_text(encoding="utf-8"))
-    kaynaklar = json.dumps(d.get("birim_kaynaklari"))
-    etkin = json.dumps(d.get("etkin_birimler"))
-    for bot in ("sef", "bekci", "karne"):
-        assert f"meridian-istek-{bot}.path" in kaynaklar and f"meridian-istek-{bot}.path" not in etkin
-
-
-def test_her_zamanli_is_icin_path_birimi_var():
-    for bot in ii.is_listesi():
-        assert (ROOT / "deploy/oracle-a1" / f"meridian-istek-{bot}.path").is_file(), bot
+    kaynaklar = [str(k).replace("{{ playbook_dir }}/../", "") for k in d.get("birim_kaynaklari") or []]
+    etkin = set(d.get("etkin_birimler") or [])
+    adlar = {p.name for p in _path_birimleri().values()} | {f"meridian-istek-{b}.path" for b, _ in IS_CIFTLERI}
+    assert adlar
+    for ad in sorted(adlar):
+        assert any(fnmatch.fnmatchcase(f"oracle-a1/{ad}", k) for k in kaynaklar), f"{ad}: rol kopyalamaz"
+        assert ad not in etkin, f"{ad}: elle test-ateşlemeden önce etkin olamaz"
 
 
 # ------------------------------------------------------------------------------------------------
@@ -99,9 +120,8 @@ def test_her_zamanli_is_icin_path_birimi_var():
 def test_yetim_path_birimi_yok_iki_yonlu_esitlik():
     """Kadrodan bir botun `zamanli_is`i kalkarsa onun `.path` birimi de kalkmalı: yetim birim, var
     olmayan bir isteği izler ve 'şimdi çalıştır' yüzeyinin donuk listesi iki yerde ayrışır."""
-    birimler = {p.name.removeprefix("meridian-istek-").removesuffix(".path")
-                for p in (ROOT / "deploy/oracle-a1").glob("meridian-istek-*.path")}
-    assert birimler == set(ii.is_listesi())
+    assert IS_CIFTLERI, "iş listesi boş — boş küme ile boş dizin iki yönlü eşitliği anlamsız geçerdi"
+    assert set(_path_birimleri()) == set(ii.is_listesi())
 
 
 def _bot(ad: str, durum: str, zamanli_is: str | None) -> kadro.Bot:

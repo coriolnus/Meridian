@@ -333,3 +333,34 @@ def test_hatirla_hafiza_istisnasi_yazilamadi_der_ve_olay_yazar(sandbox_state):
     assert "YAZILAMADI" in cevap and _defter()[-1]["hafiza_durumu"] == "yazilamadi"
     assert any(e.get("event") == "bot_hafiza_yazim_hatasi" and e.get("sinif") == "ConnectionError"
                for e in obs.recent(20))
+
+
+# ---- Tur 3 (son inceleme I-1): taşıyıcı zaman aşımı ZORUNLU ve ÜRETİM yolu çivili ------------------------
+# `urlopen(timeout=None)` soketi SONSUZ bloklar → tek asılı api_server çağrısı Telegram döngüsünü süresiz
+# kilitler (plan Review Focus 1). Varsayılan bir değer tek başına güvence değildir: `None`a çeviren tek
+# satır bütün açık-değerli çivileri yeşil bırakırdı. İki çivi: (1) kurucu geçersiz değeri REDDEDER;
+# (2) üretimin TEK yolu (`bota_sor`, taşıyıcı VERİLMEDEN → `HermesTasiyici()` → varsayılan HTTP yolu)
+# urlopen'a sonlu, sabitlenmiş (300 sn) zaman aşımı geçirir. `_cagir` ENJEKTE EDİLMEZ — ölçülen o yol.
+
+@pytest.mark.parametrize("deger", [None, 0, 0.0, -1, -0.5, float("inf"), float("-inf"), float("nan"), "300", True])
+def test_hermes_zaman_asimi_sonlu_ve_pozitif_olmali(deger):
+    with pytest.raises(ValueError):
+        bk.HermesTasiyici(zaman_asimi_s=deger)
+
+
+def test_uretim_yolu_varsayilan_tasiyici_sonlu_sabit_zaman_asimi_gecirir(sandbox_state, monkeypatch):
+    import inspect
+    import math
+    gorulen = {}
+    monkeypatch.setattr(bk.secrets, "credential_oku", lambda ad: "K" * 32 if ad == "API_SERVER_KEY" else None)
+
+    def urlopen(istek, timeout=None):
+        gorulen.update(timeout=timeout, url=istek.full_url)
+        return _Cevap(json.dumps({"choices": [{"message": {"content": "tamam"}}]}).encode())
+
+    monkeypatch.setattr(bk.urllib.request, "urlopen", urlopen)
+    assert bk.bota_sor("bekci", "x", "pano", "o", simdi=SIMDI) == "tamam"
+    z = gorulen["timeout"]
+    assert isinstance(z, (int, float)) and not isinstance(z, bool) and math.isfinite(z) and z > 0
+    assert z == 300 == inspect.signature(bk.HermesTasiyici).parameters["zaman_asimi_s"].default
+    assert gorulen["url"] == "http://127.0.0.1:8642/p/bekci/v1/chat/completions"
