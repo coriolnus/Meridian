@@ -637,8 +637,9 @@ _oneshot_yazdir() {
 #: artık rotasyonun YAZMADIĞI bir kopyadır ve envanter onu BEYAN DIŞI diye bağırmak zorundadır.
 #: Listeden çıkarmak o geri dönüşü SESSİZ yapardı (çivi: v520 B7/M6).
 #: `/opt/hindsight/.env-cp` AYNI gerekçeyle KALIR (TSK-064 iki-kanal kapanışı, 2026-09-29): kopya tablosundan
-#: çıktı, dosya operatör kaldırana dek diskte durur — iki alanı da (sır kimliği `HINDSIGHT_CP_ACCESS_KEY` ·
-#: sözlüğe uyan `HINDSIGHT_CP_DATAPLANE_API_KEY`) BEYAN DIŞI bağırılır; kaldırılınca `test -f` atlar (v590 C5).
+#: çıktı ve dosya 2026-09-29 11:32Z'de A1'den KALDIRILDI (yedek `/root/sir-yedek-20260929T113217Z-ikikanal/`) —
+#: yok olan dosyayı `test -f` atlar; geri doğarsa iki alanı da (sır kimliği `HINDSIGHT_CP_ACCESS_KEY` ·
+#: sözlüğe uyan `HINDSIGHT_CP_DATAPLANE_API_KEY`) BEYAN DIŞI bağırılır (v590 C5).
 _taranan_dosyalar() {
   cat <<'TARA_SON'
 /opt/meridian/.env
@@ -1745,10 +1746,12 @@ tenant() {
 }
 
 # CP ERİŞİM ANAHTARI — ESKİ YOL (TSK-226b, 2026-09-26). `tenant()` emsali, adım adım: yedek → ESKİ değer
-# → üret (`hex`, `--tenant` ile aynı sınıf) → iki kopya → restart → kanıt → envanter eşitliği.
-# Sır kasaya BAĞLIDIR ve uyarı yazımdan ÖNCE `--cp --vault`u gösterir: kasa canlıyken konteyner değeri
-# yan dosyadan (`.env-cp.vault`, SONRAKİ `EnvironmentFile=`) alır ve bu yolun yazdığı `.env-cp` gölgede
-# kalır — kanıt o hâlde "YENİ değerle HTTP 401" der (çıkış 2): yarım rotasyon SESSİZ olamaz (v556 D7).
+# → üret (`hex`, `--tenant` ile aynı sınıf) → tablodaki kopyalar (2026-09-29'a dek iki, bugün TEK: kanonik
+# kopya) → restart → kanıt → envanter eşitliği.
+# Sır kasaya BAĞLIDIR ve uyarı yazımdan ÖNCE `--cp --vault`u gösterir: konteyner değeri YALNIZ yan dosyadan
+# (`.env-cp.vault`, drop-in 51 ile TEK ve ZORUNLU `EnvironmentFile=`) alır ve bu yolun yazdığı kanonik kopyayı
+# OKUMAZ (2026-09-29'a dek yazdığı `.env-cp` de yan dosyanın gölgesinde kalıyordu) — kanıt o hâlde "YENİ
+# değerle HTTP 401" der (çıkış 2): yarım rotasyon SESSİZ olamaz (v556 D7).
 # ESKİ DEĞER 2026-09-29'a kadar `.env-cp` YEDEĞİNDEN okunuyordu (o dosya birimin zorunlu `EnvironmentFile=`ıydı ve
 # her dünyada vardı). İki-kanal kapanışından beri CP'nin ZORUNLU tek kaynağı kasa yan dosyasıdır — yani kasa
 # kurulu değilse CP hiç AÇILMAZ ve kanonik kopya CP'nin açılabildiği HER dünyada vardır. Eski değer bu yüzden
@@ -1780,7 +1783,7 @@ _cp_kanit_plani() {
 
 # CP KANITI — kontrol panelinin KENDİ giriş ucu (TSK-226b). Kaynak ölçümü (v0.9.2 `api/auth/login`):
 # gövde `{"key": …}` `HINDSIGHT_CP_ACCESS_KEY` ile sabit-zamanlı kıyaslanır → eşitse 200, değilse 401;
-# anahtar TANIMSIZSA 503 (değersiz `-e AD`: değişken iki dosyada da yoksa konteynere HİÇ girmez); gövde
+# anahtar TANIMSIZSA 503 (değersiz `-e AD`: değişken yan dosyada yoksa konteynere HİÇ girmez); gövde
 # JSON değilse 400. Anahtar İSTEKTE geldiği için "eski değerle 401" DOĞRUDAN ölçülür — negatif kontrol
 # (bilerek bozuk yazım) GEREKMEZ (`apisix_admin` emsali). Değer başlıkta DEĞİL gövdededir; gövde 0600
 # dosyadan `data-binary` ile gider, argv'ye GİRMEZ (`_farksal_kod`). Başarılı girişin oturum çerezi

@@ -11,21 +11,28 @@
 # Kurulum: sudo cp -> /etc/systemd/system/hindsight-cp.service && sudo systemctl daemon-reload
 #          && sudo systemctl enable --now hindsight-cp     # YALNIZ bu birim (TSK-092 dersi:
 #          start satırına başka birim eklenmez).
-# Sır dosyası /opt/hindsight/.env-cp (chmod 600, A1-içi üretim; repoya girmez):
-#   HINDSIGHT_CP_ACCESS_KEY=<openssl rand -hex 32>
-#   HINDSIGHT_CP_DATAPLANE_API_KEY=<.env'deki HINDSIGHT_API_TENANT_API_KEY ile AYNI değer>
+# SIR KAYNAĞI (TSK-064 iki-kanal kapanışı, 2026-09-29): iki sır YALNIZ Vault yan dosyası
+# /opt/hindsight/.env-cp.vault'tan gelir (0400 root, Vault Agent render eder; envanter `vault_dosyalar`):
+#   HINDSIGHT_CP_ACCESS_KEY=<kasa: hindsight_cp_access_key — `openssl rand -hex 32` sınıfı>
+#   HINDSIGHT_CP_DATAPLANE_API_KEY=<HINDSIGHT_API_TENANT_API_KEY ile AYNI değer — takma ad, aynı kasa yolu>
+# Aşağıdaki `EnvironmentFile=/opt/hindsight/.env-cp` satırı TARİHSELDİR ve ETKİSİZDİR: drop-in
+# `51-env-cp-kaldir.conf` boş `EnvironmentFile=` ile onu sıfırlar ve yan dosyayı TEK ve ZORUNLU kaynak yapar;
+# `.env-cp` 2026-09-29 11:32Z'de A1'den kaldırıldı (yedek /root/sir-yedek-20260929T113217Z-ikikanal/).
+# Yönerge bilerek yerinde kalır (51'in şerhi: temel birimin yönergesine dokunulmaz) — geri alma 51'i
+# kaldırınca bu satır geri gelir, ÖNCE dosya yedekten geri konur (reçete 51'in şerhinde).
 # Env adları imajdan ÖLÇÜLDÜ (grep /app): ACCESS_KEY · DATAPLANE_API_KEY · DATAPLANE_API_URL ·
 # HINDSIGHT_CP_HOSTNAME · HINDSIGHT_CP_PORT.
 # SIRLAR ARGV'DE DEĞİL (TSK-226, 2026-09-25): iki sır ExecStart'a DEĞERSİZ `-e AD` ile yazılır —
-# docker istemcisi değeri KENDİ ortamından okur ve o ortamı systemd `EnvironmentFile=` satırlarıyla
-# (bu dosya + drop-in'deki kasa yan dosyası, sırayla) doldurur. Sürecin ortamı (`/proc/<pid>/environ`)
+# docker istemcisi değeri KENDİ ortamından okur ve o ortamı systemd `EnvironmentFile=` doldurur
+# (2026-09-29'dan beri YALNIZ drop-in 51'in kasa yan dosyası). Sürecin ortamı (`/proc/<pid>/environ`)
 # yalnız sahibine (root) açıktır; argv (`ps`, `/proc/<pid>/cmdline`) ise makinedeki HER kullanıcıya.
 # Önceki `-e AD=${AD}` biçimi systemd'nin değeri ExecStart'a GENİŞLETMESİ demekti: iki sır
 # 2026-09-15'ten beri root `docker run` sürecinin argv'sindeydi (Rol-1 A1 ölçümü 2026-09-25).
 # `--env-file` EKLENMEZ (gerekçe drop-in şerhinde). Sabitler (`-e HINDSIGHT_CP_PORT=9999` …) sır
 # değildir, olduğu gibi kalır. Sınıf çivisi: tests/test_birim_argv_sir_v554.py (birim komut
-# satırında sır adlı değişken genişlemesi YASAK). Yan etki: değişken iki dosyada da yoksa docker onu
-# konteynere HİÇ koymaz (eski biçim BOŞ dize koyardı) — ikisi de "anahtarsız" demektir.
+# satırında sır adlı değişken genişlemesi YASAK). Yan etki: değişken yan dosyada yoksa docker onu
+# konteynere HİÇ koymaz (eski biçim BOŞ dize koyardı) — ikisi de "anahtarsız" demektir; yan dosyanın
+# KENDİSİ yoksa birim hiç AÇILMAZ (51'de satır tiresiz).
 # Erişim: ssh -i ~/.ssh/oci-a1.key -N -L 9999:127.0.0.1:9999 ubuntu@130.61.126.87
 # BELLEK TAVANI İKİ KATMANDA (TSK-247, 2026-09-28): `MemoryMax=` YALNIZ `docker run` istemcisini sınırlar; konteynerin
 # gerçek tavanı `--memory`dir (gerekçe apisix.service şerhinde). Rol-1 A1 ölçümü 2026-09-28: HostConfig.Memory = 0
