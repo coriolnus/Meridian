@@ -48,7 +48,7 @@ def test_b_terraform_paketi_pinli_ve_surum_tek_yerde():
         for p in ROOT.glob("deploy/ansible/**/*.yml")
         if "vars" in p.parts or "defaults" in p.parts
     )
-    assert re.search(r'terraform_surumu:\s*"1\.16\.4-1"', vars_metin)  # 2026-09-28: 1.16.2-1 → 1.16.4-1 (operatör kararı)
+    assert re.search(r'terraform_surumu:\s*"1\.16\.4-1"', vars_metin)  # 2026-09-29: 1.16.2-1 → 1.16.4-1 (operatör kararı)
 
 
 def test_c_saglik_kapisi_terraform_version():

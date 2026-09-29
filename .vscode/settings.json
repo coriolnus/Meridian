@@ -86,7 +86,7 @@
   "redhat.telemetry.enabled": false,
 
   // --- Terraform (hashicorp.terraform) ---------------------------------------------------------
-  // CLI `brew install hashicorp/tap/terraform` ile kurulu, A1 ile AYNI sürüm (1.16.4; 2026-09-28 — yerelde `brew upgrade hashicorp/tap/terraform` gerekir). Editörde
+  // CLI `brew install hashicorp/tap/terraform` ile kurulu, A1 ile AYNI sürüm (1.16.4; 2026-09-29 — yerelde `brew upgrade hashicorp/tap/terraform` gerekir). Editörde
   // biçimlendirme (`terraform fmt`) ve durağan doğrulama çalışır. `validateOnSave` KAPALI kalır:
   // `terraform validate` önce `init` ister ve yerel `init` depo-izli `.terraform.lock.hcl`e macOS
   // özetlerini ekler → kirli ağaç dağıtım kapısını durdurur. Plan/import yalnız A1'de

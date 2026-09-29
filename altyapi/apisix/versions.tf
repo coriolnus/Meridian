@@ -1,7 +1,7 @@
 # TSK-176 T1 — sürüm pinleri (tasarım §1.2; plan Tech Stack).
 #
 # İKİ PİN, İKİ AYRI GEREKÇE — ikisi de "=" ile TAM, ">=" ile değil:
-#   · Terraform 1.16.4 (BUSL 1.1; 2026-09-28 1.16.2'den — operatör kararı, A0 pini ile birlikte; lisans beyanı ROADMAP TSK-176 Ref'te): ikilinin sürümü A0
+#   · Terraform 1.16.4 (BUSL 1.1; 2026-09-29 1.16.2'den — operatör kararı, A0 pini ile birlikte; lisans beyanı ROADMAP TSK-176 Ref'te): ikilinin sürümü A0
 #     rolünde apt pini ile (`terraform_surumu`) kurulur. Buradaki `required_version` o pinin
 #     AYNASIDIR: A1'de başka bir sürüm belirirse terraform ÇALIŞMAYI REDDEDER — sessiz sürüm
 #     kaymasının state'e dokunmadan durduğu yer.

@@ -146,8 +146,8 @@ docker_grubu: docker
 # kıyas öncesi sonek atılır.
 # SÜRÜM SEÇİMİ BİR KARARDIR, ölçüm değil (plan Tech Stack; lisans BUSL 1.1 beyanı ROADMAP
 # TSK-176 Ref'te): yükseltme = bu satırın değişmesi + playbook koşumu; apt'ye BIRAKILMAZ.
-# 2026-09-28 21:2xZ 1.16.2-1 → 1.16.4-1: operatör A1'de 17:29Z elle `apt upgrade` koştu (terraform dahil) ve
-# AskUserQuestion'da "1.16.4'e geçelim" dedi — pin kurulu sürüme çekildi; ayna: altyapi/apisix/versions.tf.
+# 2026-09-29 07:2xZ 1.16.2-1 → 1.16.4-1: operatör A1'de 2026-09-28 17:29Z elle `apt upgrade` koştu (terraform dahil) ve
+# AskUserQuestion'da (yanıt 09-29 ~07:2xZ) "1.16.4'e geçelim" dedi — pin kurulu sürüme çekildi; ayna: altyapi/apisix/versions.tf.
 terraform_surumu: "1.16.4-1"
 
 # --- uv (venv.yml) ---
