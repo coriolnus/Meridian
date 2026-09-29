@@ -91,6 +91,25 @@ def test_bot_bul_harf_duyarsiz():
     assert kadro.bot_bul("yok") is None
 
 
+# TUR 3 (Görev 2 son inceleme, Türkçe harf): operatör "@bekçi"/"@şef" yazar — rapor başlığı da
+# "bekçi" der. `.lower()` tek başına yetmez: "İ".lower() = "i" + BİRLEŞTİRİCİ NOKTA (U+0307).
+@pytest.mark.parametrize("yazim,ad", [
+    ("şef", "sef"), ("bekçi", "bekci"), ("DENETCİ", "denetci"), ("BEKÇİ", "bekci"),
+    ("BÜTÇE", "butce"), ("nöbet", "nobet"), ("ÖLÇÜM", "olcum"), ("ciVİci", "civici"),
+])
+def test_bot_bul_turkce_harfleri_katlar(yazim, ad):
+    assert kadro.ad_katla(yazim) == ad and "̇" not in kadro.ad_katla(yazim)
+    assert kadro.bot_bul(yazim).ad == ad
+
+
+@pytest.mark.parametrize("ad", ["bekçi", "bot2", "iki kelime", "a-b"])
+def test_dogrulama_ad_yalniz_ascii_kucuk_harf_ve_alt_cizgi(tmp_path, ad):
+    # Telegram yönlendirme desenleri (`telegram_dinleyici._SOHBET_IMZA`) adın [a-z_] olduğunu
+    # varsayar; kadro bu varsayımı ZORLAR — aksi hâlde o botun cevabına yanıt sessizce @sef'e düşerdi.
+    with pytest.raises(ValueError, match=r"'ad'=.* yalnız \[a-z_\]"):
+        kadro.kadro_yukle(_yaz(tmp_path, [_gecerli(ad=ad)]))
+
+
 @pytest.mark.parametrize("bozuk,alan", [
     ({"durum": "belki"}, "durum"),
     ({"dalga": "9"}, "dalga"),

@@ -7,6 +7,7 @@ tekrarlanan ad, aracı olmayan aktif bot, nedensiz boş tavan → `ValueError` (
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -20,6 +21,15 @@ DALGALAR = ("canli", "1", "2", "3", "kilitli")
 HAFIZA_KIPLERI = ("kendi", "hepsi")
 #: Parça 1'de araç sunucusuna eklenecek araçlar — kadro bugünden adlandırır, çivi bilinen kümeye katar.
 PLANLI_ARACLAR = ("is_iste", "bot_hafizasi_ara")
+#: Bot adının izinli biçimi. Telegram yönlendirme desenleri (`telegram_dinleyici` modülündeki
+#: `_SOHBET_IMZA`, `_ONEK`) ve oturum kimliği biçimi (`tg-<ad>-…`) adın bu kümede olduğunu varsayar;
+#: kadro varsayımı ZORLAR — rakamlı ya da Türkçe harfli bir ad, o botun cevabına yanıtı sessizce
+#: varsayılan bota düşürürdü.
+AD_DESENI = re.compile(r"[a-z_]+")
+#: Türkçe harf katlaması — operatör "@bekçi"/"@ŞEF" yazar, kadro adı ASCII'dir. BÜYÜK harfler de
+#: DOĞRUDAN ASCII küçüğe iner: "İ".lower() Python'da "i" + BİRLEŞTİRİCİ NOKTA (U+0307) verir, yani
+#: `.lower()`dan ÖNCE katlanmazsa "@DENETCİ" hiçbir adla eşleşmez.
+_TR_KATLAMA = str.maketrans("çğıöşüÇĞİÖŞÜ", "cgiosucgiosu")
 
 
 @dataclass(frozen=True)
@@ -42,6 +52,9 @@ def _bot(ham: dict) -> Bot:
     ad = str(ham.get("ad") or "").strip().lower()
     if not ad:
         raise ValueError("kadro: 'ad' alanı boş bir satır var")
+    if not AD_DESENI.fullmatch(ad):
+        raise ValueError(f"kadro: 'ad'={ad!r} yalnız [a-z_] olabilir — Telegram yönlendirme "
+                         "desenleri ve oturum kimliği bu varsayıma dayanır")
     for alan, izinli in (("durum", DURUMLAR), ("dalga", DALGALAR), ("hafiza", HAFIZA_KIPLERI)):
         if str(ham.get(alan)) not in izinli:
             raise ValueError(f"kadro: @{ad} '{alan}'={ham.get(alan)!r} izinli değil {izinli}")
@@ -75,8 +88,14 @@ def kadro_yukle(yol: Path | None = None) -> tuple[Bot, ...]:
     return botlar
 
 
+def ad_katla(ad: str) -> str:
+    """Operatörün yazdığı bot adını kadro biçimine indirir: Türkçe harf katlaması (`İ` dahil,
+    `.lower()`dan ÖNCE) + küçük harf. Tek katlama noktası budur — yönlendirme ve sorgu buradan geçer."""
+    return (ad or "").strip().translate(_TR_KATLAMA).lower()
+
+
 def bot_bul(ad: str, kadro: tuple[Bot, ...] | None = None) -> Bot | None:
-    hedef = (ad or "").strip().lower()
+    hedef = ad_katla(ad)
     return next((b for b in (kadro if kadro is not None else kadro_yukle()) if b.ad == hedef), None)
 
 
