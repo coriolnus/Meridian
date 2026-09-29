@@ -51,6 +51,13 @@ BÖLÜMLER
 SIR DEĞERİ YOK: her değer `SAHTE-` önekli ve sahtedir; üretilen değer test kökünde yaşar ve hiçbir çıktıya
 girmediği ölçülür. ÇIKTI DİSİPLİNİ: kıyaslar önce BOOLEAN'a indirilir — iddia mesajları süreç tablosunu,
 ortamı ya da değeri basmaz (yalnız ad).
+
+2026-09-29 (TSK-064 İKİ-KANAL KAPANIŞI, v590): `.env-cp` satırı kopya tablosundan ÇIKTI ve CP `51-env-cp-kaldir.conf`
+ile YALNIZ yan dosyayı (`.env-cp.vault`, ZORUNLU) okur. Bu dosyanın dünyası buna göre güncellendi: `_cp_ortami`
+`.env-cp` YAZMAZ (kapanışın hedef hâli); `systemctl` şimi boş `EnvironmentFile=`i SIFIRLAMA olarak modeller ve
+zorunlu dosya yokken birimi AÇMAZ (systemd: "Failed to load environment files"); A1/A2/B1/B2/C1/C3/E1/E3 yeni tek
+kanalı, D8 kasasız dünyada CP'nin AÇILMADIĞINI, M1 env satırının GERİ gelmesini ölçer. Ara hâl (eski dosya diskte)
+v590 C8'dedir.
 """
 from __future__ import annotations
 
@@ -224,7 +231,8 @@ sys.exit(2)
 
 SIM_SYSTEMCTL_CP = '''#!__PY__
 """`restart hindsight-cp.service` → konteynerin ETKİN anahtarı birimin EnvironmentFile SIRASIYLA
-(SONRAKİ kazanır; `-` işaretli dosya yoksa atlanır) hesaplanır ve `.sahte/cp_etkin`e yazılır."""
+(SONRAKİ kazanır; `-` işaretli dosya yoksa atlanır) hesaplanır ve `.sahte/cp_etkin`e yazılır. ZORUNLU
+dosya yoksa birim AÇILMAZ (systemd: "Failed to load environment files") → çıkış 1, etkin anahtar DEĞİŞMEZ."""
 import os, sys
 KOK = os.environ["SIR_ROT_KOK"]
 DOSYALAR = __DOSYALAR__
@@ -240,7 +248,10 @@ if len(a) >= 2 and a[0] == "restart":
             except FileNotFoundError:
                 if secimli:
                     continue
-                raise
+                with open(os.path.join(KOK, ".sahte", "argv.log"), "a", encoding="utf-8") as fh:
+                    fh.write("OLAY restart-DUSTU " + a[1] + "\\n")
+                sys.stderr.write("Job for %s failed: Failed to load environment files (%s)\\n" % (a[1], yol))
+                sys.exit(1)
             for s in satirlar:
                 if s.startswith("HINDSIGHT_CP_ACCESS_KEY="):
                     d = s.split("=", 1)[1].strip()
@@ -355,6 +366,11 @@ def _cp_env_dosyalari() -> list[tuple[str, bool]]:
             s = s.strip()
             if s.startswith("EnvironmentFile="):
                 v = s[len("EnvironmentFile="):]
+                if not v:
+                    # BOŞ atama listeyi SIFIRLAR (systemd.exec(5)) — drop-in 51 (TSK-064 iki-kanal, 2026-09-29)
+                    # temel birimin `.env-cp`sini ve 50'nin opsiyonel satırını böyle düşürür.
+                    out = []
+                    continue
                 out.append((v.lstrip("-"), v.startswith("-")))
     return out
 
@@ -379,14 +395,11 @@ def _kasa_eslemeleri() -> tuple[dict[str, str], dict[str, list[tuple[str, str, s
 
 def _cp_ortami(tmp_path: pathlib.Path, *, yan_dosya: bool = True, kasa: bool = True,
                **bayrak: str) -> tuple[pathlib.Path, dict, pathlib.Path, pathlib.Path]:
-    """v447 sahte kök + CP dünyası (A1'in 2026-09-26 varsayılan hâli: kasa açık, Agent render ediyor,
-    yan dosya kurulu, üç kopya EŞİT) + kasa/systemctl/curl ekleri."""
+    """v447 sahte kök + CP dünyası (iki-kanal kapanışının HEDEF hâli, 2026-09-29: kasa açık, Agent render
+    ediyor, yan dosya kurulu ve CP'nin TEK kaynağı; `.env-cp` YOK — operatör kaldırdı) + kasa/systemctl/curl ekleri.
+    `yan_dosya=False` = kasasız dünya: CP AÇILAMAZ (drop-in 51 yan dosyayı zorunlu kılar)."""
     kok, ortam = _sahte_ortam(tmp_path)
     (kok / KANON.lstrip("/")).write_text(ESKI_CP, encoding="utf-8")   # Agent şablonu satır sonu yazmaz
-    env_cp = kok / ENV_CP.lstrip("/")
-    env_cp.write_text(f"HINDSIGHT_CP_ACCESS_KEY={ESKI_CP}\n"
-                      f"HINDSIGHT_CP_DATAPLANE_API_KEY={ESKI['tenant']}\n", encoding="utf-8")
-    env_cp.chmod(0o600)
     if yan_dosya:
         yd = kok / ENV_CP_VAULT.lstrip("/")
         yd.write_text(f"HINDSIGHT_CP_ACCESS_KEY={ESKI_CP}\n"
@@ -509,15 +522,15 @@ def test_A0_ITHAL_EDILEN_yollar_BU_AGACIN_dosyalari():
 def test_A1_CP_kopyalari_ENVANTERDEN_ve_REFERANS_kanonik_render_hedefi():
     """Kopya kümesi TEK kaynaktan: betiğin `--kopyalar` çıktısındaki `cp` satırları envanterin
     `rotasyon_kopyalari` bloğuyla SIRASIYLA aynı (v447 A1/A2 küme, v520 A3 sıra ölçer; burada adıyla).
-    REFERANS (ilk satır) Vault Agent'ın kanonik tek-değer kopyasıdır (d-1 emsali) — `.env-cp` satırı
-    eski kanal KOPYASIDIR; kasa yan dosyası (`.env-cp.vault`) tabloda YOKTUR (onu yalnız Agent yazar)."""
+    REFERANS (ilk satır) Vault Agent'ın kanonik tek-değer kopyasıdır (d-1 emsali); kasa yan dosyası
+    (`.env-cp.vault`) tabloda YOKTUR (onu yalnız Agent yazar). 2026-09-29 (TSK-064 iki-kanal): `.env-cp` eski
+    kanal satırı ÇIKTI → referans TEK satırdır (emekli satır envanterin `emekli_kopyalar` bloğunda, v590 C2)."""
     betik = [(k["alt"], k["sir"], k["tur"], k["yol"], k["alan"], k["onek"])
              for k in _betik_kopyalari() if k["alt"] == "cp"]
     envanter = [(k["alt_komut"], k["sir"], k["tur"], k["yol"], k.get("alan"), k.get("onek"))
                 for k in _envanter_kopyalari() if k["alt_komut"] == "cp"]
     assert betik == envanter, (betik, envanter)
-    assert betik == [("cp", SIR, "dosya", KANON, None, None),
-                     ("cp", SIR, "env", ENV_CP, SIR, None)], betik
+    assert betik == [("cp", SIR, "dosya", KANON, None, None)], betik
     assert not [k for k in _betik_kopyalari() if k["yol"] == ENV_CP_VAULT], "yan dosya tabloda"
     ham = subprocess.run(["bash", str(BETIK), "--kopyalar"], capture_output=True, text=True).stdout
     assert f"cp {SIR} dosya {KANON} - 0400 root:root -" in ham.splitlines()
@@ -525,14 +538,15 @@ def test_A1_CP_kopyalari_ENVANTERDEN_ve_REFERANS_kanonik_render_hedefi():
 
 def test_A2_KASA_BAGI_rotasyon_siri_kaynak_REFERANS_ve_tek_kv_satiri():
     """Bağın dört yüzü: `rotasyon_siri` · render hedefi = tablonun REFERANSI · `kaynak` = referans
-    (`vault_sir_koy.sh` eşitlik kapısı; v520 A5 kuralı) · `kopya_kaynaklari` = kalan satır. Betiğin
-    kasa satırı yardımcısı (`_vault_kv_satirlari`) TEK satır ve takma adsız döndürür."""
+    (`vault_sir_koy.sh` eşitlik kapısı; v520 A5 kuralı) · `kopya_kaynaklari` = kalan satırlar — 2026-09-29'dan
+    beri kalan satır YOK (iki-kanal kapanışı), alan hiç taşınmaz. Betiğin kasa satırı yardımcısı
+    (`_vault_kv_satirlari`) TEK satır ve takma adsız döndürür."""
     kv = {g["ad"]: g for g in yaml.safe_load(ENVANTER.read_text(encoding="utf-8"))["vault_kv"]}
     g = kv[KV_AD]
     assert g.get("rotasyon_siri") == SIR, g.get("rotasyon_siri")
     assert (g["vault_yolu"], g["hedef"]) == (KASA_YOLU, KANON), g
     assert g["kaynak"] == {"tur": "dosya", "dosya": KANON, "alan": None, "onek": None}, g["kaynak"]
-    assert g["kopya_kaynaklari"] == [{"tur": "env_satiri", "dosya": ENV_CP, "alan": SIR, "onek": None}]
+    assert "kopya_kaynaklari" not in g, g.get("kopya_kaynaklari")
     r = v521._kv_satirlari(ENVANTER, SIR)
     assert r.returncode == 0, r.stderr
     assert r.stdout.splitlines() == [f"{KV_AD}\t{KASA_YOLU}\t{KANON}\t{SIR}\t-"], r.stdout
@@ -587,7 +601,8 @@ def test_B1_ESKI_YOL_KURU_yazacagi_ve_baslatacagi_BIRIMI_soyler_UYARIYLA_hicbir_
     assert r.returncode == 0, r.stdout + r.stderr
     satirlar = r.stdout.splitlines()
     assert f"  yazılacak: {KANON}  (dosya, {SIR})" in satirlar, r.stdout
-    assert f"  yazılacak: {ENV_CP}  ({SIR}=, önek=-)" in satirlar, r.stdout
+    # 2026-09-29 (iki-kanal kapanışı): eski yol `.env-cp`ye ARTIK yazmaz.
+    assert not [s for s in satirlar if s.startswith("  yazılacak:") and ENV_CP in s], r.stdout
     assert f"  yeniden başlatılacak: {BIRIM}" in satirlar, r.stdout
     assert any(s.startswith(f"    · hindsight-cp → {CP_UC}/api/health  kabul: ") for s in satirlar), r.stdout
     assert f"  kanıt: POST {CP_UC}/api/auth/login" in r.stdout, r.stdout
@@ -621,7 +636,8 @@ def test_B2_KASA_YOLU_KURU_plan_1_8_SIRAYLA_deger_URETILIR_SORULMAZ_hicbir_sey_y
     assert f"sir-yedek-<UTC ts>-cp/vault/{KASA_YOLU}" in plan["3"]
     assert KASA_YOLU in plan["4"] and "rollback" in plan["4"]
     assert KANON in plan["5"]
-    assert ENV_CP in plan["6"]
+    # 2026-09-29 (iki-kanal kapanışı): adım 6 kopya tablosundan türer ve "YOK" der (numaralı plan değişmez).
+    assert plan["6"].startswith("  6. eski kanal: YOK") and ENV_CP not in plan["6"], plan["6"]
     assert BIRIM in plan["7"] and f"{CP_UC}/api/health" in plan["7"]
     assert f"POST {CP_UC}/api/auth/login" in plan["8"] and "401" in plan["8"]
     assert f"    · yan dosya: {ENV_CP_VAULT}" in r.stdout, r.stdout
@@ -646,9 +662,11 @@ def test_C1_KASA_YOLU_kasa_RENDER_eski_kanal_RESTART_kanit_SIRASIYLA_ve_hepsi_YE
     yeni = kasa[-1]
     assert (kok / KANON.lstrip("/")).read_text(encoding="utf-8").strip() == yeni, "render hedefi YENİ değil"
     assert _env_alan(kok / ENV_CP_VAULT.lstrip("/"), SIR) == yeni, "yan dosya YENİ değil (sahte Agent)"
-    assert _env_alan(kok / ENV_CP.lstrip("/"), SIR) == yeni, "eski kanal `.env-cp` YENİ değerle yazılmadı"
-    assert _env_alan(kok / ENV_CP.lstrip("/"), "HINDSIGHT_CP_DATAPLANE_API_KEY") == ESKI["tenant"], \
+    assert _env_alan(kok / ENV_CP_VAULT.lstrip("/"), "HINDSIGHT_CP_DATAPLANE_API_KEY") == ESKI["tenant"], \
         "komşu satır (DATAPLANE) ezildi"
+    # 2026-09-29 (iki-kanal kapanışı): eski kanal YOK — `.env-cp` DOĞMAZ, adım 6 "YOK" der.
+    assert not (kok / ENV_CP.lstrip("/")).exists(), "emekli `.env-cp` yeniden doğdu"
+    assert "-- 6/8 eski kanal: YOK" in r.stdout, r.stdout
     assert _etkin(kok) == yeni, "CP YENİ anahtarla açılmadı"
     assert _restartlar(kok) == [BIRIM], _restartlar(kok)
     ol = _olaylar(kok)
@@ -657,14 +675,14 @@ def test_C1_KASA_YOLU_kasa_RENDER_eski_kanal_RESTART_kanit_SIRASIYLA_ve_hepsi_YE
     assert f"CP /api/auth/login: yeni→200 · eski→401 (kanıt anahtara BAĞLI)" in r.stdout, r.stdout
     assert [i.split(" sonuc=")[1] for i in _istekler(kok)] == ["200", "401"], _istekler(kok)
     esit = [s for s in r.stdout.splitlines() if s.startswith(f"  {SIR} · ")]
-    assert len(esit) == 2 and esit[0].endswith("→ VAR (referans kopya)") and esit[1].endswith("→ EŞİT"), esit
+    assert len(esit) == 1 and esit[0].endswith("→ VAR (referans kopya)"), esit   # tek satır (2026-09-29)
     assert re.search(r"✓ hazır: hindsight-cp \d+ s", r.stdout), r.stdout
-    # Yedek: ESKİ değer (KASADAN) 0600 — geri almanın girdisi; eski kanal dosyası da yedekte.
+    # Yedek: ESKİ değer (KASADAN) 0600 — geri almanın girdisi; kopya tablosunun dosyası (kanonik kopya) da yedekte.
     y = _yedek(kok)
     kasa_yedegi = y / "vault" / KASA_YOLU
     assert kasa_yedegi.read_text(encoding="utf-8").strip() == ESKI_CP
     assert stat.S_IMODE(kasa_yedegi.stat().st_mode) == 0o600
-    assert _env_alan(y / ENV_CP.lstrip("/"), SIR) == ESKI_CP
+    assert (y / KANON.lstrip("/")).read_text(encoding="utf-8").strip() == ESKI_CP
     assert "başarıda da arızada da geçerli" in r.stderr and f"-version={ESKI_SURUM} {KASA_YOLU}" in r.stderr
 
 
@@ -681,12 +699,14 @@ def test_C3_YENI_deger_64_hex_ve_iki_yolda_da_ESKI_ile_AYNI_DEGIL(tmp_path):
     assert r.returncode == 0, r.stdout + r.stderr
     yeni = _kasa(durum)[-1]
     assert re.fullmatch(r"[0-9a-f]{64}", yeni), "kasa yolu değeri 64 küçük hex değil"
-    kok2, ortam2, _, _ = _cp_ortami(tmp_path / "eski", yan_dosya=False)
+    # ESKİ YOL (2026-09-29'dan beri yalnız kanonik kopyayı yazar; CP onu okumaz → kanıt YENİ→401, çıkış 2 — D7).
+    # Üretim sınıfı yine ölçülür: kanonik kopyaya yazılan değer 64 hex ve ESKİ değerden ayrı.
+    kok2, ortam2, _, _ = _cp_ortami(tmp_path / "eski")
     r2 = _kos(BETIK, ortam2, "--cp")
-    assert r2.returncode == 0, r2.stdout + r2.stderr
-    yeni2 = _env_alan(kok2 / ENV_CP.lstrip("/"), SIR)
+    assert r2.returncode == 2, r2.stdout + r2.stderr
+    yeni2 = (kok2 / KANON.lstrip("/")).read_text(encoding="utf-8").strip()
     assert re.fullmatch(r"[0-9a-f]{64}", yeni2 or ""), "eski yol değeri 64 küçük hex değil"
-    assert yeni2 == (kok2 / KANON.lstrip("/")).read_text(encoding="utf-8").strip()
+    assert yeni2 != ESKI_CP
     assert "yeni değer üretildi (hex, 64 karakter; DEĞER BASILMAZ)" in r.stdout + r2.stdout
 
 
@@ -773,8 +793,9 @@ def test_D6_ANAHTAR_istekte_GOVDEDE_baslikta_ve_argvde_DEGIL(tmp_path):
 
 
 def test_D7_ESKI_YOL_kasa_CANLI_dunyada_UYARIR_ve_kanit_YENI_401_ile_DUSER(tmp_path):
-    """Eski yol kanonik dosyayı + `.env-cp`yi yazar ama konteyner değeri KASA yan dosyasından alır
-    (drop-in, SONRAKİ kazanır) → yeni→401, çıkış 2. Uyarı YAZIMDAN ÖNCE doğru yolu söylemişti."""
+    """Eski yol yalnız kanonik dosyayı yazar (2026-09-29'a kadar `.env-cp`yi de) ama konteyner değeri KASA yan
+    dosyasından alır (drop-in 51: tek, zorunlu kaynak) → yeni→401, çıkış 2. Uyarı YAZIMDAN ÖNCE doğru yolu
+    söylemişti. Eski yol KESİLMEDİ (Rol-1: tek rotasyon yolu kesilmez) — düşüşü gürültülüdür."""
     kok, ortam, _, _ = _cp_ortami(tmp_path)
     r = _kos(BETIK, ortam, "--cp")
     assert r.returncode == 2, r.stdout + r.stderr
@@ -782,18 +803,23 @@ def test_D7_ESKI_YOL_kasa_CANLI_dunyada_UYARIR_ve_kanit_YENI_401_ile_DUSER(tmp_p
     assert "YENİ değerle HTTP 401" in r.stderr, r.stderr
 
 
-def test_D8_ESKI_YOL_kasasiz_dunyada_IKI_kopya_ESIT_restart_kanit_ve_YEDEK(tmp_path):
+def test_D8_ESKI_YOL_kasasiz_dunyada_CP_ACILMAZ_eski_kanala_DUSULMEZ_ve_YEDEK(tmp_path):
+    """2026-09-29'a kadar bu çivi "kasasız dünyada eski yol iki kopyayı EŞİT yazar, CP yeni anahtarla açılır"
+    diyordu — o dünya iki-kanal kapanışıyla BİTTİ: yan dosya ZORUNLU (drop-in 51), yoksa birim AÇILMAZ ve
+    `.env-cp`ye DÜŞÜLMEZ. Eski yol bunu gürültülü söyler (restart düşer → çıkış 1, genel reçete), sessizce
+    anahtarsız bir CP açmaz; kanonik kopyanın ESKİ değeri yedektedir."""
     kok, ortam, log, _ = _cp_ortami(tmp_path, yan_dosya=False)
     r = _kos(BETIK, ortam, "--cp")
-    assert r.returncode == 0, r.stdout + r.stderr
-    yeni = _env_alan(kok / ENV_CP.lstrip("/"), SIR)
-    assert yeni != ESKI_CP and (kok / KANON.lstrip("/")).read_text().strip() == yeni
-    assert _etkin(kok) == yeni and _restartlar(kok) == [BIRIM]
-    assert "CP /api/auth/login: yeni→200 · eski→401 (kanıt anahtara BAĞLI)" in r.stdout, r.stdout
-    assert _env_alan(_yedek(kok) / ENV_CP.lstrip("/"), SIR) == ESKI_CP
+    assert r.returncode == 1, r.stdout + r.stderr
+    assert f"{BIRIM} yeniden başlamadı" in r.stderr, r.stderr
+    assert "restart-DUSTU " + BIRIM in _olaylar(kok), "şim zorunlu dosya yokluğunu modellemedi"
+    assert _etkin(kok) == ESKI_CP, "açılamayan birim etkin anahtarı değiştirdi"
+    assert "kanıt anahtara BAĞLI" not in r.stdout
+    assert (_yedek(kok) / KANON.lstrip("/")).read_text(encoding="utf-8").strip() == ESKI_CP
+    assert not (kok / ENV_CP.lstrip("/")).exists(), "emekli `.env-cp` yeniden doğdu"
     assert not log.exists(), "eski yol kasaya dokundu"
     assert ">> GERİ ALMA (bu koşum YEDEK aldı" in r.stderr, "eski yolun genel reçetesi basılmadı"
-    _deger_yok(r, kok, yeni)
+    _deger_yok(r, kok)
 
 
 # =================================================================================================
@@ -805,7 +831,7 @@ def test_E1_RENDER_GELMEZSE_evre_KASA_eski_kanal_YOK_restart_YOK_recete_SURUMLE(
     r = _kos(BETIK, ortam, "--cp", "--vault")
     assert r.returncode == 2, r.stdout + r.stderr
     assert "render bekleme aşıldı" in r.stderr
-    assert _env_alan(kok / ENV_CP.lstrip("/"), SIR) == ESKI_CP, "render ölçülmeden eski kanal yazıldı"
+    assert "6/8 eski kanal" not in r.stdout, "render ölçülmeden eski kanal adımına geçildi"
     assert not _restartlar(kok) and _etkin(kok) == ESKI_CP
     assert len(_kasa(durum)) == 3, "kasa yazımı modellenmedi (pozitif kontrol)"
     assert ">> GERİ ALMA (--cp --vault): kasaya YENİ değer" in r.stderr, r.stderr
@@ -827,10 +853,12 @@ def test_E3_KANIT_DUSERSE_evre_YAYIM_dort_adim_recete(tmp_path):
     r = _kos(BETIK, ortam, "--cp", "--vault")
     assert r.returncode == 2
     recete = r.stderr[r.stderr.index(">> GERİ ALMA (--cp --vault"):]
-    y = _yedek(kok)
+    # 2026-09-29 (iki-kanal kapanışı): reçetenin 3. satırı kopya tablosundan türer — env satırı yok → "YOK",
+    # geri konacak dosya yok (numaralı sıra değişmez; tabloya satır geri girerse `sudo cp -p` geri gelir — M1).
+    assert "sudo cp -p" not in recete, recete
     for parca in (f"1) kasa: vault kv rollback -version={ESKI_SURUM} {KASA_YOLU}",
                   f"2) render: {KANON}",
-                  f"3) eski kanal: sudo cp -p {y}{ENV_CP} {ENV_CP}",
+                  "3) eski kanal: YOK",
                   f"4) sudo systemctl restart {BIRIM}"):
         assert parca in recete, (parca, recete)
     assert recete.index("1) kasa") < recete.index("2) render") < recete.index("3) eski kanal") \
@@ -1242,18 +1270,26 @@ def test_G5b_SINIF_TARAYICI_pozitif_ve_negatif_kontrol(tmp_path):
 # =================================================================================================
 # M) MUTASYONLAR — her çivinin hedeflediği dalı ısırdığının gösterimi (mutant tmp'de, özgün değişmez)
 # =================================================================================================
+#: 2026-09-29'a kadar tablodaki eski kanal satırı; iki-kanal kapanışında ÇIKTI. Mutasyon onu GERİ koyar.
 ENV_SATIRI = f"cp {SIR} env {ENV_CP} {SIR} koru koru -\n"
+KANON_SATIRI = f"cp {SIR} dosya {KANON} - 0400 root:root -\n"
 
 
-def test_M1_MUT_kopya_listesinden_ENV_satiri_cikarsa_A1_ve_C1_KIRMIZI(tmp_path):
-    m = _mutant(tmp_path, (ENV_SATIRI, ""))
+def test_M1_MUT_emekli_ENV_satiri_GERI_gelirse_A1_ve_C1_KIRMIZI(tmp_path):
+    """Ters yön (2026-09-29): eski çivi "satır ÇIKARSA kırmızı" diyordu; kapanıştan sonra satırın GERİ
+    gelmesi ısırılmalı — A1 tabloyu envanterle kıyaslar (sayı ayrışır), C1'in "`.env-cp` DOĞMAZ / adım 6 YOK"
+    iddiası da mutant eski kanalı yazınca düşer (ara hâlde duran `.env-cp` YENİ değerle yazılır)."""
+    m = _mutant(tmp_path, (KANON_SATIRI, KANON_SATIRI + ENV_SATIRI))
     betik = [k for k in _betik_kopyalari(m) if k["alt"] == "cp"]
     envanter = [k for k in _envanter_kopyalari() if k["alt_komut"] == "cp"]
     assert len(betik) != len(envanter), "A1 ölçütü mutasyonu GÖRMEDİ"
-    kok, ortam, _, _ = _cp_ortami(tmp_path / "d")
+    kok, ortam, _, durum = _cp_ortami(tmp_path / "d")
+    env_cp = kok / ENV_CP.lstrip("/")
+    env_cp.write_text(f"HINDSIGHT_CP_ACCESS_KEY={ESKI_CP}\n", encoding="utf-8")
     r = _kos(m, ortam, "--cp", "--vault")
-    assert _env_alan(kok / ENV_CP.lstrip("/"), SIR) == ESKI_CP, \
-        f"mutasyon ISIRMADI: eski kanal yine yazıldı (C1 bu dalı ölçmüyor)\n{r.stdout}"
+    assert "-- 6/8 eski kanal: YOK" not in r.stdout, "mutasyon ISIRMADI: adım 6 yine YOK dedi"
+    assert _env_alan(env_cp, SIR) == _kasa(durum)[-1], \
+        f"mutasyon ISIRMADI: eski kanal yazılmadı (adım 6 tablodan türemiyor)\n{r.stdout[-400:]}"
 
 
 def test_M2_MUT_DEGER_basilirsa_C2_KIRMIZI(tmp_path):

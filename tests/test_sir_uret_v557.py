@@ -57,7 +57,10 @@ KOK_DEPO = pathlib.Path(__file__).resolve().parents[1]
 SIR = "HINDSIGHT_API_TENANT_API_KEY"
 KASA_YOLU = "secret/meridian/HINDSIGHT_API_TENANT_API_KEY"
 HEDEF = "/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY"   # Agent render hedefi = tablonun REFERANSI
-KEY = "/opt/hindsight/.key"
+#: 2026-09-29 (TSK-064 iki-kanal kapanışı, v590): `/opt/hindsight/.key` ve `.env-cp` DATAPLANE satırı kopya
+#: tablosundan ÇIKTI — `--tenant`in TEK kopyası render hedefidir; CP'nin DATAPLANE'i yan dosyadan (Agent) gelir.
+#: Tohumda iki dosya YOK (v447 `_sahte_ortam`); bu dosyanın çivileri onların YAZILMADIĞINI/DOĞMADIĞINI ölçer.
+EMEKLI_KEY = "/opt/hindsight/.key"
 DATAPLANE = "HINDSIGHT_CP_DATAPLANE_API_KEY"
 TENANT_BIRIMLER = {"hindsight-api.service", "hindsight-cp.service", "meridian.service"}
 
@@ -176,12 +179,13 @@ def _ihlaller_gercek(r: subprocess.CompletedProcess, kok: pathlib.Path, log: pat
     if yeni in (ESKI["tenant"], ISTEM_DEGERI):
         ih.append("kasadaki yeni değer ESKİ değer ya da İSTEM değeri")
     kopyalar = (("render hedefi", _dosya(kok, HEDEF)),
-                (".key", _dosya(kok, KEY)),
-                (".env-cp DATAPLANE", _env_alan(kok / v556.ENV_CP.lstrip("/"), DATAPLANE)),
                 (".env-cp.vault DATAPLANE (Agent)", _env_alan(kok / v556.ENV_CP_VAULT.lstrip("/"), DATAPLANE)))
     for etiket, deger in kopyalar:
         if not yeni or deger != yeni:
             ih.append(f"{etiket} kasadaki YENİ değerde DEĞİL")
+    for emekli in (EMEKLI_KEY, v556.ENV_CP):   # iki-kanal kapanışı (2026-09-29): rotasyon emekli kopyayı DOĞURMAZ
+        if (kok / emekli.lstrip("/")).exists():
+            ih.append(f"emekli kopya yeniden doğdu: {emekli}")
     if set(v556._restartlar(kok)) != TENANT_BIRIMLER:
         ih.append(f"yeniden başlatılan birimler {sorted(set(v556._restartlar(kok)))} ≠ {sorted(TENANT_BIRIMLER)}")
     for metin in (URETILDI, URET_BEYAN, AYRI_SATIRI):
@@ -432,8 +436,8 @@ def test_B2_KURU_plani_URET_ile_ISTEM_arasinda_YALNIZ_deger_satirlarinda_ayrisir
 def test_C1_GERCEK_URET_istem_YOK_64_hex_kasada_ESKIden_AYRI_BASILMAZ_kopyalar_YENI(tmp_path, girdi):
     """stdin BOŞ: istem çağrılsaydı "değer boş — yapacak iş yok" ile düşerdi. stdin DOLU: istem
     çağrılsaydı kasaya İSTEM değeri giderdi. İkisinde de kasadaki değer 64 küçük hex (eski yolun
-    `_uret hex` biçimi), ESKİ değerden ayrı, render hedefi + eski kanal + Agent yan dosyası YENİ,
-    tüketiciler yeniden başladı ve değer (ve hash'i) hiçbir yüzeyde yok."""
+    `_uret hex` biçimi), ESKİ değerden ayrı, render hedefi + Agent yan dosyası YENİ (2026-09-29'dan beri eski
+    kanal YOK — emekli kopyalar DOĞMAZ), tüketiciler yeniden başladı ve değer (ve hash'i) hiçbir yüzeyde yok."""
     kok, ortam, log, durum = _ortam(tmp_path)
     r = _kos(BETIK, ortam, "--tenant", "--vault", "--uret", girdi=girdi)
     ih = _ihlaller_gercek(r, kok, log, durum)
@@ -441,13 +445,16 @@ def test_C1_GERCEK_URET_istem_YOK_64_hex_kasada_ESKIden_AYRI_BASILMAZ_kopyalar_Y
 
 
 def test_C2_GERCEK_URET_kanit_ve_envanter_esitligi_AYNEN_kosar(tmp_path):
-    """Akışın kuyruğu (değer-doğruluğu beyanı · envanter eşitliği · iki-kanal notu) `--uret`te de koşar."""
+    """Akışın kuyruğu (değer-doğruluğu beyanı · envanter eşitliği · kanal notu) `--uret`te de koşar.
+    2026-09-29 (TSK-064 iki-kanal kapanışı): `--tenant`in tek kopyası render hedefidir → envanter TEK satır ve
+    kanal notu "TEK KANAL" (sabit "İKİ KANAL AÇIK" satırı burada yalan olurdu — `_kanal_beyani`, v590 C10)."""
     kok, ortam, log, durum = _ortam(tmp_path)
     r = _kos(BETIK, ortam, "--tenant", "--vault", "--uret")
     _iddia(r.returncode == 0, _ozet(r))
     esit = [s for s in r.stdout.splitlines() if s.startswith(f"  {SIR} · ")]
-    _iddia(len(esit) == 3 and all(s.endswith(("→ VAR (referans kopya)", "→ EŞİT")) for s in esit), _ozet(r))
-    _iddia(f"render ÖLÇÜLDÜ: {HEDEF}" in r.stdout and "İKİ KANAL AÇIK" in r.stdout, _ozet(r))
+    _iddia(len(esit) == 1 and esit[0].endswith("→ VAR (referans kopya)"), _ozet(r))
+    _iddia(f"render ÖLÇÜLDÜ: {HEDEF}" in r.stdout and ">> TEK KANAL: --tenant" in r.stdout
+           and "İKİ KANAL AÇIK" not in r.stdout, _ozet(r))
 
 
 def test_C3_AKIS_AYNEN_uret_ile_istem_AYNI_izi_birakir_yalniz_DEGER_KAYNAGI_ayrisir(tmp_path):
@@ -470,12 +477,12 @@ def test_C3_AKIS_AYNEN_uret_ile_istem_AYNI_izi_birakir_yalniz_DEGER_KAYNAGI_ayri
 
 
 def test_C4_BICIM_eski_yolla_AYNI_iki_yolda_da_64_kucuk_hex(tmp_path):
-    """Eski yol (`--tenant`, kasasız) aynı biçimi üretir — `.key` kopyası 64 küçük hex (A1'in
-    gövde çivisinin koşan karşılığı)."""
+    """Eski yol (`--tenant`, kasasız) aynı biçimi üretir — render hedefi 64 küçük hex (A1'in gövde çivisinin
+    koşan karşılığı; 2026-09-29'a kadar `.key` kopyasından ölçülüyordu — o kopya emekli)."""
     kok, ortam = _sahte_ortam(tmp_path)
     r = _kos(BETIK, ortam, "--tenant")
     _iddia(r.returncode == 0, _ozet(r))
-    _iddia(bool(re.fullmatch(r"[0-9a-f]{64}", _dosya(kok, KEY) or "")), "eski yol değeri 64 küçük hex değil")
+    _iddia(bool(re.fullmatch(r"[0-9a-f]{64}", _dosya(kok, HEDEF) or "")), "eski yol değeri 64 küçük hex değil")
     _iddia(URETILDI in r.stdout, _ozet(r))
 
 

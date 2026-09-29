@@ -16,6 +16,10 @@
 # gitmez, kayıt yazılmaz; stderr'e tek satır (hata türü + yol) — eskiden `cat:` satırıydı. Sondaki
 # CR/LF kırpılır; `RECALL HATASI` satırı ve her hata metni `arindir()`dan geçer — eskiden CR'lı bir
 # anahtar dosyası anahtarı bu satırla STDOUT'a basıyordu (tur 2).
+#
+# ANAHTAR KAYNAĞI VAULT RENDER HEDEFİ (TSK-064 iki-kanal kapanışı, 2026-09-29) — sözleşme `sayfa_oku.sh`
+# başlığında; anahtar bloğu iki betikte bayt-aynıdır. Varsayılan artık `/opt/hindsight/.key` DEĞİL:
+# `sudo -n cat /etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY` alt sürecinin stdout borusu.
 set -euo pipefail
 SORU="${1:?soru gerekli}"; K="${2:-5}"; BANK="${3:-meridian-arsiv}"; BUTCE="${4:-mid}"
 PORT="${HAFIZA_PORT:-8888}"
@@ -23,8 +27,8 @@ case "$PORT" in ''|*[!0-9]*) echo "HAFIZA_PORT yalnız rakam olabilir" >&2; exit
 BASE="http://127.0.0.1:${PORT}/v1/default"
 HAFIZA_BETIK="${BASH_SOURCE[0]}" python3 - "$SORU" "$K" "$BANK" "$BASE" "$BUTCE" <<'PY'
 import sys, json, time, urllib.request
-# >>> anahtar (TSK-064) — argv'de/ortamda DURMAZ, hiçbir çıktı kanalına BASILMAZ; dosyayı bu süreç okur
-import os, pathlib
+# >>> anahtar (TSK-064) — argv'de/ortamda DURMAZ, hiçbir çıktı kanalına BASILMAZ; değeri bu süreç okur
+import os, pathlib, subprocess
 key = ""
 def arindir(metin):
     """Basılacak hata metninden anahtarı `<anahtar>` ile değiştirir: ham, str-repr ve başlığın bayt-repr
@@ -36,10 +40,23 @@ def arindir(metin):
     return m
 # yakalanmamış istisna ham traceback BASMAZ (mesajı anahtarı taşıyabilir): tür + arındırılmış mesaj, çıkış 1
 sys.excepthook = lambda tur, deger, iz: print(f"{tur.__name__}: {arindir(deger)}", file=sys.stderr)
+# KAYNAK (TSK-064 iki-kanal kapanışı, 2026-09-29): Vault Agent'ın render hedefi, 0400 root. Değer
+# `sudo -n cat` ALT SÜRECİNİN stdout BORUSUNDAN okunur — argv'de yalnız YOL durur, değer değil; kabuk YOK
+# (sabit liste). `-n`: parolasız sudo yoksa BEKLEMEDEN düşer. Ezme (`HAFIZA_ANAHTAR_DOSYASI`) verilirse o
+# dosya düz okunur ve sudo ÇAĞRILMAZ (test/yerel kullanım). Eski düz kopya EMEKLİ (başlık şerhi).
+KAYNAK = "/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY"
+EZME = os.environ.get("HAFIZA_ANAHTAR_DOSYASI")
 try:
-    key = os.fsdecode(pathlib.Path(os.environ.get("HAFIZA_ANAHTAR_DOSYASI") or "/opt/hindsight/.key").read_bytes().rstrip(b"\r\n"))
-except OSError as e:  # sessiz-yutma değil: hata türü + yol stderr'e, çıkış 1, istek GİTMEZ
-    print(f"HAFIZA ANAHTARI OKUNAMADI: {type(e).__name__}: {arindir(e)}", file=sys.stderr); sys.exit(1)
+    if EZME:
+        ham = pathlib.Path(EZME).read_bytes()
+    else:
+        cagri = subprocess.run(["sudo", "-n", "cat", KAYNAK], stdin=subprocess.DEVNULL, capture_output=True, timeout=60)
+        if cagri.returncode != 0:  # sudo'nun kendi mesajı TEK satıra indirilir (stderr sözleşmesi: tek satır)
+            raise OSError(f"çıkış {cagri.returncode}: {' '.join(os.fsdecode(cagri.stderr).split())[:200]}")
+        ham = cagri.stdout
+    key = os.fsdecode(ham.rstrip(b"\r\n"))
+except (OSError, subprocess.SubprocessError) as e:  # sessiz-yutma değil: kaynak + hata türü stderr'e, çıkış 1, istek GİTMEZ
+    print(f"HAFIZA ANAHTARI OKUNAMADI ({EZME or 'sudo -n cat ' + KAYNAK}): {type(e).__name__}: {arindir(e)}", file=sys.stderr); sys.exit(1)
 # <<< anahtar
 soru, k, bank, base, butce = sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4], sys.argv[5]
 # >>> okuma kaydı (EDG-2026-103 · TSK-222) — okuma işlevi bu bloğa BAĞLI DEĞİL

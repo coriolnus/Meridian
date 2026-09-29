@@ -46,6 +46,9 @@ SINIFI ölçer:
      aynen; `--env-file` yok (Rol-1 kararı); kasa yan dosyası (`EnvironmentFile=-…/.env-cp.vault`,
      drop-in) ORTAM yoluyla hâlâ kazanır — sistemd+docker birleşimi sentetik değerlerle modellenir ve
      eski biçimin argv'ye sızdırdığı, yenisinin sızdırmadığı AYNI modelde gösterilir.
+     2026-09-29 (TSK-064 iki-kanal kapanışı, v590): drop-in 51 boş `EnvironmentFile=` ile listeyi SIFIRLAR ve
+     yan dosyayı TEK + ZORUNLU kaynak yapar — G4 tek dosyayı, G5b yan dosyasız birimin AÇILMADIĞINI ölçer; CP
+     sır adlarının kaynağı artık `vault_dosyalar`ın yan dosya satırlarıdır (`.env-cp` envanterde EMEKLİ).
 
 MODELLENMEYEN (bilinçli): `EnvironmentFile=` İÇERİKLERİ (A1'de, depoda değil); betiklerin çalışma
 anında yazdığı drop-in'ler (depoda Exec satırı yazan betik yok — ölçüldü 2026-09-25); birim dışı argv
@@ -486,8 +489,11 @@ def _docker_e(jetonlar: list[str]) -> list[str]:
 
 
 def _cp_envanter_sirlari() -> set[str]:
-    d = next(x for x in _envanter()["dosyalar"] if x["yol"] == CP_ENV)
-    return {v["ad"] for v in d["degiskenler"] if v["sir"]}
+    """CP'nin sır adları — birimin OKUDUĞU dosyadan: 2026-09-29'a kadar `dosyalar:` bloğunun `.env-cp` girdisi,
+    iki-kanal kapanışından (drop-in 51) beri TEK kaynak olan kasa yan dosyasının satırları (`vault_dosyalar`).
+    `.env-cp` girdisi `dosyalar:`da EMEKLİ olarak durur (operatör kaldırana dek) ve okunmaz."""
+    d = next(x for x in _envanter()["vault_dosyalar"] if x["yol"] == CP_ENV_VAULT)
+    return {s["alan"] for s in d["satirlar"]}
 
 
 def test_G1_CP_sirlari_DEGERSIZ_e_AD_ile_gecer():
@@ -496,7 +502,7 @@ def test_G1_CP_sirlari_DEGERSIZ_e_AD_ile_gecer():
     degerli = sorted(a.split("=", 1)[0] for a in sirli if "=" in a)
     assert not degerli, f"sır `-e AD=…` biçiminde — değer argv'ye girer: {degerli}"
     assert sorted(sirli) == sorted(_cp_envanter_sirlari()), (
-        "ExecStart'ın değersiz geçirdiği sır adları envanterin .env-cp sırlarıyla aynı değil")
+        "ExecStart'ın değersiz geçirdiği sır adları envanterin .env-cp.vault sırlarıyla aynı değil")
 
 
 def test_G2_CP_sir_olmayan_sabitler_AYNEN():
@@ -528,13 +534,15 @@ def _cp_environment_files() -> list[str]:
     return liste
 
 
-def test_G4_kasa_yan_dosyasi_ORTAM_yoluyla_KAZANIR():
-    """Vault düzeni (`50-vault-yan-dosya.conf`) aynen çalışır: yan dosya ASIL dosyadan SONRA okunur
-    (aynı anahtarda sonraki kazanır), opsiyoneldir (`-`), drop-in komut satırına DOKUNMAZ ve kasanın
-    render ettiği adlar ExecStart'ın değersiz geçirdiği adlarla BİREBİR aynıdır — fazlası konteynere
-    ulaşmaz, eksiği eski kanalda kalır."""
-    assert _cp_environment_files() == [CP_ENV, "-" + CP_ENV_VAULT]
-    assert not [a for _, a, _ in _yonergeler(CP_DROPIN.read_text(encoding="utf-8")) if a in KOMUT_YONERGELERI]
+def test_G4_kasa_yan_dosyasi_ORTAM_yoluyla_TEK_ve_ZORUNLU_kaynak():
+    """Vault düzeni: 2026-09-14..29 arasında yan dosya ASIL dosyadan SONRA (opsiyonel, `-`) okunuyordu (drop-in 50).
+    2026-09-29'dan beri (TSK-064 iki-kanal kapanışı, drop-in 51) boş `EnvironmentFile=` listeyi SIFIRLAR ve yan
+    dosya TEK ve ZORUNLU kaynaktır. Drop-in'ler komut satırına DOKUNMAZ ve kasanın render ettiği adlar ExecStart'ın
+    değersiz geçirdiği adlarla BİREBİR aynıdır — fazlası konteynere ulaşmaz, eksiği HİÇ ulaşmaz (eski kanal yok)."""
+    assert _cp_environment_files() == [CP_ENV_VAULT]
+    for dropin in sorted(CP_DROPIN.parent.glob("*.conf")):
+        assert not [a for _, a, _ in _yonergeler(dropin.read_text(encoding="utf-8")) if a in KOMUT_YONERGELERI], \
+            dropin.name
     yan = next(d for d in _envanter()["vault_dosyalar"] if d["yol"] == CP_ENV_VAULT)
     degersiz = {a for a in _docker_e(_cp_execstart()) if "=" not in a}
     assert {s["alan"] for s in yan["satirlar"]} == degersiz
@@ -558,13 +566,18 @@ def _env_dosyasi_oku(p: Path) -> dict[str, str]:
     return cikti
 
 
+class _BirimAcilmaz(Exception):
+    """systemd: zorunlu (`-`siz) `EnvironmentFile=` yoksa birim AÇILMAZ ("Failed to load environment files")."""
+
+
 def _systemd_ortami(env_dosyalari: list[str], kok: Path) -> dict[str, str]:
     ortam: dict[str, str] = {}
     for girdi in env_dosyalari:
         istege_bagli = girdi.startswith("-")
         yol = kok / Path(girdi.lstrip("-")).name
         if not yol.exists():
-            assert istege_bagli, f"zorunlu EnvironmentFile yok: {Path(girdi.lstrip('-')).name}"
+            if not istege_bagli:
+                raise _BirimAcilmaz(f"zorunlu EnvironmentFile yok: {Path(girdi.lstrip('-')).name}")
             continue
         ortam.update(_env_dosyasi_oku(yol))
     return ortam
@@ -594,6 +607,8 @@ def _konteyner_ortami(argv: list[str], istemci_ortami: dict[str, str]) -> dict[s
 
 
 def _cp_sahnesi(tmp_path: Path, *, kasa: bool) -> dict[str, dict[str, str]]:
+    """Eski dosya (`.env-cp`) sahnede HER ZAMAN durur — iki-kanal kapanışının ARA hâli (operatör kaldırmadan
+    önce): model onun OKUNMADIĞINI göstermek zorundadır (2026-09-29, drop-in 51)."""
     adlar = sorted(_cp_envanter_sirlari())
     (tmp_path / Path(CP_ENV).name).write_text(
         "".join(f"{a}=sentetik-eski-{i}\n" for i, a in enumerate(adlar)), encoding="utf-8")
@@ -604,7 +619,16 @@ def _cp_sahnesi(tmp_path: Path, *, kasa: bool) -> dict[str, dict[str, str]]:
             "kasa": {a: f"sentetik-kasa-{i}" for i, a in enumerate(adlar)}}
 
 
-@pytest.mark.parametrize("kasa", [True, False], ids=["kasa_var", "kasa_yok_geri_alim"])
+def test_G5b_MODEL_kasa_YOKSA_birim_ACILMAZ_eski_kanala_DUSULMEZ(tmp_path):
+    """2026-09-29'a kadar bu dal "kasa_yok_geri_alim"dı: yan dosya yoksa konteyner `.env-cp`deki değerle açılırdı.
+    İki-kanal kapanışından (drop-in 51) beri yan dosya ZORUNLUDUR: yoksa birim AÇILMAZ — eski dosya dursa bile
+    ona düşülmez (düşülseydi iki kanal sessizce geri gelirdi). Gürültülü arıza, sessiz eski değer değil."""
+    _cp_sahnesi(tmp_path, kasa=False)
+    with pytest.raises(_BirimAcilmaz):
+        _systemd_ortami(_cp_environment_files(), tmp_path)
+
+
+@pytest.mark.parametrize("kasa", [True], ids=["kasa_var"])
 def test_G5_MODEL_argv_DEGERSIZ_konteyner_degeri_DOGRU_kanaldan(tmp_path, kasa):
     beklenen = _cp_sahnesi(tmp_path, kasa=kasa)
     ortam = _systemd_ortami(_cp_environment_files(), tmp_path)
