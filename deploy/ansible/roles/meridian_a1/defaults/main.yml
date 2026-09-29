@@ -41,6 +41,15 @@ birim_kaynaklari:
   # Sıra: rol kopyalar → parola kasaya → elle başlat + test-ateşle → AYRI değişiklikle `etkin_birimler`e.
   # Reçete: deploy/oracle-a1/RUNBOOK.md "Telemetri (Grafana) erişimi". Çivi: tests/test_telemetri_altyapi_v584.py.
   - "{{ playbook_dir }}/../telemetri/*.service"
+  # Konuşan filo Parça 1a Görev 2 (2026-09-29, spec §3.6): "şimdi çalıştır" `.path` birimleri. ROL YALNIZ
+  # KOPYALAR — üçü de `etkin_birimler`de DEĞİLDİR (Vault/Grafana emsali): Parça 1 dağıtımında elle
+  # test-ateşle (`is_iste` → `state/istek/<bot>.istek` → servis koştu mu) → AYRI değişiklikle etkin.
+  # AÇIK AD, glob DEĞİL: v594 çivisi birimleri ADIYLA arar (kopyalanıyor, etkin değil); elle liste sessiz
+  # bayatlayamaz çünkü v451 Çivi 2a `.path`i de sayar (deploy/ altında listelenmemiş bir `.path` → EKSİK) ve
+  # v594 bu üçünü kadrodan türeyen iş listesiyle İKİ YÖNLÜ eşitler (yetim birim yok).
+  - "{{ playbook_dir }}/../oracle-a1/meridian-istek-sef.path"
+  - "{{ playbook_dir }}/../oracle-a1/meridian-istek-bekci.path"
+  - "{{ playbook_dir }}/../oracle-a1/meridian-istek-karne.path"
 
 # --- drop-in dizinleri (basename; Task 2'de her biri için with_fileglob `*.conf`) ---
 dropin_dizinleri:

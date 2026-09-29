@@ -15,7 +15,10 @@ gider — "bu kalem ne?" hangi kalemi sorduğunu ancak alıntıyla bilir. Çit v
 mesajıdır, yani en çok 4096 karakter — ayrıca kırpılmaz. (b) Oturum kimliği: bot cevabına yanıtta
 cevabın imza satırındaki oturum SÜRER (Telegram `reply_to_message`ı yalnız BİR düzey iç içe verir,
 zincir yürünemez — durum cevabın kendisinde taşınır); rapora yanıt `tg-<bot>-r<rapor mesajı>`,
-yanıtsız mesaj `tg-<bot>-<YYYYAAGG>`. `dongu` bir ürün hizmet döngüsüdür; systemd birimi Parça 2
+yanıtsız mesaj `tg-<bot>-<YYYYAAGG>`. (c) KOMUT İSTİSNASI (Tur 2, Görev 1 incelemesi I-1): operatörün
+sözleri `bot_kanal.komut_oneki` ile `hatırla:`/`unut:` ise çit KURULMAZ — çit öne konsaydı `bota_sor`
+öneki göremez ve not MODELE giderdi; `hatırla` yanıtı nota yanıtlanan ilk satırı kaynak etiketi olarak
+ekler (`_komut_giden`). `dongu` bir ürün hizmet döngüsüdür; systemd birimi Parça 2
 dağıtımında gelir — bu modülde `main()` YOK.
 
 DEĞİŞMEZLER.
@@ -55,6 +58,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from . import kadro as _kadro, notify, obs, secrets, store
+# KOMUT TESPİTİ İTHAL EDİLİR, KOPYALANMAZ — sahibi `bot_kanal` (bota_sor'un dağıtımı da onu kullanır).
+from .bot_kanal import komut_oneki
 # ÇİT GRAMERİ İTHAL EDİLİR, KOPYALANMAZ — sahibi `skill_gorus_llm` (`sohbet` de oradan alır).
 from .skill_gorus_llm import _veri_bloku
 
@@ -63,6 +68,8 @@ SOHBET_IMZA = "💬 @{ad}"
 OTURUM_AYRACI = " · "
 #: Yanıtlanan mesajın bota giden VERİ çitinin adı.
 ALINTI_CIT_ADI = "yanitlanan_mesaj"
+#: `hatırla:` yanıtındaki kaynak etiketinin (yanıtlanan mesajın ilk satırı) karakter tavanı.
+KAYNAK_ETIKETI_TAVANI = 80
 VARSAYILAN_BOT = "sef"
 OFSET_DOSYASI = "telegram_ofset.json"
 _ONEK = re.compile(r"^@([A-Za-zÇĞİÖŞÜçğıöşü_]+)[:,]?\s*(.*)$", re.S)
@@ -127,6 +134,20 @@ def _bota_giden(mesaj: dict, metin: str) -> str:
     return f"{_veri_bloku(ALINTI_CIT_ADI, alinti)}\n{metin}"
 
 
+def _komut_giden(mesaj: dict, metin: str, komut: tuple[str, str]) -> str:
+    """`hatırla:` / `unut:` komutu bota ÇİTSİZ çıplak söz olarak gider (çit öne konsaydı `bota_sor`
+    öneki göremez, not MODELE giderdi — Tur 2, inceleme I-1). Rol-1 kararı: `hatırla` + yanıt + DOLU
+    gövde → nota deterministik kaynak etiketi ` (yanıt: <yanıtlanan mesajın ilk satırı>)` — satır
+    ÖNCE `notify.scrub`, SONRA `KAYNAK_ETIKETI_TAVANI`na kesilir (ters sıra yarım anahtarı süzgeçten
+    kaçırırdı). `unut` ve gövdesiz `hatırla` (bota_sor "neyi?" diye sorsun) etiketsiz gider."""
+    ad, govde = komut
+    alinti = ((mesaj.get("reply_to_message") or {}).get("text") or "").strip()
+    if ad != "hatirla" or not govde or not alinti:
+        return metin
+    ilk = notify.scrub(alinti.split("\n", 1)[0].strip())[:KAYNAK_ETIKETI_TAVANI]
+    return f"{metin} (yanıt: {ilk})"
+
+
 def _sha(x) -> str:
     return hashlib.sha256(str(x).encode()).hexdigest()[:12]
 
@@ -155,8 +176,11 @@ def isle(guncelleme: dict, *, yetkili_sohbet: str, bota_sor, gonder, kadro=None,
     gun = bugun or datetime.now(timezone.utc).strftime("%Y%m%d")
     oturum = oturum_kimligi(y.bot, mesaj, gun)
     imza = f"{SOHBET_IMZA.format(ad=y.bot)}{OTURUM_AYRACI}{oturum}"
+    # Komut tespiti ÇİT KURULMADAN ÖNCE, operatörün kendi sözleri üzerinde (Tur 2, I-1).
+    komut = komut_oneki(y.metin)
+    giden = _komut_giden(mesaj, y.metin, komut) if komut else _bota_giden(mesaj, y.metin)
     try:
-        cevap = bota_sor(y.bot, _bota_giden(mesaj, y.metin), "telegram", oturum)
+        cevap = bota_sor(y.bot, giden, "telegram", oturum)
     except Exception as e:  # sinyalli: operatöre sınıf adıyla cevap + olay; döngü ölmez
         obs.warn("bot_sohbet_hatasi", bot=y.bot, sinif=type(e).__name__)
         gonder(f"{imza}\n@{y.bot} şu an cevap veremiyor ({type(e).__name__}). Kayda geçti.", mid)

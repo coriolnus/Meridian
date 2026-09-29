@@ -610,6 +610,17 @@ SINK_TABANI = frozenset({
     # (pool_exhausted_seen.json sınıfı). Kalıcılık gerekçesi codelaw.DECLARED_SINKS'te yazılı:
     # işlenmiş ama onaylanmamış güncelleme restart'ta YENİDEN gelir → operatöre çift cevap.
     "telegram_ofset.json",
+    # v593'TE BEYANLI GÜNCELLENDİ (2026-09-29, konuşan filo Parça 1a Görev 1) — TEK yeni muafiyet:
+    # `bot_sohbet.jsonl`. Konuşma defteri; yazan `bot_kanal.bota_sor`, bugünkü tek okuyan aynı
+    # modülün `gunluk_sayim`ı (kota) — statik graf dış tüketiciyi göremiyor. Planlı dış okuyucular
+    # (@ayna/@butce/pano + EDG ölçüm kartı) Parça 1 dağıtımında gelir; gelince beyan KALKAR.
+    "bot_sohbet.jsonl",
+    # v594'TE BEYANLI GÜNCELLENDİ (2026-09-29, konuşan filo Parça 1a Görev 2) — İKİ yeni muafiyet:
+    # `is_istek_defteri.jsonl` — 'şimdi çalıştır' kabul defteri; yazan `is_istek.is_iste`, okuyan aynı
+    # modülün `_son_kabul`ü (15 dk tavan) — pool_exhausted_seen.json sınıfı. `istek/*.istek` — tetik
+    # dosyası; yazan `is_istek.is_iste` (`store.write_text`), okuyucusu systemd `.path` birimi
+    # (`PathChanged=`) — litestream.env sınıfı: yazar grafta görünmez, `UNVERIFIABLE_SINKS`te de durur.
+    "is_istek_defteri.jsonl", "istek/*.istek",
     # v503'TE BEYANLI DÜŞÜRÜLDÜ (2026-09-15, TSK-070 Task 1) — İKİ muafiyet KAPANDI:
     # `watchdog_alarmed.json` ve `integrity_alarmed.json`. Bu tabanın iki yönü vardır ve bu
     # DÜŞÜŞ yönüdür: muafiyet, artefakt öldüğü için değil, GERÇEK BİR DIŞ OKUYUCU DOĞDUĞU için
@@ -655,7 +666,9 @@ def test_ihlal_seti_GERILEMEDI():
     # EDG-101 yakalama yazımıdır (okuyucu kart-önce, HENÜZ YOK → `sinanamaz`); devir şartı kendi
     # alanında. Aynı turda `UNVERIFIABLE_SINKS` borç defteri doğdu (2 kayıt: yazarı store DIŞI).
     assert len(codelaw.DECLARED_SINK_PATTERNS) == 3 and len(codelaw.HUMAN_INVOKED_SINKS) == 1
-    assert set(codelaw.UNVERIFIABLE_SINKS) == {"auth.json", "litestream.env"}
+    # 2026-09-29 (v594): borç defteri 2 → 3, BEYANLA. `istek/*.istek` — 'şimdi çalıştır' tetik dosyası;
+    # yazarı `store.write_text` (WRITE_CALLS dışı, ad .json değil), okuyucusu systemd `.path` birimi.
+    assert set(codelaw.UNVERIFIABLE_SINKS) == {"auth.json", "litestream.env", "istek/*.istek"}
     assert r["stale_claims"] == [] and r["orphan_patterns"] == []
     assert r["ok"] is True, r
 
