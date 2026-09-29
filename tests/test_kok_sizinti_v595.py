@@ -20,10 +20,18 @@ NE ÇİVİLER:
   K4 SIRA: bekçi `monkeypatch`ten ÖNCE kurulur, SONRA sökülür. `monkeypatch.setenv/delenv` ile
      yapılan değişiklik monkeypatch sökümünde geri alınır ve bekçiye TAKILMAZ. Sıra tersse
      aşağıdaki iki davranış çivisi SÖKÜMDE kırmızıya döner (mutasyonla gösterildi).
+  K5 UÇTAN UCA (inceleme I-1, 2026-09-30): K1–K4 bekçinin PARÇALARINI çiviler; fikstür gövdesi
+     `yield`den sonra `_kok_sizinti_sokum`u çağırmayı bıraksa dördü de yeşil kalırdı. K5 deponun
+     GERÇEK `tests/conftest.py`sini bir ALT OTURUMDA yükler (`-p tests.conftest`) ve bekçinin
+     sökümde gerçekten ateşlediğini, geri yüklediğini ve monkeypatch'i serbest bıraktığını ölçer.
 """
 from __future__ import annotations
 
 import os
+import pathlib
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
 
 import pytest
 
@@ -31,6 +39,7 @@ from tests.conftest import _KOK_ORTAM_ADI, _kok_sizinti_denetle, _kok_sizinti_so
 
 AD = "MERIDIAN_ROOT"
 BEKCI = "_kok_sizinti_bekcisi"
+KOK = pathlib.Path(__file__).resolve().parents[1]
 
 
 # ==================================================================================================
@@ -142,3 +151,76 @@ def test_k4_monkeypatch_delenv_bekciye_takilmaz(_modul_kapsamli_kok, monkeypatch
     assert os.environ[AD] == _modul_kapsamli_kok
     monkeypatch.delenv(AD)
     assert AD not in os.environ
+
+
+# ==================================================================================================
+# K5 — UÇTAN UCA: GERÇEK conftest ALT OTURUMDA, BEKÇİ SÖKÜMDE GERÇEKTEN ATEŞLER
+# ==================================================================================================
+# NEDEN ALT SÜREÇ, `pytester` DEĞİL (pytest 9.1.1'de ÖLÇÜLDÜ, 2026-09-30): test modülündeki
+# `pytest_plugins = ["pytester"]` kabul ediliyor ama kayıt OTURUM GENELİDİR — komşu bir modül de
+# `pytester` fikstürünü ve eklentisini görüyor. "Yalnız v595 için" açılamaz; 15k testlik xdist
+# suite'inde v595'i toplayan her işçiye eklenti kaydolurdu. Süreç-içi `pytester` koşumu da ağır
+# conftest'i aynı süreçte İKİNCİ kez yüklerdi (soket/hermes/open kancaları üst üste). Düz alt süreç
+# ikisinden de uzak: conftest KOPYALANMAZ, ithal edilir (`-p tests.conftest`).
+#
+# ALT OTURUMUN ORTAMI: `PYTHONPATH` = BU dosyanın deposu (worktree'de de aynı ağacın conftest'i ve
+# `meridian`ı yüklenir; venv ana checkout'a kuruludur). `MERIDIAN_ROOT` = geçici sanal kök: alt
+# oturumun `config.STATE`i ve oturum-sonu `.locks` budaması oraya gider — xdist suite'i koşarken
+# gerçek `state/.locks` budanmaz (o kanca xdist işçisinde bilerek koşmaz; alt oturum işçi değildir).
+# `PYTHONDONTWRITEBYTECODE=1`: alt oturum `tests/` altına pyc bırakmaz. `PYTEST_*` değişkenleri
+# (xdist işçi kimliği, `PYTEST_ADDOPTS`) alt oturuma taşınmaz.
+_ALT_TESTLER = ("test_a_dogrudan_yazan_sizdirir", "test_b_monkeypatch_ile_yazan_temiz",
+                "test_c_sonraki_test_geri_yuklenmis_kok_gorur")
+
+
+def _alt_oturum_kaynagi(sanal_kok: str) -> str:
+    return (
+        "import os\n\n\n"
+        f"def {_ALT_TESTLER[0]}():\n"
+        "    os.environ['MERIDIAN_ROOT'] = '/tmp/x'\n\n\n"
+        f"def {_ALT_TESTLER[1]}(monkeypatch):\n"
+        "    monkeypatch.setenv('MERIDIAN_ROOT', '/tmp/x')\n\n\n"
+        f"def {_ALT_TESTLER[2]}():\n"
+        f"    assert os.environ.get('MERIDIAN_ROOT') == {sanal_kok!r}\n"
+    )
+
+
+def test_k5_gercek_conftest_alt_oturumda_bekci_sokumde_atesler(tmp_path):
+    """Sızdıran (a) sökümde KIRMIZI + bekçinin mesajı; monkeypatch'li (b) YEŞİL; sonraki test (c)
+    geri yüklenmiş kökü görür; üst sürecin ortamı değişmez. Bekçi gövdesinden `_kok_sizinti_sokum`
+    çağrısı silinirse (a) yeşile, (c) kırmızıya döner (mutasyonla gösterildi)."""
+    once = os.environ.get(AD)
+    sanal_kok = tmp_path / "sanal_kok"
+    (sanal_kok / "state").mkdir(parents=True)
+    oturum = tmp_path / "oturum"
+    oturum.mkdir()
+    ini = oturum / "pytest.ini"
+    ini.write_text("[pytest]\n", encoding="utf-8")
+    dosya = oturum / "test_alt_oturum.py"
+    dosya.write_text(_alt_oturum_kaynagi(str(sanal_kok)), encoding="utf-8")
+    rapor = tmp_path / "sonuc.xml"
+    ortam = {k: v for k, v in os.environ.items() if not k.startswith("PYTEST_")}
+    ortam.update(PYTHONPATH=str(KOK), MERIDIAN_ROOT=str(sanal_kok), PYTHONDONTWRITEBYTECODE="1")
+
+    kosum = subprocess.run(
+        [sys.executable, "-m", "pytest", "-p", "tests.conftest", "-p", "no:cacheprovider",
+         "--rootdir", str(oturum), "-c", str(ini), f"--junitxml={rapor}", str(dosya)],
+        cwd=oturum, env=ortam, capture_output=True, text=True, timeout=180)
+    kuyruk = (kosum.stdout + kosum.stderr)[-3000:]
+
+    # 1 = test kırmızısı. 2/3/4 alt oturumun KENDİSİNİN bozuk olduğu demektir (kullanım/iç hata):
+    # o durumda "bekçi ateşledi" hükmü verilemez.
+    assert kosum.returncode == 1, kuyruk
+    assert os.environ.get(AD) == once
+    sonuc = {tc.get("name"): tc for tc in ET.parse(rapor).getroot().iter("testcase")}
+    assert set(sonuc) == set(_ALT_TESTLER), kuyruk
+
+    sizdiran = sonuc[_ALT_TESTLER[0]]
+    hatalar = sizdiran.findall("error")
+    assert len(hatalar) == 1 and not sizdiran.findall("failure"), kuyruk
+    mesaj = hatalar[0].get("message", "")
+    assert mesaj.startswith("failed on teardown"), mesaj
+    assert "ORTAM SIZINTISI" in mesaj and _ALT_TESTLER[0] in mesaj and "'/tmp/x'" in mesaj, mesaj
+    for ad in _ALT_TESTLER[1:]:
+        tc = sonuc[ad]
+        assert not (tc.findall("error") or tc.findall("failure") or tc.findall("skipped")), (ad, kuyruk)
