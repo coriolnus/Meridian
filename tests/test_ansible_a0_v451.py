@@ -343,9 +343,15 @@ def test_ansible_cfg_depo_kokunden_yukleniyor():
 
 
 def _gercek_birim_dosyalari() -> set[pathlib.Path]:
-    """deploy/ altında (recursive) HER `*.service`/`*.timer`, bilinen ölüler HARİÇ."""
+    """deploy/ altında (recursive) HER `*.service`/`*.timer`/`*.path`, bilinen ölüler HARİÇ.
+
+    `.path` 2026-09-29'da girdi (konuşan filo Parça 1a Görev 2, v594): üç "şimdi çalıştır" birimi
+    `birim_kaynaklari`na AÇIK adla eklendi ve bu küme onları saymadığı için Çivi 2a "FAZLA" diye
+    öttü (ölçüldü). Türü kümeye katmak iki yönü birden korur: listelenmemiş yeni bir `.path` EKSİK,
+    var olmayana işaret eden bir girdi FAZLA olur — `.service`/`.timer` ile aynı sözleşme."""
     bulunan = {p.resolve() for p in DEPLOY_DIZIN.rglob("*.service")}
     bulunan |= {p.resolve() for p in DEPLOY_DIZIN.rglob("*.timer")}
+    bulunan |= {p.resolve() for p in DEPLOY_DIZIN.rglob("*.path")}
     return bulunan - OLU_BIRIM_DOSYALARI
 
 
@@ -360,7 +366,7 @@ def _glob_kapsami(desenler: list[str]) -> set[pathlib.Path]:
 
 
 def test_birim_kaynaklari_deploy_agacini_tam_kapsar():
-    """Çivi 2a: `birim_kaynaklari` glob'ları deploy/ altındaki HER `*.service`/`*.timer`'ı kapsar.
+    """Çivi 2a: `birim_kaynaklari` glob'ları deploy/ altındaki HER `*.service`/`*.timer`/`*.path`'i kapsar.
 
     Kümeler EŞİT olmalı: EKSİK → rol bir birimi hiç kopyalamaz (dagit `[1c]`'nin miras aldığı kör
     nokta — .timer/hindsight — burada TEKRARLANMAMALI); FAZLA → glob var-olmayan/yanlış bir yolu

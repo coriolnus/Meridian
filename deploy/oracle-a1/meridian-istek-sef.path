@@ -1,0 +1,17 @@
+# meridian-istek-sef.path — konuşan filo "şimdi çalıştır" (spec 2026-09-29 §3.6).
+# is_iste() state/istek/sef.istek dosyasını her kabul edilen istekte ATOMİK olarak YENİDEN YAZAR
+# (tmp + rename) → PathChanged meridian-brifing.service'i başlatır. PathExists KULLANILMAZ: dosya silinmez,
+# PathExists servis bittikçe yeniden tetiklerdi. Oneshot koşarken gelen ikinci tetik aynı işe katılır
+# (çift koşum yok). Rename'in PathChanged'i tetiklemesi bir BEKLENTİDİR (systemd path.c izleme maskesi:
+# izlenen eski inode'a IN_ATTRIB/IN_DELETE_SELF; ilk doğumda üst dizinde IN_MOVED_TO + varlık geçişi),
+# A1'de ÖLÇÜLMEDİ — Parça 1 dağıtımında elle test-ateşleme onu ölçer.
+# A0 rolü YALNIZ KOPYALAR; etkinleştirme Parça 1 dağıtımında elle test-ateşlemeden sonra.
+[Unit]
+Description=Meridian konuşan filo — @sef iş isteği izleyicisi
+
+[Path]
+PathChanged=/opt/meridian/state/istek/sef.istek
+Unit=meridian-brifing.service
+
+[Install]
+WantedBy=paths.target

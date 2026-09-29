@@ -405,6 +405,19 @@ DECLARED_SINKS: dict[str, str] = {
         "tüketiciyi göremiyor (pool_exhausted_seen.json sınıfı). okuyucu @ayna/@butce/pano + EDG "
         "ölçüm kartı; Parça 1 dağıtımında okuyucu kodu gelir — o gün dış okuyucu grafta görünür "
         "olur ve bu beyan `stale_sinks` kuralıyla KALKAR",
+    "is_istek_defteri.jsonl": "Konuşan filo 'şimdi çalıştır' kabul defteri (spec 2026-09-29 §3.6/§4, "
+        "v594). Yazan `is_istek.is_iste` (yalnız KABUL satırları), okuyan `is_istek._son_kabul` — "
+        "15 dk bot-başı tavanın hafızası; AYNI modül, statik graf dış tüketiciyi göremiyor "
+        "(pool_exhausted_seen.json sınıfı). Modülün KENDİ işletim durumudur: süreçler arası "
+        "(`state/istek/.kilit` flock'u altında) okunur, çünkü istekler iki ayrı süreçten (Telegram "
+        "dinleyicisi, pano API'si) gelir ve bellekte tutulan bir tavan öteki sürecin kabulünü görmezdi",
+    "istek/*.istek": "Konuşan filo 'şimdi çalıştır' tetik dosyası (spec 2026-09-29 §3.6, v594). "
+        "Yazan `is_istek.is_iste` (`store.write_text`, atomik); TÜKETİCİSİ MODÜL DEĞİL systemd'dir — "
+        "`deploy/oracle-a1/meridian-istek-<bot>.path` birimi `PathChanged=` ile dosyanın DEĞİŞMESİNİ "
+        "izler ve botun zamanlı iş servisini (`Unit=`) başlatır (litestream.env sınıfı: okuyucu "
+        "birim dosyası). "
+        "İçerik (bot, kanal, ts) bir denetim izidir ve aynısı `is_istek_defteri.jsonl`de de vardır. "
+        "`.path` birimleri emekli olursa BU SATIR `UNVERIFIABLE_SINKS` kaydıyla BİRLİKTE kalkar",
     # NOT: `finviz_universe.json` buradan ÇIKARILDI. Beyanı doğruydu — okuyucusu
     # yalnız kendi modülündeydi, statik graf onu göremiyordu. Artık DIŞ bir okuyucusu var:
     # `marketview.build` keşfedilen evreni bars'ta olmayan semboller için satır üretmekte
@@ -844,6 +857,12 @@ UNVERIFIABLE_SINKS: dict[str, str] = {
                       "systemd `EnvironmentFile=`dır. İki uç da `artifact_graph`ın gördüğü `store` "
                       "çağrısı değildir. DEVİR ŞARTI: S3 replica emekli olursa `DECLARED_SINKS` "
                       "satırıyla BİRLİKTE BU SATIR KALDIRILMALI.",
+    "istek/*.istek": "YAZAR STATİK GRAFTA YAPISAL OLARAK GÖRÜNMEZ: `is_istek.is_iste` tetik dosyasını "
+                     "`store.write_text` ile yazar — `WRITE_CALLS` onu saymaz ve ad `.json`/`.jsonl` "
+                     "değildir; okuyucusu da bir modül değil systemd `.path` birimidir (`PathChanged=`). "
+                     "İki uç da `artifact_graph`ın gördüğü `store` okuma/yazma çağrısı değildir. DEVİR "
+                     "ŞARTI: `.path` birimleri emekli olursa `DECLARED_SINKS` satırıyla BİRLİKTE BU SATIR "
+                     "KALDIRILMALI.",
 }
 
 
