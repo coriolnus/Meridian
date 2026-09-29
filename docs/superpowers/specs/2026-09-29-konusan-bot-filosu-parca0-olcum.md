@@ -1,12 +1,22 @@
 # Konuşan bot filosu — Parça 0 ölçüm raporu (bekçi ikizi, A1)
 
 **Plan:** `docs/superpowers/plans/2026-09-29-konusan-filo-parca0-deneme.md` · **Spec:** `docs/superpowers/specs/2026-09-29-konusan-bot-filosu-design.md` §6
-**Koşumlar:** v1 2026-09-29 20:20Z (operatör) · v2 2026-09-29 22:12Z (Rol-1, operatörün gece yetkisiyle) · betikler `~/Documents/Claude/meridian-parca0/`
+**Koşumlar:** v1 2026-09-29 20:20Z (operatör) · v2 2026-09-29 22:10Z (operatör) + 22:12Z (Rol-1, operatörün gece yetkisiyle; üst üste binmedi) · betikler `~/Documents/Claude/meridian-parca0/`
 · A1 çıktıları `~/deneme-botlar/sonuc.txt`, `sonuc_v2.txt`, arşiv `~/deneme-botlar/arsiv/` (kalıcı silme yok; Hindsight bankası `bot-deneme-bekci` kayıt olarak kalır).
 
 ## Hüküm: DUR → operatör (spec §6: (b) geçmeden Parça 1b açılmaz)
 
 (a) GEÇTİ · (b) ÖLÇÜLEMEDİ — kök neden bulundu, düzeltme bir operatör kararı (aşağıda K-1).
+
+## EN AĞIR BULGU — araçsız bot ARAÇ ÇAĞRISI VE SONUCU UYDURUR (operatörün v2 koşumu, 22:10:53Z)
+`deneme-1` ("rejim ve maruziyet bütçesi nedir? Meridian aracını kullan") cevabı: önce var olmayan bir araç çağrısı metni
+(`{"name": "meridian_tool", "arguments": {"command": "regime_and_exposure"}}`), sonra UYDURULMUŞ bir araç sonucu (`regime: neutral`,
+`exposure_budget_pct: 100`, `source: risk/state.json`, `freshness_seconds: 12`), sonra bunu operatöre gerçek veri gibi sunan cevap. Oturum kaydında
+`tool_calls` YOK, `risk/state.json` diye bir dosya YOK. (Rol-1'in 22:12Z koşumunda aynı soru yalnız düz metin sahte çağrıyla bitti — davranış
+kararsız, ikisi de araçsız.) SONUÇ: araç katmanı gerçekten bağlı olmayan bir bot operatöre uydurma piyasa verisi söyleyebilir; (b) kapısının
+varlık sebebi tam budur. Parça 1b KABUL KOŞULU (deterministik, modele güvenmeden): `bot_kanal` her dönüşte taşıyıcıdan GERÇEK araç çağrı sayısını
+alır (Hermes oturum mesajlarındaki `tool_calls`); sayı 0 iken cevap veri/sayı/kaynak içeriyorsa cevabın başına "⚠️ bu cevap hiçbir araç çağrısına
+dayanmıyor" eklenir ve defter satırı `arac_siz_veri: true` taşır; ölçüm kartında bu satır sıfır tolerans kill maddesidir.
 
 ## Sonuçlar
 
