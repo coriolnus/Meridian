@@ -24,6 +24,14 @@ NE ÇİVİLER:
      `yield`den sonra `_kok_sizinti_sokum`u çağırmayı bıraksa dördü de yeşil kalırdı. K5 deponun
      GERÇEK `tests/conftest.py`sini bir ALT OTURUMDA yükler (`-p tests.conftest`) ve bekçinin
      sökümde gerçekten ateşlediğini, geri yüklediğini ve monkeypatch'i serbest bıraktığını ölçer.
+  K6 TOPLAMA ZAMANI (TSK-255 (a)): modül İÇE AKTARILIRKEN kökü yazan modül, toplama raporu kırmızı
+     ve düğüm kimliğiyle düşer; kök hemen geri yüklenir, sonraki modül temiz kökle içe aktarılır.
+  K7 OTURUM DÜZEYİ (TSK-255 (a)): toplama kancası (hiçbir toplayıcının içinde değil) ve modül
+     kapsamlı fikstürün sökümü — ikisi de fonksiyon bekçisine görünmez; oturum sonu denetimi geri
+     yükler, raporlar, çıkışı kırmızıya çeker. Düz oturumda VE xdist altında (kayıt işçiden
+     kontrolcüye workeroutput ile taşınır; otoriter suite `-n 4` koşar).
+  K8 ALT OTURUM ORTAM SÜZGECİ (TSK-255 (b), yeniden inceleme N-1): alt oturumlar
+     `MERIDIAN_PROVENANCE*` ve `PYTEST_*` değişkenlerini devralmaz; K5 bunu uçtan uca da ölçer.
 """
 from __future__ import annotations
 
@@ -168,51 +176,87 @@ def test_k4_monkeypatch_delenv_bekciye_takilmaz(_modul_kapsamli_kok, monkeypatch
 # oturumun `config.STATE`i ve oturum-sonu `.locks` budaması oraya gider — xdist suite'i koşarken
 # gerçek `state/.locks` budanmaz (o kanca xdist işçisinde bilerek koşmaz; alt oturum işçi değildir).
 # `PYTHONDONTWRITEBYTECODE=1`: alt oturum `tests/` altına pyc bırakmaz. `PYTEST_*` değişkenleri
-# (xdist işçi kimliği, `PYTEST_ADDOPTS`) alt oturuma taşınmaz.
-_ALT_TESTLER = ("test_a_dogrudan_yazan_sizdirir", "test_b_monkeypatch_ile_yazan_temiz",
-                "test_c_sonraki_test_geri_yuklenmis_kok_gorur")
+# (xdist işçi kimliği, `PYTEST_ADDOPTS`) alt oturuma taşınmaz. `MERIDIAN_PROVENANCE*` de taşınmaz
+# (TSK-255 (b), yeniden inceleme N-1): üst oturum köken kipindeyse (`MERIDIAN_PROVENANCE=1`, elle
+# ölçüm) alt oturum da o kipe girip sonda `docs/provenance_report.json`u GÖRELİ yola (cwd = tmp,
+# orada `docs/` yok → INTERNALERROR, K5 yanlış teşhisli kırmızı) ya da mutlak `..._OUT`a (operatörün
+# raporunu çocuğun boş iziyle EZER) yazardı. Süzgeç K8'de çivili.
+_SUZULEN_ONEKLER = ("PYTEST_", "MERIDIAN_PROVENANCE")
+_YER_SANAL_KOK = "__SANAL_KOK__"
+_YER_GOZLEM = "__GOZLEM__"
 
 
-def _alt_oturum_kaynagi(sanal_kok: str) -> str:
-    return (
-        "import os\n\n\n"
-        f"def {_ALT_TESTLER[0]}():\n"
-        "    os.environ['MERIDIAN_ROOT'] = '/tmp/x'\n\n\n"
-        f"def {_ALT_TESTLER[1]}(monkeypatch):\n"
-        "    monkeypatch.setenv('MERIDIAN_ROOT', '/tmp/x')\n\n\n"
-        f"def {_ALT_TESTLER[2]}():\n"
-        f"    assert os.environ.get('MERIDIAN_ROOT') == {sanal_kok!r}\n"
-    )
+def _alt_oturum_ortami(ust, sanal_kok: str) -> dict[str, str]:
+    """Alt oturumun ortamı: üst ortamdan miras, `_SUZULEN_ONEKLER` hariç; kök sanal köke çevrilir."""
+    ortam = {k: v for k, v in ust.items() if not k.startswith(_SUZULEN_ONEKLER)}
+    ortam.update(PYTHONPATH=str(KOK), MERIDIAN_ROOT=sanal_kok, PYTHONDONTWRITEBYTECODE="1")
+    return ortam
 
 
-def test_k5_gercek_conftest_alt_oturumda_bekci_sokumde_atesler(tmp_path):
-    """Sızdıran (a) sökümde KIRMIZI + bekçinin mesajı; monkeypatch'li (b) YEŞİL; sonraki test (c)
-    geri yüklenmiş kökü görür; üst sürecin ortamı değişmez. Bekçi gövdesinden `_kok_sizinti_sokum`
-    çağrısı silinirse (a) yeşile, (c) kırmızıya döner (mutasyonla gösterildi)."""
-    once = os.environ.get(AD)
+def _alt_oturum_kos(tmp_path, dosyalar: dict[str, str], *ek_arg: str, eklenti: bool = True):
+    """Deponun GERÇEK conftest'iyle bir alt oturum koşar — `eklenti=True` ise `-p tests.conftest`
+    (küresel eklenti), değilse conftest'i `dosyalar` içindeki bir `conftest.py` yükler. `dosyalar`
+    ad → kaynak; kaynaktaki `__SANAL_KOK__` sanal kökün, `__GOZLEM__` gözlem dizininin repr'ine çevrilir.
+    Dönüş: (CompletedProcess, sanal kök, gözlem dizini, JUnit testcase sözlüğü ad → öğe, kuyruk)."""
     sanal_kok = tmp_path / "sanal_kok"
     (sanal_kok / "state").mkdir(parents=True)
+    gozlem = tmp_path / "gozlem"
+    gozlem.mkdir()
     oturum = tmp_path / "oturum"
     oturum.mkdir()
     ini = oturum / "pytest.ini"
     ini.write_text("[pytest]\n", encoding="utf-8")
-    dosya = oturum / "test_alt_oturum.py"
-    dosya.write_text(_alt_oturum_kaynagi(str(sanal_kok)), encoding="utf-8")
+    for ad, kaynak in dosyalar.items():
+        (oturum / ad).write_text(kaynak.replace(_YER_SANAL_KOK, repr(str(sanal_kok)))
+                                 .replace(_YER_GOZLEM, repr(str(gozlem))), encoding="utf-8")
     rapor = tmp_path / "sonuc.xml"
-    ortam = {k: v for k, v in os.environ.items() if not k.startswith("PYTEST_")}
-    ortam.update(PYTHONPATH=str(KOK), MERIDIAN_ROOT=str(sanal_kok), PYTHONDONTWRITEBYTECODE="1")
-
     kosum = subprocess.run(
-        [sys.executable, "-m", "pytest", "-p", "tests.conftest", "-p", "no:cacheprovider",
-         "--rootdir", str(oturum), "-c", str(ini), f"--junitxml={rapor}", str(dosya)],
-        cwd=oturum, env=ortam, capture_output=True, text=True, timeout=180)
-    kuyruk = (kosum.stdout + kosum.stderr)[-3000:]
+        [sys.executable, "-m", "pytest", *(("-p", "tests.conftest") if eklenti else ()),
+         "-p", "no:cacheprovider",
+         "--rootdir", str(oturum), "-c", str(ini), f"--junitxml={rapor}", *ek_arg, str(oturum)],
+        cwd=oturum, env=_alt_oturum_ortami(os.environ, str(sanal_kok)),
+        capture_output=True, text=True, timeout=180)
+    kuyruk = (kosum.stdout + kosum.stderr)[-4000:]
+    sonuc = ({tc.get("name"): tc for tc in ET.parse(rapor).getroot().iter("testcase")}
+             if rapor.exists() else {})
+    return kosum, str(sanal_kok), gozlem, sonuc, kuyruk
+
+
+def _temiz(tc) -> bool:
+    return not (tc.findall("error") or tc.findall("failure") or tc.findall("skipped"))
+
+
+_ALT_TESTLER = ("test_a_dogrudan_yazan_sizdirir", "test_b_monkeypatch_ile_yazan_temiz",
+                "test_c_sonraki_test_geri_yuklenmis_kok_gorur")
+_K5_KAYNAK = (
+    "import os\n\n\n"
+    f"def {_ALT_TESTLER[0]}():\n"
+    "    os.environ['MERIDIAN_ROOT'] = '/tmp/x'\n\n\n"
+    f"def {_ALT_TESTLER[1]}(monkeypatch):\n"
+    "    monkeypatch.setenv('MERIDIAN_ROOT', '/tmp/x')\n\n\n"
+    f"def {_ALT_TESTLER[2]}():\n"
+    f"    assert os.environ.get('MERIDIAN_ROOT') == {_YER_SANAL_KOK}\n"
+)
+
+
+def test_k5_gercek_conftest_alt_oturumda_bekci_sokumde_atesler(tmp_path, monkeypatch):
+    """Sızdıran (a) sökümde KIRMIZI + bekçinin mesajı; monkeypatch'li (b) YEŞİL; sonraki test (c)
+    geri yüklenmiş kökü görür; üst sürecin ortamı değişmez. Bekçi gövdesinden `_kok_sizinti_sokum`
+    çağrısı silinirse (a) yeşile, (c) kırmızıya döner (mutasyonla gösterildi).
+    Üst süreç KÖKEN KİPİNDE koşar (`MERIDIAN_PROVENANCE=1`, `..._OUT` = tmp dosyası): alt oturum o
+    kipe GİRMEMELİ — girerse sonda rapor dosyasını yazar ve bu test onu görür (K8'in uçtan ucu)."""
+    koken_raporu = tmp_path / "koken_raporu.json"
+    monkeypatch.setenv("MERIDIAN_PROVENANCE", "1")
+    monkeypatch.setenv("MERIDIAN_PROVENANCE_OUT", str(koken_raporu))
+    once = os.environ.get(AD)
+    kosum, _sanal, _g, sonuc, kuyruk = _alt_oturum_kos(
+        tmp_path, {"test_alt_oturum.py": _K5_KAYNAK})
 
     # 1 = test kırmızısı. 2/3/4 alt oturumun KENDİSİNİN bozuk olduğu demektir (kullanım/iç hata):
     # o durumda "bekçi ateşledi" hükmü verilemez.
     assert kosum.returncode == 1, kuyruk
     assert os.environ.get(AD) == once
-    sonuc = {tc.get("name"): tc for tc in ET.parse(rapor).getroot().iter("testcase")}
+    assert not koken_raporu.exists(), "alt oturum üstün köken kipini devraldı (MERIDIAN_PROVENANCE*)"
     assert set(sonuc) == set(_ALT_TESTLER), kuyruk
 
     sizdiran = sonuc[_ALT_TESTLER[0]]
@@ -224,3 +268,147 @@ def test_k5_gercek_conftest_alt_oturumda_bekci_sokumde_atesler(tmp_path):
     for ad in _ALT_TESTLER[1:]:
         tc = sonuc[ad]
         assert not (tc.findall("error") or tc.findall("failure") or tc.findall("skipped")), (ad, kuyruk)
+
+
+# ==================================================================================================
+# K6 — TOPLAMA ZAMANI: MODÜL İÇE AKTARILIRKEN YAZAN MODÜL ADIYLA KIRMIZI, KÖK HEMEN GERİ YÜKLENİR
+# ==================================================================================================
+# Fonksiyon bekçisi anlık görüntüsünü İLK testten önce alır; modül düzeyinde (içe aktarımda) yazılan
+# kök o görüntüye "başlangıç" diye girer ve hiçbir test onu göremez. `pytest_make_collect_report`
+# sarmalayıcısı her toplayıcının ÖNCESİNİ/SONRASINI ölçer: değişiklik toplayıcının toplama raporunu
+# KIRMIZIYA çevirir (düğüm kimliği = modül yolu), kökü o anda geri yükler — sonraki modül temiz kökle
+# içe aktarılır. `--continue-on-collection-errors` yalnız "sonraki modül temiz kökü gördü" ölçümü
+# içindir; bayraksız oturumda aynı kırmızı toplama raporu pytest'in olağan "N error during
+# collection" kesintisidir.
+# İKİ KAYIT KİPİ (pytest 9.1.1'de ÖLÇÜLDÜ, 2026-09-30): `-p tests.conftest` kancaları KÜRESEL kaydeder
+# (Session ve kök dizin toplayıcısı da sarılır). Gerçek suite'te ise `tests/conftest.py` bir CONFTEST
+# eklentisidir ve toplama kancaları YOLA BAĞLIDIR (`Session.gethookproxy`: yalnız kendi dizini
+# altındaki toplayıcılar). `conftest` kipi aynı kancaları alt oturumun kendi `conftest.py`sinden
+# (ithal, kopya DEĞİL) kaydeder — yani suite'in gerçek kayıt biçimini ölçer.
+_K6_CONFTEST_KANCALARI = (
+    "from tests.conftest import (  # noqa: F401 — ithal: kancalar conftest eklentisi olarak kaydolur\n"
+    "    pytest_collection_finish, pytest_make_collect_report, pytest_sessionfinish,\n"
+    "    pytest_sessionstart, pytest_terminal_summary)\n")
+_K6_SIZDIRAN = "test_a_toplamada_sizdirir"
+_K6_SONRAKI = "test_b_geri_yuklenmis_kok_gorur"
+_K6_DOSYALAR = {
+    f"{_K6_SIZDIRAN}.py": (
+        "import os\n\n"
+        "os.environ['MERIDIAN_ROOT'] = '/tmp/toplama'\n\n\n"
+        "def test_a_hic_kosmaz():\n"
+        "    pass\n"),
+    "test_b_sonraki_modul.py": (
+        "import os\n\n"
+        "TOPLAMADA = os.environ.get('MERIDIAN_ROOT')\n\n\n"
+        f"def {_K6_SONRAKI}():\n"
+        f"    assert TOPLAMADA == {_YER_SANAL_KOK}\n"
+        f"    assert os.environ.get('MERIDIAN_ROOT') == {_YER_SANAL_KOK}\n"),
+}
+
+
+@pytest.mark.parametrize("kip", ["eklenti", "conftest"])
+def test_k6_toplamada_sizdiran_modul_adiyla_kirmizi_ve_kok_geri_yuklenir(tmp_path, kip):
+    dosyalar = dict(_K6_DOSYALAR)
+    if kip == "conftest":
+        dosyalar["conftest.py"] = _K6_CONFTEST_KANCALARI
+    kosum, _sanal, _g, sonuc, kuyruk = _alt_oturum_kos(
+        tmp_path, dosyalar, "--continue-on-collection-errors", eklenti=(kip == "eklenti"))
+
+    assert kosum.returncode == 1, kuyruk
+    # Sızdıran modülün testi TOPLANMADI (rapor kırmızı → çocuk düğüm yok); sonraki modül koştu.
+    assert set(sonuc) == {_K6_SIZDIRAN, _K6_SONRAKI}, kuyruk
+    hatalar = sonuc[_K6_SIZDIRAN].findall("error")
+    assert len(hatalar) == 1 and hatalar[0].get("message") == "collection failure", kuyruk
+    metin = hatalar[0].text or ""
+    assert "ORTAM SIZINTISI" in metin and f"{_K6_SIZDIRAN}.py" in metin, metin
+    assert "'/tmp/toplama'" in metin, metin
+    # Sonraki modül İÇE AKTARILIRKEN de, testinde de sanal kökü gördü: geri yükleme toplayıcının
+    # hemen ardından yapıldı. Oturum-sonu denetimi aynı sızıntıyı İKİNCİ kez saymaz.
+    assert _temiz(sonuc[_K6_SONRAKI]), kuyruk
+    assert "ERROR ORTAM SIZINTISI" not in kosum.stdout, kuyruk
+
+
+# ==================================================================================================
+# K7 — OTURUM DÜZEYİ: TOPLAMA KANCASI + MODÜL FİKSTÜRÜ SÖKÜMÜ → GERİ YÜKLE, ÇIKIŞI KIRMIZIYA ÇEK
+# ==================================================================================================
+# İki kör nokta, tek alt oturumda: (1) `pytest_collection_modifyitems` HİÇBİR toplayıcının içinde
+# değildir — K6'nın sarmalayıcısı onu görmez; `pytest_collection_finish` oturum-başı anlık görüntüyle
+# kıyaslar (hangi kanca olduğu bilinemez, mesaj bunu söyler). (2) Modül kapsamlı fikstürün SÖKÜMÜ
+# fonksiyon bekçisinin sökümünden SONRA koşar; yazdığı kök sonraki testin "önce"sine girer.
+# `pytest_sessionfinish` oturum-başı görüntüyle kıyaslar. Testlerin HEPSİ yeşildir: çıkış 1'i
+# yalnız oturum denetimi verir. Gözlem: alt oturumun `pytest_unconfigure`i (sessionfinish'ten SONRA
+# koşar) kökü dosyaya yazar — geri yüklemenin kanıtı.
+_K7_TEST = "test_c_kanca_yazimi_geri_yuklenmis_gorur"
+_K7_DOSYALAR = {
+    "conftest.py": (
+        "import os\n"
+        "import pathlib\n\n\n"
+        "def pytest_collection_modifyitems(items):\n"
+        "    os.environ['MERIDIAN_ROOT'] = '/tmp/kanca'\n\n\n"
+        "def pytest_unconfigure(config):\n"
+        "    rol = 'isci' if hasattr(config, 'workerinput') else 'ana'\n"
+        f"    (pathlib.Path({_YER_GOZLEM}) / rol).write_text(\n"
+        "        os.environ.get('MERIDIAN_ROOT') or '(tanımsız)', encoding='utf-8')\n"),
+    "test_c_fikstur_sokumde_yazar.py": (
+        "import os\n\n"
+        "import pytest\n\n\n"
+        "@pytest.fixture(scope='module')\n"
+        "def _sokumde_yazar():\n"
+        "    yield\n"
+        "    os.environ['MERIDIAN_ROOT'] = '/tmp/fikstur'\n\n\n"
+        f"def {_K7_TEST}(_sokumde_yazar):\n"
+        f"    assert os.environ.get('MERIDIAN_ROOT') == {_YER_SANAL_KOK}\n"),
+}
+
+
+def _k7_satirlari(stdout: str) -> dict[str, list[str]]:
+    satirlar = [s for s in stdout.splitlines() if s.startswith("ERROR ORTAM SIZINTISI — ")]
+    return {
+        "hepsi": satirlar,
+        "toplama": [s for s in satirlar
+                    if s.startswith("ERROR ORTAM SIZINTISI — toplama sonu:") and "'/tmp/kanca'" in s],
+        "oturum": [s for s in satirlar
+                   if s.startswith("ERROR ORTAM SIZINTISI — oturum sonu:") and "'/tmp/fikstur'" in s],
+    }
+
+
+def test_k7_toplama_kancasi_ve_fikstur_sokumu_oturumu_kirmizi_yapar_ve_geri_yuklenir(tmp_path):
+    kosum, sanal, gozlem, sonuc, kuyruk = _alt_oturum_kos(tmp_path, _K7_DOSYALAR)
+
+    assert kosum.returncode == 1, kuyruk
+    assert set(sonuc) == {_K7_TEST} and _temiz(sonuc[_K7_TEST]), kuyruk   # toplama sonu geri yükledi
+    assert "KÖK ORTAM SIZINTISI" in kosum.stdout, kuyruk
+    s = _k7_satirlari(kosum.stdout)
+    assert len(s["hepsi"]) == 2 and len(s["toplama"]) == 1 and len(s["oturum"]) == 1, kuyruk
+    assert "bilinemez" in s["toplama"][0] and "bilinemez" in s["oturum"][0], s["hepsi"]
+    assert (gozlem / "ana").read_text(encoding="utf-8") == sanal       # oturum sonu geri yükledi
+
+
+def test_k7_xdist_iscisindeki_sizinti_kontrolcuyu_kirmizi_yapar(tmp_path):
+    """Otoriter suite `-n 4` koşar: işçinin oturum sonu denetimi kendi çıkış kodunu değiştirse bile
+    kontrolcü onu OKUMAZ (xdist işçi çıkış kodunu yalnız kesinti için sorar). Kayıt workeroutput ile
+    kontrolcüye taşınır; kontrolcü basar ve çıkışı kırmızıya çeker."""
+    kosum, sanal, gozlem, sonuc, kuyruk = _alt_oturum_kos(tmp_path, _K7_DOSYALAR, "-n", "1")
+
+    assert kosum.returncode == 1, kuyruk
+    assert set(sonuc) == {_K7_TEST} and _temiz(sonuc[_K7_TEST]), kuyruk
+    s = _k7_satirlari(kosum.stdout)
+    assert len(s["hepsi"]) == 2 and len(s["toplama"]) == 1 and len(s["oturum"]) == 1, kuyruk
+    assert all("[xdist işçisi gw0]" in satir for satir in s["hepsi"]), s["hepsi"]
+    assert (gozlem / "isci").read_text(encoding="utf-8") == sanal
+
+
+# ==================================================================================================
+# K8 — ALT OTURUM ORTAM SÜZGECİ (yeniden inceleme N-1)
+# ==================================================================================================
+def test_k8_alt_oturum_ortami_koken_ve_pytest_degiskenlerini_suzer():
+    ust = {"MERIDIAN_PROVENANCE": "1", "MERIDIAN_PROVENANCE_OUT": "/depo/docs/provenance_report.json",
+           "PYTEST_XDIST_WORKER": "gw0", "PYTEST_ADDOPTS": "-x", "MERIDIAN_ROOT": "/ust/kok",
+           "PATH": "/usr/bin", "MERIDIAN_DB": "off"}
+    kopya = dict(ust)
+    ortam = _alt_oturum_ortami(ust, "/sanal/kok")
+    assert not [k for k in ortam if k.startswith(("MERIDIAN_PROVENANCE", "PYTEST_"))], sorted(ortam)
+    assert ortam["PATH"] == "/usr/bin" and ortam["MERIDIAN_DB"] == "off"
+    assert ortam["MERIDIAN_ROOT"] == "/sanal/kok"
+    assert ortam["PYTHONPATH"] == str(KOK) and ortam["PYTHONDONTWRITEBYTECODE"] == "1"
+    assert ust == kopya                                        # üst sözlüğe dokunulmaz

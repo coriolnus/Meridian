@@ -339,25 +339,57 @@ def _no_production_global_mutation():
 # dersi). SIRA GARANTİSİ: autouse fikstürler test-düzeyi `monkeypatch`ten ÖNCE kurulur ve ters
 # sırada sökülür; dolayısıyla `monkeypatch.setenv/delenv` ile yapılan değişiklik bekçi ölçmeden
 # geri alınmıştır ve bekçiye TAKILMAZ. Sıra `tests/test_kok_sizinti_v595.py` K4'te çivili.
-# KAPSAMIN DÜRÜST SINIRI: yalnız fonksiyon kapsamı ölçülür. Toplama anında (modül düzeyinde)
-# yazan bir betik ya da modül/oturum kapsamlı bir fikstür bu bekçiye görünmez.
+#
+# ÜÇ KATMAN (TSK-255, 2026-09-30) — fonksiyon bekçisinin kör olduğu iki an da ölçülür:
+#   1. FONKSİYON: `_kok_sizinti_bekcisi` (yukarıdaki vaka) — sızdıran TEST adıyla kırmızı (K1–K5).
+#   2. TOPLAMA: `pytest_make_collect_report` sarmalayıcısı her toplayıcının (modül içe aktarımı, sınıf
+#      toplama, alt dizin conftest'i) öncesini/sonrasını kıyaslar; değişiklik o toplayıcının raporunu
+#      KIRMIZIYA çevirir (düğüm kimliği = modül yolu) ve kökü HEMEN geri yükler (K6). Hiçbir
+#      toplayıcının içinde olmayan yazımı (`pytest_collection_modifyitems` gibi kancalar)
+#      `pytest_collection_finish` oturum-başı anlık görüntüyle yakalar — o durumda kaynak BİLİNEMEZ
+#      ve mesaj bunu söyler (K7).
+#   3. OTURUM: `pytest_sessionfinish` oturum-başı görüntüyle kıyaslar — modül/oturum kapsamlı fikstürün
+#      kurulumu ya da SÖKÜMÜ (fonksiyon bekçisinin sökümünden SONRA koşar) burada görünür; hangi
+#      fikstür olduğu bilinemez (K7). Kayıt geri yüklenir, `pytest_terminal_summary` basar, çıkış 0 ise
+#      1'e çekilir. xdist işçisinde kayıt workeroutput ile kontrolcüye taşınır (`pytest_testnodedown`);
+#      işçinin kendi çıkış kodunu kontrolcü okumaz (K7 xdist).
+# MALİYET: toplayıcı başına iki `environ.get`, oturum başına sabit; test başına ek iş YOK.
+# KAPSAMIN DÜRÜST SINIRI: (a) yalnız `MERIDIAN_ROOT` izlenir, başka ortam değişkeni değil; (b) bu
+# conftest'in kendi içe aktarımından ve oturum başından ÖNCE olan yazım görünmez; (c) KESİLEN
+# oturumda (`-x`/maxfail/Ctrl-C) kalan fikstürleri pytest'in `runner` eklentisi bu denetimden SONRA
+# söker — o sökümdeki yazım kaçar, ama oturum zaten kırmızıdır (yalnız mesaj kaybolur).
 _KOK_ORTAM_ADI = "MERIDIAN_ROOT"
+_KOK_TABAN_ALINMADI = object()
+# Süreç-içi oturum durumu. OKUYUCU: `taban`ı toplama/oturum sonu denetimleri, `sizintilar`ı
+# `pytest_terminal_summary` (rapor) + `_kok_oturum_sonu_denetimi` (çıkış kodu) + xdist workeroutput.
+_KOK_OTURUM: dict = {"taban": _KOK_TABAN_ALINMADI, "sizintilar": []}
 
 
-def _kok_sizinti_denetle(once: str | None, sonra: str | None) -> str | None:
-    """Saf yüklem: test öncesi/sonrası değer AYNIYSA None, değilse okunur bir mesaj.
-    Boş dizge TANIMSIZ DEĞİLDİR (`os.environ.get` ikisini ayırır; bekçi de ayırır)."""
+def _kok_sizinti_denetle(once: str | None, sonra: str | None,
+                         an: str = "test sonunda") -> str | None:
+    """Saf yüklem: öncesi/sonrası değer AYNIYSA None, değilse okunur bir mesaj.
+    Boş dizge TANIMSIZ DEĞİLDİR (`os.environ.get` ikisini ayırır; bekçi de ayırır). `an`: sızıntının
+    ölçüldüğü an (fonksiyon bekçisi için "test sonunda")."""
     if once == sonra:
         return None
 
     def _goster(deger: str | None) -> str:
         return "(tanımsız)" if deger is None else repr(deger)
 
-    return (f"{_KOK_ORTAM_ADI} test sonunda değişik kaldı: önce={_goster(once)} "
+    return (f"{_KOK_ORTAM_ADI} {an} değişik kaldı: önce={_goster(once)} "
             f"sonra={_goster(sonra)} — süreç ortamı kalıcı yazıldı; sonraki testler ve onların "
             f"alt süreçleri (spawn) bu kökü devralır. `monkeypatch.setenv({_KOK_ORTAM_ADI!r}, …)` "
             f"kullan (doğrudan yazan bir betiği çağırmadan ÖNCE de: monkeypatch özgün durumu "
             f"kaydeder ve sökümde betiğin yazımını da geri alır)")
+
+
+def _kok_geri_yukle(once: str | None, ortam=None) -> None:
+    """Kökü `once`ye döndürür (`once` tanımsızsa değişkeni SİLER). `ortam` verilmezse `os.environ`."""
+    ortam = os.environ if ortam is None else ortam
+    if once is None:
+        ortam.pop(_KOK_ORTAM_ADI, None)
+    else:
+        ortam[_KOK_ORTAM_ADI] = once
 
 
 def _kok_sizinti_sokum(once: str | None, kimlik: str, ortam=None) -> None:
@@ -368,11 +400,64 @@ def _kok_sizinti_sokum(once: str | None, kimlik: str, ortam=None) -> None:
     mesaj = _kok_sizinti_denetle(once, ortam.get(_KOK_ORTAM_ADI))
     if mesaj is None:
         return None
-    if once is None:
-        ortam.pop(_KOK_ORTAM_ADI, None)
-    else:
-        ortam[_KOK_ORTAM_ADI] = once
+    _kok_geri_yukle(once, ortam)
     pytest.fail(f"ORTAM SIZINTISI ({kimlik}): {mesaj}")
+
+
+@pytest.hookimpl(wrapper=True)
+def pytest_make_collect_report(collector):
+    """TOPLAMA katmanı (yukarıdaki blok, 2.): toplayıcı kökü değiştirdiyse raporunu kırmızıya
+    çevirir, kökü geri yükler. Toplayıcının kendi hatası varsa mesajın ALTINDA korunur."""
+    once = os.environ.get(_KOK_ORTAM_ADI)
+    rapor = yield
+    mesaj = _kok_sizinti_denetle(once, os.environ.get(_KOK_ORTAM_ADI),
+                                 an=f"`{collector.nodeid or '.'}` toplanırken (modül içe aktarımı "
+                                    f"/ sınıf toplama / alt dizin conftest'i)")
+    if mesaj is None:
+        return rapor
+    _kok_geri_yukle(once)
+    kendi = f"\n\n(toplayıcının kendi hatası:)\n{rapor.longrepr}" if rapor.failed else ""
+    rapor.outcome = "failed"
+    rapor.longrepr = f"ORTAM SIZINTISI (toplama: {collector.nodeid or '.'}): {mesaj}{kendi}"
+    rapor.result = []
+    return rapor
+
+
+def pytest_collection_finish(session):
+    """TOPLAMA katmanının artçısı: hiçbir toplayıcının içinde olmayan yazım (toplama kancaları).
+    Oturum başı görüntüsü yoksa (bu conftest toplama sırasında geç yüklendi) taban BURADA alınır."""
+    simdi = os.environ.get(_KOK_ORTAM_ADI)
+    taban = _KOK_OTURUM["taban"]
+    if taban is _KOK_TABAN_ALINMADI:
+        _KOK_OTURUM["taban"] = simdi
+        return
+    mesaj = _kok_sizinti_denetle(
+        taban, simdi, an="toplama bittiğinde (hiçbir toplayıcının İÇİNDE değil: bir toplama kancası "
+                         "ya da eklenti — hangisi olduğu bilinemez)")
+    if mesaj is not None:
+        _kok_geri_yukle(taban)
+        _KOK_OTURUM["sizintilar"].append(f"toplama sonu: {mesaj}")
+
+
+def _kok_oturum_sonu_denetimi(session, ortam=None) -> None:
+    """OTURUM katmanı (yukarıdaki blok, 3.): oturum-başı görüntüyle kıyaslar, geri yükler, kaydeder.
+    xdist işçisi kaydı workeroutput'a koyar (kontrolcü `pytest_testnodedown`da toplar); işçi olmayan
+    süreç (düz oturum ya da xdist kontrolcüsü) kayıt varsa ve çıkış 0 ise çıkışı 1'e çeker."""
+    ortam = os.environ if ortam is None else ortam
+    taban = _KOK_OTURUM["taban"]
+    if taban is not _KOK_TABAN_ALINMADI:
+        mesaj = _kok_sizinti_denetle(
+            taban, ortam.get(_KOK_ORTAM_ADI),
+            an="oturum sonunda (fonksiyon bekçisinin görmediği an: modül/oturum kapsamlı fikstürün "
+               "kurulumu ya da sökümü, oturum kancası — hangisi olduğu bilinemez; şüpheli dosyaları "
+               "tek tek, seri koşarak daralt)")
+        if mesaj is not None:
+            _kok_geri_yukle(taban, ortam)
+            _KOK_OTURUM["sizintilar"].append(f"oturum sonu: {mesaj}")
+    if hasattr(session.config, "workeroutput"):
+        session.config.workeroutput["kok_sizinti"] = list(_KOK_OTURUM["sizintilar"])
+    elif _KOK_OTURUM["sizintilar"] and session.exitstatus == pytest.ExitCode.OK:
+        session.exitstatus = pytest.ExitCode.TESTS_FAILED
 
 
 @pytest.fixture(autouse=True)
@@ -725,11 +810,22 @@ def pytest_testnodedown(node, error):
     cikti = getattr(node, "workeroutput", None) or {}
     for kimlik, n in (cikti.get("ag_kapisi_tetik") or {}).items():
         _AG_KAPISI_ISCILERDEN[kimlik] = _AG_KAPISI_ISCILERDEN.get(kimlik, 0) + n
+    # KÖK ORTAM SIZINTISI (TSK-255): işçinin toplama/oturum sonu kayıtları; okuyucu
+    # `_kok_oturum_sonu_denetimi` (çıkış kodu) + `pytest_terminal_summary` (rapor).
+    isci = getattr(getattr(node, "gateway", None), "id", "?")
+    for kayit in cikti.get("kok_sizinti") or []:
+        _KOK_OTURUM["sizintilar"].append(f"{kayit} [xdist işçisi {isci}]")
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
     if hasattr(config, "workerinput"):
         return          # işçi terminali kontrolcüye akmaz; işçi verisi workeroutput ile taşınır
+    if _KOK_OTURUM["sizintilar"]:
+        # `ERROR` öneki bilinçli: otoriter suite hükmünün 1. ayağı (`FAILED|ERROR` grep) bu satırı
+        # da yakalar — çıkış kodu tek başına kalmaz (CLAUDE.md §6 üçlü hüküm).
+        terminalreporter.write_sep("!", "KÖK ORTAM SIZINTISI — OTURUM KIRMIZI (TSK-255)")
+        for kayit in _KOK_OTURUM["sizintilar"]:
+            terminalreporter.write_line(f"ERROR ORTAM SIZINTISI — {kayit}")
     birlesik = dict(_AG_KAPISI_ISCILERDEN)
     for kimlik, n in _AG_KAPISI_TETIK.items():
         birlesik[kimlik] = birlesik.get(kimlik, 0) + n
@@ -1422,6 +1518,10 @@ def pytest_collection_modifyitems(config, items):
 # MERIDIAN_PROVENANCE=1 ile açılır; varsayılan kapalıdır (üretim yolunda sıfır maliyet).
 def pytest_sessionstart(session):
     import os
+    # KÖK ORTAM SIZINTISI oturum-başı görüntüsü (TSK-255; okuyucu `pytest_collection_finish` +
+    # `_kok_oturum_sonu_denetimi`).
+    _KOK_OTURUM["taban"] = os.environ.get(_KOK_ORTAM_ADI)
+    _KOK_OTURUM["sizintilar"] = []
     if os.environ.get("MERIDIAN_PROVENANCE") == "1":
         from meridian import provenance
         provenance.basla()
@@ -1429,6 +1529,10 @@ def pytest_sessionstart(session):
 
 def pytest_sessionfinish(session, exitstatus):
     import os
+    # KÖK ORTAM SIZINTISI oturum katmanı (TSK-255) — İLK iş: aşağıdaki budama/köken adımları kökü
+    # okumadan önce geri yüklensin. xdist işçisinde kayıt workeroutput'a buradan girer; xdist onu
+    # kendi sarmalayıcısının SONUNDA (bütün sessionfinish uygulamalarından sonra) gönderir.
+    _kok_oturum_sonu_denetimi(session)
     # DIŞ AĞ KAPISI sayacı xdist işçisinden kontrolcüye (TSK-193; okuyucu `pytest_testnodedown`).
     if hasattr(session.config, "workeroutput"):
         session.config.workeroutput["ag_kapisi_tetik"] = dict(_AG_KAPISI_TETIK)
