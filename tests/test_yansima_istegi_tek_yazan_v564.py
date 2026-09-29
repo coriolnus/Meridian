@@ -539,7 +539,10 @@ def test_15_bekleyen_istek_yaniti_YASI_ve_TTLi_tasir(pano, saat):
     saat.ileri(120)
     out = bas()
     assert out["status"] == "busy" and out["neden"] == "bekleyen_istek", out
-    assert 120 <= out["bekleyen_yas_s"] < 121 and out["ttl_s"] == ttl and out["bayat"] is False, out
+    # SINIR [120, 121] KAPALI (2026-09-29 Rol-1 — ~%5 oynaklık, 20 koşuda 1 kırmızı ölçüldü): `istek_at` saniyeye kırpılı yazılır, sahte saat
+    # kesirli ilerler ve `hermes_runtime._yas_s` bir ondalığa yuvarlar → 120,95+ sn yaş 121,0 döner; meşru aralığın üst ucu. Çivinin iddiası
+    # (yaş ~120 sn — 0 değil, TTL değil) korunur.
+    assert 120 <= out["bekleyen_yas_s"] <= 121 and out["ttl_s"] == ttl and out["bayat"] is False, out
     assert "sn önce" in out["detail"], out
     saat.ileri(ttl)
     out = bas()
