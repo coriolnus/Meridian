@@ -105,9 +105,53 @@ def test_guncellemeleri_al_basari_ve_hata(sandbox_state):
         raise OSError("ağ yok")
 
     assert td.guncellemeleri_al("JETONDEGERI123", 5, _cagir=iyi) == [{"update_id": 5}]
-    assert td.guncellemeleri_al("JETONDEGERI123", 5, _cagir=kotu) == []
+    # TUR 2 (I-1): HATA ile "güncelleme yok" AYRI — hata `None`, boş liste yalnız "yok" demek.
+    assert td.guncellemeleri_al("JETONDEGERI123", 5, _cagir=kotu) is None
     olay = [e for e in obs.recent(20) if e.get("event") == "telegram_yoklama_hatasi"]
     assert olay and "JETONDEGERI123" not in str(olay[-1])
+    assert td.guncellemeleri_al("JETONDEGERI123", 5,
+                                _cagir=lambda u, g, z: {"ok": True, "result": []}) == []
+
+
+def test_guncellemeleri_al_ok_false_hata_sayilir_ve_sessiz_degil(sandbox_state):
+    # HTTP 200 gövdesinde `ok: false` (ör. 409 başka tüketici, 401 jeton iptali): sessiz boş tur
+    # DEĞİL — `None` + olay (hata kodu taşınır, açıklama metni taşınmaz).
+    d = td.guncellemeleri_al("JETONDEGERI123", 5, _cagir=lambda u, g, z: {
+        "ok": False, "error_code": 409, "description": "Conflict: terminated by other getUpdates"})
+    assert d is None
+    olay = [e for e in obs.recent(20) if e.get("event") == "telegram_yoklama_hatasi"]
+    assert olay and olay[-1].get("error_code") == 409
+
+
+def test_guncellemeleri_al_jeton_hata_metninde_olsa_da_olaya_dusmez(sandbox_state):
+    # Minor-1 (Tur 2'de Önemli'ye yükseltildi): istisna METNİ jetonu taşıyabilir (URL yolu). Olay
+    # yalnız sınıf adını taşımalı — `str(e)` basan bir değişiklik bu çiviyi kırmızıya çevirir.
+    def kotu(url, govde, zaman_asimi):
+        raise OSError("https://api.telegram.org/botJETONDEGERI123/getUpdates: 409")
+
+    assert td.guncellemeleri_al("JETONDEGERI123", 5, _cagir=kotu) is None
+    olaylar = obs.recent(50)
+    assert any(e.get("event") == "telegram_yoklama_hatasi" for e in olaylar)
+    assert all("JETONDEGERI123" not in str(e) for e in olaylar)
+
+
+def _sirlar(monkeypatch):
+    monkeypatch.setattr(td.secrets, "get", lambda ad: {"TELEGRAM_BOT_TOKEN": "J" * 20,
+                                                        "TELEGRAM_CHAT_ID": YETKILI}.get(ad))
+
+
+def _sirali_cagir(sonuclar, ofsetler=None):
+    """Her yoklamada sıradaki sonucu verir: istisna örneği → fırlatılır, liste → `ok: True` gövdesi."""
+    it = iter(sonuclar)
+
+    def cagir(url, govde, zaman_asimi):
+        if ofsetler is not None:
+            ofsetler.append(govde["offset"])
+        s = next(it)
+        if isinstance(s, BaseException):
+            raise s
+        return {"ok": True, "result": s}
+    return cagir
 
 
 def test_dongu_ofseti_ilerletir_ve_kalici(sandbox_state, monkeypatch):
@@ -118,6 +162,90 @@ def test_dongu_ofseti_ilerletir_ve_kalici(sandbox_state, monkeypatch):
              gonder=lambda t, r: True)
     from meridian import store
     assert store.read_json("telegram_ofset.json", {}).get("ofset") == 11
+
+
+def test_dongu_hata_turlarinda_ussel_geri_cekilir_ve_60ta_tavanlanir(sandbox_state, monkeypatch):
+    # I-1: art arda hata → 1, 2, 4, … sn, tavan 60. Uyku enjekte; gerçek bekleme YOK.
+    _sirlar(monkeypatch)
+    uykular = []
+    td.dongu(bota_sor=lambda *a: "ok", tur_sayisi=8, _cagir=_sirali_cagir([OSError("x")] * 8),
+             gonder=lambda t, r: True, _uyku=uykular.append)
+    assert uykular == [1, 2, 4, 8, 16, 32, 60, 60]
+
+
+def test_dongu_basarili_tur_geri_cekilme_sayacini_sifirlar(sandbox_state, monkeypatch):
+    _sirlar(monkeypatch)
+    uykular = []
+    td.dongu(bota_sor=lambda *a: "ok", tur_sayisi=4,
+             _cagir=_sirali_cagir([OSError("x"), OSError("x"), [], OSError("x")]),
+             gonder=lambda t, r: True, _uyku=uykular.append)
+    assert uykular == [1, 2, 1]
+
+
+def test_dongu_zehirli_guncelleme_donguyu_oldurmez_ofset_ikisini_de_gecer(sandbox_state, monkeypatch):
+    # I-2: ilk güncellemede kadro okunamıyor (ValueError) → olay, ofset YİNE ilerler (en-çok-bir-kez);
+    # ikinci güncelleme normal işlenir.
+    _sirlar(monkeypatch)
+    gercek, sayac = kadro.kadro_yukle, {"n": 0}
+
+    def bozuk_sonra_saglam(yol=None):
+        sayac["n"] += 1
+        if sayac["n"] == 1:
+            raise ValueError("kadro: bozuk")
+        return gercek(yol)
+
+    monkeypatch.setattr(td._kadro, "kadro_yukle", bozuk_sonra_saglam)
+    cagrilar = []
+    td.dongu(bota_sor=lambda bot, m, k, o: cagrilar.append((bot, m)) or "ok", tur_sayisi=1,
+             _cagir=_sirali_cagir([[{"update_id": 10, "message": _m("merhaba")},
+                                    {"update_id": 11, "message": _m("@bekci durum?")}]]),
+             gonder=lambda t, r: True, _uyku=lambda s: None)
+    assert cagrilar == [("bekci", "durum?")]
+    from meridian import store
+    assert store.read_json("telegram_ofset.json", {}).get("ofset") == 12
+    olay = [e for e in obs.recent(50) if e.get("event") == "telegram_isle_hatasi"]
+    assert olay and olay[-1].get("sinif") == "ValueError" and "bozuk" not in str(olay[-1])
+
+
+def test_dongu_update_id_siz_guncelleme_atlanir(sandbox_state, monkeypatch):
+    _sirlar(monkeypatch)
+    cagrilar = []
+    td.dongu(bota_sor=lambda bot, m, k, o: cagrilar.append(bot) or "ok", tur_sayisi=1,
+             _cagir=_sirali_cagir([[{"message": _m("merhaba")},
+                                    {"update_id": 20, "message": _m("merhaba")}]]),
+             gonder=lambda t, r: True, _uyku=lambda s: None)
+    assert cagrilar == ["sef"]
+    from meridian import store
+    assert store.read_json("telegram_ofset.json", {}).get("ofset") == 21
+    assert any(e.get("event") == "telegram_isle_hatasi" for e in obs.recent(50))
+
+
+def test_dongu_ofset_yazilamazsa_bellekte_ilerler_ve_dongu_surer(sandbox_state, monkeypatch):
+    _sirlar(monkeypatch)
+
+    def yazamaz(ad, obj):
+        raise OSError("salt-okur dosya sistemi")
+
+    monkeypatch.setattr(td.store, "write_json", yazamaz)
+    cagrilar, ofsetler = [], []
+    td.dongu(bota_sor=lambda bot, m, k, o: cagrilar.append(bot) or "ok", tur_sayisi=2,
+             _cagir=_sirali_cagir([[{"update_id": 30, "message": _m("merhaba")}], []], ofsetler),
+             gonder=lambda t, r: True, _uyku=lambda s: None)
+    assert cagrilar == ["sef"] and ofsetler == [0, 31]
+    olay = [e for e in obs.recent(50) if e.get("event") == "telegram_ofset_yazim_hatasi"]
+    assert olay and olay[-1].get("sinif") == "OSError"
+
+
+def test_dongu_ofset_islemeden_once_kalici(sandbox_state, monkeypatch):
+    # En-çok-bir-kez: ofset güncelleme İŞLENMEDEN önce diske iner — bot çağrısı sürerken süreç
+    # ölürse (dağıtım restart'ı, OOM) aynı mesaj yeniden oynatılıp ikinci kez cevaplanmaz.
+    _sirlar(monkeypatch)
+    from meridian import store
+    gorulen = []
+    td.dongu(bota_sor=lambda *a: gorulen.append(store.read_json("telegram_ofset.json", {}).get("ofset"))
+             or "ok", tur_sayisi=1, _cagir=_sirali_cagir([[{"update_id": 40, "message": _m("merhaba")}]]),
+             gonder=lambda t, r: True, _uyku=lambda s: None)
+    assert gorulen == [41]
 
 
 def test_yanitla_reply_ve_scrub(monkeypatch):
