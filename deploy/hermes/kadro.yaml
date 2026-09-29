@@ -1,0 +1,219 @@
+# deploy/hermes/kadro.yaml — konuşan bot filosu KADRO LİSTESİ (TEK KAYNAK, spec 2026-09-29 §3.1).
+# Okuyucu: meridian/kadro.py (Telegram yönlendirmesi; ileride pano seçicisi, bot sunucusu, filo MCP).
+# Çivi: tests/test_kadro_v591.py. `aktif` satırlar deploy/hermes/profiles/* ile birebir.
+botlar:
+  # ---- canlı (zamanlı raporu olan üç bot) ----
+  - ad: sef
+    rol: "Konuştuğun tek yüzey; diğer botların çıktısını tek brifinge indirir"
+    dalga: canli
+    durum: aktif
+    araclar: [pano_ozeti, alarm_oku, gunluk_ara, kart_oku, hafiza_ara, oneri_yaz, is_iste, bot_hafizasi_ara]
+    zamanli_is: meridian-brifing
+    imza: "🧭 Meridian brifing"
+    hafiza: hepsi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: bekci
+    rol: "Sessizce bozulanı bulur ve kışkırtır"
+    dalga: canli
+    durum: aktif
+    araclar: [pano_ozeti, alarm_oku, olay_sorgu, gunluk_ara, is_iste]
+    zamanli_is: meridian-bekci
+    imza: "🔭 Meridian bekçi"
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: karne
+    rol: "Deney goal.yaml'a karşı kazanıyor mu sorusunu cevaplar"
+    dalga: canli
+    durum: aktif
+    araclar: [pano_ozeti, pozisyon_oku, plan_oku, kart_oku, meridian_selfreview, is_iste]
+    zamanli_is: meridian-karne
+    imza: "📊 Meridian karne"
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  # ---- dalga 1 (sırada — profil taşımaz) ----
+  - ad: kod
+    rol: "Bu kod/karar neden böyle"
+    dalga: "1"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: karar
+    rol: "Sende bekleyen her şey + yaşları"
+    dalga: "1"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: ayna
+    rol: "Botların/skill'lerin kendi sicili — kalibrasyon"
+    dalga: "1"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: olay
+    rol: "Olayın zaman çizgisi ve kapanış takibi"
+    dalga: "1"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  # ---- dalga 2 (sırada — profil taşımaz) ----
+  - ad: kacan
+    rol: "Ne olmadı ve neye mal oldu"
+    dalga: "2"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: veri
+    rol: "Dış dünya (fiyat/broker/takvim) sağlam mı"
+    dalga: "2"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: butce
+    rol: "Kota, harcama, israf"
+    dalga: "2"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: yol
+    rol: "İş takibi: yakala · önceliklendir · öldür"
+    dalga: "2"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: nobet
+    rol: "Alarmın İLK ayrıştırması (sonrası @olay'da)"
+    dalga: "2"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: denetci
+    rol: "Neyi iddia ediyoruz, hâlâ doğru mu"
+    dalga: "2"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  # ---- dalga 3 (sırada — bu yapımda değil) ----
+  - ad: civici
+    rol: "Yanlış gideni bir daha imkânsız kılan kuralı önerir"
+    dalga: "3"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: devir
+    rol: "Oturumlar ve Mac↔A1 arası süreklilik"
+    dalga: "3"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: derleyici
+    rol: "Tekrarlanan prosedürü skill'e ya da koda çevirmeyi önerir"
+    dalga: "3"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: olcum
+    rol: "Tipli ölçüm API'si ve eksik enstrümantasyon avcısı"
+    dalga: "3"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: tasarimci
+    rol: "Parametre değil yapısal öneri kanalı"
+    dalga: "3"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: yabanci
+    rol: "Panoya ilk kez gören biri gibi bakar"
+    dalga: "3"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  - ad: piyasa
+    rol: "Rejim dedektörünün göremediği makro bağlam"
+    dalga: "3"
+    durum: sirada
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
+  # ---- kilitli (EDG-2026-058) ----
+  - ad: hipotez
+    rol: "Öğrenme motorunu besler (ret örüntüleri + arama uzayı)"
+    dalga: kilitli
+    durum: kilitli
+    araclar: []
+    zamanli_is: null
+    imza: null
+    hafiza: kendi
+    gunluk_tavan: null
+    gunluk_tavan_neden: "Parça 0 (g) günlük çağrı ölçümü bekliyor — uydurma yasağı"
