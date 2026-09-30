@@ -69,6 +69,13 @@
 ---
 
 ## Rol-1 canlı kontrol listesi (G3c — ajan DEĞİL; sırası bağlayıcı)
+> **2026-09-30 güncelleme (Task 2 hükümleri + görev incelemesi):** Hindsight kiracı credential drop-in'i (`LoadCredential=HINDSIGHT_API_TENANT_API_KEY:…`)
+> Task 2'den ÇIKARILDI → **G3b sır dilimi** (API_SERVER_KEY + profil `.env` rotasyon satırları + bu drop-in + `sir_rotasyon.sh`
+> `_kredensiyeller`/`_sir_birimleri`/`_BIRIM_SIRASI` "yalnız aktifse yeniden başlat" semantiği, v447 P6/P6b, v601 erteleme çivisi) — G3b, G3c'den
+> ÖNCE. G3b yoksa 4. adımda `bot_hafizasi_ara` 'credential yok' döner (beklenen). Ek ölçümler: kök dışı yazım `~/.cache` VE `~/.local/state/hermes`;
+> durdurmada `Result`/`ActiveState` (SIGKILL sonrası `failed`); başlatma sınırı (kalıcı bozuk geçit `failed`e düşüyor mu); `WorkingDirectory=/` altında
+> Hermes bağlam dosyası okuması. **Etkinleştirme ön koşulu:** `deploy/oracle-a1/kod_tazelik.sh` ExecStart'ında `$KOK`/`uv` olmayan birimi ATLIYOR →
+> botlar birimi etkinleşince MCP kodunun bayatlaması hiçbir kapıda görünmez; `etkin_birimler` değişikliğinden önce kapsama alınır.
 1. Sır: `API_SERVER_KEY` (≥16 karakter) kasaya + `deploy/sir_envanteri.yaml` `vault_kv` (emsal `grafana_admin_parola` commit 5004544d) + `python ops/vault_politika_uret.py --uygula` + v491/v485 — AYRI dilim (Task 4 adayı; sır dosyaları sınıflandırıcıda engellenebilir → operatör).
 2. `.env` tohumlama: `~/.hermes-botlar/.env` (`API_SERVER_KEY`), `~/.hermes-botlar/profiles/<ad>/.env` (`BOT_KEY_<AD>`, `HINDSIGHT_API_KEY`) — 0600 ubuntu; rotasyon aracının `_kopyalar()` tablosuna yeni satırlar + `deploy/sir_envanteri.yaml` `rotasyon_kopyalari` + v447 `KOPYA_SAYISI` + v520/v491 pinleri (AYRI dilim). İlk değer operatör/rotasyon aracıyla; Rol-1 sır DEĞERİ görmez/yazmaz.
 3. site.yml (A0) → birim /etc'de, dizinler + profil dosyaları kökte; SONRA dagit (aksi [1c] durdurur).
