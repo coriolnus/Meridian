@@ -109,6 +109,8 @@ UZUN_OMURLU_BIRIMLER = {
     "meridian-node-exporter.service",
     "meridian-prometheus.service",
     "meridian-grafana.service",
+    # Konuşan filo Parça 1b G3 (2026-09-30): bot ağ geçidi — rol kopyalar, etkin ETMEZ, asla başlatmaz
+    "meridian-botlar.service",
 }
 SYSTEMD_MODUL_ANAHTARLARI = (
     "systemd",

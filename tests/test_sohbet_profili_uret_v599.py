@@ -289,10 +289,9 @@ def test_mcp_env_credential_yolu_birim_adindan_turer(bot):
     assert env[secrets.CREDENTIAL_DIZIN_ENV] == f"/run/credentials/{u.BOT_BIRIMI}"
 
 
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason="Task 2 birimi")
 def test_credential_yolunun_birimi_depoda_var():
-    # Yolun adını verdiği birim depoda olmalı; Task 2 birimi yazınca bu çivi XPASS olur ve xfail kaldırılır.
-    # `raises=AssertionError`: sabit YOKSA (AttributeError) bu gerçek kırmızıdır, beklenen başarısızlık değil.
+    # Yolun adını verdiği birim depoda olmalı (G3 Task 2 ile geldi; birimin yönergeleri ve üreteç sabitleriyle
+    # eşitliği tests/test_bot_agi_gecidi_v601.py'de).
     u = _ur()
     assert (KOK / "deploy/oracle-a1" / u.BOT_BIRIMI).is_file()
 
@@ -398,6 +397,28 @@ def test_kok_profil_sohbet_zaman_asimi():
     u, k = _ur(), _kok_cfg()
     assert k["providers"]["custom"]["request_timeout_seconds"] == u.SOHBET_ISTEK_ZAMAN_ASIMI_SN
     assert k["agent"]["api_max_retries"] == u.SOHBET_API_DENEME
+
+
+def _yaprak(cfg: dict, yol: tuple[str, ...]):
+    for parca in yol:
+        cfg = cfg[parca]
+    return cfg
+
+
+@pytest.mark.parametrize("goreli", [KOK_CONFIG, *(f"deploy/hermes/sohbet/profiles/{b.ad}/config.yaml"
+                                                  for b in _aktifler())])
+def test_sohbet_butcesinin_her_yolu_uretec_sabitiyle(goreli):
+    # Task 1 yeniden inceleme (Minor): yukarıdaki çiviler yalnız `custom` zaman aşımını ve deneme sayısını ölçüyordu;
+    # `openrouter` (geri dönüş evi) değeri çivisizdi. Bütçenin HER yolu, yazıldığı her config'te (kök + sohbet
+    # profilleri), üretecin ADLI sabitiyle — bütçe sözlüğü boşalsa ya da bir yolu düşse döngü kör kalmasın diye
+    # üç yolun varlığı da ölçülür.
+    u = _ur()
+    cfg = yaml.safe_load((KOK / goreli).read_text(encoding="utf-8"))
+    assert {("agent", "api_max_retries"), ("providers", "custom", "request_timeout_seconds"),
+            ("providers", "openrouter", "request_timeout_seconds")} <= set(u.SOHBET_BUTCESI)
+    for yol, deger in u.SOHBET_BUTCESI.items():
+        sabit = u.SOHBET_API_DENEME if yol[-1] == "api_max_retries" else u.SOHBET_ISTEK_ZAMAN_ASIMI_SN
+        assert deger == sabit and _yaprak(cfg, yol) == sabit, ".".join(yol)
 
 
 def test_kok_soul_yalniz_yonlendirir():

@@ -31,6 +31,31 @@
     - { ad: SOUL.md, mode: "0644" }
     - { ad: config.yaml, mode: "0600" }
 
+# BOT AĞ GEÇİDİ KÖKÜ (konuşan filo Parça 1b G3, 2026-09-30). `meridian-botlar.service`in Hermes köküne kök (varsayılan)
+# profil ve sohbet profillerinin ÜRETİLMİŞ dosyaları gider (üreteç `ops/sohbet_profili_uret.py`, depo aynası
+# `deploy/hermes/sohbet/`); liste `sohbet_dosyalari`, eşitliği üretecin çıktısıyla v601 ölçer.
+# RAPOR PROFİLLERİNDEN FARKI BİLİNÇLİ: rapor profilleri aşağıda yalnız RAPORLANIR (kurulum `hermes profile install`,
+# yeni ajan kimliği operatör kararı). Sohbet profilleri kurulum değil ÜRETİLMİŞ yapılandırmadır ve bu kopya bir
+# kimlik AÇMAZ: birim etkin değildir ve anahtarlar rolün dışındadır — kök ile profillerin anahtar dosyalarını
+# rotasyon aracı besler, bu görev onların adını bile taşımaz. Kimliği açan adım Rol-1'in test-ateşlemesi ve ayrı
+# etkinleştirme değişikliğidir (birim başlığı).
+# MOD 0600 (SOUL dahil): kök 0700 ve tek okuyucu birimin kendisi. `backup: true`: Hermes canlıda bu dosyalara
+# yazabilir (üstteki görevle aynı gerekçe). RESTART YOK — yürürlük ağ geçidinin yeniden başlatılmasıyla (bakım
+# penceresinin işi; birim `birim_adaylari`nda değil, Rol-1 elle).
+# `dest` SONDAKİ `/` İLE BİTER (telemetri görevi emsali, `birimler.yml`): hedef dizin YOKSA copy modülü onu
+# `directory_mode` ile yaratır ve check kipinde "yaratılacak" der; düz dosya hedefi taze A1'in ilk `--check`inde
+# (bot ağ geçidi kökü henüz yokken) "Destination directory does not exist" ile DÜŞERDİ.
+- name: Bot ağ geçidi kökü ve sohbet profilleri (üretilmiş dosyalar; restart YOK)
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../hermes/sohbet/{{ item }}"
+    dest: "{{ (sohbet_kok_dizini ~ '/' ~ item) | dirname }}/"
+    owner: "{{ meridian_kullanici }}"
+    group: "{{ meridian_kullanici }}"
+    mode: "0600"
+    directory_mode: "0700"
+    backup: true
+  loop: "{{ sohbet_dosyalari }}"
+
 - name: Hermes ikilisi aranıyor (meridian/hermes.py::_hermes_bin sırası)
   ansible.builtin.stat:
     path: "{{ item }}"
