@@ -156,16 +156,10 @@ def test_hepsi_kosulu_bilinen_ada_bagli():
 # 3) tools/call — izin kontrolü ÖNCE, araç KOŞMAZ
 # =================================================================================================
 def test_izinli_olmayan_arac_cagrisi_reddedilir_ve_kosmaz(sandbox_state, monkeypatch):
+    # Vekil getter'ın `TOOLS` kaydına konur: iki kip de (bot yok = yalnız getter kaydı, bot = tam kayıt)
+    # getter'ı çağrı anında oradan okur, yani aynı vekil iki kipte de görünür.
     kosuldu: list = []
-    gercek_kayit = ms.arac_kaydi
-
-    def kayit():
-        k = gercek_kayit()
-        k["meridian_regime"] = {**k["meridian_regime"],
-                                "cagir": lambda a, b=None: kosuldu.append(1) or "x"}
-        return k
-
-    monkeypatch.setattr(ms, "arac_kaydi", kayit)
+    monkeypatch.setitem(ms._BY_NAME["meridian_regime"], "fn", lambda a: kosuldu.append(1) or {})
     r = _cagri("bekci", "meridian_regime")["result"]
     assert r["isError"] is True and "izinli değil" in r["content"][0]["text"] and kosuldu == []
     # pozitif kontrol: aynı vekil izinli olduğu kipte (bot yok) GERÇEKTEN koşar
@@ -173,10 +167,25 @@ def test_izinli_olmayan_arac_cagrisi_reddedilir_ve_kosmaz(sandbox_state, monkeyp
     assert r2["isError"] is False and kosuldu == [1]
 
 
-def test_bot_yokken_kayitli_yazan_arac_cagrilamaz(sandbox_state):
+def test_bot_yokken_yazan_arac_kayitta_yok_ve_cagrilamaz(sandbox_state):
+    """`--bot`suz kip sohbet araçlarını KAYDA BİLE almaz (Tur 2: `sohbet` ithal edilmez) — yazan araç
+    bugün G1 öncesindeki gibi "bilinmeyen araç" alır ve deftere satır düşmez."""
     store.append_jsonl("trade_plans.jsonl", {"id": "P-2026-09-30-MU", "ticker": "MU",
                                              "date": "2026-09-30", "gate_verdict": "REVIEW"})
-    r = _cagri(None, "oneri_yaz", {"tur": "not", "gerekce": "deneme"})["result"]
+    yanit = _cagri(None, "oneri_yaz", {"tur": "not", "gerekce": "deneme"})
+    assert "result" not in yanit and yanit["error"]["code"] == -32602
+    assert _sohbet_onerileri() == []
+
+
+def test_handle_tam_kayitla_izin_kumesi_verilmezse_yine_alti_getter(sandbox_state):
+    """Savunma derinliği: `_handle`e TAM kayıt verilip izin kümesi verilmezse bot yok sayılır ve
+    yalnız altı getter izinlidir — yazan araç listelenmez, koşmaz."""
+    kayit = ms.arac_kaydi()
+    liste = ms._handle({"jsonrpc": "2.0", "id": 1, "method": "tools/list"}, kayit)
+    assert sorted(t["name"] for t in liste["result"]["tools"]) == _ALTI_GETTER
+    r = ms._handle({"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+                    "params": {"name": "oneri_yaz", "arguments": {"tur": "not", "gerekce": "g"}}},
+                   kayit)["result"]
     assert r["isError"] is True and "izinli değil" in r["content"][0]["text"]
     assert _sohbet_onerileri() == []
 
@@ -328,3 +337,89 @@ def test_main_gecerli_botu_ve_bot_yoklugunu_serve_e_iletir(monkeypatch):
     monkeypatch.setattr(ms, "serve", lambda stdin=None, stdout=None, bot=None: goruldu.append(bot))
     assert ms.main(["--bot", "bekci"]) == 0 and ms.main([]) == 0
     assert goruldu == ["bekci", None]
+
+
+# =================================================================================================
+# 7) TUR 2 — stdio protokol akışı yalnız JSON-RPC (I-1) · `--bot`suz yol sohbet/kadro ithal etmez (M-1)
+# =================================================================================================
+def _protokol_satirlari(out: str) -> list[dict]:
+    """Gerçek stdout'taki HER boş olmayan satır geçerli bir JSON-RPC 2.0 mesajı olmalı."""
+    satirlar = [s for s in out.splitlines() if s.strip()]
+    ayrik = [json.loads(s) for s in satirlar]
+    assert all(isinstance(m, dict) and m.get("jsonrpc") == "2.0" for m in ayrik), satirlar
+    return ayrik
+
+
+def test_oneri_yaz_obs_satiri_stdio_protokol_akisina_karismaz(sandbox_state, capsys):
+    """`obs._emit` olayı stdout'a basar; `serve` gerçek stdout'u protokol akışı olarak kullanırken
+    başarılı `oneri_yaz`ın `sohbet_oneri_yazildi` satırı o akışa KARIŞMAMALI (stderr'e gider)."""
+    giris = io.StringIO("".join(json.dumps(m) + "\n" for m in (
+        {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+         "params": {"name": "oneri_yaz", "arguments": {"tur": "not", "gerekce": "deneme"}}},
+        {"jsonrpc": "2.0", "id": 2, "method": "ping"})))
+    ms.serve(giris, None, bot="sef")
+    out, err = capsys.readouterr()
+    yanitlar = _protokol_satirlari(out)
+    assert [y["id"] for y in yanitlar] == [1, 2] and yanitlar[0]["result"]["isError"] is False
+    # pozitif kontrol: olay GERÇEKTEN basıldı — yalnız doğru akışa
+    assert len(_sohbet_onerileri()) == 1
+    assert "sohbet_oneri_yazildi" in err and "sohbet_oneri_yazildi" not in out
+
+
+def test_getter_obs_satiri_stdio_protokol_akisina_karismaz(sandbox_state, capsys, monkeypatch):
+    """Aynı sınıf getter'larda da var (`analytics` yolları `obs.warn` çağırabilir)."""
+    from meridian import obs
+    monkeypatch.setitem(ms._BY_NAME["meridian_regime"], "fn",
+                        lambda a: obs.warn("mcp_getter_civi_olayi", detail="v597") and {"ok": 1})
+    giris = io.StringIO(json.dumps({"jsonrpc": "2.0", "id": 4, "method": "tools/call",
+                                    "params": {"name": "meridian_regime", "arguments": {}}}) + "\n")
+    ms.serve(giris, None)
+    out, err = capsys.readouterr()
+    yanitlar = _protokol_satirlari(out)
+    assert len(yanitlar) == 1 and yanitlar[0]["result"]["isError"] is False
+    assert "mcp_getter_civi_olayi" in err and "mcp_getter_civi_olayi" not in out
+
+
+def _taze_sunucu_ithal_kilitli(monkeypatch):
+    """`meridian.sohbet` ve `meridian.kadro` İTHALİ PATLARKEN `mcp_server`ı TAZE içe aktarır.
+
+    Paket özniteliği silinir (yoksa `from . import sohbet` modüle hiç sormadan özniteliği döndürür) ve
+    `sys.modules` girdisi `None` yapılır (ithal `ImportError` verir). Asıl modül nesnesine dokunulmaz:
+    `meridian.mcp_server` girdisi ve özniteliği test sonunda monkeypatch ile geri gelir."""
+    import importlib
+    import sys
+
+    import meridian
+    for ad in ("sohbet", "kadro"):
+        monkeypatch.delattr(meridian, ad, raising=False)
+        monkeypatch.setitem(sys.modules, f"meridian.{ad}", None)
+    monkeypatch.delitem(sys.modules, "meridian.mcp_server", raising=False)
+    monkeypatch.delattr(meridian, "mcp_server", raising=False)
+    return importlib.import_module("meridian.mcp_server")
+
+
+def test_botsuz_yol_sohbet_ve_kadro_ithal_etmeden_calisir(sandbox_state, monkeypatch):
+    """Varsayılan (`--bot`suz, altı getter) yol `sohbet`/`kadro` arızasıyla (bozuk `SOHBET_*` ortamı,
+    ithal hatası) ÖLMEMELİ — G1 öncesinde bu modüllere hiç bağlı değildi."""
+    taze = _taze_sunucu_ithal_kilitli(monkeypatch)
+    assert taze is not ms
+    giris = io.StringIO("".join(json.dumps(m) + "\n" for m in (
+        {"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
+        {"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+         "params": {"name": "meridian_regime", "arguments": {}}},
+        {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
+         "params": {"name": "oneri_yaz", "arguments": {"tur": "not", "gerekce": "g"}}})))
+    cikis = io.StringIO()
+    taze.serve(giris, cikis)
+    yanitlar = [json.loads(s) for s in cikis.getvalue().splitlines() if s.strip()]
+    assert sorted(t["name"] for t in yanitlar[0]["result"]["tools"]) == _ALTI_GETTER
+    assert yanitlar[1]["result"]["isError"] is False
+    assert yanitlar[2]["error"]["code"] == -32602
+    assert taze.izinli_araclar(None) == [t["name"] for t in taze.TOOLS]
+    legacy = taze._handle({"jsonrpc": "2.0", "id": 9, "method": "tools/list"})
+    assert sorted(t["name"] for t in legacy["result"]["tools"]) == _ALTI_GETTER
+    # pozitif kontrol: kilit GERÇEKTEN kilitli — bot kipi ve tam kayıt ithali patlatır (fail-closed)
+    with pytest.raises(ImportError):
+        taze.arac_kaydi()
+    with pytest.raises(ImportError):
+        taze.serve(io.StringIO(""), io.StringIO(), bot="sef")

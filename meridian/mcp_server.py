@@ -8,7 +8,10 @@ tools-call metotları desteklenir, bozuk satır parse-error alır.
 
 İKİ KİP (Parça 1b G1, spec 2026-09-29 §3.2):
   * `--bot` YOK — geri uyum (varsayılan Hermes profili; K-1 ile `enabled: false`). Bugünkü altı
-    getter, başka hiçbir şey: yazan araç ne listelenir ne koşar.
+    getter, başka hiçbir şey: yazan araç ne listelenir ne koşar; kayıt yalnız getter'lardır ve
+    `sohbet`/`kadro` İTHAL EDİLMEZ (ithaller fonksiyon içinde, yalnız `--bot` yolunda) — bu yol G1
+    öncesinde o modüllere bağlı değildi, onların arızasıyla (bozuk `SOHBET_*` ortamı, ithal hatası)
+    ölmesi geriye dönük bir kırılma olurdu (Tur 2, inceleme M-1).
   * `--bot <ad>` — ad kadroda AKTİF bir bot olmalı. Yazım hatası / sırada / kilitli bot → süreç
     AÇILMAZ (stderr'e ad + neden, çıkış 2): sessizce altı getter'la açılmak botu YANLIŞ araç
     kümesiyle konuştururdu. Sunulan küme = o botun `araclar`ı ∩ kayıt, kadro sırasıyla;
@@ -36,16 +39,24 @@ kaydına düşer. Her araç savunmacıdır: getter istisnası ve sohbet aracın�
 arızası metne döner (isError), döngü ölmez. Öngörü saflığı: `meridian_candidate_context` sonuç
 (r_multiple) DÖNDÜRMEZ.
 
+PROTOKOL AKIŞI YALNIZ JSON-RPC (Tur 2, inceleme I-1). `obs._emit` her olayı `sys.stdout`a basar; MCP
+stdio taşımasında stdout protokol kanalıdır ve JSON-RPC olmayan bir satır istemcide ayrıştırma
+hatasıdır. `serve` yanıt akışını (`stdout` ya da o anki `sys.stdout`) EN BAŞTA yakalar, sonra
+kurulumu ve döngüyü `contextlib.redirect_stdout(sys.stderr)` altında koşar: araç gövdelerinin
+(getter'lar dahil) her `print`i ve `obs` satırı stderr'e gider, yanıtlar yakalanmış akışa. Bedel:
+`serve` süresince süreç içi `sys.stdout` stderr'dir — tek iplikli stdio sunucusunda başka okuyucusu yok.
+
 OKUR: state/ (store/analytics üzerinden: regime.json, kalibrasyon artefaktları, trade_plans.jsonl,
 cf_open.json, self_review.json), `deploy/hermes/kadro.yaml` (`kadro.kadro_yukle`) ve sohbet
 araçlarının okuduğu her şey (`sohbet` modül başlığı)."""
 from __future__ import annotations
 import argparse
+import contextlib
 import json
 import sys
 
-from . import store, analytics, sohbet
-from . import kadro as _kadro
+from . import store, analytics
+# `sohbet` ve `kadro` BURADA İTHAL EDİLMEZ — yalnız `--bot` yolunun fonksiyonlarında (modül başlığı, İKİ KİP).
 
 
 def _regime(_args: dict) -> dict:
@@ -170,6 +181,7 @@ def _sohbet_cagir(ad: str):
     """Sohbet aracını `sohbet._arac_kos` ile koşturur — çit/scrub/tavan/şema KOPYALANMAZ. Kayıt
     `sohbet.ARACLAR`dan çağrı anında okunur. Başarısız dönüş (şema dışı ya da atıfsız) `_AracBasarisiz`."""
     def cagir(args, baglam=None):
+        from . import sohbet                         # yalnız `--bot` yolu (modül başlığı, İKİ KİP)
         metin, sema_disi, atif, _kesit = sohbet._arac_kos(ad, args, baglam if baglam is not None
                                                           else {}, sohbet.ARACLAR)
         if sema_disi or not atif:
@@ -178,14 +190,21 @@ def _sohbet_cagir(ad: str):
     return cagir
 
 
+def _getter_kaydi() -> dict[str, dict]:
+    """Yalnız altı getter'ın kaydı — `--bot`suz kipin TÜM kaydı. `sohbet`/`kadro` ithal etmez."""
+    return {t["name"]: {"name": t["name"], "description": t["description"],
+                        "inputSchema": t["inputSchema"], "cagir": _getter_cagir(t["name"])}
+            for t in TOOLS}
+
+
 def arac_kaydi() -> dict[str, dict]:
     """ad → `{"name", "description", "inputSchema", "cagir"}`; `cagir(args, baglam) -> str`.
 
     TEK KAYNAK: altı getter `TOOLS`tan, sohbet araçları `sohbet.ARACLAR`dan (şema/açıklama AYNI
-    nesne). Önbellek YOK — kayıt her `serve` açılışında kaynaktan türer, bayat kopya olamaz."""
-    kayit = {t["name"]: {"name": t["name"], "description": t["description"],
-                         "inputSchema": t["inputSchema"], "cagir": _getter_cagir(t["name"])}
-             for t in TOOLS}
+    nesne). Önbellek YOK — kayıt her `serve` açılışında kaynaktan türer, bayat kopya olamaz.
+    Tam kayıt yalnız `--bot` kipinin kaydıdır; `sohbet` ithali burada, ilk kullanımda."""
+    from . import sohbet
+    kayit = _getter_kaydi()
     for ad, a in sohbet.ARACLAR.items():
         if ad in kayit:
             raise ValueError(f"araç adı çakışması: {ad!r} hem getter hem sohbet aracı — kayıt "
@@ -200,6 +219,7 @@ def _bot_coz(bot: str | None, kadro=None):
     → `BotAcilamaz` (neden adıyla)."""
     if bot is None:
         return None
+    from . import kadro as _kadro                    # yalnız `--bot` yolu (modül başlığı, İKİ KİP)
     b = _kadro.bot_bul(bot, kadro)
     if b is None:
         raise BotAcilamaz(f"--bot {bot!r}: kadroda böyle bir bot yok ({_kadro.KADRO_YOLU.name})")
@@ -207,6 +227,11 @@ def _bot_coz(bot: str | None, kadro=None):
         raise BotAcilamaz(f"--bot {b.ad!r}: kadroda durum={b.durum!r} — yalnız 'aktif' bot araç "
                           "sunucusu açabilir")
     return b
+
+
+def _kip_kaydi(b) -> dict[str, dict]:
+    """Kipin kaydı: bot yoksa yalnız getter'lar (`sohbet` ithal edilmez), bot varsa tam kayıt."""
+    return arac_kaydi() if b is not None else _getter_kaydi()
 
 
 def _izinli(b, kayit: dict) -> list[str]:
@@ -220,14 +245,15 @@ def izinli_araclar(bot: str | None, kadro=None) -> list[str]:
     """Botun göreceği araç adları (kadro sırasıyla). `bot` None → bugünkü altı getter; aksi hâlde
     botun kadro satırındaki araç listesi ∩ kayıt, `YALNIZ_HEPSI_HAFIZALI` yalnız `hafiza == "hepsi"`
     bota. Kayıtta olmayan kadro adı atlanır. Aktif olmayan / bilinmeyen bot → `BotAcilamaz`."""
-    return _izinli(_bot_coz(bot, kadro), arac_kaydi())
+    b = _bot_coz(bot, kadro)
+    return _izinli(b, _kip_kaydi(b))
 
 
 def _handle(msg: dict, kayit: dict | None = None, izinli: list[str] | None = None,
             oturum: str = "mcp") -> dict | None:
     """Bir JSON-RPC isteğini işle. Bildirim (id yok) → None (yanıt yazılmaz). `kayit`/`izinli`
     verilmezse bugünkü kip (altı getter); `serve` bunları bot başına bir kez hesaplayıp geçirir."""
-    kayit = arac_kaydi() if kayit is None else kayit
+    kayit = _getter_kaydi() if kayit is None else kayit
     izinli = _izinli(None, kayit) if izinli is None else izinli
     mid = msg.get("id")
     method = msg.get("method")
@@ -278,28 +304,32 @@ def serve(stdin=None, stdout=None, bot: str | None = None) -> None:
     """Satır-ayrımlı JSON-RPC döngüsü. EOF'ta çıkar. Bozuk satır → parse error (id yoksa sessiz geç).
 
     `bot` verilirse kadro çözümü ve izin kümesi TEK SATIR OKUNMADAN hesaplanır: aktif olmayan bot
-    `BotAcilamaz` ile döngüye hiç girmez. Oturum bağlamı kadronun kanonik adıyla `mcp:<ad>`dır."""
-    b = _bot_coz(bot)
-    kayit = arac_kaydi()
-    izinli = _izinli(b, kayit)
-    oturum = f"mcp:{b.ad}" if b is not None else "mcp"
+    `BotAcilamaz` ile döngüye hiç girmez. Oturum bağlamı kadronun kanonik adıyla `mcp:<ad>`dır.
+
+    Yanıt akışı `outp` yönlendirmeden ÖNCE yakalanır; kurulum ve döngü `sys.stdout` stderr'e
+    yönlenmişken koşar — araç gövdesinin `obs` satırı protokol akışına karışmaz (modül başlığı)."""
     inp = stdin or sys.stdin
-    outp = stdout or sys.stdout
-    for line in inp:
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            msg = json.loads(line)
-        except json.JSONDecodeError:  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
-            outp.write(json.dumps({"jsonrpc": "2.0", "id": None,
-                                   "error": {"code": -32700, "message": "parse error"}}) + "\n")
-            outp.flush()
-            continue
-        resp = _handle(msg, kayit, izinli, oturum)
-        if resp is not None:
-            outp.write(json.dumps(resp, ensure_ascii=False) + "\n")
-            outp.flush()
+    outp = stdout or sys.stdout                      # PROTOKOL AKIŞI — yalnız JSON-RPC yanıtı yazılır
+    with contextlib.redirect_stdout(sys.stderr):
+        b = _bot_coz(bot)
+        kayit = _kip_kaydi(b)
+        izinli = _izinli(b, kayit)
+        oturum = f"mcp:{b.ad}" if b is not None else "mcp"
+        for line in inp:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                msg = json.loads(line)
+            except json.JSONDecodeError:  # sessiz-yutma: yardımcı G/Ç yolu; çağıran yokluğu zaten yedek değerle karşılıyor ve asıl okuma hatası store katmanında bir kez uyarılıyor
+                outp.write(json.dumps({"jsonrpc": "2.0", "id": None,
+                                       "error": {"code": -32700, "message": "parse error"}}) + "\n")
+                outp.flush()
+                continue
+            resp = _handle(msg, kayit, izinli, oturum)
+            if resp is not None:
+                outp.write(json.dumps(resp, ensure_ascii=False) + "\n")
+                outp.flush()
 
 
 def main(argv: list[str] | None = None) -> int:
