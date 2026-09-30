@@ -4068,3 +4068,25 @@ canlıyla aynı (ilk "FARKLI" ölçümüm süreç ikamesindeki stdin hatasıydı
   - **TSK-225 düzeltme**: EDG-085 pilotu canlıda AÇIK ama kayıt YALNIZ emir penceresinde yazılır — "seans açılınca dosya doğar" öncülüm yanlıştı.
   - **Araç tuzağı**: `gh run list --branch main --limit N` varsayılan sırada 09-13'ün eski kırmızı koşumunu en üste koyabiliyor — CI hükmü SHA ile okunur (memory).
   - **TSK-200** sayacı 13/40 (en erken ~10-20). Yeni kalemler: TSK-246/247/248 (üçü de aynı gün açılıp ana dala girdi).
+
+### 37. KONUŞAN BOT FİLOSU: TASARIM → PARÇA 0 DENEMESİ → ÇEKİRDEK (2026-09-29/30 gece, model Opus 5.5)
+- **Operatör isteği (09-29):** "botları aktif kullanamıyoruz; daha detaylı kullanım ve daha çok bot planlamıştık". Ölçüm: 3 bot yalnız tek yönlü
+  zamanlı rapor; Telegram botunu DİNLEYEN kod/süreç yok; pano sohbeti (TSK-012) 09-13'ten beri canlı ama hiç kullanılmamış; bot `memories/` boş.
+  Kararlar K1–K7 spec'te (`docs/superpowers/specs/2026-09-29-konusan-bot-filosu-design.md`): üç kanal (Telegram tek sohbet @ad/rapora yanıt, pano,
+  Claude uygulaması); bot okur/öneri yazar/rapor işi tetikler, ayar DEĞİŞTİRMEZ; her bot kendi Hermes profiliyle, komut yetkisi yapısal kapalı;
+  uzun hafıza (şef hepsini görür); hedef 21 bot, dalga 1–2 bu programda (TSK-061 'önce değer kanıtı' kapısı operatör kararıyla kalktı).
+- **Main'de (dağıtımsız, hepsi etkisiz):** kadro tek kaynak `deploy/hermes/kadro.yaml` (v591) · Telegram dinleyici çekirdeği (v592) ·
+  `bota_sor` + `is_iste` + `.path` (v593/v594) · araçsız-veri uyarısı + `HindsightHafiza` (v593/v596) · test ortam-sızıntı bekçisi (v595).
+- **VAKA — test ortam sızıntısı (f3d21402 tam suite 2 kırmızı):** `research/olcumler/edg091_r_paydasi/olc.py::kos` `os.environ["MERIDIAN_ROOT"]`i
+  kalıcı yazıyor, v479 süreç içi çağırınca xdist işçisi kirleniyor, v594 spawn çocukları silinmiş sahte kökü devralıyordu (tek başına ve dosya
+  `-n 4` YEŞİL). Kök yeniden üretimle kanıtlandı; conftest bekçisi (74dbc40c, TSK-255 ile toplama/oturum kapsamı). Ders: koşullu push komutu
+  kırmızı hükümden önce koşuldu (kod dağıtılmamıştı) — "yeşilse" komutu hüküm gelmeden verilmez.
+- **VAKA — Parça 0 (bekçi ikizi, A1):** (a) izin listesi yapısal GEÇTİ (26/26 kapalı, geçersiz ad fail-closed); (b) ÖLÇÜLEMEDİ — Hermes venv'inde
+  `mcp` paketi YOK → `meridian/mcp_server.py` araçları canlıda HİÇBİR Hermes koşumuna bağlanmamış (DEBUG'da yutuluyor; TSK-256). EN AĞIR BULGU:
+  araçsız bot sahte `meridian_tool` çağrısı + UYDURMA sonuç (`risk/state.json`, var olmayan) + gerçek veri gibi cevap üretti → `bota_sor`
+  deterministik uyarı katmanı (araç sayısı taşıyıcıdan, tur hizalı; model "kaynak" iddiasına güvenilmez). İlk teşhis hatam: v1 401'ini api_server
+  sandım, ajanın model çağrısıydı (profil `.env`i `BOT_KEY_<AD>` ikize kopyalanmamıştı).
+- **Sınıflandırıcı (gece):** operatör sohbette ssh/sudo/dağıtım yetkisi verdi; A1 profil ayarı yazımı, dagit kuru koşumu dahil dağıtım, istek dökümü
+  okuma engellendi — dolanılmadı. Dağıtım (canlı fark: `notify` yeniden düzenlemesi + etkisiz modüller + yorumlar) sabah operatörde.
+- **Operatörde:** K-1 (Hermes'e `mcp` — öneri: kur + varsayılan profilde `enabled: false`), dağıtım, Parça 1b taslak planı onayı
+  (`docs/superpowers/plans/2026-09-30-konusan-filo-parca1b-taslak.md`).
