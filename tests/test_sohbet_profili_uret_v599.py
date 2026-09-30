@@ -56,6 +56,22 @@ def test_komut_satiri_kontrol_sifir_doner():
     assert r.returncode == 0, r.stdout + r.stderr
 
 
+def test_ureteci_yuklemek_obs_ithal_etmez():
+    # Tur 3 ek (ölçülmüş sınıf: pytest-dışı koşum canlı yerel deftere yazar, 3 vaka): üreteç `--yaz`/`--kontrol` ile
+    # pytest DIŞINDA koşar; ithal zinciri `meridian.obs`a ulaşırsa bir sonraki değişiklik deftere yazabilir.
+    # ALT SÜREÇ ŞART: bu pytest oturumunda `meridian.obs` zaten ithal edilmiştir. Modül KAYNAKTAN yüklenir, `main`
+    # ÇAĞRILMAZ (ad `__main__` değil → dosya yazılmaz). İkinci değer pozitif kontroldür: zincir gerçekten yüklendi.
+    import os
+    kod = ("import sys\n"
+           "from ops.sasi_yukleyici import kaynaktan_yukle\n"
+           "kaynaktan_yukle('ops/sohbet_profili_uret.py', 'sohbet_profili_uret_obs_yoklugu')\n"
+           "print('meridian.obs' in sys.modules, 'meridian.bot_hafiza' in sys.modules)\n")
+    r = subprocess.run([sys.executable, "-c", kod], cwd=KOK, capture_output=True, text=True,
+                       env={**os.environ, "PYTHONPATH": str(KOK)})
+    assert r.returncode == 0, r.stderr[-2000:]
+    assert r.stdout.strip() == "False True", r.stdout
+
+
 def test_bayat_dosya_yakalanir(tmp_path):
     import shutil
     shutil.copytree(KOK / "deploy", tmp_path / "deploy")
@@ -100,6 +116,32 @@ def test_hafiza_saglayicisi_banka_ve_sirsiz(bot):
     h = json.loads((KOK / f"deploy/hermes/sohbet/profiles/{bot.ad}/hindsight/config.json").read_text(encoding="utf-8"))
     assert h["bank_id"] == f"bot-{bot.ad}" and h["memory_mode"] == "context" and h["mode"] == "local_external"
     assert "api_key" not in h
+
+
+def _hs(ad):
+    return json.loads((KOK / f"deploy/hermes/sohbet/profiles/{ad}/hindsight/config.json").read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("bot", _aktifler(), ids=lambda b: b.ad)
+def test_hafiza_otomatik_kayit_kapali_hatirlama_acik(bot):
+    # Dal sonu I-1 (Rol-1 seçenek A): Hermes'in otomatik kaydı sohbet dönüşünü `notify.scrub`'dan geçirmeden
+    # kalıcı, silinemez bankaya yazar (spec §3.4 "kayıt öncesi scrub"). Yazan tek taraf kanal katmanıdır
+    # (`bota_sor`, G4); hatırlama açık kalır — banka yalnız scrub'lı içerik taşır.
+    h = _hs(bot.ad)
+    assert h["auto_retain"] is False and h["auto_recall"] is True
+
+
+@pytest.mark.parametrize("bot", _aktifler(), ids=lambda b: b.ad)
+def test_hindsight_baglantisi_meridian_sabitleriyle_ayni(bot):
+    # Dal sonu I-2 (tek kaynak, v596 emsali): Hermes'in okuduğu banka ve bağlantı, kanal katmanının
+    # (`bot_hafiza`) yazdığı/okuduğu banka ve bağlantıyla AYNI olmalı — ayrışırsa `hatırla:` notu X'e yazılır,
+    # Hermes Y'yi okur ve iki özellik sessizce ölür. Banka öneki bot_hafiza'da sabit değil: yol eşitliğiyle bağlı.
+    from meridian import bot_hafiza, secrets
+    h = _hs(bot.ad)
+    assert h["api_url"] == secrets.HAFIZA_TABAN_URL
+    assert h["timeout"] == bot_hafiza.HAFIZA_ZAMAN_ASIMI_S
+    assert h["recall_budget"] == bot_hafiza.UNUT_RECALL_BUTCESI
+    assert bot_hafiza.HindsightHafiza()._banka_yolu(bot.ad) == f"{h['api_url']}{bot_hafiza.BANKA_KOKU}/{h['bank_id']}"
 
 
 @pytest.mark.parametrize("bot", _aktifler(), ids=lambda b: b.ad)

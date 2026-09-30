@@ -15,8 +15,12 @@ TEK KAYNAK:
   * Meridian MCP girdisi     → `deploy/hermes/config.yaml` içindeki mcp_servers → meridian girdisi
                                (`enabled` true olur, argümanlara `--bot <ad>` eklenir)
   * hangi bot, hangi araç    → `deploy/hermes/kadro.yaml` (`meridian.kadro`; yalnız `aktif` satırlar)
-  * sohbet farkları          → BU MODÜLÜN sabitleri (zaman aşımı, yeniden deneme, Hindsight ayarları, SOUL
-                               sohbet bölümü) — başka yerde yazılmaz.
+  * Hindsight bağlantısı     → kanal katmanının sabitleri: kök URL `meridian.secrets` (HAFIZA_TABAN_URL),
+                               zaman aşımı ve recall bütçesi `meridian.bot_hafiza` (spec §3.4 HINDSIGHT_*)
+                               — TÜRETİLİR; banka öneki `bot-<ad>` bot_hafiza'nın banka yoluyla v599
+                               ayrışma çivisinde bağlı (önek orada sabit değil)
+  * sohbet farkları          → BU MODÜLÜN sabitleri (model zaman aşımı, yeniden deneme, Hindsight kipi,
+                               SOUL sohbet bölümü) — başka yerde yazılmaz.
 
 KOMUT SATIRI SÖZLEŞMESİ (ops aracı sözleşmesi KOMUT SATIRIdır, `main()` değil):
 
@@ -40,8 +44,10 @@ koşum fark üretir ve `--kontrol` kapısı anlamsızlaşırdı.
 SIR YOK: hiçbir sır değeri okunmaz, yazılmaz, basılmaz. `hindsight/config.json`da anahtar alanı YOKTUR (değer
 G3 biriminin credential'ından `HINDSIGHT_API_KEY` ortamıyla gelir); profil `.env`i üretilmez.
 
-`meridian.obs`'A ULAŞMAZ: yalnız `meridian.kadro` ithal edilir (o da yalnız `meridian.config` sabitlerine
-dayanır); pytest dışı koşum canlı yerel deftere yazmaz.
+`meridian.obs`'A ULAŞMAZ: ithal edilenler `meridian.kadro`, `meridian.secrets`, `meridian.bot_hafiza` (+ onun
+`meridian.notify`u); modül düzeylerinde yalnız sabit ve `re.compile` var, `obs` yalnız `meridian.config`in
+fonksiyon gövdelerinde ve üreteç onları çağırmaz (`-X importtime` ile ölçüldü, 2026-09-30). Pytest dışı koşum
+canlı yerel deftere yazmaz; sır dosyası da OKUNMAZ (bu modüllerden yalnız sabitler okunur).
 
 OKUYUCU (Yasa 6): üretilmiş profiller Hermes çoklu ağ geçidinin profil evleridir (kuruluş G3'te); tazelik
 kapısı `--kontrol` ve `tests/test_sohbet_profili_uret_v599.py`dir.
@@ -63,7 +69,7 @@ REPO = pathlib.Path(__file__).resolve().parents[1]
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from meridian import kadro as kadro_mod  # noqa: E402  (kök sys.path'e eklendikten sonra)
+from meridian import bot_hafiza, kadro as kadro_mod, secrets  # noqa: E402  (kök sys.path'e eklendikten sonra)
 
 SOHBET_KOK = "deploy/hermes/sohbet/profiles"
 RAPOR_KOK = "deploy/hermes/profiles"
@@ -80,10 +86,20 @@ SOHBET_API_DENEME = 2
 #: Üretilmiş her dosyanın beyanı (YAML'da baş yorum, JSON'da `_uretildi` alanı).
 URETILDI = "ÜRETİLMİŞ — elle düzenlenmez; üreteç `ops/sohbet_profili_uret.py`"
 
-#: Parça 0 v3'te ÖLÇÜLEREK çalışan Hindsight anahtar kümesi. `memory_mode: context` → hafıza bağlam olarak
-#: gelir, modele hafıza ARACI açılmaz.
-HINDSIGHT_API_URL = "http://127.0.0.1:8888"
-HINDSIGHT_ZAMAN_ASIMI_SN = 10
+#: Hindsight anahtar kümesi Parça 0 v3'te ÖLÇÜLEREK çalıştı. `memory_mode: context` → hafıza bağlam olarak gelir,
+#: modele hafıza ARACI açılmaz. Bağlantı gerçekleri (kök URL, zaman aşımı, recall bütçesi) burada YAZILMAZ —
+#: `_hindsight` onları kanal katmanının sabitlerinden türetir (tek kaynak; dal sonu I-2).
+#:
+#: OTOMATİK KAYIT KAPALI (dal sonu I-1, Rol-1 seçenek A): Hermes'in `auto_retain`i sohbet dönüşünü
+#: `notify.scrub`'dan GEÇİRMEDEN kalıcı, silinemez bankaya yazar (spec §3.4 "kayıt öncesi scrub"; `unut`
+#: yumuşaktır) — operatörün mesajındaki bir jeton her sonraki turda recall ile dış modele geri giderdi. Sohbet
+#: dönüşünü hafızaya YAZAN TEK TARAF kanal katmanıdır (`bota_sor` → `bot_hafiza`, scrub'lı; G4). Hatırlama açık
+#: kalır: banka yalnız scrub'lı içerik taşır. BEDEL: G4'e kadar sohbet dönüşleri hafızaya hiç yazılmaz.
+#: `retain_*` anahtarları BIRAKILDI: yerel Hermes v0.18.2 kaynağında (plugins/memory/hindsight) otomatik kayıt
+#: kapalı + `context` kipte hiçbir yazım yolu onları kullanmaz ve recall süzgeci ayrı anahtardır (`recall_tags`);
+#: canlı v0.19.0 ÖLÇÜLMEDİ — bir yazım yolu varsa etiket/kaynak atfı korunmuş olur, yoksa zararsızdır.
+HINDSIGHT_OTOMATIK_KAYIT = False
+HINDSIGHT_OTOMATIK_HATIRLAMA = True
 
 #: Manifest `env_requires` — kapı anahtarının ADI ve `required` alanı rapor manifestinden gelir (aynı APISIX
 #: tüketicisi); AÇIKLAMA sohbet kipine özgüdür: rapor açıklaması rapor düşüş yolunu anlatır ve kurulu profilin
@@ -192,20 +208,32 @@ def _config(rapor_evi: pathlib.Path, bot: kadro_mod.Bot, kok_meridian: dict) -> 
     return _yaml_yaz(baslik, cfg)
 
 
+def _hindsight_zaman_asimi() -> int:
+    """`bot_hafiza.HAFIZA_ZAMAN_ASIMI_S` → Hermes eklentisinin tamsayı `timeout`u. Eklenti değeri `int()` ile
+    okur (yerel v0.18.2 `_parse_int_setting`): kesirli bir değer SESSİZCE kırpılırdı — o yüzden açık hata."""
+    deger = bot_hafiza.HAFIZA_ZAMAN_ASIMI_S
+    if isinstance(deger, bool) or not isinstance(deger, (int, float)) or not float(deger).is_integer():
+        raise ValueError(f"bot_hafiza.HAFIZA_ZAMAN_ASIMI_S={deger!r} tamsayı sn değil — Hermes Hindsight eklentisi "
+                         "zaman aşımını int()'e kırpar, sohbet profili kanal katmanından farklı süre kullanırdı")
+    return int(deger)
+
+
 def _hindsight(bot: kadro_mod.Bot) -> bytes:
     veri = {
         "_uretildi": URETILDI,
         "mode": "local_external",
-        "api_url": HINDSIGHT_API_URL,
+        # Kök URL (yolsuz): eklenti banka yolunu kendisi ekler, kanal katmanı da `bot_hafiza.BANKA_KOKU`yu.
+        "api_url": secrets.HAFIZA_TABAN_URL,
+        # Önek `bot_hafiza`nın banka yolunda (`HindsightHafiza._banka_yolu`) — eşitliği v599 çiviler.
         "bank_id": f"bot-{bot.ad}",
-        "recall_budget": "low",
+        "recall_budget": bot_hafiza.UNUT_RECALL_BUTCESI,
         "memory_mode": "context",
-        "auto_recall": True,
-        "auto_retain": True,
+        "auto_recall": HINDSIGHT_OTOMATIK_HATIRLAMA,
+        "auto_retain": HINDSIGHT_OTOMATIK_KAYIT,
         "retain_tags": f"bot:{bot.ad},kaynak:sohbet",
         "retain_source": bot.ad,
         "retain_async": False,
-        "timeout": HINDSIGHT_ZAMAN_ASIMI_SN,
+        "timeout": _hindsight_zaman_asimi(),
     }
     return (json.dumps(veri, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
 

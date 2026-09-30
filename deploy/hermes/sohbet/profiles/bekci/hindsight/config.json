@@ -6,7 +6,7 @@
   "recall_budget": "low",
   "memory_mode": "context",
   "auto_recall": true,
-  "auto_retain": true,
+  "auto_retain": false,
   "retain_tags": "bot:bekci,kaynak:sohbet",
   "retain_source": "bekci",
   "retain_async": false,
