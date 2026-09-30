@@ -172,5 +172,19 @@ def test_rapor_profillerine_dokunulmaz(tmp_path):
 
 ## Sonra (G3'e devreden açık ölçümler — bu planın kapsamı DIŞI)
 - Bot kökü `~/.hermes-botlar` (A1) + `deploy/hermes/sohbet/config.yaml` (varsayılan profil: `gateway.multiplex_profiles: true`, api_server 127.0.0.1:8642, hiçbir araç takımı yok) + profillerin köke kurulumu (`hermes profile install` mı A0 kopya görevi mi — ölçülür).
-- **ÖLÇÜLEMEDİ (2026-09-30 07:2xZ, sınıflandırıcı engeli — operatör ya da ayrı onay):** (a) çoklu kipte `API_SERVER_KEY`/`HINDSIGHT_API_KEY` gibi "global" sırların `os.environ`dan okunup okunmadığı (`agent/secret_scope.py` `_is_global_env`) — LoadCredential → ortam yolunun işleyip işlemediği buna bağlı; (b) `request_dump_*.json` yazımının koşulu (`agent/agent_runtime_helpers.py`) — kapatılabilir mi, yoksa dizin izni/temizliğiyle mi sınırlanır.
+- **ÖLÇÜLDÜ (2026-09-30, operatör A1'de koştu; ilk deneme 07:2xZ sınıflandırıcı engeline takılmıştı):**
+  (a) **Sırlar `os.environ`dan OKUNMAZ.** Hermes v0.19 `agent/secret_scope.py::get_secret`: yalnız `_GLOBAL_ENV_EXACT`/`_GLOBAL_ENV_PREFIXES`
+  kümesindeki adlar (HERMES_HOME, PATH, HERMES_TELEGRAM_* ayar düğmeleri, TERMINAL_* …) süreç ortamından gelir; çoklu kipte profil kapsamı
+  YETKİLİDİR — kapsamda olmayan anahtar varsayılan değeri döner, `os.environ`a DÜŞMEZ ("os.environ başka profilin değerini taşıyabilir").
+  `API_SERVER_KEY`, `HINDSIGHT_API_KEY`, `BOT_KEY_<AD>` global DEĞİL → systemd `LoadCredential` → ortam yolu bu sırlar için İŞLEMEZ.
+  G3 sonucu: `BOT_KEY_<AD>` + `HINDSIGHT_API_KEY` her sohbet profilinin `<kök>/profiles/<ad>/.env`inde, `API_SERVER_KEY` kökün
+  varsayılan profilinin `<kök>/.env`inde durur (api_server varsayılan profilde koşar; ağ geçidi açılışta varsayılan profil kapsamıyla yükler).
+  Besleme yolu EMSALLİ: rapor profillerinin `.env`i bugün de rotasyon aracıyla kasadan yazılıyor (`sir_rotasyon --vault`; Hermes
+  `.env.vault` okumaz — Vault dalga-2 ölçümü, 2026-09-15). `API_SERVER_KEY` YENİ sır → `deploy/sir_envanteri.yaml` + Vault + rotasyon.
+  Harici sır kaynağı (`hermes_cli/env_loader.py::get_secret_source_values`, Bitwarden vb.) ayrı bir seçenek — ölçülmedi.
+  (b) **İstek dökümü kapatılamaz.** `agent/agent_init.py` şerhi: `logs_dir` "request_dump_*.json için KOŞULSUZ tutulur";
+  döküm model çağrısı HATASINDA `agent.logs_dir/request_dump_<oturum>_<zaman>.json` olarak yazılır, oturum kimliği yol-geçişine karşı
+  arındırılır, sırlar yazımdan önce maskelenir (`agent/agent_runtime_helpers.py`) — ama istek gövdesi (sohbet metni + araç sonuçları)
+  maskelenmez. G3 sonucu: dökümü kapatmak yerine SINIRLA — profil `logs/` dizini 0700 + birim kullanıcısı sahipli, yaş tabanlı
+  temizlik (tmpfiles.d ya da timer), ve dökümlerin sayısı ölçüm kartına (G5) sayaç olarak.
 - Birim: `TimeoutStopSec` + `KillMode=mixed` (v3: ağ geçidi SIGTERM'i yok saydı), `ReadWritePaths` ⊇ `state/approvals.jsonl`, `state/.locks`, `state/events.jsonl` (G1 Task 1 raporu), `/opt/meridian/var/bots/<ad>`.
