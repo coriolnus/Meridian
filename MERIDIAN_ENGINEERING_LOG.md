@@ -4113,6 +4113,13 @@ canlıyla aynı (ilk "FARKLI" ölçümüm süreç ikamesindeki stdin hatasıydı
 - **Kural ihlali (§7):** CI koşu kimliğini bulmak için 6×`sleep 5` sınırlı döngü kuruldu — yasak kapsamında (bekleme döngüsü nerede
   koşarsa koşsun). Sonraki izlemeler tek `gh run list --commit <TAM SHA>` + `gh run watch` ile; iki izleme de ilk denemede kısa SHA /
   henüz kaydolmamış koşu yüzünden boş döndü (CI kırmızısı DEĞİL).
+- **TSK-257 + Dağıtım #87 (10:26–10:28Z, main HEAD e6aabf46 = deployed_sha):** G3 haritası `config_ensure_integrations`in K-1
+  `enabled: false`ı EZDİĞİNİ buldu; A1'de ölçüldü: learn poll döngüsü KOŞUYOR (memory notu bayattı — learn yeniden aktif) ama learn
+  `~/.hermes` yazamadığı için yazım her 300 sn sessizce düşüyordu; worker'daki pano 'eşitle' ucu yazabilirdi. Düzeltme: `enabled` varsa
+  aynen korunur (v600); suite 16244/0 + KILL#1 (ilk seri koşum gürültüden ÖLÇÜLEMEDİ ±13,7%, yeniden koşum geçti). Canlı: K-1
+  `enabled: False`, config dosyası yazılmadı. Öteki ezilen alanlar + pano MCP çipi `enabled`a bakmıyor → TSK-258.
+- **Ortam bulgusu:** bu oturumun Bash kabuğunda `PYTHONDONTWRITEBYTECODE=1` (harness; profil dosyalarında yok) → v334 seri koşumda
+  yalancı kırmızı; pytest artık `env -u PYTHONDONTWRITEBYTECODE` ile.
 - **Açık:** G3 planı (bot kökü `~/.hermes-botlar`, `meridian-botlar.service`, `API_SERVER_KEY`, profil `.env` rotasyon aracıyla; kapılar:
   EDG-086 sayımı `oturum` ile ayrılır, `.path` etkin, MCP alt sürecine credential mirası, çoklu kipte duruş profil başına) · TSK-214
   canlı kanıtı sonraki haftalık bileşik ön-eleme · TSK-240 Vault ×2 operatörde.
