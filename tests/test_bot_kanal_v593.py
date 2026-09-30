@@ -1280,6 +1280,102 @@ def test_tek_adimli_unut_dali_emekli():
     assert "hafiza.unut(" not in kaynak and ".unut(bot" not in kaynak
 
 
+# ---- G4 Görev 2 Tur 2 (görev incelemesi M-1..M-4; Rol-1 2026-09-30) ------------------------------------------------
+
+def _kaydi_boz(kod, sil=(), **alanlar):
+    """Bekleyen kaydı DIŞARIDAN bozar (dış hasar benzetimi — üretim yolu değil, doğrudan `store`)."""
+    doc = {k: dict(v) for k, v in store.read_json(bk.UNUT_BEKLEYEN, {}).items()}
+    for alan in sil:
+        doc[kod].pop(alan)
+    doc[kod].update(alanlar)
+    store.write_json(bk.UNUT_BEKLEYEN, doc)
+
+
+@pytest.mark.parametrize("sil,bozuk", [
+    ((), {"son": "bozuk-tarih"}), ((), {"son": None}), ((), {"son": "2026-09-29T12:15:00"}),   # dilimsiz an
+    (("son",), {}), ((), {"ts": "x"}),
+])
+def test_suresi_olculemeyen_bekleyen_kod_onaylanamaz_fail_closed(sandbox_state, sil, bozuk):
+    # M-1 (Rol-1 yükseltti): `ts`/`son` okunamayan kayıt süre denetimini ATLAMAZ — güvenlik kapısı hata durumunda
+    # KAPALI kalır: `suresi_doldu` sayılır, onay reddedilir, PATCH atılmaz, bozuk kayıt olayla bildirilir.
+    _, kod, h = _unut_adimi()
+    _kaydi_boz(kod, sil=sil, **bozuk)
+    cevap = _onayla(kod, h=h)
+    assert h.uygulananlar == [] and "unutulmadı" in cevap
+    assert _defter()[-1]["ret_nedeni"] == "suresi_doldu"
+    assert _olaylar("bot_unut_onay_reddi")[-1]["neden"] == "suresi_doldu"
+    assert _olaylar("bot_unut_bekleyen_bozuk_kayit")
+    assert _bekleyen()[kod]["durum"] == "suresi_doldu"
+
+
+def test_sahibi_okunamayan_kod_baska_bot_reddinde_none_yazmaz(sandbox_state):
+    # M-1 "benzeri": `bot` alanı olmayan kayıt reddedilir (fail-closed) ve cevap "@None" demez.
+    _, kod, h = _unut_adimi()
+    _kaydi_boz(kod, sil=("bot",))
+    cevap = _onayla(kod, h=h)
+    assert h.uygulananlar == [] and "@None" not in cevap and "unutulmadı" in cevap
+    assert _defter()[-1]["ret_nedeni"] == "baska_bot"
+
+
+def test_yeni_aday_listesi_ayni_botun_eski_bekleyen_kodunu_dusurur(sandbox_state):
+    # M-2 (Rol-1): bot başına TEK canlı kod — yeni liste verilirken aynı botun `bekliyor` kaydı `suresi_doldu` olur
+    # (aynı kilitli yazımda; kayıt SİLİNMEZ). Eski listeyi yanlışlıkla onaylamak mümkün değildir.
+    _, eski, h = _unut_adimi(ifade="eski not")
+    _, yeni, _ = _unut_adimi(ifade="başka not", h=h)
+    doc = _bekleyen()
+    assert (doc[eski]["durum"], doc[yeni]["durum"]) == ("suresi_doldu", "bekliyor")
+    cevap = _onayla(eski, h=h)
+    assert h.uygulananlar == [] and "daha yeni" in cevap and "unutulmadı" in cevap
+    assert _defter()[-1]["ret_nedeni"] == "suresi_doldu"
+    assert _olaylar("bot_unut_onay_reddi")[-1]["neden"] == "suresi_doldu"
+    _onayla(yeni, h=h)
+    assert h.uygulananlar == [("bekci", ["m1", "m2"], "başka not")]
+
+
+def test_yeni_aday_listesi_baska_botun_ve_sonuclanmis_kodlara_dokunmaz(sandbox_state):
+    _, karne_kodu, h = _unut_adimi(bot="karne")
+    _, uygulanan, _ = _unut_adimi(h=h)
+    _onayla(uygulanan, h=h)
+    _, yeni, _ = _unut_adimi(h=h)
+    doc = _bekleyen()
+    assert (doc[karne_kodu]["durum"], doc[uygulanan]["durum"], doc[yeni]["durum"]) == (
+        "bekliyor", "uygulandi", "bekliyor")
+
+
+def test_eslesmesiz_unut_eski_bekleyen_kodu_dusurmez(sandbox_state):
+    # Liste VERİLMEDİYSE (eşleşme yok) yeni kod da yoktur — eski kod canlı kalır.
+    _, kod, h = _unut_adimi()
+    bk.bota_sor("bekci", "unut: yok böyle bir şey", "pano", "o", hafiza=SahteHafiza(), simdi=SIMDI)
+    assert _bekleyen()[kod]["durum"] == "bekliyor"
+
+
+def test_geri_alinmis_kodu_onaylamak_dogru_durumu_soyler(sandbox_state):
+    # M-3: geri alınmış kod "zaten onaylandı (geri almak için …)" DEMEZ — ret nedeni ve metin gerçek durumu söyler.
+    _, kod, h = _unut_adimi()
+    _onayla(kod, h=h)
+    _geri_al(kod, h=h)
+    cevap = _onayla(kod, h=h)
+    assert len(h.uygulananlar) == 1
+    assert _defter()[-1]["ret_nedeni"] == "zaten_geri_alindi"
+    assert _olaylar("bot_unut_onay_reddi")[-1]["neden"] == "zaten_geri_alindi"
+    assert "geri alındı" in cevap and "zaten onaylandı" not in cevap
+
+
+@pytest.mark.parametrize("islem", ["onayla", "geri_al"])
+def test_budanmis_kod_bulunamadi_ve_saklama_suresi_soylenir(sandbox_state, islem):
+    # M-4: 7 günden eski sonuçlanmış kayıt budanır; bilinmeyen kodda operatör NEDEN bulunamadığını öğrenir.
+    eski = SIMDI - dt.timedelta(days=8)
+    _, kod, h = _unut_adimi(simdi=eski)
+    _onayla(kod, h=h, simdi=eski)
+    _unut_adimi(bot="karne", h=h)                               # herhangi bir yazım budamayı tetikler
+    assert kod not in _bekleyen()
+    cevap = _onayla(kod, h=h) if islem == "onayla" else _geri_al(kod, h=h)
+    assert _defter()[-1]["ret_nedeni"] == "bilinmeyen_kod"
+    assert "bulunamadı" in cevap and "yanlış yazılmış" in cevap
+    assert f"{bk.UNUT_BEKLEYEN_SAKLAMA.days} günden eski" in cevap and "budanmış" in cevap
+    assert h.geri_al_denemeleri == [] and len(h.uygulananlar) == 1
+
+
 # ---- Parça 1b G4 Görev 1: üretim kablolaması + dönüş kaydı + modele giden scrub + bütçe çapraz çivisi ----------
 # Spec §3.4 (2026-09-30 düzeltmesi): Hermes `auto_retain` KAPALI — sohbet dönüşünü hafızaya YALNIZ `bota_sor` yazar,
 # scrub'lı ve etiketli. Hafıza yazımı CEVABI DÜŞÜRMEZ; defter `hafiza_durumu` doğruyu söyler.

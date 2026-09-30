@@ -25,14 +25,19 @@ DEĞİŞMEZLER.
     `Hafiza.unut_adaylari`na (salt-okur recall) gider, en fazla `bot_hafiza.UNUT_TAVANI` aday kısa listeyle ve 6 hex
     kısa KODLA operatöre söylenir; aday kaydı `UNUT_BEKLEYEN`e `bekliyor` olarak yazılır (ömür `UNUT_ONAY_OMRU`).
     `onayla: unut <kod>` YALNIZ kodu üreten AYNI bot, `bekliyor` durumu ve süre içinde geçer — aksi hâlde ret +
-    `bot_unut_onay_reddi` (`neden` ∈ `bilinmeyen_kod` · `baska_bot` · `suresi_doldu` · `zaten_uygulandi`); geçerse
+    `bot_unut_onay_reddi` (`neden` ∈ `bilinmeyen_kod` · `baska_bot` · `suresi_doldu` · `zaten_uygulandi` ·
+    `zaten_geri_alindi`); geçerse
     `Hafiza.unut_uygula` adayları GERİ ALINABİLİR biçimde emekliye ayırır (`state: invalidated`) ve kayıt `uygulandi`
     olur. `geri al: <kod>` YALNIZ aynı bot + `uygulandi` → denenen kimliklere `Hafiza.geri_al` (`state: valid`) →
     `geri_alindi` (ret `bot_unut_geri_al_reddi`: `bilinmeyen_kod` · `baska_bot` · `uygulanmadi` ·
     `zaten_geri_alindi`). Durum geçişleri kilit altında TEK işlemdir (talep ÖNCE, istek SONRA — çift onay iki kez
     PATCH atamaz); kayıt SİLİNMEZ, durumu değişir. Kısmi PATCH hatasında `unutulan_idler`/`denenen`/`kalan` deftere
     girer (`denenen` hata vereni de taşır: zaman aşımına uğrayan PATCH sunucuda uygulanmış olabilir); hiçbir istek
-    atılmadıysa kod `bekliyor`a döner (yeniden denenebilir).
+    atılmadıysa kod `bekliyor`a döner (yeniden denenebilir). Tur 2 (görev incelemesi, Rol-1 2026-09-30): BOT BAŞINA
+    TEK CANLI KOD — yeni aday listesi verilirken aynı botun `bekliyor` kaydı aynı kilitli yazımda `suresi_doldu` olur
+    (`yerine_gecen` alanı yeni kodu gösterir; kayıt silinmez). SÜRE DENETİMİ FAIL-CLOSED: `ts`/`son`u okunamayan
+    `bekliyor` kaydı `suresi_doldu` sayılır. Bilinmeyen kod cevabı kodun yanlış yazılmış ya da budanmış
+    (`UNUT_BEKLEYEN_SAKLAMA`dan eski) olabileceğini söyler.
   * KOTA SESSİZ DEĞİL: tavan doluysa bot "bugünlük kotam doldu (n/tavan)" der, taşıyıcı ÇAĞRILMAZ,
     defter `tur: kota_doldu` satırı alır. Sayım defterin `tur == "sohbet"` satırlarından
     (`gunluk_sayim`); tavan sayısı Parça 0 (g) ölçümünden gelir — burada UYDURULMAZ.
@@ -501,7 +506,9 @@ def _dilimli_an(deger) -> datetime:
 
 def _bekleyen_bakim(doc, an: datetime) -> bool:
     """Her yazımda: süresi geçen `bekliyor` → `suresi_doldu` (SÜRE DENETİMİNİN TEK YERİ); `UNUT_BEKLEYEN_SAKLAMA`dan
-    eski SONUÇLANMIŞ kayıt budanır. Belge değiştiyse `True`. Nesne olmayan belge `ValueError` (dış hasar)."""
+    eski SONUÇLANMIŞ kayıt budanır. Belge değiştiyse `True`. Nesne olmayan belge `ValueError` (dış hasar).
+    FAIL-CLOSED (Tur 2, inceleme M-1): `ts`/`son`u okunamayan (eksik, biçimsiz, dilimsiz) kayıt olayla bildirilir ve
+    `bekliyor`sa `suresi_doldu` olur — süresi ölçülemeyen kod onaylanamaz; yaşı ölçülemediği için budanmaz."""
     if not isinstance(doc, dict):
         raise ValueError(f"{UNUT_BEKLEYEN} bir nesne değil")
     degisti = False
@@ -509,8 +516,10 @@ def _bekleyen_bakim(doc, an: datetime) -> bool:
         kayit = doc[kod]
         try:
             ts, son = _dilimli_an(kayit["ts"]), _dilimli_an(kayit["son"])
-        except (KeyError, TypeError, ValueError) as e:  # sinyalli: bozuk (dış hasar) kayıt olayla bildirilir, dokunulmaz
+        except (KeyError, TypeError, ValueError) as e:  # sinyalli: bozuk (dış hasar) kayıt olayla bildirilir; FAIL-CLOSED
             obs.warn("bot_unut_bekleyen_bozuk_kayit", kod=str(kod)[:16], sinif=type(e).__name__)
+            if isinstance(kayit, dict) and kayit.get("durum") == "bekliyor":
+                kayit["durum"], degisti = "suresi_doldu", True
             continue
         if kayit.get("durum") == "bekliyor" and an >= son:
             kayit["durum"], degisti = "suresi_doldu", True
@@ -521,7 +530,9 @@ def _bekleyen_bakim(doc, an: datetime) -> bool:
 
 
 def _bekleyen_ekle(bot: str, adaylar: list, ifade: str, an: datetime) -> str:
-    """Aday listesini `bekliyor` olarak yazar, kısa kodu döner (çakışırsa `_KOD_DENEME` kez yeniden üretilir)."""
+    """Aday listesini `bekliyor` olarak yazar, kısa kodu döner (çakışırsa `_KOD_DENEME` kez yeniden üretilir). AYNI
+    botun önceki `bekliyor` kayıtları aynı yazımda `suresi_doldu` olur ve `yerine_gecen` yeni kodu taşır (Tur 2, inceleme
+    M-2: bot başına tek canlı kod — eski listeyi yanlışlıkla onaylamak, kayıt şişmesi ve tahmin yüzeyi kapanır)."""
     sonuc = {}
 
     def degistir(doc):
@@ -532,6 +543,9 @@ def _bekleyen_ekle(bot: str, adaylar: list, ifade: str, an: datetime) -> str:
                 break
         else:
             raise RuntimeError("bekleyen unutma kodu üretilemedi (çakışma)")
+        for eski in doc.values():
+            if isinstance(eski, dict) and eski.get("bot") == bot and eski.get("durum") == "bekliyor":
+                eski["durum"], eski["yerine_gecen"] = "suresi_doldu", kod
         doc[kod] = {"bot": bot, "idler": [k for k, _ in adaylar], "kesitler": [s for _, s in adaylar],
                     "ifade": ifade, "ts": an.isoformat(timespec="seconds"),
                     "son": (an + UNUT_ONAY_OMRU).isoformat(timespec="seconds"), "durum": "bekliyor"}
@@ -545,8 +559,9 @@ def _bekleyen_ekle(bot: str, adaylar: list, ifade: str, an: datetime) -> str:
 def _gecis_talebi(kod: str, bot: str, an: datetime, islem: str) -> tuple[str | None, dict]:
     """Kilit altında TEK geçiş (talep ÖNCE, hafıza isteği SONRA — iki eşzamanlı onay aynı kodu iki kez uygulayamaz).
     `islem` `onay`: `bekliyor` → `uygulandi`; `geri_al`: `uygulandi` → `geri_alindi`. Dönüş `(ret_nedeni, bilgi)`:
-    ret yoksa `bilgi["kayit"]` talep edilen kaydın kopyası; `baska_bot` retinde `bilgi["sahip"]`. Bot eşitliği
-    DURUMDAN ÖNCE sınanır: yabancı bot kodun hâlini de öğrenemez."""
+    ret yoksa `bilgi["kayit"]` talep edilen kaydın kopyası; `baska_bot` retinde `bilgi["sahip"]`; onay retinde
+    `bilgi["yerine_gecen"]` (kodu yeni bir liste düşürdüyse). Bot eşitliği DURUMDAN ÖNCE sınanır: yabancı bot kodun
+    hâlini de öğrenemez. Sahibi okunamayan kayıt da `baska_bot`tur (fail-closed)."""
     bilgi: dict = {}
 
     def degistir(doc):
@@ -558,7 +573,9 @@ def _gecis_talebi(kod: str, bot: str, an: datetime, islem: str) -> tuple[str | N
         elif kayit.get("bot") != bot:
             bilgi["neden"], bilgi["sahip"] = "baska_bot", kayit.get("bot")
         elif islem == "onay" and durum != "bekliyor":
-            bilgi["neden"] = "suresi_doldu" if durum == "suresi_doldu" else "zaten_uygulandi"
+            bilgi["neden"] = {"suresi_doldu": "suresi_doldu", "geri_alindi": "zaten_geri_alindi"}.get(
+                durum, "zaten_uygulandi")
+            bilgi["yerine_gecen"] = kayit.get("yerine_gecen")
         elif islem == "geri_al" and durum != "uygulandi":
             bilgi["neden"] = "zaten_geri_alindi" if durum == "geri_alindi" else "uygulanmadi"
         else:
@@ -619,20 +636,28 @@ def _unut(bot: str, mesaj: str, govde: str, kanal: str, oturum: str, an: datetim
     return cevap
 
 
-def _ret_cevabi(islem: str, neden: str, kod: str | None, bot: str, sahip) -> str:
-    """Ret metni — her birinde neyin DEĞİŞMEDİĞİ açıkça söylenir."""
+def _ret_cevabi(islem: str, neden: str, kod: str | None, bot: str, bilgi: dict) -> str:
+    """Ret metni — her birinde neyin DEĞİŞMEDİĞİ açıkça söylenir. Bilinmeyen kod yanlış yazılmış ya da budanmış
+    (`UNUT_BEKLEYEN_SAKLAMA`dan eski) olabilir: operatör bunu öğrenir (Tur 2, inceleme M-4)."""
+    degismedi = "hiçbir şey unutulmadı" if islem == "onay" else "hiçbir şey değişmedi"
     if neden == "baska_bot":
+        sahip = bilgi.get("sahip")
+        kime = f"@{sahip}" if isinstance(sahip, str) and sahip else "başka bir bot"
         fiil = "onaylayamaz" if islem == "onay" else "geri alamaz"
-        return f"Bu kod @{sahip} için; @{bot} {fiil} — hiçbir şey değişmedi, hiçbir şey unutulmadı."
+        return f"Bu kod {kime} için; @{bot} {fiil} — {degismedi}."
+    if neden == "bilinmeyen_kod":
+        return (f"Kod bulunamadı — yanlış yazılmış ya da {UNUT_BEKLEYEN_SAKLAMA.days} günden eski (budanmış) olabilir; "
+                f"{degismedi}.")
+    if (islem, neden) == ("onay", "suresi_doldu") and bilgi.get("yerine_gecen"):
+        return ("Bu kodun yerini aynı bota yazılan daha yeni bir aday listesi aldı; hiçbir şey unutulmadı — en son "
+                "listedeki kodu kullan.")
     return {
-        ("onay", "bilinmeyen_kod"): "Bu kodla bekleyen bir unutma yok (`onayla: unut <6 haneli kod>`); hiçbir şey "
-                                    "unutulmadı.",
         ("onay", "suresi_doldu"): f"Kodun süresi doldu ({int(UNUT_ONAY_OMRU.total_seconds() // 60)} dk); hiçbir "
                                   "şey unutulmadı — yeniden `unut: <ifade>` yaz.",
         ("onay", "zaten_uygulandi"): f"Bu kod zaten onaylandı (geri almak için `geri al: {kod}`); yeni bir şey "
                                      "unutulmadı.",
-        ("geri_al", "bilinmeyen_kod"): "Bu kodla geri alınacak bir unutma yok (`geri al: <6 haneli kod>`); hiçbir "
-                                       "şey değişmedi.",
+        ("onay", "zaten_geri_alindi"): "Bu kod onaylanmış ve sonra geri alındı; yeni bir şey unutulmadı — yeniden "
+                                       "unutmak için yeni bir `unut: <ifade>` yaz.",
         ("geri_al", "uygulanmadi"): "Bu kod hiç onaylanmadı (ya da süresi doldu); geri alınacak bir şey yok.",
         ("geri_al", "zaten_geri_alindi"): "Bu kod zaten geri alındı; hiçbir şey değişmedi.",
     }[(islem, neden)]
@@ -655,7 +680,7 @@ def _onayla(bot: str, mesaj: str, govde: str, kanal: str, oturum: str, an: datet
             cevap, durum = _BEKLEYEN_OKUNAMADI, "kayit_hatasi"
         elif neden is not None:
             obs.warn("bot_unut_onay_reddi", bot=bot, kanal=kanal, neden=neden)
-            cevap, durum = _ret_cevabi("onay", neden, kod, bot, bilgi.get("sahip")), "reddedildi"
+            cevap, durum = _ret_cevabi("onay", neden, kod, bot, bilgi), "reddedildi"
             alanlar["ret_nedeni"] = neden
         else:
             cevap, durum = _unut_uygula(bot, kod, bilgi["kayit"], kanal, hafiza, alanlar)
@@ -720,7 +745,7 @@ def _geri_al(bot: str, mesaj: str, govde: str, kanal: str, oturum: str, an: date
             cevap, durum = _BEKLEYEN_OKUNAMADI, "kayit_hatasi"
         elif neden is not None:
             obs.warn("bot_unut_geri_al_reddi", bot=bot, kanal=kanal, neden=neden)
-            cevap, durum = _ret_cevabi("geri_al", neden, kod, bot, bilgi.get("sahip")), "reddedildi"
+            cevap, durum = _ret_cevabi("geri_al", neden, kod, bot, bilgi), "reddedildi"
             alanlar["ret_nedeni"] = neden
         else:
             kayit = bilgi["kayit"]
