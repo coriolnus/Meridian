@@ -20,6 +20,13 @@ pano sohbetinin kaydına GİRMEZ (`test_planli_araclar_kayitli_ve_pano_sohbetine
   * `bot_hafizasi_ara` hedef botun `bot-<ad>` bankasında SALT-OKUR recall (sahte `_cagir`, ağ yok): tek
     POST, çitli + scrub'lı; hedef kadroda aktif değilse HTTP'siz ret; diske yazmaz.
   * Rol-1 kararı: `hafiza_ara` alt süreci MCP'nin stdin borusunu (JSON-RPC girdisi) miras almaz.
+
+DAL SONU TURU (2026-09-30, inceleme I-1 · M-1 · M-5) — Bölüm 9:
+  * I-1: `--bot` kipinde getter çıktısı da sohbet araçlarıyla AYNI zarftan geçer (çit + scrub + tavan +
+    şema); `--bot`SUZ kip BAYT-ÖZDEŞ ham kalır. Her aktif bot × her izinli araç: metin çitle başlar.
+  * M-1: nesne olmayan mesaj / `params` → -32600 (id varsa id, yoksa null), iç hata → -32603; döngü ÖLMEZ.
+  * M-5: GERÇEK alt süreç (`python -m meridian.mcp_server --bot …`, `MERIDIAN_ROOT` = sandbox kökü): stdout
+    yalnız JSON-RPC, obs satırı stderr'de, getter çitli; gerçek `state/`e yazım yok.
 """
 from __future__ import annotations
 
@@ -27,7 +34,11 @@ import dataclasses
 import hashlib
 import io
 import json
+import os
+import pathlib
+import shutil
 import subprocess
+import sys
 
 import pytest
 
@@ -632,3 +643,156 @@ def test_hafiza_ara_alt_sureci_mcp_stdin_borusunu_miras_almaz(sandbox_state, mon
     r = _cagri("sef", "hafiza_ara", {"soru": "x"})["result"]
     assert r["isError"] is False and len(goruldu) == 1
     assert "stdin" in goruldu[0] and goruldu[0]["stdin"] == subprocess.DEVNULL
+
+
+# =================================================================================================
+# 9) DAL SONU TURU — I-1 (getter zarfı `--bot` kipinde) · M-1 (nesne olmayan mesaj/params) · M-5 (gerçek alt süreç)
+# =================================================================================================
+def _selfreview_sahte_sirli() -> None:
+    """`self_review.json`a biçimi `bearer` desenine uyan UYDURMA bir jeton koyar (gerçek sır değildir) — `attention`
+    satırları dış hata metni taşıyabilir (inceleme I-1 senaryosu)."""
+    store.write_json("self_review.json", {"generated": "2026-09-30",
+                                          "attention": [f"watchdog: Authorization: Bearer {_SAHTE_JETON}"],
+                                          "contradictions": [], "progress": {}})
+
+
+def test_bot_kipinde_getter_citli_scrubli_botsuz_kip_bayt_ozdes(sandbox_state):
+    _selfreview_sahte_sirli()
+    r = _cagri("karne", "meridian_selfreview")["result"]
+    ic = _cit_ici(r["content"][0]["text"], "meridian_selfreview")
+    assert r["isError"] is False and _SAHTE_JETON not in ic and "Bearer ***" in ic
+    assert json.loads(ic)["generated"] == "2026-09-30"
+    # `--bot`suz kip (varsayılan Hermes profili, geri uyum): aynı getter BAYT-ÖZDEŞ ham JSON
+    r0 = _cagri(None, "meridian_selfreview")["result"]
+    assert r0["isError"] is False
+    assert r0["content"][0]["text"] == json.dumps(ms._selfreview({}), ensure_ascii=False, default=str)
+
+
+def test_bot_kipinde_getter_sema_disi_cagri_kosmaz(sandbox_state, monkeypatch):
+    """Getter'lar da bot kipinde şema doğrulamasından geçer: zorunlu `ticker` yoksa getter KOŞMAZ."""
+    kosuldu: list = []
+    monkeypatch.setitem(ms._BY_NAME["meridian_candidate_context"], "fn", lambda a: kosuldu.append(1) or {})
+    kadrolu = tuple(dataclasses.replace(b, araclar=b.araclar + ("meridian_candidate_context",))
+                    if b.ad == "karne" else b for b in kadro.kadro_yukle())
+    monkeypatch.setattr(kadro, "kadro_yukle", lambda yol=None: kadrolu)
+    r = _cagri("karne", "meridian_candidate_context", {})["result"]
+    assert r["isError"] is True and "ŞEMA DIŞI" in r["content"][0]["text"] and kosuldu == []
+    # pozitif kontrol: şemaya uyan çağrı getter'ı gerçekten koşar
+    assert _cagri("karne", "meridian_candidate_context", {"ticker": "MU"})["result"]["isError"] is False
+    assert kosuldu == [1]
+
+
+#: Her aracın şemaya uyan örnek çağrısı (bot × araç çivisi için). Burada olmayan araç `{}` ile çağrılır — şema
+#: dışıysa bile metin YİNE çitli olmalı (ret ve arıza da aynı zarftan geçer).
+_ORNEK_ARGS = {"plan_oku": {"tarih": "2026-09-30"}, "olay_sorgu": {"sql": "SELECT 1"},
+               "bar_sorgu": {"sorgu": "kapsam"}, "hafiza_ara": {"soru": "x"}, "kart_oku": {"card_id": "EDG-2026-086"},
+               "gunluk_ara": {"kelime": "x"}, "oneri_yaz": {"tur": "not", "gerekce": "g"}, "is_iste": {"ad": "karne"},
+               "bot_hafizasi_ara": {"bot": "bekci", "soru": "x"}, "meridian_candidate_context": {"ticker": "MU"}}
+
+
+@pytest.mark.parametrize("bot,arac", [(b.ad, a) for b in kadro.aktif_botlar() for a in ms.izinli_araclar(b.ad)])
+def test_her_aktif_bot_her_izinli_arac_citli_doner(sandbox_state, monkeypatch, tmp_path, bot, arac):
+    """Kadrodan parametreli: bir kadro satırı yarın yeni bir getter listelerse o da çitsiz akamaz."""
+    monkeypatch.setattr(sohbet, "_hafiza_betigi", lambda: str(tmp_path / "yok.sh"))   # alt süreç yok
+    _hafiza_bagla(monkeypatch, _HafizaCasusu())                                       # ağ yok
+    r = _cagri(bot, arac, _ORNEK_ARGS.get(arac, {}))["result"]
+    _cit_ici(r["content"][0]["text"], arac)
+
+
+@pytest.mark.parametrize("bot", [None, "bekci"])
+def test_nesne_olmayan_mesaj_ve_params_donguyu_oldurmez(sandbox_state, bot):
+    """M-1: geçerli JSON ama nesne olmayan mesaj ya da `params` sunucuyu öldürüyordu (Hermes'teki bot o an
+    ARAÇSIZ kalır). Artık -32600 (id varsa id ile, yoksa null) ve sonraki istek cevaplanır."""
+    satirlar = ["[1, 2]", '"x"', "5", "null",
+                json.dumps({"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": [1]}),
+                json.dumps({"jsonrpc": "2.0", "id": 6, "method": "initialize", "params": [1]}),
+                json.dumps({"jsonrpc": "2.0", "id": 7, "method": "tools/list", "params": "x"}),
+                json.dumps({"jsonrpc": "2.0", "method": "tools/list", "params": 3}),
+                "bu json değil",
+                json.dumps({"jsonrpc": "2.0", "id": 8, "method": "tools/list"})]
+    cikis = io.StringIO()
+    ms.serve(io.StringIO("\n".join(satirlar) + "\n"), cikis, bot=bot)
+    yanitlar = [json.loads(s) for s in cikis.getvalue().splitlines() if s.strip()]
+    kodlar = [(y["id"], y["error"]["code"]) for y in yanitlar if "error" in y]
+    assert kodlar == [(None, -32600)] * 4 + [(5, -32600), (6, -32600), (7, -32600), (None, -32600),
+                                               (None, -32700)]
+    assert yanitlar[-1]["id"] == 8 and yanitlar[-1]["result"]["tools"], "döngü bozuk satırlardan sonra ÖLDÜ"
+
+
+def test_istek_islemede_beklenmeyen_istisna_donguyu_oldurmez(sandbox_state, monkeypatch, capsys):
+    """Son savunma: `_handle` beklenmedik bir istisna atarsa -32603 döner, olay stderr'e düşer, döngü sürer."""
+    gercek = ms._handle
+
+    def patlayan(msg, *a, **kw):
+        if isinstance(msg, dict) and msg.get("method") == "tools/list":
+            raise RuntimeError("beklenmeyen")
+        return gercek(msg, *a, **kw)
+
+    monkeypatch.setattr(ms, "_handle", patlayan)
+    giris = io.StringIO("".join(json.dumps(m) + "\n" for m in (
+        {"jsonrpc": "2.0", "id": 1, "method": "tools/list"}, {"jsonrpc": "2.0", "id": 2, "method": "ping"})))
+    ms.serve(giris, None, bot="bekci")
+    out, err = capsys.readouterr()
+    yanitlar = _protokol_satirlari(out)
+    assert yanitlar[0]["id"] == 1 and yanitlar[0]["error"]["code"] == -32603
+    assert yanitlar[1]["id"] == 2 and yanitlar[1]["result"] == {}
+    assert "mcp_istek_isleme_hatasi" in err and "mcp_istek_isleme_hatasi" not in out
+
+
+# ---- M-5: GERÇEK alt süreç ------------------------------------------------------------------------------
+_AGAC = pathlib.Path(__file__).resolve().parents[1]
+
+
+def _alt_surec(sandbox_state, bot: str, mesajlar, ham_satirlar=()) -> subprocess.CompletedProcess:
+    """`python -m meridian.mcp_server --bot <bot>` — `MERIDIAN_ROOT` = sandbox kökü (state/ onun altında, goal/bounds
+    fikstürden kopyalı; kadro buraya kopyalanır), `HOME` geçici. Test süreci ortamına YAZILMAZ: ortam yalnız
+    çocuğa verilen sözlükte değişir (MERIDIAN_ROOT sızıntı bekçisi)."""
+    kok = sandbox_state.parent
+    (kok / "deploy/hermes").mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(kadro.KADRO_YOLU, kok / "deploy/hermes/kadro.yaml")
+    ev = kok / "ev"
+    ev.mkdir(exist_ok=True)
+    ortam = {**os.environ, "MERIDIAN_ROOT": str(kok), "PYTHONPATH": str(_AGAC), "HOME": str(ev)}
+    giris = "".join(json.dumps(m) + "\n" for m in mesajlar) + "".join(s + "\n" for s in ham_satirlar)
+    giris += json.dumps({"jsonrpc": "2.0", "id": 999, "method": "ping"}) + "\n"   # stdin tüketilirse kaybolur
+    return subprocess.run([sys.executable, "-m", "meridian.mcp_server", "--bot", bot], input=giris,
+                          env=ortam, cwd=str(kok), capture_output=True, text=True, timeout=60)
+
+
+def _gercek_state_izi() -> dict:
+    """Ağacın GERÇEK `state/` defterlerinin (varsa) damgası — alt süreç oraya yazmamalı."""
+    kok = _AGAC / "state"
+    return {ad: ((kok / ad).stat().st_mtime_ns, (kok / ad).stat().st_size) if (kok / ad).exists() else None
+            for ad in ("approvals.jsonl", "events.jsonl", "is_istek_defteri.jsonl")}
+
+
+def test_gercek_alt_surec_stdout_yalniz_jsonrpc_obs_stderrde(sandbox_state):
+    once = _gercek_state_izi()
+    p = _alt_surec(sandbox_state, "sef", [
+        {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "2024-11-05"}},
+        {"jsonrpc": "2.0", "method": "notifications/initialized"},
+        {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
+        {"jsonrpc": "2.0", "id": 3, "method": "tools/call",
+         "params": {"name": "oneri_yaz", "arguments": {"tur": "not", "gerekce": "alt süreç"}}}],
+        ham_satirlar=["bu json değil", "[1, 2]"])
+    assert p.returncode == 0, p.stderr[-2000:]
+    yanitlar = _protokol_satirlari(p.stdout)                    # stdout'taki HER satır JSON-RPC 2.0
+    byid = {y["id"]: y for y in yanitlar if y["id"] is not None}
+    assert sorted(t["name"] for t in byid[2]["result"]["tools"]) == sorted(kadro.bot_bul("sef").araclar)
+    assert byid[3]["result"]["isError"] is False and 999 in byid
+    assert sorted(y["error"]["code"] for y in yanitlar if y["id"] is None) == [-32700, -32600]
+    assert "sohbet_oneri_yazildi" in p.stderr and "sohbet_oneri_yazildi" not in p.stdout
+    (satir,) = _sohbet_onerileri()                               # sandbox defterine yazıldı …
+    assert satir["oturum"] == "mcp:sef"
+    assert _gercek_state_izi() == once                          # … gerçek state/'e DEĞİL
+
+
+def test_gercek_alt_surec_getter_citli_ve_scrubli(sandbox_state):
+    _selfreview_sahte_sirli()
+    p = _alt_surec(sandbox_state, "karne", [
+        {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "meridian_selfreview", "arguments": {}}}])
+    assert p.returncode == 0, p.stderr[-2000:]
+    byid = {y["id"]: y for y in _protokol_satirlari(p.stdout)}
+    ic = _cit_ici(byid[1]["result"]["content"][0]["text"], "meridian_selfreview")
+    assert byid[1]["result"]["isError"] is False and _SAHTE_JETON not in p.stdout and "Bearer ***" in ic
+    assert 999 in byid

@@ -8,7 +8,8 @@ tools-call metotları desteklenir, bozuk satır parse-error alır.
 
 İKİ KİP (Parça 1b G1, spec 2026-09-29 §3.2):
   * `--bot` YOK — geri uyum (varsayılan Hermes profili; K-1 ile `enabled: false`). Bugünkü altı
-    getter, başka hiçbir şey: yazan araç ne listelenir ne koşar; kayıt yalnız getter'lardır ve
+    getter, başka hiçbir şey: yazan araç ne listelenir ne koşar; getter çıktısı BAYT-ÖZDEŞ ham JSON'dur
+    (çit/scrub bu kipte YOK — G1 öncesi sözleşme aynen); kayıt yalnız getter'lardır ve
     `sohbet`/`kadro` İTHAL EDİLMEZ (ithaller fonksiyon içinde, yalnız `--bot` yolunda) — bu yol G1
     öncesinde o modüllere bağlı değildi, onların arızasıyla (bozuk `SOHBET_*` ortamı, ithal hatası)
     ölmesi geriye dönük bir kırılma olurdu (Tur 2, inceleme M-1).
@@ -19,12 +20,14 @@ tools-call metotları desteklenir, bozuk satır parse-error alır.
     Kadronun listelediği ama kayıtta OLMAYAN ad ATLANIR (savunma: bugün aktif botların listelediği her
     ad kayıtta — çivi v597); bilinen kümenin dışındaki adı kadro çivisi (v591) yakalar.
 
-KAYIT (`arac_kaydi`) TEK KAYNAKTAN türer: altı getter aşağıdaki `TOOLS`tan; pano sohbetinin araçları
+KAYIT (`arac_kaydi`) TEK KAYNAKTAN türer: altı getter aşağıdaki `TOOLS`tan (bu kipte `_getter_araclari`
+ile sarılı — gövde aynı, zarf sohbetinki; dal sonu I-1: spec §3.2 bütün okuma araçlarının çıktısını çitli
+ister ve sohbet profillerinin SOUL'u modele "veri çitin içinde gelir" der); pano sohbetinin araçları
 `sohbet.ARACLAR`dan — şema ve açıklama KOPYALANMAZ, aynı nesnedir; MCP'ye özgü iki araç (`is_iste`,
 `bot_hafizasi_ara` = kadronun planlı araçları) `_mcp_araclari`ndan — şemaları bu modülün sabitleridir,
-pano sohbetinin kaydına GİRMEZLER (sohbetin beyaz listesi donuk). Sohbet araçları ve MCP'ye özgü
-araçlar `sohbet._arac_kos` üzerinden koşar: VERİ çiti + `notify.scrub` + çıktı tavanı + şema
-doğrulaması sohbetle birebir aynı gövdedir. Aynı ad iki kaynakta varsa kayıt sessizce EZMEZ, ValueError atar.
+pano sohbetinin kaydına GİRMEZLER (sohbetin beyaz listesi donuk). `--bot` kipinde HER araç (getter,
+sohbet aracı, MCP'ye özgü) `sohbet._arac_kos` üzerinden koşar: VERİ çiti + `notify.scrub` + çıktı
+tavanı + şema doğrulaması sohbetle birebir aynı gövdedir. Aynı ad iki kaynakta varsa kayıt sessizce EZMEZ, ValueError atar.
 
 İKİ KAT İZİN: `tools/list` yalnız izinli araçları döner; `tools/call` ÖNCE izni sorar — izinli
 olmayan araç `isError` + "izinli değil" alır ve KOŞMAZ (model listede görmediği bir adı yine de
@@ -55,6 +58,12 @@ kurulumu ve döngüyü `contextlib.redirect_stdout(sys.stderr)` altında koşar:
 Aynı sınıfın GİRDİ yüzü (Görev 2, Rol-1 kararı): stdin JSON-RPC girdisidir — araçların alt süreci onu miras
 ALMAZ (`sohbet._arac_hafiza_ara` alt süreci `stdin=DEVNULL`; `bot_hafizasi_ara` HTTP'dir, alt süreç açmaz).
 
+BOZUK GİRDİ DÖNGÜYÜ ÖLDÜRMEZ (dal sonu M-1). Süreç ölürse o Hermes oturumundaki bot ARAÇSIZ kalır ve
+araçsız modelin araç sonucu UYDURDUĞU ölçüldü (Parça 0). Ayrıştırılamayan satır → -32700; geçerli JSON
+ama nesne olmayan mesaj (dizi — toplu istek desteklenmez —, dizge, sayı, null) ya da nesne olmayan
+`params` → -32600 (id varsa o id, yoksa null; `params: null` eksik sayılır); işlemede beklenmeyen istisna
+→ -32603 + `mcp_istek_isleme_hatasi` olayı (stderr). Üçünde de döngü sürer.
+
 OKUR: state/ (store/analytics üzerinden: regime.json, kalibrasyon artefaktları, trade_plans.jsonl,
 cf_open.json, self_review.json), `deploy/hermes/kadro.yaml` (`kadro.kadro_yukle`), sohbet
 araçlarının okuduğu her şey (`sohbet` modül başlığı), `is_iste`nin tavan defteri (`is_istek`) ve
@@ -66,7 +75,7 @@ import dataclasses
 import json
 import sys
 
-from . import store, analytics
+from . import store, analytics, obs
 # `sohbet` ve `kadro` BURADA İTHAL EDİLMEZ — yalnız `--bot` yolunun fonksiyonlarında (modül başlığı, İKİ KİP).
 
 
@@ -265,6 +274,16 @@ def _mcp_araclari() -> dict:
     )}
 
 
+def _getter_araclari() -> dict:
+    """`--bot` kipinde altı getter: ad → `sohbet.Arac`, gövde `_getter_cagir` (ham JSON'u üreten AYNI
+    fonksiyon), şema/açıklama `TOOLS`taki AYNI nesne. `_arac_kos` onu sohbet aracı gibi koşar: çit + scrub +
+    tavan + şema doğrulaması. `--bot`suz kip bu sarmalayıcıyı HİÇ görmez (`_getter_kaydi`, bayt-özdeş)."""
+    from . import sohbet                             # yalnız `--bot` yolu (modül başlığı, İKİ KİP)
+    return {t["name"]: sohbet.Arac(t["name"], t["description"], t["inputSchema"], _getter_cagir(t["name"]),
+                                   lambda args: "-")
+            for t in TOOLS}
+
+
 def _getter_kaydi() -> dict[str, dict]:
     """Yalnız altı getter'ın kaydı — `--bot`suz kipin TÜM kaydı. `sohbet`/`kadro` ithal etmez."""
     return {t["name"]: {"name": t["name"], "description": t["description"],
@@ -275,13 +294,13 @@ def _getter_kaydi() -> dict[str, dict]:
 def arac_kaydi() -> dict[str, dict]:
     """ad → `{"name", "description", "inputSchema", "cagir"}`; `cagir(args, baglam) -> str`.
 
-    TEK KAYNAK: altı getter `TOOLS`tan, sohbet araçları `sohbet.ARACLAR`dan, MCP'ye özgüler
-    `_mcp_araclari`ndan (şema/açıklama AYNI nesne). Önbellek YOK — kayıt her `serve` açılışında
-    kaynaktan türer, bayat kopya olamaz. Tam kayıt yalnız `--bot` kipinin kaydıdır; `sohbet` ithali
-    burada, ilk kullanımda."""
+    TEK KAYNAK: altı getter `TOOLS`tan (`_getter_araclari` ile sarılı), sohbet araçları
+    `sohbet.ARACLAR`dan, MCP'ye özgüler `_mcp_araclari`ndan (şema/açıklama AYNI nesne); HEPSİ
+    `sohbet._arac_kos` zarfından geçer. Önbellek YOK — kayıt her `serve` açılışında kaynaktan türer,
+    bayat kopya olamaz. Tam kayıt yalnız `--bot` kipinin kaydıdır; `sohbet` ithali burada, ilk kullanımda."""
     from . import sohbet
-    kayit = _getter_kaydi()
-    for kaynak in (lambda: sohbet.ARACLAR, _mcp_araclari):
+    kayit: dict[str, dict] = {}
+    for kaynak in (_getter_araclari, lambda: sohbet.ARACLAR, _mcp_araclari):
         for ad, a in kaynak().items():
             if ad in kayit:
                 raise ValueError(f"araç adı çakışması: {ad!r} iki kaynakta (getter · sohbet · MCP'ye "
@@ -332,7 +351,13 @@ def _handle(msg: dict, kayit: dict | None = None, izinli: list[str] | None = Non
     verilmezse bugünkü kip (altı getter); `serve` bunları bot başına bir kez hesaplayıp geçirir."""
     kayit = _getter_kaydi() if kayit is None else kayit
     izinli = _izinli(None, kayit) if izinli is None else izinli
+    if not isinstance(msg, dict):                    # dizi/dizge/sayı/null — JSON-RPC isteği değil (M-1)
+        return {"jsonrpc": "2.0", "id": None,
+                "error": {"code": -32600, "message": "geçersiz istek: mesaj bir JSON nesnesi değil"}}
     mid = msg.get("id")
+    if msg.get("params") is not None and not isinstance(msg["params"], dict):
+        return {"jsonrpc": "2.0", "id": mid,
+                "error": {"code": -32600, "message": "geçersiz istek: params bir JSON nesnesi değil"}}
     method = msg.get("method")
     if method == "initialize":
         client_pv = (msg.get("params") or {}).get("protocolVersion") or PROTOCOL_VERSION
@@ -403,7 +428,13 @@ def serve(stdin=None, stdout=None, bot: str | None = None) -> None:
                                        "error": {"code": -32700, "message": "parse error"}}) + "\n")
                 outp.flush()
                 continue
-            resp = _handle(msg, kayit, izinli, oturum)
+            try:
+                resp = _handle(msg, kayit, izinli, oturum)
+            except Exception as e:                   # son savunma (M-1): döngü ölürse bot ARAÇSIZ kalır
+                obs.warn("mcp_istek_isleme_hatasi", oturum=oturum, error=f"{type(e).__name__}: {e}"[:300],
+                         detail="JSON-RPC isteği işlenirken beklenmeyen istisna — -32603 döndü, döngü sürüyor")
+                resp = {"jsonrpc": "2.0", "id": msg.get("id") if isinstance(msg, dict) else None,
+                        "error": {"code": -32603, "message": f"iç hata: {type(e).__name__}"}}
             if resp is not None:
                 outp.write(json.dumps(resp, ensure_ascii=False) + "\n")
                 outp.flush()

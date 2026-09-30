@@ -19,7 +19,8 @@ KADRO_YOLU = config.ROOT / "deploy/hermes/kadro.yaml"
 DURUMLAR = ("aktif", "sirada", "kilitli")
 DALGALAR = ("canli", "1", "2", "3", "kilitli")
 HAFIZA_KIPLERI = ("kendi", "hepsi")
-#: Parça 1'de araç sunucusuna eklenecek araçlar — kadro bugünden adlandırır, çivi bilinen kümeye katar.
+#: Sohbet kaydının DIŞINDAKİ araç sunucusu araçları — `mcp_server` bunları `--bot` kipinde sunar (Parça 1b G1);
+#: çivi v597 kayıtla eşitliği, v591 bilinen kümeyi ölçer.
 PLANLI_ARACLAR = ("is_iste", "bot_hafizasi_ara")
 #: Bot adının izinli biçimi. Telegram yönlendirme desenleri (`telegram_dinleyici` modülündeki
 #: `_SOHBET_IMZA`, `_ONEK`) ve oturum kimliği biçimi (`tg-<ad>-…`) adın bu kümede olduğunu varsayar;
