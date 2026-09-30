@@ -59,7 +59,7 @@
   ```
 - `distribution.yaml` = `{name: ad, version: "0.1.0", description: "<ad> sohbet profili — ÜRETİLMİŞ (rapor profilinden türetildi)", hermes_requires: <R manifestindeki değer>, env_requires: [R manifestinin `BOT_KEY_<AD>` girdisi AYNEN, {name: HINDSIGHT_API_KEY, required: true, description: "Hindsight kiracı anahtarı; değer G3 biriminin credential'ından, dosyaya yazılmaz"}], distribution_owned: [SOUL.md, config.yaml, hindsight/config.json]}`.
 
-- [ ] **Step 1: Başarısız testler** (`tests/test_sohbet_profili_uret_v599.py`; üreteç `importlib` ile `ops/` yolundan yüklenir — depodaki ops testlerinin emsaline bak: `grep -l "spec_from_file_location" tests/test_*uret*.py`):
+- [ ] **Step 1: Başarısız testler** (`tests/test_sohbet_profili_uret_v599.py`; üreteç `tests.conftest.betikten_modul_yukle` ile yüklenir — ham `loader.exec_module` v334 §B'de yasak (2026-09-30 uygulama hükmü)):
 
 ```python
 import json, pathlib, subprocess, sys, yaml, pytest

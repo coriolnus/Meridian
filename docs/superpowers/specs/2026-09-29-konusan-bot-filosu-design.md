@@ -131,6 +131,10 @@ satırlar profil taşımaz.
 - Kim yazar: bot kendi kararıyla YAZAMAZ (sağlayıcının retain aracı izin listesinde yok); yazan yalnız (a) sağlayıcının otomatik
   dönüş kaydı, (b) kanal katmanının DETERMİNİSTİK `hatırla: …` işleyicisi (etiket `sabit_not`, kaynak operatör). `unut: …` →
   geri alınabilir "unutuldu" işareti; kalıcı silme YOK.
+  (2026-09-30 DÜZELTME [Rol-1, G2 dal sonu incelemesi I-1]: (a) KALDIRILDI — sağlayıcının otomatik dönüş kaydı (`auto_retain`) Hermes
+  `sync_turn` ile ham metni `notify.scrub`'dan GEÇMEDEN kalıcı bankaya yazıyordu; sohbet profillerinde `auto_retain: false`,
+  `auto_recall: true`. Sohbet dönüşünü yazan tek taraf kanal katmanıdır: `bota_sor` scrub'lı mesaj + cevabı `bot`/`kanal`/`arac_siz_veri`
+  etiketleriyle yazar (Parça 1b G4). Yazan taraflar: bu deterministik dönüş kaydı + `hatırla:` işleyicisi.)
 - Uydurma koruması: SOUL sohbet bölümü — hafızadan gelen her cümle TARİHLİ atıfla söylenir; BUGÜNÜN durumu hakkında hafızadan hüküm
   verilmez (bugün yalnız araçtan). Hafıza 10 s'de gelmezse bot hafızasız cevaplar ve bunu SÖYLER.
 - Zamanlı raporlar HAFIZASIZ (2026-08-31 değerlendirmesi §7: "ne değişti" harness damgasıyla ÖLÇÜLÜR, hatırlanmaz). Uygulama:
