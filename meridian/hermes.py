@@ -3421,7 +3421,8 @@ def config_ensure_integrations() -> dict:
       • mcp_servers.meridian — salt-okunur veri sunucumuz (analytics/cf/near-miss/rejim/kalibrasyon).
         BİRLEŞTİRİR: yalnız yönetilen alanlar (command/args/env, tools.resources/prompts) kanoniğe
         çekilir, taşıma anahtarları kaldırılır; operatörün öteki anahtarları (`enabled` kararı, timeout,
-        tools.include …) KORUNUR. `enabled` YOKSA dağıtılan varsayılanla (K-1: false) eklenir.
+        tools.include …) KORUNUR. `enabled` YOKSA ya da Hermes'in AÇIK okuduğu bool-olmayan bir değerse
+        dağıtılan varsayılanla (K-1: false) konur — değişmez: yalnız bool `True` açık tutar.
       • hooks.pre_tool_call — koruma hook'u (state/secrets/mode/emir yüzeylerini sert bloklar).
         BİRLEŞTİRİR: guard girdisi yoksa başa eklenir, varsa yerinde kanonikleşir; öteki kancalar
         ve sıraları KORUNUR.
@@ -3467,7 +3468,7 @@ def config_ensure_integrations() -> dict:
     # BİRLEŞTİRME (TSK-258; TSK-257'nin `enabled` korumasını genelleştirir): öz-onarım YÖNETİLEN alanları
     # onarır, operatör kararlarına dokunmaz. `command/args/env` bütün olarak, `tools` altında yalnız
     # `resources/prompts` kanoniğe çekilir; girdinin öteki anahtarları (`enabled` — K-1 2026-09-30,
-    # `timeout`, `tools.include` araç daraltması …) aynen kalır — mevcut `enabled` DEĞİŞMEZ. Kıyas
+    # `timeout`, `tools.include` araç daraltması …) aynen kalır — mevcut bool `enabled` DEĞİŞMEZ (belirsiz değer: aşağıdaki tur 4). Kıyas
     # BİRLEŞTİRİLMİŞ hedefle ve TİP-KATI yapılır (`_tip_kati_esit`: `tools.resources: 0` Hermes'te AÇIK):
     # yönetilen alan farkı yoksa yazım YOK (churn yok). TAŞIMA anahtarları (`_MCP_TASIMA_ANAHTARLARI`) da
     # yönetilir: varsa KALDIRILIR — girdi başka bir uca yönelmesin.
