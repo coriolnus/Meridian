@@ -4346,8 +4346,13 @@ VERI_DISK_ESIK_G = 140                    # operatör 2026-09-12 "(a) dur, eşi�
                                           # DİĞER büyümenin bekçisidir (toplam 157 G, 17 G pay).
                                           # Tarihçe: 2026-09-05 → 110 (120 G kararının 10 G öncesi).
 # TSK-259 — ileri doldurma sürücüsünün KİMLİĞİ. TEK KAYNAK `deploy/oracle-a1/meridian-geridolum.
-# service` ExecStart'ıdır (`<venv>/bin/python /opt/veri/geridolum.py`); canlıda deploy/ ağacı
-# okunamadığı için ad burada KOPYADIR ve ayrışma çivisi v605 onu ExecStart'a bağlar.
+# service` ExecStart'ıdır (`<venv>/bin/python /opt/veri/geridolum.py`). Ad burada basit bir sabit
+# KOPYADIR, çünkü bekçi çalışma anında birim dosyası/ExecStart AYRIŞTIRMAZ: 300 sn'lik poll'a dosya
+# biçimine bağlı bir ayrıştırıcı eklemek kırılgan bir yol olurdu, ve yürürlükteki birim
+# `/etc/systemd/system/`teki elle kurulan kopyadır (F9 sınıfı — birim başlığı), depodaki değil.
+# (`deploy/` dağıtım rsync'inden dışlanmaz — `deploy/ansible/vars/dagit_vars.yml` içindeki
+# `rsync_disla` listesinde yok — ama bu kararı değiştirmez.) Ayrışma çivisi v605 kopyayı depodaki
+# ExecStart'a bağlar.
 GERIDOLUM_BETIK = "geridolum.py"
 PROC_KOK = "/proc"                        # testler sahte bir süreç tablosuna çevirir
 # TAŞMA TAVANI — bundan uzun koşan iş TAKILMIŞ sayılır ve eşik hükmü YİNE verilir. ÖLÇÜM (Rol-1,
@@ -4406,7 +4411,11 @@ def geridolum_is_durumu() -> dict:
     SÜRÜCÜ İMZASI birim ExecStart'ının biçimidir: argv[0] bir `python*`, argv[1]'in taban adı
     `GERIDOLUM_BETIK`. Editör (`vim …/geridolum.py`), `python -m py_compile …` ve işçinin
     `pilot.py` çocukları sürücü SAYILMAZ. Birden çok sürücü görünürse (flock ikinciyi saniyeler
-    içinde çıkarır) EN ESKİsi alınır — taşma için temkinli taraf.
+    içinde çıkarır) EN ESKİsi alınır — taşma için temkinli taraf. Yorumlayıcı bayrağı taşıyan biçim
+    (`python -u …/geridolum.py`, argv[1] = `-u`) BİLEREK eşleşmez → koşmuyor → alarm çalar (güvenli
+    yön): canlı ExecStart bayraksızdır (Rol-1 A1 ölçümü 2026-09-30:
+    `/opt/veri/pilot-venv/bin/python /opt/veri/geridolum.py`); birim bayrak alırsa v605 ayrışma
+    çivisi öter ve imza birlikte güncellenir.
 
     SÜRE: `/proc/uptime` − `stat` 22. alan (açılıştan beri tik) / `SC_CLK_TCK`. İkisi de açılış
     saatinden ölçülür; duvar saatine bakılmaz (NTP adımı süreyi bozamaz).
@@ -4478,7 +4487,13 @@ def check_veri_disk_and_alarm() -> dict:
     rep = veri_disk_report()
     if not rep["var"] or not rep["esik_asildi"]:
         return rep
-    is_durumu = geridolum_is_durumu()
+    try:
+        is_durumu = geridolum_is_durumu()
+    except Exception as e:  # sessiz-yutma: tespitin BEKLENMEDİK arızası hükmü DURDURMAZ — iş koşmuyor sayılır (güvenli yön: alarm çalar); istisnanın TÜRÜ alarm gövdesine gider, değeri gitmez
+        # Sarılmasaydı istisna `check_and_alarm`ın genel yakalayıcısına düşer, yalnız `warn`
+        # basılır (bildirim zinciri YOK) ve alarm eşik aşık kaldıkça her poll'da yutulurdu.
+        is_durumu = {"kosuyor": False, "pid": None, "sure_sn": None,
+                     "olculemedi_neden": f"tespit beklenmedik istisnayla düştü — {type(e).__name__}"}
     # `_satir()` `check_and_alarm()`in içinde tanımlı bir closure'dır, buradan çağrılamaz —
     # AYNI defter/sabitle eşdeğer "satırı bul/aç" mekaniği (iş kuralı DEĞİL, sözlük erişimi).
     doc = _gunluk_oku()

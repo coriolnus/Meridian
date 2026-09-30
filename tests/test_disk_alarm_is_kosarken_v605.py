@@ -204,6 +204,20 @@ def test_tespit_izin_yok_eslesme_yoksa_neden_yazilir(proc):
     assert d["olculemedi_neden"] and "okunamadı" in d["olculemedi_neden"]
 
 
+def test_tespit_yorumlayici_bayragi_eslesmez_alarm_calar(diskli, proc, alarmlar, monkeypatch):
+    """KARAR (düzeltme turu 1, M5b): `python -u …/geridolum.py` (argv[1] = "-u") sürücü SAYILMAZ →
+    koşmuyor → alarm ÇALAR (güvenli yön). Canlı ExecStart bayraksızdır (Rol-1 A1 ölçümü 2026-09-30:
+    `/opt/veri/pilot-venv/bin/python /opt/veri/geridolum.py`); birim bir gün bayrak alırsa ayrışma
+    çivisi (`test_ayrisma_betik_adi_birim_execstart_ile_ayni`) öter ve imza birlikte güncellenir."""
+    _surec(proc, 4250, ["/opt/veri/pilot-venv/bin/python", "-u", "/opt/veri/geridolum.py"],
+           yas_sn=10 * 60)
+    d = watchdog.geridolum_is_durumu()
+    assert d == {"kosuyor": False, "pid": None, "sure_sn": None, "olculemedi_neden": None}
+    _kullanimi_ayarla(monkeypatch, ASIM)
+    watchdog.check_veri_disk_and_alarm()
+    assert len(alarmlar) == 1 and alarmlar[0]["is_kosuyor"] is False
+
+
 def test_tespit_surec_yarisi_bitmis_surec_yok_sayilir(proc):
     """Listeleme ile okuma arasında biten süreç (cmdline YOK) normal yarıştır — ölçüm eksilmez."""
     (proc / "8001").mkdir()
@@ -334,6 +348,43 @@ def test_5_yol_yok_davranis_ayni_surec_tablosu_okunmaz(sandbox_state, alarmlar, 
     assert alarmlar == []
 
 
+def test_4c_tespit_beklenmedik_istisna_alarm_calar_tur_govdede(diskli, alarmlar, monkeypatch):
+    """Düzeltme turu 1 (M4): tespitin BEKLENMEDİK istisnası hükmü durdurmaz. Sarılmasaydı istisna
+    `check_and_alarm`ın genel yakalayıcısına düşer, yalnız `warn` basılır (bildirim zinciri YOK) ve
+    alarm her poll'da yutulurdu. Gövdeye istisnanın TÜRÜ gider, DEĞERİ gitmez."""
+    def _patlayan():
+        raise RuntimeError("gizli-deger-xyz")
+    monkeypatch.setattr(watchdog, "geridolum_is_durumu", _patlayan)
+    _kullanimi_ayarla(monkeypatch, ASIM)
+    rep = watchdog.check_veri_disk_and_alarm()
+    assert len(alarmlar) == 1, "tespit düştü diye alarm YUTULAMAZ — koşmuyor sayılır"
+    neden = alarmlar[0]["is_olculemedi_neden"]
+    assert neden and "RuntimeError" in neden
+    assert "gizli-deger-xyz" not in neden and "gizli-deger-xyz" not in alarmlar[0]["message"]
+    assert "ÖLÇÜLEMEDİ" in alarmlar[0]["message"]
+    assert alarmlar[0]["is_kosuyor"] is False and rep["atlandi"] is False
+
+
+def test_1d_gun_donumunde_atlama_sayaclari_sifirlanir(diskli, proc, alarmlar, monkeypatch):
+    """Düzeltme turu 1 (M5a): iki sayaç günlük defterin İÇİNDEdir — gün dönünce SIFIRDAN başlar
+    (`_gunluk_oku` davranışı); dünün tepesi bugünün tepesi diye okunmaz."""
+    gun = {"v": "2026-09-30"}
+    monkeypatch.setattr(watchdog, "_bugun", lambda now=None: gun["v"])
+    _surec(proc, 4242, SURUCU_ARGV, yas_sn=20 * 60)
+    _kullanimi_ayarla(monkeypatch, ASIM + 2)
+    watchdog.check_veri_disk_and_alarm()
+    watchdog.check_veri_disk_and_alarm()
+    assert _satir()["atlandi_is_kosuyor"] == 2 and _satir()["atlanan_tepe_g"] == float(ASIM + 2)
+    gun["v"] = "2026-10-01"
+    _kullanimi_ayarla(monkeypatch, ASIM)
+    watchdog.check_veri_disk_and_alarm()
+    doc = store.read_json(watchdog.ALARM_GUNLUK_FILE, {})
+    assert doc["gun"] == "2026-10-01"
+    assert _satir()["atlandi_is_kosuyor"] == 1, "dünün sayacı bugüne taşındı"
+    assert _satir()["atlanan_tepe_g"] == float(ASIM), "dünün tepesi bugüne taşındı"
+    assert alarmlar == []
+
+
 def test_esik_altinda_surec_tablosu_okunmaz_defter_yazilmaz(diskli, alarmlar, monkeypatch):
     """Ucuz yol: tespit YALNIZ eşik aşıldığında koşar (300 sn poll'unda boşuna /proc taranmaz)."""
     def _okunmamali():
@@ -418,3 +469,36 @@ def test_bayat_mesaj_metni_gitti():
     metin = ast.get_source_segment((SRC / "meridian" / "watchdog.py").read_text(encoding="utf-8"),
                                    fn) or ""
     assert "tavanına yaklaşıyor" not in metin
+
+
+# ---- düzeltme turu 1 (I1): OPERATÖRÜN GÖRDÜĞÜ metinler 09-12 + TSK-259 gerçeğini anlatır --------
+
+def test_obs_disk_esik_serhi_bayat_degil():
+    """`meridian/obs.py` ALARM_DISK_ESIK şerhi RUNBOOK'un "Belirti" (satır sonu) ve "Neden ayrı bir
+    sınıf" (üstteki blok) satırlarına ÜRETİLİR (`ops/runbook_uret.py::alarm_envanteri`) — bayat
+    kalırsa RUNBOOK aynı bölümde mesaj şablonuyla ÇELİŞİR."""
+    satirlar = (SRC / "meridian" / "obs.py").read_text(encoding="utf-8").splitlines()
+    i = next(n for n, s in enumerate(satirlar) if s.startswith("ALARM_DISK_ESIK ="))
+    blok = []
+    j = i - 1
+    while j >= 0 and satirlar[j].strip().startswith("#"):
+        blok.append(satirlar[j])
+        j -= 1
+    metin = " ".join(reversed(blok)) + " " + satirlar[i]
+    for bayat in ("tavanına yaklaşıyor", "10 G ÖNCESİNDE", "erken uyarı"):
+        assert bayat not in metin, f"obs.py ALARM_DISK_ESIK şerhi bayat: {bayat!r}"
+    for gercek in ("140 G", "KALICI", "TSK-259"):
+        assert gercek in metin, f"obs.py ALARM_DISK_ESIK şerhinde {gercek!r} yok"
+
+
+def test_pano_kapasite_karti_bayat_degil():
+    """`meridian/web/app.js` `kapasite` sınıfı (DISK_ESIK'in pano kartı) operatörün alarmı okuduğu
+    yerdir: 09-12'den beri eşik 140 G, alarm yalnız KALICI doluluğu hükme bağlar."""
+    js = (SRC / "meridian" / "web" / "app.js").read_text(encoding="utf-8")
+    bas = js.index("\n  kapasite: {")
+    son = js.index("\n  sir_kasasi: {", bas)
+    kart = js[bas:son]
+    for bayat in ("110 G", "tavanına yaklaşıyor", "kalıcı+geçici", "10 G ÖNCE"):
+        assert bayat not in kart, f"app.js kapasite kartı bayat: {bayat!r}"
+    for gercek in ("140 G", "KALICI", "atlandi_is_kosuyor", "/api/diagnostics"):
+        assert gercek in kart, f"app.js kapasite kartında {gercek!r} yok"
