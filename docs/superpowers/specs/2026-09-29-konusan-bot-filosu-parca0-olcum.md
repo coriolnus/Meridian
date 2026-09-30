@@ -18,6 +18,8 @@ varlık sebebi tam budur. Parça 1b KABUL KOŞULU (deterministik, modele güvenm
 alır (Hermes oturum mesajlarındaki `tool_calls`); sayı 0 iken cevap veri/sayı/kaynak içeriyorsa cevabın başına "⚠️ bu cevap hiçbir araç çağrısına
 dayanmıyor" eklenir ve defter satırı `arac_siz_veri: true` taşır; ölçüm kartında bu satır sıfır tolerans kill maddesidir.
 
+**2026-09-30 01:1xZ Rol-1 NOTU — bu bölümün 'KABUL KOŞULU' metni UYGULAMAYLA DEĞİŞTİ (Parça 1b-ön, main 4a81c185; kararlar incelemelerle):** (1) sayım `tool_calls` öğeleri DEĞİL, bu turda DÖNEN `role: tool` sonuç mesajlarıdır ve yalnız oturum dökümünün son asistan mesajı alınan cevaba eşitse güvenilir (değilse `None`); hata dönen araç da sayılır (bilinen sınır). (2) `arac_siz_veri` ölçülemediğinde `None`dur (0 değil) ve `arac_olculemedi` AYRI bir metriktir — kart her `None` satırını ihlalsiz saymaz, `arac_olculemedi` oranını kendi eşiğiyle ölçer (yoksa ölçüm bozulunca kart boş geçer). (3) Veri işareti `veri_isareti`: `rakam/yuzde/kaynak/sembol:<X>/sozluk:<kök>`; SIFIR TOLERANS aday sınıfı yalnız `rakam/yuzde/kaynak/sembol` — ama tarih/süre rakamları ve büyük harfli uyarı kelimeleri yanlış pozitif üretir: kart dondurulmadan ADIM-0'da bu sınıfların yanlış-pozitif oranı ve `arac_cagrilari==0 ∧ veri_isareti is None` satırlarından kaçan (nitel/İngilizce) uydurma örneklemesi ölçülür; `sozluk:*` inceleme sınıfıdır. (4) Planın dar veri kuralı ve `tool_calls` ifadesi GEÇERSİZDİR.
+
 ## Sonuçlar
 
 | # | Soru | Sonuç | Kanıt |
