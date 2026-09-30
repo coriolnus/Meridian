@@ -1,0 +1,68 @@
+# ÜRETİLMİŞ — elle düzenlenmez; üreteç `ops/sohbet_profili_uret.py`.
+# Kaynak: deploy/hermes/profiles/karne/config.yaml (duruş: kanca, onay, kapalı takımlar, model, sağlayıcılar —
+# gerekçeleri orada) + deploy/hermes/config.yaml içindeki mcp_servers → meridian girdisi (--bot karne ekiyle)
+# + üretecin sohbet sabitleri (zaman aşımı, yeniden deneme, hafıza sağlayıcısı, platform izin listesi).
+# Değiştirmek için kaynağı düzenle ve üreteci --yaz ile koş; tazelik kapısı --kontrol.
+hooks:
+  pre_tool_call:
+  - matcher: terminal|write_file|patch|edit|apply_patch
+    command: /opt/meridian/ops/meridian-guard.sh
+    timeout: 10
+hooks_auto_accept: true
+agent:
+  disabled_toolsets:
+  - terminal
+  - file
+  - code_execution
+  - browser
+  - web
+  - delegation
+  - cronjob
+  - computer_use
+  - memory
+  - session_search
+  - image_gen
+  - video_gen
+  - tts
+  api_max_retries: 2
+approvals:
+  mode: smart
+  cron_mode: deny
+  deny:
+  - '*dagit.sh*'
+  - '*git push*'
+  - '*git commit*'
+  - '*systemctl*'
+  - '*serve.sh*'
+model:
+  provider: custom:kapi
+  default: nvidia/nemotron-3-ultra-550b-a55b:free
+  max_tokens: 2000
+providers:
+  openrouter:
+    request_timeout_seconds: 60
+  kapi:
+    base_url: http://127.0.0.1:9080/llm/v1
+    key_env: BOT_KEY_KARNE
+  custom:
+    request_timeout_seconds: 60
+mcp_servers:
+  meridian:
+    enabled: true
+    command: /opt/meridian/.venv/bin/python
+    args:
+    - -m
+    - meridian.mcp_server
+    - --bot
+    - karne
+    env:
+      PYTHONPATH: /opt/meridian
+      MERIDIAN_ROOT: /opt/meridian
+    tools:
+      resources: false
+      prompts: false
+platform_toolsets:
+  api_server:
+  - meridian
+memory:
+  provider: hindsight

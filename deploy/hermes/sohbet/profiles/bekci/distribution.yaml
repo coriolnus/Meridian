@@ -1,0 +1,29 @@
+# ÜRETİLMİŞ — elle düzenlenmez; üreteç `ops/sohbet_profili_uret.py`.
+# Kaynak: deploy/hermes/profiles/bekci/distribution.yaml (sürüm tabanı, kapı anahtarı beyanı).
+name: bekci
+version: 0.1.0
+description: bekci sohbet profili — ÜRETİLMİŞ (rapor profilinden türetildi)
+hermes_requires: '>=0.19.0'
+env_requires:
+- name: BOT_KEY_BEKCI
+  description: 'Profilin KAPI anahtarı — koşumun GERÇEKTEN okuduğu anahtar (TSK-105,
+    2026-09-02). `config.yaml` `model.provider: custom:kapi` diyor ve o girdinin `key_env`i
+    tam bu addır; hermes değeri `Authorization: Bearer` olarak gönderir, kapıdaki
+    köprü `apikey`e çevirir, `key-auth` doğrular. Değer KAPININ tüketici beyanıyla
+    AYNI olmak zorunda (`deploy/apisix/routes.yaml` → `bot_bekci` → `$env://BOT_KEY_BEKCI`).
+    Profil = bağımsız HERMES_HOME dizini, yani KENDİ `.env`ini okur (ölçüldü, `hermes_cli/env_loader.py`:
+    yüklenen dosya `HERMES_HOME/.env`) — ne ana profilin ne `@sef`in anahtarı ona
+    GEÇER. Anahtar yoksa/yanlışsa arıza GÜRÜLTÜLÜ DEĞİLDİR: kapı 401 döner, LLM her
+    koşumda düşer, ham liste yolu devreye girer ve teslimat çalışıyor GÖRÜNÜR — bot
+    hiç düşünmeden. Sessiz bozulma tam olarak budur, ve bu botun var oluş sebebi o
+    sınıfı görünür kılmaktır. `env_requires` `.env` YAZMAZ; kurulu profile `.env.EXAMPLE`
+    bırakır (`.env` kullanıcı-sahipli).'
+  required: true
+- name: HINDSIGHT_API_KEY
+  required: true
+  description: Hindsight kiracı anahtarı; değer G3 biriminin credential'ından, dosyaya
+    yazılmaz
+distribution_owned:
+- SOUL.md
+- config.yaml
+- hindsight/config.json

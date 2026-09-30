@@ -1,0 +1,28 @@
+# ÜRETİLMİŞ — elle düzenlenmez; üreteç `ops/sohbet_profili_uret.py`.
+# Kaynak: deploy/hermes/profiles/karne/distribution.yaml (sürüm tabanı, kapı anahtarı beyanı).
+name: karne
+version: 0.1.0
+description: karne sohbet profili — ÜRETİLMİŞ (rapor profilinden türetildi)
+hermes_requires: '>=0.19.0'
+env_requires:
+- name: BOT_KEY_KARNE
+  description: 'Profilin KAPI anahtarı — koşumun GERÇEKTEN okuduğu anahtar (TSK-105,
+    2026-09-02). `config.yaml` `model.provider: custom:kapi` diyor ve o girdinin `key_env`i
+    tam bu addır; hermes değeri `Authorization: Bearer` olarak gönderir, kapıdaki
+    köprü `apikey`e çevirir, `key-auth` doğrular. Değer KAPININ tüketici beyanıyla
+    AYNI olmak zorunda (`deploy/apisix/routes.yaml` → `bot_karne` → `$env://BOT_KEY_KARNE`).
+    Profil = bağımsız HERMES_HOME dizini, yani KENDİ `.env`ini okur (ölçüldü, `hermes_cli/env_loader.py`:
+    yüklenen dosya `HERMES_HOME/.env`) — ne ana profilin ne kardeşlerin anahtarı ona
+    GEÇER. Anahtar yoksa/yanlışsa arıza GÜRÜLTÜLÜ DEĞİLDİR: kapı 401 döner, LLM her
+    koşumda düşer, ham karne yolu devreye girer ve teslimat çalışıyor GÖRÜNÜR — bot
+    hiç düşünmeden. Bu profilde bedeli DAR ve ölçülmüştür: kaybolan şey yalnız SUNUMdur,
+    hükümler ve değişim işaretleri her hâlükârda gider.'
+  required: true
+- name: HINDSIGHT_API_KEY
+  required: true
+  description: Hindsight kiracı anahtarı; değer G3 biriminin credential'ından, dosyaya
+    yazılmaz
+distribution_owned:
+- SOUL.md
+- config.yaml
+- hindsight/config.json
