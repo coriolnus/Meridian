@@ -15,12 +15,15 @@ HİZMETE çeviren beş parçayı çiviler:
     `SystemExit`i aynen; bilinmeyen argüman argparse çıkışı (2).
   * 4096 BÖLME (plan Review Focus 3) — Telegram `sendMessage` metin tavanı. Sayım UTF-16 KOD BİRİMİYLE (BMP dışı karakter
     iki sayılır — Telegram'ın karakter mi UTF-16 birimi mi saydığı ÖLÇÜLMEDİ, güvenli taraf); satır sınırında, tek satır
-    tavanı aşarsa karakter sınırında (Python `str` birimi — bir kod noktası asla ikiye bölünmez). İmza + `reply_to` YALNIZ
-    ilk parçada. Bölme `notify.scrub`'DAN SONRA: sınırı ortadan kesen bir anahtar iki yarım hâlinde desenden kaçmaz ve
+    tavanı aşarsa karakter sınırında (Python `str` birimi — bir kod noktası asla ikiye bölünmez). Tur 2 (Rol-1, K2): imza
+    HER parçanın ilk satırı, çok parçalıda sonunda ` (i/n)` — `_SOHBET_IMZA` eki tanır, oturumu eksiz yakalar; hangi parçaya
+    yanıt verilirse aynı bot + aynı oturum. Tavan imza satırını ve eki SAYAR. `reply_to` YALNIZ ilk parçada; tek parça
+    bugünkü biçimde (eksiz). Bölme `notify.scrub`'DAN SONRA: sınırı ortadan kesen bir anahtar iki yarım hâlinde desenden kaçmaz ve
     scrub'ın UZATTIĞI metin (`://u:p@` → `://***:***@`) tavanı sonradan aşmaz. Teslim edilemeyen parça
     `telegram_parca_teslim_hatasi` (parça no/toplam) ve kalan parçalar YİNE denenir.
   * ARA BİLDİRİM (Review Focus 4) — `bota_sor` `ARA_BILDIRIM_ESIGI_S` (8 sn) içinde dönmezse enjekte `bildir` ile BİR kez
-    "⏳ @<bot> düşünüyor…" (imzasız, operatörün mesajına yanıt). Zamanlayıcı cevaptan ÖNCE kapanır (kilit + bayrak + iptal):
+    ara bildirim (1. satır sohbet imzası EKSİZ, 2. satır "⏳ düşünüyor…" — Tur 2: ona yanıt da aynı bota/oturuma gider;
+    operatörün mesajına yanıt). Zamanlayıcı cevaptan ÖNCE kapanır (kilit + bayrak + iptal):
     cevap gittikten sonra ara bildirim ASLA gitmez. Zamanlayıcı enjekte edilir — bu dosyada gerçek `sleep` YOK; tek gerçek
     iplik çivisi eşik 0 ile `Event` bekler (sınırlı bekleme, yoklama döngüsü değil).
   * İLK KOŞUM OFSETİ — `telegram_ofset.json` YOKSA ilk (bloklamayan, `timeout: 0`) yoklamada BİRİKMİŞ güncellemeler
@@ -280,17 +283,82 @@ def _isle(cevap, gonder=None, **kw):
 IMZA = "💬 @bekci · tg-bekci-20260929"
 
 
-def test_isle_uzun_cevap_parcalanir_imza_ve_reply_to_yalniz_ilk_parcada(sandbox_state):
-    satirlar = [f"satır {i:04d} " + "y" * 90 for i in range(120)]
-    cevap = "\n".join(satirlar)
-    _, gidenler = _isle(cevap)
-    assert len(gidenler) >= 3
+UZUN_CEVAP = "\n".join(f"satır {i:04d} " + "y" * 90 for i in range(120))      # ~12k karakter → 3+ parça
+
+
+def test_isle_uzun_cevap_her_parca_imzali_ve_sirali_reply_to_yalniz_ilk_parcada(sandbox_state):
+    # Tur 2 (Rol-1 kararı, K2): imza HER parçanın ilk satırı — operatör hangi parçaya yanıt verirse versin yönlendirme
+    # aynı bota ve aynı oturuma gider. Çok parçalıda imza satırının sonunda ` (i/n)`; `reply_to` YALNIZ ilk parçada.
+    _, gidenler = _isle(UZUN_CEVAP)
+    n = len(gidenler)
+    assert n >= 3
+    assert [t.split("\n", 1)[0] for t, _ in gidenler] == [f"{IMZA} ({i}/{n})" for i in range(1, n + 1)]
+    assert [r for _, r in gidenler] == [7] + [None] * (n - 1)
     assert all(_u16(t) <= td.TELEGRAM_TAVANI for t, _ in gidenler)
-    assert gidenler[0][0].startswith(IMZA + "\n") and gidenler[0][1] == 7
-    assert sum(t.startswith("💬 @") for t, _ in gidenler) == 1, [t[:40] for t, _ in gidenler]
-    assert [r for _, r in gidenler[1:]] == [None] * (len(gidenler) - 1)
-    govdeler = [gidenler[0][0].split("\n", 1)[1]] + [t for t, _ in gidenler[1:]]
-    assert "\n".join(govdeler) == cevap
+    assert "\n".join(t.split("\n", 1)[1] for t, _ in gidenler) == UZUN_CEVAP
+
+
+def test_ikinci_parcaya_yanit_ayni_bota_ve_ayni_oturuma_gider(sandbox_state):
+    # Yanıt GÜNÜ farklı (20261001): oturum yanıtlanan parçanın imzasından SÜRER, bugünden türetilmez.
+    _, gidenler = _isle(UZUN_CEVAP)
+    yanit = {"message_id": 50, "chat": {"id": int(YETKILI), "type": "private"}, "from": {"id": int(YETKILI)},
+             "text": "bu kısmı aç", "reply_to_message": {"message_id": 41, "text": gidenler[1][0]}}
+    y = td.yonlendir(yanit, YETKILI)
+    assert (y.bot, y.neden) == ("bekci", "sohbet_imza")
+    assert td.oturum_kimligi("bekci", yanit, "20261001") == "tg-bekci-20260929"
+    cagrilar = []
+    td.isle({"update_id": 2, "message": yanit}, yetkili_sohbet=YETKILI,
+            bota_sor=lambda bot, m, k, o: cagrilar.append((bot, o)) or "tamam", gonder=lambda t, r: True,
+            bugun="20261001")
+    assert cagrilar == [("bekci", "tg-bekci-20260929")]
+
+
+def test_ikinci_parcaya_govdesiz_unut_yaniti_imza_satirini_atlar(sandbox_state):
+    # `(i/n)` ekli imza da İÇERİK değildir: gövdesiz `unut:` sorgusu parçanın ilk içerik satırı olur, imza satırı değil.
+    _, gidenler = _isle(UZUN_CEVAP)
+    ikinci_icerik = gidenler[1][0].split("\n")[1]
+    yanit = {"message_id": 51, "chat": {"id": int(YETKILI), "type": "private"}, "from": {"id": int(YETKILI)},
+             "text": "unut:", "reply_to_message": {"message_id": 41, "text": gidenler[1][0]}}
+    cagrilar = []
+    td.isle({"update_id": 3, "message": yanit}, yetkili_sohbet=YETKILI,
+            bota_sor=lambda bot, m, k, o: cagrilar.append((bot, m)) or "tamam", gonder=lambda t, r: True,
+            bugun="20260929")
+    # Sorgu `bot_kanal.alinti_ilk_satiri` tavanıyla kesilir (tek kaynak; v592 gövdesiz `unut:` çivileri).
+    assert cagrilar == [("bekci", f"unut: {ikinci_icerik[:bot_kanal.KAYNAK_ETIKETI_TAVANI]}")]
+    assert not ikinci_icerik.startswith("💬")
+
+
+@pytest.mark.parametrize("satir, bot, oturum", [
+    ("💬 @bekci", "bekci", None),                                       # bugünkü eski biçimler AYNEN tanınır
+    ("💬 @bekci · tg-bekci-20260929", "bekci", "tg-bekci-20260929"),
+    ("💬 @karne · tg-karne-r55", "karne", "tg-karne-r55"),
+    ("💬 @bekci · tg-bekci-20260929 (2/3)", "bekci", "tg-bekci-20260929"),   # parça eki: oturum grubu EKSİZ
+    ("💬 @karne · tg-karne-r55 (12/13)", "karne", "tg-karne-r55"),
+])
+def test_sohbet_imza_deseni_parca_ekini_tanir_oturum_eksiz(satir, bot, oturum):
+    s = td._SOHBET_IMZA.match(satir)
+    assert s and (s.group(1), s.group(2)) == (bot, oturum)
+
+
+def test_sohbet_imza_deseni_bozuk_eki_tanimaz():
+    for satir in ("💬 @bekci · tg-bekci-20260929 (2/)", "💬 @bekci · tg-bekci-20260929 (2/3) fazla",
+                  "💬 @bekci · tg-bekci-20260929(2/3)"):
+        assert td._SOHBET_IMZA.match(satir) is None, satir
+
+
+def test_imzali_parca_tavani_asmaz_ek_dahil(sandbox_state):
+    # Tavan imza satırını VE ` (i/n)` ekini sayar. Tek satırlık dev cevap parçaları tavana kadar DOLDURUR (sınır testi);
+    # 13 parçada ek iki haneye çıkar — ek uzunluğu parça sayısıyla büyür. 36560: eksiz bütçeyle 9 parça, tek haneli ek
+    # ayrılınca 10'a çıkar → ek İKİ haneye büyür; bölme hane sayısı sabitlenene dek yinelenmezse tavan 1 birim aşılırdı.
+    # Beklenen EN UZUN mesaj: dolu parçalar bütçeyi tam doldurur; 36560'ta dolu parçaların eki tek hanelidir (`(i/10)`,
+    # i<10) ama bütçe iki haneli ek için ayrıldı → 4095. Diğer ikisinde tavana TAM oturur (sınır gerçekten sınandı).
+    for uzunluk, beklenen_n, en_uzun in ((10000, 3, 4096), (36560, 10, 4095), (50000, 13, 4096)):
+        _, gidenler = _isle("x" * uzunluk)
+        n = len(gidenler)
+        assert n == beklenen_n, n
+        assert all(_u16(t) <= td.TELEGRAM_TAVANI for t, _ in gidenler), max(_u16(t) for t, _ in gidenler)
+        assert max(_u16(t) for t, _ in gidenler) == en_uzun
+        assert "".join(t.split("\n", 1)[1] for t, _ in gidenler) == "x" * uzunluk
 
 
 def test_isle_kisa_cevap_bugunku_tek_mesaj(sandbox_state):
@@ -379,7 +447,8 @@ def _ara_isle(bota_sor, bildir_sonuc=True):
     return olay, zamanlayicilar
 
 
-ARA = "⏳ @bekci düşünüyor…"
+# Tur 2 (Rol-1, K2): ara bildirim imza satırıyla başlar (EKSİZ) — ona verilen yanıt da aynı bota ve oturuma gider.
+ARA = IMZA + "\n⏳ düşünüyor…"
 
 
 def test_ara_bildirim_esik_altinda_gitmez_ve_zamanlayici_iptal_edilir(sandbox_state):
@@ -400,6 +469,21 @@ def test_ara_bildirim_esik_ustunde_bir_kez_ve_cevaptan_once_gider(sandbox_state)
 
     olay, _ = _ara_isle(yavas)
     assert olay == [("bildir", ARA, 7), ("gonder", IMZA + "\ngeç cevap", 7)]
+
+
+def test_ara_bildirime_yanit_ayni_bota_ve_ayni_oturuma_gider(sandbox_state):
+    def yavas(zs):
+        zs[0].ates()
+        return "geç cevap"
+
+    olay, _ = _ara_isle(yavas)
+    ara_metni = olay[0][1]
+    assert olay[0][0] == "bildir" and ara_metni == ARA
+    yanit = {"message_id": 60, "chat": {"id": int(YETKILI), "type": "private"}, "from": {"id": int(YETKILI)},
+             "text": "acele etme", "reply_to_message": {"message_id": 8, "text": ara_metni}}
+    y = td.yonlendir(yanit, YETKILI)
+    assert (y.bot, y.neden) == ("bekci", "sohbet_imza")
+    assert td.oturum_kimligi("bekci", yanit, "20261001") == "tg-bekci-20260929"
 
 
 def test_ara_bildirim_cevap_gittikten_sonra_asla_gitmez_yaris(sandbox_state):
@@ -574,5 +658,6 @@ def test_dongu_varsayilan_bildirimi_notify_yanitla(sandbox_state, monkeypatch):
     zs = []
     td.dongu(bota_sor=lambda *a: "ok", tur_sayisi=1, _cagir=_yoklama([[_g(3, "merhaba")]], []),
              _uyku=lambda s: None, _zamanlayici=lambda sure, fn: Hemen(zs, sure, fn))
-    assert len(giden) == 2 and giden[0] == ("⏳ @sef düşünüyor…", 3)
+    assert len(giden) == 2 and giden[0][1] == 3
+    assert giden[0][0].startswith("💬 @sef · tg-sef-") and giden[0][0].endswith("\n⏳ düşünüyor…")
     assert giden[1][1] == 3 and giden[1][0].startswith("💬 @sef · tg-sef-") and giden[1][0].endswith("\nok")

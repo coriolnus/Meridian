@@ -4,7 +4,8 @@ yönlendirir, cevabı aynı sohbete YANIT olarak geri verir (spec 2026-09-29 §3
 NE YAPAR. `getUpdates` uzun yoklamasıyla (`guncellemeleri_al`) gelen her güncellemeyi `isle` işler:
 `yonlendir` önce yetkiyi sınar, sonra hedef botu seçer — `@ad` öneki (`@Bekci:`/`@KARNE,`/`@bekçi`
 biçimleri dahil; Türkçe harf `kadro.ad_katla` ile katlanır) → o bot; bir bot cevabına (`💬 @ad · <oturum>`
-ilk satırı) yanıt → aynı bot; bir rapora yanıt (ilk satır kadrodaki bir aktif botun imzasıyla başlar,
+ilk satırı; çok parçalı cevabın her parçası ve ara bildirim de bu satırı taşır) yanıt → aynı bot; bir rapora
+yanıt (ilk satır kadrodaki bir aktif botun imzasıyla başlar,
 `kadro.imzadan_bot`) → o bot; hiçbiri yoksa `@sef`. Cevap `bota_sor(bot, metin, kanal, oturum)` ile
 alınır ve `💬 @ad · <oturum>` imzasıyla gönderilir.
 
@@ -55,11 +56,15 @@ DEĞİŞMEZLER.
   * CEVAP 4096'YA BÖLÜNÜR (plan Review Focus 3): `sendMessage` metin tavanı `TELEGRAM_TAVANI`. Bölme `notify.scrub`'DAN
     SONRA yapılır — sınırı ortadan kesen bir anahtar iki yarım hâlinde desenden kaçmasın, scrub'ın UZATTIĞI metin
     (`://u:p@` → `://***:***@`) tavanı sonradan aşmasın (`yanitla`nın parça başına scrub'ı scrub'lı metinde
-    büyümez). İmza ve `reply_to` YALNIZ ilk parçada (yanıt zinciri ilk parçanın imzasından sürer); ayrıntı `parcala`.
+    büyümez). İMZA HER PARÇADA (Tur 2, Rol-1 kararı — yönlendirme doğruluğu > sadelik): her parçanın ilk satırı sohbet
+    imzasıdır, çok parçalıda sonunda `PARCA_EKI` (` (i/n)`); `_SOHBET_IMZA` eki tanır ve oturumu eksiz yakalar, yani
+    operatör HANGİ parçaya yanıt verirse versin aynı bot + aynı oturum. Tek parça bugünkü biçimde (eksiz). Tavan imza
+    satırını ve eki SAYAR. `reply_to` YALNIZ ilk parçada. Ayrıntı `imzali_parcalar`, `parcala`.
     Teslim edilemeyen parça SESSİZ değildir (`telegram_parca_teslim_hatasi`: bot, parça no/toplam, sınıf) ve kalan
     parçalar YİNE denenir.
   * ARA BİLDİRİM CEVAPTAN SONRA ASLA GİTMEZ (Review Focus 4): `bota_sor` `ARA_BILDIRIM_ESIGI_S` içinde dönmezse
-    enjekte `bildir` ile BİR kez `ARA_BILDIRIM` (imzasız, operatörün mesajına yanıt) gider; ayrıntı `_AraBildirim`.
+    enjekte `bildir` ile BİR kez ara bildirim gider — 1. satır sohbet imzası (eksiz; ona yanıt da aynı bota ve oturuma
+    gider), 2. satır `ARA_BILDIRIM`; operatörün mesajına yanıt olarak. Ayrıntı `_AraBildirim`.
     `bildir` `gonder`den AYRIDIR: tek teslimat yolu yine `notify.yanitla`dır, ama "cevap" ile "bekleme işareti"
     ayrı sayılır (v592'nin `gidenler[0]` sözleşmesi cevabı gösterir).
   * YASA 6: `telegram_ofset.json`in yazarı ve okuyucusu `dongu`nun kendisidir (süreç yeniden
@@ -93,8 +98,12 @@ OTURUM_AYRACI = " · "
 VARSAYILAN_BOT = "sef"
 OFSET_DOSYASI = "telegram_ofset.json"
 _ONEK = re.compile(r"^@([A-Za-zÇĞİÖŞÜçğıöşü_]+)[:,]?\s*(.*)$", re.S)
-#: Bot adı [a-z_] — kadro bunu ZORLAR (`kadro.AD_DESENI`). Oturum `tg-<ad>-r<N>` ya da `tg-<ad>-<YYYYAAGG>`.
-_SOHBET_IMZA = re.compile(r"^💬 @([a-z_]+)(?: · (tg-[a-z_]+-r?\d+))?\s*$")
+#: Bot adı [a-z_] — kadro bunu ZORLAR (`kadro.AD_DESENI`). Oturum `tg-<ad>-r<N>` ya da `tg-<ad>-<YYYYAAGG>`. Çok parçalı
+#: cevabın imza satırı sonunda `PARCA_EKI` (` (i/n)`) taşır (G4 Görev 3 Tur 2): desen eki TANIR ama oturum grubuna
+#: KATMAZ — hangi parçaya yanıt verilirse verilsin aynı bot + aynı oturum.
+_SOHBET_IMZA = re.compile(r"^💬 @([a-z_]+)(?: · (tg-[a-z_]+-r?\d+))?(?: \([1-9]\d*/[1-9]\d*\))?\s*$")
+#: Çok parçalı cevapta her parçanın imza satırının sonuna eklenen sıra eki; tek parçada YOK (bugünkü biçim aynen).
+PARCA_EKI = " ({no}/{toplam})"
 _POZITIF_TAMSAYI = re.compile(r"[1-9]\d*")
 #: Telegram `sendMessage` metin tavanı (Bot API: "1-4096 characters"). Sayım UTF-16 KOD BİRİMİYLE yapılır: Telegram'ın
 #: karakteri kod noktası mı UTF-16 birimi mi saydığı ÖLÇÜLMEDİ (2026-09-30) — BMP dışı karakteri (emoji) iki saymak
@@ -105,9 +114,10 @@ TELEGRAM_TAVANI = 4096
 GUNCELLEME_SAYFASI = 100
 #: Uzun yoklamanın sunucu tarafı bekleme süresi (sn). İlk koşum yoklaması 0 ile (bloklamadan) yapılır — `dongu`.
 UZUN_YOKLAMA_S = 50
-#: `bota_sor` bu kadar saniyede dönmezse operatöre bir kez `ARA_BILDIRIM` gider (Rol-1 kararı 4, G4).
+#: `bota_sor` bu kadar saniyede dönmezse operatöre bir kez ara bildirim gider (Rol-1 kararı 4, G4): 1. satır sohbet
+#: imzası (EKSİZ), 2. satır `ARA_BILDIRIM` — imza sayesinde ona verilen yanıt da aynı bota ve oturuma gider (Tur 2).
 ARA_BILDIRIM_ESIGI_S = 8
-ARA_BILDIRIM = "⏳ @{ad} düşünüyor…"
+ARA_BILDIRIM = "⏳ düşünüyor…"
 
 
 @dataclass(frozen=True)
@@ -225,11 +235,13 @@ def _karakterle_kes(satir: str, sinir: int) -> tuple[str, str]:
 
 
 def parcala(metin: str, *, ilk_butce: int, butce: int = TELEGRAM_TAVANI) -> list[str]:
-    """`metin`i her biri tavana sığan parçalara böler; ilk parçanın bütçesi `ilk_butce` (imza satırı ona eklenir),
-    sonrakilerin `butce`. Satır SINIRINDA böler (parça sınırındaki satır sonu düşer — yalnız satır sınırında bölünen
+    """`metin`i her biri tavana sığan parçalara böler; ilk parçanın bütçesi `ilk_butce`, sonrakilerin `butce`
+    (`imzali_parcalar` ikisini de imza satırı + ek kadar kısaltır — her parça imzalıdır). Satır SINIRINDA böler
+    (parça sınırındaki satır sonu düşer — yalnız satır sınırında bölünen
     metinde `"\\n".join(parcalar) == metin`); tek başına bütçeyi aşan satır kod noktası sınırında kesilir
     (`_karakterle_kes`; o kesimde ayraç yoktur). Uzunluk `utf16_uzunluk` ile.
-    Boş/yalnız boşluk parça ÜRETİLMEZ (Telegram boş metni reddeder) — ilk parça hariç: o imzayı taşır, boş kalamaz.
+    Boş/yalnız boşluk parça ÜRETİLMEZ (boş gövdeli bir `(i/n)` mesajı gürültüdür) — ilk parça hariç: boş cevabın da
+    tek mesajı vardır.
     Boş `metin` → `[""]` (bugünkü tek mesaj)."""
     parcalar: list[str] = []
     cari: str | None = None
@@ -253,13 +265,34 @@ def parcala(metin: str, *, ilk_butce: int, butce: int = TELEGRAM_TAVANI) -> list
     return parcalar[:1] + [p for p in parcalar[1:] if p.strip()]
 
 
-def _parcali_gonder(gonder, bot: str, imza: str, cevap: str, reply_to) -> None:
-    """Cevabı ÖNCE scrub'lar, SONRA böler (modül başlığı, CEVAP 4096'YA BÖLÜNÜR); ilk parça `imza` satırı + `reply_to`
-    taşır, sonrakiler çıplak ve yanıtsız. Parça başına teslim hatası olay olur ve kalan parçalar yine denenir."""
-    parcalar = parcala(notify.scrub(cevap), ilk_butce=TELEGRAM_TAVANI - utf16_uzunluk(imza) - 1)
+def imzali_parcalar(imza: str, govde: str) -> list[str]:
+    """`govde`yi HER BİRİ ilk satırında `imza` taşıyan mesajlara böler (Tur 2, Rol-1 kararı: yönlendirme doğruluğu >
+    sadelik). Tek parça: `"<imza>\n<gövde>"` — bugünkü biçim, EKSİZ. Çok parça: imza satırının sonuna `PARCA_EKI`.
+    TAVAN imza satırını ve eki SAYAR: bütçe en uzun ek (` (n/n)`) için ayrılır; ekin hane sayısı parça sayısıyla büyür,
+    bu yüzden bölme hane sayısı sabitlenene dek yinelenir (bütçe yalnız küçülür → parça sayısı yalnız büyür → sonlanır)."""
+    butce = TELEGRAM_TAVANI - utf16_uzunluk(imza) - 1
+    parcalar = parcala(govde, ilk_butce=butce, butce=butce)
+    if len(parcalar) == 1:
+        return [f"{imza}\n{parcalar[0]}"]
     toplam = len(parcalar)
-    for no, parca in enumerate(parcalar, 1):
-        metin, hedef = (f"{imza}\n{parca}", reply_to) if no == 1 else (parca, None)
+    while True:
+        ek_butce = butce - utf16_uzunluk(PARCA_EKI.format(no=toplam, toplam=toplam))
+        parcalar = parcala(govde, ilk_butce=ek_butce, butce=ek_butce)
+        if len(str(len(parcalar))) <= len(str(toplam)):
+            break
+        toplam = len(parcalar)
+    toplam = len(parcalar)
+    return [f"{imza}{PARCA_EKI.format(no=no, toplam=toplam)}\n{parca}" for no, parca in enumerate(parcalar, 1)]
+
+
+def _parcali_gonder(gonder, bot: str, imza: str, cevap: str, reply_to) -> None:
+    """Cevabı ÖNCE scrub'lar, SONRA böler (modül başlığı, CEVAP 4096'YA BÖLÜNÜR); her parça imzalıdır
+    (`imzali_parcalar`), `reply_to` YALNIZ ilk parçada. Parça başına teslim hatası olay olur ve kalan parçalar yine
+    denenir."""
+    mesajlar = imzali_parcalar(imza, notify.scrub(cevap))
+    toplam = len(mesajlar)
+    for no, metin in enumerate(mesajlar, 1):
+        hedef = reply_to if no == 1 else None
         try:
             teslim = gonder(metin, hedef)
         except Exception as e:  # sinyalli: olay (bot, parça no/toplam, yalnız sınıf adı); kalan parçalar YİNE denenir
@@ -270,7 +303,7 @@ def _parcali_gonder(gonder, bot: str, imza: str, cevap: str, reply_to) -> None:
 
 
 class _AraBildirim:
-    """`bota_sor` uzun sürerse BİR kez "⏳ @<bot> düşünüyor…" — ve cevaptan SONRA ASLA (plan Review Focus 4).
+    """`bota_sor` uzun sürerse BİR kez "<imza>\n⏳ düşünüyor…" — ve cevaptan SONRA ASLA (plan Review Focus 4).
 
     ÜÇ KATMAN, üçü de gerekli: (1) `kapat()` cevap gönderiminden ÖNCE kilit altında `_kapandi` bayrağını kurar — iplik
     beklemeyi bitirmiş ama iptal ona yetişmemişse (`Timer.cancel` koşmakta olan işlevi durdurmaz) işlev kilidi alınca
@@ -280,8 +313,8 @@ class _AraBildirim:
     eşik dolana dek boşuna yaşamaz. `_gitti` ikinci ateşlemeyi susturur (BİR kez). İplik `daemon`: süreç çıkışını
     tutmaz. Zamanlayıcı enjekte edilir (`threading.Timer` imzası: `(sure, islev)` + `daemon` · `start` · `cancel`)."""
 
-    def __init__(self, bildir, bot: str, reply_to, esik_s: float, zamanlayici) -> None:
-        self._bildir, self._bot, self._reply_to = bildir, bot, reply_to
+    def __init__(self, bildir, bot: str, metin: str, reply_to, esik_s: float, zamanlayici) -> None:
+        self._bildir, self._bot, self._metin, self._reply_to = bildir, bot, metin, reply_to
         self._kilit = threading.Lock()
         self._kapandi = False
         self._gitti = False
@@ -295,7 +328,7 @@ class _AraBildirim:
                 return
             self._gitti = True
             try:
-                teslim = self._bildir(ARA_BILDIRIM.format(ad=self._bot), self._reply_to)
+                teslim = self._bildir(self._metin, self._reply_to)
             except Exception as e:  # sinyalli: olay (yalnız sınıf adı); ara bildirim düşse de cevap yolu sürer
                 obs.warn("telegram_ara_bildirim_hatasi", bot=self._bot, sinif=type(e).__name__)
                 return
@@ -308,13 +341,14 @@ class _AraBildirim:
         self._zamanlayici.cancel()
 
 
-def _ara_bildirim_kur(bildir, bot: str, reply_to, zamanlayici) -> _AraBildirim | None:
-    """`bildir` yoksa ara bildirim yok. Zamanlayıcı kurulamazsa (ör. iplik açılamadı) olay + ara bildirimsiz devam —
-    bekleme işareti cevabın önünü kesmez."""
+def _ara_bildirim_kur(bildir, bot: str, imza: str, reply_to, zamanlayici) -> _AraBildirim | None:
+    """`bildir` yoksa ara bildirim yok. Metin: 1. satır sohbet imzası (EKSİZ — ona yanıt aynı bota ve oturuma gider),
+    2. satır `ARA_BILDIRIM`. Zamanlayıcı kurulamazsa (ör. iplik açılamadı) olay + ara bildirimsiz devam — bekleme
+    işareti cevabın önünü kesmez."""
     if bildir is None:
         return None
     try:
-        return _AraBildirim(bildir, bot, reply_to, ARA_BILDIRIM_ESIGI_S, zamanlayici)
+        return _AraBildirim(bildir, bot, f"{imza}\n{ARA_BILDIRIM}", reply_to, ARA_BILDIRIM_ESIGI_S, zamanlayici)
     except Exception as e:  # sinyalli: olay (yalnız sınıf adı); soru ara bildirimsiz sorulur
         obs.warn("telegram_ara_bildirim_hatasi", bot=bot, sinif=type(e).__name__, kurulamadi=True)
         return None
@@ -349,7 +383,7 @@ def isle(guncelleme: dict, *, yetkili_sohbet: str, bota_sor, gonder, bildir=None
     # Komut tespiti ÇİT KURULMADAN ÖNCE, operatörün kendi sözleri üzerinde (Tur 2, I-1).
     komut = komut_oneki(y.metin)
     giden = _komut_giden(mesaj, y.metin, komut) if komut else _bota_giden(mesaj, y.metin)
-    ara = _ara_bildirim_kur(bildir, y.bot, mid, _zamanlayici)
+    ara = _ara_bildirim_kur(bildir, y.bot, imza, mid, _zamanlayici)
     try:
         cevap = bota_sor(y.bot, giden, "telegram", oturum)
     except Exception as e:  # sinyalli: aşağıda olay + operatöre sınıf adıyla cevap; döngü ölmez
