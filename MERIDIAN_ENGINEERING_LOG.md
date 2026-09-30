@@ -4090,3 +4090,29 @@ canlıyla aynı (ilk "FARKLI" ölçümüm süreç ikamesindeki stdin hatasıydı
   okuma engellendi — dolanılmadı. Dağıtım (canlı fark: `notify` yeniden düzenlemesi + etkisiz modüller + yorumlar) sabah operatörde.
 - **Operatörde:** K-1 (Hermes'e `mcp` — öneri: kur + varsayılan profilde `enabled: false`), dağıtım, Parça 1b taslak planı onayı
   (`docs/superpowers/plans/2026-09-30-konusan-filo-parca1b-taslak.md`).
+
+### 38. ÇARŞAMBA: K-1 DAĞITIMI + PARÇA 1b G1/G2 + TSK-214 + DAĞITIM #86 (2026-09-30, model Opus 5.5)
+
+- **Dağıtım #85 (sabah, 0ec44c33, operatör koştu — sınıflandırıcı Rol-1'i engelledi):** K-1 — Hermes venv'ine `mcp`, varsayılan
+  profilde `mcp_servers.meridian enabled: false`; site.yml uygulandı (`.path` birimleri kurulu, etkin değil). Numara günlükte yoktu;
+  #84'ten (50a0af52) sonraki ilk dağıtım olarak burada kaydedildi.
+- **Dağıtım #86 (09:25–09:27Z, main HEAD 2ac3bdce = deployed_sha):** kuru koşum `failed=0`, silme 0, [5c] taze, F9 yalnız Vault ×2
+  (TSK-240 kalan); uygula a1 `ok=62 changed=5 failed=0`; meridian/learn/barsarchive aktif NRestarts 0, healthz 200, learn durdurmasında
+  SIGKILL yok. Yeniden başlatma sonrası üç uyarı ÖLÇÜLDÜ, üçü de 09-25'ten beri günlük: `parallel_probes_failed` (learn durdurma
+  saniyesinde BrokenProcessPool — TSK-246 yan etkisi), `warmup_coverage_short`, `korumasiz_motor_disi_pozisyon` (NVDA 1 adet,
+  09-27'den beri 18 kez — bilinen A3 görünürlük uyarısı). Pencere: çarşamba 09:25Z, ABD seansı 13:30Z'de; koşan ön-eleme/sprint yoktu.
+- **Giden:** Parça 1b G1 (MCP `--bot` alt kümesi, tek zarf, `oneri_yaz`/`is_iste`/`bot_hafizasi_ara`, stdout protokol bütünlüğü —
+  v597/v594/v596), G2 (sohbet profili üreteci, `deploy/hermes/sohbet/` — botlar AÇILMADI, G3 işi; v599), TSK-214 (kum havuzu tek
+  kaynak + `storage.tutarli_kopya` + atomik kurulum; v598). Suite 16239/0 (HEAD eşit 4216aff6, sızıntı 0) + KILL#1 seri geçti.
+- **Hermes ölçümü (operatör A1'de koştu, Rol-1'in okuması sınıflandırıcıya takılmıştı):** çoklu kipte sırlar profil `.env`inden,
+  `os.environ`a düşmez → LoadCredential ortam yolu bot sırları için işlemez; istek dökümü kapatılamaz. G3 tasarımı buna göre (G2 planı "Sonra").
+- **İnceleme değeri (ölçüldü):** G1 görev incelemesi obs satırlarının MCP stdout akışını bozduğunu buldu (Rol-1 doğruladı); G2 dal sonu
+  Hermes `auto_retain`in scrub'sız kalıcı yazımını buldu (spec §3.4 düzeltildi — dönüşü yalnız `bota_sor` yazar); TSK-214 uygulayıcısı
+  `*.bak-*` yedek deseninin sır yedeği adını yuttuğunu v523 ile yakaladı; TSK-214 incelemesi yarım kum havuzunun `--resume` ile boş DB'ye
+  düşeceğini buldu (atomik kurulum).
+- **Kural ihlali (§7):** CI koşu kimliğini bulmak için 6×`sleep 5` sınırlı döngü kuruldu — yasak kapsamında (bekleme döngüsü nerede
+  koşarsa koşsun). Sonraki izlemeler tek `gh run list --commit <TAM SHA>` + `gh run watch` ile; iki izleme de ilk denemede kısa SHA /
+  henüz kaydolmamış koşu yüzünden boş döndü (CI kırmızısı DEĞİL).
+- **Açık:** G3 planı (bot kökü `~/.hermes-botlar`, `meridian-botlar.service`, `API_SERVER_KEY`, profil `.env` rotasyon aracıyla; kapılar:
+  EDG-086 sayımı `oturum` ile ayrılır, `.path` etkin, MCP alt sürecine credential mirası, çoklu kipte duruş profil başına) · TSK-214
+  canlı kanıtı sonraki haftalık bileşik ön-eleme · TSK-240 Vault ×2 operatörde.
