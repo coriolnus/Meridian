@@ -115,6 +115,24 @@ def test_install_bolumu_var_multi_user():
     assert _tek(_birim(), "Install", "WantedBy") == "multi-user.target"
 
 
+def _baslatma_siniri(birim: pathlib.Path) -> tuple[int, int, int]:
+    """(StartLimitIntervalSec, StartLimitBurst, RestartSec) — ilk ikisi `[Unit]`dan, sonuncusu `[Service]`den."""
+    return (int(_tek(birim, "Unit", "StartLimitIntervalSec")), int(_tek(birim, "Unit", "StartLimitBurst")),
+            int(_tek(birim, "Service", "RestartSec")))
+
+
+def test_baslatma_siniri_kalici_yapilandirma_hatasini_failed_e_dusurur():
+    # Tur 3, görev incelemesi M-2: sır yoksa / sohbet kimliği pozitif değilse `dongu` `SystemExit` (çıkış 1) ile çıkar.
+    # systemd varsayılan sınırı (5 başlatma / 10 sn) `RestartSec=10` ile ASLA dolmaz → birim `failed`e düşmeden günde
+    # binlerce kez yeniden başlar (görünmez arıza). 300 sn'de 5 başarısız başlatma → `failed`. Sınırın ETKİLİ olması
+    # için `Burst × RestartSec` pencereye sığmalı — biri değişip sınırı sessizce etkisiz kılarsa çivi öter.
+    aralik, patlama, yeniden_s = _baslatma_siniri(_birim())
+    assert (aralik, patlama) == (300, 5)
+    assert patlama * yeniden_s < aralik, (patlama, yeniden_s, aralik)
+    # Yönerge `[Unit]`a aittir (systemd'nin `[Service]` yerleşimi yalnız geriye uyumluluktur) — tek yer, tek değer.
+    assert not [a for a, _ in _bolum(_birim(), "Service") if a.startswith("StartLimit")]
+
+
 def test_birim_filo_sertlestirme_ve_uzun_omur_listelerinde():
     # Liste çivileri ELLE listedir: birim kurulduğu turda iki listeye de girer (bekçi dersi, v174 şerhi). Buradaki çivi
     # listeden sessizce düşmeyi yakalar — sertleştirme seti v174'te, "rol asla yeniden başlatmaz" v451'de ölçülür.
@@ -492,6 +510,69 @@ def test_ara_bildirim_cevap_gittikten_sonra_asla_gitmez_yaris(sandbox_state):
     olay, zs = _ara_isle(lambda zs: "cevap")
     zs[0].fn()
     assert [o[0] for o in olay] == ["gonder"]
+
+
+def _ucusta_tutan_bildir(kayit):
+    """Uçuşta TUTULAN sahte gönderim: girince `icerde` kurulur, `serbest` gelene dek döner DEĞİL (sınırlı bekleme)."""
+    icerde, serbest = threading.Event(), threading.Event()
+
+    def bildir(t, r):
+        icerde.set()
+        assert serbest.wait(10), "test düzeneği: uçuştaki ara bildirim hiç serbest bırakılmadı"
+        kayit.append("ara")
+        return True
+    return bildir, icerde, serbest
+
+
+def test_ara_bildirim_ucustayken_kapat_bekler_cevap_ondan_sonra_gider(sandbox_state):
+    # Tur 3, görev incelemesi I-1 — GERÇEK İKİ İPLİK. Zamanlayıcı ipliği "kapandı mı?" denetimini GEÇMİŞ ve gönderim
+    # UÇUŞTA (HTTP'de) iken cevap yolu `kapat()`a girer. `kapat()`taki kilit gönderimi BEKLER: sıra kaydı ara → cevap.
+    # Kilit olmasaydı `kapat()` hemen döner, cevap yola çıkar ve uçuştaki ara bildirim CEVAPTAN SONRA iner (Review Focus
+    # 4'ün yasakladığı sıra). `time.sleep` YOK: tek zaman bağımlı adım `Event.wait(0.3)` — kilit varken sonucu DEĞİŞTİRMEZ
+    # (kapat zaten bekler), yalnız kilitsiz mutasyonun cevap ipliğine koşma fırsatı verir.
+    kayit, zs = [], []
+    bildir, icerde, serbest = _ucusta_tutan_bildir(kayit)
+    ab = td._AraBildirim(bildir, "bekci", ARA, 7, td.ARA_BILDIRIM_ESIGI_S,
+                         lambda sure, fn: _SahteZamanlayici(zs, sure, fn))
+    zamanlayici_ipligi = threading.Thread(target=zs[0].fn, daemon=True)     # eşik doldu: iplik işlevi koşar
+    zamanlayici_ipligi.start()
+    assert icerde.wait(10), "ara bildirim uçuşa hiç girmedi"
+    cevap_gitti = threading.Event()
+
+    def cevap_yolu():                                   # `isle`in sırası: kapat() → cevabı gönder
+        ab.kapat()
+        kayit.append("cevap")
+        cevap_gitti.set()
+
+    cevap_ipligi = threading.Thread(target=cevap_yolu, daemon=True)
+    cevap_ipligi.start()
+    erken = cevap_gitti.wait(0.3)
+    serbest.set()
+    zamanlayici_ipligi.join(10)
+    cevap_ipligi.join(10)
+    assert not erken, "kapat() uçuştaki ara bildirimi BEKLEMEDEN döndü — cevap ara bildirimden önce yola çıktı"
+    assert kayit == ["ara", "cevap"], f"sıra kaydı {kayit}: ara bildirim cevaptan SONRA indi"
+
+
+def test_ara_bildirim_ucustayken_ikinci_atesleme_ikinci_bildirim_degildir(sandbox_state):
+    # İKİNCİ İPLİK aynı işlevi koşarsa (yeniden tetiklenen zamanlayıcı) kilidi bekler; uçuştaki gönderim bittikten sonra
+    # "gitti" bayrağını görüp SUSAR. Sonuç zamanlamadan bağımsızdır: bayrak gönderimden ÖNCE kurulur, ikinci iplik kilide
+    # ne zaman varırsa varsın. Bayrak denetimi olmasaydı ara bildirim İKİ kez giderdi.
+    kayit, zs = [], []
+    bildir, icerde, serbest = _ucusta_tutan_bildir(kayit)
+    ab = td._AraBildirim(bildir, "bekci", ARA, 7, td.ARA_BILDIRIM_ESIGI_S,
+                         lambda sure, fn: _SahteZamanlayici(zs, sure, fn))
+    birinci = threading.Thread(target=zs[0].fn, daemon=True)
+    birinci.start()
+    assert icerde.wait(10), "ara bildirim uçuşa hiç girmedi"
+    ikinci = threading.Thread(target=zs[0].fn, daemon=True)
+    ikinci.start()
+    serbest.set()
+    birinci.join(10)
+    ikinci.join(10)
+    assert not (birinci.is_alive() or ikinci.is_alive()), "iplik 10 sn içinde bitmedi (kilitlenme?)"
+    ab.kapat()
+    assert kayit == ["ara"], f"ara bildirim {kayit.count('ara')} kez gitti — BİR kez olmalıydı"
 
 
 def test_ara_bildirim_bota_sor_hatasinda_da_kapanir(sandbox_state):

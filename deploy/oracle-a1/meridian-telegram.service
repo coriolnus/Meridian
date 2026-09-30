@@ -26,6 +26,13 @@ Description=Meridian Telegram dinleyicisi — konuşan bot filosunun Telegram ka
 # başlaması dinleyiciyi DÜŞÜRMEMELİ — o anki soru "şu an cevap veremiyor" alır, dinleyici ayakta kalır. v602 çiviler.
 After=network-online.target meridian-botlar.service
 Wants=network-online.target
+# BAŞLATMA SINIRI (G4 Görev 3 Tur 3, görev incelemesi M-2): systemd varsayılanı (5 başlatma / 10 sn) `RestartSec=10`
+# ile ASLA dolmaz — kalıcı bir arıza (sır yok ya da sohbet kimliği pozitif değil → `dongu`nun `SystemExit`i, çıkış 1)
+# birimi `failed`e düşürmeden sonsuz yeniden başlatırdı (görünmez arıza). 300 sn'de 5 başarısız başlatma → `failed`
+# (panoda "arızalı", `systemctl reset-failed` ile geri gelir). Geçici arıza bu sınıra girmez: Telegram/ağ kesintisini
+# `dongu` KENDİ içinde geri çekilerek bekler, süreç çıkmaz. Yönergeler `[Unit]`a aittir; v602 çiviler.
+StartLimitIntervalSec=300
+StartLimitBurst=5
 # `OnFailure=` BİLEREK YOK (bot ağ geçidiyle aynı karar, Rol-1 2026-09-30): `meridian-fail-notify.service` rapor sınıfı
 # içindir. `failed`in okuyucusu yine var (Yasa 6): `/api/infra` birimleri `deploy/**/*.service` dosyalarından KENDİSİ
 # keşfeder (`meridian/api.py::_infra_birim_adlari`).

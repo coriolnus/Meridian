@@ -229,6 +229,18 @@ def test_after_kapi_ve_hafiza_birimlerini_siralar_ama_bagimlilik_kurmaz():
     assert not adlar & bagimlilik, bagimlilik
 
 
+def test_baslatma_siniri_kalici_arizayi_failed_e_dusurur():
+    # G4 Görev 3 Tur 3 (görev incelemesi M-2, Rol-1 kararı): `Restart=on-failure` + `RestartSec=10` ile systemd'nin
+    # varsayılan başlatma sınırı (5 / 10 sn) ASLA dolmaz — kalıcı bir arıza (bozuk kök config, eksik ikili) birimi `failed`e
+    # düşürmeden sonsuz yeniden başlatır (görünmez arıza). 300 sn'de 5 başarısız başlatma → `failed`. Sınırın ETKİLİ olması
+    # için `Burst × RestartSec` pencereye sığmalı. Telegram dinleyicisinde eşi v602.
+    aralik = int(_tek(_birim_yolu(), "Unit", "StartLimitIntervalSec"))
+    patlama = int(_tek(_birim_yolu(), "Unit", "StartLimitBurst"))
+    assert (aralik, patlama) == (300, 5)
+    assert patlama * int(_tek(_birim_yolu(), "Service", "RestartSec")) < aralik
+    assert not [a for a, _ in _bolum(_birim_yolu(), "Service") if a.startswith("StartLimit")]
+
+
 def test_install_bolumu_var_multi_user():
     # Uzun ömürlü servis: `[Install]` var ki ayrı değişikliğin `systemctl enable`ı çalışsın (enable BU turda yok).
     assert _tek(_birim_yolu(), "Install", "WantedBy") == "multi-user.target"
