@@ -100,7 +100,9 @@ satırlar profil taşımaz.
   alarm_oku · olay_sorgu · bar_sorgu · hafiza_ara · kart_oku · gunluk_ara` + mevcut 6 getter. Çıktı `<<<VERI:ad>>>` çiti +
   `notify.scrub` + boyut tavanı (sohbet.py değişmezleri aynen).
 - `oneri_yaz` — sohbet.py'deki donuk `ONERI_TURLERI` (`plan_onayi`, `alarm_ack`, `not`) ve AYNI `approvals.jsonl` yolu; ikinci
-  onay yolu AÇILMAZ; `kaynak` alanı bot adını taşır.
+  onay yolu AÇILMAZ; bot kimliği bağlamın `oturum` alanında (`mcp:<bot>`) taşınır. (2026-09-30 DÜZELTME [Rol-1, G1 Task 1
+  uygulayıcı + görev incelemesi ölçtü]: ilk metin "`kaynak` alanı bot adını taşır" diyordu; pano önerileri yalnız
+  `kaynak == "sohbet"` satırını tanıyor — bot adı yazılsaydı öneri onay kutusunda görünmez ve onaylanamazdı. `kaynak` "sohbet" kalır.)
 - `is_iste(is)` — §3.6.
 - `bot_hafizasi_ara(bot, soru)` — yalnız `hafiza: hepsi` botlara (bugün `@sef`) listelenir; `bot-*` bankalarında SALT-OKUR recall.
 - Bot başına araç seti: sunucu çağıran profili kimliğinden bilir (profil başına ayrı `mcp_servers` girdisi, `--bot <ad>` argümanı);
