@@ -33,11 +33,14 @@ DEĞİŞMEZLER.
     "bağlı olmayan hafıza" dalı YOKTUR. Credential yoksa hafıza işlemi HTTP'den ÖNCE `anahtar_yok` ile düşer ve
     aşağıdaki hata yolları bunu operatöre/deftere SÖYLER (sessiz kalınmaz). Testler sahtelerini AÇIKÇA verir.
   * DÖNÜŞ KAYDI (spec §3.4, 2026-09-30 düzeltmesi: Hermes `auto_retain` KAPALI, dönüşü YALNIZ bu katman yazar):
-    başarılı her `tur: sohbet` turu `Hafiza.donus_yaz(bot, scrub(mesaj), scrub(cevap), etiketler)` çağırır —
-    `cevap` operatörün gördüğü ÖNEKLİ metindir (araçsız-veri uyarısı hafızada da kalır); etiketler `bot:<ad>`,
-    `kanal:<kanal>`, `DONUS_ETIKETI` + `arac_siz_veri is True` ise `arac_siz_veri`, sayı ölçülemediyse
-    `arac_olculemedi`. HAFIZA CEVABI DÜŞÜRMEZ: istisna → defter `hafiza_durumu: yazilamadi` + `bot_hafiza_donus_hatasi`
-    olayı (`sinif` + kapalı-küme `neden`, `bot_hafiza.hata_nedeni`); `success: false` → `yazilamadi` +
+    başarılı her `tur: sohbet` turu `Hafiza.donus_yaz(bot, scrub(operatör sözleri), scrub(cevap), etiketler)` çağırır —
+    Telegram yanıt kipinde yanıtlanan metnin VERİ çiti hafızaya GİTMEZ, yerine `(yanıt: <ilk satır>)` kaynak etiketi
+    (`_hafiza_mesaji`; modele giden metin alıntıyı TAŞIR); `cevap` operatörün gördüğü ÖNEKLİ metindir (araçsız-veri
+    uyarısı hafızada da kalır); etiketler `bot:<ad>`, `kanal:<kanal>`, `DONUS_ETIKETI` + `arac_siz_veri is True`
+    ise `arac_siz_veri`, sayı ölçülemediyse `arac_olculemedi`. Defter sohbet satırı: `hafiza_durumu: kabul_edildi`
+    (async KABUL — bankaya işlendi DEĞİL), `hafiza_islem_kimligi`, `hafiza_sure_s`. HAFIZA CEVABI DÜŞÜRMEZ: istisna →
+    `hafiza_durumu: yazilamadi` + `bot_hafiza_donus_hatasi` olayı (`sinif` + kapalı-küme `neden`,
+    `bot_hafiza.hata_nedeni`; sonuç `kabul`/`islem_kimligi` taşımıyorsa da bu yol); `success: false` → `yazilamadi` +
     `bot_hafiza_donus_yazilamadi`. Kota/hata turunda dönüş YAZILMAZ (`hafiza_durumu: atlandi`); komut turları kendi
     `hafiza_durumu`nu taşır. Kayıt SENKRONDUR ama retain `async: true`dur (Hindsight çıkarımı arka planda);
     Hindsight asılırsa cevabın gecikmesi soket İŞLEMİ başına `bot_hafiza.DONUS_ZAMAN_ASIMI_S` ile sınırlıdır
@@ -78,7 +81,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Protocol
 
-from . import bot_hafiza, kadro as _kadro, notify, obs, secrets, store
+from . import bot_hafiza, kadro as _kadro, notify, obs, secrets, skill_gorus_llm, store
 
 KANALLAR = ("telegram", "pano", "claude")
 DEFTER = "bot_sohbet.jsonl"
@@ -131,6 +134,14 @@ SEMBOL_DISI = frozenset({
 })
 #: Sohbet dönüşü kaydının sabit etiketi (dönüş kaydını `sabit_not`tan ayırır; plan 2026-09-30 G4 Görev 1).
 DONUS_ETIKETI = "sohbet_donusu"
+#: Telegram yanıt kipinde yanıtlanan mesajın bota giden VERİ çitinin adı — TEK KAYNAK burası (G4 Görev 1 Tur 3,
+#: inceleme I-1): üretici `telegram_dinleyici._bota_giden` ithal eder, dönüş kaydı (`_hafiza_mesaji`) çözer.
+ALINTI_CIT_ADI = "yanitlanan_mesaj"
+#: Yanıt kaynak etiketinin (yanıtlanan mesajın ilk satırı) karakter tavanı — `kaynak_etiketi`.
+KAYNAK_ETIKETI_TAVANI = 80
+#: Monotonik saat — taşıyıcı (`sure_s`) ve dönüş kaydı (`hafiza_sure_s`) süreleri. Modül düzeyinde ki çiviler sahte
+#: saatle süre alanlarını ölçebilsin.
+_saat = time.monotonic
 #: `HermesTasiyici` zaman aşımı varsayılanı (sn; soket İŞLEMİ başına). Hermes bir model çağrısını en kötü
 #: `SOHBET_API_DENEME × SOHBET_ISTEK_ZAMAN_ASIMI_SN` bekler (`ops/sohbet_profili_uret.py`); taşıyıcı bundan KISA
 #: bekleseydi model hâlâ çalışırken düşerdi — çapraz çivi v593 `test_hermes_zaman_asimi_sohbet_cagri_butcesini_kapsar`.
@@ -167,8 +178,10 @@ class Hafiza(Protocol):
         """Geri alınabilir unutma; emekliye ayrılan `(bellek_id, metin_kesiti)` listesi (boş = eşleşme yok)."""
         ...
 
-    def donus_yaz(self, bot: str, mesaj: str, cevap: str, etiketler: tuple[str, ...]) -> bool:
-        """Sohbet dönüşü kaydı (operatör mesajı + botun önekli cevabı); `success` (bool) döner, hata istisnadır."""
+    def donus_yaz(self, bot: str, mesaj: str, cevap: str,
+                  etiketler: tuple[str, ...]) -> bot_hafiza.DonusSonucu:
+        """Sohbet dönüşü kaydı (operatör sözleri + botun önekli cevabı); `DonusSonucu(kabul, islem_kimligi)` döner,
+        hata istisnadır."""
         ...
 
 
@@ -427,25 +440,57 @@ def _unut(bot: str, mesaj: str, govde: str, kanal: str, oturum: str, an: datetim
     return cevap
 
 
+def kaynak_etiketi(alinti: str) -> str:
+    """`(yanıt: <yanıtlanan mesajın ilk satırı>)` — satır ÖNCE `notify.scrub`, SONRA `KAYNAK_ETIKETI_TAVANI` (ters sıra
+    yarım anahtarı süzgeçten kaçırırdı). TEK KAYNAK: Telegram `hatırla:` yanıtı (`telegram_dinleyici._komut_giden`) ve
+    dönüş kaydı (`_hafiza_mesaji`) aynı etiketi buradan alır."""
+    ilk = notify.scrub(str(alinti).strip().split("\n", 1)[0].strip())[:KAYNAK_ETIKETI_TAVANI]
+    return f"(yanıt: {ilk})"
+
+
+def _hafiza_mesaji(mesaj: str) -> str:
+    """Dönüş kaydına giden OPERATÖR metni (inceleme I-1). Telegram yanıt kipinde `mesaj` = yanıtlanan metnin VERİ çiti
+    (`ALINTI_CIT_ADI`, metnin BAŞINDA) + operatörün sözleri; çit hafızaya "Operatör:" diye girerse alıntı (rapor ya da
+    botun eski cevabı) yanlış atfedilir ve uzun alıntıda operatörün sorusu `bot_hafiza.DONUS_TAVANI`nın dışına düşer.
+    Çit çıkarılır, yerine `kaynak_etiketi` kalır. Çit grameri `skill_gorus_llm.veri_bloku_ayir`dan çözülür (jetonlar
+    elle yazılmaz). Başka adlı ya da metnin ortasındaki çit OLDUĞU GİBİ kalır (anlamı uydurulmaz). Modele ve deftere
+    giden metin DEĞİŞMEZ."""
+    ayrik = skill_gorus_llm.veri_bloku_ayir(mesaj, ALINTI_CIT_ADI)
+    if ayrik is None:
+        return mesaj
+    alinti, sozler = ayrik
+    etiket = kaynak_etiketi(alinti)
+    return f"{etiket}\n{sozler}" if sozler else etiket
+
+
 def _donus_kaydi(bot: str, mesaj: str, cevap: str, kanal: str, arac_siz_veri: bool | None,
-                 arac_olculemedi: bool, hafiza: Hafiza) -> str:
-    """Sohbet dönüşünü hafızaya yazar; defterin `hafiza_durumu`nu döner (`yazildi` | `yazilamadi`). Hafıza istisnası
-    ve `success: false` CEVABI DÜŞÜRMEZ — olay yazılır (modül başlığı, DÖNÜŞ KAYDI)."""
+                 arac_olculemedi: bool, hafiza: Hafiza) -> dict:
+    """Sohbet dönüşünü hafızaya yazar; defter alanlarını döner: `hafiza_durumu` (`kabul_edildi` | `yazilamadi`),
+    `hafiza_islem_kimligi` (Hindsight işlem kimliği ya da `None`), `hafiza_sure_s` (çağrının duvar saati süresi,
+    3 ondalık — async kabul gecikmesi G3c'de buradan ölçülür). Hafıza istisnası (sonuç nesnesi tanınmazsa da istisna
+    yolu), `success: false` CEVABI DÜŞÜRMEZ — olay yazılır (modül başlığı, DÖNÜŞ KAYDI)."""
     etiketler = (f"bot:{bot}", f"kanal:{kanal}", DONUS_ETIKETI)
     if arac_siz_veri is True:
         etiketler += ("arac_siz_veri",)
     if arac_olculemedi:
         etiketler += ("arac_olculemedi",)
+    kimlik = None
+    t0 = _saat()
     try:
-        yazildi = bool(hafiza.donus_yaz(bot, notify.scrub(mesaj), notify.scrub(cevap), etiketler))
+        sonuc = hafiza.donus_yaz(bot, notify.scrub(_hafiza_mesaji(mesaj)), notify.scrub(cevap), etiketler)
+        kabul, kimlik = sonuc.kabul is True, sonuc.islem_kimligi
     except Exception as e:  # sinyalli: olay (sınıf adı + kapalı-küme neden) + defter `yazilamadi`; hafıza istisnası cevabı düşürmez
         obs.warn("bot_hafiza_donus_hatasi", bot=bot, kanal=kanal, sinif=type(e).__name__,
                  neden=bot_hafiza.hata_nedeni(e))
-        return "yazilamadi"
-    if not yazildi:
-        obs.warn("bot_hafiza_donus_yazilamadi", bot=bot, kanal=kanal)
-        return "yazilamadi"
-    return "yazildi"
+        durum = "yazilamadi"
+    else:
+        if kabul:
+            durum = "kabul_edildi"
+        else:
+            obs.warn("bot_hafiza_donus_yazilamadi", bot=bot, kanal=kanal)
+            durum = "yazilamadi"
+    return {"hafiza_durumu": durum, "hafiza_islem_kimligi": kimlik if isinstance(kimlik, str) else None,
+            "hafiza_sure_s": round(_saat() - t0, 3)}
 
 
 def bota_sor(bot: str, mesaj: str, kanal: str, oturum: str, *, tasiyici: Tasiyici | None = None,
@@ -471,12 +516,12 @@ def bota_sor(bot: str, mesaj: str, kanal: str, oturum: str, *, tasiyici: Tasiyic
         return cevap
     tasiyici = tasiyici or HermesTasiyici()
     giden = notify.scrub(mesaj)
-    t0 = time.monotonic()
+    t0 = _saat()
     try:
         sonuc = tasiyici.sor(b.ad, giden, oturum)
     except Exception as e:  # sinyalli: defter `tur: hata` + sınıf adı, istisna YUKARI fırlar
         _defter_yaz(_satir(an, b.ad, kanal, oturum, "hata", mesaj, None, hata=type(e).__name__,
-                           sure_s=round(time.monotonic() - t0, 3), kota_bugun=n, hafiza_durumu="atlandi"))
+                           sure_s=round(_saat() - t0, 3), kota_bugun=n, hafiza_durumu="atlandi"))
         raise
     arac = sonuc.arac_cagrilari
     arac_olculemedi = arac is None
@@ -486,10 +531,10 @@ def bota_sor(bot: str, mesaj: str, kanal: str, oturum: str, *, tasiyici: Tasiyic
     cevap = _onekle(sonuc.metin, UYARI_OLCULEMEDI if arac_olculemedi else UYARI_ARACSIZ if arac_siz_veri else None)
     # `sure_s` taşıyıcı turunu ölçer — dönüş kaydının süresi ona KARIŞMAZ (model gecikmesi hafıza gecikmesinden
     # ayrı okunabilsin).
-    sure_s = round(time.monotonic() - t0, 3)
-    hafiza_durumu = _donus_kaydi(b.ad, mesaj, cevap, kanal, arac_siz_veri, arac_olculemedi, hafiza)
+    sure_s = round(_saat() - t0, 3)
+    donus = _donus_kaydi(b.ad, mesaj, cevap, kanal, arac_siz_veri, arac_olculemedi, hafiza)
     _defter_yaz(_satir(an, b.ad, kanal, oturum, "sohbet", mesaj, cevap,
                        sure_s=sure_s, arac_cagrilari=arac,
                        arac_siz_veri=arac_siz_veri, arac_olculemedi=arac_olculemedi, veri_isareti=isaret,
-                       model_cagrilari=sonuc.model_cagrilari, kota_bugun=n + 1, hafiza_durumu=hafiza_durumu))
+                       model_cagrilari=sonuc.model_cagrilari, kota_bugun=n + 1, **donus))
     return cevap

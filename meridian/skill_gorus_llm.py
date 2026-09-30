@@ -160,6 +160,23 @@ def _veri_bloku(ad: str, metin: str) -> str:
             f"{VERI_KAPANIS.format(ad=ad)}")
 
 
+def veri_bloku_ayir(metin: str, ad: str) -> tuple[str, str] | None:
+    """`_veri_bloku`nun TERSİ — jetonlar AYNI kaynaktan (`VERI_ACILIS`/`VERI_KAPANIS`), elle yazılmaz. `metin` `ad`
+    adlı bir çitle BAŞLIYORSA `(çit_içi, kalan)`; başlamıyorsa, kapanış yoksa ya da ad farklıysa `None`. Çitten
+    sonraki TEK ayraç satır sonu `kalan`a girmez. Güvenli çünkü üretici gövdedeki `<<<`'ü `«`'ya katlar: kapanış
+    jetonu gövdeden sahtelenemez, İLK kapanış bloğun sonudur. Çit içi katlanmış hâliyle döner (geri çevrilmez).
+    Tüketici: `bot_kanal` dönüş kaydı (Telegram yanıt alıntısını hafızaya "operatör sözü" diye yazmamak için)."""
+    acilis = VERI_ACILIS.format(ad=ad) + "\n"
+    kapanis = "\n" + VERI_KAPANIS.format(ad=ad)
+    if not isinstance(metin, str) or not metin.startswith(acilis):
+        return None
+    son = metin.find(kapanis, len(acilis))
+    if son < 0:
+        return None
+    kalan = metin[son + len(kapanis):]
+    return metin[len(acilis):son], kalan[1:] if kalan.startswith("\n") else kalan
+
+
 # GÖRÜNMEZ VE BENZER KARAKTERLER — DEDEKTÖRÜN KÖR NOKTALARI, ADIYLA KAPATILDI.
 # `Cf` (format) sınıfı ZWSP/ZWJ/soft-hyphen gibi HİÇ ÇİZİLMEYEN karakterleri kapsar: `TA<ZWSP>LİMAT`
 # insan gözüne "TALİMAT" görünür, düz aramaya görünmez. Kiril homoglifleri aynı sınıfın ikinci

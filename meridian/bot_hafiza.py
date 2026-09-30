@@ -7,7 +7,8 @@ NE YAPAR. `bota_sor`un DETERMİNİSTİK `hatırla:` / `unut:` dalları ve sohbet
   * `donus_yaz` → AYNI uca retain, `async: true` (Parça 1b G4 Görev 1): Hindsight çıkarımı arka planda koşar ve uç
     hemen `success` + `operation_id` döner (A1 OpenAPI `RetainRequest`/`RetainResponse`, 2026-09-30) — dönüş kaydı
     cevabı çıkarım süresince bekletmez; kendi KISA zaman aşımı `DONUS_ZAMAN_ASIMI_S` (async kabul gecikmesi G3c'de
-    ölçülür). İçerik `"Operatör: <mesaj>\\n@<bot>: <cevap>"`; her parça ÖNCE `notify.scrub`,
+    ölçülür). Dönüş `DonusSonucu`: `kabul` = `success` (KABUL — bankaya İŞLENDİ demek değildir, çıkarım arka planda)
+    + `islem_kimligi` (`operation_id`, yoksa `operation_ids[0]`; tanınmazsa `None`). İçerik `"Operatör: <mesaj>\\n@<bot>: <cevap>"`; her parça ÖNCE `notify.scrub`,
     SONRA `DONUS_TAVANI`; bağlam `DONUS_BAGLAMI`, `metadata.kaynak` `DONUS_KAYNAGI`. Spec §3.4 (2026-09-30
     düzeltmesi): Hermes `auto_retain` KAPALI — sohbet dönüşünü hafızaya YALNIZ bu yol yazar.
   * `unut`    → önce recall `POST …/memories/recall` (`budget: low`), sonra sonuç SIRASIYLA (upstream'in kendi
@@ -64,13 +65,16 @@ import math
 import re
 import urllib.error
 import urllib.request
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from . import kadro as _kadro, notify, secrets
 
 #: Her HTTP çağrısının zaman aşımı (sn) — spec §3.4 `HINDSIGHT_TIMEOUT=10` (Parça 0 (c): küçük bankada recall
 #: low 4,2 s). `api.HAFIZA_ZAMAN_ASIMI_S` (2 s) pano vekilinin AYRI sözleşmesidir; bu değer ondan türemez.
-#: SENKRON retain'in süresi ÖLÇÜLMEDİ (retain LLM çıkarımı koşar) — Parça 1b kablolamasından önce ölçülür.
+#: AÇIK KALEM (G4 Görev 1 incelemesi M-3): `hatırla:`ın SENKRON retain'i (`yaz`, `async: false` — retain LLM
+#: çıkarımı koşar) bu tavanla kablolandı ama süresi ÖLÇÜLMEDİ; ölçüm G3c'dedir. Dönüş kaydı bu değeri KULLANMAZ
+#: (`DONUS_ZAMAN_ASIMI_S`; süresi defterin `hafiza_sure_s` alanında).
 HAFIZA_ZAMAN_ASIMI_S = 10.0
 #: `donus_yaz`in AYRI ve KISA zaman aşımı (sn; soket İŞLEMİ başına) — Rol-1 kararı 2026-09-30 (G4 Görev 1 Tur 2, K-1).
 #: Dönüş kaydı operatörün cevabıyla aynı turda SENKRON koşar (`hafiza_durumu` aynı defter satırında kalsın diye arka
@@ -145,6 +149,25 @@ def hata_nedeni(e: BaseException) -> str:
     if isinstance(neden, str) and (neden in HATA_NEDENLERI or _HTTP_NEDENI.fullmatch(neden)):
         return neden
     return "beklenmeyen"
+
+
+@dataclass(frozen=True)
+class DonusSonucu:
+    """`donus_yaz`in sonucu (inceleme M-1). `kabul`: Hindsight `async: true` isteğini KABUL etti (`success`) —
+    bankaya İŞLENDİ demek DEĞİLDİR (çıkarım arka planda koşar; durumu `islem_kimligi` ile sorulur, G3c).
+    `islem_kimligi`: işlem kimliği ya da `None` (yok/tanınmadı — uydurulmaz)."""
+    kabul: bool
+    islem_kimligi: str | None = None
+
+
+def _islem_kimligi(yanit: dict) -> str | None:
+    """RetainResponse'tan işlem kimliği: `operation_id`, boşsa `operation_ids[0]` (`ops/defter_ozeti_retain.py`
+    emsali). Deftere yazılır → `_KIMLIK_DESENI`ne uymayan değer `None` (uydurulmaz, tanınmayan metin deftere girmez)."""
+    kimlik = yanit.get("operation_id")
+    if not kimlik:
+        liste = yanit.get("operation_ids")
+        kimlik = liste[0] if isinstance(liste, list) and liste else None
+    return kimlik if isinstance(kimlik, str) and _KIMLIK_DESENI.fullmatch(kimlik) else None
 
 
 def _kesit(metin, tavan: int = KESIT_TAVANI) -> str:
@@ -248,12 +271,13 @@ class HindsightHafiza:
 
     # ---- Hafiza protokolü -----------------------------------------------------------------------------------
 
-    def _retain(self, banka: str, oge: dict, asenkron: bool, anahtar: str, zaman_asimi: float | None = None) -> bool:
-        """TEK retain çağrısı (`yaz` ve `donus_yaz`): `success` alanı okunamazsa "yazıldı" UYDURULMAZ (`bicim`)."""
+    def _retain(self, banka: str, oge: dict, asenkron: bool, anahtar: str, zaman_asimi: float | None = None) -> dict:
+        """TEK retain çağrısı (`yaz` ve `donus_yaz`): `success` alanı okunamazsa "yazıldı" UYDURULMAZ (`bicim`).
+        Doğrulanmış cevap sözlüğünü döner (`success` bool olarak VAR)."""
         cevap = self._istek("POST", f"{banka}/memories", {"items": [oge], "async": asenkron}, anahtar, zaman_asimi)
         if not isinstance(cevap, dict) or not isinstance(cevap.get("success"), bool):
             raise _hata("hindsight retain cevabı tanınmadı (success alanı yok)", "bicim")
-        return cevap["success"]
+        return cevap
 
     def yaz(self, bot: str, metin: str, etiketler: tuple[str, ...]) -> bool:
         """Senkron retain; `success` alanı `True` ise `True`, `False` ise `False`; okunamazsa `RuntimeError`."""
@@ -261,20 +285,21 @@ class HindsightHafiza:
         anahtar = self._anahtar_al()
         oge = {"content": metin, "timestamp": _simdi_iso(), "context": NOT_BAGLAMI, "tags": list(etiketler),
                "metadata": {"kaynak": NOT_KAYNAGI}}
-        return self._retain(banka, oge, False, anahtar)
+        return self._retain(banka, oge, False, anahtar)["success"]
 
-    def donus_yaz(self, bot: str, mesaj: str, cevap: str, etiketler: tuple[str, ...]) -> bool:
+    def donus_yaz(self, bot: str, mesaj: str, cevap: str, etiketler: tuple[str, ...]) -> DonusSonucu:
         """Sohbet dönüşü kaydı: `async: true` retain (modül başlığı). İçerik parçaları ÖNCE scrub SONRA `DONUS_TAVANI`
         (ters sırada tavan bir anahtarı ortadan böler ve yarısı desenin dışında kalıp kalıcı bankaya sızar). Dönüş
-        `yaz` ile aynı sözleşme: `success`; okunamazsa `RuntimeError` (`bicim`). Zaman aşımı `DONUS_ZAMAN_ASIMI_S`
-        (kurucunun `zaman_asimi_s`i DEĞİL — cevabı bekleten yol kısa tutulur)."""
+        `DonusSonucu(kabul=success, islem_kimligi)`; `success` okunamazsa `RuntimeError` (`bicim`). Zaman aşımı
+        `DONUS_ZAMAN_ASIMI_S` (kurucunun `zaman_asimi_s`i DEĞİL — cevabı bekleten yol kısa tutulur)."""
         banka = self._banka_yolu(bot)
         anahtar = self._anahtar_al()
         icerik = (f"Operatör: {notify.scrub(mesaj)[:DONUS_TAVANI]}\n"
                   f"@{bot}: {notify.scrub(cevap)[:DONUS_TAVANI]}")
         oge = {"content": icerik, "timestamp": _simdi_iso(), "context": DONUS_BAGLAMI, "tags": list(etiketler),
                "metadata": {"kaynak": DONUS_KAYNAGI}}
-        return self._retain(banka, oge, True, anahtar, DONUS_ZAMAN_ASIMI_S)
+        yanit = self._retain(banka, oge, True, anahtar, DONUS_ZAMAN_ASIMI_S)
+        return DonusSonucu(yanit["success"], _islem_kimligi(yanit))
 
     def unut(self, bot: str, ifade: str) -> list[tuple[str, str]]:
         """Recall + en fazla `UNUT_TAVANI` bellek için geri alınabilir `invalidated`. Dönüş `[(id, kesit), …]`."""

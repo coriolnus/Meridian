@@ -481,7 +481,7 @@ RETAIN_ASYNC = {"success": True, "bank_id": "bot-bekci", "items_count": 1, "asyn
 
 def test_donus_yaz_istek_bicimi_async_baglam_kaynak_icerik():
     c = Casus(retain=RETAIN_ASYNC)
-    assert _h(c).donus_yaz("bekci", "durum?", "rejim risk-on", DONUS_ETIKETLERI) is True
+    assert _h(c).donus_yaz("bekci", "durum?", "rejim risk-on", DONUS_ETIKETLERI) == bh.DonusSonucu(True, "op-1")
     (cagri,) = c.cagrilar
     assert (cagri["yontem"], cagri["url"]) == ("POST", f"{TABAN}/v1/default/banks/bot-bekci/memories")
     assert cagri["basliklar"] == {"Authorization": f"Bearer {ANAHTAR}"}
@@ -514,7 +514,8 @@ def test_donus_yaz_her_parca_once_scrub_sonra_tavan():
 
 
 def test_donus_yaz_success_false_ise_false():
-    assert _h(Casus(retain={**RETAIN_ASYNC, "success": False})).donus_yaz("bekci", "x", "y", DONUS_ETIKETLERI) is False
+    assert _h(Casus(retain={**RETAIN_ASYNC, "success": False})).donus_yaz("bekci", "x", "y", DONUS_ETIKETLERI) \
+        == bh.DonusSonucu(False, "op-1")
 
 
 @pytest.mark.parametrize("cevap", [None, {}, {"operation_id": "op-1"}, [], "tamam"])
@@ -614,7 +615,7 @@ def test_bota_sor_gercek_sinifla_donus_kaydi_async_ve_scrubli(sandbox_state):
     assert oge["content"] == "Operatör: durum? ***\n@bekci: rejim risk-on"
     assert oge["tags"] == ["bot:bekci", "kanal:telegram", "sohbet_donusu"]
     s = _defter()[-1]
-    assert (s["tur"], s["hafiza_durumu"]) == ("sohbet", "yazildi")
+    assert (s["tur"], s["hafiza_durumu"], s["hafiza_islem_kimligi"]) == ("sohbet", "kabul_edildi", "op-1")
 
 
 @pytest.mark.parametrize("hata,neden", [
@@ -672,8 +673,39 @@ def test_varsayilan_yol_donus_yaz_kisa_zaman_asimli_async_post(monkeypatch):
         return _Cevap(json.dumps(RETAIN_ASYNC).encode())
 
     monkeypatch.setattr(bh.urllib.request, "urlopen", urlopen)
-    assert bh.HindsightHafiza(_anahtar=lambda: ANAHTAR).donus_yaz("bekci", "soru", "cevap", DONUS_ETIKETLERI) is True
+    assert bh.HindsightHafiza(_anahtar=lambda: ANAHTAR).donus_yaz("bekci", "soru", "cevap", DONUS_ETIKETLERI) \
+        == bh.DonusSonucu(True, "op-1")
     istek = gorulen["istek"]
     assert gorulen["timeout"] == bh.DONUS_ZAMAN_ASIMI_S and istek.get_method() == "POST"
     assert istek.full_url == f"{TABAN}/v1/default/banks/bot-bekci/memories"
     assert json.loads(istek.data)["async"] is True
+
+
+# ---- Tur 3 (görev incelemesi M-1, I-1) ----------------------------------------------------------------------------
+# M-1: `async: true` retain'in `success`i KABULDÜR (çıkarım arka planda) — "işlendi" uydurulmaz; işlem kimliği
+# (`operation_id`, yoksa `operation_ids[0]` — `ops/defter_ozeti_retain.py` emsali) deftere taşınsın diye döner.
+
+@pytest.mark.parametrize("cevap,kimlik", [
+    ({"success": True, "operation_id": "op-9", "operation_ids": ["op-8"]}, "op-9"),
+    ({"success": True, "operation_ids": ["op-8", "op-7"]}, "op-8"),
+    ({"success": True, "operation_id": None, "operation_ids": []}, None),
+    ({"success": True}, None),
+    ({"success": True, "operation_id": "../x"}, None),                         # URL/defter güvenli değil → yok
+    ({"success": True, "operation_id": 7}, None),
+    ({"success": True, "operation_id": "", "operation_ids": "op-1"}, None),
+    ({"success": True, "operation_id": "123e4567-e89b-12d3-a456-426614174000"}, "123e4567-e89b-12d3-a456-426614174000"),
+])
+def test_donus_yaz_islem_kimligi_olculur_uydurulmaz(cevap, kimlik):
+    assert _h(Casus(retain=cevap)).donus_yaz("bekci", "x", "y", DONUS_ETIKETLERI) == bh.DonusSonucu(True, kimlik)
+
+
+def test_bota_sor_gercek_sinifla_uzun_telegram_alintisinda_operator_sorusu_kayitta(sandbox_state):
+    # İnceleme I-1 (b), GERÇEK sınıf + gerçek üretici: 3000 karakterlik alıntıda bile kayıt operatörün sorusunu taşır,
+    # alıntı gövdesini ve çit jetonlarını TAŞIMAZ.
+    from meridian import telegram_dinleyici as td
+    mesaj = td._bota_giden({"reply_to_message": {"text": "Rapor başlığı\n" + "z" * 3000}}, "bu kalem ne?")
+    c = Casus(retain=RETAIN_ASYNC)
+    bk.bota_sor("bekci", mesaj, "telegram", "o", tasiyici=_Tasiyici(), hafiza=_h(c), simdi=SIMDI)
+    icerik = c.cagrilar[0]["govde"]["items"][0]["content"]
+    assert icerik == "Operatör: (yanıt: Rapor başlığı)\nbu kalem ne?\n@bekci: rejim risk-on"
+    assert "zzz" not in icerik and "VERI" not in icerik

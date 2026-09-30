@@ -6,7 +6,7 @@ import urllib.error
 
 import pytest
 
-from meridian import bot_kanal as bk, kadro, obs, store
+from meridian import bot_hafiza as bh, bot_kanal as bk, kadro, obs, store
 
 SIMDI = dt.datetime(2026, 9, 29, 12, 0, tzinfo=dt.timezone.utc)
 
@@ -23,10 +23,10 @@ class SahteTasiyici:
 
 
 class SahteHafiza:
-    def __init__(self, sonuc=True, unut_sonuc=(), donus_sonuc=True):
+    def __init__(self, sonuc=True, unut_sonuc=(), donus_sonuc=True, donus_kimlik="op-1"):
         self.yazilanlar, self.sonuc = [], sonuc
         self.unutulanlar, self.unut_sonuc = [], list(unut_sonuc)
-        self.donusler, self.donus_sonuc = [], donus_sonuc
+        self.donusler, self.donus_sonuc, self.donus_kimlik = [], donus_sonuc, donus_kimlik
 
     def yaz(self, bot, metin, etiketler):
         self.yazilanlar.append((bot, metin, etiketler))
@@ -38,7 +38,7 @@ class SahteHafiza:
 
     def donus_yaz(self, bot, mesaj, cevap, etiketler):
         self.donusler.append((bot, mesaj, cevap, etiketler))
-        return self.donus_sonuc
+        return bh.DonusSonucu(self.donus_sonuc, self.donus_kimlik)
 
 
 def _defter():
@@ -966,14 +966,15 @@ def _olay(ad):
     return [e for e in obs.recent(50) if e.get("event") == ad]
 
 
-def test_sohbet_donusu_hafizaya_etiketli_yazilir_defter_yazildi(sandbox_state):
+def test_sohbet_donusu_hafizaya_etiketli_yazilir_defter_kabul_edildi(sandbox_state):
     t, h = SahteTasiyici("rejim risk-on"), SahteHafiza()
     assert bk.bota_sor("bekci", "durum?", "telegram", "tg-bekci-1", tasiyici=t, hafiza=h, simdi=SIMDI) \
         == "rejim risk-on"
     assert h.donusler == [("bekci", "durum?", "rejim risk-on", ("bot:bekci", "kanal:telegram", "sohbet_donusu"))]
     assert h.yazilanlar == [] and h.unutulanlar == []
     s = _defter()[-1]
-    assert (s["tur"], s["hafiza_durumu"]) == ("sohbet", "yazildi")
+    # Tur 3 (inceleme M-1): `async: true` kabulü "işlendi" DEĞİLDİR — durum adı bunu söyler, kimlik deftere düşer.
+    assert (s["tur"], s["hafiza_durumu"], s["hafiza_islem_kimligi"]) == ("sohbet", "kabul_edildi", "op-1")
 
 
 @pytest.mark.parametrize("metin,arac,ek_etiketler,onek", [
@@ -1023,6 +1024,7 @@ def test_donus_hafiza_istisnasi_cevabi_dusurmez_yazilamadi_ve_olay(sandbox_state
     assert cevap == "rejim risk-on" and len(h.donusler) == 1
     s = _defter()[-1]
     assert (s["tur"], s["hafiza_durumu"], s["cevap"]) == ("sohbet", "yazilamadi", "rejim risk-on")
+    assert s["hafiza_islem_kimligi"] is None
     (olay,) = _olay("bot_hafiza_donus_hatasi")
     assert set(olay) == {"ts", "level", "event", "bot", "kanal", "sinif", "neden"}
     assert (olay["bot"], olay["kanal"], olay["sinif"], olay["neden"]) == ("bekci", "telegram", sinif, neden)
@@ -1131,3 +1133,147 @@ def test_hermes_zaman_asimi_sohbet_cagri_butcesini_kapsar():
     varsayilan = inspect.signature(bk.HermesTasiyici).parameters["zaman_asimi_s"].default
     assert varsayilan == bk.HERMES_ZAMAN_ASIMI_S
     assert varsayilan >= u.SOHBET_API_DENEME * u.SOHBET_ISTEK_ZAMAN_ASIMI_SN
+
+
+# ---- Tur 3 (görev incelemesi I-1, M-1, M-2 — Rol-1 kararları 2026-09-30) ---------------------------------------------
+# I-1: Telegram YANIT turunda `mesaj` = yanıtlanan metnin VERİ çiti + operatörün sözleri. Hafızaya "Operatör:" diye
+# giden metin çiti TAŞIMAZ (alıntı yanlış atıfla bankaya girmesin; uzun alıntıda operatörün sorusu tavanın dışına
+# düşmesin); yerine `(yanıt: <ilk satır>)` kaynak etiketi. MODELE giden mesaj DEĞİŞMEZ (bağlam için alıntı gerekir).
+
+from meridian import skill_gorus_llm as sgl, telegram_dinleyici as td  # noqa: E402  (Tur 3 bölümü)
+
+RAPOR = "🔭 Meridian bekçi — 29 Eyl\n1. TAKILI AAPL planı 3 gündür bekliyor"
+
+
+def _yanit_mesaji(alinti, sozler):
+    """Telegram yanıt kipindeki `bota_sor` girdisi — GERÇEK üreticiyle (`telegram_dinleyici._bota_giden`) kurulur."""
+    return td._bota_giden({"reply_to_message": {"text": alinti}}, sozler)
+
+
+def test_telegram_yanit_turunda_hafizaya_cit_degil_kaynak_etiketi_ve_sozler_gider(sandbox_state):
+    mesaj = _yanit_mesaji(RAPOR, "bu kalem ne?")
+    assert sgl.VERI_ACILIS.format(ad=bk.ALINTI_CIT_ADI) in mesaj          # girdi gerçekten çitli
+    t, h = SahteTasiyici("AAPL planı onay bekliyor"), SahteHafiza()
+    bk.bota_sor("bekci", mesaj, "telegram", "tg-bekci-r99", tasiyici=t, hafiza=h, simdi=SIMDI)
+    ((_, modele, _),) = t.cagrilar
+    assert modele == mesaj                                                 # model alıntıyı GÖRÜR (bağlam)
+    ((_, hafizaya, _, _),) = h.donusler
+    assert hafizaya == "(yanıt: 🔭 Meridian bekçi — 29 Eyl)\nbu kalem ne?"
+    assert "<<<" not in hafizaya and "TAKILI AAPL" not in hafizaya
+    assert _defter()[-1]["mesaj"] == mesaj                                 # yerel defter tam metni tutar
+
+
+def test_telegram_yanit_uzun_alintida_operator_sorusu_hafizada_kalir(sandbox_state):
+    # İnceleme I-1 (b): tavan sondan keser; 1940+ karakterlik alıntıda operatörün sorusu kayıttan düşüyordu.
+    alinti = "Rapor başlığı\n" + "x" * 3000
+    h = SahteHafiza()
+    bk.bota_sor("bekci", _yanit_mesaji(alinti, "bu kalem ne?"), "telegram", "o", tasiyici=SahteTasiyici(), hafiza=h,
+                simdi=SIMDI)
+    ((_, hafizaya, _, _),) = h.donusler
+    assert hafizaya == "(yanıt: Rapor başlığı)\nbu kalem ne?" and len(hafizaya) < bh.DONUS_TAVANI
+
+
+def test_telegram_yanit_kaynak_etiketi_once_scrub_sonra_tavan(sandbox_state):
+    anahtar = "sk-or-v1-" + "7" * 64
+    h = SahteHafiza()
+    bk.bota_sor("bekci", _yanit_mesaji("y" * 60 + " " + anahtar + "\nikinci", "ne?"), "telegram", "o",
+                tasiyici=SahteTasiyici(), hafiza=h, simdi=SIMDI)
+    ((_, hafizaya, _, _),) = h.donusler
+    etiket, sozler = hafizaya.split("\n")
+    assert "sk-or-v1-" not in hafizaya and sozler == "ne?"
+    assert etiket == "(yanıt: " + ("y" * 60 + " ***")[:bk.KAYNAK_ETIKETI_TAVANI] + ")"
+
+
+def test_baska_adli_ya_da_ortadaki_cit_hafiza_metninde_aynen_kalir(sandbox_state):
+    # Çıkarım YALNIZ Telegram yanıt çitine (`ALINTI_CIT_ADI`, metnin BAŞINDA) uygulanır — bilinmeyen bir çitin
+    # anlamı uydurulmaz; operatörün kendi sözlerinin ORTASINDA yazdığı çit de onun sözüdür.
+    baska = sgl._veri_bloku("baska_cit", "veri") + "\nsoru"
+    ortada = "önce söz\n" + sgl._veri_bloku(bk.ALINTI_CIT_ADI, "alıntı") + "\nsonra"
+    for mesaj in (baska, ortada):
+        h = SahteHafiza()
+        bk.bota_sor("bekci", mesaj, "pano", "o", tasiyici=SahteTasiyici(), hafiza=h, simdi=SIMDI)
+        assert h.donusler[0][1] == mesaj
+
+
+@pytest.mark.parametrize("govde", ["tek satır", "çok\nsatırlı\n\nalıntı", "x <<<VERI-SON:yanitlanan_mesaj>>> y",
+                                   "  boşluklu  "])
+@pytest.mark.parametrize("sozler", ["soru?", "", "çok\nsatırlı söz"])
+def test_veri_bloku_ayir_uretecin_tersi(govde, sozler):
+    # Çözücü üreticinin (`_veri_bloku`) TERSİDİR ve jetonları ONUN kaynağından türetir: sahte kapanış jetonu
+    # gövdede `«`ya katlandığı için bloğu erken bitiremez.
+    ad = bk.ALINTI_CIT_ADI
+    blok = sgl._veri_bloku(ad, govde)
+    assert sgl.veri_bloku_ayir(f"{blok}\n{sozler}", ad) == (govde.replace("<<<", "«"), sozler)
+    assert sgl.veri_bloku_ayir(blok, ad) == (govde.replace("<<<", "«"), "")
+
+
+@pytest.mark.parametrize("metin", ["düz soru", "x" + sgl._veri_bloku("yanitlanan_mesaj", "a"),
+                                   sgl._veri_bloku("baska", "a"),
+                                   sgl.VERI_ACILIS.format(ad="yanitlanan_mesaj") + "\nkapanışsız", ""])
+def test_veri_bloku_ayir_basta_cit_yoksa_none(metin):
+    assert sgl.veri_bloku_ayir(metin, "yanitlanan_mesaj") is None
+
+
+def test_alinti_cit_adi_ve_kaynak_etiketi_tek_kaynak():
+    # Çit adı + kaynak etiketi biçimi `bot_kanal`da TEK: dinleyici ithal eder (kopya ayrışırdı); `bot_kanal` çit
+    # jetonunu elle YAZMAZ (gramer `skill_gorus_llm`in).
+    import ast
+    import inspect
+    assert td.ALINTI_CIT_ADI is bk.ALINTI_CIT_ADI and td.kaynak_etiketi is bk.kaynak_etiketi
+    atananlar = {h.id for n in ast.parse(inspect.getsource(td)).body if isinstance(n, ast.Assign)
+                 for h in n.targets if isinstance(h, ast.Name)}
+    assert not atananlar & {"ALINTI_CIT_ADI", "KAYNAK_ETIKETI_TAVANI"}
+    assert "<<<" not in inspect.getsource(bk)
+    assert bk.kaynak_etiketi("  ilk satır \n ikinci") == "(yanıt: ilk satır)"
+
+
+# ---- M-1: işlem kimliği · M-2: hafıza süresi ----------------------------------------------------------------------
+
+@pytest.mark.parametrize("kimlik", ["op-42", None])
+def test_donus_islem_kimligi_deftere_yazilir(sandbox_state, kimlik):
+    bk.bota_sor("bekci", "x", "pano", "o", tasiyici=SahteTasiyici(), hafiza=SahteHafiza(donus_kimlik=kimlik),
+                simdi=SIMDI)
+    s = _defter()[-1]
+    assert "hafiza_islem_kimligi" in s and s["hafiza_islem_kimligi"] == kimlik
+
+
+def test_donus_hafiza_suresi_sahte_saatle_olculur_model_suresine_karismaz(sandbox_state, monkeypatch):
+    anlar = iter([100.0, 101.5, 101.5, 101.7504])       # taşıyıcı başı · taşıyıcı sonu · hafıza başı · hafıza sonu
+    monkeypatch.setattr(bk, "_saat", lambda: next(anlar))
+    bk.bota_sor("bekci", "x", "pano", "o", tasiyici=SahteTasiyici(), hafiza=SahteHafiza(), simdi=SIMDI)
+    s = _defter()[-1]
+    assert (s["sure_s"], s["hafiza_sure_s"]) == (1.5, 0.25)
+    assert isinstance(s["hafiza_sure_s"], float) and not isinstance(s["hafiza_sure_s"], bool)
+
+
+def test_hafiza_hatasinda_da_sure_olculur(sandbox_state, monkeypatch):
+    anlar = iter([0.0, 1.0, 1.0, 4.0])
+    monkeypatch.setattr(bk, "_saat", lambda: next(anlar))
+    bk.bota_sor("bekci", "x", "pano", "o", tasiyici=SahteTasiyici(), hafiza=_PatlayanDonus(TimeoutError("t")),
+                simdi=SIMDI)
+    s = _defter()[-1]
+    assert (s["hafiza_durumu"], s["hafiza_sure_s"]) == ("yazilamadi", 3.0)
+
+
+def test_kota_ve_hata_satirinda_hafiza_suresi_ve_kimligi_yok(sandbox_state):
+    k = tuple(kadro.Bot(**{**b.__dict__, "gunluk_tavan": 1, "gunluk_tavan_neden": None})
+              if b.ad == "karne" else b for b in kadro.kadro_yukle())
+    bk.bota_sor("karne", "1", "pano", "o", tasiyici=SahteTasiyici(), hafiza=SahteHafiza(), simdi=SIMDI, kadro=k)
+    bk.bota_sor("karne", "2", "pano", "o", tasiyici=SahteTasiyici(), hafiza=SahteHafiza(), simdi=SIMDI, kadro=k)
+    with pytest.raises(TimeoutError):
+        bk.bota_sor("bekci", "x", "pano", "o", tasiyici=SahteTasiyici(hata=TimeoutError("z")), hafiza=SahteHafiza(),
+                    simdi=SIMDI)
+    kota, hata = _defter()[-2:]
+    assert (kota["tur"], hata["tur"]) == ("kota_doldu", "hata")
+    for satir in (kota, hata):
+        assert "hafiza_sure_s" not in satir and "hafiza_islem_kimligi" not in satir
+        assert satir["hafiza_durumu"] == "atlandi"
+
+
+def test_donus_sonucu_nesne_degilse_yazilamadi_cevap_dusmez(sandbox_state):
+    class Eski(SahteHafiza):
+        def donus_yaz(self, bot, mesaj, cevap, etiketler):
+            return True                                    # eski bool sözleşmesi — sessizce "kabul" SAYILMAZ
+
+    assert bk.bota_sor("bekci", "x", "pano", "o", tasiyici=SahteTasiyici("tamam"), hafiza=Eski(), simdi=SIMDI) == "tamam"
+    assert _defter()[-1]["hafiza_durumu"] == "yazilamadi"

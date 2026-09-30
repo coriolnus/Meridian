@@ -58,18 +58,15 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from . import kadro as _kadro, notify, obs, secrets, store
-# KOMUT TESPİTİ İTHAL EDİLİR, KOPYALANMAZ — sahibi `bot_kanal` (bota_sor'un dağıtımı da onu kullanır).
-from .bot_kanal import komut_oneki
+# KOMUT TESPİTİ, YANIT ÇİTİNİN ADI ve KAYNAK ETİKETİ İTHAL EDİLİR, KOPYALANMAZ — sahibi `bot_kanal` (bota_sor'un
+# dağıtımı ve dönüş kaydı da onları kullanır; G4 Görev 1 Tur 3: dönüş kaydı yanıt çitini hafızaya yazmadan çözer).
+from .bot_kanal import ALINTI_CIT_ADI, kaynak_etiketi, komut_oneki
 # ÇİT GRAMERİ İTHAL EDİLİR, KOPYALANMAZ — sahibi `skill_gorus_llm` (`sohbet` de oradan alır).
 from .skill_gorus_llm import _veri_bloku
 
 SOHBET_IMZA = "💬 @{ad}"
 #: Cevap imza satırı `💬 @<bot> · <oturum>` — yanıt zincirinin oturumu cevabın KENDİSİNDE taşınır.
 OTURUM_AYRACI = " · "
-#: Yanıtlanan mesajın bota giden VERİ çitinin adı.
-ALINTI_CIT_ADI = "yanitlanan_mesaj"
-#: `hatırla:` yanıtındaki kaynak etiketinin (yanıtlanan mesajın ilk satırı) karakter tavanı.
-KAYNAK_ETIKETI_TAVANI = 80
 VARSAYILAN_BOT = "sef"
 OFSET_DOSYASI = "telegram_ofset.json"
 _ONEK = re.compile(r"^@([A-Za-zÇĞİÖŞÜçğıöşü_]+)[:,]?\s*(.*)$", re.S)
@@ -137,15 +134,14 @@ def _bota_giden(mesaj: dict, metin: str) -> str:
 def _komut_giden(mesaj: dict, metin: str, komut: tuple[str, str]) -> str:
     """`hatırla:` / `unut:` komutu bota ÇİTSİZ çıplak söz olarak gider (çit öne konsaydı `bota_sor`
     öneki göremez, not MODELE giderdi — Tur 2, inceleme I-1). Rol-1 kararı: `hatırla` + yanıt + DOLU
-    gövde → nota deterministik kaynak etiketi ` (yanıt: <yanıtlanan mesajın ilk satırı>)` — satır
-    ÖNCE `notify.scrub`, SONRA `KAYNAK_ETIKETI_TAVANI`na kesilir (ters sıra yarım anahtarı süzgeçten
-    kaçırırdı). `unut` ve gövdesiz `hatırla` (bota_sor "neyi?" diye sorsun) etiketsiz gider."""
+    gövde → nota deterministik kaynak etiketi ` (yanıt: <yanıtlanan mesajın ilk satırı>)` — biçim, scrub
+    ve tavan `bot_kanal.kaynak_etiketi`nde (tek kaynak; dönüş kaydı da onu kullanır). `unut` ve gövdesiz
+    `hatırla` (bota_sor "neyi?" diye sorsun) etiketsiz gider."""
     ad, govde = komut
     alinti = ((mesaj.get("reply_to_message") or {}).get("text") or "").strip()
     if ad != "hatirla" or not govde or not alinti:
         return metin
-    ilk = notify.scrub(alinti.split("\n", 1)[0].strip())[:KAYNAK_ETIKETI_TAVANI]
-    return f"{metin} (yanıt: {ilk})"
+    return f"{metin} {kaynak_etiketi(alinti)}"
 
 
 def _sha(x) -> str:
