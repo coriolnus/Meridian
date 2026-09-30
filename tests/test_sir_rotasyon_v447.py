@@ -251,19 +251,58 @@ def _dropin_kredensiyelleri() -> dict[str, dict[str, str]]:
 
 KRED_KAYNAKLARI = _dropin_kredensiyelleri()
 
+
+#: KOŞULLU BİRİMLER — betiğin `_KOSULLU_BIRIMLER` sabitinden TÜRETİLİR (tek-kaynak; G3b 2026-09-30). Şimin
+#: `is-active` varsayılanı bu kümeyi `inactive` sayar (A1 gerçeği: iki birimin dosyası bile yok, 2026-09-30).
+#: Sabit betikte YOKSA küme BOŞ döner ve şim her birimi etkin sayar — yani sabitten ÖNCEKİ davranış; bu
+#: bir sessiz düşüş DEĞİLDİR, çünkü v604 A0/A1 sabitin varlığını ve şimle eşitliğini ayrıca çiviler.
+def _betik_kosullu_birimleri() -> tuple[str, ...]:
+    m = re.search(r'^_KOSULLU_BIRIMLER="([^"]*)"$', BETIK.read_text(encoding="utf-8"), re.M)
+    return tuple(m.group(1).split()) if m else ()
+
+
+KOSULLU_BIRIMLER = _betik_kosullu_birimleri()
+
 SIM_SYSTEMCTL = '''#!/usr/bin/env python3
 """`restart` systemd'nin yaptığını yapar: LoadCredential kaynağını /run/credentials altına koyar.
 
 AYRICA HAZIRLIK BÜTÇESİ YAZAR (`SAHTE_HAZIR_N`, varsayılan 0 = anında hazır). systemd'nin
 `restart`ı DÖNDÜĞÜNDE birim henüz dinlemiyor olabilir — 2026-09-08 06:13Z'de canlıda tam bu
 oldu. Bütçe o pencerenin modelidir: `curl` bütçe bitene kadar O BİRİME giden HER çağrıda
-bağlanamaz. Modellenmeyen bir pencere ölçülemez (tur-3'ün dersi, zaman ekseninde)."""
+bağlanamaz. Modellenmeyen bir pencere ölçülemez (tur-3'ün dersi, zaman ekseninde).
+
+`is-active [--quiet] <birim>` DURUM MODELİ (G3b, 2026-09-30): betik koşullu birimleri (`_KOSULLU_BIRIMLER`)
+YALNIZ etkinse yeniden başlatır. Durum sırasıyla: `.sahte/durum_<birim>` VARSA içindeki ad (ör. `failed`);
+yoksa `.sahte/etkin_birimler` VARSA listedekiler `active`, ötekiler `inactive`; ikisi de yoksa koşullu birim
+`inactive`, öteki her birim `active` (A1 gerçeği — mevcut birimler için davranış DEĞİŞMEZ). Çıkış systemd'nin:
+`active` → 0, gerisi → 3; `--quiet` durumu basmaz. Her soru `.sahte/is_active.log`a yazılır (hangi birim
+soruldu — koşulsuz birimin HİÇ sorulmadığı ancak böyle ölçülür)."""
 import json, os, shutil, sys
 KOK = os.environ["SIR_ROT_KOK"]
 KRED = json.loads("""__KRED_JSON__""")   # drop-in'lerden TÜRETİLDİ (bkz. `_dropin_kredensiyelleri`)
+KOSULLU = json.loads("""__KOSULLU_JSON__""")   # betiğin `_KOSULLU_BIRIMLER`ından TÜRETİLDİ
 a = sys.argv[1:]
 if a and a[0] == "--version":
     print("systemd 255 (255.4-1ubuntu8.4)"); sys.exit(0)
+if a and a[0] == "is-active":
+    sessiz = "--quiet" in a[1:] or "-q" in a[1:]
+    adlar = [x for x in a[1:] if not x.startswith("-")]
+    birim = adlar[0] if adlar else ""
+    with open(os.path.join(KOK, ".sahte", "is_active.log"), "a") as fh:
+        fh.write(birim + "\\n")
+    ozel = os.path.join(KOK, ".sahte", "durum_" + birim)
+    etkinler = os.path.join(KOK, ".sahte", "etkin_birimler")
+    if os.path.exists(ozel):
+        with open(ozel, encoding="utf-8") as fh:
+            durum = fh.read().strip()
+    elif os.path.exists(etkinler):
+        with open(etkinler, encoding="utf-8") as fh:
+            durum = "active" if birim in fh.read().split() else "inactive"
+    else:
+        durum = "inactive" if birim in KOSULLU else "active"
+    if not sessiz:
+        print(durum)
+    sys.exit(0 if durum == "active" else 3)
 if len(a) >= 2 and a[0] == "restart":
     birim = a[1]
     with open(os.path.join(KOK, ".sahte", "systemctl.log"), "a") as fh:
@@ -307,7 +346,8 @@ if len(a) >= 2 and a[0] == "restart":
 sys.exit(0)
 '''
 #: Harita şim KAYNAĞINA gömülür (şim ayrı bir süreçtir, modül değişkenini göremez).
-SIM_SYSTEMCTL = SIM_SYSTEMCTL.replace("__KRED_JSON__", json.dumps(KRED_KAYNAKLARI))
+SIM_SYSTEMCTL = (SIM_SYSTEMCTL.replace("__KRED_JSON__", json.dumps(KRED_KAYNAKLARI))
+                 .replace("__KOSULLU_JSON__", json.dumps(list(KOSULLU_BIRIMLER))))
 
 SIM_CURL = '''#!/usr/bin/env python3
 """`-K <cfg>` okur, sunulan anahtarı O ANDAKİ dosya içeriğiyle KARŞILAŞTIRIR, HTTP kodunu basar.

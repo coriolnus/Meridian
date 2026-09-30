@@ -53,6 +53,7 @@
 #                                           `--cp --vault` (aşağıda); eski yol uyarıyla koşar.
 #   ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 #                                           başlayacağını listeler, HİÇBİR ŞEY yazmaz
+#   (koşullu birim) `_KOSULLU_BIRIMLER` YALNIZ ETKİNSE yeniden başlar; değilse "ATLANDI (etkin değil: <durum>)"
 #   sudo ./sir_rotasyon.sh --<alt> --vault  → KASADAN ROTASYON (TSK-064 Faz-2 DALGA-2, 2026-09-14):
 #                                           yeni değer operatörden alınır (`--uret` ile betik İÇİNDE
 #                                           üretilir — aşağıda) ve ÖNCE KASAYA konur;
@@ -253,6 +254,11 @@ ADMIN_KOK="${SIR_ROT_ADMIN:-http://127.0.0.1:9180/apisix/admin}"
 #: 2026-09-26 — `hindsight-control-plane/src/middleware.ts` · `src/app/api/auth/login/route.ts` ·
 #: `src/app/api/health/route.ts`.
 CP_KOK="${SIR_ROT_CP:-http://127.0.0.1:9999}"
+#: BOT AĞ GEÇİDİ (Hermes `api_server`, `meridian-botlar.service`; G3b 2026-09-30). Varsayılan dinleyici
+#: 127.0.0.1:8642. Hazırlık ucu `GET /health` KİMLİKSİZDİR ve `{"status":"ok"}` döner — Rol-1 A1'deki Hermes
+#: kaynağında ölçtü (2026-09-30). Birim YALNIZ ETKİNSE yeniden başlar (`_KOSULLU_BIRIMLER`), yani uç ancak o
+#: zaman yoklanır. Telegram dinleyicisinin (`meridian-telegram.service`) sağlık ucu YOKTUR.
+BOTLAR_KOK="${SIR_ROT_BOTLAR:-http://127.0.0.1:8642}"
 
 #: HAZIRLIK BEKLEME penceresi. Ölçüm 2026-09-08 (A1, elle rotasyon penceresi): meridian
 #: `/healthz` 6-8 s, hindsight `/health` 3-10 s, apisix `/healthz` 5-10 s. Tavan o ölçümün ~6
@@ -536,7 +542,27 @@ _sir_birimleri() {
 #: `$env://` çözümünü apisix YALNIZ açılışta yapar — reload YETMEZ, RESTART gerekir. Sıra TEK
 #: yerde yaşar: birim kümesi nereden gelirse gelsin (alt komutun tamamı ya da tek bir sırrın
 #: tüketicileri) buradan geçer, yani "sıra" ile "küme" birbirinden bağımsız değişebilir.
-_BIRIM_SIRASI="apisix.service hindsight-api.service hindsight-cp.service meridian.service"
+#: 2026-09-30 (G3b): bot ağ geçidi ve Telegram dinleyicisi sona eklendi — telegram birimi
+#: `After=meridian-botlar.service` taşır, botlar kapıdan ve hafızadan SONRA açılır (birim dosyalarının
+#: `After=`ı; çivi v604 A1b). Listede olmayan birimi `_sirala` sessizce DÜŞÜRÜR: yeni tüketici birim buraya
+#: girmeden restart kümesine giremez (v604 A1).
+_BIRIM_SIRASI="apisix.service hindsight-api.service hindsight-cp.service meridian.service meridian-botlar.service meridian-telegram.service"
+
+#: KOŞULLU BİRİMLER — YALNIZ ETKİNSE yeniden başlatılır (G3b, 2026-09-30). Bot ağ geçidi ve Telegram
+#: dinleyicisi A1'de bugün ETKİN DEĞİL (birim dosyaları bile yok, `inactive` — ölçüldü 2026-09-30); canlıda
+#: etkinleştirme G3c'dedir. Koşulsuz `systemctl restart` etkin olmayan bir birimi BAŞLATIRDI (etkinleştirme
+#: kararını rotasyon vermiş olurdu) ve açılmayan bir birimin `/run/credentials`ı hiç doğmadığı için credential
+#: denetimi `olcum_yok` (çıkış 2) verirdi. `_yeniden_baslat` bu birimleri `systemctl is-active` ile sorar;
+#: etkin değilse (inactive · failed · yüklü değil) `ATLANDI (etkin değil: <durum>)` basar ve birimi restart,
+#: credential ve hazırlık kümelerinden ÇIKARIR — sessiz atlama değil, DURUM ADIYLA beyan (bedel yasası).
+#: Kuru rapor aynı soruyu sorar ve atlanacağı ÖNCEDEN söyler (`_kosullu_kuru_notu`). Öteki birimler için
+#: `is-active` HİÇ sorulmaz: onların davranışı birebir aynıdır (v604 A14).
+_KOSULLU_BIRIMLER="meridian-botlar.service meridian-telegram.service"
+
+_kosullu_birim_mi() {
+  case " $_KOSULLU_BIRIMLER " in *" $1 "*) return 0 ;; esac
+  return 1
+}
 
 #: Verilen birimleri bağımlılık sırasına dizer ve TEKİLLEŞTİRİR: iki sır aynı birimi tüketebilir
 #: (`--openrouter`de meridian NOUS'tan, hindsight-api OPENROUTER'dan gelir) ve aynı birimi iki kez
@@ -1272,6 +1298,40 @@ _yaz() {
   done < <(_kopyalar)
 }
 
+# YAZIM ÖNCESİ HEDEF ÖN-DENETİMİ — YARIM ROTASYON YOK (G3b, 2026-09-30).
+# `_yaz_satir` bir `env`/`url` hedefini YARATAMAZ (satırın DEĞERİNİ yazar, dosyayı KURMAZ) ve yokluğu yalnız
+# YAZIM ANINDA soruyordu. O ana gelindiğinde yedek alınmış, değer üretilmiş, kasa yolunda `kv put` yapılmış ve
+# tabloda ÖNCEKİ satırlar YENİ değerle yazılmış olurdu; tüketiciler yeniden başlamaz — yarım rotasyon. Yeni
+# sohbet `.env`leri (G3b: `--tohumla-sohbet` kurar) tabloya girdiği an bu hâl her rotasyonda doğardı.
+# Artık aynı soru dağıtım kapısında, HİÇBİR yazımdan (yedek · değer üretimi · kasa · ilk satır) ÖNCE sorulur ve
+# eksik her yol ADIYLA basılır. Çağrı TEK noktadadır (dağıtım bloğu, root kapısından sonra, `_islik_kur`dan
+# önce): eski yol, kasa yolunun üç dalı (genel döngü · `--db` · `--cp`) ve yedi alt komut aynı kapıdan geçer.
+# KAPSAM = `_yaz_satir`ın hedefi YARATAMADIĞI türler (`env` · `url`). `dosya` satırının hedefini betik KENDİSİ
+# kurar (mod/sahip açıkken): Faz-1C öncesi `--apisix-admin` (v447 R7) ve render hedefi yokken
+# `--vault --uret` (v557 F2) o sözleşmeye dayanır. `dosya … koru` satırı (bugün tabloda YOK) yazım anındaki
+# kendi kapısıyla durur (v447 K7c). `api`/`sql` dosya değildir.
+# `sudo test` DEĞİL, düz `[ -f ]`: kapı root kapısının ARKASINDADIR (sudo no-op olurdu) ve eski `--db` yolunun
+# sudo izi altın izle çivili (v538 C7) — kapı o izi DEĞİŞTİRMEZ.
+# Kuru koşum ve `--esitle` bu kapıdan GEÇMEZ: kuru hiçbir şey yazmaz; eşitlemenin ölçüm geçişi eksik kopyayı
+# ZATEN yazımdan (yedek dahil) önce "kopya YOK — eşitleme yarım kalırdı" ile durdurur ve o durdurma korunur.
+# Çiviler: v604 A5 · A6 · A8 (yedi alt komut × iki kip) · A9 · A10 · A11.
+_hedef_on_denetim() {
+  local alt="$1" _alt _sir tur yol _alan _mod _sahip _onek eksik="" n=0
+  while read -r _alt _sir tur yol _alan _mod _sahip _onek; do
+    [ "$_alt" = "$alt" ] || continue
+    case "$tur" in env|url) ;; *) continue ;; esac
+    if [ -f "$KOK$yol" ]; then continue; fi
+    case " $eksik " in *" $yol "*) continue ;; esac
+    eksik="${eksik:+$eksik }$yol"
+    n=$((n+1))
+  done < <(_kopyalar)
+  [ -n "$eksik" ] || return 0
+  for yol in $eksik; do echo "!! hedef dosya YOK: $yol" >&2; done
+  die "--$alt: $n hedef dosya YOK — önce: sudo ./sir_rotasyon.sh --tohumla-sohbet
+     (sohbet .env'leri; başka bir yolsa o dosyayı kuran adım). HİÇBİR ŞEY yazılmadı: yedek, değer
+     üretimi, kasa ve kopya satırı yok — rotasyon yarıda kalmadı, hiç başlamadı."
+}
+
 # Parola argv'ye GİRMEZ ve DOSYA YOLU postgres'e HİÇ VERİLMEZ.
 #
 # İlk tur `sudo chown postgres "$sql"` + `psql -f "$sql"` yazıyordu ve bu üretimde HİÇ koşamazdı:
@@ -1362,10 +1422,28 @@ _api_sil() {
 # `_yeniden_baslat <alt> [birim…]` — birim kümesi VERİLMEZSE alt komutun tamamı. Verilebilir
 # olması bir kolaylık değil KAPSAM sözleşmesidir: `--openrouter` iki anahtardan yalnız birini
 # döndürebilir ve o turda ötekinin birimini yeniden başlatmak karşılıksız bir kesintidir.
+#: KOŞULLU BİRİM (G3b, 2026-09-30): `_KOSULLU_BIRIMLER`deki birim YALNIZ ETKİNSE kümede kalır. Süzgeç restart'tan
+#: ÖNCE koşar ve `birimler`i yeniden kurar: aşağıdaki restart, credential denetimi ve hazırlık beklemesi AYNI
+#: süzülmüş kümeyi görür — atlanan birim için `/run/credentials` sorulmaz (yoksa açılmamış birim `olcum_yok`
+#: çıkış 2 verirdi) ve sağlık ucu yoklanmaz. Karar `is-active --quiet`in ÇIKIŞ KODUdur; durum ADI ayrı bir
+#: okumayla satıra yazılır (`failed` ile `inactive` operatör için aynı hâl değildir). Koşulsuz birim için
+#: `is-active` HİÇ sorulmaz. Çiviler: v604 A2-A4 (fonksiyon DOĞRUDAN, sürücüyle), A14.
 _yeniden_baslat() {
   local alt="$1"; shift
-  local birimler b
-  if [ "$#" -gt 0 ]; then birimler="$*"; else birimler="$(_birimler "$alt")"; fi
+  local birimler b hepsi durum
+  if [ "$#" -gt 0 ]; then hepsi="$*"; else hepsi="$(_birimler "$alt")"; fi
+  birimler=""
+  for b in $hepsi; do
+    if _kosullu_birim_mi "$b" && ! sudo systemctl is-active --quiet "$b"; then
+      # sessiz-yutma: `is-active` etkin OLMAYAN birimde 3 döner ve bu BEKLENEN hâldir — okunan şey çıkış
+      # kodu değil DURUM ADIDIR; ad okunamazsa uydurulmaz, satır "ÖLÇÜLEMEDİ" der.
+      durum="$(sudo systemctl is-active "$b" || true)"
+      echo "  · ATLANDI (etkin değil: ${durum:-ÖLÇÜLEMEDİ}): $b — yeniden BAŞLATILMADI (yalnız etkinse:"
+      echo "    _KOSULLU_BIRIMLER); credential ve hazırlık denetimi bu birim için İSTENMEDİ"
+      continue
+    fi
+    birimler="${birimler:+$birimler }$b"
+  done
   for b in $birimler; do
     adim "yeniden başlat: $b"
     sudo systemctl restart "$b" || die "$b yeniden başlamadı — journalctl -u $b -n 50"
@@ -1409,6 +1487,9 @@ _hazir_uc() {
     #: 200 şartı, cevap veren bir CP'yi "ölü" sayabilirdi (2026-09-08 meridian dersi). Kesin hüküm
     #: hazırlıktan SONRA giriş ucunun kanıtıdır (`_cp_kanit`: yeni 200 · eski 401).
     hindsight-cp.service)  echo "$CP_KOK/api/health http CP sunucusu cevap veriyor" ;;
+    #: Bot ağ geçidi (G3b): Hermes `GET /health` kimliksiz, `{"status":"ok"}` → 200 hazırlıktır (Rol-1 kaynak
+    #: ölçümü, 2026-09-30; bkz. `BOTLAR_KOK`). Telegram dinleyicisinin ucu YOK → güvenlik ağı dalı.
+    meridian-botlar.service) echo "$BOTLAR_KOK/health 200 -" ;;
     *) return 1 ;;
   esac
 }
@@ -1603,6 +1684,34 @@ _restart_carpani() {
   case " $_NK_ALT_KOMUTLARI " in *" $1 "*) echo 3 ;; *) echo 1 ;; esac
 }
 
+#: KURU RAPORUN KOŞULLU BİRİM NOTU (G3b, 2026-09-30) — bedel yasası: gerçek koşumda ATLANACAK birim kuru
+#: raporda ÖNCEDEN görünür. Kural ve ölçüm `_yeniden_baslat`ınkiyle AYNIDIR (`_kosullu_birim_mi` +
+#: `is-active`): şu anki durum ve sonucu ("→ ATLANACAK" / "→ yeniden başlar") birim başına basılır. Kümede
+#: koşullu birim YOKSA hiçbir şey basılmaz (ilgisiz başlık gürültüdür). Başlık satırı "    · " ile
+#: BAŞLAMAZ: kuru raporun "sır → tüketici birimler" bloğunu ayrıştıran çivi (v447 N10) o önekle sürdürür.
+#: `_kosullu_kuru_notu <birim…>` — çağıran kümeyi verir (eski yol `_birimler`, kasa yolu `_sirala`).
+_kosullu_kuru_notu() {
+  local b var=0 durum
+  for b in "$@"; do
+    if _kosullu_birim_mi "$b"; then var=1; fi
+  done
+  [ "$var" = 1 ] || return 0
+  echo "  koşullu birimler — YALNIZ ETKİNSE yeniden başlar (değilse ATLANDI satırı; credential ve hazırlık"
+  echo "  denetimi o birim için istenmez):"
+  for b in "$@"; do
+    _kosullu_birim_mi "$b" || continue
+    if sudo systemctl is-active --quiet "$b"; then
+      echo "    · $b — şu an: active → yeniden başlar"
+    else
+      # sessiz-yutma: `is-active` etkin OLMAYAN birimde 3 döner (beklenen); hüküm DURUM ADIDIR ve okunamazsa
+      # satır "ÖLÇÜLEMEDİ" der — kuru rapor bir durum UYDURMAZ.
+      durum="$(sudo systemctl is-active "$b" || true)"
+      echo "    · $b — şu an: ${durum:-ÖLÇÜLEMEDİ} → ATLANACAK"
+    fi
+  done
+  return 0
+}
+
 _kuru_rapor() {
   local alt="$1" _alt sir tur yol alan _m _s onek satir uc kabul onceki="" carpan tavan
   local _ONESHOT_SATIR
@@ -1637,6 +1746,8 @@ _kuru_rapor() {
     echo "  oneshot tüketiciler (restart kümesi DIŞI — rotasyon bunları yeniden başlatmaz):"
     echo "$_ONESHOT_SATIR"
   fi
+  # shellcheck disable=SC2046
+  _kosullu_kuru_notu $(_birimler "$alt")
   # BEDEL YASASI: bekleme bakım penceresine SÜRE ekler ve o süre kuru raporda BEYAN EDİLİR —
   # "hangi birimler yeniden başlayacak" sorusunun cevabı artık "hangi ÖLÇÜTLE ve ne kadar
   # bekleyebilir"i de içerir. Üç sütun da `_hazir_uc`/`_hazir_tavan`tan TÜRETİLİR: ikinci bir
@@ -2495,6 +2606,8 @@ _vault_kuru_rapor() {
   done <<< "$bagli"
   # shellcheck disable=SC2086
   echo "  yeniden başlatılacak: $(_sirala $hepsi)   (değeri VERİLEN sırların tüketicileri — boş bırakılan sırrınki başlamaz)"
+  # shellcheck disable=SC2046,SC2086
+  _kosullu_kuru_notu $(_sirala $hepsi)
   _birimsiz_tuketici_beyani "$alt"
   echo "  değer: $(_kuru_deger_metni "$alt")"
   _deger_kaynagi_beyani "$alt"
@@ -3564,6 +3677,9 @@ _KURU_ONERI=""
      Sebep: kanıt girdileri (curl -K cfg · PGPASSFILE · SQL) 0600 root yazılır; onları çağıran
      kimlikle okutmak HER kanıtı 000 yapar ve rotasyon doğrulanamaz."
 
+# YAZIM ÖNCESİ HEDEF ÖN-DENETİMİ (G3b) — bütün yazım yollarının (kasa dalı · eski yol alt komutları) ÖNÜNDE,
+# TEK nokta; kuru koşum ve eşitleme hariç (gerekçe `_hedef_on_denetim` şerhinde).
+if [ "$KURU" = 0 ] && [ "$ESITLE" = 0 ] && [ "$KURU_ONERILIR" = 1 ]; then _hedef_on_denetim "$ALT"; fi
 _islik_kur
 if [ "$VAULT_KIP" = 1 ]; then vault_rotasyon "$ALT"; exit 0; fi
 if [ "$ESITLE" = 1 ]; then esitle "$ALT"; exit 0; fi
