@@ -3317,10 +3317,54 @@ def _repo_root() -> str:
     return str(_cfg.ROOT)
 
 
+# Hermes'in MCP `enabled` yorumunun AYNASI — ölçüldü 2026-09-30, YEREL hermes-agent 0.18.2
+# `tools/mcp_tool.py` (`_parse_boolish(cfg.get("enabled", True), default=True)`; sözlük olmayan girdi
+# `_load_mcp_config`te atlanır). A1'deki v0.19 kaynağı bu ölçümde OKUNMADI — sürüm yükseltmesinde
+# yeniden okunur. Pano çipi bu aynayla konuşur: Hermes'in bağlayacağı sunucu "açık", atlayacağı "kapalı".
+_HERMES_EVET = frozenset({"true", "1", "yes", "on"})
+_HERMES_HAYIR = frozenset({"false", "0", "no", "off"})
+
+
+def _hermes_mcp_acik_mi(girdi) -> bool:
+    """`mcp_servers.<ad>` girdisini Hermes'in okuyacağı gibi okur: sözlük değilse kapalı (Hermes
+    bağlanmaz); `enabled` yok/None → AÇIK (Hermes varsayılanı); bool aynen; tanınan dizge
+    evet/hayır; öteki her değer (int dahil) Hermes'teki gibi varsayılana (AÇIK) düşer."""
+    if not isinstance(girdi, dict):
+        return False
+    deger = girdi.get("enabled")
+    if isinstance(deger, bool):
+        return deger
+    if isinstance(deger, str):
+        k = deger.strip().lower()
+        if k in _HERMES_EVET:
+            return True
+        if k in _HERMES_HAYIR:
+            return False
+    return True
+
+
+def _guard_girdisi_mi(kanca) -> bool:
+    """`hooks.pre_tool_call` girdisi Meridian guard'ı mı? Kimlik KOMUT YOLUDUR (Hermes'in kanca
+    onay listesi de `(olay, komut)` çiftine bağlı): komutun ilk sözcüğü `…/ops/meridian-guard.sh`.
+    Kök dizin farkı (bayat kurulum yolu) guard olmayı değiştirmez — alanları kanoniğe çekilir."""
+    if not isinstance(kanca, dict):
+        return False
+    komut = kanca.get("command")
+    if not isinstance(komut, str) or not komut.strip():
+        return False
+    ilk = komut.strip().split()[0]
+    return (os.path.basename(ilk) == "meridian-guard.sh"
+            and os.path.basename(os.path.dirname(ilk)) == "ops")
+
+
 def config_ensure_integrations() -> dict:
     """Yerel hermes-agent config.yaml'ına Meridian entegrasyonlarını IDEMPOTENT yazar (Tier 1+2):
-      • mcp_servers.meridian — salt-okunur veri sunucumuz (analytics/cf/near-miss/rejim/kalibrasyon)
-      • hooks.pre_tool_call — koruma hook'u (state/secrets/mode/emir yüzeylerini sert bloklar)
+      • mcp_servers.meridian — salt-okunur veri sunucumuz (analytics/cf/near-miss/rejim/kalibrasyon).
+        BİRLEŞTİRİR: yalnız yönetilen alanlar (command/args/env, tools.resources/prompts) kanoniğe
+        çekilir; operatörün öteki anahtarları (`enabled` kararı, timeout, tools.include …) KORUNUR.
+      • hooks.pre_tool_call — koruma hook'u (state/secrets/mode/emir yüzeylerini sert bloklar).
+        BİRLEŞTİRİR: guard girdisi yoksa başa eklenir, varsa yerinde kanonikleşir; öteki kancalar
+        ve sıraları KORUNUR.
       • prompt_caching.cache_ttl → 1h (oturum-arası önek önbelleği; saf maliyet)
       • credential_pool_strategies — 429 rotasyon stratejisi (havuz varsa devreye girer)
       • model.default ÖLÜ-AD GÖÇÜ — bilinen-ölü Gemini adı sabit alias'a çevrilir (aşağıda)
@@ -3360,28 +3404,50 @@ def config_ensure_integrations() -> dict:
     # MCP sunucusu
     servers = cfg.setdefault("mcp_servers", {}) if isinstance(cfg.get("mcp_servers", {}), dict) else {}
     cfg["mcp_servers"] = servers
-    # OPERATÖRÜN `enabled` KARARI KORUNUR (TSK-257; K-1, 2026-09-30: varsayılan profilde Meridian MCP
-    # KAPALI). Öz-onarım ALANLARI (command/args/env/tools) onarır, yetenek AÇMAZ ya da KAPATMAZ: mevcut
-    # girdide anahtar varsa değeri aynen hedefe taşınır, yoksa eklenmez. Kıyas bu KORUNMUŞ hedefle
-    # yapılır — enabled'sız hedefle kıyas K-1 girdisini her turda 'farklı' bulur, girdiyi ezer ve
-    # dosyayı her standby turunda yeniden yazardı (canlıda tek engel learn'ün yazma yasağıydı).
+    # BİRLEŞTİRME (TSK-258; TSK-257'nin `enabled` korumasını genelleştirir): öz-onarım YÖNETİLEN alanları
+    # onarır, operatör kararlarına dokunmaz. `command/args/env` bütün olarak, `tools` altında yalnız
+    # `resources/prompts` kanoniğe çekilir; girdinin öteki anahtarları (`enabled` — K-1 2026-09-30,
+    # `timeout`, `tools.include` araç daraltması …) aynen kalır, `enabled` hiçbir yolda EKLENMEZ. Kıyas
+    # BİRLEŞTİRİLMİŞ hedefle yapılır: yönetilen alan farkı yoksa yazım YOK (churn yok). Sözlük olmayan
+    # girdi (null/liste — Hermes onu atlar) kanonik girdiyle değiştirilir.
     mevcut_mcp = servers.get("meridian")
-    hedef_mcp = desired_mcp
-    if isinstance(mevcut_mcp, dict) and "enabled" in mevcut_mcp:
-        hedef_mcp = {"enabled": mevcut_mcp["enabled"], **desired_mcp}
+    if isinstance(mevcut_mcp, dict):
+        hedef_mcp = dict(mevcut_mcp)
+        hedef_mcp.update({k: desired_mcp[k] for k in ("command", "args", "env")})
+        araclar = dict(mevcut_mcp["tools"]) if isinstance(mevcut_mcp.get("tools"), dict) else {}
+        araclar.update(desired_mcp["tools"])
+        hedef_mcp["tools"] = araclar
+    else:
+        hedef_mcp = desired_mcp
     if mevcut_mcp != hedef_mcp:
         servers["meridian"] = hedef_mcp
         changed.append("mcp_servers.meridian")
-    # koruma hook'u (matcher: yazma/terminal araçları)
-    desired_hook = [{"matcher": "terminal|write_file|patch|edit|apply_patch",
-                     "command": guard, "timeout": 10}]
+    # koruma hook'u (matcher: yazma/terminal araçları) — BİRLEŞTİRME (TSK-258): liste BÜTÜN
+    # değiştirilmez. Guard girdisi (`_guard_girdisi_mi`) varsa YERİNDE kanonik alanlarına çekilir
+    # (girdideki öteki anahtarlar kalır); yoksa listenin BAŞINA bir kez eklenir — Hermes
+    # `pre_tool_call` yönergelerinde "ilk geçerli yönerge kazanır" (ölçüldü: yerel 0.18.2
+    # `hermes_cli/plugins.py`), önde duran bir `approve` guard'ın `block`unu gölgelemesin. Operatör
+    # kancaları ve sıraları dokunulmaz. Değer liste değilse (Hermes onu uyarıyla ATLAR) guard'lı tek
+    # elemanlı listeyle değiştirilir.
+    guard_kanca = {"matcher": "terminal|write_file|patch|edit|apply_patch",
+                   "command": guard, "timeout": 10}
     hooks = cfg.setdefault("hooks", {}) if isinstance(cfg.get("hooks", {}), dict) else {}
     cfg["hooks"] = hooks
-    if hooks.get("pre_tool_call") != desired_hook:
-        hooks["pre_tool_call"] = desired_hook
+    mevcut_kancalar = hooks.get("pre_tool_call")
+    if isinstance(mevcut_kancalar, list):
+        hedef_kancalar = [{**k, **guard_kanca} if _guard_girdisi_mi(k) else k
+                          for k in mevcut_kancalar]
+        if not any(_guard_girdisi_mi(k) for k in mevcut_kancalar):
+            hedef_kancalar.insert(0, dict(guard_kanca))
+    else:
+        hedef_kancalar = [dict(guard_kanca)]
+    if mevcut_kancalar != hedef_kancalar:
+        hooks["pre_tool_call"] = hedef_kancalar
         changed.append("hooks.pre_tool_call")
-    # başsız (non-TTY) çağrıda first-use consent çalışmaz — koruma hook'u HER ZAMAN koşmalı. Tek hook
-    # bizim ve config'i biz kontrol ediyoruz, o yüzden auto-accept güvenli (asıl savunma hook'un kendisi).
+    # başsız (non-TTY) çağrıda first-use consent çalışmaz — koruma hook'u HER ZAMAN koşmalı; asıl savunma
+    # hook'un kendisi. UYARI (TSK-258): kanca listesi artık BİRLEŞTİRİLİYOR — "tek hook bizim" varsayımı
+    # zorlanmıyor; config'teki öteki kancalar da bu bayrakla TTY onayı OLMADAN kaydedilir. Bayrağın
+    # kendisi bu dilimin kapsamı DIŞINDA bırakıldı (Rol-1 kararı, 2026-09-30) — ayrı karar.
     if cfg.get("hooks_auto_accept") is not True:
         cfg["hooks_auto_accept"] = True
         changed.append("hooks_auto_accept")
@@ -3455,7 +3521,11 @@ def integrations_status() -> dict:
     try:
         with open(AGENT_CONFIG) as fh:
             cfg = yaml.safe_load(fh) or {}
-        out["mcp"] = "meridian" in (cfg.get("mcp_servers") or {})
+        # `mcp` = Hermes sunucuyu BAĞLAR mı (TSK-258): girdinin VARLIĞI değil, varlık ∧ `enabled` —
+        # K-1'den (enabled: false) beri kapalı sunucu panoda yeşil görünüyordu. Yorum Hermes aynasıyla.
+        _mcp_bolumu = cfg.get("mcp_servers")
+        out["mcp"] = _hermes_mcp_acik_mi(
+            _mcp_bolumu.get("meridian") if isinstance(_mcp_bolumu, dict) else None)
         out["guard_hook"] = any("meridian-guard" in (h.get("command") or "")
                                 for h in (cfg.get("hooks", {}).get("pre_tool_call") or []))
         out["prompt_cache"] = (cfg.get("prompt_caching") or {}).get("cache_ttl")
