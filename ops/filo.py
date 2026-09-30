@@ -85,7 +85,13 @@ IPTAL_IZI = "cancel"
 
 #: Birim dosyasındaki profil evi. `^` şarttır: bu depoda birim dosyaları uzun yorum blokları
 #: taşır ve yorumdaki bir örnek satır eşleşseydi eşleme uydurulmuş olurdu.
-_EV_DESENI = re.compile(r"^Environment=HERMES_HOME=(?P<kok>\S+)/(?P<bot>[^/\s]+)\s*$", re.M)
+#: EKSEN RAPOR PROFİLİ EVİDİR — `…/.hermes/profiles/<ad>` (G3 dal sonu C1, 2026-09-30). Eski desen HER
+#: `HERMES_HOME`u `<kök>/<bot>` diye bölüyordu; bot ağ geçidi (`meridian-botlar.service`,
+#: `HERMES_HOME=/home/ubuntu/.hermes-botlar` — çok profilli bir kökün kendisi, bir bot DEĞİL) `.hermes-botlar` adlı sahte
+#: bir bot doğurdu ve `durum` kalıcı kırmızıya döndü. Sözleşme `tests/test_bot_profil_durusu_v329.py::_profil_birimi`
+#: ile AYNI; bu araç stdlib-yalnız olduğu için onu ithal edemez — iki okuyucunun eşitliğini v348 b6 ölçer.
+#: `kok` grubu profil DİZİNİNİN kendisidir (yedek `tar -C` kökü), eski desendekiyle aynı değer.
+_EV_DESENI = re.compile(r"^Environment=HERMES_HOME=(?P<kok>\S*/\.hermes/profiles)/(?P<bot>[^/\s]+)\s*$", re.M)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

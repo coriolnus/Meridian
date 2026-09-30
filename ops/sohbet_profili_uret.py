@@ -98,6 +98,12 @@ BOT_CREDENTIAL_DIZINI = f"/run/credentials/{BOT_BIRIMI}"
 #: `HERMES_WRITE_SAFE_ROOT` SÜREÇ başına okunur → tek ağ geçidinde bot başına kum havuzu İMKÂNSIZ. BEYANLI sapma:
 #: bütün sohbet profilleri bu ortak kum havuzunu paylaşır (dosya/terminal takımları zaten kapalı — ikinci katman);
 #: rapor kum havuzlarından ayrıdır.
+#: AYNI DİZİN AĞ GEÇİDİNİN BAĞLAM DİZİNİDİR (G3 dal sonu I1; A1 Hermes v0.19.0 Rol-1 ölçümü, yerel v0.18.2 aynı): bağlam
+#: dosyaları (AGENTS.md/CLAUDE.md/.cursorrules/.hermes.md) SÜREÇ cwd'sinden değil `TERMINAL_CWD`den aranır ve ağ
+#: geçidi onu açılışta YALNIZ kök config'in `terminal.cwd`sinden köprüler (yoksa `MESSAGING_CWD`, yoksa ev dizini —
+#: `/home/ubuntu`). Kök config bu yüzden `terminal: {cwd: BOT_KUM_HAVUZU}` taşır: A0'nun kurduğu BOŞ dizin (bağlam
+#: dosyası yok). `TERMINAL_*` çoklu kipte süreç-geneli sayılır (Hermes `agent/secret_scope.py` global önekleri; API
+#: sunucusu oturum bağlamı cwd vermez) → ikincil profillere YAZILMAZ: okunmayan bir değer sahte güvence olurdu.
 BOT_KUM_HAVUZU = "/opt/meridian/var/bots/sohbet"
 #: Ağ geçidinin Hermes kökü (`HERMES_HOME`): `~/.hermes` DIŞINDA olduğu için kendi başına köktür; `SOHBET_EV` onun
 #: depo aynasıdır.
@@ -108,10 +114,10 @@ KOK_DURUS_PROFILI = "sef"
 #: blok (hafıza, MCP) araçsız/hafızasız köke sızmasın. Miras alınan anahtar BÜTÜN olarak kopyalanır (alt anahtarlar
 #: kendiliğinden yayılır).
 KOK_MIRAS_ANAHTARLARI = ("hooks", "hooks_auto_accept", "agent", "approvals", "model", "providers")
-#: BEYANLI İSTİSNA — rapor profilinde bulunsa da köke GEÇMEYEN üst anahtarlar: kök bunları kendisi kurar (çoklu
+#: BEYANLI İSTİSNA — rapor profilinde bulunsa da köke GEÇMEYEN üst anahtarlar: kök bunları kendisi kurar (bağlam dizini, çoklu
 #: kip, boş izin listesi) ya da hiç taşımaz (hafıza, MCP girdisi). Kaynağın bu iki kümenin hiçbirinde olmayan bir
 #: üst anahtarı v599 yön çivisinde öter: yeni bir duruş anahtarı köke SESSİZCE eksik kalmaz, bir karar ister.
-KOK_MIRAS_DISI = ("mcp_servers", "memory", "platform_toolsets", "platforms", "gateway")
+KOK_MIRAS_DISI = ("mcp_servers", "memory", "platform_toolsets", "platforms", "gateway", "terminal")
 #: `/p/` öneksiz istek kök profile düşer; araçsız model veri UYDURUR (Parça 0). SOUL yalnız yönlendirme cümlesi
 #: yazdırır ve hiçbir yetenek (araç, hafıza) vaat etmez.
 KOK_SOUL = ("Bu, Meridian bot ağ geçidinin kök profilidir. Bu uç doğrudan kullanılmaz; her soru `/p/<bot>/` "
@@ -285,6 +291,8 @@ def _kok_config(kok: pathlib.Path) -> bytes:
     _sohbet_cagri_butcesi(cfg, str(kaynak))
     cfg["gateway"] = {"multiplex_profiles": True}
     cfg["platform_toolsets"] = {"api_server": []}
+    # Bağlam dizini (gerekçe `BOT_KUM_HAVUZU` şerhinde): yalnız kökte — ağ geçidi yalnız kökünkini köprüler.
+    cfg["terminal"] = {"cwd": BOT_KUM_HAVUZU}
     baslik = (
         URETILDI + ".",
         "Bot ağ geçidinin KÖK (varsayılan) profili.",
@@ -294,6 +302,7 @@ def _kok_config(kok: pathlib.Path) -> bytes:
         "Meridian MCP girdisi ve hafıza sağlayıcısı YOK; SOUL yalnız yönlendirme cümlesi yazdırır.",
         "Kökün .env'ine model anahtarı (providers.kapi.key_env) BİLİNÇLİ konmaz: öneksiz istek kapıda 401 ile düşer",
         "(model çağrılmaz — uydurma yok, kota yok); SOUL'daki ret cümlesi ikinci katmandır (Rol-1 hükmü, 2026-09-30).",
+        f"terminal.cwd = {BOT_KUM_HAVUZU}: ağ geçidinin BAĞLAM dizini (AGENTS.md/CLAUDE.md buradan aranır; boş kum havuzu).",
         f"Kaynak: {RAPOR_KOK}/{KOK_DURUS_PROFILI}/config.yaml (duruş: kanca, onay, kapalı takımlar, model,",
         "sağlayıcılar — gerekçeleri orada) + üretecin sabitleri (zaman aşımı, yeniden deneme, çoklu kip).",
         "Değiştirmek için kaynağı düzenle ve üreteci --yaz ile koş; tazelik kapısı --kontrol.",

@@ -6,6 +6,7 @@
 # Meridian MCP girdisi ve hafıza sağlayıcısı YOK; SOUL yalnız yönlendirme cümlesi yazdırır.
 # Kökün .env'ine model anahtarı (providers.kapi.key_env) BİLİNÇLİ konmaz: öneksiz istek kapıda 401 ile düşer
 # (model çağrılmaz — uydurma yok, kota yok); SOUL'daki ret cümlesi ikinci katmandır (Rol-1 hükmü, 2026-09-30).
+# terminal.cwd = /opt/meridian/var/bots/sohbet: ağ geçidinin BAĞLAM dizini (AGENTS.md/CLAUDE.md buradan aranır; boş kum havuzu).
 # Kaynak: deploy/hermes/profiles/sef/config.yaml (duruş: kanca, onay, kapalı takımlar, model,
 # sağlayıcılar — gerekçeleri orada) + üretecin sabitleri (zaman aşımı, yeniden deneme, çoklu kip).
 # Değiştirmek için kaynağı düzenle ve üreteci --yaz ile koş; tazelik kapısı --kontrol.
@@ -56,3 +57,5 @@ gateway:
   multiplex_profiles: true
 platform_toolsets:
   api_server: []
+terminal:
+  cwd: /opt/meridian/var/bots/sohbet

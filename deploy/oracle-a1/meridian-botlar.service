@@ -40,13 +40,14 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=ubuntu
-# ÇALIŞMA DİZİNİ BİLEREK `/`, `/opt/meridian` DEĞİL — systemd'nin sistem birimi varsayılanıyla aynı; kardeş
-# birimlerden `/opt/meridian` kopyalanmasın diye AÇIK yazıldı. Hermes çalışma dizininden `AGENTS.md`/`CLAUDE.md`/
-# `.hermes.md` toplayıp SİSTEM PROMPT'una koyar (yerel v0.18.2 `agent/prompt_builder.py`, `load_context_files`;
-# meridian-brifing.service şerhi): `/opt/meridian` depo kökündeki `CLAUDE.md`yi (A1 host'u, ssh yolu, dağıtım
-# disiplini) her sohbet isteğiyle model sağlayıcısına gönderirdi. ÖLÇÜLMEDİ: v0.19 ağ geçidinin bağlam dosyaları
-# için çalışma dizinine bakıp bakmadığı (G3c'de ilk istekte doğrulanır); `/` iki durumda da zararsızdır — orada
-# bağlam dosyası yok ve `ProtectSystem=strict` altında salt-okurdur.
+# ÇALIŞMA DİZİNİ BİLEREK `/`, `/opt/meridian` DEĞİL — İKİNCİ KATMAN; bağlam dizinini `terminal.cwd` belirler (v0.19
+# ölçümü). Hermes bağlam dosyalarını (`AGENTS.md`/`CLAUDE.md`/`.cursorrules`/`.hermes.md`) sistem istemine koyar; ağ
+# geçidinde arama dizini süreç cwd'si DEĞİL `TERMINAL_CWD`dir ve açılışta kök config'in `terminal.cwd`sinden
+# köprülenir (A1 v0.19.0 Hermes `gateway/run.py` + `agent/runtime_cwd.py`, Rol-1 ölçümü 2026-09-30; yerel v0.18.2
+# aynı) — üreteç onu boş kum havuzuna (`/opt/meridian/var/bots/sohbet`) sabitler (G3 dal sonu I1). O dizin YOKSA
+# keşif süreç cwd'sine düşer: `/opt/meridian` depo kökündeki `CLAUDE.md` (A1 host'u, ssh yolu, dağıtım disiplini) o
+# durumda her sohbet isteğiyle model sağlayıcısına giderdi. `/` bağlam dosyası taşımaz ve `ProtectSystem=strict`
+# altında salt-okurdur; kardeş birimlerden `/opt/meridian` kopyalanmasın diye AÇIK yazıldı (systemd varsayılanı).
 WorkingDirectory=/
 # --- KÖK VE YAZMA KISITI — ikisi de sır DEĞİL, ikisi de yalnız burada verilebilir --------------------------------
 # `HERMES_HOME`: ağ geçidinin Hermes kökü. Kök profil dosyaları doğrudan burada, sohbet profilleri `profiles/<ad>/`
@@ -55,7 +56,8 @@ WorkingDirectory=/
 # `HERMES_WRITE_SAFE_ROOT`: ajan araçlarının yazabileceği TEK dizin. Değişken TANIMSIZSA hiçbir yazma kısıtı
 #   UYGULANMAZ (Hermes `agent/file_safety.py`, `if safe_roots:` dalı). SÜREÇ başına okunur → tek ağ geçidinde
 #   bot başına kum havuzu İMKÂNSIZ; BEYANLI sapma: üç sohbet profili ortak `/opt/meridian/var/bots/sohbet`i
-#   paylaşır (dosya/terminal takımları zaten kapalı — ikinci katman) ve rapor kum havuzlarından ayrıdır.
+#   paylaşır (dosya/terminal takımları zaten kapalı — ikinci katman) ve rapor kum havuzlarından ayrıdır. AYNI
+#   dizin ağ geçidinin BAĞLAM dizinidir (kök config `terminal.cwd`) — içinde bağlam dosyası olmamalı, BOŞ kalmalı.
 # SIRLAR BURADA YOK: çoklu kipte sırlar PROFİL `.env`inden okunur, süreç ortamına düşmez (Hermes
 #   `agent/secret_scope.py`, `get_secret`) — dinleyici anahtarı kökün, kapı ve Hindsight anahtarları her sohbet
 #   profilinin `.env`inde; beslemesi rotasyon aracıyla (rapor profilleri emsali). Birim dosyası 0644'tür.

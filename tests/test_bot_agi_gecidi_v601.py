@@ -191,11 +191,25 @@ def test_readwritepaths_tam_olarak_mcp_agaci_ve_onekli_hermes_koku():
     assert _kapsar(rwp, u.KOK_DIZIN) and _kapsar(rwp, u.BOT_KUM_HAVUZU)
 
 
+def test_baglam_dizini_kok_terminal_cwd_kum_havuzu_birim_ve_a0_ile_ayni():
+    # GİZLİLİK KORUMASI — YÜK TAŞIYAN EKSEN (G3 dal sonu I1; A1 Hermes v0.19.0 Rol-1 ölçümü, yerel v0.18.2 aynı): ağ
+    # geçidi bağlam dosyalarını (`AGENTS.md`/`CLAUDE.md`…) `TERMINAL_CWD`den arar ve onu açılışta kök config'in
+    # `terminal.cwd`sinden köprüler; yoksa `MESSAGING_CWD`, yoksa ev dizini `/home/ubuntu`. Dağıtılan kök config'te
+    # değer ortak kum havuzudur — A0'nun kurduğu BOŞ dizin, birimin yazma kökü ile AYNI yol.
+    u, baglam = _ur(), _baglam()
+    kok = yaml.safe_load((KOK / u.SOHBET_EV / "config.yaml").read_text(encoding="utf-8"))
+    cwd = (kok.get("terminal") or {}).get("cwd")
+    assert cwd == u.BOT_KUM_HAVUZU, cwd
+    assert cwd == _ortam(_birim_yolu()).get("HERMES_WRITE_SAFE_ROOT")
+    assert cwd == _coz(baglam["sohbet_kum_havuzu"], baglam) and cwd in _dizin_gorevleri()
+
+
 def test_calisma_dizini_kok_opt_meridian_degil():
-    # GİZLİLİK KORUMASI (Tur 3, inceleme M1): Hermes çalışma dizininden `CLAUDE.md`/`AGENTS.md` toplayıp sistem
-    # istemine koyar; `/opt/meridian`de ikisi de var (A1 host'u, ssh yolu, dağıtım disiplini) ve her sohbet isteğiyle
-    # model sağlayıcısına giderdi. Kardeş birimlerin normu `/opt/meridian` olduğundan bir "tutarlılık" düzenlemesi bu
-    # korumayı sessizce geri açardı (brifing birimindeki aynı korumanın emsali v330 çivisi).
+    # İKİNCİ KATMAN (Tur 3 inceleme M1; eksen G3 dal sonu I1'de düzeltildi): bağlam dizinini `terminal.cwd` belirler
+    # (v0.19 ölçümü, üstteki çivi) — ama o dizin YOKSA Hermes bağlam keşfini süreç cwd'sine (`WorkingDirectory`)
+    # düşürür. `/opt/meridian`de `CLAUDE.md`/`AGENTS.md` var (A1 host'u, ssh yolu, dağıtım disiplini); kardeş
+    # birimlerin normu `/opt/meridian` olduğundan bir "tutarlılık" düzenlemesi bu ikinci katmanı sessizce açardı
+    # (brifing birimindeki emsal v330).
     deger = _tek(_birim_yolu(), "Service", "WorkingDirectory")
     assert deger == "/" and deger != "/opt/meridian", deger
 

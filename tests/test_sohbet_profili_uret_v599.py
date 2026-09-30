@@ -399,6 +399,21 @@ def test_kok_profil_sohbet_zaman_asimi():
     assert k["agent"]["api_max_retries"] == u.SOHBET_API_DENEME
 
 
+def test_kok_baglam_dizini_terminal_cwd_kum_havuzu():
+    # G3 dal sonu I1 (2026-09-30): ağ geçidi bağlam dosyalarını (AGENTS.md/CLAUDE.md/.cursorrules/.hermes.md) SÜREÇ
+    # cwd'sinden değil `TERMINAL_CWD`den arar ve onu açılışta YALNIZ kök config'in `terminal.cwd`sinden köprüler (yoksa
+    # `MESSAGING_CWD`, yoksa ev dizini). Değer ÜRETECİN çıktısında (`uret()`) ortak kum havuzu olmalı; `TERMINAL_*`
+    # çoklu kipte süreç-geneli olduğu için ikincil profillere yazılmaz (okunmaz — yazılsa sahte güvence olurdu).
+    u = _ur()
+    cikti = u.uret()
+    kok = yaml.safe_load(cikti[KOK_CONFIG].decode("utf-8"))
+    assert kok.get("terminal") == {"cwd": u.BOT_KUM_HAVUZU}, kok.get("terminal")
+    assert "terminal" in u.KOK_MIRAS_DISI
+    for bot in _aktifler():
+        profil = yaml.safe_load(cikti[f"deploy/hermes/sohbet/profiles/{bot.ad}/config.yaml"].decode("utf-8"))
+        assert "terminal" not in profil, bot.ad
+
+
 def _yaprak(cfg: dict, yol: tuple[str, ...]):
     for parca in yol:
         cfg = cfg[parca]

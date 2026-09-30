@@ -168,6 +168,49 @@ def test_b4_TIMER_VE_UZAK_EV_DE_TURETILIR():
     assert p["karne"]["ev"] == "/home/ubuntu/.hermes/profiles/karne", p["karne"]
 
 
+def test_b5_PROFIL_EVI_DISINDAKI_HERMES_HOME_BOT_SAYILMAZ(tmp_path, monkeypatch):
+    """G3 dal sonu C1 (2026-09-30): bot ağ geçidi `meridian-botlar.service` `HERMES_HOME=/home/ubuntu/.hermes-botlar`
+    taşır — bir rapor botu DEĞİL, çok profilli bir ağ geçidinin KÖKÜ. Eski desen HER `HERMES_HOME`u `<kök>/<bot>`
+    diye böldü: `.hermes-botlar` adlı sahte bir bot doğdu, `eksik_timerlar()` onu "timer yok" saydı ve `durum` üç bot
+    sağlıklıyken kalıcı KIRMIZI + sahte "BİRİM YOK" satırı bastı (d8/d9 kırmızıydı). Eksen rapor profili EVİDİR:
+    `…/.hermes/profiles/<ad>` — v329 `_profil_birimi` ile aynı sözleşme (b6 iki okuyucuyu çapraz ölçer)."""
+    mod = _yukle()
+    # (a) GERÇEK DEPO: profil evi dışında HERMES_HOME taşıyan birimler taranır (vaka birimi listede — pozitif kontrol)
+    # ve hiçbiri bot eşlemesine girmez.
+    disarida = sorted({b.name for b in mod.BIRIM_DIZINI.glob("*.service")
+                       for ln in b.read_text(encoding="utf-8").splitlines()
+                       if ln.startswith("Environment=HERMES_HOME=")
+                       and not re.search(r"/\.hermes/profiles/[^/\s]+\s*$", ln)})
+    assert "meridian-botlar.service" in disarida, disarida
+    p = mod.profiller()
+    assert not set(disarida) & {b["birim"] for b in p.values()}, p
+    assert ".hermes-botlar" not in p and mod.eksik_timerlar() == [], (sorted(p), mod.eksik_timerlar())
+    # (b) SENTETİK: kök biçimi başka bir birimde de bot sayılmaz; profil evi biçimi sayılır ve `kok` (yedek `tar -C`
+    # kökü) profil dizininin kendisi kalır.
+    (tmp_path / "x-ag.service").write_text("[Service]\nEnvironment=HERMES_HOME=/home/ubuntu/.hermes-botlar\n",
+                                           encoding="utf-8")
+    (tmp_path / "x-rapor.service").write_text("[Service]\nEnvironment=HERMES_HOME=/home/ubuntu/.hermes/profiles/zzz\n",
+                                              encoding="utf-8")
+    monkeypatch.setattr(mod, "BIRIM_DIZINI", tmp_path)
+    p = mod.profiller()
+    assert sorted(p) == ["zzz"], p
+    assert (p["zzz"]["birim"], p["zzz"]["kok"], p["zzz"]["ev"]) == (
+        "x-rapor.service", "/home/ubuntu/.hermes/profiles", "/home/ubuntu/.hermes/profiles/zzz"), p["zzz"]
+
+
+def test_b6_FILO_ESLEMESI_V329_PROFIL_BIRIMI_ILE_AYNI():
+    """TEK SÖZLEŞME, İKİ OKUYUCU: `ops/filo.py` stdlib-yalnız kalmak ZORUNDA (i1/i2) ve v329'un
+    `tests/test_bot_profil_durusu_v329.py::_profil_birimi`ini ithal edemez; ikisi de rapor profilini birime
+    `HERMES_HOME=…/.hermes/profiles/<ad>` satırıyla bağlar. Bu çivi iki okuyucunun gerçek depoda AYNI eşlemeyi
+    ürettiğini ölçer — biri genişlerse (C1: sahte `.hermes-botlar` botu) ya da daralırsa ayrışma öter."""
+    from tests.test_bot_profil_durusu_v329 import _profil_birimi
+    mod = _yukle()
+    v329 = {pr.name: svc.name for pr in sorted(mod.PROFIL_DIZINI.iterdir()) if pr.is_dir()
+            for svc in [_profil_birimi(pr)] if svc is not None}
+    filo = {bot: b["birim"] for bot, b in mod.profiller().items()}
+    assert v329 and filo == v329, (filo, v329)
+
+
 # ═══════════════════════════════════════════════════════════════════════════
 #  C. SSH SARMALI — KİMLİK VE GEÇERSİZ KILMA
 # ═══════════════════════════════════════════════════════════════════════════

@@ -37,7 +37,9 @@
 # birimin `HERMES_WRITE_SAFE_ROOT`/`HERMES_HOME`u ile tests/test_bot_agi_gecidi_v601.py eşitler.
 # KUM HAVUZU: ağ geçidi TEK süreçtir ve yazma kökünü süreç başına okur → üç sohbet profili tek ortak kum havuzunu
 # paylaşır (rapor kum havuzlarından ayrı). Yukarıdaki görevle aynı gerekçe: `/var` rsync'ten dışlanır, dizini
-# canlıda biri yaratmak ZORUNDA; sahiplik ZORLANIR (root sahipli dizine birim SESSİZCE yazamaz).
+# canlıda biri yaratmak ZORUNDA; sahiplik ZORLANIR (root sahipli dizine birim SESSİZCE yazamaz). AYNI dizin ağ
+# geçidinin BAĞLAM dizinidir (kök config `terminal.cwd` — G3 dal sonu I1): Hermes AGENTS.md/CLAUDE.md'yi buradan arar;
+# dizin YOKSA arama süreç cwd'sine düşer, bu yüzden kurulması yazma kökünden de öte bir gizlilik ön koşuludur.
 - name: Sohbet kum havuzu (bot ağ geçidinin ortak yazma kökü)
   ansible.builtin.file:
     path: "{{ sohbet_kum_havuzu }}"
