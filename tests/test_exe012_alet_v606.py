@@ -20,6 +20,18 @@ HER BÖLÜM BİR ALET MADDESİ:
         `codelaw.DECLARED_SINKS`te beyanlı ve graf onu DOĞRULUYOR.
   G     Bedel (kart beyanli_sinirlar (4), ADIM-0c `alet_olay_basi_maliyeti_us`): PK bileşimli düzenekte ölçülür ve
         basılır (`-s` ile görünür); tavanlar şişme bekçisidir, kanıt değil.
+TUR 2 (düzeltme turu 1, 2026-09-30 — inceleme I-1, M-2/M-3/M-4 + Rol-1 kararı "kapanışta boşaltma"):
+  H     I-1: kayıt yolunun arızası turu DÜŞÜREMEZ — temiz tur temiz döner, `except` kolunun kendi istisnası
+        maskelenmez; kayıp adıyla (yalnız tür adı) uyarıya düşer, `last_error`a dokunulmaz.
+  K     Kapanışta boşaltma (`api._lifespan` kapanış kolu): yalnız `_autostart`ın tüketiciyi KAYDETTİĞİ yaşam
+        döngüsünde; boş tampon satır yazmaz; takas + yazım kilit altında (barfeed iş parçacığı kapanışta durmaz);
+        kapanış çağrısının arızası kapanışı bozmaz; `bosaltma: kapanis`.
+  E1'e M-3 (bayrak kapalıyken `_handle_symbol`da saat okuması/sayaç YOK) ve C6'ya M-4 (alan sırası tek kaynak)
+  eklendi.
+
+BAĞIMLILIK BEYANI (inceleme M-6, ertelendi): v217'nin sahne yardımcıları (`_kapilar_olculebilir`, `_plan`, `_bar`,
+`RTH`, `SEANS`, `PLAN_GUNU`) bilerek içe aktarılır — kopya ikinci kaynak olurdu; v217 bu adları değiştirirse bu dosya
+toplama hatasıyla GÖRÜNÜR biçimde düşer.
 
 Bu dosya `state/`e yalnız `sandbox_state` üzerinden dokunur, ağa çıkmaz. Numara v606: ana checkout + beş worktree'de
 boş (ölçüldü 2026-09-30; v604 G3b, v605 TSK-259).
@@ -35,11 +47,16 @@ import pathlib
 import random
 import re
 import statistics
+import threading
 import time
 
 import pytest
 
-from meridian import barclock as bc, codelaw, gecikme, intraday_cycle as ic, intraday_shadow as ish, store
+from fastapi.testclient import TestClient
+
+from meridian import api, barclock as bc, barfeed as bf, codelaw, gecikme, intraday_cycle as ic, \
+    intraday_shadow as ish, marketstream as mk, store
+from meridian.adapters import alpaca
 from tests.test_golge_planli_kol_v217 import PLAN_GUNU, RTH, SEANS, _bar, _kapilar_olculebilir, _plan
 
 KOK = pathlib.Path(__file__).resolve().parent.parent
@@ -351,6 +368,32 @@ def test_C5_alanlar_SIRALI_ofset_AYNI_saatten(sandbox_state, monkeypatch):
     assert ikinci[3] == 159.75 and (ilk[1], ikinci[1]) == (0.25, 0.25)
 
 
+def test_C6_alan_sirasi_TEK_KAYNAK_ATIF_ALANLARI(sandbox_state, monkeypatch):
+    """İnceleme M-4 (tek-kaynak yasası): kaydın alan sırası `ATIF_ALANLARI`dan TÜRER — kayıt kurucusu yalnız ADLA
+    doldurulur, satırdaki `alanlar` başlığı ile değerler ada göre eşleşir; konumsal bir demet ikinci kaynak olamaz."""
+    saat = _Saat()
+    syms = _z_sahnesi(monkeypatch, saat, planli_gecikme=0.25)
+    casus = _gozlem_casusu(monkeypatch)
+    t = ic.consumer()
+    t.on_barfeed_event({"syms": syms})
+    k = t._atif_olaylar[0]
+    assert k._fields == ic.ATIF_ALANLARI
+    assert (k.outcome, k.x_s, k.z_s, k.planli_giris, k.planli_yazim) == ("processed", casus[0][0], 0.5, 2, 2)
+    bc.set_clock(lambda: KAPANIS_SONRASI)
+    t.on_barfeed_event({"syms": syms})
+    satir = _defter()[0]
+    olay = dict(zip(satir["alanlar"], satir["olaylar"][0]))
+    assert (olay["outcome"], olay["x_s"], olay["z_s"], olay["planli_giris"], olay["planli_yazim"]) == \
+        ("processed", casus[0][0], 0.5, 2, 2), f"satır başlığı ile değer konumu ayrıştı: {olay}"
+    agac = ast.parse((KOK / "meridian" / "intraday_cycle.py").read_text(encoding="utf-8"))
+    fn = next(d for d in ast.walk(agac) if isinstance(d, ast.FunctionDef) and d.name == "_atif_kaydet")
+    kurucular = [d for d in ast.walk(fn) if isinstance(d, ast.Call) and ast.unparse(d.func) == "AtifOlay"]
+    assert len(kurucular) == 1 and not kurucular[0].args, "kayıt kurucusu konumsal argüman almamalı (yalnız ad)"
+    assert {kw.arg for kw in kurucular[0].keywords} == set(ic.ATIF_ALANLARI)
+    eklemeler = [d for d in ast.walk(fn) if isinstance(d, ast.Call) and ast.unparse(d.func).endswith(".append")]
+    assert all(not isinstance(a, ast.Tuple) for d in eklemeler for a in d.args), "tampona konumsal demet ekleniyor"
+
+
 # =================================================================================================================
 # D — (4) seans başına TOPLU yazım, X ölçümünün DIŞINDA; süreç damgası
 # =================================================================================================================
@@ -370,6 +413,7 @@ def test_D1_seans_kapisinda_TEK_satir_alanlar_ve_surec_damgasi(sandbox_state, mo
     assert len(satirlar) == 1, f"seans başına TEK satır olmalı: {len(satirlar)}"
     s = satirlar[0]
     assert s["kart"] == "EXE-2026-012" and s["seans"] == SEANS and s["bosaltma"] == "seans_kapandi"
+    assert ic.ATIF_BOSALTMA == ("seans_kapandi", "seans_degisti", "kapanis"), "bosaltma değer sözlüğü (B okuyucusu)"
     assert s["surec_baslangic"] == "2026-07-23T12:00:00.123456+00:00" and s["pid"] == os.getpid()
     assert s["alanlar"] == list(ic.ATIF_ALANLARI) and s["n"] == 3
     assert s["olaylar"] == bellek, "defter bellekten farklı — yuvarlama/dönüşüm var"
@@ -469,6 +513,14 @@ def _senaryo(sandbox_state, monkeypatch, *, acik: bool) -> dict:
     ish.reset_dedup()
     monkeypatch.setattr(ic, "ATIF_ENABLED", acik)
     syms = _pk_kur(monkeypatch)
+    okuma = [0]
+    gercek = time.perf_counter
+
+    def sayan_saat():
+        okuma[0] += 1
+        return gercek()
+
+    monkeypatch.setattr(gecikme, "_saat", sayan_saat)
     once = {e: s["sayi"] for e, s in ic.DONGU_SURESI.anlik().items()}
     t = ic.consumer()
     donusler = [t.on_barfeed_event({"syms": syms}) for _ in range(3)]
@@ -479,7 +531,8 @@ def _senaryo(sandbox_state, monkeypatch, *, acik: bool) -> dict:
     return {"donusler": donusler, "health": ic.health(),
             "sayim": {e: sonra[e] - once.get(e, 0) for e in sonra},
             "defterler": {ad: oku(ad) for ad in (ic.DECISIONS_FILE, ish.ORDERS_FILE, ish.PLANLI_ORDERS_FILE)},
-            "atif_defteri": oku(ic.ATIF_DEFTERI), "tampon": list(t._atif_olaylar)}
+            "atif_defteri": oku(ic.ATIF_DEFTERI), "tampon": list(t._atif_olaylar),
+            "birikim": (t._atif_z, t._atif_giris, t._atif_yazim), "saat_okuma": okuma[0]}
 
 
 def test_E1_bayrak_KAPALIYKEN_kayit_ve_defter_YOK_sicak_yol_BAYT_ESIT(sandbox_state, monkeypatch):
@@ -492,6 +545,13 @@ def test_E1_bayrak_KAPALIYKEN_kayit_ve_defter_YOK_sicak_yol_BAYT_ESIT(sandbox_st
     assert kapali["health"] == acik["health"], "alet sıcak yolun sayaçlarını değiştirdi"
     assert kapali["donusler"] == acik["donusler"] == [None] * 4
     assert kapali["sayim"] == acik["sayim"] and acik["sayim"]["processed"] == 3
+    # M-3 (inceleme): kapalıyken `_handle_symbol`un planli dalında da saat OKUNMAZ, sayaç DEĞİŞMEZ — yalnız olay
+    # turunun kendi iki okuması (giriş/çıkış) × 4 olay kalır. Açıkta planli girişler ek okuma yapar (kurgu kanıtı).
+    assert kapali["birikim"] == (0.0, 0, 0), f"bayrak kapalıyken planli dal birikimi değişti: {kapali['birikim']}"
+    assert kapali["saat_okuma"] == 2 * 4, f"bayrak kapalıyken fazladan saat okuması: {kapali['saat_okuma']}"
+    # (açıkta birikimler her olayın başında sıfırlanır — son olay kapanış-sonrası skipped olduğu için (0.0, 0, 0)
+    # görünür; kurgu kanıtı fazladan saat okumasıdır: 3 olay × 3 planli giriş × 2 okuma)
+    assert acik["saat_okuma"] == 2 * 4 + 3 * 3 * 2, f"kurgu geçersiz: açıkta planli dal okuması {acik['saat_okuma']}"
 
 
 def test_E2_bayrak_ORTAMDAN_okunur_varsayilan_ACIK_intraday_shadow_deseni():
@@ -537,7 +597,8 @@ def test_F1_motor_defteri_OKUMAZ_yalniz_yazar_OTOMATIK_KAPI_YOK():
 
 def test_F2_beyan_OKUYUCUYU_ve_DEVIR_SARTINI_adlandirir():
     gerekce = codelaw.DECLARED_SINKS[ic.ATIF_DEFTERI]
-    for parca in ("EXE-2026-012", "research/olcumler/exe012_kill1_canli", "OTOMATİK KAPI", "DEVİR ŞARTI"):
+    for parca in ("EXE-2026-012", "research/olcumler/exe012_kill1_canli", "OTOMATİK KAPI", "DEVİR ŞARTI",
+                  "kapanis", "27 MB", "yarım satır"):
         assert parca in gerekce, f"beyan '{parca}' parçasını taşımıyor"
 
 
@@ -546,6 +607,220 @@ def test_F3_kod_KARTA_bagli_kart_ALET_maddesini_tasiyor():
     assert "card_id: EXE-2026-012" in kart and ic.ATIF_KART == "EXE-2026-012"
     for parca in ("ikinci kronometre YASAK", "gecikme._saat", "skipped kaydedilmez", "süreç başlangıç damgasını"):
         assert parca in kart, f"kartın ALET metni '{parca}' içermiyor — kod neye bağlı?"
+
+
+# =================================================================================================================
+# H — (Tur 2, I-1) kayıt yolunun arızası turu DÜŞÜREMEZ
+# =================================================================================================================
+
+def test_H1_kayit_ARIZASI_temiz_turu_temiz_dondurur_adiyla_uyari(sandbox_state, monkeypatch):
+    store.write_json("portfolio.json", {"positions": {}, "armed": []})
+    bc.set_clock(lambda: RTH)
+    uyarilar = []
+    monkeypatch.setattr(ic.obs, "warn", lambda olay, **kw: uyarilar.append((olay, kw)))
+
+    def patlayan_kayit(self, *a, **kw):
+        raise RuntimeError("v606 kayıt gizli-değer-xyz")
+
+    monkeypatch.setattr(ic.IntradayConsumer, "_atif_kaydet", patlayan_kayit)
+    t = ic.consumer()
+    assert t.on_barfeed_event({"syms": ""}) is None, "kayıt arızası temiz turu istisnaya çevirdi"
+    assert t.events_handled == 1 and t.last_error == "", "alet arızası sıcak yolun sayaç/hata alanına sızdı"
+    assert [o for o, _ in uyarilar] == ["exe012_atif_kayit_dustu"]
+    kw = uyarilar[0][1]
+    assert kw["tur"] == "RuntimeError", kw
+    assert "gizli-değer-xyz" not in json.dumps(kw, ensure_ascii=False), "uyarı istisnanın DEĞERİNİ taşıyor (yalnız tür)"
+
+
+def test_H2_except_kolunun_ISTISNASI_kayit_arizasiyla_MASKELENMEZ(sandbox_state, monkeypatch):
+    """v585 B6 / C3 sözleşmesinin üstüne: `except` kolu yükseltir + kayıt da patlar + kayıp uyarısı da patlar →
+    yine ÖZGÜN istisna (aynı nesne) yükselir."""
+    ozgun = OSError("kanal düştü")
+
+    def kanal(olay, **kw):
+        if olay == "intraday_event_failed":
+            raise ozgun
+        raise OSError("ikinci kanal arızası — özgünün yerine geçmemeli")
+
+    def patla(self, fields):
+        raise RuntimeError("v606")
+
+    def patlayan_kayit(self, *a, **kw):
+        raise RuntimeError("v606 kayıt")
+
+    monkeypatch.setattr(ic.obs, "warn", kanal)
+    monkeypatch.setattr(ic.IntradayConsumer, "_handle", patla)
+    monkeypatch.setattr(ic.IntradayConsumer, "_atif_kaydet", patlayan_kayit)
+    with pytest.raises(OSError) as yakalanan:
+        ic.consumer().on_barfeed_event({"syms": "AAPL"})
+    assert yakalanan.value is ozgun, f"turun kendi istisnası maskelendi: {yakalanan.value!r}"
+
+
+# =================================================================================================================
+# K — (Tur 2, Rol-1 kararı) işçinin düzgün kapanışında seans tamponu deftere iner
+# =================================================================================================================
+
+def _yasam_dongusu(monkeypatch, *, kaydeder: bool) -> None:
+    """`TestClient(api.app)` yaşam döngüsünün `_autostart` kolları: `kaydeder` = intraday tüketicisi barfeed'e
+    KAYDEDİLİR mi (canlı işçinin koşulu: piyasa akışı açık + Alpaca kâğıt anahtarı). Akış/barfeed/ayna başlatılmaz."""
+    monkeypatch.setattr(alpaca, "paper_available", lambda: kaydeder)
+    monkeypatch.setattr(api.secrets_mod, "present", lambda n: True)
+    monkeypatch.setenv("MERIDIAN_MARKET_STREAM", "1")
+    monkeypatch.setenv("MERIDIAN_MIRROR_STREAM", "0")
+    monkeypatch.setenv("MERIDIAN_INTRADAY", "1")
+    monkeypatch.setattr(mk, "start", lambda *a, **k: None)
+    monkeypatch.setattr(bf, "start", lambda *a, **k: None)
+    monkeypatch.setattr(bf, "_CONSUMER", None)
+
+
+def _olaylar(t, n: int) -> None:
+    bc.set_clock(lambda: RTH)
+    store.write_json("portfolio.json", {"positions": {}, "armed": []})
+    for _ in range(n):
+        t.on_barfeed_event({"syms": ""})
+
+
+def test_K1_kayitli_yasam_dongusu_KAPANISTA_tamponu_yazar(sandbox_state, monkeypatch):
+    _yasam_dongusu(monkeypatch, kaydeder=True)
+    with TestClient(api.app):
+        t = ic.consumer()
+        assert bf.consumer().callback == t.on_barfeed_event, "kurgu: tüketici bu yaşam döngüsünde kaydedilmedi"
+        _olaylar(t, 3)
+        assert _defter() == []
+    satirlar = _defter()
+    assert [(s["seans"], s["n"], s["bosaltma"]) for s in satirlar] == [(SEANS, 3, "kapanis")]
+    assert t._atif_olaylar == []
+
+
+def test_K2_kaydetmeyen_yasam_dongusu_KAPANISTA_hicbir_sey_yazmaz(sandbox_state, monkeypatch):
+    """Sandbox'sız bir TestClient kapanışının sınıfı: yaşam döngüsü tüketici KAYDETMEDİ (anahtar yok) ama süreçteki
+    tekil tüketicinin tamponu DOLU (önceki bir testten). Kapanış yolu onu yazsaydı, sandbox'sız bir koşumda gerçek yerel
+    `state/`e düşerdi. İkinci kurgu: doğrudan `api._autostart()` çağıran bir testin bıraktığı kayıt referansı sonraki
+    yaşam döngüsünün kapanışına TAŞINMAZ."""
+    t = ic.consumer()
+    _olaylar(t, 2)
+    _yasam_dongusu(monkeypatch, kaydeder=False)
+    with TestClient(api.app):
+        pass
+    assert _defter() == [] and not (sandbox_state / ic.ATIF_DEFTERI).exists(), "kaydetmeyen kapanış defter yazdı"
+    assert len(t._atif_olaylar) == 2
+    _yasam_dongusu(monkeypatch, kaydeder=True)
+    api._autostart()                                       # yaşam döngüsü DIŞI kayıt (bayat referans adayı)
+    _yasam_dongusu(monkeypatch, kaydeder=False)
+    with TestClient(api.app):
+        pass
+    assert not (sandbox_state / ic.ATIF_DEFTERI).exists(), "önceki kaydın referansı sonraki kapanışa taşındı"
+
+
+def test_K3_bos_tampon_SATIR_YAZMAZ(sandbox_state, monkeypatch):
+    t = ic.consumer()
+    t._atif_bosalt("kapanis")
+    t._atif_bosalt("seans_kapandi")
+    assert not (sandbox_state / ic.ATIF_DEFTERI).exists(), "boş tampon n:0 satırı yazdı"
+    _yasam_dongusu(monkeypatch, kaydeder=True)
+    with TestClient(api.app):
+        pass
+    assert not (sandbox_state / ic.ATIF_DEFTERI).exists(), "olaysız yaşam döngüsünün kapanışı satır yazdı"
+    _olaylar(t, 2)
+    t._atif_bosalt("kapanis")
+    t._atif_bosalt("kapanis")
+    assert [s["n"] for s in _defter()] == [2], "ikinci boşaltma boş satır üretti"
+
+
+def test_K4_kapanis_ARIZASI_kapanisi_BOZMAZ(sandbox_state, monkeypatch):
+    uyarilar = []
+
+    def kanal(olay, **kw):
+        uyarilar.append((olay, kw))
+        if olay == "exe012_kapanis_bosaltma_dustu":
+            raise OSError("uyarı kanalı da düştü")
+
+    def patlayan(self):
+        raise RuntimeError("v606 kapanış gizli-değer-xyz")
+
+    _yasam_dongusu(monkeypatch, kaydeder=True)
+    monkeypatch.setattr(api.obs, "warn", kanal)
+    monkeypatch.setattr(ic.IntradayConsumer, "kapanista_bosalt", patlayan)
+    with TestClient(api.app):
+        _olaylar(ic.consumer(), 1)
+    ad = [(o, kw) for o, kw in uyarilar if o == "exe012_kapanis_bosaltma_dustu"]
+    assert len(ad) == 1 and ad[0][1]["tur"] == "RuntimeError"
+    assert "gizli-değer-xyz" not in json.dumps(ad[0][1], ensure_ascii=False)
+
+
+def _baska_is_parcacigi_alabilir(kilit) -> bool:
+    """Kilit şu an TUTULUYOR mu? — başka bir iş parçacığından bloklamadan almayı dener (RLock sahipliği yeniden
+    girişe izin verdiği için aynı iş parçacığından sınanamaz)."""
+    sonuc = []
+
+    def dene():
+        ok = kilit.acquire(blocking=False)
+        if ok:
+            kilit.release()
+        sonuc.append(ok)
+
+    th = threading.Thread(target=dene)
+    th.start()
+    th.join()
+    return sonuc[0]
+
+
+def test_K5_tampon_takasi_ve_yazim_KILIT_ALTINDA(sandbox_state, monkeypatch):
+    """İnceleme koşulu (a): kapanış boşaltması lifespan iş parçacığından gelir, barfeed daemon iş parçacığı DURMAZ.
+    Tampona ekleme, seans değişimi/kapısı boşaltması ve kapanış boşaltması AYNI kilidi TUTARAK koşar."""
+    store.write_json("portfolio.json", {"positions": {}, "armed": []})
+    bc.set_clock(lambda: RTH)
+    t = ic.consumer()
+    ihlal = []
+
+    class KontrolluListe(list):
+        def append(self, x):
+            if _baska_is_parcacigi_alabilir(t._atif_kilit):
+                ihlal.append("tampona ekleme kilitsiz")
+            super().append(x)
+
+    ozgun = store.append_jsonl
+
+    def kontrollu_defter(ad, satir):
+        if ad == ic.ATIF_DEFTERI and _baska_is_parcacigi_alabilir(t._atif_kilit):
+            ihlal.append("defter yazımı kilitsiz")
+        return ozgun(ad, satir)
+
+    monkeypatch.setattr(ic.store, "append_jsonl", kontrollu_defter)
+    t._atif_olaylar = KontrolluListe()
+    t.on_barfeed_event({"syms": ""})
+    t._atif_bosalt("kapanis")                              # kapanış yolu
+    t._atif_olaylar = KontrolluListe()
+    t.on_barfeed_event({"syms": ""})
+    bc.set_clock(lambda: ERTESI_RTH)
+    t._atif_olaylar = KontrolluListe(t._atif_olaylar)
+    t.on_barfeed_event({"syms": ""})                       # seans değişimi yolu
+    assert ihlal == [], ihlal
+    assert [s["bosaltma"] for s in _defter()] == ["kapanis", "seans_degisti"]
+
+
+def test_K6_eszamanli_kapanis_bosaltmasi_OLAY_KAYBETMEZ_CIFT_YAZMAZ(sandbox_state, monkeypatch):
+    """Davranış kanıtı (GIL altında yarış penceresi dar — ısırma K5'tedir): barfeed benzeri iş parçacığı olay işlerken
+    ana iş parçacığı tekrar tekrar kapanış boşaltması yapar; her olay TAM BİR KEZ deftere ya da tampona düşer."""
+    store.write_json("portfolio.json", {"positions": {}, "armed": []})
+    bc.set_clock(lambda: RTH)
+    t = ic.consumer()
+    n = 400
+
+    def akis():
+        for _ in range(n):
+            t.on_barfeed_event({"syms": ""})
+
+    th = threading.Thread(target=akis)
+    th.start()
+    for _ in range(3000):                                  # sabit sayıda eşzamanlı boşaltma denemesi (iş yükü)
+        t._atif_bosalt("kapanis")
+    th.join()
+    t._atif_bosalt("kapanis")
+    satirlar = _defter()
+    assert all(s["n"] == len(s["olaylar"]) and s["n"] > 0 for s in satirlar)
+    ofsetler = [o[satirlar[0]["alanlar"].index("ofset_s")] for s in satirlar for o in s["olaylar"]]
+    assert len(ofsetler) == n and len(set(ofsetler)) == n, "olay kayboldu ya da çift yazıldı"
 
 
 # =================================================================================================================

@@ -34,8 +34,10 @@ hatasıdır; tetik-geçiş ölçümü değildir (eşik kontrolüdür, gösterge 
 olayları, portfolio.json, trade_plans.jsonl; yazar: intraday_decisions.jsonl. Komşular: barclock,
 hotstate, intraday_shadow, loop."""
 from __future__ import annotations
+import collections
 import datetime as _dt
 import os
+import threading
 
 from . import barclock, config, gecikme, hotstate, store, obs
 from . import health as _health
@@ -84,9 +86,17 @@ DONGU_SURESI = gecikme.Histogram(
 #       dönüşleri p95'i işlenen olayın maliyetinden aşağı çekerdi). Alan sırası `ATIF_ALANLARI`. Kayıt olay turu
 #       KAPANDIKTAN sonra eklenir → X'e GİRMEZ.
 #   (4) Toplu yazım `state/` altında tek defter (`ATIF_DEFTERI`), seans başına TEK satır, olay turunun ölçümü DIŞINDA:
-#       seans kapısında dönen ilk olayda ya da kayıtlı bir olayın seansı tampondakinden farklıysa. Satır süreç
-#       başlangıç damgasını (`_SUREC_BASLANGIC`) + pid'i taşır: seans içi yeniden başlatmayı okuyucu bununla ayırır
-#       (yeniden başlatmada kaybolan tampon, o seansın satırında seans açılışından SONRAKİ bir damgayla görünür).
+#       seans kapısında dönen ilk olayda ya da kayıtlı bir olayın seansı tampondakinden farklıysa; ayrıca işçinin
+#       DÜZGÜN kapanışında (`api._lifespan` kapanış kolu → `IntradayConsumer.kapanista_bosalt`). Nedenin değer sözlüğü
+#       `ATIF_BOSALTMA`. Boş tampon satır YAZMAZ. Takas + yazım `_atif_kilit` altında (kapanış boşaltması lifespan iş
+#       parçacığından gelir, barfeed daemon iş parçacığı kapanışta durmaz). Satır süreç başlangıç damgasını
+#       (`_SUREC_BASLANGIC`) + pid'i taşır: seans içi yeniden başlatmayı okuyucu bununla ayırır (yeniden başlatmada
+#       kaybolan ya da kapanışta kısmen yazılan tampon, o seansın satırında seans açılışından SONRAKİ bir damgayla
+#       görünür; aynı seansın satırları (seans, surec_baslangic, pid) ile birleştirilir). DİSK: ~109 KB/seans (sentetik;
+#       gerçek değer ADIM-0c) × ~252 seans ≈ 27 MB/yıl; aletin ömrü 20–40 seans ≈ 2–4 MB; rotasyon YOK — alet emekli
+#       edilince yazım sökülür, defter silinmez (hüküm kesiti research/ altına dondurulur). Yazım kilitsiz dosya
+#       eklemesidir (emsal defterlerle aynı, tek yazar): SIGKILL/OOM yazımın ortasında keserse son satır yarım kalabilir —
+#       okuyucu onu bozuk satır olarak ayıklar, seans eksik sayılır.
 #   (5) Kapatma: `MERIDIAN_TUR_ATIF=0` (intraday_shadow ENABLED deseni; import anında okunur, varsayılan AÇIK).
 # SINIR (kart kill_list, tasarım §2): OTOMATİK KAPI YOK — hiçbir motor kodu bu defteri okuyup planli kolu
 # kapatamaz/açamaz; okuyucu motor DIŞINDADIR (research/olcumler/exe012_kill1_canli/, Rol-1). BEDEL (kart
@@ -96,6 +106,11 @@ ATIF_ENABLED = os.environ.get("MERIDIAN_TUR_ATIF", "1") != "0"
 ATIF_KART = "EXE-2026-012"
 ATIF_DEFTERI = "exe012_tur_atif.jsonl"
 ATIF_ALANLARI = ("outcome", "x_s", "z_s", "ofset_s", "planli_giris", "planli_yazim")
+# Olay kaydı — alan SIRASI `ATIF_ALANLARI`dan türer (tek kaynak); kurucu yalnız ADLA doldurulur (`_atif_kaydet`).
+AtifOlay = collections.namedtuple("AtifOlay", ATIF_ALANLARI)
+# `bosaltma` alanının değer sözlüğü (B dilimi okuyucusu için): seans kapısında dönen ilk olay · kayıtlı olayın seansı
+# değişti · işçinin düzgün kapanışı (seans ortasındaysa satır KISMİ seanstır).
+ATIF_BOSALTMA = ("seans_kapandi", "seans_degisti", "kapanis")
 # Süreç başlangıç damgası (duvar saati, UTC) ve olay ofsetinin tabanı (X/Z ile AYNI saat: ofset = olayın X ölçümünün
 # başladığı an − bu okuma). Modül içe aktarımı süreç açılışındadır (`api._autostart` tüketiciyi orada kaydeder).
 _SUREC_BASLANGIC = _dt.datetime.now(_dt.timezone.utc).isoformat()
@@ -151,7 +166,10 @@ class IntradayConsumer:
         self._atif_giris = 0
         self._atif_yazim = 0
         self._atif_seans: str | None = None
-        self._atif_olaylar: list[tuple] = []
+        self._atif_olaylar: list[AtifOlay] = []
+        # Tampon takası + defter yazımı bu kilidin ALTINDA (kapanış boşaltması başka iş parçacığından gelir). Yeniden
+        # girişli: `_atif_kaydet` kilidi tutarken seans değişimi/kapısı için `_atif_bosalt`ı çağırır.
+        self._atif_kilit = threading.RLock()
 
     # ---- ilgi kümesi: açık pozisyonlar ∪ silahlı ∪ GÜNÜN TÜM PLANLARI (O(≤ plan tavanı)) ----
     def _interest_set(self, pf: dict, planned: dict) -> set:
@@ -218,7 +236,8 @@ class IntradayConsumer:
 
         EXE-2026-012 ALETİ (`ATIF_ENABLED`): olay başı birikimler turdan ÖNCE sıfırlanır; tur KAPANDIKTAN sonra
         (`finally` — X ölçülmüş, istisna yolunda da) `_atif_kaydet` olayı seans tamponuna ekler. Ölçülen turun
-        DIŞINDADIR; özgün istisna AYNEN geçer."""
+        DIŞINDADIR; kaydın arızası yakalanır ve adıyla uyarıya düşer — temiz tur temiz döner, özgün istisna AYNEN
+        geçer."""
         atif = ATIF_ENABLED
         if atif:
             self._atif_z, self._atif_giris, self._atif_yazim = 0.0, 0, 0
@@ -236,7 +255,17 @@ class IntradayConsumer:
                     olcum.etiket_degeri = "processed" if self.events_handled != n0 else "skipped"
         finally:
             if atif:
-                self._atif_kaydet(olcum, self.skipped["session"] != seans_kapisi0)
+                try:
+                    self._atif_kaydet(olcum, self.skipped["session"] != seans_kapisi0)
+                except Exception as e:
+                    # ALET ARIZASI TURU DÜŞÜREMEZ (inceleme I-1): temiz tur temiz döner, `except` kolunun kendi
+                    # istisnası maskelenmez; kayıp adıyla (yalnız TÜR) uyarıya düşer, `last_error`a DOKUNULMAZ.
+                    try:
+                        obs.warn("exe012_atif_kayit_dustu", tur=type(e).__name__,
+                                 detail="EXE-2026-012 tur-içi atıf kaydı düştü — bu olay tampona girmedi; canlı "
+                                        "karar turu etkilenmedi")
+                    except Exception:  # sessiz-yutma: uyarı kanalının kendisi düştü — alet arızası turun dönüşünü ve özgün istisnasını maskeleyemez
+                        pass
 
     def _atif_kaydet(self, olcum, seans_kapisinda: bool) -> None:
         """EXE-2026-012 ALET (3)/(4) — olay turu KAPANDIKTAN sonra çağrılır: bu çağrının süresi X'e GİRMEZ.
@@ -245,40 +274,57 @@ class IntradayConsumer:
         nesnesinin çıkış süresi (histograma işlenen değerin kendisi), Z ve planli giriş/yazım sayıları bu olayın
         birikimleri, ofset = X ölçümünün başladığı an − `_SUREC_SAAT0`. `skipped` KAYDEDİLMEZ. Tampon iki anda
         deftere iner: kayıtlı olayın seansı tampondakinden farklıysa (önce eski seans yazılır) ve seans kapısında
-        dönen bir olayda (seans bitti). Yazım hatası `_atif_bosalt`ta adıyla uyarıya düşer; buradan yükselen bir şey yoktur."""
+        dönen bir olayda (seans bitti). Tampon `_atif_kilit` altında değişir. Yazım hatası `_atif_bosalt`ta adıyla
+        uyarıya düşer; bu fonksiyondan yükselen başka bir arızayı `on_barfeed_event` yakalar ve adıyla uyarıya çevirir
+        (tur düşmez)."""
         sonuc = olcum.etiket_degeri
-        if sonuc in ("processed", "error") and olcum.sure is not None:
-            seans = barclock.session_date()
-            if self._atif_olaylar and seans != self._atif_seans:
-                self._atif_bosalt("seans_degisti")
-            self._atif_seans = seans
-            self._atif_olaylar.append((sonuc, olcum.sure, self._atif_z, olcum.baslangic - _SUREC_SAAT0,
-                                       self._atif_giris, self._atif_yazim))
-        elif seans_kapisinda and self._atif_olaylar:
-            self._atif_bosalt("seans_kapandi")
+        with self._atif_kilit:
+            if sonuc in ("processed", "error") and olcum.sure is not None:
+                seans = barclock.session_date()
+                if self._atif_olaylar and seans != self._atif_seans:
+                    self._atif_bosalt("seans_degisti")
+                self._atif_seans = seans
+                self._atif_olaylar.append(AtifOlay(
+                    outcome=sonuc, x_s=olcum.sure, z_s=self._atif_z, ofset_s=olcum.baslangic - _SUREC_SAAT0,
+                    planli_giris=self._atif_giris, planli_yazim=self._atif_yazim))
+            elif seans_kapisinda and self._atif_olaylar:
+                self._atif_bosalt("seans_kapandi")
+
+    def kapanista_bosalt(self) -> None:
+        """İşçinin DÜZGÜN kapanışında seans tamponunu deftere indirir (`bosaltma: kapanis`; EXE-2026-012 ALET (4)).
+
+        Tek çağıranı `api._lifespan` kapanış kolu (`api._kapanis_atif_bosalt`) — YALNIZ bu tüketicinin o yaşam
+        döngüsünde `_autostart` tarafından barfeed'e KAYDEDİLDİĞİ durumda. Boş tampon satır yazmaz. Barfeed daemon iş
+        parçacığı kapanışta durdurulmaz; takas + yazım `_atif_kilit` altındadır. Seans ortasında bir kapanışın satırı
+        KISMİ seanstır (sonraki süreç aynı seansa yeni `surec_baslangic` ile yazar → kart kuralıyla pencere dışı)."""
+        self._atif_bosalt("kapanis")
 
     def _atif_bosalt(self, neden: str) -> None:
         """EXE-2026-012 ALET (4) — seans tamponunu `state/` altındaki `ATIF_DEFTERI`ne TEK satır olarak ekler, boşaltır.
 
         Satır: kart, şema, seans, süreç başlangıç damgası + pid (seans içi yeniden başlatma tespiti), boşaltma nedeni
-        (`seans_kapandi` | `seans_degisti`), yazım anı, alan adları, olay sayısı ve olay listesi (yuvarlamasız).
+        (`ATIF_BOSALTMA`), yazım anı, alan adları, olay sayısı ve olay listesi (yuvarlamasız). BOŞ TAMPON SATIR YAZMAZ.
+        Takas + yazım `_atif_kilit` altında (yeniden girişli; kapanış boşaltması başka iş parçacığından gelir).
         YAZIM DÜŞERSE tampon YİNE boşalır ve kayıp ADIYLA uyarıya düşer (seans + olay sayısı): her sonraki kapı-önü
         olayda yeniden deneyen bir tampon hem sınırsız büyür hem uyarı seli üretirdi. Seans defterde görünmez; okuyucu
         onu eksik seans olarak adlandırır. Sıcak yolun `last_error` alanına DOKUNULMAZ (alet arızası karar hattının
         arızası değildir)."""
-        olaylar, seans = self._atif_olaylar, self._atif_seans
-        self._atif_olaylar = []
-        try:
-            store.append_jsonl(ATIF_DEFTERI, {
-                "kart": ATIF_KART, "sema": 1, "seans": seans,
-                "surec_baslangic": _SUREC_BASLANGIC, "pid": os.getpid(), "bosaltma": neden,
-                "yazim_ts": barclock.now().isoformat(), "alanlar": list(ATIF_ALANLARI),
-                "n": len(olaylar), "olaylar": olaylar})
-        except Exception as e:
-            obs.warn("exe012_defter_yazim_dustu", seans=seans, n=len(olaylar),
-                     error=f"{type(e).__name__}: {e}"[:160],
-                     detail="EXE-2026-012 tur-içi atıf defteri yazılamadı — bu seansın kaydı KAYIP (hüküm penceresinde "
-                            "eksik seans olarak görünür); canlı karar döngüsü etkilenmedi")
+        with self._atif_kilit:
+            olaylar, seans = self._atif_olaylar, self._atif_seans
+            if not olaylar:
+                return                                    # boş tampon SATIR YAZMAZ (n:0 satırı yok)
+            self._atif_olaylar = []
+            try:
+                store.append_jsonl(ATIF_DEFTERI, {
+                    "kart": ATIF_KART, "sema": 1, "seans": seans,
+                    "surec_baslangic": _SUREC_BASLANGIC, "pid": os.getpid(), "bosaltma": neden,
+                    "yazim_ts": barclock.now().isoformat(), "alanlar": list(ATIF_ALANLARI),
+                    "n": len(olaylar), "olaylar": olaylar})
+            except Exception as e:
+                obs.warn("exe012_defter_yazim_dustu", seans=seans, n=len(olaylar),
+                         error=f"{type(e).__name__}: {e}"[:160],
+                         detail="EXE-2026-012 tur-içi atıf defteri yazılamadı — bu seansın kaydı KAYIP (hüküm "
+                                "penceresinde eksik seans olarak görünür); canlı karar döngüsü etkilenmedi")
 
     def _handle(self, fields: dict) -> None:
         """Tek bir barfeed olayını işler: seans/HALT kapılarını geçer, ilgi kümesini kurar ve olaydaki
