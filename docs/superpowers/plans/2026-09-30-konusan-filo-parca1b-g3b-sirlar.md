@@ -298,7 +298,7 @@ Davranış (Review Focus 4):
   6. Ancak bundan sonra rotasyon alt komutları. Tohumlamadan önce `--tenant` koşulursa ön-denetim durdurur (Task 1).
   7. G3c test-ateşlemesi (G3 planı listesi).
   Geri alma: yeni `.env`leri `sudo mv` ile yedek dizinine taşı (silme yok); drop-in'ler etkin olmayan birimde zararsız.
-- Modify: `docs/superpowers/plans/2026-09-30-konusan-filo-parca1b-g3-bot-agi-gecidi.md` G3c kontrol listesine tek satır: `/p/<bot>/v1/models` Bearer ile 200 ölçülür (profil kapsamı doğrulaması); yanlış anahtar 401.
+- ~~G3 planı G3c satırı~~ — Rol-1 2026-09-30 18:4xZ ekledi (G3c 4b, G4 dal sonu I-1 ile birlikte); bu görevde YAPILMAZ.
 
 - [ ] **Step 1:** RUNBOOK bölümünü yaz. Her komut ssh sarmalı ya da "A1'de" başlıklı olur, değer basan komut içermez.
 - [ ] **Step 2:** Doğrula: `tests/test_uiux_s1b_v154.py` (üretilmiş RUNBOOK bekçisi) kırmızıysa bu beklenen durumdur. Başlık değişti; `docs/RUNBOOK.md`i Rol-1 üretir. Raporda "v154 kırmızı — Rol-1 `ops/runbook_uret.py` üretecek" diye beyan et, ajan düzeltmeye kalkmaz. Öteki kapsam: Task 4 kümesi → PASS.
