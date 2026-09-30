@@ -405,6 +405,14 @@ DECLARED_SINKS: dict[str, str] = {
         "tüketiciyi göremiyor (pool_exhausted_seen.json sınıfı). okuyucu @ayna/@butce/pano + EDG "
         "ölçüm kartı; Parça 1 dağıtımında okuyucu kodu gelir — o gün dış okuyucu grafta görünür "
         "olur ve bu beyan `stale_sinks` kuralıyla KALKAR",
+    "bot_unut_bekleyen.json": "Konuşan filo `unut:` iki adımının bekleyen aday kaydı (Parça 1b G4 Görev 2, "
+        "v593): kısa kod → bot, bellek kimlikleri, kesitler, ifade, ts, son, durum. Yazan da okuyan da "
+        "`bot_kanal` (`_bekleyen_ekle`, `_gecis_talebi`, `_bekleyen_guncelle` — hepsi `store.update_json` kilitli "
+        "oku-değiştir-yaz) — AYNI modül, statik graf dış tüketiciyi göremiyor (pool_exhausted_seen.json sınıfı). "
+        "Modülün KENDİ işletim durumudur, dışarıdan okunması anlamsız: kalıcı olmak ZORUNDA çünkü ilk adım "
+        "(aday listesi + kod) ile `onayla: unut <kod>` ayrı mesajlardır ve süreç yeniden başlarsa bellekteki "
+        "kayıt kaybolur; `geri al: <kod>` de hangi kimliklerin emekliye ayrıldığını buradan bilir. Durum "
+        "dosyasıdır, defter değil: 7 günden eski sonuçlanmış kayıt yazımda budanır, tam iz bot_sohbet.jsonl'de",
     "is_istek_defteri.jsonl": "Konuşan filo 'şimdi çalıştır' kabul defteri (spec 2026-09-29 §3.6/§4, "
         "v594). Yazan `is_istek.is_iste` (yalnız KABUL satırları), okuyan `is_istek._son_kabul` — "
         "15 dk bot-başı tavanın hafızası; AYNI modül, statik graf dış tüketiciyi göremiyor "

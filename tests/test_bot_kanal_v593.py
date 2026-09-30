@@ -23,18 +23,34 @@ class SahteTasiyici:
 
 
 class SahteHafiza:
-    def __init__(self, sonuc=True, unut_sonuc=(), donus_sonuc=True, donus_kimlik="op-1"):
+    # G4 Görev 2: tek adımlı `unut` EMEKLİ — iki adım (`unut_adaylari` salt-okur, `unut_uygula`) + `geri_al`.
+    def __init__(self, sonuc=True, adaylar=(), donus_sonuc=True, donus_kimlik="op-1", uygula_hatasi=None,
+                 geri_al_hatasi_sirasi=None):
         self.yazilanlar, self.sonuc = [], sonuc
-        self.unutulanlar, self.unut_sonuc = [], list(unut_sonuc)
+        self.aday_sorgulari, self.adaylar = [], list(adaylar)
+        self.uygulananlar, self.uygula_hatasi = [], uygula_hatasi
+        self.geri_al_denemeleri, self.geri_al_hatasi_sirasi = [], geri_al_hatasi_sirasi
         self.donusler, self.donus_sonuc, self.donus_kimlik = [], donus_sonuc, donus_kimlik
 
     def yaz(self, bot, metin, etiketler):
         self.yazilanlar.append((bot, metin, etiketler))
         return self.sonuc
 
-    def unut(self, bot, ifade):
-        self.unutulanlar.append((bot, ifade))
-        return list(self.unut_sonuc)
+    def unut_adaylari(self, bot, ifade):
+        self.aday_sorgulari.append((bot, ifade))
+        return list(self.adaylar)
+
+    def unut_uygula(self, bot, idler, ifade):
+        self.uygulananlar.append((bot, list(idler), ifade))
+        if self.uygula_hatasi is not None:
+            raise self.uygula_hatasi
+        return list(idler)
+
+    def geri_al(self, bot, memory_id):
+        self.geri_al_denemeleri.append((bot, memory_id))
+        if len(self.geri_al_denemeleri) - 1 == self.geri_al_hatasi_sirasi:
+            raise _nedenli("http_502")
+        return True
 
     def donus_yaz(self, bot, mesaj, cevap, etiketler):
         self.donusler.append((bot, mesaj, cevap, etiketler))
@@ -120,13 +136,14 @@ def test_hatirla_hafiza_verilmezse_gercek_sinif_anahtarsiz_yazilamadi_ve_olay(sa
                and e.get("neden") == "anahtar_yok" for e in obs.recent(20))
 
 
-def test_unut_hafiza_verilmezse_gercek_sinif_anahtarsiz_unutulamadi(sandbox_state):
-    # Eski "bağlı değil" dalı emekli (G4 Görev 1): hafıza VERİLMEDİYSE gerçek sınıf; anahtar yoksa UNUTULAMADI.
+def test_unut_hafiza_verilmezse_gercek_sinif_anahtarsiz_aranamadi(sandbox_state):
+    # Eski "bağlı değil" dalı emekli (G4 Görev 1): hafıza VERİLMEDİYSE gerçek sınıf; anahtar yoksa aday listesi
+    # ARANAMADI (G4 Görev 2: ilk adım salt-okur — "hiçbir şey unutulmadı" burada DOĞRUDUR).
     t = SahteTasiyici()
     cevap = bk.bota_sor("bekci", "unut: eski not", "telegram", "o", tasiyici=t, simdi=SIMDI)
-    assert t.cagrilar == [] and cevap.startswith("UNUTULAMADI")
+    assert t.cagrilar == [] and "ARANAMADI" in cevap and "hiçbir şey unutulmadı" in cevap
     s = _defter()[-1]
-    assert (s["tur"], s["hafiza_durumu"]) == ("unut", "unutulamadi")
+    assert (s["tur"], s["hafiza_durumu"]) == ("unut", "aranamadi")
 
 
 def test_tasiyici_hatasi_defterde_ve_yukari_firlar(sandbox_state):
@@ -294,7 +311,29 @@ KOMUT_TABLOSU = [
     ("unutma", None),
     ("hatırla bunu", None),
     ("<<<VERI:yanitlanan_mesaj>>>\nx\n<<<VERI-SON:yanitlanan_mesaj>>>\nhatırla: not", None),
+    # G4 Görev 2 (Rol-1 kararı 3): `onayla` ve İKİ KELİMELİ `geri al` (`kadro.ad_katla` + `_` ile `geri_al`).
+    ("onayla: unut a1b2c3", ("onayla", "unut a1b2c3")),
+    ("Onayla : Unut A1B2C3", ("onayla", "Unut A1B2C3")),
+    ("onayla:", ("onayla", "")),
+    ("geri al: a1b2c3", ("geri_al", "a1b2c3")),
+    ("Geri Al : a1b2c3", ("geri_al", "a1b2c3")),
+    ("GERİ AL: a1b2c3", ("geri_al", "a1b2c3")),
+    ("geri  al:\ta1b2c3", ("geri_al", "a1b2c3")),
+    ("geri al:", ("geri_al", "")),
+    ("geri\nal: a1b2c3", None),                # kelimeler arası satır sonu komut değil
+    ("geri al a1b2c3", None),
+    ("geri alma: a1b2c3", None),
+    ("geri: a1b2c3", None),
+    ("al: a1b2c3", None),
+    ("onaylama: unut a1b2c3", None),
+    ("geri al bunu: a1b2c3", None),             # en çok İKİ kelime
+    ("hatırla bunu: not", None),                # iki kelime ama tabloda değil
+    ("unut şunu: not", None),
 ]
+
+#: Komut adı → defter `tur`u. `onayla` satırı Rol-1 kararı 4 (2026-09-30) ile `unut_onay` adını taşır (onayladığı iş
+#: unutmadır); diğerlerinde tur = komut adı.
+_KOMUT_TURU = {"onayla": "unut_onay"}
 
 
 @pytest.mark.parametrize("metin,beklenen", KOMUT_TABLOSU)
@@ -306,7 +345,11 @@ def test_komut_oneki_tablosu_ve_bota_sor_dagitimi_AYNI_hukmu_verir(sandbox_state
     t = SahteTasiyici()
     bk.bota_sor("sef", metin, "pano", "o", tasiyici=t, hafiza=SahteHafiza(), simdi=SIMDI)
     dagitim = "model" if t.cagrilar else _defter()[-1]["tur"]
-    assert dagitim == (beklenen[0] if beklenen else "model")
+    assert dagitim == (_KOMUT_TURU.get(beklenen[0], beklenen[0]) if beklenen else "model")
+
+
+def test_komutlar_tablosu_donuk():
+    assert bk.KOMUTLAR == ("hatirla", "unut", "onayla", "geri_al")
 
 
 def test_bota_sor_komut_tespitini_YALNIZ_komut_oneki_ile_yapar():
@@ -882,73 +925,345 @@ def test_sozluk_onek_dislama_listesi_donuk():
     assert bk.SOZLUK_DISI_ONEK == ("hisset",)
 
 
-# ---- Parça 1b-ön Görev 2: `unut:` dalı gerçek hafıza çağrısı (geri alınabilir `invalidated`, kalıcı silme YOK) ----
+# ---- Parça 1b G4 Görev 2: `unut:` İKİ ADIM (aday listesi → `onayla: unut <kod>`) + `geri al: <kod>` ---------------
+# Plan Review Focus 2: ilk adım HİÇBİR şeyi değiştirmez (yalnız aday listesi + kısa kod); süresi geçen/yabancı/bilinmeyen
+# kod reddedilir; başka botun adayını onaylamak mümkün değildir. Bekleyen kayıt `state/bot_unut_bekleyen.json` (Rol-1
+# kararı 1): `{kod: {bot, idler, kesitler, ifade, ts, son, durum}}`, kod 6 hex, ömür 15 dk, kayıt SİLİNMEZ (durum değişir).
 
-def test_unut_hafizaya_gider_ve_unutulanlari_listeler(sandbox_state):
+import re as _re  # noqa: E402  (G4 Görev 2 bölümü)
+
+IKI_ADAY = [("m1", "eski not bir"), ("m2", "eski not iki")]
+
+
+def _bekleyen():
+    return store.read_json(bk.UNUT_BEKLEYEN, {})
+
+
+def _unut_adimi(bot="bekci", ifade="eski not", h=None, simdi=SIMDI, kanal="telegram"):
+    """İlk adımı koşar; `(cevap, kod, hafıza)` döner. Kod defter satırından okunur (cevapla aynı olduğu da ölçülür)."""
+    h = h if h is not None else SahteHafiza(adaylar=IKI_ADAY)
+    cevap = bk.bota_sor(bot, f"unut: {ifade}", kanal, "o", tasiyici=SahteTasiyici(), hafiza=h, simdi=simdi)
+    kod = _defter()[-1].get("unut_kodu")
+    return cevap, kod, h
+
+
+def _onayla(kod, bot="bekci", h=None, simdi=SIMDI, kanal="telegram"):
+    return bk.bota_sor(bot, f"onayla: unut {kod}", kanal, "o", tasiyici=SahteTasiyici(), hafiza=h, simdi=simdi)
+
+
+def _geri_al(kod, bot="bekci", h=None, simdi=SIMDI):
+    return bk.bota_sor(bot, f"geri al: {kod}", "pano", "o", tasiyici=SahteTasiyici(), hafiza=h, simdi=simdi)
+
+
+def _olaylar(ad):
+    return [e for e in obs.recent(50) if e.get("event") == ad]
+
+
+def test_unut_ilk_adim_aday_listeler_hicbir_seyi_degistirmez_kod_verir(sandbox_state):
     t = SahteTasiyici()
-    h = SahteHafiza(unut_sonuc=[("m1", "eski not bir"), ("m2", "eski not iki")])
+    h = SahteHafiza(adaylar=IKI_ADAY)
     cevap = bk.bota_sor("bekci", "unut: eski not", "telegram", "o", tasiyici=t, hafiza=h, simdi=SIMDI)
-    assert cevap == "Unuttum (geri alınabilir): 1) eski not bir 2) eski not iki"
-    assert t.cagrilar == [] and h.unutulanlar == [("bekci", "eski not")]
     s = _defter()[-1]
-    assert (s["tur"], s["hafiza_durumu"], s["unutulan_idler"]) == ("unut", "unutuldu", ["m1", "m2"])
+    kod = s["unut_kodu"]
+    assert _re.fullmatch(r"[0-9a-f]{6}", kod)
+    assert "1) eski not bir 2) eski not iki" in cevap and f"onayla: unut {kod}" in cevap
+    assert "unutulmadı" in cevap and "15 dk" in cevap
+    # İLK ADIM PATCH ATMAZ: yalnız salt-okur aday sorgusu; uygula / geri al / model YOK.
+    assert h.aday_sorgulari == [("bekci", "eski not")] and h.uygulananlar == [] and h.geri_al_denemeleri == []
+    assert t.cagrilar == []
+    assert (s["tur"], s["hafiza_durumu"], s["aday_idler"]) == ("unut", "onay_bekliyor", ["m1", "m2"])
+    kayit = _bekleyen()[kod]
+    assert kayit == {"bot": "bekci", "idler": ["m1", "m2"], "kesitler": ["eski not bir", "eski not iki"],
+                     "ifade": "eski not", "ts": "2026-09-29T12:00:00+00:00", "son": "2026-09-29T12:15:00+00:00",
+                     "durum": "bekliyor"}
+    assert bk.UNUT_ONAY_OMRU == dt.timedelta(minutes=15)
 
 
-def test_unut_eslesme_yoksa_acik_soyler(sandbox_state):
+def test_unut_eslesme_yoksa_acik_soyler_kod_yok(sandbox_state):
     cevap = bk.bota_sor("bekci", "unut: yok böyle bir şey", "pano", "o", hafiza=SahteHafiza(), simdi=SIMDI)
     assert cevap == "Eşleşen bir not bulamadım; hiçbir şey unutulmadı."
     s = _defter()[-1]
-    assert (s["hafiza_durumu"], s["unutulan_idler"]) == ("eslesme_yok", [])
+    assert (s["hafiza_durumu"], s["aday_idler"], s["unut_kodu"]) == ("eslesme_yok", [], None)
+    assert _bekleyen() == {}
 
 
-def test_unut_hafiza_istisnasi_unutulamadi_der_ve_olay_yazar(sandbox_state):
+def test_unut_aday_hatasi_aranamadi_der_ve_nedenli_olay(sandbox_state):
     class Patlayan(SahteHafiza):
-        def unut(self, bot, ifade):
-            raise ConnectionError("hindsight kapalı")
+        def unut_adaylari(self, bot, ifade):
+            raise _nedenli("zaman_asimi", "hindsight gizli-metin-XYZ")
 
     cevap = bk.bota_sor("bekci", "unut: x", "pano", "o", hafiza=Patlayan(), simdi=SIMDI)
-    assert "UNUTULAMADI" in cevap and "hindsight kapalı" not in cevap
+    assert "ARANAMADI" in cevap and "gizli-metin" not in cevap
     s = _defter()[-1]
-    assert (s["tur"], s["hafiza_durumu"], s["unutulan_idler"]) == ("unut", "unutulamadi", [])
-    assert any(e.get("event") == "bot_hafiza_unut_hatasi" and e.get("sinif") == "ConnectionError"
-               for e in obs.recent(20))
-
-
-def test_unut_kismi_hatada_emekliye_ayrilanlar_da_soylenir(sandbox_state):
-    # Kısmi hata: 1. bellek zaten `invalidated`; operatör onu bilmezse geri alamaz (Review Focus 2/3).
-    class Kismi(SahteHafiza):
-        def unut(self, bot, ifade):
-            hata = RuntimeError("hindsight HTTP 500")
-            hata.unutulanlar = [("m1", "eski not bir")]
-            raise hata
-
-    cevap = bk.bota_sor("bekci", "unut: eski not", "pano", "o", hafiza=Kismi(), simdi=SIMDI)
-    assert cevap.startswith("UNUTULAMADI") and "1) eski not bir" in cevap and "geri alınabilir" in cevap
-    assert _defter()[-1]["unutulan_idler"] == ["m1"]
+    assert (s["tur"], s["hafiza_durumu"], s["aday_idler"]) == ("unut", "aranamadi", [])
+    (olay,) = _olaylar("bot_hafiza_unut_hatasi")
+    assert (olay["bot"], olay["kanal"], olay["sinif"], olay["neden"], olay["adim"]) == (
+        "bekci", "pano", "RuntimeError", "zaman_asimi", "aday")
 
 
 @pytest.mark.parametrize("mesaj", ["unut:", "unut:   ", "Unut :\n"])
 def test_unut_bos_govde_sorar_hafiza_cagrilmaz(sandbox_state, mesaj):
     # Boş sorgu recall'da en yakın rastgele bellekleri döndürür — hafızaya HİÇ gidilmez.
-    h = SahteHafiza(unut_sonuc=[("m1", "x")])
+    h = SahteHafiza(adaylar=IKI_ADAY)
     cevap = bk.bota_sor("bekci", mesaj, "pano", "o", hafiza=h, simdi=SIMDI)
-    assert "neyi unutayım" in cevap.lower() and h.unutulanlar == []
+    assert "neyi unutayım" in cevap.lower() and h.aday_sorgulari == []
     assert _defter()[-1]["hafiza_durumu"] == "bos_govde"
 
 
-def test_unut_ifadesi_hafizaya_scrub_ile_gider(sandbox_state):
+def test_unut_ifadesi_hafizaya_ve_kayda_scrub_ile_gider(sandbox_state):
     # İfade Hindsight'a sorgu VE `reason` olarak gider (bellek geçmişinde kalır) — hatırla ile aynı süzgeç.
     anahtar = "sk-or-v1-" + "e" * 64
-    h = SahteHafiza()
-    bk.bota_sor("bekci", f"unut: eski anahtar {anahtar}", "pano", "o", hafiza=h, simdi=SIMDI)
-    assert h.unutulanlar and anahtar not in h.unutulanlar[0][1] and "eski anahtar" in h.unutulanlar[0][1]
+    _, kod, h = _unut_adimi(ifade=f"eski anahtar {anahtar}")
+    assert anahtar not in h.aday_sorgulari[0][1] and "eski anahtar" in h.aday_sorgulari[0][1]
+    assert anahtar not in json.dumps(_bekleyen()) and _bekleyen()[kod]["ifade"] == "eski anahtar ***"
 
 
 def test_unut_kesitleri_cevapta_scrub_edilir(sandbox_state):
     anahtar = "sk-or-v1-" + "f" * 64
-    h = SahteHafiza(unut_sonuc=[("m1", f"anahtar {anahtar}")])
-    cevap = bk.bota_sor("bekci", "unut: anahtar", "pano", "o", hafiza=h, simdi=SIMDI)
-    assert anahtar not in cevap and cevap.startswith("Unuttum (geri alınabilir): 1) anahtar")
+    cevap, kod, _ = _unut_adimi(h=SahteHafiza(adaylar=[("m1", f"anahtar {anahtar}")]))
+    assert anahtar not in cevap and "1) anahtar ***" in cevap and anahtar not in json.dumps(_bekleyen())
+
+
+def test_unut_adaylari_tavandan_fazlaysa_kayit_ve_onay_tavanda_kalir(sandbox_state):
+    # Gerçek sınıf zaten `UNUT_TAVANI` döndürür; kanal katmanı sahte/değişen bir hafızaya da güvenmez (PATCH ≤ 3).
+    h = SahteHafiza(adaylar=[(f"m{i}", f"not {i}") for i in range(1, 6)])
+    _, kod, _ = _unut_adimi(h=h)
+    assert _bekleyen()[kod]["idler"] == ["m1", "m2", "m3"]
+    _onayla(kod, h=h)
+    assert h.uygulananlar == [("bekci", ["m1", "m2", "m3"], "eski not")]
+
+
+def test_onayla_ayni_bot_sure_icinde_uygular_ve_geri_alinabilir_der(sandbox_state):
+    _, kod, h = _unut_adimi()
+    cevap = _onayla(kod, h=h, simdi=SIMDI + dt.timedelta(minutes=14, seconds=59))
+    assert h.uygulananlar == [("bekci", ["m1", "m2"], "eski not")]
+    assert cevap == f"Unuttum (geri alınabilir — `geri al: {kod}`): 1) eski not bir 2) eski not iki"
+    s = _defter()[-1]
+    assert (s["tur"], s["hafiza_durumu"], s["unut_kodu"]) == ("unut_onay", "unutuldu", kod)
+    assert (s["unutulan_idler"], s["denenen"], s["kalan"]) == (["m1", "m2"], ["m1", "m2"], [])
+    assert _bekleyen()[kod]["durum"] == "uygulandi"
+
+
+def test_onayla_baska_botun_kodunu_reddeder_patch_yok_kod_bekler(sandbox_state):
+    _, kod, h = _unut_adimi(bot="bekci")
+    cevap = _onayla(kod, bot="karne", h=h)
+    assert h.uygulananlar == [] and "@bekci" in cevap and "unutulmadı" in cevap
+    s = _defter()[-1]
+    assert (s["bot"], s["tur"], s["hafiza_durumu"], s["ret_nedeni"]) == ("karne", "unut_onay", "reddedildi",
+                                                                         "baska_bot")
+    (olay,) = _olaylar("bot_unut_onay_reddi")
+    assert (olay["bot"], olay["neden"]) == ("karne", "baska_bot")
+    assert _bekleyen()[kod]["durum"] == "bekliyor"            # yabancının denemesi kodu TÜKETMEZ
+    _onayla(kod, bot="bekci", h=h)
+    assert h.uygulananlar == [("bekci", ["m1", "m2"], "eski not")]
+
+
+@pytest.mark.parametrize("gecen", [dt.timedelta(minutes=15), dt.timedelta(minutes=16), dt.timedelta(days=2)])
+def test_onayla_suresi_dolmus_kodu_reddeder(sandbox_state, gecen):
+    _, kod, h = _unut_adimi()
+    cevap = _onayla(kod, h=h, simdi=SIMDI + gecen)
+    assert h.uygulananlar == [] and "süresi doldu" in cevap.lower()
+    assert _defter()[-1]["ret_nedeni"] == "suresi_doldu"
+    assert _olaylar("bot_unut_onay_reddi")[-1]["neden"] == "suresi_doldu"
+    assert _bekleyen()[kod]["durum"] == "suresi_doldu"
+    _onayla(kod, h=h, simdi=SIMDI + gecen)                     # ikinci deneme de aynı ret — kayıt silinmedi
+    assert h.uygulananlar == [] and _defter()[-1]["ret_nedeni"] == "suresi_doldu"
+
+
+@pytest.mark.parametrize("govde", ["unut ffffff", "unut xyz", "unut a1b2c", "evet", "unut", "unut a1b2c3 fazla",
+                                   "sil a1b2c3"])
+def test_onayla_bilinmeyen_ya_da_bicimsiz_kod_reddedilir(sandbox_state, govde):
+    h = SahteHafiza(adaylar=IKI_ADAY)
+    cevap = bk.bota_sor("bekci", f"onayla: {govde}", "pano", "o", hafiza=h, simdi=SIMDI)
+    assert h.uygulananlar == [] and "unutulmadı" in cevap
+    s = _defter()[-1]
+    assert (s["tur"], s["hafiza_durumu"], s["ret_nedeni"]) == ("unut_onay", "reddedildi", "bilinmeyen_kod")
+    assert _olaylar("bot_unut_onay_reddi")[-1]["neden"] == "bilinmeyen_kod"
+
+
+def test_onayla_kod_harf_buyuklugune_duyarsiz(sandbox_state):
+    _, kod, h = _unut_adimi()
+    _onayla(kod.upper(), h=h)
+    assert len(h.uygulananlar) == 1
+
+
+def test_onayla_bos_govde_sorar_olay_yok(sandbox_state):
+    h = SahteHafiza()
+    cevap = bk.bota_sor("bekci", "onayla:", "pano", "o", hafiza=h, simdi=SIMDI)
+    assert "onayla: unut" in cevap and h.uygulananlar == []
+    assert _defter()[-1]["hafiza_durumu"] == "bos_govde" and _olaylar("bot_unut_onay_reddi") == []
+
+
+def test_onayla_ikinci_kez_zaten_uygulandi(sandbox_state):
+    _, kod, h = _unut_adimi()
+    _onayla(kod, h=h)
+    cevap = _onayla(kod, h=h)
+    assert len(h.uygulananlar) == 1 and f"geri al: {kod}" in cevap
+    assert _defter()[-1]["ret_nedeni"] == "zaten_uygulandi"
+
+
+def test_onay_kismi_hatada_denenen_kalan_ve_unutulanlar_deftere(sandbox_state):
+    hata = _nedenli("http_500")
+    hata.unutulanlar, hata.denenen, hata.kalan = ["m1"], ["m1", "m2"], ["m3"]
+    h = SahteHafiza(adaylar=[("m1", "bir"), ("m2", "iki"), ("m3", "üç")], uygula_hatasi=hata)
+    _, kod, _ = _unut_adimi(h=h)
+    cevap = _onayla(kod, h=h)
+    assert cevap.startswith("UNUTULAMADI") and "1) bir" in cevap and "iki" not in cevap
+    assert f"geri al: {kod}" in cevap
+    s = _defter()[-1]
+    assert (s["hafiza_durumu"], s["unutulan_idler"], s["denenen"], s["kalan"]) == (
+        "unutulamadi", ["m1"], ["m1", "m2"], ["m3"])
+    (olay,) = _olaylar("bot_hafiza_unut_hatasi")
+    assert (olay["neden"], olay["adim"], olay["sinif"]) == ("http_500", "onay", "RuntimeError")
+    kayit = _bekleyen()[kod]
+    assert (kayit["durum"], kayit["denenen"]) == ("uygulandi", ["m1", "m2"])
+
+
+def test_onay_hicbir_istek_atilmadiysa_kod_bekliyor_kalir_yeniden_denenebilir(sandbox_state):
+    hata = _nedenli("anahtar_yok")
+    hata.unutulanlar, hata.denenen, hata.kalan = [], [], ["m1", "m2"]
+    h = SahteHafiza(adaylar=IKI_ADAY, uygula_hatasi=hata)
+    _, kod, _ = _unut_adimi(h=h)
+    cevap = _onayla(kod, h=h)
+    assert cevap.startswith("UNUTULAMADI") and f"onayla: unut {kod}" in cevap
+    assert _bekleyen()[kod]["durum"] == "bekliyor"
+    assert _olaylar("bot_hafiza_unut_hatasi")[-1]["neden"] == "anahtar_yok"
+    h.uygula_hatasi = None
+    _onayla(kod, h=h)
+    assert len(h.uygulananlar) == 2 and _bekleyen()[kod]["durum"] == "uygulandi"
+
+
+def test_onay_istisnasi_denenen_tasimazsa_bilinmiyor_der_uydurmaz(sandbox_state):
+    # Uydurma yasağı: istisna hangi PATCH'lerin denendiğini söylemiyorsa defter `None` yazar ("hiçbiri" değil); kod
+    # `uygulandi` sayılır ki `geri al` TÜM adayları geri alabilsin (valid PATCH'i zaten geçerli bellekte zararsız).
+    h = SahteHafiza(adaylar=IKI_ADAY, uygula_hatasi=ConnectionError("hindsight gizli-metin-XYZ"))
+    _, kod, _ = _unut_adimi(h=h)
+    cevap = _onayla(kod, h=h)
+    assert cevap.startswith("UNUTULAMADI") and "gizli-metin" not in cevap
+    s = _defter()[-1]
+    assert (s["unutulan_idler"], s["denenen"], s["kalan"]) == (None, None, None)
+    assert _olaylar("bot_hafiza_unut_hatasi")[-1]["neden"] == "beklenmeyen"
+    assert _bekleyen()[kod]["durum"] == "uygulandi"
+    _geri_al(kod, h=h)
+    assert h.geri_al_denemeleri == [("bekci", "m1"), ("bekci", "m2")]
+
+
+def test_geri_al_uygulanan_kodu_valid_yapar(sandbox_state):
+    _, kod, h = _unut_adimi()
+    _onayla(kod, h=h)
+    cevap = _geri_al(kod, h=h, simdi=SIMDI + dt.timedelta(days=3))       # 15 dk sınırı geri almaya UYGULANMAZ
+    assert h.geri_al_denemeleri == [("bekci", "m1"), ("bekci", "m2")]
+    assert cevap == "Geri aldım (yeniden hatırlanır): 1) eski not bir 2) eski not iki"
+    s = _defter()[-1]
+    assert (s["tur"], s["hafiza_durumu"], s["unut_kodu"], s["geri_alinan_idler"], s["denenen"], s["kalan"]) == (
+        "geri_al", "geri_alindi", kod, ["m1", "m2"], ["m1", "m2"], [])
+    assert _bekleyen()[kod]["durum"] == "geri_alindi"
+
+
+def test_geri_al_yalniz_denenen_idleri_geri_alir(sandbox_state):
+    hata = _nedenli("http_500")
+    hata.unutulanlar, hata.denenen, hata.kalan = ["m1"], ["m1", "m2"], ["m3"]
+    h = SahteHafiza(adaylar=[("m1", "bir"), ("m2", "iki"), ("m3", "üç")], uygula_hatasi=hata)
+    _, kod, _ = _unut_adimi(h=h)
+    _onayla(kod, h=h)
+    _geri_al(kod, h=h)
+    # `m3` hiç denenmedi (`kalan`) — ona valid PATCH'i atılmaz; `m2` hata verdi ama sunucuda uygulanmış olabilir.
+    assert h.geri_al_denemeleri == [("bekci", "m1"), ("bekci", "m2")]
+
+
+@pytest.mark.parametrize("senaryo,neden", [
+    ("bilinmeyen", "bilinmeyen_kod"), ("bicimsiz", "bilinmeyen_kod"), ("baska_bot", "baska_bot"),
+    ("bekliyor", "uygulanmadi"), ("suresi_doldu", "uygulanmadi"), ("ikinci", "zaten_geri_alindi"),
+])
+def test_geri_al_ret_nedenleri(sandbox_state, senaryo, neden):
+    _, kod, h = _unut_adimi()
+    if senaryo in ("baska_bot", "ikinci"):
+        _onayla(kod, h=h)
+    if senaryo == "ikinci":
+        _geri_al(kod, h=h)
+    if senaryo == "suresi_doldu":
+        _onayla(kod, h=h, simdi=SIMDI + dt.timedelta(hours=1))
+    onceki = len(h.geri_al_denemeleri)
+    hedef = {"bilinmeyen": "abcdef" if kod != "abcdef" else "fedcba", "bicimsiz": "xyz"}.get(senaryo, kod)
+    cevap = _geri_al(hedef, bot="karne" if senaryo == "baska_bot" else "bekci", h=h)
+    assert len(h.geri_al_denemeleri) == onceki and cevap
+    s = _defter()[-1]
+    assert (s["tur"], s["hafiza_durumu"], s["ret_nedeni"]) == ("geri_al", "reddedildi", neden)
+    assert _olaylar("bot_unut_geri_al_reddi")[-1]["neden"] == neden
+
+
+def test_geri_al_kismi_hatada_kod_uygulandi_kalir_yeniden_denenebilir(sandbox_state):
+    h = SahteHafiza(adaylar=IKI_ADAY, geri_al_hatasi_sirasi=1)
+    _, kod, _ = _unut_adimi(h=h)
+    _onayla(kod, h=h)
+    cevap = _geri_al(kod, h=h)
+    assert "GERİ ALINAMADI" in cevap and "1) eski not bir" in cevap
+    s = _defter()[-1]
+    assert (s["hafiza_durumu"], s["geri_alinan_idler"], s["denenen"], s["kalan"]) == (
+        "geri_alinamadi", ["m1"], ["m1", "m2"], [])
+    olay = _olaylar("bot_hafiza_geri_al_hatasi")[-1]
+    assert (olay["neden"], olay["sinif"]) == ("http_502", "RuntimeError")
+    assert _bekleyen()[kod]["durum"] == "uygulandi"
+    h.geri_al_hatasi_sirasi = None
+    _geri_al(kod, h=h)
+    assert _bekleyen()[kod]["durum"] == "geri_alindi"
+
+
+def test_geri_al_bos_govde_sorar(sandbox_state):
+    h = SahteHafiza()
+    cevap = bk.bota_sor("bekci", "geri al:", "pano", "o", hafiza=h, simdi=SIMDI)
+    assert "geri al: <kod>" in cevap and h.geri_al_denemeleri == []
+    assert _defter()[-1]["hafiza_durumu"] == "bos_govde"
+
+
+def test_bekleyen_kayitlar_yedi_gunden_eski_sonuclanmislari_budanir(sandbox_state):
+    # Durum dosyası (defter DEĞİL) sınırsız büyümesin: 7 günden eski SONUÇLANMIŞ kayıt yazımda budanır; tam iz
+    # `bot_sohbet.jsonl` defterinde kalır. Bedeli: 7 günden eski bir kod `geri al` ile artık bulunamaz.
+    eski = SIMDI - dt.timedelta(days=8)
+    _, uygulanan, h = _unut_adimi(simdi=eski)
+    _onayla(uygulanan, h=h, simdi=eski)
+    _, bekleyen, _ = _unut_adimi(simdi=eski, h=h)
+    _, yakin, _ = _unut_adimi(simdi=SIMDI - dt.timedelta(days=6), h=h)
+    _onayla(yakin, h=h, simdi=SIMDI - dt.timedelta(days=6))
+    _, yeni, _ = _unut_adimi(simdi=SIMDI, h=h)
+    doc = _bekleyen()
+    assert uygulanan not in doc and bekleyen not in doc               # süresi dolmuş sayıldı ve budandı
+    assert doc[yakin]["durum"] == "uygulandi" and doc[yeni]["durum"] == "bekliyor"
+    assert bk.UNUT_BEKLEYEN_SAKLAMA == dt.timedelta(days=7)
+
+
+def test_kod_cakisirsa_yeniden_uretilir(sandbox_state, monkeypatch):
+    kodlar = iter(["aaaaaa", "aaaaaa", "bbbbbb"])
+    monkeypatch.setattr(bk, "_kod_uret", lambda: next(kodlar))
+    _, k1, h = _unut_adimi()
+    _, k2, _ = _unut_adimi(h=h)
+    assert (k1, k2) == ("aaaaaa", "bbbbbb") and set(_bekleyen()) == {"aaaaaa", "bbbbbb"}
+
+
+def test_bekleyen_durum_sozlugu_donuk():
+    assert bk.UNUT_DURUMLARI == ("bekliyor", "uygulandi", "geri_alindi", "suresi_doldu")
+
+
+def test_kod_uretici_alti_hex(sandbox_state):
+    assert all(_re.fullmatch(r"[0-9a-f]{6}", bk._kod_uret()) for _ in range(50))
+
+
+def test_bekleyen_kayit_yazilamazsa_kod_verilmez_ve_olay(sandbox_state, monkeypatch):
+    asil = store.update_json
+
+    def patla(ad, fn, default=None):
+        if ad == bk.UNUT_BEKLEYEN:
+            raise OSError("disk dolu")
+        return asil(ad, fn, default)
+    monkeypatch.setattr(bk.store, "update_json", patla)
+    cevap, kod, h = _unut_adimi()
+    assert "onayla" not in cevap and "unutulmadı" in cevap and kod is None
+    assert _defter()[-1]["hafiza_durumu"] == "kayit_yazilamadi"
+    olay = _olaylar("bot_unut_bekleyen_hatasi")[-1]
+    assert (olay["adim"], olay["sinif"]) == ("aday", "OSError")
+    cevap = _onayla("abcdef", h=h)
+    assert h.uygulananlar == [] and _defter()[-1]["hafiza_durumu"] == "kayit_hatasi"
+    assert _olaylar("bot_unut_bekleyen_hatasi")[-1]["adim"] == "onay"
 
 
 def test_hazir_degil_dali_emekli():
@@ -956,6 +1271,13 @@ def test_hazir_degil_dali_emekli():
     import inspect
     kaynak = inspect.getsource(bk)
     assert "bot_unut_hazir_degil" not in kaynak and not hasattr(bk, "_UNUT_HAZIR_DEGIL")
+
+
+def test_tek_adimli_unut_dali_emekli():
+    # Eski tek adımlı yol (`hafiza.unut` → hemen PATCH) kanal katmanında da iz bırakmaz.
+    import inspect
+    kaynak = inspect.getsource(bk)
+    assert "hafiza.unut(" not in kaynak and ".unut(bot" not in kaynak
 
 
 # ---- Parça 1b G4 Görev 1: üretim kablolaması + dönüş kaydı + modele giden scrub + bütçe çapraz çivisi ----------
@@ -971,7 +1293,7 @@ def test_sohbet_donusu_hafizaya_etiketli_yazilir_defter_kabul_edildi(sandbox_sta
     assert bk.bota_sor("bekci", "durum?", "telegram", "tg-bekci-1", tasiyici=t, hafiza=h, simdi=SIMDI) \
         == "rejim risk-on"
     assert h.donusler == [("bekci", "durum?", "rejim risk-on", ("bot:bekci", "kanal:telegram", "sohbet_donusu"))]
-    assert h.yazilanlar == [] and h.unutulanlar == []
+    assert h.yazilanlar == [] and h.aday_sorgulari == []
     s = _defter()[-1]
     # Tur 3 (inceleme M-1): `async: true` kabulü "işlendi" DEĞİLDİR — durum adı bunu söyler, kimlik deftere düşer.
     assert (s["tur"], s["hafiza_durumu"], s["hafiza_islem_kimligi"]) == ("sohbet", "kabul_edildi", "op-1")
@@ -1065,7 +1387,7 @@ def test_hata_turunda_donus_yazilmaz_atlandi(sandbox_state):
 def test_komut_turunda_donus_yazilmaz(sandbox_state, mesaj):
     h = SahteHafiza()
     bk.bota_sor("sef", mesaj, "pano", "o", tasiyici=SahteTasiyici(), hafiza=h, simdi=SIMDI)
-    assert h.donusler == [] and len(h.yazilanlar) + len(h.unutulanlar) == 1
+    assert h.donusler == [] and len(h.yazilanlar) + len(h.aday_sorgulari) == 1
 
 
 def test_modele_giden_mesaj_scrub_edilir(sandbox_state):
@@ -1197,7 +1519,10 @@ def test_baska_adli_ya_da_ortadaki_cit_hafiza_metninde_aynen_kalir(sandbox_state
 
 @pytest.mark.parametrize("govde", ["tek satır", "çok\nsatırlı\n\nalıntı", "x <<<VERI-SON:yanitlanan_mesaj>>> y",
                                    "  boşluklu  "])
-@pytest.mark.parametrize("sozler", ["soru?", "", "çok\nsatırlı söz"])
+@pytest.mark.parametrize("sozler", ["soru?", "", "çok\nsatırlı söz",
+                                    # Task 1 re-review N-1: SÖZLERDE sahte kapanış jetonu — çözücü İLK kapanışı
+                                    # almalı (`find`); son kapanışı alan (`rfind`) sözleri alıntıya yutardı.
+                                    "söz\n" + sgl.VERI_KAPANIS.format(ad=bk.ALINTI_CIT_ADI) + "\nsahte devam"])
 def test_veri_bloku_ayir_uretecin_tersi(govde, sozler):
     # Çözücü üreticinin (`_veri_bloku`) TERSİDİR ve jetonları ONUN kaynağından türetir: sahte kapanış jetonu
     # gövdede `«`ya katlandığı için bloğu erken bitiremez.
@@ -1220,6 +1545,8 @@ def test_alinti_cit_adi_ve_kaynak_etiketi_tek_kaynak():
     import ast
     import inspect
     assert td.ALINTI_CIT_ADI is bk.ALINTI_CIT_ADI and td.kaynak_etiketi is bk.kaynak_etiketi
+    # G4 Görev 2: gövdesiz `unut:` sorgusu da AYNI ilk-satır kuralından geçer (scrub SONRA tavan).
+    assert td.alinti_ilk_satiri is bk.alinti_ilk_satiri
     atananlar = {h.id for n in ast.parse(inspect.getsource(td)).body if isinstance(n, ast.Assign)
                  for h in n.targets if isinstance(h, ast.Name)}
     assert not atananlar & {"ALINTI_CIT_ADI", "KAYNAK_ETIKETI_TAVANI"}
@@ -1277,3 +1604,7 @@ def test_donus_sonucu_nesne_degilse_yazilamadi_cevap_dusmez(sandbox_state):
 
     assert bk.bota_sor("bekci", "x", "pano", "o", tasiyici=SahteTasiyici("tamam"), hafiza=Eski(), simdi=SIMDI) == "tamam"
     assert _defter()[-1]["hafiza_durumu"] == "yazilamadi"
+    # Task 1 re-review N-3: istisna yolu SESSİZ değil — olay sınıf + kapalı-küme nedenle yazılır.
+    (olay,) = _olay("bot_hafiza_donus_hatasi")
+    assert (olay["bot"], olay["kanal"], olay["sinif"], olay["neden"]) == ("bekci", "pano", "AttributeError",
+                                                                          "beklenmeyen")

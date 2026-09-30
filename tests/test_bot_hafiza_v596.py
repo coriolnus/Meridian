@@ -8,6 +8,10 @@ AĞ YOK: her çivi ya sahte `_cagir` taşır ya da `urlopen`u yamar — gerçek 
 Parça 1b G1 Görev 2 (2026-09-30): `ara(bot, soru, k)` — MCP `bot_hafizasi_ara` aracının gövdesi. SALT-OKUR: tek
 recall POST'u, PATCH/DELETE YOK; dönüş `[(tarih, metin), …]` (tarih ölçülmüş okuyucunun alan sırasıyla,
 yoksa "(tarih yok)"); metin ÖNCE scrub SONRA `ARA_KESIT_TAVANI`; zarf tanınmazsa hata ("sonuç yok" uydurulmaz).
+
+Parça 1b G4 Görev 2 (2026-09-30): tek adımlı `unut` EMEKLİ — `unut_adaylari` (SALT-OKUR recall, PATCH YOK) +
+`unut_uygula` (en fazla `UNUT_TAVANI` PATCH `invalidated`; hata istisnası `denenen`/`kalan`/`unutulanlar` taşır);
+tanınmayan bellek kimliğinin `neden`i `kimlik` (eskiden `bicim`).
 """
 import ast
 import datetime as dt
@@ -49,7 +53,7 @@ class Casus:
             return self.retain
         if yontem == "PATCH":
             if len(self.patchler()) - 1 == self.patch_hatasi_sirasi:
-                raise RuntimeError("hindsight HTTP 500")
+                raise bh._hata("hindsight HTTP 500", "http_500")      # varsayılan yolun işaretlediği biçim
             return None
         raise AssertionError(f"beklenmeyen çağrı {yontem} {url}")
 
@@ -97,87 +101,130 @@ def test_yaz_cevabi_taninmazsa_yazildi_uydurulmaz(cevap):
     assert ANAHTAR[:8] not in str(e.value)
 
 
-# ---- unut (recall + invalidated) --------------------------------------------------------------------------
+# ---- unut iki adım: unut_adaylari (salt-okur recall) + unut_uygula (invalidated) — G4 Görev 2 -------------------
 
-def test_unut_recall_sonra_en_fazla_uc_patch_ve_geri_alinabilir_neden():
+def test_unut_adaylari_salt_okur_tek_recall_patch_yok_en_fazla_uc():
+    # İlk adım HİÇBİR ŞEYİ değiştirmez (plan Review Focus 2): tek recall POST'u, PATCH/DELETE/retain YOK.
     c = Casus(recall=_recall(("m1", "eski not bir"), ("m2", "eski not iki"), ("m3", "eski not üç"),
                              ("m4", "dördüncü"), ("m5", "beşinci")))
-    donen = _h(c).unut("bekci", "eski not")
+    donen = _h(c).unut_adaylari("bekci", "  eski not ")
     assert donen == [("m1", "eski not bir"), ("m2", "eski not iki"), ("m3", "eski not üç")]
-    recall, *patchler = c.cagrilar
+    (recall,) = c.cagrilar
     assert (recall["yontem"], recall["url"]) == ("POST", f"{TABAN}/v1/default/banks/bot-bekci/memories/recall")
     assert recall["govde"] == {"query": "eski not", "budget": "low", "max_tokens": bh.UNUT_RECALL_MAX_TOKENS}
-    assert [p["url"] for p in patchler] == [f"{TABAN}/v1/default/banks/bot-bekci/memories/m{i}" for i in (1, 2, 3)]
-    assert all(p["yontem"] == "PATCH" and p["basliklar"] == {"Authorization": f"Bearer {ANAHTAR}"}
-               for p in patchler)
-    for p in patchler:
-        assert set(p["govde"]) == {"state", "reason"} and p["govde"]["state"] == "invalidated"
-        m = re.fullmatch(r"operatör unut: eski not \((.+)\)", p["govde"]["reason"])
-        assert m and _utc_mu(m.group(1))
     assert bh.UNUT_TAVANI == 3
 
 
-def test_unut_recall_bossa_bos_liste_ve_patch_yok():
+def test_unut_adaylari_recall_bossa_bos_liste():
     c = Casus(recall={"results": []})
-    assert _h(c).unut("bekci", "hiç yazılmamış bir şey") == []
-    assert c.patchler() == [] and len(c.cagrilar) == 1
+    assert _h(c).unut_adaylari("bekci", "hiç yazılmamış bir şey") == [] and len(c.cagrilar) == 1
 
 
 @pytest.mark.parametrize("zarf", ["liste", "items", "results", "memories", "data"])
-def test_unut_recall_zarfi_olculmus_okuyucu_kadar_toleransli(zarf):
+def test_unut_adaylari_recall_zarfi_olculmus_okuyucu_kadar_toleransli(zarf):
     # Ölçülen okuyucu `deploy/hindsight/hafiza_sor.sh`: liste ise kendisi, değilse items|results|memories|data.
     dizi = [{"id": "m1", "text": "eski not"}]
     c = Casus(recall=dizi if zarf == "liste" else {zarf: dizi, "trace": {}})
-    assert _h(c).unut("bekci", "eski") == [("m1", "eski not")]
-    assert len(c.patchler()) == 1
+    assert _h(c).unut_adaylari("bekci", "eski") == [("m1", "eski not")]
+    assert c.patchler() == []
 
 
 @pytest.mark.parametrize("cevap", [{"sonuclar": []}, {"results": "x"}, "x", None, 3])
-def test_unut_recall_zarfi_taninmazsa_hata_ve_patch_yok(cevap):
-    # Tanınmayan zarf "eşleşme yok" SAYILMAZ: operatöre "hiçbir şey unutulmadı" demek ölçülmemiş bir iddia olurdu.
+def test_unut_adaylari_recall_zarfi_taninmazsa_hata_neden_bicim(cevap):
+    # Tanınmayan zarf "eşleşme yok" SAYILMAZ: operatöre "hiçbir şey bulunamadı" demek ölçülmemiş bir iddia olurdu.
     c = Casus(recall=cevap)
-    with pytest.raises(RuntimeError):
-        _h(c).unut("bekci", "eski")
-    assert c.patchler() == []
+    with pytest.raises(RuntimeError) as e:
+        _h(c).unut_adaylari("bekci", "eski")
+    assert bh.hata_nedeni(e.value) == "bicim" and c.patchler() == []
 
 
 @pytest.mark.parametrize("kayit", [{"text": "kimliksiz"}, {"id": "../m1", "text": "x"}, {"id": "a/b", "text": "x"},
                                    {"id": 7, "text": "x"}, {"id": "", "text": "x"}, "düz-metin"])
-def test_unut_ilk_uc_sonucta_kimlik_taninmazsa_hic_patch_atilmaz(kayit):
-    # Kimlik URL YOLUNA girer; biri bile tanınmazsa HİÇBİRİ emekliye ayrılmaz (yarım iş operatöre sessiz kalırdı).
+def test_unut_adaylari_ilk_uc_sonucta_kimlik_taninmazsa_neden_kimlik(kayit):
+    # Kimlik URL YOLUNA girer; biri bile tanınmazsa aday listesi VERİLMEZ (yarım liste operatöre sessiz kalırdı).
+    # Task 1 kaygısı K-5 (Rol-1 2026-09-30): bu hata `bicim` değil, kendi kapalı-küme nedeni `kimlik`.
     c = Casus(recall={"results": [{"id": "m1", "text": "iyi"}, kayit]})
-    with pytest.raises(RuntimeError):
-        _h(c).unut("bekci", "eski")
+    with pytest.raises(RuntimeError) as e:
+        _h(c).unut_adaylari("bekci", "eski")
+    assert e.value.neden == "kimlik" and bh.hata_nedeni(e.value) == "kimlik"
     assert c.patchler() == []
 
 
-def test_unut_kesit_once_scrub_sonra_80_tavan():
+def test_unut_adaylari_kesit_once_scrub_sonra_80_tavan():
     anahtar = "sk-or-v1-" + "a" * 64
     metin = "x" * 60 + " " + anahtar + "\n" + "y" * 100
-    ((_, kesit),) = _h(Casus(recall=_recall(("m1", metin)))).unut("bekci", "x")
+    ((_, kesit),) = _h(Casus(recall=_recall(("m1", metin)))).unut_adaylari("bekci", "x")
     assert len(kesit) <= 80 and "sk-or-v1-" not in kesit and "\n" not in kesit
 
 
-def test_unut_metinsiz_sonuc_kesiti_uydurulmaz():
-    ((_, kesit),) = _h(Casus(recall={"results": [{"id": "m1"}]})).unut("bekci", "x")
+def test_unut_adaylari_metinsiz_sonuc_kesiti_uydurulmaz():
+    ((_, kesit),) = _h(Casus(recall={"results": [{"id": "m1"}]})).unut_adaylari("bekci", "x")
     assert kesit == "(metin yok)"
 
 
-def test_unut_kismi_hata_emekliye_ayrilanlari_istisnada_tasir():
-    # 2. PATCH düşerse 1. zaten emekliye ayrılmıştır: operatör hangisini geri alacağını bilmeli (Review Focus 2/3).
-    c = Casus(recall=_recall(("m1", "bir"), ("m2", "iki"), ("m3", "üç")), patch_hatasi_sirasi=1)
-    with pytest.raises(RuntimeError) as e:
-        _h(c).unut("bekci", "x")
-    assert e.value.unutulanlar == [("m1", "bir")] and len(c.patchler()) == 2
-
-
-@pytest.mark.parametrize("ifade", ["", "   ", "\n"])
-def test_unut_bos_ifade_http_oncesi_reddedilir(ifade):
-    # Boş sorgu recall'da rastgele en yakın bellekleri döndürür — emekliye ayrılan şey operatörün seçimi olmazdı.
+@pytest.mark.parametrize("ifade", ["", "   ", "\n", None])
+def test_unut_adaylari_bos_ifade_http_oncesi_reddedilir(ifade):
+    # Boş sorgu recall'da rastgele en yakın bellekleri döndürür — aday listesi operatörün seçimi olmazdı.
     c = Casus(recall=_recall(("m1", "x")))
     with pytest.raises(ValueError):
-        _h(c).unut("bekci", ifade)
+        _h(c).unut_adaylari("bekci", ifade)
     assert c.cagrilar == []
+
+
+def test_unut_uygula_en_fazla_uc_patch_invalidated_ve_geri_alinabilir_neden():
+    c = Casus()
+    assert _h(c).unut_uygula("bekci", ["m1", "m2", "m3"], "eski not") == ["m1", "m2", "m3"]
+    patchler = c.cagrilar
+    assert [p["url"] for p in patchler] == [f"{TABAN}/v1/default/banks/bot-bekci/memories/m{i}" for i in (1, 2, 3)]
+    assert all(p["yontem"] == "PATCH" and p["basliklar"] == {"Authorization": f"Bearer {ANAHTAR}"}
+               and p["zaman_asimi"] == bh.HAFIZA_ZAMAN_ASIMI_S for p in patchler)
+    for p in patchler:
+        assert set(p["govde"]) == {"state", "reason"} and p["govde"]["state"] == "invalidated"
+        m = re.fullmatch(r"operatör unut: eski not \((.+)\)", p["govde"]["reason"])
+        assert m and _utc_mu(m.group(1))
+
+
+@pytest.mark.parametrize("idler", [[], ["m1", "m2", "m3", "m4"], "m1", None, ("m1",) * 0])
+def test_unut_uygula_bos_ya_da_tavan_ustu_liste_http_oncesi_reddedilir(idler):
+    c = Casus()
+    with pytest.raises(ValueError) as e:
+        _h(c).unut_uygula("bekci", idler, "x")
+    assert c.cagrilar == [] and e.value.denenen == [] and e.value.unutulanlar == []
+
+
+@pytest.mark.parametrize("idler", [["m1", "../x"], ["m1", "a/b"], ["m1", 7], ["", "m1"]])
+def test_unut_uygula_gecersiz_kimlikte_hic_patch_atilmaz_neden_kimlik(idler):
+    # Kimlikler bekleyen kayıttan (`state/`) gelir; dış hasar URL yoluna girmesin — biri bile tanınmazsa HİÇBİRİ.
+    c = Casus()
+    with pytest.raises(ValueError) as e:
+        _h(c).unut_uygula("bekci", idler, "x")
+    assert c.cagrilar == [] and bh.hata_nedeni(e.value) == "kimlik"
+    assert (e.value.denenen, e.value.kalan, e.value.unutulanlar) == ([], list(idler), [])
+
+
+def test_unut_uygula_kismi_hata_denenen_kalan_unutulanlar_tasir():
+    # 2. PATCH düşerse 1. zaten emekliye ayrılmıştır; 2. de SUNUCUDA uygulanmış olabilir (zaman aşımı) — `denenen`
+    # hata vereni de taşır ki geri alma onu da kapsasın; `kalan` hiç denenmeyendir (Rol-1 kararı 4, 2026-09-30).
+    c = Casus(patch_hatasi_sirasi=1)
+    with pytest.raises(RuntimeError) as e:
+        _h(c).unut_uygula("bekci", ["m1", "m2", "m3"], "x")
+    assert (e.value.unutulanlar, e.value.denenen, e.value.kalan) == (["m1"], ["m1", "m2"], ["m3"])
+    assert len(c.patchler()) == 2 and bh.hata_nedeni(e.value) == "http_500"
+
+
+def test_unut_uygula_anahtar_yoksa_istek_atilmaz_denenen_bos():
+    c = Casus()
+    with pytest.raises(RuntimeError) as e:
+        bh.HindsightHafiza(_cagir=c, _anahtar=lambda: None).unut_uygula("bekci", ["m1", "m2"], "x")
+    assert c.cagrilar == [] and bh.hata_nedeni(e.value) == "anahtar_yok"
+    assert (e.value.denenen, e.value.kalan, e.value.unutulanlar) == ([], ["m1", "m2"], [])
+
+
+def test_tek_adimli_unut_emekli():
+    # Tek adımlı `unut` (recall + PATCH aynı çağrıda) G4 Görev 2 ile EMEKLİ: ilk adım PATCH atamaz olsun diye yöntem
+    # ikiye bölündü. Eski yöntem ne sınıfta ne protokolde kalır — geri dönüşü sessiz olmasın.
+    assert not hasattr(bh.HindsightHafiza, "unut") and not hasattr(bk.Hafiza, "unut")
+    assert "def unut(" not in inspect.getsource(bh)
 
 
 # ---- ara (salt-okur recall — MCP `bot_hafizasi_ara`) -------------------------------------------------------
@@ -275,33 +322,37 @@ def test_geri_al_state_valid():
 @pytest.mark.parametrize("kimlik", ["../m1", "a/b", "", "m1?x=1", "m1#f", "..", None, 5])
 def test_geri_al_gecersiz_kimlik_http_oncesi_reddedilir(kimlik):
     c = Casus()
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError) as e:
         _h(c).geri_al("bekci", kimlik)
-    assert c.cagrilar == []
+    assert c.cagrilar == [] and bh.hata_nedeni(e.value) == "kimlik"
 
 
 # ---- ortak kapılar ------------------------------------------------------------------------------------------
 
+ISLEMLER = ("yaz", "unut_adaylari", "unut_uygula", "geri_al", "ara", "donus_yaz")
+
+
+def _islem(h, islem, bot="bekci"):
+    return {"yaz": lambda: h.yaz(bot, "x", ("sabit_not",)), "unut_adaylari": lambda: h.unut_adaylari(bot, "x"),
+            "unut_uygula": lambda: h.unut_uygula(bot, ["m1"], "x"),
+            "geri_al": lambda: h.geri_al(bot, "m1"), "ara": lambda: h.ara(bot, "x"),
+            "donus_yaz": lambda: h.donus_yaz(bot, "x", "y", ("sohbet_donusu",))}[islem]
+
+
 @pytest.mark.parametrize("bot", ["../x", "a/b", "Bekci", "", "bekci?k=1", "bekci-1"])
-@pytest.mark.parametrize("islem", ["yaz", "unut", "geri_al", "ara", "donus_yaz"])
+@pytest.mark.parametrize("islem", ISLEMLER)
 def test_bot_adi_http_oncesi_reddedilir(bot, islem):
     c = Casus()
-    h = _h(c)
     with pytest.raises(ValueError):
-        {"yaz": lambda: h.yaz(bot, "x", ("sabit_not",)), "unut": lambda: h.unut(bot, "x"),
-         "geri_al": lambda: h.geri_al(bot, "m1"), "ara": lambda: h.ara(bot, "x"),
-         "donus_yaz": lambda: h.donus_yaz(bot, "x", "y", ("sohbet_donusu",))}[islem]()
+        _islem(_h(c), islem, bot)()
     assert c.cagrilar == []
 
 
-@pytest.mark.parametrize("islem", ["yaz", "unut", "geri_al", "ara", "donus_yaz"])
+@pytest.mark.parametrize("islem", ISLEMLER)
 def test_anahtar_yoksa_istek_atilmaz_ve_hata_metni_sabit(islem):
     c = Casus()
-    h = bh.HindsightHafiza(_cagir=c, _anahtar=lambda: None)
     with pytest.raises(RuntimeError) as e:
-        {"yaz": lambda: h.yaz("bekci", "x", ("sabit_not",)), "unut": lambda: h.unut("bekci", "x"),
-         "geri_al": lambda: h.geri_al("bekci", "m1"), "ara": lambda: h.ara("bekci", "x"),
-         "donus_yaz": lambda: h.donus_yaz("bekci", "x", "y", ("sohbet_donusu",))}[islem]()
+        _islem(bh.HindsightHafiza(_cagir=c, _anahtar=lambda: None), islem)()
     assert str(e.value) == "hindsight kiracı anahtarı credential yok" and c.cagrilar == []
     assert e.value.neden == "anahtar_yok" and bh.hata_nedeni(e.value) == "anahtar_yok"
 
@@ -378,7 +429,7 @@ def test_varsayilan_yol_ag_hatasi_sinif_adi_tasir_mesaj_sizmaz(monkeypatch, hata
 
     monkeypatch.setattr(bh.urllib.request, "urlopen", urlopen)
     with pytest.raises(RuntimeError) as e:
-        bh.HindsightHafiza(_anahtar=lambda: "GIZLIANAHTAR" + "Z" * 20).unut("bekci", "x")
+        bh.HindsightHafiza(_anahtar=lambda: "GIZLIANAHTAR" + "Z" * 20).unut_adaylari("bekci", "x")
     assert str(e.value) == f"hindsight {type(hata).__name__}" and "GIZLI" not in str(e.value)
     assert e.value.__cause__ is None and e.value.__suppress_context__ is True
 
@@ -386,7 +437,7 @@ def test_varsayilan_yol_ag_hatasi_sinif_adi_tasir_mesaj_sizmaz(monkeypatch, hata
 def test_varsayilan_yol_json_olmayan_govde_sinyalli(monkeypatch):
     monkeypatch.setattr(bh.urllib.request, "urlopen", lambda istek, timeout=None: _Cevap(b"<html>gizli</html>"))
     with pytest.raises(RuntimeError) as e:
-        bh.HindsightHafiza(_anahtar=lambda: ANAHTAR).unut("bekci", "x")
+        bh.HindsightHafiza(_anahtar=lambda: ANAHTAR).unut_adaylari("bekci", "x")
     assert "gizli" not in str(e.value)
 
 
@@ -418,7 +469,8 @@ def test_api_kopyalariyla_ayrismaz():
 
 
 def test_bot_kanal_hafiza_protokolunu_uygular():
-    for ad in ("yaz", "unut", "donus_yaz"):
+    # G4 Görev 2: tek adımlı `unut` yerine iki adım + geri alma protokolde (emeklilik çivisi `test_tek_adimli_unut_emekli`).
+    for ad in ("yaz", "unut_adaylari", "unut_uygula", "geri_al", "donus_yaz"):
         beklenen = list(inspect.signature(getattr(bk.Hafiza, ad)).parameters)
         assert list(inspect.signature(getattr(bh.HindsightHafiza, ad)).parameters) == beklenen, ad
 
@@ -436,38 +488,78 @@ def _defter():
     return store.read_jsonl(bk.DEFTER)
 
 
-def test_bota_sor_gercek_sinifla_hatirla_ve_unut(sandbox_state):
+def _kod():
+    """Son `unut:` ilk adımının verdiği kısa kod — defter satırından (operatörün gördüğü cevapla aynı kod)."""
+    return next(s for s in reversed(_defter()) if s["tur"] == "unut")["unut_kodu"]
+
+
+def test_bota_sor_gercek_sinifla_hatirla_ve_iki_adimli_unut_ve_geri_al(sandbox_state):
     c = Casus(recall=_recall(("m1", "cuma toplantısı iptal"), ("m2", "cuma yemeği")))
     h = _h(c)
     assert bk.bota_sor("sef", "hatırla: cuma toplantısı iptal", "pano", "o", hafiza=h, simdi=SIMDI) \
         == "Not aldım: cuma toplantısı iptal"
     cevap = bk.bota_sor("sef", "unut: cuma", "pano", "o", hafiza=h, simdi=SIMDI)
-    assert cevap == "Unuttum (geri alınabilir): 1) cuma toplantısı iptal 2) cuma yemeği"
+    kod = _kod()
+    assert "1) cuma toplantısı iptal 2) cuma yemeği" in cevap and f"onayla: unut {kod}" in cevap
+    assert c.patchler() == []                                   # İLK ADIM HİÇBİR ŞEYİ DEĞİŞTİRMEZ (casus)
+    cevap = bk.bota_sor("sef", f"onayla: unut {kod}", "pano", "o", hafiza=h, simdi=SIMDI + dt.timedelta(minutes=5))
+    assert cevap.startswith("Unuttum") and f"geri al: {kod}" in cevap
     assert [p["url"].rsplit("/", 1)[1] for p in c.patchler()] == ["m1", "m2"]
+    assert all(p["govde"]["state"] == "invalidated" and p["govde"]["reason"].startswith("operatör unut: cuma (")
+               for p in c.patchler())
     s = _defter()[-1]
-    assert (s["tur"], s["hafiza_durumu"], s["unutulan_idler"]) == ("unut", "unutuldu", ["m1", "m2"])
+    assert (s["tur"], s["hafiza_durumu"], s["unutulan_idler"], s["denenen"], s["kalan"]) == (
+        "unut_onay", "unutuldu", ["m1", "m2"], ["m1", "m2"], [])
+    bk.bota_sor("sef", f"geri al: {kod}", "pano", "o", hafiza=h, simdi=SIMDI + dt.timedelta(hours=2))
+    assert [(p["url"].rsplit("/", 1)[1], p["govde"]) for p in c.patchler()[2:]] == [
+        ("m1", {"state": "valid"}), ("m2", {"state": "valid"})]
+    assert (_defter()[-1]["tur"], _defter()[-1]["hafiza_durumu"]) == ("geri_al", "geri_alindi")
 
 
-def test_bota_sor_gercek_sinif_hindsight_erisilemezse_yazilamadi_unutulamadi_ve_olay(sandbox_state, monkeypatch):
+def test_bota_sor_gercek_sinifla_onay_en_fazla_uc_patch(sandbox_state):
+    c = Casus(recall=_recall(*[(f"m{i}", f"not {i}") for i in range(1, 6)]))
+    h = _h(c)
+    bk.bota_sor("bekci", "unut: not", "pano", "o", hafiza=h, simdi=SIMDI)
+    bk.bota_sor("bekci", f"onayla: unut {_kod()}", "pano", "o", hafiza=h, simdi=SIMDI)
+    assert len(c.patchler()) == bh.UNUT_TAVANI == 3
+
+
+def test_bota_sor_gercek_sinifla_kismi_patch_hatasi_denenen_kalan_deftere(sandbox_state):
+    c = Casus(recall=_recall(("m1", "bir"), ("m2", "iki"), ("m3", "üç")), patch_hatasi_sirasi=1)
+    h = _h(c)
+    bk.bota_sor("bekci", "unut: x", "pano", "o", hafiza=h, simdi=SIMDI)
+    kod = _kod()
+    cevap = bk.bota_sor("bekci", f"onayla: unut {kod}", "pano", "o", hafiza=h, simdi=SIMDI)
+    assert cevap.startswith("UNUTULAMADI") and "1) bir" in cevap and f"geri al: {kod}" in cevap
+    s = _defter()[-1]
+    assert (s["tur"], s["hafiza_durumu"], s["unutulan_idler"], s["denenen"], s["kalan"]) == (
+        "unut_onay", "unutulamadi", ["m1"], ["m1", "m2"], ["m3"])
+    olay = [e for e in obs.recent(20) if e.get("event") == "bot_hafiza_unut_hatasi"][-1]
+    assert (olay["neden"], olay["adim"], olay["sinif"]) == ("http_500", "onay", "RuntimeError")
+
+
+def test_bota_sor_gercek_sinif_hindsight_erisilemezse_yazilamadi_aranamadi_ve_olay(sandbox_state, monkeypatch):
     def urlopen(istek, timeout=None):
         raise urllib.error.URLError("[Errno 61] Connection refused")
 
     monkeypatch.setattr(bh.urllib.request, "urlopen", urlopen)
     h = bh.HindsightHafiza(_anahtar=lambda: ANAHTAR)
     assert "YAZILAMADI" in bk.bota_sor("sef", "hatırla: x", "pano", "o", hafiza=h, simdi=SIMDI)
-    assert "UNUTULAMADI" in bk.bota_sor("sef", "unut: x", "pano", "o", hafiza=h, simdi=SIMDI)
+    assert "ARANAMADI" in bk.bota_sor("sef", "unut: x", "pano", "o", hafiza=h, simdi=SIMDI)
     olaylar = obs.recent(20)
     assert any(e.get("event") == "bot_hafiza_yazim_hatasi" and e.get("sinif") == "RuntimeError" for e in olaylar)
-    assert any(e.get("event") == "bot_hafiza_unut_hatasi" and e.get("sinif") == "RuntimeError" for e in olaylar)
-    assert _defter()[-1]["hafiza_durumu"] == "unutulamadi"
+    assert any(e.get("event") == "bot_hafiza_unut_hatasi" and e.get("sinif") == "RuntimeError"
+               and e.get("neden") == "ag" and e.get("adim") == "aday" for e in olaylar)
+    assert _defter()[-1]["hafiza_durumu"] == "aranamadi"
 
 
 def test_bota_sor_gercek_sinif_anahtarsiz_sessiz_kalmaz(sandbox_state):
     c = Casus()
     h = bh.HindsightHafiza(_cagir=c, _anahtar=lambda: None)
     assert "YAZILAMADI" in bk.bota_sor("sef", "hatırla: x", "pano", "o", hafiza=h, simdi=SIMDI)
-    assert "UNUTULAMADI" in bk.bota_sor("sef", "unut: x", "pano", "o", hafiza=h, simdi=SIMDI)
+    assert "ARANAMADI" in bk.bota_sor("sef", "unut: x", "pano", "o", hafiza=h, simdi=SIMDI)
     assert c.cagrilar == []
+    assert any(e.get("event") == "bot_hafiza_unut_hatasi" and e.get("neden") == "anahtar_yok" for e in obs.recent(20))
 
 
 # ---- Parça 1b G4 Görev 1: `donus_yaz` (sohbet dönüşü kaydı) + yapısal `neden` -------------------------------------
@@ -586,6 +678,7 @@ def test_hata_nedeni_isaretsiz_istisnada_beklenmeyen(hata):
 
 @pytest.mark.parametrize("neden,beklenen", [
     ("anahtar_yok", "anahtar_yok"), ("ag", "ag"), ("zaman_asimi", "zaman_asimi"), ("bicim", "bicim"),
+    ("kimlik", "kimlik"),                                   # G4 Görev 2 (Task 1 kaygısı K-5): bellek kimliği tanınmadı
     ("beklenmeyen", "beklenmeyen"), ("http_404", "http_404"),
     ("http_", "beklenmeyen"), ("http_abc", "beklenmeyen"), ("http_4040", "beklenmeyen"), ("gizli metin", "beklenmeyen"),
     (None, "beklenmeyen"), (7, "beklenmeyen"),
@@ -594,6 +687,11 @@ def test_hata_nedeni_kapali_kume(neden, beklenen):
     hata = RuntimeError("x")
     hata.neden = neden
     assert bh.hata_nedeni(hata) == beklenen
+
+
+def test_hata_nedenleri_kumesi_donuk():
+    # Olay sözlüğü kapalıdır: yeni neden bu satırı DÜZENLEYEREK gelir (brief arayüzü, G4 Görev 2).
+    assert bh.HATA_NEDENLERI == ("anahtar_yok", "ag", "zaman_asimi", "bicim", "kimlik", "beklenmeyen")
 
 
 # ---- gerçek sınıf `bota_sor` sohbet turunda (dönüş kaydı; Review Focus 1: hafıza hatası cevabı düşürmez) -------------
@@ -659,7 +757,8 @@ def test_donus_zaman_asimi_hafiza_zaman_asimindan_kisa_ve_yalniz_donus_yazda():
     h.donus_yaz("bekci", "soru", "cevap", DONUS_ETIKETLERI)
     h.yaz("bekci", "not", ("sabit_not",))
     h.ara("bekci", "x")
-    h.unut("bekci", "x")
+    h.unut_adaylari("bekci", "x")
+    h.unut_uygula("bekci", ["m1"], "x")
     h.geri_al("bekci", "m1")
     assert [cg["zaman_asimi"] for cg in c.cagrilar] == [bh.DONUS_ZAMAN_ASIMI_S] + [bh.HAFIZA_ZAMAN_ASIMI_S] * 5
 

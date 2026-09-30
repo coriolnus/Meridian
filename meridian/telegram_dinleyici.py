@@ -16,10 +16,11 @@ mesajıdır, yani en çok 4096 karakter — ayrıca kırpılmaz. (b) Oturum kiml
 cevabın imza satırındaki oturum SÜRER (Telegram `reply_to_message`ı yalnız BİR düzey iç içe verir,
 zincir yürünemez — durum cevabın kendisinde taşınır); rapora yanıt `tg-<bot>-r<rapor mesajı>`,
 yanıtsız mesaj `tg-<bot>-<YYYYAAGG>`. (c) KOMUT İSTİSNASI (Tur 2, Görev 1 incelemesi I-1): operatörün
-sözleri `bot_kanal.komut_oneki` ile `hatırla:`/`unut:` ise çit KURULMAZ — çit öne konsaydı `bota_sor`
-öneki göremez ve not MODELE giderdi; `hatırla` yanıtı nota yanıtlanan ilk satırı kaynak etiketi olarak
-ekler (`_komut_giden`). `dongu` bir ürün hizmet döngüsüdür; systemd birimi Parça 2
-dağıtımında gelir — bu modülde `main()` YOK.
+sözleri `bot_kanal.komut_oneki` ile bir komutsa (`hatırla:` · `unut:` · `onayla:` · `geri al:`) çit KURULMAZ — çit
+öne konsaydı `bota_sor` öneki göremez ve not MODELE giderdi; `hatırla` yanıtı nota yanıtlanan ilk satırı kaynak
+etiketi olarak ekler, gövdesiz `unut:` yanıtı yanıtlanan mesajın ilk İÇERİK satırını sorgu yapar
+(`_komut_giden`). `dongu` bir ürün hizmet döngüsüdür; systemd birimi Parça 2 dağıtımında gelir — bu modülde
+`main()` YOK.
 
 DEĞİŞMEZLER.
   * YALNIZ OPERATÖR (Tur 3, I-3): mesaj yalnız `chat.type == "private"` VE
@@ -58,9 +59,10 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from . import kadro as _kadro, notify, obs, secrets, store
-# KOMUT TESPİTİ, YANIT ÇİTİNİN ADI ve KAYNAK ETİKETİ İTHAL EDİLİR, KOPYALANMAZ — sahibi `bot_kanal` (bota_sor'un
-# dağıtımı ve dönüş kaydı da onları kullanır; G4 Görev 1 Tur 3: dönüş kaydı yanıt çitini hafızaya yazmadan çözer).
-from .bot_kanal import ALINTI_CIT_ADI, kaynak_etiketi, komut_oneki
+# KOMUT TESPİTİ, YANIT ÇİTİNİN ADI, KAYNAK ETİKETİ ve ALINTI İLK SATIRI İTHAL EDİLİR, KOPYALANMAZ — sahibi `bot_kanal`
+# (bota_sor'un dağıtımı ve dönüş kaydı da onları kullanır; G4 Görev 1 Tur 3: dönüş kaydı yanıt çitini hafızaya
+# yazmadan çözer; G4 Görev 2: gövdesiz `unut:` sorgusu aynı ilk-satır kuralından geçer).
+from .bot_kanal import ALINTI_CIT_ADI, alinti_ilk_satiri, kaynak_etiketi, komut_oneki
 # ÇİT GRAMERİ İTHAL EDİLİR, KOPYALANMAZ — sahibi `skill_gorus_llm` (`sohbet` de oradan alır).
 from .skill_gorus_llm import _veri_bloku
 
@@ -131,17 +133,35 @@ def _bota_giden(mesaj: dict, metin: str) -> str:
     return f"{_veri_bloku(ALINTI_CIT_ADI, alinti)}\n{metin}"
 
 
+def _alinti_icerik_satiri(alinti: str) -> str:
+    """Yanıtlanan mesajın ilk İÇERİK satırı: bot cevabının imza satırı (`💬 @ad · <oturum>`) içerik değildir, atlanır;
+    boş satırlar atlanır. Satır `bot_kanal.alinti_ilk_satiri`ndan geçer (scrub SONRA tavan). İçerik yoksa `""`."""
+    satirlar = [s.strip() for s in alinti.split("\n")]
+    if satirlar and _SOHBET_IMZA.match(satirlar[0]):
+        satirlar = satirlar[1:]
+    ilk = next((s for s in satirlar if s), "")
+    return alinti_ilk_satiri(ilk) if ilk else ""
+
+
 def _komut_giden(mesaj: dict, metin: str, komut: tuple[str, str]) -> str:
-    """`hatırla:` / `unut:` komutu bota ÇİTSİZ çıplak söz olarak gider (çit öne konsaydı `bota_sor`
-    öneki göremez, not MODELE giderdi — Tur 2, inceleme I-1). Rol-1 kararı: `hatırla` + yanıt + DOLU
-    gövde → nota deterministik kaynak etiketi ` (yanıt: <yanıtlanan mesajın ilk satırı>)` — biçim, scrub
-    ve tavan `bot_kanal.kaynak_etiketi`nde (tek kaynak; dönüş kaydı da onu kullanır). `unut` ve gövdesiz
-    `hatırla` (bota_sor "neyi?" diye sorsun) etiketsiz gider."""
+    """Komut bota ÇİTSİZ çıplak söz olarak gider (çit öne konsaydı `bota_sor` öneki göremez, not MODELE
+    giderdi — Tur 2, inceleme I-1). Yanıt kipinde iki deterministik ek:
+      * `hatırla` + DOLU gövde (Rol-1 kararı) → nota kaynak etiketi ` (yanıt: <yanıtlanan mesajın ilk satırı>)` —
+        biçim, scrub ve tavan `bot_kanal.kaynak_etiketi`nde (tek kaynak; dönüş kaydı da onu kullanır).
+      * `unut` + BOŞ gövde (G4 Görev 2, Rol-1 kararı 5) → yanıtlanan mesajın ilk İÇERİK satırı (`_alinti_icerik_satiri`:
+        bot imzası atlanır, scrub SONRA ≤`KAYNAK_ETIKETI_TAVANI`) SORGU olur: `unut: <satır>`. "Bunu unut" demenin yolu.
+    Dolu gövdeli `unut`, gövdesiz `hatırla` (bota_sor "neyi?" diye sorsun), `onayla`/`geri al` ve içeriksiz alıntı
+    OLDUĞU GİBİ gider — sorgu uydurulmaz."""
     ad, govde = komut
     alinti = ((mesaj.get("reply_to_message") or {}).get("text") or "").strip()
-    if ad != "hatirla" or not govde or not alinti:
+    if not alinti:
         return metin
-    return f"{metin} {kaynak_etiketi(alinti)}"
+    if ad == "hatirla" and govde:
+        return f"{metin} {kaynak_etiketi(alinti)}"
+    if ad == "unut" and not govde:
+        sorgu = _alinti_icerik_satiri(alinti)
+        return f"{metin.rstrip()} {sorgu}" if sorgu else metin
+    return metin
 
 
 def _sha(x) -> str:

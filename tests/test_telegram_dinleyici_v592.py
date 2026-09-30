@@ -439,6 +439,50 @@ def test_isle_yanitta_unut_ciplak_soz_gider(sandbox_state):
     assert cagrilar[0][1] == "Unut : eski not"
 
 
+# ---- Parça 1b G4 Görev 2 (Rol-1 kararı 5): yanıtta GÖVDESİZ `unut:` → yanıtlanan mesajın ilk satırı SORGU olur ----
+# Gövde doluysa bugünkü gibi çıplak söz (yukarıdaki çivi). Satır `bot_kanal.alinti_ilk_satiri` ile: ÖNCE scrub, SONRA
+# `KAYNAK_ETIKETI_TAVANI` (≤80) — `kaynak_etiketi` ile aynı tek kaynak. Bot cevabının imza satırı (`💬 @ad · oturum`)
+# içerik değildir: atlanır, ilk İÇERİK satırı sorgu olur.
+
+@pytest.mark.parametrize("komut", ["unut:", "Unut :", "UNUT:   "])
+def test_isle_yanitta_bos_unut_alinti_ilk_satiri_sorgu_olur(sandbox_state, komut):
+    _, cagrilar, _ = _isle(komut, yanit=RAPOR)
+    giden = cagrilar[0][1]
+    assert giden == f"{komut.rstrip()} 🔭 Meridian bekçi — 29 Eyl" and "<<<VERI" not in giden
+    assert td.komut_oneki(giden) == ("unut", "🔭 Meridian bekçi — 29 Eyl")
+
+
+def test_isle_yanitta_bos_unut_bot_cevabinin_imza_satiri_atlanir(sandbox_state):
+    _, cagrilar, _ = _isle("unut:", yanit="💬 @karne · tg-karne-r55\n\nGEÇTİ kararı yanlış\nikinci satır")
+    bot, giden, _, _ = cagrilar[0]
+    assert (bot, giden) == ("karne", "unut: GEÇTİ kararı yanlış")
+
+
+def test_isle_yanitta_bos_unut_sorgusu_once_scrub_sonra_80_tavan(sandbox_state):
+    anahtar = "sk-or-v1-" + "d" * 64
+    _, c1, _ = _isle("unut:", yanit="z" * 60 + " " + anahtar + "\nikinci satır")
+    _, c2, _ = _isle("unut:", yanit="u" * 200)
+    assert "sk-or-v1-" not in c1[0][1] and "ikinci" not in c1[0][1]
+    assert td.komut_oneki(c1[0][1])[1] == ("z" * 60 + " ***")[:80]
+    assert td.komut_oneki(c2[0][1])[1] == "u" * 80
+
+
+@pytest.mark.parametrize("yanit", [None, "   ", "💬 @karne · tg-karne-r55", "💬 @karne · tg-karne-r55\n  \n"])
+def test_isle_bos_unut_alintisiz_ya_da_icerik_satirsiz_ise_govdesiz_gider(sandbox_state, yanit):
+    # Sorgu uydurulmaz: alıntı yoksa ya da imzadan başka satırı yoksa bota_sor "Neyi unutayım?" diye sorar.
+    _, cagrilar, _ = _isle("@karne unut:" if yanit is None else "unut:", yanit=yanit)
+    assert cagrilar[0][1] == "unut:"
+
+
+def test_isle_onayla_ve_geri_al_citsiz_ayni_bota_gider(sandbox_state):
+    # Aday listesi bir bot cevabıdır; ona YANIT olarak yazılan onay/geri al o bota gider ve ÇİTSİZDİR (çit öne
+    # konsaydı `bota_sor` öneki göremez, komut modele giderdi).
+    aday = "💬 @karne · tg-karne-r55\nUnutmaya aday (1): 1) x"
+    _, c1, _ = _isle("onayla: unut a1b2c3", yanit=aday)
+    _, c2, _ = _isle("geri al: a1b2c3", yanit=aday)
+    assert c1[0][:2] == ("karne", "onayla: unut a1b2c3") and c2[0][:2] == ("karne", "geri al: a1b2c3")
+
+
 def test_isle_yanitta_bos_hatirla_etiketsiz_gider(sandbox_state):
     # Gövdesiz `hatırla:` etiketle "dolu" görünmesin — bota_sor "Neyi hatırlayayım?" diye sorabilsin.
     _, cagrilar, _ = _isle("hatırla:", yanit=RAPOR)

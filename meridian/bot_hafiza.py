@@ -11,15 +11,17 @@ NE YAPAR. `bota_sor`un DETERMİNİSTİK `hatırla:` / `unut:` dalları ve sohbet
     + `islem_kimligi` (`operation_id`, yoksa `operation_ids[0]`; tanınmazsa `None`). İçerik `"Operatör: <mesaj>\\n@<bot>: <cevap>"`; her parça ÖNCE `notify.scrub`,
     SONRA `DONUS_TAVANI`; bağlam `DONUS_BAGLAMI`, `metadata.kaynak` `DONUS_KAYNAGI`. Spec §3.4 (2026-09-30
     düzeltmesi): Hermes `auto_retain` KAPALI — sohbet dönüşünü hafızaya YALNIZ bu yol yazar.
-  * `unut`    → önce recall `POST …/memories/recall` (`budget: low`), sonra sonuç SIRASIYLA (upstream'in kendi
-    sıralaması = recall skoru) en fazla `UNUT_TAVANI` bellek için `PATCH …/memories/{id}`
-    `{"state": "invalidated", "reason": "operatör unut: <ifade> (<ISO>)"}`. Emekliye ayrılan `(id, kesit)`
-    listesi döner; `bota_sor` operatöre hangi metinleri unuttuğunu söyler.
-  * `geri_al` → `PATCH …/memories/{id}` `{"state": "valid"}` (bu parçada API fonksiyonu, komut değil).
+  * `unut_adaylari` → `unut:` İLK ADIMI (Parça 1b G4 Görev 2), SALT-OKUR: TEK recall `POST …/memories/recall`
+    (`budget: low`); sonuç SIRASIYLA (upstream'in kendi sıralaması = recall skoru) en fazla `UNUT_TAVANI` aday
+    `[(id, kesit), …]` döner. Hiçbir bellek DEĞİŞMEZ — operatör listeyi görüp `onayla: unut <kod>` der.
+  * `unut_uygula` → onaylanan kimlikler için SIRAYLA `PATCH …/memories/{id}`
+    `{"state": "invalidated", "reason": "operatör unut: <ifade> (<ISO>)"}`; emekliye ayrılan kimlik listesi döner.
+  * `geri_al` → `PATCH …/memories/{id}` `{"state": "valid"}` (`bota_sor`un `geri al: <kod>` komutu çağırır).
   * `ara`     → SALT-OKUR recall (Parça 1b G1 Görev 2; MCP araç sunucusunun `bot_hafizasi_ara` aracı): TEK
     `POST …/memories/recall`, bellek durumu DEĞİŞMEZ; `[(tarih, metin), …]` en fazla `k` öğe, upstream sırasıyla.
 
 ÇAĞIRANLAR. `bota_sor` `hafiza` verilmezse bu sınıfı ÜRETİM varsayılanı olarak kurar (Parça 1b G4 Görev 1);
+iki adımlı `unut:` / `onayla: unut <kod>` / `geri al: <kod>` akışı ve kısa kodun bekleyen kaydı `bot_kanal`dadır;
 `mcp_server`in `--bot` kipindeki `bot_hafizasi_ara` aracı `ara`yı çağırır. `bota_sor`u üretimde çağıran bir süreç
 henüz YOK (Telegram `main()` G4 Görev 3'te gelir; canlı açılış G3b sırlarından sonradır).
 
@@ -29,13 +31,18 @@ DEĞİŞMEZLER.
     uydurulmaz; öğe nesne değilse "sonuç yok" SAYILMAZ, `RuntimeError`.
   * KALICI SİLME YOK: yalnız `state` alanı değişir (`invalidated` recall'dan düşürür, arşive taşır, `valid` ile
     geri döner — ölçüldü, A1 openapi 2026-09-29). Kaynakta silme yöntemi yoktur (çivi v596).
-  * TAVAN: tek `unut` en fazla `UNUT_TAVANI` bellek emekliye ayırır; ilk `UNUT_TAVANI` sonucun kimliklerinden biri
-    bile tanınmazsa (yok / URL yoluna uygun değil) HİÇBİR PATCH atılmaz — yarım iş sessiz kalırdı.
+  * İLK ADIM SALT-OKURDUR: `unut_adaylari` recall dışında istek ATMAZ (çivi v596 — tek çağrı, PATCH yok). Tek adımlı
+    eski `unut` (recall + PATCH aynı çağrıda) EMEKLİDİR (çivi v596 `test_tek_adimli_unut_emekli`).
+  * TAVAN: aday listesi en fazla `UNUT_TAVANI` öğedir ve `unut_uygula` 1..`UNUT_TAVANI` kimlik dışını HTTP'den ÖNCE
+    reddeder. Adaylardan birinin kimliği bile tanınmazsa (yok / URL yoluna uygun değil) liste VERİLMEZ, uygulanacak
+    kimliklerden biri bile tanınmazsa HİÇBİR PATCH atılmaz — yarım iş sessiz kalırdı (`neden`: `kimlik`).
   * TANIMADIĞINI "BOŞ" SAYMAZ: recall zarfı ölçülmüş okuyucu (`deploy/hindsight/hafiza_sor.sh`) kadar toleranslıdır
     (liste ya da `items`/`results`/`memories`/`data`), ama hiçbiri tutmazsa `RuntimeError` — "eşleşme yok" demek
     ölçülmemiş bir iddia olurdu. Retain cevabında `success` okunamazsa da "yazıldı" UYDURULMAZ.
-  * KISMİ HATA GÖRÜNÜR: bir PATCH düşerse istisna, o âna dek emekliye ayrılanları `unutulanlar` özniteliğinde
-    taşır (`bota_sor` onları operatöre söyler — geri alabilsin diye).
+  * KISMİ HATA GÖRÜNÜR (Rol-1 kararı 4, 2026-09-30): `unut_uygula`nın attığı HER istisna üç öznitelik taşır —
+    `unutulanlar` (PATCH'i başarılı kimlikler), `denenen` (PATCH'i ATILAN kimlikler, hata veren DAHİL: zaman aşımına
+    uğrayan bir PATCH sunucuda yine de uygulanmış olabilir) ve `kalan` (hiç denenmeyenler); HTTP öncesi reddinde
+    `denenen` boştur. `bota_sor` üçünü deftere yazar ve `geri al` yalnız `denenen`i geri alır.
   * SIR: kiracı anahtarı HER çağrıda `secrets.credential_oku(secrets.HAFIZA_KRED_ADI)` ile okunur (LoadCredential
     kanalı); yoksa istek HİÇ atılmaz. Anahtar yalnız `Authorization` başlığındadır; HTTP hatası yalnız DURUM KODUYLA,
     ağ/başlık hatası yalnız SINIF ADIYLA `RuntimeError`a çevrilir, zincir bastırılır — `http.client`in geçersiz
@@ -54,8 +61,10 @@ TEK KAYNAK. Taban ve kiracı anahtarı adı `secrets`ten gelir (`api` takma ad v
 ithal etmez; ayrışma çivisi v596 `test_api_kopyalariyla_ayrismaz`.
 
 YASA 6. Bu modül dosya yazmaz; yazdığı tek yer Hindsight bankasıdır (okuyucuları: sohbet profillerinin Hermes
-`auto_recall`u — `deploy/hermes/sohbet/profiles/*/hindsight/config.json`, `ara`/`bot_hafizasi_ara`, `unut` recall'u).
-Emekliye ayrılan kimliklerin yerel kaydı `bot_kanal` defter satırının `unutulan_idler` alanıdır.
+`auto_recall`u — `deploy/hermes/sohbet/profiles/*/hindsight/config.json`, `ara`/`bot_hafizasi_ara`,
+`unut_adaylari` recall'u).
+Emekliye ayrılan kimliklerin yerel kaydı `bot_kanal` defterinin `unut_onay` satırıdır (`unutulan_idler`, `denenen`,
+`kalan`) ve `bot_kanal`in bekleyen kaydı (`state/bot_unut_bekleyen.json`).
 """
 from __future__ import annotations
 
@@ -80,9 +89,10 @@ HAFIZA_ZAMAN_ASIMI_S = 10.0
 #: Dönüş kaydı operatörün cevabıyla aynı turda SENKRON koşar (`hafiza_durumu` aynı defter satırında kalsın diye arka
 #: plana alınmadı); `async: true` kabulü sağlıklı Hindsight'ta anında döner, ASILI Hindsight'ta cevap soket işlemi
 #: başına en fazla bu kadar gecikir. `HAFIZA_ZAMAN_ASIMI_S` DEĞİŞMEZ (v599 onu Hermes profil yapılandırmasına bağlar;
-#: `yaz`/`unut`/`ara`/`geri_al` onu kullanır). Async kabul gecikmesi G3c'de ölçülür — bu değer ölçüm değil tavandır.
+#: `yaz`/`unut_adaylari`/`unut_uygula`/`ara`/`geri_al` onu kullanır). Async kabul gecikmesi G3c'de ölçülür — bu değer
+#: ölçüm değil tavandır.
 DONUS_ZAMAN_ASIMI_S = 3.0
-#: Tek `unut` en fazla bu kadar belleği emekliye ayırır (plan Review Focus 2: belirsiz ifade → alakasız bellek).
+#: Tek `unut:` en fazla bu kadar aday listeler / emekliye ayırır (plan Review Focus 2: belirsiz ifade → alakasız bellek).
 UNUT_TAVANI = 3
 #: Hindsight banka kökü — `api._HAFIZA_BANK_KOKU` kopyası (ayrışma çivisi v596).
 BANKA_KOKU = "/v1/default/banks"
@@ -107,8 +117,9 @@ NOT_KAYNAGI = "operator"
 DONUS_TAVANI = 2000
 DONUS_BAGLAMI = "sohbet dönüşü"
 DONUS_KAYNAGI = "bot_kanal"
-#: Hata `neden`inin KAPALI kümesi (+ `http_<kod>`, `_HTTP_NEDENI`). `bot_hafiza_*` olaylarının tek sözlüğü.
-HATA_NEDENLERI = ("anahtar_yok", "ag", "zaman_asimi", "bicim", "beklenmeyen")
+#: Hata `neden`inin KAPALI kümesi (+ `http_<kod>`, `_HTTP_NEDENI`). `bot_hafiza_*` olaylarının tek sözlüğü. `kimlik`:
+#: bellek kimliği tanınmadı / URL yoluna uygun değil (G4 Görev 2 — Task 1 kaygısı K-5; eskiden `bicim`).
+HATA_NEDENLERI = ("anahtar_yok", "ag", "zaman_asimi", "bicim", "kimlik", "beklenmeyen")
 _HTTP_NEDENI = re.compile(r"http_[1-5][0-9]{2}")
 #: Ölçülen recall zarfları (`deploy/hindsight/hafiza_sor.sh` okuyucusuyla aynı sıra).
 _RECALL_ZARFLARI = ("items", "results", "memories", "data")
@@ -256,7 +267,7 @@ class HindsightHafiza:
                            self.zaman_asimi_s if zaman_asimi is None else zaman_asimi)
 
     def _recall(self, banka: str, ifade: str, anahtar: str) -> list:
-        """TEK recall gövdesi (`unut` ve `ara`): `budget` + upstream'in kendi `max_tokens` varsayılanı; zarf
+        """TEK recall gövdesi (`unut_adaylari` ve `ara`): `budget` + upstream'in kendi `max_tokens` varsayılanı; zarf
         tanınmazsa `RuntimeError`."""
         cevap = self._istek("POST", f"{banka}/memories/recall",
                             {"query": ifade, "budget": UNUT_RECALL_BUTCESI, "max_tokens": UNUT_RECALL_MAX_TOKENS},
@@ -265,8 +276,11 @@ class HindsightHafiza:
 
     @staticmethod
     def _kimlik(memory_id) -> str:
+        """URL yoluna girecek bellek kimliği; uymazsa HTTP'den ÖNCE `ValueError` (`neden`: `kimlik`)."""
         if not isinstance(memory_id, str) or not _KIMLIK_DESENI.fullmatch(memory_id):
-            raise ValueError("HindsightHafiza: bellek kimliği [A-Za-z0-9_-] olmalı (URL yoluna girer)")
+            hata = ValueError("HindsightHafiza: bellek kimliği [A-Za-z0-9_-] olmalı (URL yoluna girer)")
+            hata.neden = "kimlik"
+            raise hata
         return memory_id
 
     # ---- Hafiza protokolü -----------------------------------------------------------------------------------
@@ -301,28 +315,51 @@ class HindsightHafiza:
         yanit = self._retain(banka, oge, True, anahtar, DONUS_ZAMAN_ASIMI_S)
         return DonusSonucu(yanit["success"], _islem_kimligi(yanit))
 
-    def unut(self, bot: str, ifade: str) -> list[tuple[str, str]]:
-        """Recall + en fazla `UNUT_TAVANI` bellek için geri alınabilir `invalidated`. Dönüş `[(id, kesit), …]`."""
+    def unut_adaylari(self, bot: str, ifade: str) -> list[tuple[str, str]]:
+        """`unut:` İLK ADIMI — SALT-OKUR: TEK recall, bellek durumu DEĞİŞMEZ. Dönüş `[(id, kesit), …]` en fazla
+        `UNUT_TAVANI` öğe, upstream sırasıyla. Boş ifade HTTP'den ÖNCE `ValueError`; ilk `UNUT_TAVANI` sonucun
+        kimliklerinden biri bile tanınmazsa `RuntimeError` (`neden`: `kimlik`) — yarım liste verilmez."""
         banka = self._banka_yolu(bot)
         ifade = ifade.strip() if isinstance(ifade, str) else ""
         if not ifade:
-            raise ValueError("HindsightHafiza.unut: boş ifade — recall en yakın rastgele bellekleri döndürür")
+            raise ValueError("HindsightHafiza.unut_adaylari: boş ifade — recall en yakın rastgele bellekleri döndürür")
         anahtar = self._anahtar_al()
-        secilen = []
+        adaylar = []
         for kayit in self._recall(banka, ifade, anahtar)[:UNUT_TAVANI]:
             kimlik = kayit.get("id") if isinstance(kayit, dict) else None
             if not isinstance(kimlik, str) or not _KIMLIK_DESENI.fullmatch(kimlik):
-                raise _hata("hindsight recall sonucunda bellek kimliği tanınmadı — hiçbir şey unutulmadı", "bicim")
-            secilen.append((kimlik, _kesit(kayit.get("text"))))
-        neden = f"operatör unut: {ifade} ({_simdi_iso()})"
-        unutulanlar: list[tuple[str, str]] = []
-        for kimlik, kesit in secilen:
-            try:
-                self._istek("PATCH", f"{banka}/memories/{kimlik}", {"state": "invalidated", "reason": neden}, anahtar)
-            except Exception as e:  # sinyalli: istisna YUKARI fırlar; o âna dek emekliye ayrılanları taşır (operatör geri alabilsin)
-                e.unutulanlar = list(unutulanlar)
-                raise
-            unutulanlar.append((kimlik, kesit))
+                raise _hata("hindsight recall sonucunda bellek kimliği tanınmadı — aday listesi verilmedi", "kimlik")
+            adaylar.append((kimlik, _kesit(kayit.get("text"))))
+        return adaylar
+
+    def unut_uygula(self, bot: str, idler, ifade: str) -> list[str]:
+        """Onaylanan 1..`UNUT_TAVANI` kimlik için SIRAYLA geri alınabilir `invalidated`; emekliye ayrılan kimlikleri
+        döner. Kimlik listesi ya da ifade geçersizse HİÇBİR PATCH atılmaz (`ValueError`, kimlik hatasında `neden`
+        `kimlik`). HER istisna `unutulanlar` + `denenen` (hata veren dahil) + `kalan` taşır (modül başlığı)."""
+        liste = list(idler) if isinstance(idler, (list, tuple)) else []
+        denenen: list[str] = []
+        unutulanlar: list[str] = []
+        try:
+            banka = self._banka_yolu(bot)
+            if not isinstance(idler, (list, tuple)) or not 1 <= len(liste) <= UNUT_TAVANI:
+                raise ValueError(f"HindsightHafiza.unut_uygula: 1..{UNUT_TAVANI} kimlik listesi olmalı")
+            for kimlik in liste:
+                self._kimlik(kimlik)
+            ifade = ifade.strip() if isinstance(ifade, str) else ""
+            if not ifade:
+                raise ValueError("HindsightHafiza.unut_uygula: boş ifade — `reason` operatörün sözünü taşımalı")
+            anahtar = self._anahtar_al()
+            neden = f"operatör unut: {ifade} ({_simdi_iso()})"
+            for kimlik in liste:
+                denenen.append(kimlik)
+                self._istek("PATCH", f"{banka}/memories/{kimlik}", {"state": "invalidated", "reason": neden},
+                            anahtar)
+                unutulanlar.append(kimlik)
+        except Exception as e:  # sinyalli: istisna YUKARI fırlar; denenen/kalan/unutulanlar eklenir (geri alma ve defter için)
+            e.unutulanlar = list(unutulanlar)
+            e.denenen = list(denenen)
+            e.kalan = liste[len(denenen):]
+            raise
         return unutulanlar
 
     def ara(self, bot: str, soru: str, k: int = 5) -> list[tuple[str, str]]:
@@ -345,7 +382,8 @@ class HindsightHafiza:
         return sonuc
 
     def geri_al(self, bot: str, memory_id: str) -> bool:
-        """`unut`un tersi: `state: valid` (bellek recall'a döner). Başarıda `True`; hata `RuntimeError`."""
+        """`unut_uygula`nın tersi: `state: valid` (bellek recall'a döner). Başarıda `True`; hata `RuntimeError`
+        (geçersiz kimlik HTTP'den ÖNCE `ValueError`, `neden`: `kimlik`)."""
         banka = self._banka_yolu(bot)
         kimlik = self._kimlik(memory_id)
         anahtar = self._anahtar_al()
