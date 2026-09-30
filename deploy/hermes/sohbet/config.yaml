@@ -4,6 +4,8 @@
 # Dinleyiciyi bu profil tutar; sohbet profilleri çoklu kipte /p/<ad>/ altında sunulur. ARAÇSIZ ve HAFIZASIZ:
 # /p/ öneksiz istek buraya düşer ve araçlı ya da hafızalı bir kök veri uydururdu — platform izin listesi boş,
 # Meridian MCP girdisi ve hafıza sağlayıcısı YOK; SOUL yalnız yönlendirme cümlesi yazdırır.
+# Kökün .env'ine model anahtarı (providers.kapi.key_env) BİLİNÇLİ konmaz: öneksiz istek kapıda 401 ile düşer
+# (model çağrılmaz — uydurma yok, kota yok); SOUL'daki ret cümlesi ikinci katmandır (Rol-1 hükmü, 2026-09-30).
 # Kaynak: deploy/hermes/profiles/sef/config.yaml (duruş: kanca, onay, kapalı takımlar, model,
 # sağlayıcılar — gerekçeleri orada) + üretecin sabitleri (zaman aşımı, yeniden deneme, çoklu kip).
 # Değiştirmek için kaynağı düzenle ve üreteci --yaz ile koş; tazelik kapısı --kontrol.

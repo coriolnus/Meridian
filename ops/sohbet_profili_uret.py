@@ -105,8 +105,13 @@ KOK_DIZIN = "/home/ubuntu/.hermes-botlar"
 #: Kök profilin duruşunu (kanca, onay, kapalı takımlar, model, sağlayıcılar) miras aldığı rapor profili.
 KOK_DURUS_PROFILI = "sef"
 #: Kök profilin rapor profilinden aldığı üst düzey anahtarlar — BEYAZ LİSTE: rapor profiline ileride eklenen bir
-#: blok (hafıza, MCP) araçsız/hafızasız köke sızmasın.
+#: blok (hafıza, MCP) araçsız/hafızasız köke sızmasın. Miras alınan anahtar BÜTÜN olarak kopyalanır (alt anahtarlar
+#: kendiliğinden yayılır).
 KOK_MIRAS_ANAHTARLARI = ("hooks", "hooks_auto_accept", "agent", "approvals", "model", "providers")
+#: BEYANLI İSTİSNA — rapor profilinde bulunsa da köke GEÇMEYEN üst anahtarlar: kök bunları kendisi kurar (çoklu
+#: kip, boş izin listesi) ya da hiç taşımaz (hafıza, MCP girdisi). Kaynağın bu iki kümenin hiçbirinde olmayan bir
+#: üst anahtarı v599 yön çivisinde öter: yeni bir duruş anahtarı köke SESSİZCE eksik kalmaz, bir karar ister.
+KOK_MIRAS_DISI = ("mcp_servers", "memory", "platform_toolsets", "platforms", "gateway")
 #: `/p/` öneksiz istek kök profile düşer; araçsız model veri UYDURUR (Parça 0). SOUL yalnız yönlendirme cümlesi
 #: yazdırır ve hiçbir yetenek (araç, hafıza) vaat etmez.
 KOK_SOUL = ("Bu, Meridian bot ağ geçidinin kök profilidir. Bu uç doğrudan kullanılmaz; her soru `/p/<bot>/` "
@@ -118,6 +123,14 @@ KOK_SOUL = ("Bu, Meridian bot ağ geçidinin kök profilidir. Bu uç doğrudan k
 SOHBET_ISTEK_ZAMAN_ASIMI_SN = 60
 #: `agent.api_max_retries` — Hermes v0.19 varsayılanı 3 (`agent/agent_init.py`).
 SOHBET_API_DENEME = 2
+#: Sohbet çağrı bütçesi: rapor duruşunun ÜZERİNE yazılan yaprak yollar ve değerleri — TEK KAYNAK. Hem yazım
+#: (`_sohbet_cagri_butcesi`) hem de kökün rapor profilinden BİLİNÇLİ farkları (v599 yön çivisinin istisnası) buradan.
+#: Zaman aşımı `custom` (kapı sağlayıcısının çözümlendiği ad) ve `openrouter` (geri dönüş evi) girdilerine yazılır.
+SOHBET_BUTCESI: dict[tuple[str, ...], int] = {
+    ("agent", "api_max_retries"): SOHBET_API_DENEME,
+    ("providers", "custom", "request_timeout_seconds"): SOHBET_ISTEK_ZAMAN_ASIMI_SN,
+    ("providers", "openrouter", "request_timeout_seconds"): SOHBET_ISTEK_ZAMAN_ASIMI_SN,
+}
 
 #: Üretilmiş her dosyanın beyanı (YAML'da baş yorum, JSON'da `_uretildi` alanı).
 URETILDI = "ÜRETİLMİŞ — elle düzenlenmez; üreteç `ops/sohbet_profili_uret.py`"
@@ -224,13 +237,13 @@ def _kadro(kok: pathlib.Path, kadro) -> tuple[kadro_mod.Bot, ...]:
 
 def _sohbet_cagri_butcesi(cfg: dict, kaynak: str) -> None:
     """Sohbet ağ geçidinde çağrılan her profile (kök dahil) sohbet zaman aşımı ve yeniden deneme sayısı — YERİNDE."""
-    ajan = cfg.get("agent")
-    if not isinstance(ajan, dict):
+    if not isinstance(cfg.get("agent"), dict):
         raise ValueError(f"{kaynak}: 'agent' eşlemesi yok — duruş (kapalı takımlar) miras alınamaz")
-    ajan["api_max_retries"] = SOHBET_API_DENEME
-    saglayicilar = cfg.setdefault("providers", {})
-    for ad in ("custom", "openrouter"):
-        saglayicilar.setdefault(ad, {})["request_timeout_seconds"] = SOHBET_ISTEK_ZAMAN_ASIMI_SN
+    for yol, deger in SOHBET_BUTCESI.items():
+        hedef = cfg
+        for parca in yol[:-1]:
+            hedef = hedef.setdefault(parca, {})
+        hedef[yol[-1]] = deger
 
 
 def _config(rapor_evi: pathlib.Path, bot: kadro_mod.Bot, kok_meridian: dict) -> bytes:
@@ -238,7 +251,9 @@ def _config(rapor_evi: pathlib.Path, bot: kadro_mod.Bot, kok_meridian: dict) -> 
     girdi = copy.deepcopy(kok_meridian)
     cfg["mcp_servers"] = {"meridian": {
         **girdi, "enabled": True, "args": list(girdi["args"]) + ["--bot", bot.ad],
-        "env": {**(girdi.get("env") or {}), "CREDENTIALS_DIRECTORY": BOT_CREDENTIAL_DIZINI}}}
+        # Değişken ADI okuyucunun sabitinden (`secrets.credential_oku` onu okur): ad ayrışırsa araç sessizce
+        # "credential yok" döner — literal yazılmaz (tek kaynak).
+        "env": {**(girdi.get("env") or {}), secrets.CREDENTIAL_DIZIN_ENV: BOT_CREDENTIAL_DIZINI}}}
     cfg["platform_toolsets"] = {"api_server": ["meridian"]}
     # İkincil profil dinleyici AÇMAZ: süreç ortamındaki dinleyici anahtarı aksi hâlde burada da dinleyici açmaya
     # zorlar ve ağ geçidi açılışta düşer (çoklu kip yapılandırma hatası). Dinleyiciyi kök profil tutar.
@@ -277,6 +292,8 @@ def _kok_config(kok: pathlib.Path) -> bytes:
         "Dinleyiciyi bu profil tutar; sohbet profilleri çoklu kipte /p/<ad>/ altında sunulur. ARAÇSIZ ve HAFIZASIZ:",
         "/p/ öneksiz istek buraya düşer ve araçlı ya da hafızalı bir kök veri uydururdu — platform izin listesi boş,",
         "Meridian MCP girdisi ve hafıza sağlayıcısı YOK; SOUL yalnız yönlendirme cümlesi yazdırır.",
+        "Kökün .env'ine model anahtarı (providers.kapi.key_env) BİLİNÇLİ konmaz: öneksiz istek kapıda 401 ile düşer",
+        "(model çağrılmaz — uydurma yok, kota yok); SOUL'daki ret cümlesi ikinci katmandır (Rol-1 hükmü, 2026-09-30).",
         f"Kaynak: {RAPOR_KOK}/{KOK_DURUS_PROFILI}/config.yaml (duruş: kanca, onay, kapalı takımlar, model,",
         "sağlayıcılar — gerekçeleri orada) + üretecin sabitleri (zaman aşımı, yeniden deneme, çoklu kip).",
         "Değiştirmek için kaynağı düzenle ve üreteci --yaz ile koş; tazelik kapısı --kontrol.",
@@ -378,12 +395,18 @@ def uret(kok: pathlib.Path = REPO, kadro=None) -> dict[str, bytes]:
     return cikti
 
 
+#: `fazla` sayılmayan dosya ADLARI — yalnız macOS Finder'ın dizin önbelleği: sohbet kökü yerelde Finder'la
+#: açılınca oluşur ve `--kontrol`u sahte kırmızıya çevirirdi. Liste bilerek TEK ad: başka gizli dosya (`.env` dahil)
+#: fazla sayılmaya DEVAM eder — Hermes köküne taşınacak elle dosya görünmez olmamalı.
+FAZLA_SAYILMAZ = frozenset({".DS_Store"})
+
+
 def _fazlalar(kok: pathlib.Path, beklenen: dict[str, bytes]) -> list[str]:
     taban = kok / SOHBET_EV
     if not taban.is_dir():
         return []
     return sorted(str(p.relative_to(kok)) for p in taban.rglob("*")
-                  if p.is_file() and str(p.relative_to(kok)) not in beklenen)
+                  if p.is_file() and p.name not in FAZLA_SAYILMAZ and str(p.relative_to(kok)) not in beklenen)
 
 
 def yaz(kok: pathlib.Path = REPO, kadro=None) -> list[str]:

@@ -111,8 +111,10 @@ def test_mcp_girdisi_tek_kaynaktan_ve_bot_argumani(bot):
     assert m["enabled"] is True and m["args"] == kok["args"] + ["--bot", bot.ad]
     for a in ("command", "tools"):
         assert m[a] == kok[a]
-    # G3: `env`e tek ek credential yoludur (aşağıdaki çivi); geri kalanı kökle AYNI kalır.
-    assert {k: v for k, v in m["env"].items() if k != "CREDENTIALS_DIRECTORY"} == kok["env"]
+    # G3: `env`e tek ek credential yoludur (aşağıdaki çivi); geri kalanı kökle AYNI kalır. Değişken ADI okuyucunun
+    # sabitinden (`secrets.CREDENTIAL_DIZIN_ENV`) — literal değil (tek kaynak; Tur 2 Minor 1).
+    from meridian import secrets
+    assert {k: v for k, v in m["env"].items() if k != secrets.CREDENTIAL_DIZIN_ENV} == kok["env"]
 
 
 @pytest.mark.parametrize("bot", _aktifler(), ids=lambda b: b.ad)
@@ -277,12 +279,14 @@ def test_ikincil_profil_api_server_kapali(bot):
 
 @pytest.mark.parametrize("bot", _aktifler(), ids=lambda b: b.ad)
 def test_mcp_env_credential_yolu_birim_adindan_turer(bot):
-    # MCP alt süreç ortamı SÜZÜLÜR → `CREDENTIALS_DIRECTORY` geçmez; `bot_hafizasi_ara` Hindsight anahtarını
+    # MCP alt süreç ortamı SÜZÜLÜR → credential dizini değişkeni geçmez; `bot_hafizasi_ara` Hindsight anahtarını
     # credential dizininden okur. Yol birim ADINDAN türer: birim yeniden adlandırılıp yol unutulursa araç sessizce
-    # "credential yok" döner (Review Focus 3).
+    # "credential yok" döner (Review Focus 3). Değişkenin ADI okuyucunun (`secrets.credential_oku`) sabitidir:
+    # ad ayrışırsa aynı sessiz arıza (Tur 2 Minor 1).
+    from meridian import secrets
     u = _ur()
     env = _cfg(bot.ad)["mcp_servers"]["meridian"]["env"]
-    assert env["CREDENTIALS_DIRECTORY"] == f"/run/credentials/{u.BOT_BIRIMI}"
+    assert env[secrets.CREDENTIAL_DIZIN_ENV] == f"/run/credentials/{u.BOT_BIRIMI}"
 
 
 @pytest.mark.xfail(strict=True, raises=AssertionError, reason="Task 2 birimi")
@@ -318,6 +322,75 @@ def test_kok_profil_durusu_sef_rapor_profilinden():
     # Eşitlik boş-boşa geçmesin: kaynakta kanca, onay ve ret listesi GERÇEKTEN var.
     assert any("meridian-guard.sh" in h.get("command", "") for h in k["hooks"]["pre_tool_call"])
     assert k["hooks_auto_accept"] is True and k["approvals"]["deny"]
+
+
+def _yapraklar(d, onek=()):
+    """İç içe eşlemenin yaprak yolları ve değerleri (liste, skaler ve boş eşleme yapraktır)."""
+    for k, v in d.items():
+        if isinstance(v, dict) and v:
+            yield from _yapraklar(v, onek + (k,))
+        else:
+            yield onek + (k,), v
+
+
+def _kok_durus_ayrisimi(kok):
+    """Duruş kaynağı rapor profili (`KOK_DURUS_PROFILI`) ile kök config arasındaki ayrışmalar; boş = tutarlı.
+
+    İKİ YÖN (Tur 2 Minor 2 — yön körlüğü): (a) kaynağın HER üst anahtarı ya miras listesinde
+    (`KOK_MIRAS_ANAHTARLARI`) ya da beyanlı istisnada (`KOK_MIRAS_DISI`) olmalı — yeni bir duruş anahtarı köke
+    SESSİZCE geçmez, bir karar ister; (b) miras alınan her YAPRAK kökte AYNI değerle durur — yalnız sohbet çağrı
+    bütçesinin beyanlı olarak ezdiği yollar (`SOHBET_BUTCESI`) hariç (değerleri ayrı çivide)."""
+    u = _ur()
+    kaynak = yaml.safe_load((kok / u.RAPOR_KOK / u.KOK_DURUS_PROFILI / "config.yaml").read_text(encoding="utf-8"))
+    kc = yaml.safe_load((kok / KOK_CONFIG).read_text(encoding="utf-8"))
+    bulgular = [f"kapsanmayan üst anahtar: {a}" for a in kaynak
+                if a not in u.KOK_MIRAS_ANAHTARLARI and a not in u.KOK_MIRAS_DISI]
+    kok_yapraklari = dict(_yapraklar(kc))
+    for yol, deger in _yapraklar({a: v for a, v in kaynak.items() if a in u.KOK_MIRAS_ANAHTARLARI}):
+        if yol in u.SOHBET_BUTCESI:
+            continue
+        if yol not in kok_yapraklari:
+            bulgular.append(f"kökte yok: {'.'.join(yol)}")
+        elif kok_yapraklari[yol] != deger:
+            bulgular.append(f"değer farklı: {'.'.join(yol)}")
+    return bulgular
+
+
+def test_kok_durusu_kaynagin_her_anahtarini_ayni_degerle_tasir():
+    assert _kok_durus_ayrisimi(KOK) == []
+
+
+def test_kok_miras_listesi_ile_istisna_ayrik_ve_istisna_kokte_kaynaktan_gelmez():
+    u = _ur()
+    assert not set(u.KOK_MIRAS_ANAHTARLARI) & set(u.KOK_MIRAS_DISI)
+    # Beyanlı istisna "kök bunu kendisi kurar ya da hiç taşımaz" demektir: hafıza ve MCP girdisi kökte YOK.
+    k = _kok_cfg()
+    assert "memory" in u.KOK_MIRAS_DISI and "mcp_servers" in u.KOK_MIRAS_DISI and "memory" not in k
+
+
+def test_kok_durus_ayrisimi_yeni_kaynak_anahtarini_yakalar(tmp_path):
+    # POZİTİF KONTROL (Tur 2 Minor 2 mutasyonu kalıcı): kaynağa yeni bir `approvals` alt anahtarı ve yeni bir üst
+    # anahtar eklenir. Bayat kök İKİSİNİ de gösterir; yeniden üretimden sonra alt anahtar mirasla geçer (duruş
+    # yayılır), yeni ÜST anahtar ise listede/istisnada olmadığı için hâlâ öter — karar ister.
+    import shutil
+    shutil.copytree(KOK / "deploy", tmp_path / "deploy")
+    u = _ur()
+    kaynak = tmp_path / u.RAPOR_KOK / u.KOK_DURUS_PROFILI / "config.yaml"
+    veri = yaml.safe_load(kaynak.read_text(encoding="utf-8"))
+    veri["approvals"]["yeni_kural"] = "deny"
+    veri["guvenlik"] = {"kip": "siki"}
+    kaynak.write_text(yaml.safe_dump(veri, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    once = _kok_durus_ayrisimi(tmp_path)
+    assert "kökte yok: approvals.yeni_kural" in once and "kapsanmayan üst anahtar: guvenlik" in once
+    u.yaz(kok=tmp_path)
+    assert _kok_durus_ayrisimi(tmp_path) == ["kapsanmayan üst anahtar: guvenlik"]
+
+
+def test_kok_config_basligi_model_anahtari_kararini_tasir():
+    # Tur 2 Minor 3 (Rol-1 hükmü): kökün `.env`ine model anahtarı BİLİNÇLİ konmaz — öneksiz istek kapıda 401 ile
+    # düşer. Kararı okuyan dosyada durmazsa kök `.env`ini tohumlayan biri anahtarı "eksik" sanıp koyar.
+    baslik = [ln for ln in (KOK / KOK_CONFIG).read_text(encoding="utf-8").splitlines() if ln.startswith("#")]
+    assert any("BİLİNÇLİ konmaz" in ln and "401" in ln for ln in baslik), baslik
 
 
 def test_kok_profil_sohbet_zaman_asimi():
@@ -360,6 +433,23 @@ def test_kontrol_sohbet_kokundeki_fazla_dosyayi_yakalar(tmp_path):
     (tmp_path / "deploy/hermes/sohbet/el_ile.yaml").write_text("x: 1\n", encoding="utf-8")
     assert any("deploy/hermes/sohbet/el_ile.yaml" in a and a.startswith("fazla:")
                for a in _ur().kontrol(kok=tmp_path))
+
+
+@pytest.mark.parametrize("goreli", ["deploy/hermes/sohbet/.DS_Store", "deploy/hermes/sohbet/profiles/sef/.DS_Store"])
+def test_kontrol_ds_store_fazla_sayilmaz(tmp_path, goreli):
+    # Tur 2 Minor 5: tarama sohbet kökünün tamamına genişledi; macOS Finder'ın `.DS_Store`u yerelde `--kontrol`u
+    # sahte kırmızıya çevirirdi. İstisna YALNIZ bu ad (aşağıdaki çivi: başka gizli dosya fazla kalır).
+    import shutil
+    shutil.copytree(KOK / "deploy", tmp_path / "deploy")
+    (tmp_path / goreli).write_bytes(b"\x00\x00\x00\x01Bud1")
+    assert _ur().kontrol(kok=tmp_path) == []
+
+
+def test_kontrol_baska_gizli_dosya_fazla_sayilir(tmp_path):
+    import shutil
+    shutil.copytree(KOK / "deploy", tmp_path / "deploy")
+    (tmp_path / "deploy/hermes/sohbet/.gizli").write_text("x\n", encoding="utf-8")
+    assert any("deploy/hermes/sohbet/.gizli" in a and a.startswith("fazla:") for a in _ur().kontrol(kok=tmp_path))
 
 
 def test_komut_satiri_bayat_kokte_bir_doner(tmp_path):
