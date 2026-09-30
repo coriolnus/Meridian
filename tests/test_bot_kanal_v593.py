@@ -480,11 +480,10 @@ def test_hermes_tasiyici_bu_turdaki_arac_cagrilarini_gercekten_sayar(sandbox_sta
 
 
 @pytest.mark.parametrize("govde", [
-    {}, [], {"data": "x"}, {"data": None},
-    {"data": [{"role": "assistant", "content": "c"}]},                      # kullanıcı mesajı yok → bu tur bulunamaz
-    {"data": [{"role": "user"}, {"role": "assistant", "tool_calls": "bozuk"}]},
-    {"data": [{"role": "user"}, {"role": "assistant", "tool_calls": {"a": 1}}]},
+    {}, [], {"data": "x"}, {"data": None}, {"data": []},
+    {"data": [{"role": "assistant", "content": "c"}]},                      # hizalı ama kullanıcı mesajı yok → tur bulunamaz
     {"data": [{"role": "user"}, "bozuk"]},
+    # Tur 2: `tool_calls` biçim parametreleri düştü — sayım artık `tool_calls`a değil `role: tool` sonuçlarına bakar (I-2)
 ])
 def test_hermes_oturum_bicimi_beklenmedikse_arac_sayisi_none_ve_olay(sandbox_state, govde):
     # Biçimi tanınmayan oturum dökümü 0 SAYILMAZ (uydurma yasağı) — None + sınıf adlı olay.
@@ -495,7 +494,7 @@ def test_hermes_oturum_bicimi_beklenmedikse_arac_sayisi_none_ve_olay(sandbox_sta
     s = bk.HermesTasiyici(_cagir=cagir, _anahtar=lambda: "K" * 32).sor("bekci", "m", "o")
     assert s.metin == "c" and s.arac_cagrilari is None
     assert any(e.get("event") == "bot_arac_sayimi_olculemedi" and e.get("bot") == "bekci" and e.get("sinif")
-               for e in obs.recent(20))
+               and e.get("neden") == "bicim" for e in obs.recent(20))
 
 
 @pytest.mark.parametrize("oturum", ["../x", "a/b", "..", "o?k=1", "o#f", "o o", ""])
@@ -510,6 +509,7 @@ def test_hermes_oturum_kimligi_url_yoluna_uygun_degilse_get_atilmaz_none(sandbox
     s = bk.HermesTasiyici(_cagir=cagir, _anahtar=lambda: "K" * 32).sor("bekci", "m", oturum)
     assert s.metin == "c" and s.arac_cagrilari is None
     assert [u for u in urller if not u.endswith("/chat/completions")] == []
+    assert _olcum_nedeni() == "oturum_kimligi"
 
 
 def test_hermes_oturum_okunamazsa_olay_sinif_adiyla_yazilir(sandbox_state):
@@ -519,7 +519,7 @@ def test_hermes_oturum_okunamazsa_olay_sinif_adiyla_yazilir(sandbox_state):
         raise OSError("okunamadı")
     assert bk.HermesTasiyici(_cagir=cagir, _anahtar=lambda: "K" * 32).sor("bekci", "m", "o").arac_cagrilari is None
     assert any(e.get("event") == "bot_arac_sayimi_olculemedi" and e.get("bot") == "bekci"
-               and e.get("sinif") == "OSError" for e in obs.recent(20))
+               and e.get("sinif") == "OSError" and e.get("neden") == "ag" for e in obs.recent(20))
 
 
 def test_hermes_varsayilan_cagri_oturum_mesajlarini_zaman_asimli_get_ile_okur(sandbox_state, monkeypatch):
@@ -557,6 +557,8 @@ def test_hermes_oturum_okuma_http_hatasi_yalniz_kod_tasir_anahtar_sizmaz(sandbox
     assert bk.HermesTasiyici(_anahtar=lambda: anahtar).sor("bekci", "x", "o").arac_cagrilari is None
     olaylar = [e for e in obs.recent(20) if e.get("event") == "bot_arac_sayimi_olculemedi"]
     assert olaylar and olaylar[-1]["sinif"] == "RuntimeError" and anahtar not in json.dumps(obs.recent(50))
+    assert olaylar[-1]["neden"] == "http_404"
+    assert set(olaylar[-1]) == {"ts", "level", "event", "bot", "sinif", "neden"}
     # GET dalında da hata çevirisi: yalnız KOD, URL/mesaj/anahtar yok, zincir bastırılmış.
     with pytest.raises(RuntimeError) as e:
         bk.HermesTasiyici._cagir_varsayilan("http://127.0.0.1:8642/p/bekci/api/sessions/o/messages", None,
@@ -589,20 +591,6 @@ def test_aracsiz_veri_onek_bicimi_ve_olculmus_alanlar(sandbox_state):
     assert s["arac_siz_veri"] is False and s["arac_olculemedi"] is False and s["cevap"] == "Merhaba!"
 
 
-@pytest.mark.parametrize("cevap,beklenen", [
-    ("Bütçe %yüz", True),                    # yalnız `%` (rakamsız)
-    ("KAYNAK belirtilmedi", True),           # yalnız `kaynak`, katlanarak
-    ("SOURCE: meridian", True),              # yalnız `source`, katlanarak
-    ("bkz. risk/state.JSONL", True),         # yalnız `.json` (`.jsonl`yi kapsar), katlanarak
-    ("Rejim nötr, bütçe tam", False),
-])
-def test_veri_iceriyor_her_isaret_tek_basina_yeter(cevap, beklenen):
-    # RULING (uygulayıcı, 2026-09-30, ölçüldü): brief'in parametrik çivisinde `%` taşıyan tek girdi
-    # ("bütçe %100") rakam da taşıyor — `%` dalını silen mutasyon (brief Step 5 iii) onu kırmızıya
-    # ÇEVİREMEZ. Her işaret burada TEK BAŞINA ölçülür.
-    assert bk.veri_iceriyor(cevap) is beklenen
-
-
 def test_hermes_uretilen_telegram_oturum_kimlikleri_desene_uyar_get_atilir(sandbox_state):
     # memory `kimlik-uzayi-olculmeden-duvar-yok`: ret deseni meşru kimlik uzayını kırmamalı. Uzayın bugünkü TEK
     # üreticisi `telegram_dinleyici.oturum_kimligi` (pano/claude kanal kimlikleri henüz yok) — kimlikler oradan
@@ -619,7 +607,259 @@ def test_hermes_uretilen_telegram_oturum_kimlikleri_desene_uyar_get_atilir(sandb
         def cagir(url, govde, basliklar, zaman_asimi):
             urller.append(url)
             if url.endswith("/chat/completions"):
-                return {"choices": [{"message": {"content": "c"}}]}
+                return {"choices": [{"message": {"content": "tamam"}}]}
             return _ARACSIZ_TUR
         s = bk.HermesTasiyici(_cagir=cagir, _anahtar=lambda: "K" * 32).sor("bekci", "m", oturum)
         assert s.arac_cagrilari == 0 and urller[-1].endswith(f"/api/sessions/{oturum}/messages")
+
+
+# ---- Tur 2 (inceleme I-1, I-2, I-3, M-2 — Rol-1 kararları 2026-09-30) -------------------------------------
+
+def _tasiyici_dokumle(dokum, cevap):
+    """Sohbet çağrısı `cevap` döner, oturum dökümü GET'i `dokum`."""
+    def cagir(url, govde, basliklar, zaman_asimi):
+        if url.endswith("/chat/completions"):
+            return {"choices": [{"message": {"content": cevap}}]}
+        return dokum
+    return bk.HermesTasiyici(_cagir=cagir, _anahtar=lambda: "K" * 32)
+
+
+def _olcum_nedeni():
+    olay = [e for e in obs.recent(20) if e.get("event") == "bot_arac_sayimi_olculemedi"]
+    return olay[-1].get("neden") if olay else None
+
+
+#: Önceki tur ARAÇLI: hizasız bir sayım bu turun araçsız cevabını bu 1 sonuçla susturur (sessiz, tehlikeli yön).
+_ESKI_TUR_ARACLI = [
+    {"role": "user", "content": "eski"},
+    {"role": "assistant", "tool_calls": [{"id": "1", "function": {"name": "meridian_rejim"}}]},
+    {"role": "tool", "content": "{\"rejim\": \"neutral\"}"}, {"role": "assistant", "content": "eski cevap"}]
+
+
+@pytest.mark.parametrize("dokum", [
+    {"data": _ESKI_TUR_ARACLI},                                                        # bayat: bu tur yazılmamış
+    {"data": _ESKI_TUR_ARACLI + [{"role": "user", "content": "yeni"}]},               # cevap henüz yazılmamış
+    {"data": _ESKI_TUR_ARACLI + [{"role": "user", "content": "yeni"},
+                                 {"role": "tool", "content": "yeni cevap"}]},         # son mesaj asistan değil
+    {"data": _ESKI_TUR_ARACLI + [{"role": "user", "content": "yeni"},
+                                 {"role": "assistant", "content": None}]},            # içerik yok
+    {"data": _ESKI_TUR_ARACLI + [{"role": "user", "content": "yeni"},
+                                 {"role": "assistant", "content": [{"type": "text", "text": "yeni cevap"}]}]},
+])
+def test_hermes_dokum_bu_tura_hizali_degilse_sayim_none_tur_hizasiz(sandbox_state, dokum):
+    # I-1: döküm ancak SON mesajı `assistant` ve içeriği az önce alınan cevaba (strip sonrası) EŞİTSE bu turundur.
+    s = _tasiyici_dokumle(dokum, "yeni cevap").sor("bekci", "yeni", "o-1")
+    assert s.metin == "yeni cevap" and s.arac_cagrilari is None and _olcum_nedeni() == "tur_hizasiz"
+
+
+def test_hermes_eski_tur_aracli_bu_tur_aracsiz_yalniz_hizaliysa_sifir(sandbox_state):
+    dokum = {"data": _ESKI_TUR_ARACLI + [{"role": "user", "content": "yeni"},
+                                         {"role": "assistant", "content": "yeni cevap"}]}
+    assert _tasiyici_dokumle(dokum, "yeni cevap").sor("bekci", "yeni", "o-1").arac_cagrilari == 0
+    assert _tasiyici_dokumle(dokum, "başka cevap").sor("bekci", "yeni", "o-1").arac_cagrilari is None
+    assert _olcum_nedeni() == "tur_hizasiz"
+
+
+def test_hermes_hiza_bas_son_bosluk_farkini_tolere_eder(sandbox_state):
+    dokum = {"data": [{"role": "user", "content": "yeni"}, {"role": "assistant", "tool_calls": [{"id": "1"}]},
+                      {"role": "tool", "content": "x"}, {"role": "assistant", "content": "  yeni cevap"}]}
+    assert _tasiyici_dokumle(dokum, "yeni cevap\n").sor("bekci", "yeni", "o-1").arac_cagrilari == 1
+
+
+def test_hermes_sonucsuz_arac_cagrisi_sayilmaz(sandbox_state):
+    # I-2: sayılan SONUÇTUR (`role: tool`), deneme (`tool_calls` öğesi) değil — yanıtsız yapılandırılmış çağrı 0.
+    dokum = {"data": [{"role": "user", "content": "yeni"},
+                      {"role": "assistant", "tool_calls": [{"id": "1", "function": {"name": "meridian_uydurma"}}]},
+                      {"role": "assistant", "content": "yeni cevap"}]}
+    assert _tasiyici_dokumle(dokum, "yeni cevap").sor("bekci", "yeni", "o-1").arac_cagrilari == 0
+
+
+def test_hermes_iki_arac_sonucu_iki_sayilir(sandbox_state):
+    dokum = {"data": [{"role": "user", "content": "yeni"},
+                      {"role": "assistant", "tool_calls": [{"id": "1"}, {"id": "2"}, {"id": "3"}]},
+                      {"role": "tool", "content": "a"}, {"role": "tool", "content": "b"},
+                      {"role": "assistant", "content": "yeni cevap"}]}
+    assert _tasiyici_dokumle(dokum, "yeni cevap").sor("bekci", "yeni", "o-1").arac_cagrilari == 2
+
+
+def test_hermes_hata_donen_arac_sonucu_da_sayilir_bilinen_sinir(sandbox_state):
+    # BİLİNEN SINIR (docstring + kart kill-list): hata dönen araç da bir sonuçtur — sayım içeriğe bakmaz.
+    dokum = {"data": [{"role": "user", "content": "yeni"}, {"role": "assistant", "tool_calls": [{"id": "1"}]},
+                      {"role": "tool", "content": "{\"error\": \"unknown tool\"}"},
+                      {"role": "assistant", "content": "yeni cevap"}]}
+    assert _tasiyici_dokumle(dokum, "yeni cevap").sor("bekci", "yeni", "o-1").arac_cagrilari == 1
+
+
+@pytest.mark.parametrize("hata,neden", [
+    (OSError("x"), "ag"), (TimeoutError("x"), "ag"), (urllib.error.URLError("x"), "ag"),
+    (json.JSONDecodeError("x", "d", 0), "bicim"), (TypeError("x"), "beklenmeyen"),
+])
+def test_hermes_olculemedi_nedeni_sinifa_gore(sandbox_state, hata, neden):
+    # M-2: neden kapalı bir kümeden; `str(e)`, URL ya da anahtar olaya GİRMEZ.
+    def cagir(url, govde, basliklar, zaman_asimi):
+        if url.endswith("/chat/completions"):
+            return {"choices": [{"message": {"content": "c"}}]}
+        raise hata
+    assert bk.HermesTasiyici(_cagir=cagir, _anahtar=lambda: "K" * 32).sor("bekci", "m", "o").arac_cagrilari is None
+    assert _olcum_nedeni() == neden
+
+
+#: Rol-1 I-3 kararı (2026-09-30), Tur 3 kararıyla güncel — alan sözlüğü DONUK; katlanmış küçük harfle KELİME
+#: BAŞINDA KÖK ÖNEKİ eşleşir. `kar` Tur 3'te DÜŞTÜ (3 harf; karar/karne/kardeş çakışması); `getiri` Tur 4'te
+#: DÜŞTÜ ("getirmek" fiili; getiri iddiaları rakam/`%` taşır).
+SOZLUK_DONUK = ["rejim", "maruziyet", "pozisyon", "stop", "alarm", "emir", "zarar", "butce",
+                "sinyal", "plan", "fiyat", "hisse", "portfoy", "dolum", "tetik"]
+
+
+def test_veri_sozlugu_rol1_kararina_esit():
+    assert list(bk.VERI_SOZLUGU) == SOZLUK_DONUK
+
+
+@pytest.mark.parametrize("yazim,kelime", [
+    ("Rejim", "rejim"), ("maruziyet", "maruziyet"), ("POZİSYON", "pozisyon"), ("stop", "stop"), ("Alarm", "alarm"),
+    ("emir", "emir"), ("Zarar", "zarar"), ("Bütçe", "butce"),
+    ("sinyal", "sinyal"), ("plan", "plan"), ("Fiyat", "fiyat"), ("hisse", "hisse"), ("Portföy", "portfoy"),
+    ("dolum", "dolum"), ("tetik", "tetik"),
+])
+def test_veri_isareti_sozluk_her_kelime_katlanarak(yazim, kelime):
+    assert bk.veri_isareti(f"şu an {yazim} konusu") == f"sozluk:{kelime}"
+
+
+@pytest.mark.parametrize("cevap,isaret", [
+    ("Bugün 3 kalem var", "rakam"),
+    ("Tam %yüz", "yuzde"),                                   # yalnız `%` (rakamsız)
+    ("KAYNAK belirtilmedi", "kaynak"), ("SOURCE: meridian", "kaynak"), ("bkz. risk/state.JSONL", "kaynak"),
+    ("Rejim risk-on, maruziyet yüksek", "sozluk:rejim"),     # inceleme I-3 örneği
+    ("AAPL için stop tetiklendi", "sozluk:stop"),            # inceleme I-3 örneği
+    ("Bütçe yüzde yüz", "sozluk:butce"),                     # inceleme I-3 örneği
+    ("NVDA yükseliyor", "sembol:NVDA"), ("AAPL'in durumu iyi", "sembol:AAPL"),
+    ("Merhaba, nasıl yardımcı olabilirim?", None), ("OK, anlaşıldı", None),
+    ("Karar senin, karne hazır", None),                      # tam kelime: `kar` karar/karne İÇİNDE sayılmaz
+    ("", None),
+])
+def test_veri_isareti_hangi_isaret(cevap, isaret):
+    assert bk.veri_isareti(cevap) == isaret
+    assert bk.veri_iceriyor(cevap) is (isaret is not None)
+
+
+@pytest.mark.parametrize("jeton", ["OK", "UTC", "API", "JSON", "PDF", "AI", "TL", "USD"])
+def test_veri_isareti_rol1_sembol_disi_listesi(jeton):
+    assert bk.veri_isareti(f"{jeton} tamam") is None
+
+
+def test_soul_ve_uyari_metinlerindeki_buyuk_harf_jetonlari_sembol_sayilmaz():
+    # Rol-1 I-3: kendi SOUL/uyarı metinlerimizde ÖLÇÜLEN büyük harfli jetonlar (vurgu kelimeleri: NE, TEK, YOK…)
+    # sembol değildir. SOUL'a yeni bir vurgu kelimesi girerse bu çivi öter ve `SEMBOL_DISI` bilinçli güncellenir;
+    # SOUL'a gerçek bir sembol örneği girerse DIŞLANMAZ — bu çivi o gün değiştirilir.
+    import pathlib
+    kok = pathlib.Path(__file__).resolve().parent.parent / "deploy" / "hermes"
+    soullar = sorted(kok.rglob("SOUL*.md"))
+    assert soullar
+    metinler = [p.read_text() for p in soullar] + [bk.UYARI_ARACSIZ, bk.UYARI_OLCULEMEDI]
+    jetonlar = {t for m in metinler for t in bk._SEMBOL_DESENI.findall(m)}
+    assert jetonlar
+    sembol_sanilan = sorted(t for t in jetonlar if str(bk.veri_isareti(f"{t} tamam")).startswith("sembol:"))
+    assert sembol_sanilan == []
+
+
+def test_defter_veri_isareti_alani(sandbox_state):
+    bk.bota_sor("bekci", "rejim?", "pano", "o", tasiyici=SayacliTasiyici("Rejim risk-on, maruziyet yüksek", 0),
+                simdi=SIMDI)
+    s = _defter()[-1]
+    assert s["veri_isareti"] == "sozluk:rejim" and s["arac_siz_veri"] is True
+    assert s["cevap"] == bk.UYARI_ARACSIZ + "\nRejim risk-on, maruziyet yüksek"
+    bk.bota_sor("sef", "selam", "pano", "o", tasiyici=SayacliTasiyici("Merhaba!", 0), simdi=SIMDI)
+    assert _defter()[-1]["veri_isareti"] is None
+    bk.bota_sor("karne", "x", "pano", "o", tasiyici=SayacliTasiyici("AAPL güçlü", None), simdi=SIMDI)
+    s = _defter()[-1]
+    assert s["veri_isareti"] == "sembol:AAPL" and s["arac_siz_veri"] is None
+
+
+# ---- Tur 3 (Rol-1 kararı 2026-09-30: sözlük KÖK ÖNEKİ; `kar` düştü; ölçülmüş çakışma dışlaması) ------------
+# Ölçüm (Tur 2, bağımsız eşlem): tam-kelime kuralı 10 çekimli alan cümlesinin 1'ini yakaladı — Türkçe eklemeli.
+
+@pytest.mark.parametrize("cevap,isaret", [
+    ("Fiyatı yükseldi.", "sozluk:fiyat"), ("Açık pozisyonlar temiz.", "sozluk:pozisyon"),
+    ("Stop tetiklendi.", "sozluk:stop"), ("Hisseleri sattık.", "sozluk:hisse"),
+    ("Portföyde değişiklik yok.", "sozluk:portfoy"), ("Rejimi risk-on.", "sozluk:rejim"),
+    ("Bütçemiz dolu.", "sozluk:butce"),
+    ("Sinyaller karışık.", "sozluk:sinyal"), ("Emirler iletildi.", "sozluk:emir"),
+    ("Dün gece tetiklendi.", "sozluk:tetik"), ("Zararı büyük.", "sozluk:zarar"),
+])
+def test_veri_isareti_cekimli_alan_kelimeleri_kok_onekiyle_yakalanir(cevap, isaret):
+    assert bk.veri_isareti(cevap) == isaret
+
+
+@pytest.mark.parametrize("cevap", ["karar verdim", "karne geldi", "kardeşim", "Merhaba, nasıl yardımcı olabilirim?"])
+def test_veri_isareti_kar_cakismalari_veri_sayilmaz(cevap):
+    assert bk.veri_isareti(cevap) is None
+
+
+@pytest.mark.parametrize("cevap", ["Emirhan geldi", "Nedeni zararsız görünüyor"])
+def test_veri_isareti_olculmus_sozluk_dislamalari_veri_sayilmaz(cevap):
+    assert bk.veri_isareti(cevap) is None
+
+
+def test_sozluk_dislama_kumesi_donuk():
+    # Dışlama kümesi BİLİNÇLİ ve DONUK: bir alan kelimesini ("emirler") buraya sessizce eklemek sözlüğü kör eder.
+    assert bk.SOZLUK_DISI == {"emirhan", "zararsiz"}
+
+
+#: Tur 3 ölçümü (2026-09-30): önek kuralının kendi SOUL/uyarı metinlerimizdeki TÜM isabetleri, sınıflandırılmış.
+#: KABUL = alan verisi, sayılır ("dikkat bütçesi", "alarm yığını", "emir gönderme"); DIŞLANAN = açıkça veri
+#: değil ("nedeni zararsız görünüyor" — zararsız = "zararı yok" değil "masum").
+SOUL_SOZLUK_KABUL = {"alarm", "butcesi", "butcesini", "emir"}
+SOUL_SOZLUK_DISLANAN = {"zararsiz"}
+
+
+def test_soul_ve_uyari_metinlerindeki_sozluk_isabetleri_olculmus_kumede():
+    # Sembol dışlama çivisinin (Tur 2) eşi: SOUL'da YENİ bir kelime önek kuralına takılırsa bu çivi öter ve
+    # kelime bilinçli sınıflanır (KABUL ya da `SOZLUK_DISI`).
+    import pathlib
+    kok = pathlib.Path(__file__).resolve().parent.parent / "deploy" / "hermes"
+    soullar = sorted(kok.rglob("SOUL*.md"))
+    assert soullar
+    metinler = [p.read_text() for p in soullar] + [bk.UYARI_ARACSIZ, bk.UYARI_OLCULEMEDI]
+    isabetler = {m.group(0) for t in metinler for m in bk._SOZLUK_DESENI.finditer(kadro.ad_katla(t))}
+    assert isabetler and isabetler <= SOUL_SOZLUK_KABUL | SOUL_SOZLUK_DISLANAN, sorted(
+        isabetler - SOUL_SOZLUK_KABUL - SOUL_SOZLUK_DISLANAN)
+    assert SOUL_SOZLUK_DISLANAN <= bk.SOZLUK_DISI
+    assert all(str(bk.veri_isareti(k)).startswith("sozluk:") for k in SOUL_SOZLUK_KABUL)
+    assert all(bk.veri_isareti(k) is None for k in SOUL_SOZLUK_DISLANAN)
+
+
+def test_veri_isareti_kok_kelime_ortasinda_sayilmaz():
+    # Rol-1 Tur 3: önek KELİME BAŞINDA — "saplantı" içindeki `plan` veri değildir.
+    assert bk.veri_isareti("Saplantı yapma") is None
+
+
+@pytest.mark.parametrize("cevap,isaret", [
+    ("Emirhan fiyatı sordu", "sozluk:fiyat"), ("Nedeni zararsız ama pozisyon açık", "sozluk:pozisyon")])
+def test_veri_isareti_dislanan_kelimeden_sonra_taramaya_devam_eder(cevap, isaret):
+    # Mutasyon M3-7 (Tur 3) hayatta kaldı: dışlanan kelimede tarama DURURSA arkasındaki gerçek veri kelimesi
+    # sessizce kaçardı. Dışlama yalnız O kelimeyi atlar.
+    assert bk.veri_isareti(cevap) == isaret
+
+
+# ---- Tur 4 (Rol-1 kararı 2026-09-30: `getiri` düştü; `hisset` ÖNEK dışlaması) ------------------------------
+# Ölçüm (Tur 3, depo Türkçe belgeleri): `getiri*` isabetlerinin 41/137'si "getirmek" fiiliydi.
+
+def test_veri_isareti_getirmek_fiili_veri_sayilmaz_getiri_iddiasi_rakamla_yakalanir():
+    assert bk.veri_isareti("bunu getirir misin") is None
+    assert bk.veri_isareti("getiri %3") == "rakam" and bk.veri_iceriyor("getiri %3") is True
+
+
+@pytest.mark.parametrize("cevap", ["Bu durum risk hissettirdi", "hissetmek zor", "Hissettim"])
+def test_veri_isareti_hissetmek_fiili_veri_sayilmaz(cevap):
+    # BİLİNEN GÜRÜLTÜ (Rol-1 kapsamı `hisset`): "hissediyorum"/"hissederim" `hissed` ile başlar ve `hisse`ye takılır;
+    # `hissedi`/`hissede` dışlaması "hissedir" (hisse+dir) ve "hissede" (hisse+de) isimlerini de yutardı.
+    assert bk.veri_isareti(cevap) is None
+
+
+@pytest.mark.parametrize("cevap", ["Hissedarlar toplandı", "Hisseler düştü"])
+def test_veri_isareti_hisse_isimleri_hisset_dislamasina_ragmen_yakalanir(cevap):
+    assert bk.veri_isareti(cevap) == "sozluk:hisse"
+
+
+def test_sozluk_onek_dislama_listesi_donuk():
+    assert bk.SOZLUK_DISI_ONEK == ("hisset",)
