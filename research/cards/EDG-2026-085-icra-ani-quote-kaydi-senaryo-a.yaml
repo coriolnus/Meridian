@@ -218,3 +218,14 @@ pilot_kaniti_2026_09_28: >
   canlı süreçte açık (`MERIDIAN_QUOTE_CAPTURE=1`, kayıt dizini ortamdan). Seans içi yeniden başlatma YOK (dağıtım #80 10:17Z ve #81 12:12Z RTH
   ÖNCESİ). Pencere sayımı: 1 geçerli seans / en çok 20; dolum 2 / n_uygun_alt 30. Not: 13:4xZ'deki ilk okumada dizin boştu — kayıt YALNIZ emir
   penceresinde yazılır, ilk pencere 13:45:03Z'de açıldı (arıza değil). Eşik/kill-list DEĞİŞMEDİ.
+
+fizibilite_ara_2026_09_30: >
+  (2026-09-30 18:4xZ, Rol-1, A1 salt-okur — ARA ÖLÇÜM, HÜKÜM DEĞİL) Geçerli pilot seansı 2 (09-28: 772 quote · 2 dolum; 09-29: 118 quote ·
+  1 dolum; bozuk 0; dolum işaret satırı 3/3 fiyatlı, kayıp nedeni boş) → n_uygun 3/30 dolum ∧ 2/10 seans. FİZİBİLİTE-2 (worker etkisi) —
+  "CPU Δ ≤ 5pp (taban aracıyla AYNI yol)": taban tek-çekirdek % 5 seans HAVUZLANMIŞ örnekten hesaplanmıştı (09-14..18, n=430, cgroup kaynaklı:
+  medyan 0,17 · p95 13,71 — kayıttaki 13,94 ile interpolasyon farkı), aynı yolla pilot 09-28..30 (n=239): medyan 1,07 · p95 14,94 · ort 3,08 →
+  Δ medyan +0,9 pp · Δ p95 +1,2 pp · Δ ort +1,0 pp — hepsi ≤ 5 pp ✓. healthz_max p95 günlük 2,0–5,7 ms ≤ 51,90 ms ✓ → kill#(worker etkisi) TETİKLENMEDİ.
+  UYARI (ölçüm aleti eşikten sapar): GÜNLÜK p95'i havuzlanmış taban p95'iyle kıyaslamak kartın yolu DEĞİL — her gün tek bir 20–30 dk CPU patlaması
+  (09-28 15:55–16:10Z · 09-29 16:15–16:30Z · 09-30 13:35–13:55Z; taban günlerinde de VAR: 09-14 19:00–19:20Z, 09-15 günlük p95 15,98) 86 örneklik
+  günde p95'i tek başına belirler; bu yolla 09-28 (20,14) ve 09-30 (27,52) sahte kill verirdi. Patlama saatleri kayıt penceresiyle (09-28 13:45–14:13Z)
+  çakışmıyor; 09-30 patlaması açılışa yakın — kaynağı ölçülmedi (None). Eşik/kill-list DEĞİŞMEDİ.
