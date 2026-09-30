@@ -11,23 +11,28 @@ NE ÇİVİLENİR (spec `docs/superpowers/specs/2026-09-29-konusan-bot-filosu-des
   * `oneri_yaz` MCP'den AYNI onay defterine yazar; panonun MEVCUT gelen kutusu ve MEVCUT onay ucu
     satırı tanır, onay MEVCUT icra fonksiyonunu çağırır (ikinci onay yolu YOK).
 
-GÖREV 2 SINIRI (brief): `is_iste` ve `bot_hafizasi_ara` bu görevde KAYITSIZDIR; kadro onları listelerse
-sunucu ATLAR. `_GOREV2_KAYITSIZ` Görev 2'de boşalır — o gün
-`test_gorev2_araclari_henuz_kayitsiz_ve_atlanir` öter ve beklenen kümeler güncellenir.
+GÖREV 2 (2026-09-30): Görev 1'in "iki planlı araç henüz kayıtsız" sabitlemesi bilinçli olarak yeni
+sözleşmeye çevrildi — `kadro.PLANLI_ARACLAR` kayıtta, aktif botların listelediği HER ad kayıtta, ikisi
+pano sohbetinin kaydına GİRMEZ (`test_planli_araclar_kayitli_ve_pano_sohbetine_girmez`). Bölüm 8:
+  * `is_iste` MCP'den kanal BİLİNMEDEN çağrılır → defterde `kanal: null` + `cagiran: "mcp:<bot>"`; kanal
+    ve kimlik MODELDEN gelemez (şema dışı); tavan kanallar arasında ortaktır; ret (tavan / bilinmeyen iş)
+    `isError` taşır — model "tetiklendi" diye okuyamasın.
+  * `bot_hafizasi_ara` hedef botun `bot-<ad>` bankasında SALT-OKUR recall (sahte `_cagir`, ağ yok): tek
+    POST, çitli + scrub'lı; hedef kadroda aktif değilse HTTP'siz ret; diske yazmaz.
+  * Rol-1 kararı: `hafiza_ara` alt süreci MCP'nin stdin borusunu (JSON-RPC girdisi) miras almaz.
 """
 from __future__ import annotations
 
 import dataclasses
+import hashlib
 import io
 import json
+import subprocess
 
 import pytest
 
-from meridian import kadro, sohbet, store
+from meridian import bot_hafiza, config, is_istek, kadro, secrets, sohbet, store
 from meridian import mcp_server as ms
-
-#: Görev 2'nin kaydedeceği iki araç — bu görevde kayıtta YOKLAR (brief'in beyanı; çivi aşağıda).
-_GOREV2_KAYITSIZ = frozenset({"is_iste", "bot_hafizasi_ara"})
 
 _ALTI_GETTER = sorted(["meridian_regime", "meridian_calibrations", "meridian_near_miss",
                        "meridian_cf_summary", "meridian_selfreview", "meridian_candidate_context"])
@@ -67,42 +72,52 @@ def test_bot_yokken_bugunku_alti_getter(sandbox_state):
 
 def test_bot_yokken_yazan_arac_sunulmaz():
     """Geri-uyum kipi (varsayılan profil) YAZAN bir aracı ne listeler ne koşturur."""
-    assert not set(ms.izinli_araclar(None)) & set(sohbet.YAZAN_ARACLAR)
+    yazanlar = set(sohbet.YAZAN_ARACLAR) | set(ms.MCP_YAZAN_ARACLAR)
+    assert {"oneri_yaz", "is_iste"} <= yazanlar
+    assert not set(ms.izinli_araclar(None)) & yazanlar
 
 
 def test_bekci_yalniz_kadro_araclari(sandbox_state):
-    beklenen = sorted(set(kadro.bot_bul("bekci").araclar) - _GOREV2_KAYITSIZ)
-    assert beklenen, "bekçinin kayıtlı aracı yok — çivi boş kümeyi eşitlerdi"
+    beklenen = sorted(kadro.bot_bul("bekci").araclar)
+    assert "is_iste" in beklenen, "bekçi kadroda is_iste taşıyor — Görev 2 onu kayda aldı, beklenen düşürmez"
     assert _liste("bekci") == beklenen
 
 
 @pytest.mark.parametrize("ad", [b.ad for b in kadro.aktif_botlar()])
 def test_her_aktif_bot_kendi_kadro_kumesini_gorur(sandbox_state, ad):
-    """Getter (`karne` → `meridian_selfreview`) ve sohbet aracı aynı kayıttan, kadro sırasıyla."""
+    """Getter (`karne` → `meridian_selfreview`), sohbet aracı ve MCP'ye özgü araç aynı kayıttan, kadro sırasıyla."""
     b = kadro.bot_bul(ad)
-    beklenen = [a for a in b.araclar if a not in _GOREV2_KAYITSIZ]
-    assert ms.izinli_araclar(ad) == beklenen
-    assert _liste(ad) == sorted(beklenen)
+    # Gerçek kadroda `bot_hafizasi_ara` yalnız `hafiza: hepsi` botta listeli; öyle olmasa beklenen kadronun TAMAMI olmazdı.
+    assert "bot_hafizasi_ara" not in b.araclar or b.hafiza == "hepsi"
+    assert ms.izinli_araclar(ad) == list(b.araclar)
+    assert _liste(ad) == sorted(b.araclar)
 
 
-def test_gorev2_araclari_henuz_kayitsiz_ve_atlanir(sandbox_state):
+def test_planli_araclar_kayitli_ve_pano_sohbetine_girmez(sandbox_state):
+    """Görev 1'in "henüz kayıtsız" pin'inin YERİNE: kadronun planladığı iki araç kayıtta; aktif botların
+    listelediği HER ad kayıtta (atlanan yok); ikisi pano sohbetinin kaydına GİRMEZ (sohbetin beyaz listesi
+    donuk — bu araçlar MCP sunucusuna özgüdür)."""
     kayit = ms.arac_kaydi()
-    assert _GOREV2_KAYITSIZ <= set(kadro.PLANLI_ARACLAR)
-    assert not _GOREV2_KAYITSIZ & set(kayit), (
-        "Görev 2 bu araçları kaydetti — `_GOREV2_KAYITSIZ` kümesini ve beklenenleri güncelle")
-    # kadro listeler (sef: ikisi de), sunucu kırılmadan atlar
-    assert _GOREV2_KAYITSIZ <= set(kadro.bot_bul("sef").araclar)
-    assert not _GOREV2_KAYITSIZ & set(ms.izinli_araclar("sef"))
+    assert set(ms._mcp_araclari()) == set(kadro.PLANLI_ARACLAR)
+    assert set(kadro.PLANLI_ARACLAR) <= set(kayit)
+    assert not set(kadro.PLANLI_ARACLAR) & (set(sohbet.ARACLAR) | set(sohbet.BEYAZ_LISTE))
+    for b in kadro.aktif_botlar():
+        assert set(b.araclar) <= set(kayit), (b.ad, set(b.araclar) - set(kayit))
+    assert set(kadro.PLANLI_ARACLAR) <= set(ms.izinli_araclar("sef"))
 
 
 def test_kayit_tek_kaynaktan_turer():
-    """Kayıt = mevcut 6 getter ∪ `sohbet.ARACLAR` — sunucu kendi aracını İCAT ETMEZ, şemayı kopyalamaz."""
+    """Kayıt = 6 getter ∪ `sohbet.ARACLAR` ∪ MCP'ye özgü iki araç — şema/açıklama KOPYALANMAZ, aynı nesnedir."""
     kayit = ms.arac_kaydi()
-    assert set(kayit) == {t["name"] for t in ms.TOOLS} | set(sohbet.ARACLAR)
-    for ad, a in sohbet.ARACLAR.items():
-        assert kayit[ad]["inputSchema"] is a.sema and kayit[ad]["description"] == a.aciklama
+    mcp = ms._mcp_araclari()
+    assert set(kayit) == {t["name"] for t in ms.TOOLS} | set(sohbet.ARACLAR) | set(mcp)
+    for kaynak in (sohbet.ARACLAR, mcp):
+        for ad, a in kaynak.items():
+            assert kayit[ad]["inputSchema"] is a.sema and kayit[ad]["description"] == a.aciklama
     for t in ms.TOOLS:
         assert kayit[t["name"]]["inputSchema"] is t["inputSchema"]
+    # MCP'ye özgü şemalar modül sabitidir: her türetim AYNI nesneyi görür (kayıt ↔ çağrı anı doğrulaması ayrışamaz)
+    assert all(ms._mcp_araclari()[ad].sema is mcp[ad].sema for ad in mcp)
 
 
 def test_kayitta_ad_cakismasi_sessizce_ezilmez(monkeypatch):
@@ -111,22 +126,45 @@ def test_kayitta_ad_cakismasi_sessizce_ezilmez(monkeypatch):
         ms.arac_kaydi()
 
 
+def test_mcp_araci_sohbet_araciyla_cakisirsa_sessizce_ezilmez(monkeypatch):
+    monkeypatch.setitem(sohbet.ARACLAR, "is_iste", sohbet.ARACLAR["pano_ozeti"])
+    with pytest.raises(ValueError, match="is_iste"):
+        ms.arac_kaydi()
+
+
 # =================================================================================================
 # 2) bot_hafizasi_ara — yalnız `hafiza: hepsi` (iki kat)
 # =================================================================================================
-def _hafiza_duzenegi(monkeypatch, kosuldu: list):
-    """Görev 2 öncesi: kayda bir `bot_hafizasi_ara` VEKİLİ, kadroya `araclar`ında onu taşıyan ama
-    `hafiza: kendi` olan bir karne koyar — koşul ancak böyle ısırılabilir (gerçek karne onu listelemez)."""
-    gercek_kayit = ms.arac_kaydi
+class _HafizaCasusu:
+    """Sahte `_cagir(yontem, url, govde, basliklar, zaman_asimi)` — AĞ YOK. Her çağrıyı kaydeder; recall'a
+    verilen cevabı döner, `hata` verilmişse onu fırlatır. Salt-okur araçtan recall DIŞI çağrı beklenmez."""
 
-    def kayit():
-        k = gercek_kayit()
-        k["bot_hafizasi_ara"] = {"name": "bot_hafizasi_ara", "description": "vekil",
-                                 "inputSchema": {"type": "object", "properties": {}},
-                                 "cagir": lambda a, b=None: kosuldu.append(1) or "vekil"}
-        return k
+    def __init__(self, recall=None, hata: Exception | None = None):
+        self.cagrilar: list = []
+        self.recall = {"results": []} if recall is None else recall
+        self.hata = hata
 
-    monkeypatch.setattr(ms, "arac_kaydi", kayit)
+    def __call__(self, yontem, url, govde, basliklar, zaman_asimi):
+        self.cagrilar.append((yontem, url, govde))
+        if self.hata is not None:
+            raise self.hata
+        if yontem == "POST" and url.endswith("/memories/recall"):
+            return self.recall
+        raise AssertionError(f"salt-okur araçtan beklenmeyen çağrı: {yontem} {url}")
+
+
+def _hafiza_bagla(monkeypatch, casus: _HafizaCasusu) -> None:
+    """Araç gövdesinin kurduğu `bot_hafiza.HindsightHafiza`yı sahte `_cagir` + uydurma anahtarla kurdurur
+    (gerçek credential OKUNMAZ, istek atılmaz)."""
+    gercek = bot_hafiza.HindsightHafiza
+    monkeypatch.setattr(bot_hafiza, "HindsightHafiza",
+                        lambda *a, **kw: gercek(_cagir=casus, _anahtar=lambda: "K" * 32))
+
+
+def _hafiza_duzenegi(monkeypatch, casus: _HafizaCasusu):
+    """Kadroya `araclar`ında `bot_hafizasi_ara` taşıyan ama `hafiza: kendi` olan bir karne koyar — `hafiza`
+    koşulu ancak böyle ısırılabilir (gerçek karne o aracı listelemez)."""
+    _hafiza_bagla(monkeypatch, casus)
     gercek = kadro.kadro_yukle()
     karne = kadro.bot_bul("karne", gercek)
     assert karne.hafiza != "hepsi"
@@ -137,19 +175,32 @@ def _hafiza_duzenegi(monkeypatch, kosuldu: list):
 
 
 def test_bot_hafizasi_ara_yalniz_hepsi_hafizali_bota(sandbox_state, monkeypatch):
-    kosuldu: list = []
-    sahte = _hafiza_duzenegi(monkeypatch, kosuldu)
+    casus = _HafizaCasusu()
+    sahte = _hafiza_duzenegi(monkeypatch, casus)
     assert kadro.bot_bul("sef", sahte).hafiza == "hepsi"
     assert "bot_hafizasi_ara" in ms.izinli_araclar("sef", kadro=sahte)
     assert "bot_hafizasi_ara" not in ms.izinli_araclar("karne", kadro=sahte)
     assert "bot_hafizasi_ara" in _liste("sef") and "bot_hafizasi_ara" not in _liste("karne")
-    r = _cagri("karne", "bot_hafizasi_ara")["result"]
-    assert r["isError"] is True and "izinli değil" in r["content"][0]["text"] and kosuldu == []
+    args = {"bot": "bekci", "soru": "x"}
+    r = _cagri("karne", "bot_hafizasi_ara", args)["result"]
+    assert r["isError"] is True and "izinli değil" in r["content"][0]["text"] and casus.cagrilar == []
+    # pozitif kontrol: aynı çağrı `hafiza: hepsi` bottan GERÇEKTEN koşar
+    r2 = _cagri("sef", "bot_hafizasi_ara", args)["result"]
+    assert r2["isError"] is False and len(casus.cagrilar) == 1
+
+
+@pytest.mark.parametrize("bot", ["karne", "bekci"])
+def test_bot_hafizasi_ara_gercek_kadroda_hepsi_olmayan_sunucudan_izinli_degil(sandbox_state, monkeypatch, bot):
+    casus = _HafizaCasusu()
+    _hafiza_bagla(monkeypatch, casus)
+    assert "bot_hafizasi_ara" not in _liste(bot)
+    r = _cagri(bot, "bot_hafizasi_ara", {"bot": "sef", "soru": "x"})["result"]
+    assert r["isError"] is True and "izinli değil" in r["content"][0]["text"] and casus.cagrilar == []
 
 
 def test_hepsi_kosulu_bilinen_ada_bagli():
-    """Koşulun taşıdığı ad bir yazım hatasıyla ayrışırsa iki kat SESSİZCE tek kata düşerdi."""
-    assert set(ms.YALNIZ_HEPSI_HAFIZALI) <= set(kadro.PLANLI_ARACLAR) | set(ms.arac_kaydi())
+    """Koşulun taşıdığı ad bir yazım hatasıyla ayrışırsa iki kat SESSİZCE tek kata düşerdi — ad KAYITTA olmalı."""
+    assert set(ms.YALNIZ_HEPSI_HAFIZALI) <= set(ms.arac_kaydi())
 
 
 # =================================================================================================
@@ -381,7 +432,8 @@ def test_getter_obs_satiri_stdio_protokol_akisina_karismaz(sandbox_state, capsys
 
 
 def _taze_sunucu_ithal_kilitli(monkeypatch):
-    """`meridian.sohbet` ve `meridian.kadro` İTHALİ PATLARKEN `mcp_server`ı TAZE içe aktarır.
+    """`meridian.sohbet`, `meridian.kadro`, `meridian.is_istek` ve `meridian.bot_hafiza` İTHALİ PATLARKEN
+    `mcp_server`ı TAZE içe aktarır (son ikisi Görev 2: MCP'ye özgü araçların gövdeleri de yalnız `--bot` yolunda).
 
     Paket özniteliği silinir (yoksa `from . import sohbet` modüle hiç sormadan özniteliği döndürür) ve
     `sys.modules` girdisi `None` yapılır (ithal `ImportError` verir). Asıl modül nesnesine dokunulmaz:
@@ -390,7 +442,7 @@ def _taze_sunucu_ithal_kilitli(monkeypatch):
     import sys
 
     import meridian
-    for ad in ("sohbet", "kadro"):
+    for ad in ("sohbet", "kadro", "is_istek", "bot_hafiza"):
         monkeypatch.delattr(meridian, ad, raising=False)
         monkeypatch.setitem(sys.modules, f"meridian.{ad}", None)
     monkeypatch.delitem(sys.modules, "meridian.mcp_server", raising=False)
@@ -423,3 +475,160 @@ def test_botsuz_yol_sohbet_ve_kadro_ithal_etmeden_calisir(sandbox_state, monkeyp
         taze.arac_kaydi()
     with pytest.raises(ImportError):
         taze.serve(io.StringIO(""), io.StringIO(), bot="sef")
+
+
+# =================================================================================================
+# 8) GÖREV 2 — `is_iste` (kanal null + cagiran) · `bot_hafizasi_ara` (salt-okur recall) · alt süreç stdin
+# =================================================================================================
+def _cit_ici(metin: str, ad: str) -> str:
+    """VERİ çitinin İÇİ — çit yoksa (çıktı çitsiz modele gidiyorsa) iddia düşer."""
+    bas, son = f"<<<VERI:{ad}>>>\n", f"\n<<<VERI-SON:{ad}>>>"
+    assert metin.startswith(bas) and metin.endswith(son), metin[:120]
+    return metin[len(bas):-len(son)]
+
+
+def _is_defteri() -> list[dict]:
+    return store.read_jsonl(is_istek.DEFTER)
+
+
+def _anlik(kok) -> dict:
+    return {str(p.relative_to(kok)): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in sorted(kok.rglob("*")) if p.is_file()}
+
+
+@pytest.mark.parametrize("bot,cagiran,is_adi,hedef", [("SEF", "mcp:sef", "brifing", "sef"),
+                                                      ("bekci", "mcp:bekci", "karne", "karne"),
+                                                      ("karne", "mcp:karne", "BEKÇİ", "bekci")])
+def test_is_iste_mcpden_kanal_null_ve_cagiran_sunucunun_botu(sandbox_state, bot, cagiran, is_adi, hedef):
+    r = _cagri(bot, "is_iste", {"ad": is_adi})["result"]
+    ic = json.loads(_cit_ici(r["content"][0]["text"], "is_iste"))
+    assert r["isError"] is False and ic["kabul"] is True and ic["bot"] == hedef and ic["neden"] == "kabul"
+    (satir,) = _is_defteri()
+    assert "kanal" in satir and satir["kanal"] is None, "kanal UYDURULMAZ — MCP'de bilinmiyor"
+    assert satir["cagiran"] == cagiran and (satir["bot"], satir["neden"]) == (hedef, "kabul")
+    govde = json.loads((config.STATE / is_istek.ISTEK_DIZINI / f"{hedef}.istek").read_text())
+    assert govde["kanal"] is None and govde["bot"] == hedef
+
+
+def test_is_iste_tavan_mcpden_de_isler_ve_kanallar_arasinda_ortak(sandbox_state):
+    yanitlar = _rpc("sef", *({"jsonrpc": "2.0", "id": i, "method": "tools/call",
+                              "params": {"name": "is_iste", "arguments": {"ad": "karne"}}} for i in (1, 2)))
+    assert yanitlar[0]["result"]["isError"] is False
+    r = yanitlar[1]["result"]
+    ic = json.loads(_cit_ici(r["content"][0]["text"], "is_iste"))
+    assert r["isError"] is True and (ic["kabul"], ic["neden"]) == (False, "tavan") and ic["sonraki_uygun"]
+    assert len(_is_defteri()) == 1
+    # Telegram'dan gelen kabul MCP isteğini de tavana sokar (tavanın hafızası bot başınadır, kanal başına değil)
+    assert is_istek.is_iste("bekci", "telegram").kabul
+    r2 = _cagri("sef", "is_iste", {"ad": "bekci"})["result"]
+    assert r2["isError"] is True and json.loads(_cit_ici(r2["content"][0]["text"], "is_iste"))["neden"] == "tavan"
+    assert [s["bot"] for s in _is_defteri()] == ["karne", "bekci"]
+
+
+@pytest.mark.parametrize("ad", ["kod", "yokboyle", "../sef"])
+def test_is_iste_bilinmeyen_is_reddedilir_ve_hicbir_sey_yazmaz(sandbox_state, ad):
+    r = _cagri("sef", "is_iste", {"ad": ad})["result"]
+    ic = json.loads(_cit_ici(r["content"][0]["text"], "is_iste"))
+    assert r["isError"] is True and (ic["kabul"], ic["neden"]) == (False, "bilinmeyen_is")
+    assert _is_defteri() == [] and not (config.STATE / is_istek.ISTEK_DIZINI).exists()
+
+
+@pytest.mark.parametrize("args", [{"ad": "karne", "kanal": "telegram"}, {"ad": "karne", "cagiran": "mcp:karne"},
+                                  {}, {"ad": 5}, {"ad": ""}])
+def test_is_iste_kanal_ve_kimlik_modelden_gelemez(sandbox_state, args):
+    """Kanal ve çağıran kimliği SUNUCUNUN bilgisidir: model şemaya alan ekleyip kendini Telegram ya da başka
+    bir bot gibi gösteremez — şema dışı çağrı reddedilir, istek YAZILMAZ."""
+    r = _cagri("sef", "is_iste", args)["result"]
+    assert r["isError"] is True and "ŞEMA DIŞI" in r["content"][0]["text"]
+    assert _is_defteri() == []
+
+
+def test_bot_hafizasi_ara_hedef_bankaya_salt_okur_recall_citli_ve_scrubli(sandbox_state, monkeypatch):
+    casus = _HafizaCasusu(recall={"results": [
+        {"id": "m1", "text": f"bekçi notu: Authorization: Bearer {_SAHTE_JETON}",
+         "mentioned_at": "2026-09-28T10:00:00Z"},
+        {"id": "m2", "text": "ikinci not"}]})
+    _hafiza_bagla(monkeypatch, casus)
+    r = _cagri("sef", "bot_hafizasi_ara", {"bot": "BEKÇİ", "soru": "not"})["result"]
+    assert r["isError"] is False
+    ic = _cit_ici(r["content"][0]["text"], "bot_hafizasi_ara")
+    assert [(y, u) for y, u, _ in casus.cagrilar] == [
+        ("POST", f"{secrets.HAFIZA_TABAN_URL}/v1/default/banks/bot-bekci/memories/recall")]
+    assert casus.cagrilar[0][2]["query"] == "not"
+    assert _SAHTE_JETON not in ic and "Bearer ***" in ic
+    assert "2026-09-28T10:00:00Z" in ic and "ikinci not" in ic and "(tarih yok)" in ic and "bot-bekci" in ic
+
+
+def test_bot_hafizasi_ara_sonuc_yoksa_olculmus_sifir_der(sandbox_state, monkeypatch):
+    casus = _HafizaCasusu(recall={"results": []})
+    _hafiza_bagla(monkeypatch, casus)
+    r = _cagri("sef", "bot_hafizasi_ara", {"bot": "karne", "soru": "hiç"})["result"]
+    ic = _cit_ici(r["content"][0]["text"], "bot_hafizasi_ara")
+    assert r["isError"] is False and "0 sonuç" in ic and "bot-karne" in ic and len(casus.cagrilar) == 1
+
+
+@pytest.mark.parametrize("hedef", ["kod", "yokboyle", "../sef", "hipotez"])
+def test_bot_hafizasi_ara_aktif_olmayan_hedef_http_oncesi_reddedilir(sandbox_state, monkeypatch, hedef):
+    casus = _HafizaCasusu()
+    _hafiza_bagla(monkeypatch, casus)
+    r = _cagri("sef", "bot_hafizasi_ara", {"bot": hedef, "soru": "x"})["result"]
+    assert r["isError"] is True and "aktif" in r["content"][0]["text"].lower() and casus.cagrilar == []
+
+
+@pytest.mark.parametrize("args", [{"bot": "bekci"}, {"soru": "x"}, {"bot": "bekci", "soru": ""},
+                                  {"bot": "bekci", "soru": "x", "k": 50}])
+def test_bot_hafizasi_ara_sema_disi_http_yok(sandbox_state, monkeypatch, args):
+    casus = _HafizaCasusu()
+    _hafiza_bagla(monkeypatch, casus)
+    r = _cagri("sef", "bot_hafizasi_ara", args)["result"]
+    assert r["isError"] is True and "ŞEMA DIŞI" in r["content"][0]["text"] and casus.cagrilar == []
+
+
+def test_bot_hafizasi_ara_hindsight_erisilemezse_hata_doner_ve_dongu_olmez(sandbox_state, monkeypatch):
+    casus = _HafizaCasusu(hata=RuntimeError("hindsight URLError"))
+    _hafiza_bagla(monkeypatch, casus)
+    yanitlar = _rpc("sef",
+                    {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                     "params": {"name": "bot_hafizasi_ara", "arguments": {"bot": "bekci", "soru": "x"}}},
+                    {"jsonrpc": "2.0", "id": 2, "method": "ping"})
+    r = yanitlar[0]["result"]
+    ic = _cit_ici(r["content"][0]["text"], "bot_hafizasi_ara")
+    assert r["isError"] is True and "RuntimeError" in ic
+    assert yanitlar[1]["id"] == 2 and yanitlar[1]["result"] == {}
+
+
+#: MCP'ye özgü YAZMAYAN her aracın örnek çağrısı. Yeni bir MCP aracı eklenip burada yoksa aşağıdaki çivi KeyError
+#: ile öter — "yazmıyor" iddiası beyansız kalamaz.
+_OKUYAN_ORNEK_ARGS = {"bot_hafizasi_ara": {"bot": "bekci", "soru": "x"}}
+
+
+def test_mcp_ozgu_yazmayan_araclar_diske_yazmaz(sandbox_state, monkeypatch):
+    casus = _HafizaCasusu(recall={"results": [{"id": "m1", "text": "not"}]})
+    _hafiza_bagla(monkeypatch, casus)
+    okuyanlar = sorted(set(ms._mcp_araclari()) - set(ms.MCP_YAZAN_ARACLAR))
+    assert okuyanlar == ["bot_hafizasi_ara"]
+    once = _anlik(sandbox_state)
+    for ad in okuyanlar:
+        assert _cagri("sef", ad, _OKUYAN_ORNEK_ARGS[ad])["result"]["isError"] is False
+    assert _anlik(sandbox_state) == once, "yazmadığı beyan edilen araç diske yazdı"
+    # pozitif kontrol: aynı ölçüm yazan aracı GERÇEKTEN görür
+    assert _cagri("sef", "is_iste", {"ad": "karne"})["result"]["isError"] is False
+    assert _anlik(sandbox_state) != once
+
+
+def test_hafiza_ara_alt_sureci_mcp_stdin_borusunu_miras_almaz(sandbox_state, monkeypatch, tmp_path):
+    """MCP stdio taşımasında sürecin stdin'i JSON-RPC GİRDİSİDİR; alt süreç onu miras alıp okursa protokol
+    satırlarını TÜKETİR. `hafiza_ara` alt süreci `stdin=subprocess.DEVNULL` ile koşar (Rol-1 kararı)."""
+    betik = tmp_path / "hafiza_ara.sh"
+    betik.write_text("#!/bin/sh\n", encoding="utf-8")
+    monkeypatch.setattr(sohbet, "_hafiza_betigi", lambda: str(betik))
+    goruldu: list = []
+
+    def sahte_run(argv, **kw):
+        goruldu.append(kw)
+        return subprocess.CompletedProcess(argv, 0, stdout="[1] not", stderr="")
+
+    monkeypatch.setattr(sohbet.subprocess, "run", sahte_run)
+    r = _cagri("sef", "hafiza_ara", {"soru": "x"})["result"]
+    assert r["isError"] is False and len(goruldu) == 1
+    assert "stdin" in goruldu[0] and goruldu[0]["stdin"] == subprocess.DEVNULL

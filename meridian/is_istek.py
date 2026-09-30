@@ -1,4 +1,4 @@
-"""is_istek.py — konuşan filonun "şimdi çalıştır" yolu: `is_iste(ad, kanal) -> IsSonuc`
+"""is_istek.py — konuşan filonun "şimdi çalıştır" yolu: `is_iste(ad, kanal, *, cagiran=None) -> IsSonuc`
 (spec docs/superpowers/specs/2026-09-29-konusan-bot-filosu-design.md §0 K2-B, §3.6, §4).
 
 NE YAPAR. Operatör bir kanaldan (Telegram dinleyicisi, pano, Claude uygulaması) bir botun zamanlı işini
@@ -27,6 +27,12 @@ DÜŞER (uyararak); bu yüzeyde süreç-içi kilit hiçbir şey korumaz.
 DEĞİŞMEZLER.
   * GEÇERSİZ GİRDİ SESSİZ VARSAYILANA DÜŞMEZ: `bot_kanal.KANALLAR` dışı kanal ve saat dilimsiz
     `simdi` → `ValueError`, hiçbir bayt yazılmaz (bot_kanal değişmeziyle aynı).
+  * KANAL UYDURULMAZ, KİMLİKSİZ İSTEK YOK (Parça 1b G1 Görev 2). Kanalı BİLMEYEN çağıran (MCP araç
+    sunucusu: Hermes hangi kanaldan konuştuğunu söylemez) `kanal=None` verir ve `cagiran` kimliğini
+    (`mcp:<bot>`) ZORUNLU taşır; istek dosyasında ve defterde `kanal: null` + `cagiran` durur. `kanal`
+    verilince doğrulama aynen işler — `cagiran` bilinmeyen bir kanalı aklamaz. `cagiran` verildiyse boş
+    olmayan bir dizge olmalı; `kanal=None` + `cagiran` yok/boş → `ValueError`, hiçbir bayt yazılmaz.
+    Tavan bot başınadır, kanal başına değil: kanalsız istek Telegram kabulünü görür.
   * SIRA: istek dosyası (atomik, `store.write_text`: tmp + fsync + os.replace) ÖNCE, defter satırı
     SONRA. Defter yazımı düşerse iş zaten tetiklenmiştir: sonuç `kabul` döner (gerçeği söyler) ve
     `is_istek_defter_yazim_hatasi` olayı yazılır — o istekten sonraki 15 dk tavansız kalır ve bu
@@ -117,11 +123,19 @@ def _son_kabul(bot: str) -> dt.datetime | None:
     return son
 
 
-def is_iste(ad: str, kanal: str, *, simdi: dt.datetime | None = None,
-            kadro: tuple[_kadro.Bot, ...] | None = None) -> IsSonuc:
-    """Bir botun zamanlı işini şimdi koşturma isteği. `neden` ∈ `kabul · bilinmeyen_is · tavan`."""
-    if kanal not in bot_kanal.KANALLAR:
+def is_iste(ad: str, kanal: str | None, *, simdi: dt.datetime | None = None,
+            kadro: tuple[_kadro.Bot, ...] | None = None, cagiran: str | None = None) -> IsSonuc:
+    """Bir botun zamanlı işini şimdi koşturma isteği. `neden` ∈ `kabul · bilinmeyen_is · tavan`.
+    `kanal=None` yalnız `cagiran` kimliğiyle (modül başlığı, DEĞİŞMEZLER)."""
+    if cagiran is not None and (not isinstance(cagiran, str) or not cagiran.strip()):
+        raise ValueError(f"is_iste: 'cagiran' boş olmayan bir dizge olmalı, gelen {type(cagiran).__name__}")
+    if kanal is None:
+        if cagiran is None:
+            raise ValueError("is_iste: kanal bilinmiyorsa 'cagiran' zorunlu — kimliksiz istek denetim izi "
+                             "bırakmaz, kanal da uydurulmaz")
+    elif kanal not in bot_kanal.KANALLAR:
         raise ValueError(f"is_iste: bilinmeyen kanal {kanal!r} (izinli: {bot_kanal.KANALLAR})")
+    cagiran = cagiran.strip() if cagiran is not None else None
     an = _an(simdi)
     katli = _kadro.ad_katla(ad)
     hedef = TAKMA_ADLAR.get(katli, katli)
@@ -140,7 +154,7 @@ def is_iste(ad: str, kanal: str, *, simdi: dt.datetime | None = None,
                          json.dumps({"bot": hedef, "kanal": kanal, "ts": ts}, ensure_ascii=False))
         try:
             store.append_jsonl(DEFTER, {"ts": ts, "bot": hedef, "birim": birim, "kanal": kanal,
-                                        "neden": "kabul"})
+                                        "cagiran": cagiran, "neden": "kabul"})
         except OSError as e:
             obs.warn("is_istek_defter_yazim_hatasi", bot=hedef, birim=birim, sinif=type(e).__name__,
                      detail="iş tetiklendi ama kabul deftere düşmedi — bu istekten sonraki 15 dk tavansız")

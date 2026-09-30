@@ -654,8 +654,10 @@ def _arac_hafiza_ara(args: dict, baglam: dict | None = None) -> str:
     soru = str(args.get("soru") or "").strip()
     k = max(1, min(int(args.get("k") or 5), 20))
     try:
+        # stdin KAPALI (Parça 1b G1 Görev 2, Rol-1 kararı): bu araç MCP stdio sunucusunda da koşar ve orada
+        # sürecin stdin'i JSON-RPC GİRDİSİDİR — miras alan bir alt süreç onu okursa protokol satırlarını tüketir.
         r = subprocess.run([yol, "-k", str(k), soru], capture_output=True, text=True,
-                           timeout=180)
+                           timeout=180, stdin=subprocess.DEVNULL)
     except Exception as e:
         obs.warn("sohbet_hafiza_ara_hatasi", error=f"{type(e).__name__}: {e}",
                  detail="hafıza arama alt süreci koşamadı — metin modele döner, döngü ölmez")

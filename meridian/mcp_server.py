@@ -16,26 +16,33 @@ tools-call metotları desteklenir, bozuk satır parse-error alır.
     AÇILMAZ (stderr'e ad + neden, çıkış 2): sessizce altı getter'la açılmak botu YANLIŞ araç
     kümesiyle konuştururdu. Sunulan küme = o botun `araclar`ı ∩ kayıt, kadro sırasıyla;
     `YALNIZ_HEPSI_HAFIZALI` araçlar yalnız `hafiza: hepsi` bota (kadroda listelense bile — iki kat).
-    Kadronun listelediği ama kayıtta henüz OLMAYAN ad (Parça 1b G1 Görev 2'nin iki aracı) ATLANIR;
-    bilinen kümenin dışındaki adı kadro çivisi (v591) zaten yakalar.
+    Kadronun listelediği ama kayıtta OLMAYAN ad ATLANIR (savunma: bugün aktif botların listelediği her
+    ad kayıtta — çivi v597); bilinen kümenin dışındaki adı kadro çivisi (v591) yakalar.
 
 KAYIT (`arac_kaydi`) TEK KAYNAKTAN türer: altı getter aşağıdaki `TOOLS`tan; pano sohbetinin araçları
-`sohbet.ARACLAR`dan — şema ve açıklama KOPYALANMAZ, aynı nesnedir. Sohbet araçları burada da
-`sohbet._arac_kos` üzerinden koşar: VERİ çiti + `notify.scrub` + çıktı tavanı + şema doğrulaması
-sohbetle birebir aynı gövdedir. İki kaynak aynı adı taşırsa kayıt sessizce EZMEZ, ValueError atar.
+`sohbet.ARACLAR`dan — şema ve açıklama KOPYALANMAZ, aynı nesnedir; MCP'ye özgü iki araç (`is_iste`,
+`bot_hafizasi_ara` = kadronun planlı araçları) `_mcp_araclari`ndan — şemaları bu modülün sabitleridir,
+pano sohbetinin kaydına GİRMEZLER (sohbetin beyaz listesi donuk). Sohbet araçları ve MCP'ye özgü
+araçlar `sohbet._arac_kos` üzerinden koşar: VERİ çiti + `notify.scrub` + çıktı tavanı + şema
+doğrulaması sohbetle birebir aynı gövdedir. Aynı ad iki kaynakta varsa kayıt sessizce EZMEZ, ValueError atar.
 
 İKİ KAT İZİN: `tools/list` yalnız izinli araçları döner; `tools/call` ÖNCE izni sorar — izinli
 olmayan araç `isError` + "izinli değil" alır ve KOŞMAZ (model listede görmediği bir adı yine de
 çağırabilir). Kayıtta hiç olmayan ad bugünkü gibi -32602 alır.
 
 DEĞİŞMEZLER. Sunucunun KENDİ kodu hiçbir dosyaya yazmaz (AST çivisi `tests/test_mcp_audit_v31.py`).
-Getter'lar salt okur. `--bot` kipinde TEK yazan araç `sohbet.YAZAN_ARACLAR`daki `oneri_yaz`dır:
+Getter'lar salt okur. `--bot` kipinde YAZAN iki araç var, ikisi de BAŞKA modülün gövdesiyle yazar:
+(1) `is_iste` (`MCP_YAZAN_ARACLAR`) — `is_istek.is_iste` gövdesiyle istek tetik dosyası + kabul defteri;
+donuk iş listesi ve 15 dk tavanı aynen. Kanal bu sunucuda BİLİNMEZ (Hermes söylemez) → `kanal: null` +
+`cagiran: mcp:<bot>`; kanal ve kimlik şemada YOKTUR, model kendini başka kanal/bot gibi gösteremez; ret
+(tavan / bilinmeyen iş) `isError` taşır. (2) `oneri_yaz` (`sohbet.YAZAN_ARACLAR`) —
 sohbetin AYNI gövdesiyle onay defterine `durum: "bekliyor"` bir ÖNERİ satırı ekler — bağlamın
 `oturum` alanı `mcp:<bot>` taşır, `kaynak` alanı sohbetin `CAGRI_KIND`ı KALIR, çünkü panonun gelen
 kutusu ve onay ucu satırı bu alan + kimlik biçiminden tanır (`api._defter_tarama`,
 `api._bekleyen_sohbet_onerileri`, `sohbet.oneri_satiri`). İCRA ETMEZ; kararı operatör MEVCUT onay
-ucundan verir — ikinci onay yolu YOK. Sohbet araçlarının arıza/red olayları sohbetin kendi gözlem
-kaydına düşer. Her araç savunmacıdır: getter istisnası ve sohbet aracının reddi / şema dışılığı /
+ucundan verir — ikinci onay yolu YOK. `bot_hafizasi_ara` SALT-OKUR: hedef AKTİF botun `bot-<ad>`
+bankasında recall (`bot_hafiza`, HTTP; bellek durumu değişmez). Sohbet ve MCP'ye özgü araçların arıza/red
+olayları sohbetin kendi gözlem kaydına düşer. Her araç savunmacıdır: getter istisnası ve sohbet aracının reddi / şema dışılığı /
 arızası metne döner (isError), döngü ölmez. Öngörü saflığı: `meridian_candidate_context` sonuç
 (r_multiple) DÖNDÜRMEZ.
 
@@ -45,13 +52,17 @@ hatasıdır. `serve` yanıt akışını (`stdout` ya da o anki `sys.stdout`) EN 
 kurulumu ve döngüyü `contextlib.redirect_stdout(sys.stderr)` altında koşar: araç gövdelerinin
 (getter'lar dahil) her `print`i ve `obs` satırı stderr'e gider, yanıtlar yakalanmış akışa. Bedel:
 `serve` süresince süreç içi `sys.stdout` stderr'dir — tek iplikli stdio sunucusunda başka okuyucusu yok.
+Aynı sınıfın GİRDİ yüzü (Görev 2, Rol-1 kararı): stdin JSON-RPC girdisidir — araçların alt süreci onu miras
+ALMAZ (`sohbet._arac_hafiza_ara` alt süreci `stdin=DEVNULL`; `bot_hafizasi_ara` HTTP'dir, alt süreç açmaz).
 
 OKUR: state/ (store/analytics üzerinden: regime.json, kalibrasyon artefaktları, trade_plans.jsonl,
-cf_open.json, self_review.json), `deploy/hermes/kadro.yaml` (`kadro.kadro_yukle`) ve sohbet
-araçlarının okuduğu her şey (`sohbet` modül başlığı)."""
+cf_open.json, self_review.json), `deploy/hermes/kadro.yaml` (`kadro.kadro_yukle`), sohbet
+araçlarının okuduğu her şey (`sohbet` modül başlığı), `is_iste`nin tavan defteri (`is_istek`) ve
+Hindsight `bot-*` bankaları (`bot_hafiza`, HTTP)."""
 from __future__ import annotations
 import argparse
 import contextlib
+import dataclasses
 import json
 import sys
 
@@ -151,8 +162,26 @@ PROTOCOL_VERSION = "2024-11-05"
 
 #: Yalnız `hafiza: hepsi` bota listelenen araçlar (spec §3.2: bütün botların hafızasını okuyan
 #: araç yalnız @sef'e). Kadro `araclar`ında listelense bile `hafiza` koşulu ayrıca sorulur — iki kat.
-#: Ad `kadro.PLANLI_ARACLAR` ∪ kayıt içinde olmalı (çivi v597): yazım hatası kapıyı sessizce açardı.
+#: Ad KAYITTA olmalı (çivi v597): yazım hatası kapıyı sessizce açardı.
 YALNIZ_HEPSI_HAFIZALI = ("bot_hafizasi_ara",)
+
+#: MCP'ye özgü araçlardan YAZAN(lar) — `sohbet.YAZAN_ARACLAR`ın bu sunucudaki eşi. Liste ADIYLA beyanlıdır:
+#: yazmadığı beyan edilen her MCP'ye özgü araç diske dokunmadan koşmalı (çivi v597); yeni bir yazan araç
+#: buraya girmeden o çivi öter.
+MCP_YAZAN_ARACLAR = ("is_iste",)
+
+#: MCP'ye özgü araçların şemaları MODÜL SABİTİDİR: kayıt ve çağrı anı doğrulaması AYNI nesneyi görür.
+#: Kanal ve çağıran kimliği şemada YOK — ikisi de sunucunun bilgisidir (modül başlığı, DEĞİŞMEZLER).
+_IS_ISTE_SEMA = {"type": "object",
+                 "properties": {"ad": {"type": "string",
+                                       "description": "zamanlı işi şimdi koşturulacak botun adı, ör. karne "
+                                                      "(liste kadrodan türer)"}},
+                 "required": ["ad"], "additionalProperties": False}
+_BOT_HAFIZASI_ARA_SEMA = {"type": "object",
+                          "properties": {"bot": {"type": "string",
+                                                 "description": "hafızası aranacak AKTİF bot, ör. bekci"},
+                                         "soru": {"type": "string"}},
+                          "required": ["bot", "soru"], "additionalProperties": False}
 
 
 class BotAcilamaz(ValueError):
@@ -177,17 +206,63 @@ def _getter_cagir(ad: str):
     return cagir
 
 
-def _sohbet_cagir(ad: str):
-    """Sohbet aracını `sohbet._arac_kos` ile koşturur — çit/scrub/tavan/şema KOPYALANMAZ. Kayıt
-    `sohbet.ARACLAR`dan çağrı anında okunur. Başarısız dönüş (şema dışı ya da atıfsız) `_AracBasarisiz`."""
+def _arac_kos_cagir(ad: str, kaynak):
+    """Aracı `sohbet._arac_kos` ile koşturur — çit/scrub/tavan/şema KOPYALANMAZ. `kaynak()` araç sözlüğünü
+    ÇAĞRI ANINDA döner (sohbet araçları için `sohbet.ARACLAR`, MCP'ye özgüler için `_mcp_araclari`).
+    Başarısız dönüş (şema dışı, ret ya da arıza — atıfsız) `_AracBasarisiz`."""
     def cagir(args, baglam=None):
         from . import sohbet                         # yalnız `--bot` yolu (modül başlığı, İKİ KİP)
         metin, sema_disi, atif, _kesit = sohbet._arac_kos(ad, args, baglam if baglam is not None
-                                                          else {}, sohbet.ARACLAR)
+                                                          else {}, kaynak())
         if sema_disi or not atif:
             raise _AracBasarisiz(metin)
         return metin
     return cagir
+
+
+def _arac_is_iste(args: dict, baglam: dict | None = None) -> str:
+    """`is_istek.is_iste` — kanal BU SUNUCUDA BİLİNMEZ: `kanal=None` + `cagiran` = oturum (`mcp:<bot>`); oturum
+    yoksa `is_iste` kimliksiz isteği reddeder. Ret (tavan / bilinmeyen iş) `AracReddi`dir: sonuç metni aynen
+    modele gider ama MCP istemcisi `isError` görür — "iş tetiklendi" diye okunamaz."""
+    from . import is_istek, sohbet                   # yalnız `--bot` yolu (modül başlığı, İKİ KİP)
+    s = is_istek.is_iste(str(args.get("ad") or ""), None, cagiran=(baglam or {}).get("oturum"))
+    metin = json.dumps(dataclasses.asdict(s), ensure_ascii=False)
+    if not s.kabul:
+        raise sohbet.AracReddi(metin)
+    return metin
+
+
+def _arac_bot_hafizasi_ara(args: dict, baglam: dict | None = None) -> str:
+    """Hedef botun `bot-<ad>` bankasında SALT-OKUR recall (`bot_hafiza`, HTTP — alt süreç YOK). Hedef kadroda
+    AKTİF değilse HTTP'den ÖNCE ret. Sonuç yoksa bunu ölçülmüş sıfır olarak SÖYLER."""
+    from . import bot_hafiza, kadro as _kadro, sohbet  # yalnız `--bot` yolu (modül başlığı, İKİ KİP)
+    ham = str(args.get("bot") or "")
+    hedef = _kadro.bot_bul(ham)
+    if hedef is None or hedef.durum != "aktif":
+        durum = "kadroda yok" if hedef is None else f"durum={hedef.durum}"
+        raise sohbet.AracReddi(f"bot {ham!r} kadroda 'aktif' değil ({durum}) — yalnız aktif botların hafıza "
+                               "bankası aranır")
+    soru = str(args.get("soru") or "")
+    sonuclar = bot_hafiza.HindsightHafiza().ara(hedef.ad, soru)
+    satirlar = [f"bot-{hedef.ad} hafızası · soru {soru.strip()!r} · {len(sonuclar)} sonuç (tarih · metin)"]
+    satirlar += [f"[{i}] {tarih} · {metin}" for i, (tarih, metin) in enumerate(sonuclar, 1)]
+    if not sonuclar:
+        satirlar.append("(recall bu soru için bellek döndürmedi)")
+    return "\n".join(satirlar)
+
+
+def _mcp_araclari() -> dict:
+    """MCP'ye özgü araçlar: ad → `sohbet.Arac`. Adlar kadronun planlı araçlarıdır (çivi v597); gövde ve şema bu
+    modülde, koşum `sohbet._arac_kos`ta. `sohbet` ithali burada (yalnız `--bot` yolu)."""
+    from . import sohbet
+    return {a.ad: a for a in (
+        sohbet.Arac("is_iste", "Bir botun zamanlı işini ŞİMDİ koşturma isteği (donuk iş listesi, iş başına "
+                               "15 dk tavanı). Sonuç: kabul/ret + neden.",
+                    _IS_ISTE_SEMA, _arac_is_iste, lambda args: str(args.get("ad") or "-")),
+        sohbet.Arac("bot_hafizasi_ara", "Bir AKTİF botun hafıza bankasında salt-okur arama (tarih · metin).",
+                    _BOT_HAFIZASI_ARA_SEMA, _arac_bot_hafizasi_ara,
+                    lambda args: f"bot-{args.get('bot') or '-'}"),
+    )}
 
 
 def _getter_kaydi() -> dict[str, dict]:
@@ -200,17 +275,19 @@ def _getter_kaydi() -> dict[str, dict]:
 def arac_kaydi() -> dict[str, dict]:
     """ad → `{"name", "description", "inputSchema", "cagir"}`; `cagir(args, baglam) -> str`.
 
-    TEK KAYNAK: altı getter `TOOLS`tan, sohbet araçları `sohbet.ARACLAR`dan (şema/açıklama AYNI
-    nesne). Önbellek YOK — kayıt her `serve` açılışında kaynaktan türer, bayat kopya olamaz.
-    Tam kayıt yalnız `--bot` kipinin kaydıdır; `sohbet` ithali burada, ilk kullanımda."""
+    TEK KAYNAK: altı getter `TOOLS`tan, sohbet araçları `sohbet.ARACLAR`dan, MCP'ye özgüler
+    `_mcp_araclari`ndan (şema/açıklama AYNI nesne). Önbellek YOK — kayıt her `serve` açılışında
+    kaynaktan türer, bayat kopya olamaz. Tam kayıt yalnız `--bot` kipinin kaydıdır; `sohbet` ithali
+    burada, ilk kullanımda."""
     from . import sohbet
     kayit = _getter_kaydi()
-    for ad, a in sohbet.ARACLAR.items():
-        if ad in kayit:
-            raise ValueError(f"araç adı çakışması: {ad!r} hem getter hem sohbet aracı — kayıt "
-                             "sessizce ezilmez")
-        kayit[ad] = {"name": ad, "description": a.aciklama, "inputSchema": a.sema,
-                     "cagir": _sohbet_cagir(ad)}
+    for kaynak in (lambda: sohbet.ARACLAR, _mcp_araclari):
+        for ad, a in kaynak().items():
+            if ad in kayit:
+                raise ValueError(f"araç adı çakışması: {ad!r} iki kaynakta (getter · sohbet · MCP'ye "
+                                 "özgü) — kayıt sessizce ezilmez")
+            kayit[ad] = {"name": ad, "description": a.aciklama, "inputSchema": a.sema,
+                         "cagir": _arac_kos_cagir(ad, kaynak)}
     return kayit
 
 

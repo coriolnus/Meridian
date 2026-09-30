@@ -12,6 +12,10 @@ Brief'in dokuz çivisine ek (Görev 2 uygulayıcısı, 2026-09-29):
   * Geçersiz girdi sessiz varsayılana düşmez (`bot_kanal` değişmezi): bilinmeyen kanal ve saat dilimsiz
     `simdi` → `ValueError`, hiçbir şey yazılmaz. Defter yazımı düşerse kabul DÖNER (iş zaten tetiklendi)
     ama olay SİNYALLİDİR (`is_istek_defter_yazim_hatasi`).
+
+Parça 1b G1 Görev 2 (2026-09-30) — KANALI BİLİNMEYEN ÇAĞIRAN (MCP araç sunucusu): `kanal=None` yalnız
+`cagiran` kimliğiyle kabul edilir; defterde `kanal: null` + `cagiran` durur, kanal UYDURULMAZ. Kimliksiz
+istek (`kanal=None`, `cagiran` yok/boş/dizge değil) `ValueError` — hiçbir bayt yazılmaz.
 """
 import datetime as dt
 import fcntl
@@ -162,6 +166,55 @@ def test_gecersiz_kanal_ve_dilimsiz_an_hicbir_sey_yazmaz(sandbox_state):
         ii.is_iste("karne", "pano", simdi=dt.datetime(2026, 9, 29, 12, 0))
     assert not (config.STATE / ii.ISTEK_DIZINI / "karne.istek").exists()
     assert store.read_jsonl(ii.DEFTER) == []
+
+
+@pytest.mark.parametrize("kanal", ["faks", "", "TELEGRAM", 0])
+def test_bilinmeyen_kanal_cagiran_verilse_de_valueerror(sandbox_state, kanal):
+    """`cagiran` bilinmeyen bir kanalı AKLAMAZ: kanal verildiyse bugünkü doğrulama aynen işler."""
+    with pytest.raises(ValueError):
+        ii.is_iste("karne", kanal, simdi=SIMDI, cagiran="mcp:sef")
+    assert not (config.STATE / ii.ISTEK_DIZINI / "karne.istek").exists()
+    assert store.read_jsonl(ii.DEFTER) == []
+
+
+def test_kanal_none_cagiran_ile_defter_kanal_null_ve_cagiran(sandbox_state):
+    s = ii.is_iste("brifing", None, simdi=SIMDI, cagiran="mcp:sef")
+    assert s == ii.IsSonuc(kabul=True, bot="sef", birim="meridian-brifing", neden="kabul", sonraki_uygun=None)
+    (satir,) = store.read_jsonl(ii.DEFTER)
+    assert "kanal" in satir and satir["kanal"] is None, "kanal alanı VAR ve null olmalı (uydurma yok)"
+    assert satir["cagiran"] == "mcp:sef" and (satir["bot"], satir["neden"]) == ("sef", "kabul")
+    govde = json.loads((config.STATE / ii.ISTEK_DIZINI / "sef.istek").read_text())
+    assert "kanal" in govde and govde["kanal"] is None and govde["bot"] == "sef"
+
+
+def test_kanal_verilince_cagiran_yoksa_defterde_null(sandbox_state):
+    ii.is_iste("karne", "telegram", simdi=SIMDI)
+    (satir,) = store.read_jsonl(ii.DEFTER)
+    assert satir["kanal"] == "telegram" and "cagiran" in satir and satir["cagiran"] is None
+
+
+@pytest.mark.parametrize("cagiran", [None, "", "   ", 7, b"mcp:sef"])
+def test_kanal_none_kimliksiz_istek_valueerror_ve_hicbir_sey_yazmaz(sandbox_state, cagiran):
+    """Kanal bilinmiyorsa istek KİMİN olduğunu taşımak zorunda — kimliksiz tetik denetim izi bırakmaz."""
+    with pytest.raises(ValueError):
+        ii.is_iste("karne", None, simdi=SIMDI, cagiran=cagiran)
+    assert not (config.STATE / ii.ISTEK_DIZINI).exists()
+    assert store.read_jsonl(ii.DEFTER) == []
+
+
+@pytest.mark.parametrize("cagiran", ["", "  ", 7])
+def test_kanal_verilince_de_bozuk_cagiran_valueerror(sandbox_state, cagiran):
+    with pytest.raises(ValueError):
+        ii.is_iste("karne", "pano", simdi=SIMDI, cagiran=cagiran)
+    assert store.read_jsonl(ii.DEFTER) == []
+
+
+def test_tavan_kanalsiz_ve_kanalli_istekler_arasinda_ortak(sandbox_state):
+    """Tavanın hafızası bot başınadır, kanal başına DEĞİL: MCP'den gelen istek Telegram kabulünü görür."""
+    assert ii.is_iste("karne", "telegram", simdi=SIMDI).kabul
+    s = ii.is_iste("karne", None, simdi=SIMDI + dt.timedelta(minutes=5), cagiran="mcp:sef")
+    assert (s.kabul, s.neden) == (False, "tavan") and s.sonraki_uygun.startswith("2026-09-29T12:15")
+    assert len(store.read_jsonl(ii.DEFTER)) == 1
 
 
 def test_istek_dizini_750_ile_kurulur(sandbox_state):
