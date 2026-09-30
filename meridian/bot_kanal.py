@@ -5,8 +5,9 @@ NE YAPAR. Üç kanal (Telegram dinleyicisi, pano, Claude uygulaması) bir bota s
 sorar. Sıra DONUKTUR: (1) kanal `KANALLAR` içinde mi; (2) bot kadroda VE `aktif` mi
 (`kadro.bot_bul`); (3) `hatırla:` / `unut:` öneki mi — öyleyse MODELE GİTMEZ, deterministik işlenir;
 (4) bot başına UTC günlük kota (kadro satırının `gunluk_tavan` alanı; `None` = tavan yok ama SAYILIR);
-(5) taşıyıcı çağrısı (`Tasiyici` protokolü; varsayılan `HermesTasiyici` = Hermes api_server);
-(6) araçsız-veri uyarısı (aşağıda); (7) her dönüş `state/bot_sohbet.jsonl` defterine bir satır.
+(5) taşıyıcı çağrısı (`Tasiyici` protokolü; varsayılan `HermesTasiyici` = Hermes api_server) — modele giden metin
+`notify.scrub`'lı; (6) araçsız-veri uyarısı (aşağıda); (7) sohbet dönüşünün hafıza kaydı (`Hafiza.donus_yaz`;
+varsayılan `bot_hafiza.HindsightHafiza`); (8) her dönüş `state/bot_sohbet.jsonl` defterine bir satır.
 
 DEĞİŞMEZLER.
   * GEÇERSİZ GİRDİ SESSİZ VARSAYILANA DÜŞMEZ: bilinmeyen kanal, kadroda olmayan ya da `aktif`
@@ -14,12 +15,12 @@ DEĞİŞMEZLER.
     dilimsiz bir an yerel saat sanılıp günü sessizce kaydırırdı.
   * `hatırla:` / `unut:` (Türkçe harf katlamalı, büyük/küçük harf duyarsız — `kadro.ad_katla`)
     modele GİTMEZ. `hatırla` gövdesi `notify.scrub`'dan geçip `Hafiza.yaz`a gider (etiket
-    `sabit_not`, `bot:<ad>`, `kanal:<kanal>`); hafıza bağlı değilse bunu AÇIKÇA söyler ve
-    `bot_hafiza_bagli_degil` olayı yazar. `unut` gövdesi de `notify.scrub`'dan geçip `Hafiza.unut`a gider:
+    `sabit_not`, `bot:<ad>`, `kanal:<kanal>`). `unut` gövdesi de `notify.scrub`'dan geçip `Hafiza.unut`a gider:
     en fazla birkaç bellek GERİ ALINABİLİR biçimde emekliye ayrılır (gerçek uygulama `bot_hafiza.HindsightHafiza`,
     Parça 0 (f) ölçümü: `state: invalidated`) ve operatöre hangi metinlerin unutulduğu kısa listeyle söylenir;
     eşleşme yoksa bu da söylenir. Gövdesiz komut hafızaya GİTMEZ ("neyi?" diye sorulur) — boş sorgu rastgele
-    bellek döndürürdü. Hafıza istisnası "YAZILAMADI"/"UNUTULAMADI" + olay olur, sohbet hatasına dönmez; kısmi
+    bellek döndürürdü. Hafıza istisnası "YAZILAMADI"/"UNUTULAMADI" + olay olur (`hatırla` olayı kapalı-küme `neden`
+    taşır, `bot_hafiza.hata_nedeni`), sohbet hatasına dönmez; kısmi
     `unut` hatasında o âna dek unutulanlar (`unutulanlar` özniteliği) yine söylenir. Kalıcı silme bu modülde YOK.
     Tespitin TEK kaynağı `komut_oneki`dir; Telegram dinleyicisi de onu çağırır (yanıt kipinde
     komut, VERİ çitinin arkasında kaybolmasın diye çit kurulmadan ÖNCE — Tur 2, inceleme I-1).
@@ -28,9 +29,24 @@ DEĞİŞMEZLER.
     (`gunluk_sayim`); tavan sayısı Parça 0 (g) ölçümünden gelir — burada UYDURULMAZ.
   * TAŞIYICI HATASI YUTULMAZ: defter `tur: hata` + sınıf adı, istisna YUKARI fırlar (Telegram
     dinleyicisi `bot_sohbet_hatasi` yolunda yakalar ve operatöre sınıf adıyla söyler).
+  * HAFIZA ÜRETİMDE BAĞLIDIR (Parça 1b G4 Görev 1): `hafiza` verilmezse `bot_hafiza.HindsightHafiza()` kurulur —
+    "bağlı olmayan hafıza" dalı YOKTUR. Credential yoksa hafıza işlemi HTTP'den ÖNCE `anahtar_yok` ile düşer ve
+    aşağıdaki hata yolları bunu operatöre/deftere SÖYLER (sessiz kalınmaz). Testler sahtelerini AÇIKÇA verir.
+  * DÖNÜŞ KAYDI (spec §3.4, 2026-09-30 düzeltmesi: Hermes `auto_retain` KAPALI, dönüşü YALNIZ bu katman yazar):
+    başarılı her `tur: sohbet` turu `Hafiza.donus_yaz(bot, scrub(mesaj), scrub(cevap), etiketler)` çağırır —
+    `cevap` operatörün gördüğü ÖNEKLİ metindir (araçsız-veri uyarısı hafızada da kalır); etiketler `bot:<ad>`,
+    `kanal:<kanal>`, `DONUS_ETIKETI` + `arac_siz_veri is True` ise `arac_siz_veri`, sayı ölçülemediyse
+    `arac_olculemedi`. HAFIZA CEVABI DÜŞÜRMEZ: istisna → defter `hafiza_durumu: yazilamadi` + `bot_hafiza_donus_hatasi`
+    olayı (`sinif` + kapalı-küme `neden`, `bot_hafiza.hata_nedeni`); `success: false` → `yazilamadi` +
+    `bot_hafiza_donus_yazilamadi`. Kota/hata turunda dönüş YAZILMAZ (`hafiza_durumu: atlandi`); komut turları kendi
+    `hafiza_durumu`nu taşır. Kayıt SENKRONDUR ama retain `async: true`dur (Hindsight çıkarımı arka planda);
+    Hindsight asılırsa cevabın gecikmesi soket İŞLEMİ başına `bot_hafiza.DONUS_ZAMAN_ASIMI_S` ile sınırlıdır
+    (bağlanma + okuma; duvar saati değil) — cevap düşmez.
   * DEFTER YAZIMI CEVABI DÜŞÜRMEZ: `store.append_jsonl` düşerse `bot_defter_yazim_hatasi` olayı
     (sinyalli) — operatörün cevabı yine döner.
-  * SIR DEFTERE/İSTİSNAYA DÜŞMEZ: defterdeki `mesaj`/`cevap` `notify.scrub`'dan ÖNCE geçer, SONRA
+  * SIR MODELE/HAFIZAYA/DEFTERE/İSTİSNAYA DÜŞMEZ: taşıyıcıya giden `mesaj` `notify.scrub`'lıdır (Rol-1 hükmü, plan
+    2026-09-30 G4: operatörün yapıştırdığı sır DIŞ MODELE gitmez); dönüş kaydı da scrub'lı parçalar alır. Defterdeki
+    `mesaj`/`cevap` `notify.scrub`'dan ÖNCE geçer, SONRA
     `cevap` `CEVAP_TAVANI`na kesilir (ters sıra yarım kesilmiş bir anahtarı desenin dışına itip
     sızdırırdı); `kesildi` alanı her satırda. `API_SERVER_KEY` yalnız `Authorization` başlığındadır;
     HTTP hatası yalnız DURUM KODUYLA `RuntimeError`a çevrilir, zincir bastırılır (`from None`).
@@ -46,7 +62,8 @@ DEĞİŞMEZLER.
 YASA 6 — OKUYUCU BEYANI. `bot_sohbet.jsonl`in bugünkü tek okuyucusu bu modülün kendi
 `gunluk_sayim`idir (kota); aynı modül olduğu için statik graf dış tüketiciyi göremez. Planlı
 okuyucular (@ayna, @butce, pano bot sayacı, EDG ölçüm kartı) Parça 1 dağıtımında gelir — beyan
-`codelaw.DECLARED_SINKS`te gerekçesiyle durur.
+`codelaw.DECLARED_SINKS`te gerekçesiyle durur. Dönüş kaydının okuyucuları Hindsight tarafındadır (sohbet
+profillerinin `auto_recall`u, `bot_hafizasi_ara`) — `bot_hafiza` modül başlığı.
 """
 from __future__ import annotations
 
@@ -61,7 +78,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Protocol
 
-from . import kadro as _kadro, notify, obs, secrets, store
+from . import bot_hafiza, kadro as _kadro, notify, obs, secrets, store
 
 KANALLAR = ("telegram", "pano", "claude")
 DEFTER = "bot_sohbet.jsonl"
@@ -72,10 +89,8 @@ _KOMUT = re.compile(r"^([^\W\d_]+)\s*:(.*)$", re.S)
 #: Deterministik komutlar (katlanmış ad). Tespit YALNIZ `komut_oneki`de.
 KOMUTLAR = ("hatirla", "unut")
 _HATIRLA_BOS = "Neyi hatırlayayım? `hatırla: <not>` biçiminde yaz."
-_HAFIZA_BAGLI_DEGIL = "Hafızam henüz bağlı değil (Parça 0 ölçümü bekleniyor); not ALINMADI."
 _HAFIZA_YAZILAMADI = "Not YAZILAMADI (hafıza hatası), kayda geçti."
 _UNUT_BOS = "Neyi unutayım? `unut: <ifade>` biçiminde yaz."
-_UNUT_BAGLI_DEGIL = "Hafızam henüz bağlı değil; hiçbir şey unutulmadı."
 _UNUT_ESLESME_YOK = "Eşleşen bir not bulamadım; hiçbir şey unutulmadı."
 #: "hiçbir şey unutulmadı" DENMEZ: zaman aşımına uğrayan bir PATCH sunucuda yine de uygulanmış olabilir.
 _UNUTULAMADI = "UNUTULAMADI (hafıza hatası), kayda geçti."
@@ -114,6 +129,12 @@ SEMBOL_DISI = frozenset({
     "HAZIR", "HER", "IZI", "KALDI", "KALEM", "KEZ", "KIL", "MCP", "NE", "NEDEN", "OKUMA", "OOS", "SADE", "SANA",
     "SATIR", "SIRA", "SKILL", "SON", "SONRA", "TEK", "VERI", "YA", "YAZMA", "YOK", "ZORLA",
 })
+#: Sohbet dönüşü kaydının sabit etiketi (dönüş kaydını `sabit_not`tan ayırır; plan 2026-09-30 G4 Görev 1).
+DONUS_ETIKETI = "sohbet_donusu"
+#: `HermesTasiyici` zaman aşımı varsayılanı (sn; soket İŞLEMİ başına). Hermes bir model çağrısını en kötü
+#: `SOHBET_API_DENEME × SOHBET_ISTEK_ZAMAN_ASIMI_SN` bekler (`ops/sohbet_profili_uret.py`); taşıyıcı bundan KISA
+#: bekleseydi model hâlâ çalışırken düşerdi — çapraz çivi v593 `test_hermes_zaman_asimi_sohbet_cagri_butcesini_kapsar`.
+HERMES_ZAMAN_ASIMI_S = 300.0
 #: Oturum kimliği oturum dökümü GET'inde URL YOLUNA girer (bot adıyla aynı sınıf): `/`, `..`, `?`, `#`
 #: yolu başka bir uca taşırdı. Desene uymayan kimlikte GET ATILMAZ, sayım ölçülemedi (`None`) olur.
 _OTURUM_DESENI = re.compile(r"[A-Za-z0-9_-]{1,128}")
@@ -146,6 +167,10 @@ class Hafiza(Protocol):
         """Geri alınabilir unutma; emekliye ayrılan `(bellek_id, metin_kesiti)` listesi (boş = eşleşme yok)."""
         ...
 
+    def donus_yaz(self, bot: str, mesaj: str, cevap: str, etiketler: tuple[str, ...]) -> bool:
+        """Sohbet dönüşü kaydı (operatör mesajı + botun önekli cevabı); `success` (bool) döner, hata istisnadır."""
+        ...
+
 
 class HermesTasiyici:
     """Hermes api_server (v0.19.0, A1 kaynağında ölçüldü): `POST {taban}/p/<bot>/v1/chat/completions`,
@@ -161,7 +186,7 @@ class HermesTasiyici:
     `model_cagrilari` bu yolda ÖLÇÜLMÜYOR (`None`): api_server cevabının bu sayıyı taşıyıp taşımadığı
     Parça 0 (b)/(g) ölçümünü bekler (uydurma yasağı)."""
 
-    def __init__(self, taban_url: str = "http://127.0.0.1:8642", zaman_asimi_s: float = 300.0,
+    def __init__(self, taban_url: str = "http://127.0.0.1:8642", zaman_asimi_s: float = HERMES_ZAMAN_ASIMI_S,
                  _cagir=None, _anahtar=None):
         # bool bir int alt sınıfıdır: `True` 1 sn diye sessizce okunmasın (kadro `gunluk_tavan` emsali).
         if (isinstance(zaman_asimi_s, bool) or not isinstance(zaman_asimi_s, (int, float))
@@ -347,7 +372,7 @@ def komut_oneki(metin: str) -> tuple[str, str] | None:
     return (ad, m.group(2).strip()) if ad in KOMUTLAR else None
 
 
-def _komut(bot: str, mesaj: str, kanal: str, oturum: str, an: datetime, hafiza: Hafiza | None) -> str | None:
+def _komut(bot: str, mesaj: str, kanal: str, oturum: str, an: datetime, hafiza: Hafiza) -> str | None:
     """`hatırla:` / `unut:` dalı. Komut değilse `None` (soru modele gider)."""
     komut = komut_oneki(mesaj)
     if komut is None:
@@ -357,15 +382,12 @@ def _komut(bot: str, mesaj: str, kanal: str, oturum: str, an: datetime, hafiza: 
         return _unut(bot, mesaj, govde, kanal, oturum, an, hafiza)
     if not govde:
         cevap, durum = _HATIRLA_BOS, "bos_govde"
-    elif hafiza is None:
-        obs.warn("bot_hafiza_bagli_degil", bot=bot, kanal=kanal)
-        cevap, durum = _HAFIZA_BAGLI_DEGIL, "bagli_degil"
     else:
         temiz = notify.scrub(govde)
         try:
             yazildi = bool(hafiza.yaz(bot, temiz, ("sabit_not", f"bot:{bot}", f"kanal:{kanal}")))
         except Exception as e:  # sinyalli: olay + "YAZILAMADI" cevabı; hafıza istisnası sohbet hatasına dönmez
-            obs.warn("bot_hafiza_yazim_hatasi", bot=bot, sinif=type(e).__name__)
+            obs.warn("bot_hafiza_yazim_hatasi", bot=bot, sinif=type(e).__name__, neden=bot_hafiza.hata_nedeni(e))
             yazildi = False
         if yazildi:
             cevap, durum = f"Not aldım: {temiz}", "yazildi"
@@ -381,14 +403,11 @@ def _unutulan_listesi(unutulanlar) -> str:
     return " ".join(f"{i}) {notify.scrub(kesit)}" for i, (_, kesit) in enumerate(unutulanlar, 1))
 
 
-def _unut(bot: str, mesaj: str, govde: str, kanal: str, oturum: str, an: datetime, hafiza: Hafiza | None) -> str:
+def _unut(bot: str, mesaj: str, govde: str, kanal: str, oturum: str, an: datetime, hafiza: Hafiza) -> str:
     """`unut:` dalı — geri alınabilir unutma. Defter satırı `unutulan_idler` taşır (geri almanın yerel kaydı)."""
     unutulanlar: list = []
     if not govde:
         cevap, durum = _UNUT_BOS, "bos_govde"
-    elif hafiza is None:
-        obs.warn("bot_hafiza_bagli_degil", bot=bot, kanal=kanal)
-        cevap, durum = _UNUT_BAGLI_DEGIL, "bagli_degil"
     else:
         try:
             unutulanlar = list(hafiza.unut(bot, notify.scrub(govde)))
@@ -408,30 +427,56 @@ def _unut(bot: str, mesaj: str, govde: str, kanal: str, oturum: str, an: datetim
     return cevap
 
 
+def _donus_kaydi(bot: str, mesaj: str, cevap: str, kanal: str, arac_siz_veri: bool | None,
+                 arac_olculemedi: bool, hafiza: Hafiza) -> str:
+    """Sohbet dönüşünü hafızaya yazar; defterin `hafiza_durumu`nu döner (`yazildi` | `yazilamadi`). Hafıza istisnası
+    ve `success: false` CEVABI DÜŞÜRMEZ — olay yazılır (modül başlığı, DÖNÜŞ KAYDI)."""
+    etiketler = (f"bot:{bot}", f"kanal:{kanal}", DONUS_ETIKETI)
+    if arac_siz_veri is True:
+        etiketler += ("arac_siz_veri",)
+    if arac_olculemedi:
+        etiketler += ("arac_olculemedi",)
+    try:
+        yazildi = bool(hafiza.donus_yaz(bot, notify.scrub(mesaj), notify.scrub(cevap), etiketler))
+    except Exception as e:  # sinyalli: olay (sınıf adı + kapalı-küme neden) + defter `yazilamadi`; hafıza istisnası cevabı düşürmez
+        obs.warn("bot_hafiza_donus_hatasi", bot=bot, kanal=kanal, sinif=type(e).__name__,
+                 neden=bot_hafiza.hata_nedeni(e))
+        return "yazilamadi"
+    if not yazildi:
+        obs.warn("bot_hafiza_donus_yazilamadi", bot=bot, kanal=kanal)
+        return "yazilamadi"
+    return "yazildi"
+
+
 def bota_sor(bot: str, mesaj: str, kanal: str, oturum: str, *, tasiyici: Tasiyici | None = None,
              hafiza: Hafiza | None = None, simdi=None, kadro=None) -> str:
-    """Kanal → bot → komut → kota → taşıyıcı → defter (modül başlığındaki DONUK sıra)."""
+    """Kanal → bot → komut → kota → taşıyıcı → dönüş kaydı → defter (modül başlığındaki DONUK sıra). `tasiyici` /
+    `hafiza` verilmezse ÜRETİM varsayılanları (`HermesTasiyici`, `bot_hafiza.HindsightHafiza`)."""
     if kanal not in KANALLAR:
         raise ValueError(f"bota_sor: kanal {kanal!r} izinli değil {KANALLAR}")
     b = _kadro.bot_bul(bot, kadro)
     if b is None or b.durum != "aktif":
         raise ValueError(f"bota_sor: {bot!r} kadroda aktif bir bot değil")
     an = _utc(simdi)
+    if hafiza is None:
+        hafiza = bot_hafiza.HindsightHafiza()
     komut_cevabi = _komut(b.ad, mesaj, kanal, oturum, an, hafiza)
     if komut_cevabi is not None:
         return komut_cevabi
     n = gunluk_sayim(b.ad, an.strftime("%Y-%m-%d"))
     if b.gunluk_tavan is not None and n >= b.gunluk_tavan:
         cevap = f"@{b.ad} bugünlük kotam doldu ({n}/{b.gunluk_tavan}); yarın (UTC) yeniden."
-        _defter_yaz(_satir(an, b.ad, kanal, oturum, "kota_doldu", mesaj, cevap, kota_bugun=n))
+        _defter_yaz(_satir(an, b.ad, kanal, oturum, "kota_doldu", mesaj, cevap, kota_bugun=n,
+                           hafiza_durumu="atlandi"))
         return cevap
     tasiyici = tasiyici or HermesTasiyici()
+    giden = notify.scrub(mesaj)
     t0 = time.monotonic()
     try:
-        sonuc = tasiyici.sor(b.ad, mesaj, oturum)
+        sonuc = tasiyici.sor(b.ad, giden, oturum)
     except Exception as e:  # sinyalli: defter `tur: hata` + sınıf adı, istisna YUKARI fırlar
         _defter_yaz(_satir(an, b.ad, kanal, oturum, "hata", mesaj, None, hata=type(e).__name__,
-                           sure_s=round(time.monotonic() - t0, 3), kota_bugun=n))
+                           sure_s=round(time.monotonic() - t0, 3), kota_bugun=n, hafiza_durumu="atlandi"))
         raise
     arac = sonuc.arac_cagrilari
     arac_olculemedi = arac is None
@@ -439,8 +484,12 @@ def bota_sor(bot: str, mesaj: str, kanal: str, oturum: str, *, tasiyici: Tasiyic
     isaret = veri_isareti(sonuc.metin)
     arac_siz_veri = None if arac_olculemedi else (arac == 0 and isaret is not None)
     cevap = _onekle(sonuc.metin, UYARI_OLCULEMEDI if arac_olculemedi else UYARI_ARACSIZ if arac_siz_veri else None)
+    # `sure_s` taşıyıcı turunu ölçer — dönüş kaydının süresi ona KARIŞMAZ (model gecikmesi hafıza gecikmesinden
+    # ayrı okunabilsin).
+    sure_s = round(time.monotonic() - t0, 3)
+    hafiza_durumu = _donus_kaydi(b.ad, mesaj, cevap, kanal, arac_siz_veri, arac_olculemedi, hafiza)
     _defter_yaz(_satir(an, b.ad, kanal, oturum, "sohbet", mesaj, cevap,
-                       sure_s=round(time.monotonic() - t0, 3), arac_cagrilari=arac,
+                       sure_s=sure_s, arac_cagrilari=arac,
                        arac_siz_veri=arac_siz_veri, arac_olculemedi=arac_olculemedi, veri_isareti=isaret,
-                       model_cagrilari=sonuc.model_cagrilari, kota_bugun=n + 1))
+                       model_cagrilari=sonuc.model_cagrilari, kota_bugun=n + 1, hafiza_durumu=hafiza_durumu))
     return cevap

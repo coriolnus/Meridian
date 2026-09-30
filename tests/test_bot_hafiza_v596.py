@@ -11,6 +11,7 @@ yoksa "(tarih yok)"); metin ÖNCE scrub SONRA `ARA_KESIT_TAVANI`; zarf tanınmaz
 """
 import ast
 import datetime as dt
+import http.client
 import inspect
 import io
 import json
@@ -282,24 +283,27 @@ def test_geri_al_gecersiz_kimlik_http_oncesi_reddedilir(kimlik):
 # ---- ortak kapılar ------------------------------------------------------------------------------------------
 
 @pytest.mark.parametrize("bot", ["../x", "a/b", "Bekci", "", "bekci?k=1", "bekci-1"])
-@pytest.mark.parametrize("islem", ["yaz", "unut", "geri_al", "ara"])
+@pytest.mark.parametrize("islem", ["yaz", "unut", "geri_al", "ara", "donus_yaz"])
 def test_bot_adi_http_oncesi_reddedilir(bot, islem):
     c = Casus()
     h = _h(c)
     with pytest.raises(ValueError):
         {"yaz": lambda: h.yaz(bot, "x", ("sabit_not",)), "unut": lambda: h.unut(bot, "x"),
-         "geri_al": lambda: h.geri_al(bot, "m1"), "ara": lambda: h.ara(bot, "x")}[islem]()
+         "geri_al": lambda: h.geri_al(bot, "m1"), "ara": lambda: h.ara(bot, "x"),
+         "donus_yaz": lambda: h.donus_yaz(bot, "x", "y", ("sohbet_donusu",))}[islem]()
     assert c.cagrilar == []
 
 
-@pytest.mark.parametrize("islem", ["yaz", "unut", "geri_al", "ara"])
+@pytest.mark.parametrize("islem", ["yaz", "unut", "geri_al", "ara", "donus_yaz"])
 def test_anahtar_yoksa_istek_atilmaz_ve_hata_metni_sabit(islem):
     c = Casus()
     h = bh.HindsightHafiza(_cagir=c, _anahtar=lambda: None)
     with pytest.raises(RuntimeError) as e:
         {"yaz": lambda: h.yaz("bekci", "x", ("sabit_not",)), "unut": lambda: h.unut("bekci", "x"),
-         "geri_al": lambda: h.geri_al("bekci", "m1"), "ara": lambda: h.ara("bekci", "x")}[islem]()
+         "geri_al": lambda: h.geri_al("bekci", "m1"), "ara": lambda: h.ara("bekci", "x"),
+         "donus_yaz": lambda: h.donus_yaz("bekci", "x", "y", ("sohbet_donusu",))}[islem]()
     assert str(e.value) == "hindsight kiracı anahtarı credential yok" and c.cagrilar == []
+    assert e.value.neden == "anahtar_yok" and bh.hata_nedeni(e.value) == "anahtar_yok"
 
 
 @pytest.mark.parametrize("deger", [None, 0, 0.0, -1, float("inf"), float("-inf"), float("nan"), "10", True])
@@ -414,7 +418,7 @@ def test_api_kopyalariyla_ayrismaz():
 
 
 def test_bot_kanal_hafiza_protokolunu_uygular():
-    for ad in ("yaz", "unut"):
+    for ad in ("yaz", "unut", "donus_yaz"):
         beklenen = list(inspect.signature(getattr(bk.Hafiza, ad)).parameters)
         assert list(inspect.signature(getattr(bh.HindsightHafiza, ad)).parameters) == beklenen, ad
 
@@ -464,3 +468,212 @@ def test_bota_sor_gercek_sinif_anahtarsiz_sessiz_kalmaz(sandbox_state):
     assert "YAZILAMADI" in bk.bota_sor("sef", "hatırla: x", "pano", "o", hafiza=h, simdi=SIMDI)
     assert "UNUTULAMADI" in bk.bota_sor("sef", "unut: x", "pano", "o", hafiza=h, simdi=SIMDI)
     assert c.cagrilar == []
+
+
+# ---- Parça 1b G4 Görev 1: `donus_yaz` (sohbet dönüşü kaydı) + yapısal `neden` -------------------------------------
+# Spec §3.4 (2026-09-30 düzeltmesi): Hermes `auto_retain` KAPALI; dönüşü YALNIZ `bota_sor` bu yöntemle yazar. Retain
+# `async: true` — Hindsight arka planda işler, hemen `success` + `operation_id` döner (A1 OpenAPI, 2026-09-30).
+
+DONUS_ETIKETLERI = ("bot:bekci", "kanal:telegram", "sohbet_donusu")
+RETAIN_ASYNC = {"success": True, "bank_id": "bot-bekci", "items_count": 1, "async": True,
+                "operation_id": "op-1", "operation_ids": ["op-1"]}
+
+
+def test_donus_yaz_istek_bicimi_async_baglam_kaynak_icerik():
+    c = Casus(retain=RETAIN_ASYNC)
+    assert _h(c).donus_yaz("bekci", "durum?", "rejim risk-on", DONUS_ETIKETLERI) is True
+    (cagri,) = c.cagrilar
+    assert (cagri["yontem"], cagri["url"]) == ("POST", f"{TABAN}/v1/default/banks/bot-bekci/memories")
+    assert cagri["basliklar"] == {"Authorization": f"Bearer {ANAHTAR}"}
+    assert cagri["zaman_asimi"] == bh.DONUS_ZAMAN_ASIMI_S == 3.0     # Tur 2 (Rol-1 K-1): AYRI ve KISA
+    (oge,) = cagri["govde"]["items"]
+    assert _utc_mu(oge.pop("timestamp"))
+    assert cagri["govde"] == {"items": [{"content": "Operatör: durum?\n@bekci: rejim risk-on",
+                                         "context": "sohbet dönüşü", "tags": list(DONUS_ETIKETLERI),
+                                         "metadata": {"kaynak": "bot_kanal"}}], "async": True}
+
+
+def test_donus_ve_not_sabitleri_donuk():
+    assert (bh.DONUS_TAVANI, bh.DONUS_BAGLAMI, bh.DONUS_KAYNAGI) == (2000, "sohbet dönüşü", "bot_kanal")
+    assert bh.DONUS_ZAMAN_ASIMI_S == 3.0
+    assert (bh.NOT_BAGLAMI, bh.NOT_KAYNAGI) == ("operatör notu", "operator")
+
+
+def test_donus_yaz_her_parca_once_scrub_sonra_tavan():
+    # Ters sırada tavan anahtarı ortadan böler, yarım anahtar desene uymaz ve kalıcı bankaya sızar.
+    anahtar = "sk-or-v1-" + "a" * 64
+    mesaj = "x" * (bh.DONUS_TAVANI - 10) + anahtar
+    cevap = "y" * (bh.DONUS_TAVANI - 5) + anahtar + "z" * 50
+    c = Casus(retain=RETAIN_ASYNC)
+    _h(c).donus_yaz("bekci", mesaj, cevap, DONUS_ETIKETLERI)
+    icerik = c.cagrilar[0]["govde"]["items"][0]["content"]
+    assert "sk-or-v1-" not in icerik
+    operator, bot = icerik.split("\n@bekci: ")
+    assert operator == "Operatör: " + "x" * (bh.DONUS_TAVANI - 10) + "***"
+    assert bot == ("y" * (bh.DONUS_TAVANI - 5) + "***" + "z" * 50)[:bh.DONUS_TAVANI]
+
+
+def test_donus_yaz_success_false_ise_false():
+    assert _h(Casus(retain={**RETAIN_ASYNC, "success": False})).donus_yaz("bekci", "x", "y", DONUS_ETIKETLERI) is False
+
+
+@pytest.mark.parametrize("cevap", [None, {}, {"operation_id": "op-1"}, [], "tamam"])
+def test_donus_yaz_cevabi_taninmazsa_yazildi_uydurulmaz_neden_bicim(cevap):
+    with pytest.raises(RuntimeError) as e:
+        _h(Casus(retain=cevap)).donus_yaz("bekci", "x", "y", DONUS_ETIKETLERI)
+    assert e.value.neden == "bicim" and bh.hata_nedeni(e.value) == "bicim"
+
+
+def test_yaz_govdesi_donus_kaydindan_etkilenmez():
+    # `hatırla:` retain'i SENKRON kalır (bağlam "operatör notu", kaynak "operator") — dönüş kaydının `async: true`su
+    # ona sızmaz; iki gövde yan yana ölçülür.
+    c = Casus()
+    h = _h(c)
+    h.yaz("bekci", "not", ("sabit_not",))
+    h.donus_yaz("bekci", "soru", "cevap", DONUS_ETIKETLERI)
+    yaz, donus = (cg["govde"] for cg in c.cagrilar)
+    assert (yaz["async"], yaz["items"][0]["context"], yaz["items"][0]["metadata"]) == (
+        False, "operatör notu", {"kaynak": "operator"})
+    assert (donus["async"], donus["items"][0]["context"], donus["items"][0]["metadata"]) == (
+        True, "sohbet dönüşü", {"kaynak": "bot_kanal"})
+
+
+# ---- yapısal `neden` (kapalı küme; mesaj metninden TÜRETİLMEZ) -----------------------------------------------------
+
+@pytest.mark.parametrize("hata,neden", [
+    (urllib.error.HTTPError(f"{TABAN}/x", 503, "Service Unavailable", {}, None), "http_503"),
+    (urllib.error.HTTPError(f"{TABAN}/x", 401, "Unauthorized", {}, None), "http_401"),
+    (urllib.error.URLError(ConnectionRefusedError(61, "Connection refused")), "ag"),
+    (ConnectionResetError(54, "reset"), "ag"),
+    (TimeoutError("timed out"), "zaman_asimi"),                                 # okuma sırasında soket zaman aşımı
+    (urllib.error.URLError(TimeoutError("timed out")), "zaman_asimi"),          # bağlanırken (urllib sarar)
+    (http.client.IncompleteRead(b"yarim"), "ag"),
+    (ValueError("Invalid header value b'Bearer GIZLI\\n'"), "beklenmeyen"),     # istemci tarafı, ağ değil
+])
+def test_varsayilan_yol_istisnasi_yapisal_neden_tasir(monkeypatch, hata, neden):
+    def urlopen(istek, timeout=None):
+        raise hata
+
+    monkeypatch.setattr(bh.urllib.request, "urlopen", urlopen)
+    with pytest.raises(RuntimeError) as e:
+        bh.HindsightHafiza(_anahtar=lambda: ANAHTAR).donus_yaz("bekci", "x", "y", DONUS_ETIKETLERI)
+    assert e.value.neden == neden and bh.hata_nedeni(e.value) == neden
+    assert "GIZLI" not in str(e.value)
+
+
+def test_varsayilan_yol_json_olmayan_govde_neden_bicim(monkeypatch):
+    monkeypatch.setattr(bh.urllib.request, "urlopen", lambda istek, timeout=None: _Cevap(b"<html>gizli</html>"))
+    with pytest.raises(RuntimeError) as e:
+        bh.HindsightHafiza(_anahtar=lambda: ANAHTAR).donus_yaz("bekci", "x", "y", DONUS_ETIKETLERI)
+    assert bh.hata_nedeni(e.value) == "bicim"
+
+
+def test_recall_zarfi_taninmazsa_neden_bicim():
+    with pytest.raises(RuntimeError) as e:
+        _h(Casus(recall={"sonuclar": []})).ara("bekci", "x")
+    assert bh.hata_nedeni(e.value) == "bicim"
+
+
+@pytest.mark.parametrize("hata", [
+    RuntimeError("hindsight HTTP 500"),                  # MESAJ http der ama öznitelik yok → mesajdan türetilmez
+    RuntimeError("hindsight TimeoutError"),
+    ConnectionError("x"), TimeoutError("x"), ValueError("x"),
+])
+def test_hata_nedeni_isaretsiz_istisnada_beklenmeyen(hata):
+    assert bh.hata_nedeni(hata) == "beklenmeyen"
+
+
+@pytest.mark.parametrize("neden,beklenen", [
+    ("anahtar_yok", "anahtar_yok"), ("ag", "ag"), ("zaman_asimi", "zaman_asimi"), ("bicim", "bicim"),
+    ("beklenmeyen", "beklenmeyen"), ("http_404", "http_404"),
+    ("http_", "beklenmeyen"), ("http_abc", "beklenmeyen"), ("http_4040", "beklenmeyen"), ("gizli metin", "beklenmeyen"),
+    (None, "beklenmeyen"), (7, "beklenmeyen"),
+])
+def test_hata_nedeni_kapali_kume(neden, beklenen):
+    hata = RuntimeError("x")
+    hata.neden = neden
+    assert bh.hata_nedeni(hata) == beklenen
+
+
+# ---- gerçek sınıf `bota_sor` sohbet turunda (dönüş kaydı; Review Focus 1: hafıza hatası cevabı düşürmez) -------------
+
+class _Tasiyici:
+    def sor(self, bot, mesaj, oturum):
+        return bk.TasiyiciSonuc("rejim risk-on", arac_cagrilari=1)
+
+
+def test_bota_sor_gercek_sinifla_donus_kaydi_async_ve_scrubli(sandbox_state):
+    anahtar = "sk-or-v1-" + "b" * 64
+    c = Casus(retain=RETAIN_ASYNC)
+    cevap = bk.bota_sor("bekci", f"durum? {anahtar}", "telegram", "o", tasiyici=_Tasiyici(), hafiza=_h(c),
+                        simdi=SIMDI)
+    assert cevap == "rejim risk-on"
+    (cagri,) = c.cagrilar
+    (oge,) = cagri["govde"]["items"]
+    assert cagri["govde"]["async"] is True and anahtar not in json.dumps(cagri["govde"])
+    assert oge["content"] == "Operatör: durum? ***\n@bekci: rejim risk-on"
+    assert oge["tags"] == ["bot:bekci", "kanal:telegram", "sohbet_donusu"]
+    s = _defter()[-1]
+    assert (s["tur"], s["hafiza_durumu"]) == ("sohbet", "yazildi")
+
+
+@pytest.mark.parametrize("hata,neden", [
+    (urllib.error.URLError(ConnectionRefusedError(61, "Connection refused")), "ag"),
+    (TimeoutError("timed out"), "zaman_asimi"),
+    (urllib.error.HTTPError(f"{TABAN}/x", 500, "Internal", {}, None), "http_500"),
+])
+def test_bota_sor_gercek_sinif_hindsight_hatasinda_cevap_doner_yazilamadi_ve_nedenli_olay(sandbox_state, monkeypatch,
+                                                                                         hata, neden):
+    def urlopen(istek, timeout=None):
+        raise hata
+
+    monkeypatch.setattr(bh.urllib.request, "urlopen", urlopen)
+    h = bh.HindsightHafiza(_anahtar=lambda: ANAHTAR)
+    assert bk.bota_sor("bekci", "durum?", "pano", "o", tasiyici=_Tasiyici(), hafiza=h, simdi=SIMDI) == "rejim risk-on"
+    assert _defter()[-1]["hafiza_durumu"] == "yazilamadi"
+    olay = [e for e in obs.recent(20) if e.get("event") == "bot_hafiza_donus_hatasi"]
+    assert olay and (olay[-1]["sinif"], olay[-1]["neden"], olay[-1]["kanal"]) == ("RuntimeError", neden, "pano")
+
+
+def test_bota_sor_gercek_sinif_hatirla_hatasi_nedenli_olay(sandbox_state, monkeypatch):
+    def urlopen(istek, timeout=None):
+        raise urllib.error.URLError(ConnectionRefusedError(61, "Connection refused"))
+
+    monkeypatch.setattr(bh.urllib.request, "urlopen", urlopen)
+    h = bh.HindsightHafiza(_anahtar=lambda: ANAHTAR)
+    assert "YAZILAMADI" in bk.bota_sor("sef", "hatırla: x", "pano", "o", hafiza=h, simdi=SIMDI)
+    assert any(e.get("event") == "bot_hafiza_yazim_hatasi" and e.get("neden") == "ag" for e in obs.recent(20))
+
+
+# ---- Tur 2 (Rol-1 K-1 kararı 2026-09-30): dönüş kaydının AYRI ve KISA zaman aşımı --------------------------------
+# Dönüş kaydı operatörün cevabıyla AYNI turda senkron koşar (`hafiza_durumu` aynı defter satırında). `async: true` kabulü
+# sağlıklı Hindsight'ta anında döner; ASILI Hindsight'ta cevap soket işlemi başına en fazla `DONUS_ZAMAN_ASIMI_S`
+# gecikir. `HAFIZA_ZAMAN_ASIMI_S` (10 s) DEĞİŞMEZ — v599 onu Hermes profil yapılandırmasına bağlar; `yaz`/`unut`/`ara`
+# onu kullanmaya devam eder.
+
+def test_donus_zaman_asimi_hafiza_zaman_asimindan_kisa_ve_yalniz_donus_yazda():
+    assert bh.DONUS_ZAMAN_ASIMI_S < bh.HAFIZA_ZAMAN_ASIMI_S == 10.0
+    c = Casus(recall=_recall(("m1", "x")))
+    h = _h(c)
+    h.donus_yaz("bekci", "soru", "cevap", DONUS_ETIKETLERI)
+    h.yaz("bekci", "not", ("sabit_not",))
+    h.ara("bekci", "x")
+    h.unut("bekci", "x")
+    h.geri_al("bekci", "m1")
+    assert [cg["zaman_asimi"] for cg in c.cagrilar] == [bh.DONUS_ZAMAN_ASIMI_S] + [bh.HAFIZA_ZAMAN_ASIMI_S] * 5
+
+
+def test_varsayilan_yol_donus_yaz_kisa_zaman_asimli_async_post(monkeypatch):
+    # Üretimin TEK yolu (`_cagir` enjekte EDİLMEZ): kısa zaman aşımı urlopen'a GERÇEKTEN gider.
+    gorulen = {}
+
+    def urlopen(istek, timeout=None):
+        gorulen.update(istek=istek, timeout=timeout)
+        return _Cevap(json.dumps(RETAIN_ASYNC).encode())
+
+    monkeypatch.setattr(bh.urllib.request, "urlopen", urlopen)
+    assert bh.HindsightHafiza(_anahtar=lambda: ANAHTAR).donus_yaz("bekci", "soru", "cevap", DONUS_ETIKETLERI) is True
+    istek = gorulen["istek"]
+    assert gorulen["timeout"] == bh.DONUS_ZAMAN_ASIMI_S and istek.get_method() == "POST"
+    assert istek.full_url == f"{TABAN}/v1/default/banks/bot-bekci/memories"
+    assert json.loads(istek.data)["async"] is True

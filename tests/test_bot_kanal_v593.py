@@ -23,9 +23,10 @@ class SahteTasiyici:
 
 
 class SahteHafiza:
-    def __init__(self, sonuc=True, unut_sonuc=()):
+    def __init__(self, sonuc=True, unut_sonuc=(), donus_sonuc=True):
         self.yazilanlar, self.sonuc = [], sonuc
         self.unutulanlar, self.unut_sonuc = [], list(unut_sonuc)
+        self.donusler, self.donus_sonuc = [], donus_sonuc
 
     def yaz(self, bot, metin, etiketler):
         self.yazilanlar.append((bot, metin, etiketler))
@@ -34,6 +35,10 @@ class SahteHafiza:
     def unut(self, bot, ifade):
         self.unutulanlar.append((bot, ifade))
         return list(self.unut_sonuc)
+
+    def donus_yaz(self, bot, mesaj, cevap, etiketler):
+        self.donusler.append((bot, mesaj, cevap, etiketler))
+        return self.donus_sonuc
 
 
 def _defter():
@@ -105,20 +110,23 @@ def test_hatirla_bos_govde_sorar(sandbox_state):
     assert h.yazilanlar == []
 
 
-def test_hatirla_hafiza_bagli_degilse_acik_soyler(sandbox_state):
+def test_hatirla_hafiza_verilmezse_gercek_sinif_anahtarsiz_yazilamadi_ve_olay(sandbox_state):
+    # Parça 1b G4 Görev 1 (Rol-1 kararı 2026-09-30): `hafiza` verilmeyen çağrı ÜRETİM varsayılanına
+    # (`bot_hafiza.HindsightHafiza`) gider. `sandbox_state` credential kanalını kapatır → anahtar yok →
+    # HTTP'den ÖNCE hata; sessiz kalınmaz: "YAZILAMADI" + sınıf ve kapalı-küme nedenli olay.
     cevap = bk.bota_sor("sef", "hatırla: x", "pano", "o", tasiyici=SahteTasiyici(), simdi=SIMDI)
-    assert "henüz bağlı değil" in cevap
-    assert any(e.get("event") == "bot_hafiza_bagli_degil" for e in obs.recent(20))
+    assert "YAZILAMADI" in cevap and _defter()[-1]["hafiza_durumu"] == "yazilamadi"
+    assert any(e.get("event") == "bot_hafiza_yazim_hatasi" and e.get("sinif") == "RuntimeError"
+               and e.get("neden") == "anahtar_yok" for e in obs.recent(20))
 
 
-def test_unut_hafiza_bagli_degilse_acik_soyler_ve_sinyalli(sandbox_state):
-    # Parça 1b-ön Görev 2 (2026-09-30): "hazır değil" dalı emekli — yöntem ölçüldü ve uygulandı (`bot_hafiza`);
-    # hafıza VERİLMEDİYSE mevcut "bağlı değil" dalına düşer (plan: `hafiza=None` → "bağlı değil").
+def test_unut_hafiza_verilmezse_gercek_sinif_anahtarsiz_unutulamadi(sandbox_state):
+    # Eski "bağlı değil" dalı emekli (G4 Görev 1): hafıza VERİLMEDİYSE gerçek sınıf; anahtar yoksa UNUTULAMADI.
     t = SahteTasiyici()
     cevap = bk.bota_sor("bekci", "unut: eski not", "telegram", "o", tasiyici=t, simdi=SIMDI)
-    assert t.cagrilar == [] and "henüz bağlı değil" in cevap and "hiçbir şey unutulmadı" in cevap
+    assert t.cagrilar == [] and cevap.startswith("UNUTULAMADI")
     s = _defter()[-1]
-    assert (s["tur"], s["hafiza_durumu"]) == ("unut", "bagli_degil")
+    assert (s["tur"], s["hafiza_durumu"]) == ("unut", "unutulamadi")
 
 
 def test_tasiyici_hatasi_defterde_ve_yukari_firlar(sandbox_state):
@@ -177,7 +185,7 @@ def test_hermes_tasiyici_istek_bicimi_ve_jetonsuz_hata(sandbox_state):
 
 def test_unut_olayi_yazilir(sandbox_state):
     bk.bota_sor("bekci", "Unut: eski not", "telegram", "o", tasiyici=SahteTasiyici(), simdi=SIMDI)
-    assert any(e.get("event") == "bot_hafiza_bagli_degil" and e.get("bot") == "bekci" for e in obs.recent(20))
+    assert any(e.get("event") == "bot_hafiza_unut_hatasi" and e.get("bot") == "bekci" for e in obs.recent(20))
 
 
 def test_hatirla_govdesi_hafizaya_scrub_ile_gider(sandbox_state):
@@ -384,7 +392,8 @@ def test_uretim_yolu_varsayilan_tasiyici_sonlu_sabit_zaman_asimi_gecirir(sandbox
     assert bk.bota_sor("bekci", "x", "pano", "o", simdi=SIMDI) == "tamam"
     z = gorulen["timeout"]
     assert isinstance(z, (int, float)) and not isinstance(z, bool) and math.isfinite(z) and z > 0
-    assert z == 300 == inspect.signature(bk.HermesTasiyici).parameters["zaman_asimi_s"].default
+    # G4 Görev 1: varsayılan ADLI sabitten okunur (çapraz bütçe çivisi aşağıda aynı sabiti okur); değer 300 DONUK.
+    assert z == 300 == bk.HERMES_ZAMAN_ASIMI_S == inspect.signature(bk.HermesTasiyici).parameters["zaman_asimi_s"].default
     assert gorulen["url"] == "http://127.0.0.1:8642/p/bekci/v1/chat/completions"
 
 
@@ -947,3 +956,178 @@ def test_hazir_degil_dali_emekli():
     import inspect
     kaynak = inspect.getsource(bk)
     assert "bot_unut_hazir_degil" not in kaynak and not hasattr(bk, "_UNUT_HAZIR_DEGIL")
+
+
+# ---- Parça 1b G4 Görev 1: üretim kablolaması + dönüş kaydı + modele giden scrub + bütçe çapraz çivisi ----------
+# Spec §3.4 (2026-09-30 düzeltmesi): Hermes `auto_retain` KAPALI — sohbet dönüşünü hafızaya YALNIZ `bota_sor` yazar,
+# scrub'lı ve etiketli. Hafıza yazımı CEVABI DÜŞÜRMEZ; defter `hafiza_durumu` doğruyu söyler.
+
+def _olay(ad):
+    return [e for e in obs.recent(50) if e.get("event") == ad]
+
+
+def test_sohbet_donusu_hafizaya_etiketli_yazilir_defter_yazildi(sandbox_state):
+    t, h = SahteTasiyici("rejim risk-on"), SahteHafiza()
+    assert bk.bota_sor("bekci", "durum?", "telegram", "tg-bekci-1", tasiyici=t, hafiza=h, simdi=SIMDI) \
+        == "rejim risk-on"
+    assert h.donusler == [("bekci", "durum?", "rejim risk-on", ("bot:bekci", "kanal:telegram", "sohbet_donusu"))]
+    assert h.yazilanlar == [] and h.unutulanlar == []
+    s = _defter()[-1]
+    assert (s["tur"], s["hafiza_durumu"]) == ("sohbet", "yazildi")
+
+
+@pytest.mark.parametrize("metin,arac,ek_etiketler,onek", [
+    ("3 kalem", 0, ("arac_siz_veri",), bk.UYARI_ARACSIZ),       # araçsız VERİ → etiket + önekli cevap hafızada
+    ("Getiri %2", None, ("arac_olculemedi",), bk.UYARI_OLCULEMEDI),  # sayı ölçülemedi → yalnız `arac_olculemedi`
+    ("Merhaba!", 0, (), None),                                  # araçsız ama verisiz → etiket yok
+    ("3 kalem", 2, (), None),                                   # araçlı veri → etiket yok
+])
+def test_donus_etiketleri_arac_isaretlerini_tasir_ve_onekli_cevap_yazilir(sandbox_state, metin, arac, ek_etiketler,
+                                                                           onek):
+    h = SahteHafiza()
+    cevap = bk.bota_sor("karne", "soru", "pano", "o", tasiyici=SayacliTasiyici(metin, arac), hafiza=h, simdi=SIMDI)
+    ((bot, mesaj, yazilan, etiketler),) = h.donusler
+    assert (bot, mesaj) == ("karne", "soru")
+    assert etiketler == ("bot:karne", "kanal:pano", "sohbet_donusu") + ek_etiketler
+    # Hafızaya giden cevap operatörün GÖRDÜĞÜ (önekli) metindir: uyarı hafızada da kalır.
+    assert yazilan == cevap == (metin if onek is None else f"{onek}\n{metin}")
+
+
+class _PatlayanDonus(SahteHafiza):
+    def __init__(self, hata):
+        super().__init__()
+        self.hata = hata
+
+    def donus_yaz(self, bot, mesaj, cevap, etiketler):
+        self.donusler.append((bot, mesaj, cevap, etiketler))
+        raise self.hata
+
+
+def _nedenli(neden, mesaj="hindsight gizli-metin-XYZ"):
+    hata = RuntimeError(mesaj)
+    hata.neden = neden
+    return hata
+
+
+@pytest.mark.parametrize("hata,sinif,neden", [
+    (_nedenli("http_503"), "RuntimeError", "http_503"),
+    (_nedenli("zaman_asimi"), "RuntimeError", "zaman_asimi"),
+    (_nedenli("anahtar_yok"), "RuntimeError", "anahtar_yok"),
+    (_nedenli("uydurma_neden"), "RuntimeError", "beklenmeyen"),    # kapalı küme DIŞI öznitelik geçmez
+    (ConnectionError("hindsight gizli-metin-XYZ"), "ConnectionError", "beklenmeyen"),  # işaretsiz istisna
+])
+def test_donus_hafiza_istisnasi_cevabi_dusurmez_yazilamadi_ve_olay(sandbox_state, hata, sinif, neden):
+    h = _PatlayanDonus(hata)
+    cevap = bk.bota_sor("bekci", "durum?", "telegram", "o", tasiyici=SahteTasiyici("rejim risk-on"), hafiza=h,
+                        simdi=SIMDI)
+    assert cevap == "rejim risk-on" and len(h.donusler) == 1
+    s = _defter()[-1]
+    assert (s["tur"], s["hafiza_durumu"], s["cevap"]) == ("sohbet", "yazilamadi", "rejim risk-on")
+    (olay,) = _olay("bot_hafiza_donus_hatasi")
+    assert set(olay) == {"ts", "level", "event", "bot", "kanal", "sinif", "neden"}
+    assert (olay["bot"], olay["kanal"], olay["sinif"], olay["neden"]) == ("bekci", "telegram", sinif, neden)
+    assert "gizli-metin" not in json.dumps(obs.recent(50))
+
+
+def test_donus_success_false_yazilamadi_ve_olay(sandbox_state):
+    cevap = bk.bota_sor("bekci", "durum?", "pano", "o", tasiyici=SahteTasiyici("tamam"),
+                        hafiza=SahteHafiza(donus_sonuc=False), simdi=SIMDI)
+    assert cevap == "tamam" and _defter()[-1]["hafiza_durumu"] == "yazilamadi"
+    (olay,) = _olay("bot_hafiza_donus_yazilamadi")
+    assert (olay["bot"], olay["kanal"]) == ("bekci", "pano")
+
+
+def test_kota_dolu_turda_donus_yazilmaz_atlandi(sandbox_state):
+    k = tuple(kadro.Bot(**{**b.__dict__, "gunluk_tavan": 1, "gunluk_tavan_neden": None})
+              if b.ad == "karne" else b for b in kadro.kadro_yukle())
+    h = SahteHafiza()
+    bk.bota_sor("karne", "1", "pano", "o", tasiyici=SahteTasiyici(), hafiza=h, simdi=SIMDI, kadro=k)
+    assert "kotam doldu" in bk.bota_sor("karne", "2", "pano", "o", tasiyici=SahteTasiyici(), hafiza=h, simdi=SIMDI,
+                                        kadro=k)
+    assert [d[1] for d in h.donusler] == ["1"]
+    s = _defter()[-1]
+    assert (s["tur"], s["hafiza_durumu"]) == ("kota_doldu", "atlandi")
+
+
+def test_hata_turunda_donus_yazilmaz_atlandi(sandbox_state):
+    h = SahteHafiza()
+    with pytest.raises(TimeoutError):
+        bk.bota_sor("bekci", "x", "telegram", "o", tasiyici=SahteTasiyici(hata=TimeoutError("zaman")), hafiza=h,
+                    simdi=SIMDI)
+    assert h.donusler == []
+    s = _defter()[-1]
+    assert (s["tur"], s["hafiza_durumu"]) == ("hata", "atlandi")
+
+
+@pytest.mark.parametrize("mesaj", ["hatırla: cuma toplantısı iptal", "unut: eski not"])
+def test_komut_turunda_donus_yazilmaz(sandbox_state, mesaj):
+    h = SahteHafiza()
+    bk.bota_sor("sef", mesaj, "pano", "o", tasiyici=SahteTasiyici(), hafiza=h, simdi=SIMDI)
+    assert h.donusler == [] and len(h.yazilanlar) + len(h.unutulanlar) == 1
+
+
+def test_modele_giden_mesaj_scrub_edilir(sandbox_state):
+    # Rol-1 hükmü (plan Global Constraints): operatörün yapıştırdığı sır DIŞ MODELE gitmez.
+    anahtar = "sk-or-v1-" + "d" * 64
+    t, h = SahteTasiyici("tamam"), SahteHafiza()
+    bk.bota_sor("sef", f"anahtarım {anahtar} bunu sakla", "pano", "o", tasiyici=t, hafiza=h, simdi=SIMDI)
+    ((_, giden, _),) = t.cagrilar
+    assert anahtar not in giden and giden == "anahtarım *** bunu sakla"
+    ((_, hafizaya, _, _),) = h.donusler
+    assert anahtar not in hafizaya and hafizaya == "anahtarım *** bunu sakla"
+
+
+def test_hafizaya_giden_cevap_da_scrub_edilir(sandbox_state):
+    # Model cevabı bir sırrı yankılayabilir; operatöre dönen metin değişmez ama HAFIZAYA giden maskelidir.
+    anahtar = "sk-or-v1-" + "9" * 64
+    h = SahteHafiza()
+    cevap = bk.bota_sor("sef", "x", "pano", "o", tasiyici=SahteTasiyici(f"anahtar {anahtar}"), hafiza=h, simdi=SIMDI)
+    assert anahtar in cevap
+    ((_, _, hafizaya, _),) = h.donusler
+    assert anahtar not in hafizaya and hafizaya == "anahtar ***"
+
+
+def test_hafiza_verilmezse_uretim_varsayilani_gercek_sinif_anahtarsiz_yazilamadi(sandbox_state, monkeypatch):
+    # Üretim yolu: `hafiza` VERİLMEZ → `bot_hafiza.HindsightHafiza()`. Testte credential kanalı kapalı (sandbox) →
+    # HTTP'den ÖNCE `anahtar_yok`; cevap düşmez, sessiz de kalınmaz. Ağa çıkılmadığı tuzakla ölçülür.
+    from meridian import bot_hafiza as bh
+    istekler = []
+
+    def urlopen(istek, timeout=None):
+        istekler.append(istek.full_url)
+        raise AssertionError("anahtarsız hafıza isteği atıldı")
+    monkeypatch.setattr(bh.urllib.request, "urlopen", urlopen)
+    assert bk.bota_sor("bekci", "durum?", "telegram", "o", tasiyici=SahteTasiyici("tamam"), simdi=SIMDI) == "tamam"
+    assert istekler == []
+    s = _defter()[-1]
+    assert (s["tur"], s["hafiza_durumu"]) == ("sohbet", "yazilamadi")
+    (olay,) = _olay("bot_hafiza_donus_hatasi")
+    assert (olay["sinif"], olay["neden"]) == ("RuntimeError", "anahtar_yok")
+
+
+def test_bagli_degil_dali_emekli():
+    # "bağlı değil" dalı artık ULAŞILAMAZ (hafıza verilmezse gerçek sınıf) — metni, olayı ve sabitleri iz bırakmaz.
+    import inspect
+    kaynak = inspect.getsource(bk)
+    assert "bot_hafiza_bagli_degil" not in kaynak and "bagli_degil" not in kaynak
+    assert not hasattr(bk, "_HAFIZA_BAGLI_DEGIL") and not hasattr(bk, "_UNUT_BAGLI_DEGIL")
+
+
+def test_hafiza_protokolu_donus_yazi_tasir():
+    import inspect
+    assert list(inspect.signature(bk.Hafiza.donus_yaz).parameters) == ["self", "bot", "mesaj", "cevap", "etiketler"]
+
+
+def test_hermes_zaman_asimi_sohbet_cagri_butcesini_kapsar():
+    # M-5 çapraz çivisi: taşıyıcı api_server'ı, Hermes'in bir model çağrısını en kötü `deneme × istek zaman aşımı`
+    # boyunca beklediğinden DAHA KISA bekleseydi, model hâlâ çalışırken taşıyıcı düşer ve operatör "cevap veremiyor"
+    # alırdı. Bütçe sabitleri üretecin TEK kaynağından okunur (paket değil — KAYNAKTAN yüklenir).
+    import inspect
+    import pathlib
+
+    from tests.conftest import betikten_modul_yukle
+    u = betikten_modul_yukle(pathlib.Path(__file__).resolve().parent.parent / "ops/sohbet_profili_uret.py",
+                             "sohbet_profili_uret_v593")
+    varsayilan = inspect.signature(bk.HermesTasiyici).parameters["zaman_asimi_s"].default
+    assert varsayilan == bk.HERMES_ZAMAN_ASIMI_S
+    assert varsayilan >= u.SOHBET_API_DENEME * u.SOHBET_ISTEK_ZAMAN_ASIMI_SN
