@@ -95,7 +95,8 @@ yani uydurma riski en yüksek — cevapları seçerek elerdi. Kaç satırda hang
 | `kota.dolu_pencere_n` / `dolu_pencere_pay` | `kota_bugun ≥ kart tavanı` olan satır sayısı / payı. Kartta `kota_gunluk_tavan` yoksa `None` + `dolu_pencere_neden` |
 | `kota.llm_dustu_n` | Zincirin hiçbir ayağının cevap vermediği satırlar |
 | `kota.olculemeyen_n` | `kota_bugun` `None` olan satırlar (telemetri halkası bugünün içinde dolmuş) |
-| `oneri` | `approvals.jsonl`de `kaynak=sohbet` satırları: `n`/`onaylanan`/`reddedilen`/`bekleyen` (tanı). Defter yoksa hepsi `None` + `neden` |
+| `oneri` | `approvals.jsonl`de `kaynak=sohbet` satırlarının **PANO** kovası: `n`/`onaylanan`/`reddedilen`/`bekleyen` (tanı). `oturum` alanı olmayan (G3 öncesi) ya da boş oturumlu satır pano sayılır. Defter yoksa hepsi `None` + `neden` |
+| `oneri_bot` | Aynı şekil, **MCP bot** kovası: `oturum` alanı `mcp:` ile başlayan öneri satırları (konuşan filo G3, 2026-09-30). Bot `oneri_yaz`ı sohbetin aynı gövdesiyle çağırdığı için satır `kaynak=sohbet` taşır — iki yazıcıyı `kaynak` değil `oturum` ayırır. Pano sayısına **girmez**; kartın öneri ölçüsü pano sohbetinindir. Karar satırları (`decision`) `oturum` taşımaz, kimlikle önerinin kovasına bağlanır. Pano gelen kutusu bot önerilerini göstermeye devam eder — ayrım yalnız bu sayaçtadır |
 | `model_kirilimi` | Künye → `{n, uydurma_oran, uydurma_payda, sema_disi_oran, tur_n}` |
 | `olculemeyen` | Ölçülemeyen her şeyin adı ve nedeni (uydurma yasağı) |
 | `beyan` | Betiğin ne yaptığı / ne yapmadığı — rapora da basılır |

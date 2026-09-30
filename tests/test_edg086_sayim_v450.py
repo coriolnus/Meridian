@@ -758,6 +758,72 @@ def test_oneri_sayimi_onay_defterinden_okunur(tmp_path):
     sonuc = s.calistir(defter=defter, kart=KART_YOLU, onaylar=onaylar)
     assert sonuc["oneri"] == {"n": 3, "onaylanan": 1, "reddedilen": 1, "bekleyen": 1,
                               "neden": None}, sonuc["oneri"]
+    # Bot satırı yokken bot kovası ÖLÇÜLMÜŞ SIFIRDIR (defter okundu), `None` değil.
+    assert sonuc["oneri_bot"] == {"n": 0, "onaylanan": 0, "reddedilen": 0, "bekleyen": 0,
+                                  "neden": None}, sonuc["oneri_bot"]
+
+
+def _oneri(ts: str, kimlik: str, **ek) -> dict:
+    """`sohbet._arac_oneri_yaz`ın yazdığı ÖNERİ satırı şekli (`oturum` yalnız verilirse eklenir)."""
+    return {"ts": ts, "id": kimlik, "kaynak": "sohbet", "tur": "not", "hedef": "",
+            "gerekce": "g", "durum": "bekliyor", **ek}
+
+
+def _karar(kimlik: str, karar: str) -> dict:
+    """`api.api_approve`ın yazdığı KARAR satırı şekli — `oturum` TAŞIMAZ, kimlikle bağlanır."""
+    return {"id": kimlik, "decision": karar, "reason": "", "ts": "..."}
+
+
+def test_mcp_bot_onerisi_pano_sayimina_GIRMEZ_oneri_bot_alaninda_sayilir(tmp_path):
+    """G3 (konuşan filo): MCP botu `oneri_yaz`ı sohbetin AYNI gövdesiyle çağırır ve satır
+    `kaynak: sohbet` + `oturum: mcp:<bot>` taşır. Kartın öneri ölçüsü PANO sohbetinindir; bot
+    önerisi oraya karışsaydı "pano sohbeti kaç öneri yazdı" sorusu sessizce şişerdi.
+
+    Kovalar ASİMETRİKTİR (pano 3/1/1/1, bot 2/0/1/1): simetrik sayılar kovaları YER DEĞİŞTİREN bir
+    mutasyonu yeşil bırakırdı. `oturum` alanı OLMAYAN eski satır ve `None`/boş oturum PANO sayılır
+    (geriye uyum: G3 öncesi defterde bot yazıcısı yoktu). `mcp:` önek değildir diye ortasında
+    geçen oturum da PANO'dur. Pencere süzgeci İKİ kovaya da uygulanır."""
+    s = _sayim()
+    defter = _defter_yaz(tmp_path / "sohbet.jsonl", _pk_defteri())
+    onaylar = tmp_path / "approvals.jsonl"
+    satirlar = [
+        _oneri("2026-09-10T10:01:00+00:00", "SO-20260910T100100Z-1",
+               oturum="pano-2026-09-10-ab12"),                               # pano · onay
+        _oneri("2026-09-10T10:02:00+00:00", "SO-20260910T100200Z-2"),        # eski satır · ret
+        _oneri("2026-09-10T10:03:00+00:00", "SO-20260910T100300Z-3",
+               oturum="pano-mcp:yanki"),                                     # pano · bekliyor
+        _oneri("2026-09-10T10:04:00+00:00", "SO-20260910T100400Z-4",
+               oturum="mcp:sef"),                                            # bot · ret
+        _oneri("2026-09-10T10:05:00+00:00", "SO-20260910T100500Z-5",
+               oturum="mcp:karne"),                                          # bot · bekliyor
+        _oneri("2026-09-01T10:00:00+00:00", "SO-20260901T100000Z-6",
+               oturum="mcp:bekci"),                                          # bot · PENCERE DIŞI
+        _oneri("2026-09-01T10:00:01+00:00", "SO-20260901T100001Z-7",
+               oturum=None),                                                 # pano · PENCERE DIŞI
+        _karar("SO-20260910T100100Z-1", "approve"),
+        _karar("SO-20260910T100200Z-2", "reject"),
+        _karar("SO-20260910T100400Z-4", "reject"),
+        _karar("SO-20260901T100000Z-6", "approve"),
+        _karar("rec:baska-uretici", "approve"),
+    ]
+    onaylar.write_text("".join(json.dumps(r) + "\n" for r in satirlar), encoding="utf-8")
+
+    sonuc = s.calistir(defter=defter, kart=KART_YOLU, onaylar=onaylar,
+                       baslangic="2026-09-10T00:00Z")
+    assert sonuc["oneri"] == {"n": 3, "onaylanan": 1, "reddedilen": 1, "bekleyen": 1,
+                              "neden": None}, sonuc["oneri"]
+    assert sonuc["oneri_bot"] == {"n": 2, "onaylanan": 0, "reddedilen": 1, "bekleyen": 1,
+                                  "neden": None}, sonuc["oneri_bot"]
+
+    # Pencere süzgeci İKİ kovada da çalışıyor: pencere verilmezse iki eski satır da sayılır.
+    tum = s.calistir(defter=defter, kart=KART_YOLU, onaylar=onaylar)
+    assert (tum["oneri"]["n"], tum["oneri_bot"]["n"], tum["oneri_bot"]["onaylanan"]) == (4, 3, 1)
+
+    # RAPORDA AYRI SATIR: pano satırı pano sayısını, bot satırı bot sayısını taşır.
+    md = s.markdown_uret(sonuc)
+    assert "- öneri (tanı): n=3 · onaylanan=1 · reddedilen=1 · bekleyen=1" in md, md
+    assert ("- öneri — MCP botları (tanı; pano sayımına GİRMEZ): n=2 · onaylanan=0 · "
+            "reddedilen=1 · bekleyen=1") in md, md
 
 
 def test_onay_defteri_yoksa_oneri_None_ve_NEDEN(tmp_path):
@@ -765,6 +831,51 @@ def test_onay_defteri_yoksa_oneri_None_ve_NEDEN(tmp_path):
     defter = _defter_yaz(tmp_path / "sohbet.jsonl", _pk_defteri())
     sonuc = s.calistir(defter=defter, kart=KART_YOLU)
     assert sonuc["oneri"]["n"] is None and sonuc["oneri"]["neden"], sonuc["oneri"]
+    assert sonuc["oneri_bot"]["n"] is None and sonuc["oneri_bot"]["neden"], sonuc["oneri_bot"]
+
+
+def test_GERCEK_iki_yazici_iki_kovaya_ayrisir(sandbox_state, tmp_path):
+    """TÜRETME + AYRIŞMA ÇİVİSİ (tek-kaynak yasası). Sayacın bot öneki (`mcp:`) ile
+    `meridian.mcp_server.serve`in yazdığı oturum bağlamı AYRI yerlerde yaşar; sayaç `mcp_server`ı
+    ithal etmez (araç kaydını kurmak sayaca `sohbet` dışı bir bağımlılık ekler). Bu çivi iki
+    tarafı GERÇEK yazıcılardan bağlar: `serve(bot=…)` üzerinden `oneri_yaz` ve pano yolunun
+    varsayılan oturumu (`sohbet.gunun_oturumu`) ile aynı gövde. MCP tarafı öneki değiştirirse
+    satır pano kovasına düşer ve çivi öter.
+
+    Bot SEÇİMİ KADRODAN türer (ad donuk yazılmaz): `oneri_yaz`ı kadrosunda taşıyan aktif bot
+    yoksa bot kovasının üreticisi yoktur — o durumda sessiz atlama değil KIRMIZI (ayrımın
+    varlık gerekçesi düşmüştür, yeniden değerlendirilmeli)."""
+    import io
+
+    from meridian import config, kadro, store
+    from meridian import mcp_server as ms
+
+    yazan = next((b for b in kadro.aktif_botlar() if "oneri_yaz" in b.araclar), None)
+    assert yazan is not None, "kadroda `oneri_yaz` taşıyan aktif bot YOK — bot kovası üreticisiz"
+
+    istek = {"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+             "params": {"name": "oneri_yaz", "arguments": {"tur": "not", "gerekce": "bot"}}}
+    cikis = io.StringIO()
+    ms.serve(io.StringIO(json.dumps(istek) + "\n"), cikis, bot=yazan.ad)
+    (yanit,) = [json.loads(x) for x in cikis.getvalue().splitlines() if x.strip()]
+    assert yanit["result"]["isError"] is False, yanit
+
+    sohbet.ARACLAR["oneri_yaz"].cagir({"tur": "not", "gerekce": "pano"},
+                                      {"oturum": sohbet.gunun_oturumu()})
+
+    oneriler = [r for r in store.read_jsonl(sohbet.ONAY_DEFTERI)
+                if isinstance(r, dict) and r.get("kaynak") == sohbet.CAGRI_KIND]
+    bot_satiri = next(r for r in oneriler if r.get("gerekce") == "bot")
+    store.append_jsonl(sohbet.ONAY_DEFTERI, _karar(bot_satiri["id"], "approve"))
+
+    s = _sayim()
+    defter = _defter_yaz(tmp_path / "sohbet.jsonl", _pk_defteri())
+    sonuc = s.calistir(defter=defter, kart=KART_YOLU,
+                       onaylar=config.STATE / sohbet.ONAY_DEFTERI)
+    assert sonuc["oneri"] == {"n": 1, "onaylanan": 0, "reddedilen": 0, "bekleyen": 1,
+                              "neden": None}, (sonuc["oneri"], oneriler)
+    assert sonuc["oneri_bot"] == {"n": 1, "onaylanan": 1, "reddedilen": 0, "bekleyen": 0,
+                                  "neden": None}, (sonuc["oneri_bot"], oneriler)
 
 
 def test_model_kirilimi_kunye_basina_ayrilir(tmp_path):
