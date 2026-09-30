@@ -903,6 +903,26 @@ def test_I10c_vekil_dropin_53_u_EZMEZ():
         assert s != "LoadCredential=", "boş LoadCredential ataması 53'ün kimliklerini SIFIRLAR"
 
 
+def test_I10d_HAFIZA_kimligi_ve_tabani_secrets_TEK_KAYNAK_api_TAKMA_AD():
+    """TEK KAYNAK TAŞINDI (Parça 1b-ön Görev 2, 2026-09-30): `bot_hafiza` kiracı anahtarının adına ve Hindsight
+    tabanına `api`yi (FastAPI uygulaması) İTHAL ETMEDEN ulaşmalı; kanonik tanım `secrets`e indi, `api` onlara
+    TAKMA AD verir. İkinci bir literal (ya da ikinci bir türetme) yazılırsa iki kopya sessizce ayrışır — okuyucu
+    dosyayı bulamaz, kanal SESSİZCE ölür (I10b'nin sınıfı). Kimlik (`is`) + kaynak biçimi (AST: atama değeri,
+    aynı adlı secrets_mod özniteliği) birlikte ölçülür; eşitlik tek başına kopyayı yakalamaz."""
+    import ast
+    from meridian import api, secrets as s
+    assert api.HAFIZA_KRED_ADI is s.HAFIZA_KRED_ADI and s.HAFIZA_KRED_ADI == VEKIL_ADI
+    assert api.HAFIZA_ANAHTAR_ONEKI is s.HAFIZA_ANAHTAR_ONEKI
+    assert api.HAFIZA_TABAN_URL is s.HAFIZA_TABAN_URL
+    agac = ast.parse((REPO / "meridian" / "api.py").read_text(encoding="utf-8"))
+    degerler = {t.id: d.value for d in agac.body if isinstance(d, ast.Assign)
+                for t in d.targets if isinstance(t, ast.Name)}
+    for ad in ("HAFIZA_KRED_ADI", "HAFIZA_ANAHTAR_ONEKI", "HAFIZA_TABAN_URL"):
+        v = degerler[ad]
+        assert isinstance(v, ast.Attribute) and v.attr == ad and isinstance(v.value, ast.Name) \
+            and v.value.id == "secrets_mod", f"api.{ad} secrets'e takma ad değil"
+
+
 def test_I11_betik_HAFIZA_dropinini_KAYNAKSIZ_KURMAZ(tmp_path):
     """MOTORU DÜŞÜREN SINIF. `LoadCredential=` kaynağı yoksa birim HİÇ başlamaz — yani
     54-hafiza-credential.conf'u `/etc/hindsight/creds/...` üretilmeden kurmak MOTORU kapatır.
