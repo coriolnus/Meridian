@@ -3360,8 +3360,17 @@ def config_ensure_integrations() -> dict:
     # MCP sunucusu
     servers = cfg.setdefault("mcp_servers", {}) if isinstance(cfg.get("mcp_servers", {}), dict) else {}
     cfg["mcp_servers"] = servers
-    if servers.get("meridian") != desired_mcp:
-        servers["meridian"] = desired_mcp
+    # OPERATÖRÜN `enabled` KARARI KORUNUR (TSK-257; K-1, 2026-09-30: varsayılan profilde Meridian MCP
+    # KAPALI). Öz-onarım ALANLARI (command/args/env/tools) onarır, yetenek AÇMAZ ya da KAPATMAZ: mevcut
+    # girdide anahtar varsa değeri aynen hedefe taşınır, yoksa eklenmez. Kıyas bu KORUNMUŞ hedefle
+    # yapılır — enabled'sız hedefle kıyas K-1 girdisini her turda 'farklı' bulur, girdiyi ezer ve
+    # dosyayı her standby turunda yeniden yazardı (canlıda tek engel learn'ün yazma yasağıydı).
+    mevcut_mcp = servers.get("meridian")
+    hedef_mcp = desired_mcp
+    if isinstance(mevcut_mcp, dict) and "enabled" in mevcut_mcp:
+        hedef_mcp = {"enabled": mevcut_mcp["enabled"], **desired_mcp}
+    if mevcut_mcp != hedef_mcp:
+        servers["meridian"] = hedef_mcp
         changed.append("mcp_servers.meridian")
     # koruma hook'u (matcher: yazma/terminal araçları)
     desired_hook = [{"matcher": "terminal|write_file|patch|edit|apply_patch",
