@@ -3324,6 +3324,13 @@ def _repo_root() -> str:
 _HERMES_EVET = frozenset({"true", "1", "yes", "on"})
 _HERMES_HAYIR = frozenset({"false", "0", "no", "off"})
 
+# `mcp_servers.meridian`in TAŞIMA anahtarları — YÖNETİLEN alan (TSK-258 tur 2, Rol-1 kararı): öz-onarımın
+# güvencesi girdinin YEREL stdio sunucumuzu göstermesidir. Ölçüm (yerel 0.18.2 `tools/mcp_tool.py`): stdio
+# yerine HTTP'yi seçtiren TEK anahtar `url` (`MCPServerTask._is_http`: `"url" in config` — `command` o
+# zaman yok sayılır); `transport` yalnız sse/streamable seçer, `headers` yalnız HTTP isteğine gider — ikisi
+# `url` varken anlam taşır, Rol-1 kararıyla üçü birlikte yönetilir. Listenin TEK kaynağı bu sabittir.
+_MCP_TASIMA_ANAHTARLARI = ("url", "transport", "headers")
+
 
 def _hermes_mcp_acik_mi(girdi) -> bool:
     """`mcp_servers.<ad>` girdisini Hermes'in okuyacağı gibi okur: sözlük değilse kapalı (Hermes
@@ -3409,10 +3416,15 @@ def config_ensure_integrations() -> dict:
     # `resources/prompts` kanoniğe çekilir; girdinin öteki anahtarları (`enabled` — K-1 2026-09-30,
     # `timeout`, `tools.include` araç daraltması …) aynen kalır, `enabled` hiçbir yolda EKLENMEZ. Kıyas
     # BİRLEŞTİRİLMİŞ hedefle yapılır: yönetilen alan farkı yoksa yazım YOK (churn yok). Sözlük olmayan
-    # girdi (null/liste — Hermes onu atlar) kanonik girdiyle değiştirilir.
+    # girdi (null/liste — Hermes onu atlar) kanonik girdiyle değiştirilir. TAŞIMA anahtarları
+    # (`_MCP_TASIMA_ANAHTARLARI`) da yönetilir: varsa KALDIRILIR — girdi başka bir uca yönelmesin.
     mevcut_mcp = servers.get("meridian")
+    tasima_kaldirilan = []                         # olay yazım başarısına bağlı (aşağıda)
     if isinstance(mevcut_mcp, dict):
         hedef_mcp = dict(mevcut_mcp)
+        tasima_kaldirilan = [k for k in _MCP_TASIMA_ANAHTARLARI if k in hedef_mcp]
+        for k in tasima_kaldirilan:
+            del hedef_mcp[k]
         hedef_mcp.update({k: desired_mcp[k] for k in ("command", "args", "env")})
         araclar = dict(mevcut_mcp["tools"]) if isinstance(mevcut_mcp.get("tools"), dict) else {}
         araclar.update(desired_mcp["tools"])
@@ -3506,6 +3518,13 @@ def config_ensure_integrations() -> dict:
                     detail="yerel ajan config'indeki model adı Google listesinden kalkmış (üretim "
                            "404 sınıfı) — sabit alias'a taşındı; rol korundu (flash→flash-latest, "
                            "pro→pro-latest)")
+        if tasima_kaldirilan:
+            # YASA-6 OKUYUCU: pano olay akışı (events.jsonl) + operatör teşhisi. Yalnız ANAHTAR ADLARI —
+            # `url`/`headers` DEĞERİ kimlik bilgisi taşıyabilir, basılmaz. Olay BAŞARILI yazımdan SONRA
+            # (göç olayıyla aynı ilke: yazılamayan düzeltmeyi "düzeltildi" diye olaylamak uydurmadır).
+            obs.warn("hermes_mcp_yonetilen_alan_duzeltildi", anahtarlar=tasima_kaldirilan,
+                     detail="mcp_servers.meridian taşıma anahtarları kaldırıldı — girdi yerel stdio "
+                            "sunucusuna döndü (url varken Hermes command'ı yok sayar)")
         obs.log("agent_integrations_synced", changed=changed)
         return {"ok": True, "changed": changed}
     except Exception as e:
@@ -3526,8 +3545,12 @@ def integrations_status() -> dict:
         _mcp_bolumu = cfg.get("mcp_servers")
         out["mcp"] = _hermes_mcp_acik_mi(
             _mcp_bolumu.get("meridian") if isinstance(_mcp_bolumu, dict) else None)
-        out["guard_hook"] = any("meridian-guard" in (h.get("command") or "")
-                                for h in (cfg.get("hooks", {}).get("pre_tool_call") or []))
+        # guard çipi öz-onarımla AYNI tanımı kullanır (`_guard_girdisi_mi`, tek kaynak — TSK-258 tur 2):
+        # alt-dizge eşleşmesi `/tmp/meridian-guard.sh.bak` gibi başka bir dosyayı da "var" sayıyordu.
+        _kanca_bolumu = cfg.get("hooks")
+        _kancalar = _kanca_bolumu.get("pre_tool_call") if isinstance(_kanca_bolumu, dict) else None
+        out["guard_hook"] = (any(_guard_girdisi_mi(h) for h in _kancalar)
+                             if isinstance(_kancalar, list) else False)
         out["prompt_cache"] = (cfg.get("prompt_caching") or {}).get("cache_ttl")
         fb = cfg.get("fallback_providers") or []
         out["fallback"] = f"{fb[0]['provider']}·{fb[0]['model']}" if fb else None

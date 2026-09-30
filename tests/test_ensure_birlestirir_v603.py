@@ -30,14 +30,23 @@ SÖZLEŞME (bu dosya çiviler):
   K3  Kanca: guard kanonik + operatör kancaları → YAZIM YOK.
   S1  Çip: `integrations_status()["mcp"]` = girdi var ∧ Hermes'in `enabled` yorumu.
   S2  Çip: dağıtılan `deploy/hermes/config.yaml` (K-1) → `mcp` False.
+  T1  (Tur 2, Rol-1 kararı) TAŞIMA anahtarları (`hermes._MCP_TASIMA_ANAHTARLARI`) YÖNETİLEN alandır:
+      varsa KALDIRILIR, `hermes_mcp_yonetilen_alan_duzeltildi` uyarısı yalnız ANAHTAR ADLARIYLA
+      yazılır (değer basılmaz); operatörün öteki anahtarları korunur; ikinci çağrı yazmaz. Ölçüm
+      (yerel 0.18.2): stdio yerine HTTP'yi seçtiren TEK anahtar `url`dur (`MCPServerTask._is_http`);
+      `transport` (sse/streamable) ve `headers` yalnız `url` varken okunur — Rol-1 üçünü de yönetir.
+  G1  (Tur 2) Guard çipi öz-onarımla AYNI tanımı kullanır (`_guard_girdisi_mi`, tek kaynak):
+      guard'a benzeyen başka yol "var" sayılmaz; sözlük olmayan kanca girdisi öteki alanları düşürmez.
 
 Mutasyon beklentisi: birleştirme yerine bütün-değiştirme → B1 kırmızı; kanca listesi
 bütün-değiştirme → K1/K2 kırmızı; çip `enabled`ı okumazsa → S1/S2 kırmızı; kıyas eski
-(birleştirilmemiş) hedefle → B2 kırmızı.
+(birleştirilmemiş) hedefle → B2 kırmızı; taşıma anahtarı kaldırılmazsa → T1 kırmızı; guard çipi
+alt-dizge eşleşmesine dönerse → G1 kırmızı.
 """
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import sys
 
@@ -268,3 +277,77 @@ def test_S2_dagitim_config_i_K1_ile_cip_KAPALI(tmp_path, monkeypatch):
     st = hermes.integrations_status()
     assert st["mcp"] is False, "K-1 ile kapalı MCP panoda AÇIK görünüyor"
     assert st["guard_hook"] is True, "guard çipi bu değişiklikten etkilenmemeliydi"
+
+
+# ----------------------------------------------------------------------------- T1 (Tur 2)
+
+URL_DEGERI = "http://deger-basilmaz.invalid/mcp"
+BASLIK_DEGERI = "Bearer deger-basilmaz-kanarya"
+
+
+def _olaylar(sandbox_state, ad: str) -> list:
+    yol = sandbox_state / "events.jsonl"
+    if not yol.exists():
+        return []
+    return [json.loads(l) for l in yol.read_text().splitlines()
+            if l.strip() and json.loads(l).get("event") == ad]
+
+
+def test_T1_tasima_anahtarlari_KALDIRILIR_olay_yalniz_ADLARLA(tmp_path, monkeypatch, sandbox_state):
+    """Öz-onarımın güvencesi: `mcp_servers.meridian` YEREL stdio sunucumuzu gösterir. `url` varken
+    Hermes `command`ı yok sayıp HTTP'ye bağlanır (yerel 0.18.2 ölçümü) — girdi başka bir uca
+    yönelmiş olur. Taşıma anahtarları kaldırılır; operatörün öteki kararları kalır."""
+    yol = _config_kur(tmp_path, monkeypatch, {
+        "model": {"provider": "gemini"},
+        "mcp_servers": {"meridian": {"enabled": False, **BAYAT, "timeout": 30,
+                                     "url": URL_DEGERI, "transport": "http",
+                                     "headers": {"Authorization": BASLIK_DEGERI}}},
+    })
+    out = hermes.config_ensure_integrations()
+    assert out["ok"] is True and "mcp_servers.meridian" in out["changed"]
+    girdi = _oku(yol)["mcp_servers"]["meridian"]
+    kalan = [k for k in ("url", "transport", "headers") if k in girdi]
+    assert kalan == [], f"taşıma anahtarları kaldırılmadı: {kalan}"
+    assert girdi.get("enabled") is False and girdi.get("timeout") == 30, (
+        f"operatörün öteki anahtarları korunmadı: {sorted(girdi)}")
+    _kanonik_komut_alanlari(girdi)
+    ev = _olaylar(sandbox_state, "hermes_mcp_yonetilen_alan_duzeltildi")
+    assert len(ev) == 1, f"düzeltme olayı tek kez yazılmadı: {len(ev)}"
+    assert ev[0].get("anahtarlar") == ["url", "transport", "headers"], ev[0].get("anahtarlar")
+    ham = (sandbox_state / "events.jsonl").read_text()
+    assert URL_DEGERI not in ham and BASLIK_DEGERI not in ham, "olay anahtar DEĞERİ bastı"
+    once = _parmak_izi(yol)
+    out2 = hermes.config_ensure_integrations()
+    assert out2["ok"] is True and out2["changed"] == [], f"ikinci çağrı yine yazdı: {out2['changed']}"
+    assert _parmak_izi(yol) == once
+    assert len(_olaylar(sandbox_state, "hermes_mcp_yonetilen_alan_duzeltildi")) == 1, (
+        "fark yokken olay yeniden yazıldı")
+
+
+def test_T1b_tasima_anahtari_sabiti_TEK_KAYNAK():
+    """Liste tek sabitte yaşar; `url` (Hermes'in HTTP seçicisi) mutlaka içinde."""
+    assert hermes._MCP_TASIMA_ANAHTARLARI == ("url", "transport", "headers")
+
+
+# ----------------------------------------------------------------------------- G1 (Tur 2)
+
+@pytest.mark.parametrize("komut,beklenen", [
+    ("/tmp/meridian-guard.sh.bak", False),          # benzer ad, başka dosya
+    ("/tmp/meridian-guard.sh", False),              # `ops/` altında değil
+    ("/opt/meridian/ops/meridian-guard.sh", True),
+    ("/x/ops/meridian-guard.sh --kati", True),      # ilk sözcük guard
+], ids=["bak_uzantili", "ops_disi", "gercek_guard", "argumanli_guard"])
+def test_G1_guard_cipi_ozonarimla_AYNI_tanimi_kullanir(tmp_path, monkeypatch, komut, beklenen):
+    _config_kur(tmp_path, monkeypatch, {"hooks": {"pre_tool_call": [{"command": komut}]}})
+    assert hermes.integrations_status()["guard_hook"] is beklenen
+    assert hermes._guard_girdisi_mi({"command": komut}) is beklenen, "iki tanım ayrıştı"
+
+
+def test_G1b_sozluk_olmayan_kanca_girdisi_OTEKI_alanlari_dusurmez(tmp_path, monkeypatch):
+    _config_kur(tmp_path, monkeypatch, {
+        "hooks": {"pre_tool_call": ["dizge-girdi", {"command": "/opt/meridian/ops/meridian-guard.sh"}]},
+        "prompt_caching": {"cache_ttl": "1h"},
+    })
+    st = hermes.integrations_status()
+    assert st["guard_hook"] is True
+    assert st["prompt_cache"] == "1h", "kanca satırındaki çökme öteki alanları düşürdü"
