@@ -46,13 +46,21 @@ SÖZLEŞME (bu dosya çiviler):
   M3  (Tur 3) Olaylar YALNIZ başarılı yazımdan sonra: yazıcı OSError fırlatınca düzeltme olayları YOK.
   M2  (Tur 3) Guard kimliği Hermes'in ayrıştırıcısıyla (`shlex.split(os.path.expanduser(...))`);
       kanonik guard komutu `shlex.quote`lu → boşluklu kökte kanonik girdi KENDİNİ tanır.
+  N1  (Tur 4, Rol-1: Important — K-1 DEĞİŞMEZİ: öz-onarım sonrası varsayılan profil ancak `enabled`
+      bool `True` ise açıktır) `True` DEĞİLKEN Hermes'in AÇIK okuduğu değer (`None`, `0`, `2`, `[]`,
+      `"maybe"`, tırnaklı `"true"` …) dağıtılan varsayılana çekilir + `neden: belirsiz_deger` (değer
+      basılmaz, yalnız tür adı). Hermes'in KAPALI okudukları (`False`, `"false"`, `"off"`, `"0"` …) ve
+      bool `True` AYNEN kalır.
+  N2  (Tur 4) Tip-katı kıyasta kimlik kısayolu: `.nan` taşıyan ek anahtar churn üretmez.
+  N3  (Tur 4) Varsayılan okunurken `UnicodeDecodeError`/bozuk YAML öz-onarımı İPTAL ETMEZ → `False` + uyarı.
 
 Mutasyon beklentisi: birleştirme yerine bütün-değiştirme → B1 kırmızı; kanca listesi
 bütün-değiştirme → K1/K2 kırmızı; çip `enabled`ı okumazsa → S1/S2 kırmızı; kıyas eski
 (birleştirilmemiş) hedefle → B2 kırmızı; taşıma anahtarı kaldırılmazsa → T1 kırmızı; guard çipi
 alt-dizge eşleşmesine dönerse → G1 kırmızı; varsayılan sabit `False`a dönerse → E1 türetme
 kırmızı; kıyas `==`e dönerse → M1 kırmızı; olay yazımdan önce basılırsa → M3 kırmızı; `split()`e
-dönerse → M2 kırmızı.
+dönerse → M2 kırmızı; `enabled` tip/değer denetimi kaldırılırsa (yalnız anahtar varlığı) → N1
+kırmızı; kimlik kısayolu kalkarsa → N2 kırmızı; `ValueError` ailesi yakalanmazsa → N3 kırmızı.
 """
 from __future__ import annotations
 
@@ -489,3 +497,81 @@ def test_M2_bosluklu_kokte_kanonik_guard_KENDINI_tanir_ve_yazim_tekrarlanmaz(tmp
     assert out2["changed"] == [], f"guard kendini tanımadı, yeniden eklendi: {out2['changed']}"
     assert _parmak_izi(yol) == once
     assert len(_oku(yol)["hooks"]["pre_tool_call"]) == 1
+
+
+# ----------------------------------------------------------------------------- N1 (Tur 4)
+
+@pytest.mark.parametrize("deger", [None, 0, 2, [], "maybe", "true", "yes"],
+                         ids=["null", "int_0", "int_2", "bos_liste", "dizge_maybe", "dizge_true", "dizge_yes"])
+def test_N1_hermesin_ACIK_okudugu_belirsiz_deger_varsayilana_cekilir(tmp_path, monkeypatch, sandbox_state, deger):
+    """K-1 değişmezi (Rol-1, Tur 4): öz-onarım sonrası varsayılan profil YALNIZ bool `True` ile açık.
+    Hermes (yerel 0.18.2 `_parse_boolish`, varsayılan True) bu değerlerin hepsini AÇIK okur: `None`/int/
+    liste/tanınmayan dizge uyarıyla varsayılana düşer; tırnaklı `"true"/"yes"` açık okunur ama bool
+    `True` DEĞİLDİR (YAML 1.1'de tırnaksız `yes/on/true` zaten bool `True` ayrıştırılır — ölçüldü)."""
+    yol = _config_kur(tmp_path, monkeypatch, {"model": {"provider": "gemini"},
+                                              "mcp_servers": {"meridian": {"enabled": deger, **BAYAT}}})
+    assert hermes._hermes_mcp_acik_mi({"enabled": deger}) is True, "önkoşul: Hermes bu değeri AÇIK okumalı"
+    out = hermes.config_ensure_integrations()
+    assert out["ok"] is True and "mcp_servers.meridian" in out["changed"]
+    girdi = _oku(yol)["mcp_servers"]["meridian"]
+    assert girdi["enabled"] is False, f"belirsiz değer korundu → Hermes AÇIK sayar: {girdi['enabled']!r}"
+    assert list(girdi)[0] == "enabled", "anahtar yerinde değiştirilmeliydi (sıra korunur)"
+    ev = _olaylar(sandbox_state, "hermes_mcp_enabled_eklendi")
+    assert len(ev) == 1 and ev[0].get("neden") == "belirsiz_deger", ev
+    assert ev[0].get("eski_tur") == type(deger).__name__
+    assert set(ev[0]) <= {"ts", "level", "event", "enabled", "neden", "eski_tur", "detail"}, (
+        f"olay beklenmeyen alan taşıyor (değer sızabilir): {sorted(ev[0])}")
+    if isinstance(deger, str):
+        assert deger not in json.dumps(ev[0], ensure_ascii=False), "olay DEĞERİ bastı"
+    once = _parmak_izi(yol)
+    out2 = hermes.config_ensure_integrations()
+    assert out2["changed"] == [] and _parmak_izi(yol) == once
+    assert len(_olaylar(sandbox_state, "hermes_mcp_enabled_eklendi")) == 1
+
+
+@pytest.mark.parametrize("deger", [False, "false", "off", "no", "0", True],
+                         ids=["false", "dizge_false", "dizge_off", "dizge_no", "dizge_0", "true"])
+def test_N1b_hermesin_KAPALI_okudugu_ve_bool_True_AYNEN_kalir(tmp_path, monkeypatch, sandbox_state, deger):
+    yol = _config_kur(tmp_path, monkeypatch, {"model": {"provider": "gemini"},
+                                              "mcp_servers": {"meridian": {"enabled": deger, **BAYAT}}})
+    assert hermes.config_ensure_integrations()["ok"] is True
+    girdi = _oku(yol)["mcp_servers"]["meridian"]
+    assert type(girdi["enabled"]) is type(deger) and girdi["enabled"] == deger
+    assert _olaylar(sandbox_state, "hermes_mcp_enabled_eklendi") == []
+
+
+# ----------------------------------------------------------------------------- N2 (Tur 4)
+
+def test_N2_nan_tasiyan_ek_anahtar_CHURN_uretmez(tmp_path, monkeypatch):
+    """`float('nan') != float('nan')`: kimlik kısayolu olmadan tip-katı kıyas `.nan`lı girdiyi her
+    turda "farklı" bulur → her 300 sn yeniden yazım + yorum kaybı (eski `!=` kıyası kimliğe bakıyordu)."""
+    yol = _kanonik_taban(tmp_path, monkeypatch)
+    belge = _oku(yol)
+    belge["mcp_servers"]["meridian"]["timeout"] = float("nan")
+    belge["mcp_servers"]["meridian"]["ek"] = [float("nan")]
+    _yaz(yol, belge)
+    once = _parmak_izi(yol)
+    out = hermes.config_ensure_integrations()
+    assert out["ok"] is True and out["changed"] == [], f"nan churn: {out['changed']}"
+    assert _parmak_izi(yol) == once
+
+
+# ----------------------------------------------------------------------------- N3 (Tur 4)
+
+@pytest.mark.parametrize("bayt", [b"mcp_servers:\n  meridian:\n    enabled: \xff\xfe\n",
+                                  b"mcp_servers: [kapanmamis\n"],
+                         ids=["bozuk_utf8", "bozuk_yaml"])
+def test_N3_varsayilan_dosyasi_BOZUKSA_ozonarim_iptal_olmaz_False_ve_uyari(
+        tmp_path, monkeypatch, sandbox_state, bayt):
+    kok = tmp_path / "kok"
+    hedef = kok / "deploy" / "hermes" / "config.yaml"
+    hedef.parent.mkdir(parents=True)
+    hedef.write_bytes(bayt)
+    monkeypatch.setattr(hermes, "_repo_root", lambda: str(kok))
+    yol = _config_kur(tmp_path, monkeypatch, {"model": {"provider": "gemini"}})
+    out = hermes.config_ensure_integrations()
+    assert out["ok"] is True, f"öz-onarım iptal oldu: {out}"
+    belge = _oku(yol)
+    assert belge["mcp_servers"]["meridian"].get("enabled") is False
+    assert hermes._guard_girdisi_mi(belge["hooks"]["pre_tool_call"][0]), "öteki onarımlar da koşmalı"
+    assert len(_olaylar(sandbox_state, "hermes_mcp_varsayilan_okunamadi")) == 1

@@ -3376,6 +3376,8 @@ def _tip_kati_esit(a, b) -> bool:
     """`==`in tip-KATI hâli (yönetilen alan kıyası): Python'da `0 == False`, `0.0 == False` doğrudur ama
     Hermes `_parse_boolish(0)`ı AÇIK sayar (yerel 0.18.2) — `tools.resources: 0` "kanonik" görünüp
     yardımcı araçları açık bırakıyordu. Tipler de ayrılır; sözlük anahtar SIRASI önemsizdir."""
+    if a is b:                  # kimlik kısayolu: `.nan != .nan` → her turda churn olurdu (eski `!=` de kimliğe bakıyordu)
+        return True
     if type(a) is not type(b):
         return False
     if isinstance(a, dict):
@@ -3397,9 +3399,9 @@ def _varsayilan_mcp_enabled() -> bool:
     import yaml
     yol = os.path.join(_repo_root(), *_VARSAYILAN_PROFIL_CONFIG)
     try:
-        with open(yol) as fh:
+        with open(yol, encoding="utf-8") as fh:
             belge = yaml.safe_load(fh)
-    except (OSError, yaml.YAMLError) as e:
+    except (OSError, ValueError, yaml.YAMLError) as e:   # ValueError ⊃ UnicodeDecodeError (bozuk bayt)
         # YASA-6 OKUYUCU: pano olay akışı + operatör teşhisi (öz-onarım neden `false` seçti?).
         obs.warn("hermes_mcp_varsayilan_okunamadi", yol=yol, error=type(e).__name__,
                  detail="dağıtılan varsayılan profil config'i okunamadı — güvenli taraf enabled: false")
@@ -3472,9 +3474,13 @@ def config_ensure_integrations() -> dict:
     # K-1 ATLATMASI KAPALI (tur 3, Rol-1 düzeltmesi — TSK-257'nin "yoksa eklenmez" hükmü YANLIŞTI): girdi
     # yok / sözlük değil (null/false/liste — Hermes atlar) ya da sözlük ama `enabled`sız (Hermes AÇIK sayar)
     # ise `enabled` DAĞITILAN varsayılanla (`_varsayilan_mcp_enabled`, bugün false) konur ve uyarılır.
+    # K-1 DEĞİŞMEZİ (tur 4, Rol-1): öz-onarım sonrası varsayılan profil YALNIZ `enabled` bool `True` ise
+    # açıktır. `True` DEĞİLKEN Hermes'in AÇIK okuduğu değer (`_hermes_mcp_acik_mi`: None/int/liste/tanınmayan
+    # ya da tırnaklı "true" dizgesi) varsayılana çekilir (`belirsiz_deger`; olay değeri değil TÜRÜ taşır).
+    # Hermes'in KAPALI okudukları (False, "false"/"off"/"no"/"0") ve bool True AYNEN kalır.
     mevcut_mcp = servers.get("meridian")
     tasima_kaldirilan = []                         # olaylar yazım başarısına bağlı (aşağıda)
-    enabled_eklendi = None                         # (değer, neden)
+    enabled_eklendi = None                         # (değer, neden, eski_tür|None)
     if isinstance(mevcut_mcp, dict):
         hedef_mcp = dict(mevcut_mcp)
         tasima_kaldirilan = [k for k in _MCP_TASIMA_ANAHTARLARI if k in hedef_mcp]
@@ -3485,11 +3491,15 @@ def config_ensure_integrations() -> dict:
         araclar.update(desired_mcp["tools"])
         hedef_mcp["tools"] = araclar
         if "enabled" not in hedef_mcp:
-            enabled_eklendi = (_varsayilan_mcp_enabled(), "anahtar_yok")
+            enabled_eklendi = (_varsayilan_mcp_enabled(), "anahtar_yok", None)
             hedef_mcp = {"enabled": enabled_eklendi[0], **hedef_mcp}
+        elif hedef_mcp["enabled"] is not True and _hermes_mcp_acik_mi(hedef_mcp):
+            enabled_eklendi = (_varsayilan_mcp_enabled(), "belirsiz_deger",
+                               type(hedef_mcp["enabled"]).__name__)
+            hedef_mcp["enabled"] = enabled_eklendi[0]      # yerinde: anahtar sırası korunur
     else:
         enabled_eklendi = (_varsayilan_mcp_enabled(),
-                           "sozluk_degil" if "meridian" in servers else "girdi_yok")
+                           "sozluk_degil" if "meridian" in servers else "girdi_yok", None)
         hedef_mcp = {"enabled": enabled_eklendi[0], **desired_mcp}
     if not _tip_kati_esit(mevcut_mcp, hedef_mcp):
         servers["meridian"] = hedef_mcp
@@ -3589,9 +3599,11 @@ def config_ensure_integrations() -> dict:
                             "sunucusuna döndü (url varken Hermes command'ı yok sayar)")
         if enabled_eklendi:
             # YASA-6 OKUYUCU: pano olay akışı + operatör teşhisi. Aynı ilke: yalnız BAŞARILI yazımdan sonra.
+            # `eski_tur` yalnız `belirsiz_deger`de dolu: operatörün yazdığı DEĞER basılmaz, yalnız türü.
             obs.warn("hermes_mcp_enabled_eklendi", enabled=enabled_eklendi[0], neden=enabled_eklendi[1],
-                     detail="mcp_servers.meridian enabled taşımıyordu (Hermes AÇIK sayar) — dağıtılan "
-                            "varsayılan profil değeriyle kuruldu (K-1 atlatması kapatıldı)")
+                     eski_tur=enabled_eklendi[2],
+                     detail="mcp_servers.meridian enabled bool olarak kapalı/açık karar taşımıyordu (Hermes "
+                            "AÇIK sayar) — dağıtılan varsayılan profil değeri kondu (K-1 atlatması kapatıldı)")
         obs.log("agent_integrations_synced", changed=changed)
         return {"ok": True, "changed": changed}
     except Exception as e:
