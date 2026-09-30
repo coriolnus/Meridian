@@ -32,6 +32,13 @@ Description=Meridian bot ağ geçidi — Hermes çoklu profil sohbeti (kök ~/.h
 # dosyalarından (`deploy/apisix/apisix.service`, `deploy/hindsight/hindsight-api.service`); v601 çiviler.
 After=network-online.target apisix.service hindsight-api.service
 Wants=network-online.target
+# BAŞLATMA SINIRI (G4 Görev 3 Tur 3, görev incelemesi M-2): systemd varsayılanı (5 başlatma / 10 sn) `RestartSec=10`
+# ile ASLA dolmaz — kalıcı bir arıza (bozuk kök config, eksik `hermes` ikilisi) birimi `failed`e düşürmeden sonsuz
+# yeniden başlatırdı (görünmez arıza). 300 sn'de 5 başarısız başlatma → `failed` (panoda "arızalı", `systemctl
+# reset-failed` ile geri gelir). Geçici arıza bu sınıra girmez: kapı ya da Hindsight'ın durması ağ geçidini düşürmez
+# (o anki istek hata alır, yukarıdaki sıralama şerhi). Yönergeler `[Unit]`a aittir; v601 çiviler.
+StartLimitIntervalSec=300
+StartLimitBurst=5
 # `OnFailure=` BİLEREK YOK (Rol-1 kararı 2026-09-30): `meridian-fail-notify.service` rapor sınıfı içindir, bot ağ
 # geçidinin bildirim yolu ayrı karardır. `failed`in okuyucusu yine var (Yasa 6): `/api/infra` birimleri
 # `deploy/**/*.service` dosyalarından KENDİSİ keşfeder (`meridian/api.py::_infra_birim_adlari`) ve

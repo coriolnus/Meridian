@@ -835,12 +835,12 @@ def test_onay_defteri_yoksa_oneri_None_ve_NEDEN(tmp_path):
 
 
 def test_GERCEK_iki_yazici_iki_kovaya_ayrisir(sandbox_state, tmp_path):
-    """TÜRETME + AYRIŞMA ÇİVİSİ (tek-kaynak yasası). Sayacın bot öneki (`mcp:`) ile
-    `meridian.mcp_server.serve`in yazdığı oturum bağlamı AYRI yerlerde yaşar; sayaç `mcp_server`ı
-    ithal etmez (araç kaydını kurmak sayaca `sohbet` dışı bir bağımlılık ekler). Bu çivi iki
-    tarafı GERÇEK yazıcılardan bağlar: `serve(bot=…)` üzerinden `oneri_yaz` ve pano yolunun
-    varsayılan oturumu (`sohbet.gunun_oturumu`) ile aynı gövde. MCP tarafı öneki değiştirirse
-    satır pano kovasına düşer ve çivi öter.
+    """UÇTAN UCA AYRIŞMA ÇİVİSİ (tek-kaynak yasası). Bot öneki TEK yerde yaşar
+    (`sohbet.MCP_OTURUM_ONEKI`, G4 Görev 4): `meridian.mcp_server.serve` oturum bağlamını, sayaç
+    bot kovasını oradan okur — türetme çivisi `test_mcp_oneki_tek_kaynak_sunucu_ve_sayim_sohbetten_okur`.
+    Bu çivi iki tarafı GERÇEK yazıcılardan bağlar: `serve(bot=…)` üzerinden `oneri_yaz` ve pano
+    yolunun varsayılan oturumu (`sohbet.gunun_oturumu`) ile aynı gövde. Yazıcılardan biri öneki
+    kaynaktan okumayı bırakırsa satır yanlış kovaya düşer ve çivi öter.
 
     Bot SEÇİMİ KADRODAN türer (ad donuk yazılmaz): `oneri_yaz`ı kadrosunda taşıyan aktif bot
     yoksa bot kovasının üreticisi yoktur — o durumda sessiz atlama değil KIRMIZI (ayrımın
@@ -876,6 +876,105 @@ def test_GERCEK_iki_yazici_iki_kovaya_ayrisir(sandbox_state, tmp_path):
                               "neden": None}, (sonuc["oneri"], oneriler)
     assert sonuc["oneri_bot"] == {"n": 1, "onaylanan": 1, "reddedilen": 0, "bekleyen": 0,
                                   "neden": None}, (sonuc["oneri_bot"], oneriler)
+
+
+# =================================================================================================
+# `mcp:` ÖNEKİ — PANO YAZICISI İLE SAYIM HİZASI + TEK KAYNAK (konuşan filo Parça 1b G4 Görev 4)
+# =================================================================================================
+#: Pano ucuna gelebilecek oturum dizgeleri: sayımın bot kovasına düşecek olanlar (baştaki önek, baş/son
+#: boşluklu hâli, yalnız önek) ve PANO sayılanlar (harfi farklı önek, ortada geçen önek, UI'nin gerçek biçimi).
+PANO_OTURUM_ADAYLARI = ("mcp:sef", " mcp:sef", "\tmcp:karne\n", "mcp:", "MCP:sef", "Mcp:sef",
+                        "pano-mcp:yanki", "pano-mcp:x", "S mcp:sef", "pano-2026-09-30-ab12")
+
+
+def _oneri_yazan_model():
+    """Sahte model: ilk turda `oneri_yaz` (tür `not` — hedef kapısı yok) ister, sonra düz metinle biter."""
+    arac = {"id": "c1", "type": "function",
+            "function": {"name": "oneri_yaz", "arguments": json.dumps({"tur": "not", "gerekce": "pano"})}}
+    kuyruk = [{"mesaj": {"content": "", "tool_calls": [arac]}, "model": "sahte", "jeton_giris": 1,
+               "jeton_cikis": 1}]
+    son = {"mesaj": {"content": "not düşüldü", "tool_calls": []}, "model": "sahte", "jeton_giris": 1,
+           "jeton_cikis": 1}
+    return lambda mesajlar, araclar: kuyruk.pop(0) if kuyruk else son
+
+
+def test_pano_yazicisi_sayimin_bot_kovasina_satir_dusuremez(sandbox_state, tmp_path):
+    """HİZA ÇİVİSİ (plan Review Focus 5). Pano sohbeti (`sohbet.sohbet_dongusu`) öneriyi onay defterine
+    `oturum`un NORMALİZE (strip'li) hâliyle yazar; sayım öneriyi o alanın BAŞINDAKİ `mcp:` önekiyle (harf
+    duyarlı) bot kovasına ayırır. İki yön birlikte ölçülür:
+      * EKSİK RED YOK — kabul edilen hiçbir oturumun GERÇEK öneri satırı sayımda bot sayılmaz (yoksa pano
+        önerisi bot kovasına kaçar, kartın pano öneri sayısı sessizce küçülür);
+      * FAZLA RED YOK — reddedilen her oturum, yazılsaydı sayımda bot sayılacak olandır (`MCP:sef`,
+        `pano-mcp:x` sayımda PANO'dur; pano onları reddetseydi iki yüzey aynı dizgeye iki hüküm verirdi)."""
+    from meridian import config, store
+
+    s = _sayim()
+    kabul, red = [], []
+    for oturum in PANO_OTURUM_ADAYLARI:
+        try:
+            sohbet.sohbet_dongusu("not düş", oturum, model_cagir=_oneri_yazan_model())
+        except ValueError:
+            red.append(oturum)
+        else:
+            kabul.append(oturum)
+    assert red and kabul, (red, kabul)            # iki kol da dolu: çivi boş kümede yeşil kalmasın
+    assert [o for o in red if not s.bot_onerisi_mi({"oturum": o.strip()})] == [], red
+
+    oneriler = [r for r in store.read_jsonl(sohbet.ONAY_DEFTERI) if r.get("kaynak") == sohbet.CAGRI_KIND]
+    assert sorted(r["oturum"] for r in oneriler) == sorted(o.strip() for o in kabul), oneriler
+    assert [r["oturum"] for r in oneriler if s.bot_onerisi_mi(r)] == []
+
+    sonuc = s.calistir(defter=_defter_yaz(tmp_path / "sohbet.jsonl", _pk_defteri()), kart=KART_YOLU,
+                       onaylar=config.STATE / sohbet.ONAY_DEFTERI)
+    assert (sonuc["oneri"]["n"], sonuc["oneri_bot"]["n"]) == (len(kabul), 0), (sonuc["oneri"], sonuc["oneri_bot"])
+
+
+def test_mcp_oneki_tek_kaynak_sunucu_ve_sayim_sohbetten_okur(sandbox_state, monkeypatch):
+    """TÜRETME ÇİVİSİ (tek-kaynak yasası). Önek `sohbet.MCP_OTURUM_ONEKI`de TEK yerde yaşar; yazıcı
+    (`meridian.mcp_server.serve` — `--bot` kipinin oturum bağlamı) ve okuyucu (sayımın bot kovası) onu
+    ÇAĞRI ANINDA oradan okur. Sabit başka bir değere çekilince ikisi de izler; literal kopya izlemez ve öter."""
+    import io
+
+    from meridian import kadro
+    from meridian import mcp_server as ms
+
+    monkeypatch.setattr(sohbet, "MCP_OTURUM_ONEKI", "bot~")
+    s = _sayim()
+    assert s.bot_onerisi_mi({"oturum": "bot~sef"}) is True
+    assert s.bot_onerisi_mi({"oturum": "mcp:sef"}) is False
+
+    bot = kadro.aktif_botlar()[0]
+    gorulen: list[str] = []
+    monkeypatch.setattr(ms, "_handle", lambda msg, kayit, izinli, oturum: gorulen.append(oturum))
+    ms.serve(io.StringIO(json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"}) + "\n"), io.StringIO(),
+             bot=bot.ad)
+    assert gorulen == [f"bot~{bot.ad}"], gorulen
+
+
+def test_mcp_onek_literali_yalniz_sohbetteki_tanimda():
+    """YAPISAL ÇİVİ (tek-kaynak yasası, sınıf taraması). `meridian/` + `ops/` + sayım betiğinde `mcp:` ile
+    BAŞLAYAN tek dizge sabiti (f-string parçası dahil) `sohbet.MCP_OTURUM_ONEKI`nin tanımıdır — üçüncü bir
+    kopya (ör. bir uçta `startswith("mcp:")`) doğduğu gün öter. Docstring/şerh ortasındaki anılış önek
+    DEĞİLDİR ve sayılmaz."""
+    import ast
+
+    onek = sohbet.MCP_OTURUM_ONEKI
+    yollar = [*sorted((KOK / "meridian").rglob("*.py")), *sorted((KOK / "ops").rglob("*.py")), BETIK_YOLU]
+    bulunan: dict[str, list[int]] = {}
+    for yol in yollar:
+        if "__pycache__" in yol.parts:
+            continue
+        agac = ast.parse(yol.read_text(encoding="utf-8"))
+        satirlar = [n.lineno for n in ast.walk(agac)
+                    if isinstance(n, ast.Constant) and isinstance(n.value, str) and n.value.startswith(onek)]
+        if satirlar:
+            bulunan[str(yol.relative_to(KOK))] = satirlar
+
+    sohbet_agaci = ast.parse((KOK / "meridian" / "sohbet.py").read_text(encoding="utf-8"))
+    tanim = [n.value.lineno for n in sohbet_agaci.body
+             if isinstance(n, ast.Assign) and [ast.unparse(t) for t in n.targets] == ["MCP_OTURUM_ONEKI"]]
+    assert len(tanim) == 1, "sohbet.py'de `MCP_OTURUM_ONEKI` modül seviyesinde TEK kez tanımlı olmalı"
+    assert bulunan == {"meridian/sohbet.py": tanim}, bulunan
 
 
 def test_model_kirilimi_kunye_basina_ayrilir(tmp_path):

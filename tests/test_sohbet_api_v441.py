@@ -84,6 +84,65 @@ def test_post_sohbet_oturumsuz_istek_gunun_oturumuna_duser(istemci, monkeypatch)
     assert govde["oturum"] == sohbet.gunun_oturumu()
 
 
+# -------------------------------------------------------------------------------------------------
+# 1b) `mcp:` ÖNEKLİ OTURUM REDDİ (konuşan filo Parça 1b G4 Görev 4, plan Review Focus 5)
+#
+# `mcp:<bot>` MCP bot önerilerinin işaretidir: EDG-2026-086 sayımı onay defterindeki öneriyi `oturum`
+# alanının BAŞINDAKİ bu önekle (harf duyarlı `startswith`) bot kovasına ayırır. Pano bu öneki kabul
+# etseydi pano sohbetinin önerisi bot kovasına düşer ve kartın "pano kaç öneri yazdı" sayısı sessizce
+# küçülürdü. Kural sayımla BİREBİR hizalıdır: `strip` sonrası BAŞTA, harf duyarlı — `MCP:sef` ve
+# `pano-mcp:x` sayımda PANO sayılır, o yüzden pano onları kabul eder (sayımla hizası v450'de).
+# -------------------------------------------------------------------------------------------------
+def _durum_anligi() -> dict:
+    """`state/` ağacının dosya → sha256 haritası — "hiçbir satır yazılmadı" iddiasının ölçümü (defter adı
+    listesine bağlı değil: bugün bilinmeyen bir yazım da farkı bozar)."""
+    import hashlib
+    return {str(p.relative_to(config.STATE)): hashlib.sha256(p.read_bytes()).hexdigest()
+            for p in sorted(config.STATE.rglob("*")) if p.is_file()}
+
+
+@pytest.mark.parametrize("oturum", ["mcp:sef", " mcp:sef", "mcp:", "\tmcp:karne\n"],
+                         ids=["duz", "bas_bosluk", "yalniz_onek", "sekme_satir_sonu"])
+def test_post_sohbet_mcp_onekli_oturum_400_model_cagrilmaz_hicbir_satir_yazilmaz(istemci, monkeypatch, oturum):
+    cagrilar: list = []
+    monkeypatch.setattr(sohbet, "_kapi_cagir",
+                        lambda mesajlar, araclar, **k: cagrilar.append(1) or _sahte_model()(mesajlar, araclar))
+    once = _durum_anligi()
+    r = istemci.post("/api/sohbet", json={"mesaj": "MU planı?", "oturum": oturum})
+    assert r.status_code == 400, r.text
+    assert sohbet.MCP_OTURUM_ONEKI in r.json()["detail"], r.json()
+    assert cagrilar == [], "reddedilen oturum için model ÇAĞRILDI (kota harcandı)"
+    for defter in (sohbet.SOHBET_DEFTERI, sohbet.ONAY_DEFTERI, sohbet.CAGRI_DEFTERI):
+        assert store.read_jsonl(defter) == [], f"reddedilen istek {defter} defterine yazdı"
+    assert _durum_anligi() == once, "reddedilen istek state/ ağacında iz bıraktı"
+
+
+@pytest.mark.parametrize("oturum", ["MCP:sef", "Mcp:sef", "pano-mcp:x", "pano-mcp:yanki", "S mcp:sef"])
+def test_post_sohbet_onek_basta_degilse_ya_da_harfi_farkliysa_gecer(istemci, monkeypatch, oturum):
+    # Harf duyarlılığı BİLİNÇLİ: sayım `startswith` harf duyarlıdır ve `MCP:sef`i PANO sayar; pano onu reddetseydi
+    # iki yüzey aynı dizge için iki farklı hüküm verirdi. Ortada geçen `mcp:` önek değildir.
+    monkeypatch.setattr(sohbet, "_kapi_cagir", _sahte_model())
+    r = istemci.post("/api/sohbet", json={"mesaj": "selam", "oturum": oturum})
+    assert r.status_code == 200, r.text
+    assert r.json()["oturum"] == oturum.strip()
+    assert [s["oturum"] for s in store.read_jsonl(sohbet.SOHBET_DEFTERI)] == [oturum.strip()]
+
+
+def test_post_sohbet_mcp_reddi_kilit_mesgulken_de_400_mesgul_200_degil(istemci, monkeypatch):
+    # RED KİLİDİN DIŞINDA (boş mesaj emsali, `sohbet_dongusu` docstring'i): kilit başkasındayken `mcp:` oturumu
+    # "meşgul" 200'ü ALMAMALI — hükmü kilidin hâline bağlı bir 400, istemciye yanlış sinyal verirdi ("sonra tekrar
+    # dene" der, oysa tekrar denemek hiçbir zaman kabul görmeyecek). Pozitif kontrol: kilit GERÇEKTEN tutuluyor.
+    monkeypatch.setattr(sohbet, "_kapi_cagir", _sahte_model())
+    assert sohbet._SOHBET_KILIDI.acquire(blocking=False), "test düzeneği: kilit zaten tutuluyordu"
+    try:
+        mesgul = istemci.post("/api/sohbet", json={"mesaj": "selam", "oturum": "S1"})
+        red = istemci.post("/api/sohbet", json={"mesaj": "selam", "oturum": "mcp:sef"})
+    finally:
+        sohbet._SOHBET_KILIDI.release()
+    assert mesgul.status_code == 200 and mesgul.json().get("mesgul") is True, mesgul.text
+    assert red.status_code == 400, red.text
+
+
 # =================================================================================================
 # 2) GET /api/sohbet + /api/sohbet/kota
 # =================================================================================================

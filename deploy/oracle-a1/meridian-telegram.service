@@ -1,0 +1,97 @@
+# meridian-telegram.service — konuşan bot filosunun TELEGRAM KANALI (Parça 1b G4 Görev 3, 2026-09-30).
+#
+# NE: `getUpdates` uzun yoklamasıyla operatörün Telegram mesajlarını alır, doğru bota yönlendirir ve cevabı aynı sohbete
+# YANIT olarak verir (spec 2026-09-29 §3.5). Giriş noktası `meridian/telegram_dinleyici.py::main` → `dongu` üretim
+# `bota_sor`u ile (`meridian/bot_kanal.py::bota_sor` — taşıyıcı bot ağ geçidi, hafıza Hindsight). Davranışın tamamı
+# (yetki, yönlendirme, en-çok-bir-kez ofset, ilk koşum atlaması, 4096 bölme, ara bildirim) modül başlığındadır; çivi
+# tests/test_telegram_birimi_v602.py.
+#
+# KURULUM: A0 rolü KOPYALAR (`birim_kaynaklari` glob'u) ama ETKİN ETMEZ — birim `etkin_birimler`de DEĞİLDİR (uzun
+# ömürlü birim ayrı değişiklikle etkin olur; `meridian-botlar.service` emsali) ve dagit bakım penceresinin adaylarında da
+# yoktur. Sıra Rol-1'indir: G3b sır dilimi (credential drop-in'i, aşağıda) → site.yml → elle başlat + test-ateşle
+# ("kurulu" != "çalışır") → AYRI değişiklikle `etkin_birimler`. dagit [1c] kurulmamış birimde DURUR: site.yml
+# dağıtımdan ÖNCE koşar.
+#
+# CREDENTIAL BUGÜN YOK — BEYANLI ERTELEME (Rol-1 kararı 2026-09-30, G4). `bota_sor` iki anahtarı YALNIZ credential
+# kanalından okur (`meridian/secrets.py::credential_oku`): bot ağ geçidinin dinleyici anahtarı (`HermesTasiyici`) ve
+# Hindsight kiracı anahtarı (dönüş kaydı). Drop-in'leri G3b sır diliminde rotasyon tablosuyla TEK dilimde gelir (v447 P6
+# sınıfı); o güne dek her soru "şu an cevap veremiyor" alır ve olay yazılır. Telegram jetonu ve sohbet kimliği bugünkü
+# zincirle okunur (`meridian/secrets.py::get`: credential, sonra ortam, sonra `state/secrets.json`) — değişiklik yok.
+# Jeton ya da sohbet kimliği YOKSA süreç `SystemExit` ile çıkar; `Restart=on-failure` onu 10 sn arayla yeniden dener AMA
+# sonsuza dek değil: bu kalıcı bir arızadır ve 300 sn içinde beş başarısız başlatmada başlatma sınırı (aşağıda,
+# `StartLimitIntervalSec`/`StartLimitBurst`) birimi `failed`e düşürür — systemd artık denemez. Sır/kimlik düzeltildikten
+# sonra `systemctl reset-failed` + `start` gerekir. `failed` journal'de ve panoda (`/api/infra`) görünür — sessiz ölü
+# birim değil, ama kendiliğinden de geri gelmez.
+[Unit]
+Description=Meridian Telegram dinleyicisi — konuşan bot filosunun Telegram kanalı (getUpdates uzun yoklaması)
+# SIRALAMA, BAĞIMLILIK DEĞİL: bot ağ geçidi (`ops/sohbet_profili_uret.py::BOT_BIRIMI`) açılışta dinleyiciden ÖNCE kalksın
+# ki ilk soru bağlantı hatası almasın. `Wants=`/`Requires=` o birim için BİLEREK YOK: ağ geçidinin durması ya da yeniden
+# başlaması dinleyiciyi DÜŞÜRMEMELİ — o anki soru "şu an cevap veremiyor" alır, dinleyici ayakta kalır. v602 çiviler.
+After=network-online.target meridian-botlar.service
+Wants=network-online.target
+# BAŞLATMA SINIRI (G4 Görev 3 Tur 3, görev incelemesi M-2): systemd varsayılanı (5 başlatma / 10 sn) `RestartSec=10`
+# ile ASLA dolmaz — kalıcı bir arıza (sır yok ya da sohbet kimliği pozitif değil → `dongu`nun `SystemExit`i, çıkış 1)
+# birimi `failed`e düşürmeden sonsuz yeniden başlatırdı (görünmez arıza). 300 sn'de 5 başarısız başlatma → `failed`
+# (panoda "arızalı", `systemctl reset-failed` ile geri gelir). Geçici arıza bu sınıra girmez: Telegram/ağ kesintisini
+# `dongu` KENDİ içinde geri çekilerek bekler, süreç çıkmaz. Yönergeler `[Unit]`a aittir; v602 çiviler.
+StartLimitIntervalSec=300
+StartLimitBurst=5
+# `OnFailure=` BİLEREK YOK (bot ağ geçidiyle aynı karar, Rol-1 2026-09-30): `meridian-fail-notify.service` rapor sınıfı
+# içindir. `failed`in okuyucusu yine var (Yasa 6): `/api/infra` birimleri `deploy/**/*.service` dosyalarından KENDİSİ
+# keşfeder (`meridian/api.py::_infra_birim_adlari`).
+
+[Service]
+Type=simple
+User=ubuntu
+# Kardeş Python birimlerinin normu. Dinleyici bağlam dosyası OKUMAZ (ağ geçidinin `WorkingDirectory=/` gerekçesi burada
+# yok); `state/` yolu cwd'den değil paket kökünden çözülür (`meridian/config.py::STATE`).
+WorkingDirectory=/opt/meridian
+# `uv run` DEĞİL: doğrudan venv yorumlayıcısı (brifing/bekçi emsali) — `~/.cache` açılmaz.
+ExecStart=/opt/meridian/.venv/bin/python -m meridian.telegram_dinleyici
+# `on-failure`, `always` DEĞİL: operatörün `systemctl stop`u arıza değildir ve birimi geri getirmemeli; çökme (sıfırdışı
+# çıkış, sinyal) getirir. Ofset işlemeden ÖNCE yazıldığı için yeniden başlatma bir cevabı İKİNCİ kez vermez
+# (en-çok-bir-kez; bedel: tam o anda işlenen soru cevapsız kalabilir — `dongu` docstring'i).
+Restart=on-failure
+RestartSec=10
+
+# ==================================================================================================================
+# H3 SERTLEŞTİRME — filo ortak seti (`tests/test_h3_tur2_v174.py::ORTAK_SET`, meridian.service ile BİREBİR).
+# Gerekçelerin TAM METNİ ve dışarıda bırakılanlar (MemoryDenyWriteExecute · PrivateDevices · PrivateUsers ·
+# ProtectProc/ProcSubset · IPAddressDeny · SystemCallErrorNumber=EPERM): meridian.service. Burada YALNIZ ayrışan
+# kalem (ReadWritePaths) ve bu birime özgü ölçülmemiş kalem (SystemCallFilter) yazılıdır.
+# ==================================================================================================================
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+# --- AYRIŞMA — ReadWritePaths: TEK yol, `/opt/meridian` — dinleyicinin ve aynı süreçte koşan `bota_sor`un bütün
+#     yazımları onun `state/` ağacında: Telegram ofseti (`telegram_ofset.json`), sohbet defteri (`bot_sohbet.jsonl`),
+#     `unut:` bekleyen aday kaydı (`bot_unut_bekleyen.json`) ve kilitleri (`.locks`), olay defteri (`events.jsonl`),
+#     onay kaydı (`approvals.jsonl`), iş istekleri (`istek/`); import anında `__pycache__`. Ev dizini AÇILMAZ: ExecStart
+#     `uv` değil (`~/.cache` gereksiz) ve süreç Hermes kökü taşımaz (`HERMES_HOME` yok — `ops/filo.py` onu bot saymaz).
+ReadWritePaths=/opt/meridian
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+# Ağ: çıkış Telegram API'sine (getUpdates, sendMessage), bot ağ geçidine (127.0.0.1 port 8642) ve Hindsight'a
+# (127.0.0.1 port 8888); dinleyici soket AÇMAZ. Liste kardeşlerle BİREBİR aynı; AF_NETLINK'in dışarıda oluşu
+# meridian.service'te.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+# ÖLÇÜLMEDİ: `@system-service`in dinleyiciyle (stdlib urllib + threading.Timer) uyumu canlıda, test-ateşlemede ölçülür.
+# Aynı yorumlayıcı ve aynı kütüphane ailesi brifing/bekçi birimlerinde bu filtre altında koşuyor. Filtre bir sistem
+# çağrısını reddederse süreç SIGSYS ile ölür → `Restart=on-failure` + journal'de `signal=SYS` — görünür yön.
+SystemCallFilter=@system-service
+
+# [Install] VAR — uzun ömürlü servis. AMA birim `etkin_birimler`de DEĞİL: `enable` ayrı bir değişikliktir (G3b sırları
+# + test-ateşlemeden SONRA); bölüm bugün o değişikliğin `systemctl enable`ı çalışabilsin diye burada.
+[Install]
+WantedBy=multi-user.target

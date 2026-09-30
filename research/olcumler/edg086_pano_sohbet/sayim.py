@@ -125,17 +125,21 @@ BELIRSIZ_RE = re.compile(r"%\s{0,3}\d+(?:[.,]\d+)?"
 #: (FastAPI uygulamasını) ithal EDEMEZ, o yüzden sözlük burada donuk ve dar tutulur.
 KARAR_DEGERLERI = ("approve", "reject")
 
-#: MCP BOT ÖNERİSİNİN İŞARETİ (konuşan filo G3, 2026-09-30). `meridian/mcp_server.py::serve`
-#: `--bot` kipinde oturum bağlamını `mcp:<ad>` kurar ve `oneri_yaz` (sohbetin AYNI gövdesi) onu
-#: onay defterinin `oturum` alanına AYNEN yazar; `kaynak` alanı sohbetin `CAGRI_KIND`ı KALIR,
-#: çünkü panonun gelen kutusu satırı o alandan tanır. Yani `kaynak` iki yazıcıyı AYIRMAZ, `oturum`
-#: ayırır. Kartın öneri ölçüsü PANO sohbetinindir; bot önerisi oraya karışsaydı "pano sohbeti kaç
-#: öneri yazdı" sayısı sessizce şişerdi.
+#: MCP BOT ÖNERİSİNİN İŞARETİ (konuşan filo G3, 2026-09-30) — öneki bu betik TANIMLAMAZ, OKUR
+#: (`meridian.sohbet` içindeki `MCP_OTURUM_ONEKI`, tek kaynak — G4 Görev 4, 2026-09-30). Yazıcı
+#: (`meridian/mcp_server.py::serve`, `--bot` kipinin oturum bağlamı) ve pano ucunun reddi de onu
+#: oradan okur; üç yüzey aynı dizgeyi görür, literal kopya ayrışamaz. `oneri_yaz` (sohbetin AYNI
+#: gövdesi) oturumu onay defterinin `oturum` alanına AYNEN yazar; `kaynak` alanı sohbetin
+#: `CAGRI_KIND`ı KALIR, çünkü panonun gelen kutusu satırı o alandan tanır. Yani `kaynak` iki yazıcıyı
+#: AYIRMAZ, `oturum` ayırır. Kartın öneri ölçüsü PANO sohbetinindir; bot önerisi oraya karışsaydı
+#: "pano sohbeti kaç öneri yazdı" sayısı sessizce şişerdi — ters yönü (pano oturumu bot kovasına)
+#: pano ucunun reddi kapatır.
 #: BOTSUZ KİP (`oturum: mcp`, öneksiz) BURADA YOK, bilerek: o kipin kaydı yalnız altı getter'dır ve
 #: `oneri_yaz` taşımaz (`tests/test_mcp_bot_alt_kume_v597.py::test_bot_yokken_bugunku_alti_getter`)
-#: — öneri satırı ÜRETEMEZ. Önek ile yazıcının ayrışması türetme çivisiyle bağlı:
-#: `tests/test_edg086_sayim_v450.py::test_GERCEK_iki_yazici_iki_kovaya_ayrisir`.
-MCP_OTURUM_ONEKI = "mcp:"
+#: — öneri satırı ÜRETEMEZ. Çiviler `tests/test_edg086_sayim_v450.py` içinde: uçtan uca
+#: `test_GERCEK_iki_yazici_iki_kovaya_ayrisir`, türetme
+#: `test_mcp_oneki_tek_kaynak_sunucu_ve_sayim_sohbetten_okur`, pano hizası
+#: `test_pano_yazicisi_sayimin_bot_kovasina_satir_dusuremez`.
 
 
 # ======================================================================================
@@ -543,8 +547,9 @@ def kota_olc(satirlar: list[dict], tavan) -> dict:
 # ======================================================================================
 def bot_onerisi_mi(satir: dict) -> bool:
     """Öneri satırını MCP BOTU mu yazdı? `oturum` alanı olmayan (G3 öncesi) ya da boş/`None`
-    oturumlu satır PANO sayılır — o defterde bot yazıcısı yoktu (geriye uyum)."""
-    return str(satir.get("oturum") or "").startswith(MCP_OTURUM_ONEKI)
+    oturumlu satır PANO sayılır — o defterde bot yazıcısı yoktu (geriye uyum). Önek ÇAĞRI ANINDA
+    tek kaynaktan okunur (modül başındaki şerh)."""
+    return str(satir.get("oturum") or "").startswith(_sohbet.MCP_OTURUM_ONEKI)
 
 
 def _oneri_dagilimi(oneriler: list[dict], kararlar: dict[str, str]) -> dict:

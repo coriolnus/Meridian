@@ -82,6 +82,19 @@ CAGRI_DEFTERI = "agent_calls.jsonl"
 #: Telemetri künyesi — "kaç sohbet çağrısı yapıldı" sorusunun cevabı çağrının KENDİ kaydından
 #: gelir, ayrı bir sayaç dosyasından değil (ikinci sayaç ikinci gerçek olurdu).
 CAGRI_KIND = "sohbet"
+#: MCP BOT OTURUMUNUN ÖNEKİ — TEK KAYNAK (konuşan filo Parça 1b G4 Görev 4, 2026-09-30). Üç yüzey bu
+#: sabiti OKUR, hiçbiri kopyalamaz:
+#:   * YAZICI — `mcp_server.serve` `--bot` kipinde oturum bağlamını `<önek><bot>` kurar; `oneri_yaz` (bu
+#:     modülün AYNI gövdesi) onu onay defterinin `oturum` alanına aynen yazar. `kaynak` alanı iki yazıcıda
+#:     da `CAGRI_KIND`dır, yani iki yazıcıyı `kaynak` değil `oturum` ayırır.
+#:   * OKUYUCU — EDG-2026-086 sayımı (`research/olcumler/edg086_pano_sohbet/sayim.py`) öneriyi `oturum`un
+#:     BAŞINDAKİ bu önekle (HARF DUYARLI `startswith`) bot kovasına ayırır; kartın öneri ölçüsü PANO'nundur.
+#:   * KAPI — `sohbet_dongusu` pano ucundan gelen, strip'li hâli bu önekle başlayan oturumu REDDEDER.
+#:     Kabul etseydi pano önerisi bot kovasına düşer ve "pano sohbeti kaç öneri yazdı" sayısı sessizce
+#:     küçülürdü. Kural sayımla BİREBİR hizalıdır: yalnız BAŞTA ve harf duyarlı — `MCP:sef` ile
+#:     `pano-mcp:x` sayımda PANO sayılır, o yüzden kapıdan geçer (iki yüzey aynı dizgeye iki hüküm vermez).
+#: Çiviler: v441 (uç 400 + hiçbir satır) · v450 (hiza + türetme + literal taraması).
+MCP_OTURUM_ONEKI = "mcp:"
 
 KOTA_GUNLUK_VARSAYILAN = 120        # kartın `kota_gunluk_tavan` eşiği (bot kovasının ~%12'si)
 MAX_TUR_VARSAYILAN = 6              # spec §2: en çok N=6 araç turu
@@ -1381,6 +1394,13 @@ def sohbet_dongusu(mesaj: str, oturum: str, *, model_cagir=None,
         # "meşgul" cevabıyla gölgelemesi (ve 4xx yerine 200 dönmesi) yanlış olurdu — cevaplanacak
         # bir soru yokken kilidin hâli sorunun cevabını değiştirmez.
         raise ValueError("boş mesaj — cevaplanacak bir soru yok")
+    if str(oturum or "").strip().startswith(MCP_OTURUM_ONEKI):
+        # MCP BOT ÖNEKİ PANODA REDDEDİLİR (G4 Görev 4; gerekçe ve sayımla hiza `MCP_OTURUM_ONEKI`nin
+        # yanında). Boş mesajla AYNI yerde, KİLİDİN DIŞINDA: hükmü kilidin hâline bağlı olmayan bir 400,
+        # "meşgul" 200'üyle gölgelenmez — istemci "sonra tekrar dene" okur, oysa tekrar hiç kabul görmez.
+        # Model çağrılmaz, hiçbir deftere satır yazılmaz; uç ValueError'ı 400'e çevirir.
+        raise ValueError(f"oturum {MCP_OTURUM_ONEKI!r} önekiyle başlıyor — bu önek MCP bot oturumlarının "
+                         "işaretidir (EDG-2026-086 sayımı onu bot kovasına ayırır); pano sohbeti kullanamaz")
     if not _SOHBET_KILIDI.acquire(blocking=False):
         return _mesgul_satiri(mesaj, oturum, simdi)
     try:

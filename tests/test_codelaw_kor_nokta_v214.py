@@ -621,6 +621,12 @@ SINK_TABANI = frozenset({
     # dosyası; yazan `is_istek.is_iste` (`store.write_text`), okuyucusu systemd `.path` birimi
     # (`PathChanged=`) — litestream.env sınıfı: yazar grafta görünmez, `UNVERIFIABLE_SINKS`te de durur.
     "is_istek_defteri.jsonl", "istek/*.istek",
+    # v593'TE BEYANLI GÜNCELLENDİ (2026-09-30, konuşan filo Parça 1b G4 Görev 2) — TEK yeni muafiyet:
+    # `bot_unut_bekleyen.json`. `unut:` iki adımının bekleyen aday kaydı (kısa kod → bot, idler, kesitler,
+    # ifade, ts, son, durum); yazan ve okuyan `bot_kanal` (`store.update_json` kilitli oku-değiştir-yaz: aday
+    # ekleme, `onayla: unut <kod>` ve `geri al: <kod>` geçişleri) — aynı modül, statik graf dış tüketiciyi
+    # göremiyor (pool_exhausted_seen.json sınıfı). Modülün KENDİ işletim durumudur; gerekçe codelaw.DECLARED_SINKS'te.
+    "bot_unut_bekleyen.json",
     # v503'TE BEYANLI DÜŞÜRÜLDÜ (2026-09-15, TSK-070 Task 1) — İKİ muafiyet KAPANDI:
     # `watchdog_alarmed.json` ve `integrity_alarmed.json`. Bu tabanın iki yönü vardır ve bu
     # DÜŞÜŞ yönüdür: muafiyet, artefakt öldüğü için değil, GERÇEK BİR DIŞ OKUYUCU DOĞDUĞU için
