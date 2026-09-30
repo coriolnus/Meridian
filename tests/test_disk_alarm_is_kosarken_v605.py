@@ -414,7 +414,7 @@ def _execstart_argv(birim: pathlib.Path) -> list[str]:
 
 def test_ayrisma_betik_adi_birim_execstart_ile_ayni():
     """TEK KAYNAK: sürücünün kimliği birim dosyasının ExecStart'ıdır. `watchdog.GERIDOLUM_BETIK`
-    bir KOPYADIR (canlıda deploy/ ağacı okunamaz); ayrışırsa tespit sessizce 'koşmuyor' der."""
+    bir KOPYADIR (bekçi çalışma anında birim dosyasını ayrıştırmaz — sabit + bu ayrışma çivisi); ayrışırsa tespit sessizce 'koşmuyor' der."""
     argv = _execstart_argv(BIRIM_KOK / "meridian-geridolum.service")
     assert pathlib.PurePath(argv[0]).name.startswith("python"), argv
     assert pathlib.PurePath(argv[1]).name == watchdog.GERIDOLUM_BETIK, argv
