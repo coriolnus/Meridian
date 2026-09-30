@@ -1,0 +1,27 @@
+# ÜRETİLMİŞ — elle düzenlenmez; üreteç `ops/sohbet_profili_uret.py`.
+# Kaynak: deploy/hermes/profiles/bekci/distribution.yaml (sürüm tabanı, kapı anahtarının adı ve zorunluluğu,
+# yazma kökü — rapor kum havuzu + '-sohbet'); açıklamalar üretecin sohbet sabitleri.
+name: bekci
+version: 0.1.0
+description: bekci sohbet profili — ÜRETİLMİŞ (rapor profilinden türetildi)
+hermes_requires: '>=0.19.0'
+env_requires:
+- name: HERMES_WRITE_SAFE_ROOT
+  description: Bu profilin yazabileceği tek dizin; tanımsız değişken sınırsız yazma
+    demektir. Çoklu ağ geçidinde değişkenin profil başına mı süreç başına mı okunduğu
+    G3'te ölçülür.
+  required: true
+  default: /opt/meridian/var/bots/bekci-sohbet
+- name: BOT_KEY_BEKCI
+  description: Kapı anahtarı — rapor profiliyle AYNI APISIX tüketicisi. Sohbet profili
+    bu anahtarla model çağırır; değer profilin kendi .env dosyasında durur, depoya
+    yazılmaz. Anahtar yoksa ya da yanlışsa kapı 401 döner ve bot sohbet cevabı veremez.
+  required: true
+- name: HINDSIGHT_API_KEY
+  required: true
+  description: Hindsight kiracı anahtarı; değer G3 biriminin credential'ından, dosyaya
+    yazılmaz
+distribution_owned:
+- SOUL.md
+- config.yaml
+- hindsight/config.json

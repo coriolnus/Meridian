@@ -1,0 +1,14 @@
+{
+  "_uretildi": "ÜRETİLMİŞ — elle düzenlenmez; üreteç `ops/sohbet_profili_uret.py`",
+  "mode": "local_external",
+  "api_url": "http://127.0.0.1:8888",
+  "bank_id": "bot-sef",
+  "recall_budget": "low",
+  "memory_mode": "context",
+  "auto_recall": true,
+  "auto_retain": false,
+  "retain_tags": "bot:sef,kaynak:sohbet",
+  "retain_source": "sef",
+  "retain_async": false,
+  "timeout": 10
+}
