@@ -352,13 +352,13 @@ kanal kuruluysa — telefon bildirimi. Aşağıdaki her bölüm o jetonun kendi 
 
 ### Belirti
 
-- /opt/veri kullanımı operatör tavanına yaklaşıyor (erken uyarı) *(kaynak: `meridian/obs.py` — `ALARM_DISK_ESIK`)*
-- Neden ayrı bir sınıf: TSK-131 ALT-İŞ (2026-09-05): A1 /opt/veri (EDG-066 tick geri dolumu) hiçbir sensörle izlenmiyordu. Operatörün 120 G tavanı (ROADMAP TSK-131, `deploy/oracle-a1/geridolum.py:: TAVAN_BAYT` — TEK KAYNAK) o kararın 10 G ÖNCESİNDE haber verir; jeton bu yüzden kendi adını hak ediyor (DATA_QUALITY/MECHANISM_STALE'ın anlattığı olgu bu DEĞİL — "disk operatör tavanına yaklaşıyor" bir KAPASİTE uyarısıdır). Üretici: `watchdog.check_veri_disk_and_alarm`. *(kaynak: `meridian/obs.py`)*
+- /opt/veri KALICI doluluğu 140 G eşiğini aştı (ileri doldurma koşarken hüküm verilmez) *(kaynak: `meridian/obs.py` — `ALARM_DISK_ESIK`)*
+- Neden ayrı bir sınıf: TSK-131 ALT-İŞ (2026-09-05) + TSK-259 (2026-09-30): A1 /opt/veri (EDG-066 tick arşivi, ayrı disk) hiçbir sensörle izlenmiyordu. Eşik 2026-09-12'den beri 140 G'dir (operatör "(a) dur, eşiği 140 G'ye taşı"; `meridian/watchdog.py::VERI_DISK_ESIK_G`): geri dolum kendi 120 G tavanında durdu (`deploy/oracle-a1/geridolum.py::TAVAN_BAYT`) ve jeton artık diskteki KALICI büyümenin bekçisidir. TSK-259 (operatör 2026-09-30 "iş koşarken ölçme"): ileri doldurma işi koşarken eşik hükmü VERİLMEZ — ölçüm işin geçici alanını içerir, iş kendini kendi disk payı kapısıyla korur; atlanan hüküm sayılır (`veri_disk_esigi` satırında `atlandi_is_kosuyor` + `atlanan_tepe_g`, `/api/diagnostics`). İş 2 saatten uzun koşarsa ya da durumu ölçülemezse hüküm YİNE verilir ve mesaj bunu söyler. Jeton kendi adını hak ediyor (DATA_QUALITY/MECHANISM_STALE'ın anlattığı olgu bu DEĞİL — "disk kalıcı olarak doluyor" bir KAPASİTE uyarısıdır). Üretici: `watchdog.check_veri_disk_and_alarm`. *(kaynak: `meridian/obs.py`)*
 
 ### Teşhis adımları
 
 - Bu jetonu **1 kod yolu** ateşliyor — hangisinin konuştuğu olay kaydındaki `detail` alanından okunur:
-  - `meridian/watchdog.py::check_veri_disk_and_alarm` → mesaj şablonu: `f"/opt/veri kullanımı eşiği aştı: {rep['kullanilan_g']} G / {rep['toplam_g']} G " f"(eşik {rep['esik_g']} G, boş {rep['bos_g']} G) — EDG-066 geri dolumu operatörün " "120 G tavanına yaklaşıyor"`
+  - `meridian/watchdog.py::check_veri_disk_and_alarm` → mesaj şablonu: `f"/opt/veri kullanımı eşiği aştı: {rep['kullanilan_g']} G / {rep['toplam_g']} G " f"(eşik {rep['esik_g']} G, boş {rep['bos_g']} G) — " + (f"ileri doldurma işi (pid {is_durumu['pid']}) " f"{int(is_durumu['sure_sn'] // 60)} dk'dır koşuyor — taşma tavanı " f"{TASMA_SN // 60} dk aşıldı: iş takılmış olabilir, ölçüm işin geçici alanını " "da içerir" if is_durumu["kosuyor"] else f"ileri doldurma işinin durumu ÖLÇÜLEMEDİ ({is_durumu['olculemedi_neden']}) — " "koşmuyor sayıldı; ölçüm işin geçici alanını içerebilir" if is_durumu["olculemedi_neden"] else "ileri doldurma işi koşmuyor: bu KALICI doluluktur")`
 - Kaydın tamamı: panoda alarm satırına bas → çekmece; diskte `state/events.jsonl`.
 
 ### Çözüm / betik
