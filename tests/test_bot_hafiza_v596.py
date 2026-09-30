@@ -4,6 +4,10 @@ spec 2026-09-29 §3.4). `hatırla:` → retain, `unut:` → recall + en fazla `U
 
 AĞ YOK: her çivi ya sahte `_cagir` taşır ya da `urlopen`u yamar — gerçek 8888'e hiçbir istek gitmez. `bota_sor`
 üzerinden koşan (olay yazabilen) her çivi `sandbox_state` alır.
+
+Parça 1b G1 Görev 2 (2026-09-30): `ara(bot, soru, k)` — MCP `bot_hafizasi_ara` aracının gövdesi. SALT-OKUR: tek
+recall POST'u, PATCH/DELETE YOK; dönüş `[(tarih, metin), …]` (tarih ölçülmüş okuyucunun alan sırasıyla,
+yoksa "(tarih yok)"); metin ÖNCE scrub SONRA `ARA_KESIT_TAVANI`; zarf tanınmazsa hata ("sonuç yok" uydurulmaz).
 """
 import ast
 import datetime as dt
@@ -175,6 +179,87 @@ def test_unut_bos_ifade_http_oncesi_reddedilir(ifade):
     assert c.cagrilar == []
 
 
+# ---- ara (salt-okur recall — MCP `bot_hafizasi_ara`) -------------------------------------------------------
+
+def test_ara_tek_recall_post_patch_yok_ve_k_sonuc():
+    c = Casus(recall={"results": [
+        {"id": "m1", "text": "cuma toplantısı iptal", "occurred_start": "2026-09-26T09:00:00Z",
+         "mentioned_at": "2026-09-27T10:00:00Z"},
+        {"id": "m2", "text": "cuma yemeği", "mentioned_at": "2026-09-28T11:00:00Z"},
+        {"id": "m3", "text": "üçüncü"}]})
+    donen = _h(c).ara("bekci", "  cuma  ", k=2)
+    assert donen == [("2026-09-26T09:00:00Z", "cuma toplantısı iptal"), ("2026-09-28T11:00:00Z", "cuma yemeği")]
+    (cagri,) = c.cagrilar                                    # TEK çağrı: PATCH / DELETE / retain YOK
+    assert (cagri["yontem"], cagri["url"]) == ("POST", f"{TABAN}/v1/default/banks/bot-bekci/memories/recall")
+    assert cagri["govde"] == {"query": "cuma", "budget": bh.UNUT_RECALL_BUTCESI,
+                              "max_tokens": bh.UNUT_RECALL_MAX_TOKENS}
+    assert cagri["basliklar"] == {"Authorization": f"Bearer {ANAHTAR}"} and cagri["zaman_asimi"] == 10.0
+
+
+def test_ara_varsayilan_k_bes():
+    c = Casus(recall={"results": [{"id": f"m{i}", "text": f"not {i}"} for i in range(9)]})
+    assert [m for _, m in _h(c).ara("bekci", "not")] == [f"not {i}" for i in range(5)]
+
+
+def test_ara_tarih_yoksa_uydurulmaz_metin_yoksa_soylenir():
+    c = Casus(recall={"results": [{"id": "m1", "text": "tarihsiz"}, {"id": "m2", "occurred_start": 7},
+                                  {"id": "m3", "text": "  "}]})
+    assert _h(c).ara("bekci", "x") == [("(tarih yok)", "tarihsiz"), ("(tarih yok)", "(metin yok)"),
+                                        ("(tarih yok)", "(metin yok)")]
+
+
+def test_ara_metin_once_scrub_sonra_tavan():
+    anahtar = "sk-or-v1-" + "a" * 64
+    uzun = "x" * (bh.ARA_KESIT_TAVANI - 20) + " " + anahtar + "\n" + "y" * 900
+    ((_, metin),) = _h(Casus(recall=_recall(("m1", uzun)))).ara("bekci", "x")
+    assert "sk-or-v1-" not in metin and "\n" not in metin
+    # tam tavanda kesilir: daha kısa bir tavan (ör. `unut`un 80'i) modele eksik bellek metni verirdi
+    assert len(metin) == bh.ARA_KESIT_TAVANI and metin.endswith("…")
+
+
+def test_ara_recall_bossa_bos_liste():
+    c = Casus(recall={"results": []})
+    assert _h(c).ara("bekci", "hiç yazılmamış") == [] and len(c.cagrilar) == 1
+
+
+@pytest.mark.parametrize("cevap", [{"sonuclar": []}, {"results": "x"}, "x", None, 3,
+                                   {"results": [{"id": "m1", "text": "iyi"}, "düz-metin"]}])
+def test_ara_taninmayan_cevap_bos_sayilmaz(cevap):
+    # Tanınmayan zarf ya da sonuç öğesi "hafızada yok" demek olmaz — ölçülmemiş bir iddia olurdu.
+    with pytest.raises(RuntimeError):
+        _h(Casus(recall=cevap)).ara("bekci", "x")
+
+
+@pytest.mark.parametrize("soru", ["", "   ", "\n", None])
+def test_ara_bos_soru_http_oncesi_reddedilir(soru):
+    c = Casus()
+    with pytest.raises(ValueError):
+        _h(c).ara("bekci", soru)
+    assert c.cagrilar == []
+
+
+@pytest.mark.parametrize("k", [0, -1, True, "5", 2.0, None])
+def test_ara_k_gecersizse_http_oncesi_reddedilir(k):
+    c = Casus()
+    with pytest.raises(ValueError):
+        _h(c).ara("bekci", "x", k=k)
+    assert c.cagrilar == []
+
+
+def test_ara_varsayilan_http_yolu_post_recall(monkeypatch):
+    gorulen = {}
+
+    def urlopen(istek, timeout=None):
+        gorulen.update(istek=istek, timeout=timeout)
+        return _Cevap(json.dumps({"results": [{"id": "m1", "text": "not"}]}).encode())
+
+    monkeypatch.setattr(bh.urllib.request, "urlopen", urlopen)
+    assert bh.HindsightHafiza(_anahtar=lambda: ANAHTAR).ara("sef", "not") == [("(tarih yok)", "not")]
+    istek = gorulen["istek"]
+    assert istek.get_method() == "POST" and gorulen["timeout"] == 10.0
+    assert istek.full_url == f"{TABAN}/v1/default/banks/bot-sef/memories/recall"
+
+
 # ---- geri_al ------------------------------------------------------------------------------------------------
 
 def test_geri_al_state_valid():
@@ -197,23 +282,23 @@ def test_geri_al_gecersiz_kimlik_http_oncesi_reddedilir(kimlik):
 # ---- ortak kapılar ------------------------------------------------------------------------------------------
 
 @pytest.mark.parametrize("bot", ["../x", "a/b", "Bekci", "", "bekci?k=1", "bekci-1"])
-@pytest.mark.parametrize("islem", ["yaz", "unut", "geri_al"])
+@pytest.mark.parametrize("islem", ["yaz", "unut", "geri_al", "ara"])
 def test_bot_adi_http_oncesi_reddedilir(bot, islem):
     c = Casus()
     h = _h(c)
     with pytest.raises(ValueError):
         {"yaz": lambda: h.yaz(bot, "x", ("sabit_not",)), "unut": lambda: h.unut(bot, "x"),
-         "geri_al": lambda: h.geri_al(bot, "m1")}[islem]()
+         "geri_al": lambda: h.geri_al(bot, "m1"), "ara": lambda: h.ara(bot, "x")}[islem]()
     assert c.cagrilar == []
 
 
-@pytest.mark.parametrize("islem", ["yaz", "unut", "geri_al"])
+@pytest.mark.parametrize("islem", ["yaz", "unut", "geri_al", "ara"])
 def test_anahtar_yoksa_istek_atilmaz_ve_hata_metni_sabit(islem):
     c = Casus()
     h = bh.HindsightHafiza(_cagir=c, _anahtar=lambda: None)
     with pytest.raises(RuntimeError) as e:
         {"yaz": lambda: h.yaz("bekci", "x", ("sabit_not",)), "unut": lambda: h.unut("bekci", "x"),
-         "geri_al": lambda: h.geri_al("bekci", "m1")}[islem]()
+         "geri_al": lambda: h.geri_al("bekci", "m1"), "ara": lambda: h.ara("bekci", "x")}[islem]()
     assert str(e.value) == "hindsight kiracı anahtarı credential yok" and c.cagrilar == []
 
 

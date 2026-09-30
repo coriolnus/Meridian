@@ -7,6 +7,14 @@ Bu sunucu, LLM'in Meridian'ın iç durumuna açılan tek penceresi. 7. soru:
   MC2 "sonuç sızdırmaz" → candidate_context ÖNGÖRÜ SAFLIĞI için r_multiple döndürmemeli; ajan
      geçmiş bir kararın sonucunu görürse "tahminleri" geriye dönük olarak kusursuz olur
   MC3 "bozuk girdi döngüyü öldürmez" → JSON-RPC protokol dayanıklılığı
+
+KAPSAM NOTU (Parça 1b G1, 2026-09-30): MC1'in "yalnız getter" iddiası bugün `--bot`SUZ kip içindir
+(varsayılan Hermes profili; bu dosyanın bütün çivileri o kipte koşar). `--bot <ad>` kipinde iki YAZAN araç
+vardır — `oneri_yaz` (approvals.jsonl'e bekleyen öneri) ve `is_iste` (istek tetik dosyası + istek
+defteri); beyan `MCP_YAZAN_ARACLAR` (mcp_server) + `YAZAN_ARACLAR` (sohbet), sözleşme
+tests/test_mcp_bot_alt_kume_v597.py. MC1'in AST çivisi DEĞİŞMEDİ ve iki kipte de doğrudur: yazımı
+sunucunun KENDİ kodu değil, başka modüllerin gövdeleri yapar. MC3'ün nesne olmayan mesaj/params ve iç hata
+kolları (-32600 / -32603) da v597'de çivili.
 """
 from __future__ import annotations
 

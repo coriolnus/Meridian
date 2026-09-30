@@ -173,10 +173,16 @@ COVERED: dict[str, list[str]] = {
     # Testler: test_indicators_audit_v30.py (23).
     "indicators": ["uretkenlik", "determinizm", "tutarlilik"],
     # --- mcp_server ---
-    # "MUTLAK: yalnız getter" iddiası iki katmanlı kanıtla bağlandı — AST'de yazma çağrısı yok +
-    # tüm araçlar koştuktan sonra state klasörünün SHA'ları değişmiyor (sahiplik). Öngörü saflığı:
-    # candidate_context r_multiple/pnl/exit_reason DÖNMEZ (korunum — sonuç sızarsa ajanın "tahmini"
-    # geriye dönük kusursuz olur). Protokol dayanıklılığı. Testler: test_mcp_audit_v31.py (9).
+    # YETKİ SINIRI İKİ KİPLİDİR (Parça 1b G1, 2026-09-30). `--bot`SUZ kip (varsayılan Hermes profili):
+    # yalnız altı getter, SALT-OKUR — iki katmanlı kanıt: AST'de yazma çağrısı yok + tüm getter'lar
+    # koştuktan sonra state klasörünün SHA'ları değişmiyor (sahiplik). `--bot` kipinde İKİ YAZAN araç
+    # vardır, ikisi de başka modülün gövdesiyle yazar: `oneri_yaz` → approvals.jsonl (yalnız bekleyen
+    # öneri, icra yok) ve `is_iste` → istek tetik dosyası + is_istek_defteri.jsonl; beyan
+    # `MCP_YAZAN_ARACLAR` (mcp_server) + `YAZAN_ARACLAR` (sohbet), sözleşme test_mcp_bot_alt_kume_v597.py.
+    # Sunucunun KENDİ kodu iki kipte de yazmaz (AST çivisi aynen). Öngörü saflığı: candidate_context
+    # r_multiple/pnl/exit_reason DÖNMEZ (korunum — sonuç sızarsa ajanın "tahmini" geriye dönük kusursuz
+    # olur). Protokol dayanıklılığı: bozuk satır -32700, nesne olmayan mesaj/params -32600, iç hata
+    # -32603, döngü ölmez (v597). Testler: test_mcp_audit_v31.py (9) + test_mcp_bot_alt_kume_v597.py.
     "mcp_server": ["uretkenlik", "korunum", "determinizm", "tutarlilik", "sahiplik"], # --- memory ---
     # Kimlik `len+1` idi → defter kısalınca GERİ SARIYORDU (iki hipotez aynı kimlik); artık
     # max(mevcut)+1, tek yönlü (monotonluk). Terfi mandalı + durum damgası yalnız GEÇİŞTE

@@ -8,11 +8,17 @@ NE YAPAR. `bota_sor`un DETERMİNİSTİK `hatırla:` / `unut:` dalları bu sını
     `{"state": "invalidated", "reason": "operatör unut: <ifade> (<ISO>)"}`. Emekliye ayrılan `(id, kesit)`
     listesi döner; `bota_sor` operatöre hangi metinleri unuttuğunu söyler.
   * `geri_al` → `PATCH …/memories/{id}` `{"state": "valid"}` (bu parçada API fonksiyonu, komut değil).
+  * `ara`     → SALT-OKUR recall (Parça 1b G1 Görev 2; MCP araç sunucusunun `bot_hafizasi_ara` aracı): TEK
+    `POST …/memories/recall`, bellek durumu DEĞİŞMEZ; `[(tarih, metin), …]` en fazla `k` öğe, upstream sırasıyla.
 
-HİÇBİR CANLI YOL BU SINIFI BUGÜN KULLANMAZ: varsayılan olarak hiçbir yere bağlanmadı; kablolama Parça 1b'de
-operatörün K-1 kararından sonra gelir (plan). `bota_sor` `hafiza=None` iken "bağlı değil" der.
+HİÇBİR CANLI YOL BU SINIFI BUGÜN KULLANMAZ: `bota_sor` kablolaması Parça 1b'de operatörün K-1 kararından sonra
+gelir (plan) — `hafiza=None` iken "bağlı değil" der. Tek kod çağıranı `mcp_server`in `--bot` kipindeki
+`bot_hafizasi_ara` aracıdır ve o kip henüz hiçbir Hermes profiline bağlı değildir (G2).
 
 DEĞİŞMEZLER.
+  * `ara` SALT-OKURDUR: recall dışında hiçbir istek atmaz (çivi v596 — tek çağrı, PATCH/DELETE yok). Tarih
+    alanı ölçülmüş okuyucunun (`deploy/hindsight/hafiza_sor.sh`) sırasıyla okunur, yoksa "(tarih yok)" —
+    uydurulmaz; öğe nesne değilse "sonuç yok" SAYILMAZ, `RuntimeError`.
   * KALICI SİLME YOK: yalnız `state` alanı değişir (`invalidated` recall'dan düşürür, arşive taşır, `valid` ile
     geri döner — ölçüldü, A1 openapi 2026-09-29). Kaynakta silme yöntemi yoktur (çivi v596).
   * TAVAN: tek `unut` en fazla `UNUT_TAVANI` bellek emekliye ayırır; ilk `UNUT_TAVANI` sonucun kimliklerinden biri
@@ -65,6 +71,11 @@ UNUT_RECALL_MAX_TOKENS = 4096
 UNUT_RECALL_BUTCESI = "low"
 #: Operatöre gösterilen kesit tavanı (karakter; plan arayüzü `metin_kesiti≤80`).
 KESIT_TAVANI = 80
+#: `ara` sonucunun metin tavanı (karakter) — ölçülmüş okuyucu `deploy/hindsight/hafiza_sor.sh` sonuç başına 600
+#: karakter basar. Modele giden toplam ayrıca araç çıktısı tavanından geçer (MCP: sohbetin çit + kesit gövdesi).
+ARA_KESIT_TAVANI = 600
+#: `ara` tarih alanları, ölçülmüş okuyucunun okuma sırasıyla (olay anı, yoksa anılma anı).
+_ARA_TARIH_ALANLARI = ("occurred_start", "mentioned_at")
 #: Retain `context` ve `metadata` — plan 2026-09-29 Görev 2 (DONUK).
 NOT_BAGLAMI = "operatör notu"
 NOT_KAYNAGI = "operator"
@@ -80,13 +91,23 @@ def _simdi_iso() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def _kesit(metin) -> str:
-    """Operatöre gösterilecek tek satırlık kesit: ÖNCE scrub (tavan bir anahtarı ortadan bölüp desenin dışına itmesin),
-    sonra boşluk katlama, sonra `KESIT_TAVANI`. Metin yoksa bunu SÖYLER — boş kesit uydurulmaz."""
+def _kesit(metin, tavan: int = KESIT_TAVANI) -> str:
+    """Tek satırlık kesit: ÖNCE scrub (tavan bir anahtarı ortadan bölüp desenin dışına itmesin), sonra boşluk
+    katlama, sonra `tavan` (varsayılan `KESIT_TAVANI`; `ara` kendi tavanını verir). Metin yoksa bunu SÖYLER —
+    boş kesit uydurulmaz."""
     if not isinstance(metin, str) or not metin.strip():
         return "(metin yok)"
     tek = " ".join(notify.scrub(metin).split())
-    return tek if len(tek) <= KESIT_TAVANI else tek[:KESIT_TAVANI - 1] + "…"
+    return tek if len(tek) <= tavan else tek[:tavan - 1] + "…"
+
+
+def _tarih(kayit: dict) -> str:
+    """Belleğin tarihi, `_ARA_TARIH_ALANLARI` sırasıyla; hiçbiri dolu bir dizge değilse bunu SÖYLER (uydurulmaz)."""
+    for alan in _ARA_TARIH_ALANLARI:
+        deger = kayit.get(alan)
+        if isinstance(deger, str) and deger.strip():
+            return deger.strip()
+    return "(tarih yok)"
 
 
 def _recall_dizisi(veri) -> list:
@@ -153,6 +174,14 @@ class HindsightHafiza:
     def _istek(self, yontem: str, url: str, govde: dict, anahtar: str):
         return self._cagir(yontem, url, govde, {"Authorization": f"Bearer {anahtar}"}, self.zaman_asimi_s)
 
+    def _recall(self, banka: str, ifade: str, anahtar: str) -> list:
+        """TEK recall gövdesi (`unut` ve `ara`): `budget` + upstream'in kendi `max_tokens` varsayılanı; zarf
+        tanınmazsa `RuntimeError`."""
+        cevap = self._istek("POST", f"{banka}/memories/recall",
+                            {"query": ifade, "budget": UNUT_RECALL_BUTCESI, "max_tokens": UNUT_RECALL_MAX_TOKENS},
+                            anahtar)
+        return _recall_dizisi(cevap)
+
     @staticmethod
     def _kimlik(memory_id) -> str:
         if not isinstance(memory_id, str) or not _KIMLIK_DESENI.fullmatch(memory_id):
@@ -179,11 +208,8 @@ class HindsightHafiza:
         if not ifade:
             raise ValueError("HindsightHafiza.unut: boş ifade — recall en yakın rastgele bellekleri döndürür")
         anahtar = self._anahtar_al()
-        cevap = self._istek("POST", f"{banka}/memories/recall",
-                            {"query": ifade, "budget": UNUT_RECALL_BUTCESI, "max_tokens": UNUT_RECALL_MAX_TOKENS},
-                            anahtar)
         secilen = []
-        for kayit in _recall_dizisi(cevap)[:UNUT_TAVANI]:
+        for kayit in self._recall(banka, ifade, anahtar)[:UNUT_TAVANI]:
             kimlik = kayit.get("id") if isinstance(kayit, dict) else None
             if not isinstance(kimlik, str) or not _KIMLIK_DESENI.fullmatch(kimlik):
                 raise RuntimeError("hindsight recall sonucunda bellek kimliği tanınmadı — hiçbir şey unutulmadı")
@@ -198,6 +224,25 @@ class HindsightHafiza:
                 raise
             unutulanlar.append((kimlik, kesit))
         return unutulanlar
+
+    def ara(self, bot: str, soru: str, k: int = 5) -> list[tuple[str, str]]:
+        """SALT-OKUR recall: TEK POST, bellek durumu DEĞİŞMEZ. Dönüş `[(tarih, metin), …]` en fazla `k` öğe,
+        upstream sırasıyla; metin ÖNCE scrub SONRA `ARA_KESIT_TAVANI`. Boş soru / geçersiz `k` HTTP'den ÖNCE
+        `ValueError`; nesne olmayan sonuç öğesi `RuntimeError` ("sonuç yok" sayılmaz)."""
+        banka = self._banka_yolu(bot)
+        soru = soru.strip() if isinstance(soru, str) else ""
+        if not soru:
+            raise ValueError("HindsightHafiza.ara: boş soru — recall en yakın rastgele bellekleri döndürür")
+        # bool bir int alt sınıfıdır: `True` 1 diye sessizce okunmasın.
+        if isinstance(k, bool) or not isinstance(k, int) or k < 1:
+            raise ValueError(f"HindsightHafiza.ara: k pozitif tamsayı olmalı, gelen {k!r}")
+        anahtar = self._anahtar_al()
+        sonuc: list[tuple[str, str]] = []
+        for kayit in self._recall(banka, soru, anahtar)[:k]:
+            if not isinstance(kayit, dict):
+                raise RuntimeError("hindsight recall sonucu tanınmadı (öğe bir nesne değil)")
+            sonuc.append((_tarih(kayit), _kesit(kayit.get("text"), ARA_KESIT_TAVANI)))
+        return sonuc
 
     def geri_al(self, bot: str, memory_id: str) -> bool:
         """`unut`un tersi: `state: valid` (bellek recall'a döner). Başarıda `True`; hata `RuntimeError`."""
