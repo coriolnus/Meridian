@@ -3,6 +3,11 @@ model:
   default: gemini-flash-latest
 mcp_servers:
   meridian:
+    # KAPALI (operatör K-1, 2026-09-30): Hermes venv'ine `mcp` paketi kurulunca bu girdi İLK KEZ canlanırdı ve varsayılan
+    # profili kullanan yollar (öğrenme, bileşik ön-eleme, pano 'düşün') Meridian araçlarını ölçülmeden görmeye başlardı.
+    # Bot sohbet profilleri bu sunucuyu kendi `platform_toolsets` izin listesiyle açar. Açmak ayrı karar + ölçüm kartı ister.
+    # Kanıt: docs/superpowers/specs/2026-09-29-konusan-bot-filosu-parca0-olcum.md (K-1), TSK-256.
+    enabled: false
     command: /opt/meridian/.venv/bin/python
     args:
     - -m
