@@ -17,7 +17,8 @@ sessizce yaratır ve boş doğan bir DB defterleri boş okuturdu; yaratma yetkis
 `ensure_schema`/dbmigrate yolunda). `read_entity`/`write_entity` ortak yüzeyi; `read_rows`/
 `append_row`/`replace_rows`, `read_doc`/`write_doc`, `read_series`/`write_series`; `meta`/`stamp`
 (entity_meta damgası — dosya çağındaki mtime'ın karşılığı, önbellek anahtarı + tazelik ölçümü);
-`backup_to` (çevrimiçi yedek — WAL modunda cp/tar sessizce eksik kopya verir); `close_connections`.
+`backup_to` (çevrimiçi yedek — WAL modunda cp/tar sessizce eksik kopya verir) ve kök bağımsız kardeşi
+`tutarli_kopya` (verilen yoldaki DB'yi salt-okur açıp kopyalar — ön-eleme kum havuzu); `close_connections`.
 `db_path()` her çağrıda `config.STATE`ten türetilir: yol dondurmak ölçüm sandbox'larını kırar.
 
 DEĞİŞMEZLER. Tip koruma (parite sözleşmesi): tipli kolonlar sorgulanabilirlik içindir, DOĞRULUK
@@ -30,7 +31,8 @@ hâl varsayılmaz, ÖLÇÜLÜR ve süreç başına bir kez beyan edilir (`db_off
 SİMETRİĞİ (P2): DB dosyası hiç YOKKEN kanonik defter dosyaları duruyorsa süreç başına bir kez
 `yerel_donmus_defter` damgalanır — bu makinedeki defter donmuş fotoğraf olabilir, canlı DB başka
 makinede olabilir; süreç-içi dedektör bu ayrışmayı yapısal olarak göremez (envanter 2026-08-22 #4).
-Okur/yazar: yalnız `state/meridian.db` (+ -wal/-shm).
+Okur/yazar: `state/meridian.db` (+ -wal/-shm); `tutarli_kopya` verilen kaynağı SALT-OKUR açar ve yalnız
+hedef dosyaya yazar.
 """
 from __future__ import annotations
 
@@ -937,15 +939,50 @@ def backup_to(hedef: Path | str) -> Path:
     (kopyalama sırasında checkpoint çalışabilir). Yedeğin sessizce eksik olması, yedek olmamasından
     daha kötüdür: geri yükleme gününe kadar görünmez."""
     src = connect()
+    with _GUARD:
+        return _cevrimici_yedek(src, hedef)
+
+
+def _cevrimici_yedek(src: sqlite3.Connection, hedef: Path | str) -> Path:
+    """Çevrimiçi yedeğin TEK YAZICISI: `hedef`e yeni bir SQLite dosyası açar, `src`in tamamını yedek API'siyle
+    aktarır, hedef bağlantısını kapatır. `backup_to` (süreç bağlantısı, kilitli) ve `tutarli_kopya` (verilen
+    yoldan salt-okur bağlantı) aynı gövdeyi çağırır — iki kopya gövde zamanla ayrışırdı (tek-kaynak)."""
     p = Path(hedef)
     p.parent.mkdir(parents=True, exist_ok=True)
     dst = sqlite3.connect(str(p))
     try:
-        with _GUARD:
-            src.backup(dst)
+        src.backup(dst)
     finally:
         dst.close()
     return p
+
+
+def tutarli_kopya(kaynak: Path | str, hedef: Path | str) -> Path:
+    """VERİLEN YOLDAKİ SQLite defterinin TUTARLI kopyası — `backup_to`nun kök bağımsız kardeşi (TSK-214).
+
+    NEDEN `backup_to` YETMEDİ (ölçüldü): o kaynağı `connect()` → `db_path()` ile `config.STATE`ten türetir.
+    Ön-eleme kum havuzu (`prescreen._sandbox`) ise açık bir `live` kökü alır ve iki kök ayrışabilir
+    (testler; `store.kum_havuzuna_maddelestir`in `canli_kok_config_disinda` dalı tam bu durumu ölçer) —
+    `backup_to` orada YANLIŞ defteri kopyalardı. Süreç-içi bağlantı önbelleğine (`_CONNS`) de girmez: kopya
+    tek seferliktir ve canlı dosyaya açık kalan bir bağlantı sürecin geri kalanına taşınmamalıdır.
+
+    NEDEN SALT-OKUR (`mode=ro` URI): canlı defterin sahibi worker'dır. Okuma-yazma bir bağlantı, SON
+    bağlantı olarak kapanırsa WAL'ı ANA dosyaya checkpoint eder — yani canlıya YAZAR. Salt-okur bağlantı veri
+    yazamaz ve olmayan yolu YARATMAZ (`connect(create=False)` sigortasının aynısı; `sqlite3.connect`
+    varsayılanı sessizce boş bir DB doğururdu). ÖLÇÜLDÜ (2026-09-30, stdlib sondası + v598 Y3): WAL'da bekleyen
+    satır kopyaya girer, canlı üç dosyanın (ana/-wal/-shm) boyut ve mtime'ı değişmez. BEYANLI YAN ETKİ:
+    kaynakta `-wal`/`-shm` HİÇ YOKSA (hiçbir bağlantı açık değilken) SQLite WAL okuma protokolü gereği onları
+    BOŞ yaratır ve salt-okur bağlantı silemez — veri değildir. Canlıda ön-elemenin ebeveyni olan worker
+    süreç-içi bağlantısını (`_CONNS`) açık tuttuğu sürece yan dosyalar zaten vardır ve bu dal doğmaz (kod
+    okuması; canlıda ÖLÇÜLMEDİ).
+
+    Hedef tek dosyadır: yan dosya (`-wal`/`-shm`) üretmez; yedek API'si sayfaları taşır, WAL ayrı kopyalanmaz."""
+    k = Path(kaynak).resolve()
+    src = sqlite3.connect(f"{k.as_uri()}?mode=ro", uri=True, timeout=5.0)
+    try:
+        return _cevrimici_yedek(src, hedef)
+    finally:
+        src.close()
 
 
 def mark_migrated(name: str, *, digest: str, conn: sqlite3.Connection | None = None) -> None:

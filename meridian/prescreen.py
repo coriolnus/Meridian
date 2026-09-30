@@ -31,6 +31,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os
 import pathlib
 import shutil
 import sys
@@ -154,11 +155,77 @@ def live_fingerprint(live: pathlib.Path) -> dict:
     return out
 
 
+def _sprint_kok_sapmalari() -> dict[str, str]:
+    """Ön-eleme kum havuzunun KÖK kararında sprint'ten (`sprint._atlanir`) BEYANLI sapmaları: ad → ne olur.
+
+    KARAR SPRINT'İNDİR, SAPMA BURADADIR ve YALNIZ İKİ ADDIR (TSK-214 tur 2, Rol-1 NÜANS 2026-09-30):
+      * `bars` → "kopyalanir": ölçümün GİRDİSİDİR (`run()` `config.BARS`ı kopyaya çevirir, `dataset.load`
+        oradan okur). Sprint onu kopyalamaz, BAĞ kurar; ön-eleme İÇERİĞİNİ kopyalar (`symlinks=False`
+        davranışı aynen korunur).
+      * DB (`storage.DB_NAME`) → "tutarli_kopya": Kademe C'den (TSK-020, 2026-09-28) beri iki öğrenme
+        defteri DB'dedir ve ön-eleme onları KOPYADAN okur; sprint izolasyon için DB'siz doğar. Ön-eleme DB'yi
+        dosya olarak DEĞİL, SQLite çevrimiçi yedeğiyle alır (`storage.tutarli_kopya`); DB'nin `-wal`/`-shm`
+        yan dosyaları sprint ile AYNI kararla atlanır.
+    Başka her kök adında (sır/geçici/yedek artığı, `HALT`, `sprint`, iki seans-içi bar arşivi dizini, DB yan
+    dosyaları) karar sprint'inkidir. Arşiv dizinlerinin ADI burada BİLEREK yazılmaz: `barsarchive` yazar
+    tekliği çivisi (v116) o adı anan her modülü yazar sayar; adlar `sprint.SKIP_COPY`dedir. Konum adlarının ön-eleme ölçüm yolunda OKUYUCUSU YOK (ölçüldü, grep
+    2026-09-30): `HALT`ı `health.halted` okur ve onu çağıran modüller (loop, scheduler, api, hermes, analytics,
+    seans-içi döngüler) ön-elemenin yolunda değildir; `backtest`, `broker`, `strategy`, `dataset`, `guard`,
+    `validation` ve `reflect`in kapı yolu HALT'a, `state/sprint` ağacına ve seans-içi bar arşivlerine bakmaz.
+    Kazanç: kum havuzu başına `state/sprint` ve iki seans-içi arşiv kopyalanmaz (boyutları sprint `SKIP_COPY`
+    şerhindeki A1 ölçümünde; bugünkü boyut ÖLÇÜLMEDİ).
+    Ayrışma çivisi: `tests/test_prescreen_kum_havuzu_tek_kaynak_v598.py` (Y4 yüklem, Y4b üretim yolu) — bu
+    sözlük orada DONDURULMUŞTUR; yeni bir sapma çivide beyan edilmeden doğamaz, bir sapmanın kaybı (ör. DB'nin
+    atlanması) öğrenme defterlerini kum havuzundan düşürür ve o da öter."""
+    from . import storage
+    return {"bars": "kopyalanir", storage.DB_NAME: "tutarli_kopya"}
+
+
+def _kok_atlar(ad: str, *, dizin: bool) -> bool:
+    """KÖK girdisi `copytree`den DÜŞÜLÜR mü? — sprint'in kök kararı (`sprint._atlanir`), beyanlı sapmalarla
+    (`_sprint_kok_sapmalari`). Karar burada YENİDEN YAZILMAZ, sprint'ten sorulur.
+
+    DİZİN MUAFİYETİ (v533 T5, bedel): desenler yalnız DOSYA adlarına uygulanır — desene uyan bir DİZİNİ
+    atlamak alt ağacın tamamını sessizce düşürürdü. Kökteki bir dizin yalnız sprint'in TAM AD kümesindeyse
+    (`SKIP_COPY`) atlanır. Sprint'in kök döngüsü desene uyan dizini de atlar; bu fark beyanlıdır ve canlıda
+    böyle bir dizin ölçülmedi.
+
+    "tutarli_kopya" sapmasındaki ad DA `copytree`den düşülür (dosya kopyası sprint ile aynı kararla
+    yapılmaz) — içeriğini `_sandbox` ayrıca, tutarlı yoldan yazar."""
+    from . import sprint
+    if _sprint_kok_sapmalari().get(ad) == "kopyalanir":
+        return False
+    if dizin:
+        return ad in sprint.SKIP_COPY
+    return sprint._atlanir(ad)
+
+
+def _okunabilir(yol: pathlib.Path) -> bool:
+    """Kopya bu SÜRECİN kimliğiyle bu girdiyi okuyabilir mi? Dosyada okuma, dizinde okuma + geçiş izni.
+
+    C00005 vakasının (A1 2026-09-21, `[Errno 13]`) ADA BAĞLI OLMAYAN hâli: adı hiçbir desene uymayan root
+    sahipli bir dosya da `shutil.copytree`ı `shutil.Error` ile düşürür ve haftanın bileşik kalemi ölçülmeden
+    yanar. `os.access` GERÇEK uid'e bakar — ön-eleme çocuğu setuid değildir, gerçek = etkin. Kırık bir
+    sembolik bağ da burada okunamaz sayılır (hedefi yok; `symlinks=False` altında kopyası zaten düşerdi)."""
+    return os.access(yol, os.R_OK | (os.X_OK if yol.is_dir() else 0))
+
+
 def _sandbox(workdir: pathlib.Path, live: pathlib.Path, log=print) -> pathlib.Path:
     """Çalışma dizinindeki state kopyası (varsa YENİDEN KULLANILIR).
 
     Yeniden kullanım `--resume`un ön şartıdır: yeni bir kopya, önceki koşunun `inc_cache.json`ını
     da silerdi ve "atlanan" adaylar aslında yeniden ölçülürdü.
+
+    ATOMİK KURULUM (TSK-214 tur 2, inceleme bulgusu — Rol-1: sessiz ölçüm bozulması). Yeniden kullanım
+    kararı yalnız `hedef`in VARLIĞINA bakar; kopya doğrudan `hedef`e kurulsaydı `copytree`den SONRAKİ bir
+    adım (tutarlı DB kopyası, maddeleştirme) düştüğünde DB'siz yarım bir ağaç kalırdı ve sonraki
+    `--resume` onu hazır sayardı — kum havuzunda DB açan kod BOŞ bir veritabanı görür, öğrenme defterleri
+    boş okunur, ölçüm SESSİZCE değişir. Bu yüzden kurulum kardeş `state.yarim` dizininde yapılır ve
+    BÜTÜN adımlar bitince tek `os.replace` ile `hedef`e taşınır (aynı üst dizin = aynı dosya sistemi =
+    atomik ad değişikliği): `hedef` ya tam doğar ya hiç doğmaz. Düşen kurulumun `.yarim` dizini
+    SİLİNMEZ — düşüşün kanıtıdır; sonraki koşum onu zaman damgalı + pid'li bir ada KENARA alır ve loga
+    yazar (`obs` DEĞİL, aşağıdaki gerekçe). BEDEL (beyanlı): kenara alınan dizinler `workdir`de birikir
+    (her biri bir kum havuzu boyutunda); temizlik bu fonksiyonun işi değildir — kalıcı silme yok.
 
     SIR/GEÇİCİ ARTIK SÜZÜLÜR (TSK-214, ölçülmüş vaka A1 2026-09-21 20:39:43Z). Süzgeçsiz kopya
     haftanın TEK bileşik kalemini ölçmeden düşürdü: `shutil.copytree` root sahipli (0600) bir sır
@@ -171,49 +238,108 @@ def _sandbox(workdir: pathlib.Path, live: pathlib.Path, log=print) -> pathlib.Pa
     daha vurmuştu (sprint kum havuzu TSK-208, teşhis paketi/yedek TSK-209) ve oralarda çözüm tek
     kaynak oldu: `config.SIR_TAM_ADLAR`/`SIR_DESENLERI`/`GECICI_ARTIK_DESENLERI` + bileşik yüklem
     `kopyalanmaz_mi`. Dördüncü bir liste yazmak TSK-209'da ÖLÇÜLEN ayrışmayı ("iki yüzey iki liste
-    tuttu") geri getirirdi, o yüzden süzgeç `sprint._alt_dizin_suzgeci`in KENDİSİDİR — kopyası
-    değil. Import ölçüldü (TSK-214): `sprint` bu depoda `prescreen`e hiçbir atıf yapmaz (döngü
-    yok) ve modül düzeyinde yalnız `config` + `store` çeker; `store` zaten `run()`un birkaç satır
-    altında `reflect` üzerinden yüklenir, yani marjinal ağırlık TEK modüldür. Import BURADA
-    (gövdede) durur: `python -m meridian.prescreen --help` gibi yollar numpy'a kadar inen kapanışı
-    ödemesin — dosyanın geri kalanı da (`config`, `backtest`, `obs`) aynı deseni kullanır.
+    tuttu") geri getirirdi, o yüzden SINIF süzgeci `sprint._alt_dizin_suzgeci`in KENDİSİDİR — kopyası
+    değil; YEDEK ARTIĞI sınıfı (TSK-214 tur 2, `config.YEDEK_ARTIK_DESENLERI`) da oradan gelir ve HER
+    DERİNLİKTE (kök dahil) sorulur. Import ölçüldü (TSK-214): `sprint` bu depoda `prescreen`e hiçbir atıf
+    yapmaz (döngü yok) ve modül düzeyinde yalnız `config` + `store` çeker; `store` zaten `run()`un birkaç
+    satır altında `reflect` üzerinden yüklenir, yani marjinal ağırlık TEK modüldür. Import BURADA (gövdede)
+    durur: `python -m meridian.prescreen --help` gibi yollar numpy'a kadar inen kapanışı ödemesin —
+    dosyanın geri kalanı da (`config`, `backtest`, `obs`) aynı deseni kullanır.
 
-    `SKIP_COPY` BİLEREK SORULMAZ VE BU BİR DARALTMA KAÇINMASIDIR. O küme KÖK sözleşmesidir, içinde
-    KONUMA bağlı adlar vardır (`bars`, `sprint`, `HALT`, `meridian.db`) ve gerekçeleri BOYUT ile
-    İZOLASYONDUR — ön-eleme için ÖLÇÜLMEDİ. Burada kapanan yalnız SINIF sorusudur (sır + geçici
-    artık); boyut/izolasyon ayrı bir kalemdir ve ölçülmeden atlamak ölçülmemiş bir kayıptır.
+    KÖK KARARI SPRINT'İNDİR (TSK-214 tur 2, 2026-09-30). Eski "`SKIP_COPY` BİLEREK SORULMAZ" kaçınması
+    KALKTI: ROADMAP İŞ metni kökte sprint ile AYNI kümeyi istedi, konum adlarının ön-eleme yolunda okuyucusu
+    olmadığı ölçüldü. Kökte her ad `_kok_atlar`dan geçer — sprint'in kararı + iki BEYANLI sapma (`bars`
+    içerik olarak kopyalanır, DB tutarlı kopyalanır; gerekçe ve okuyucu ölçümü `_sprint_kok_sapmalari`nda).
+    Ayrışma çivisi: v598 Y4 (yüklem) + Y4b (iki üretim yolu aynı canlı köke karşı).
 
-    `obs` KULLANILMAZ, SATIR `log`a GİDER: bu fonksiyon çağrıldığında `config.STATE` HENÜZ CANLI
+    ÜÇ AYRI RAPOR, çünkü üç ayrı sınıf: SINIF (sır/geçici/yedek artığı — adı önceden bilinemez, göreli yol),
+    KONUM (sprint'in tam ad kümesi — adları kodda yazılı, ama bu yüzey için YENİ bir daralma: ilk koşumlarda
+    görünür olsun), OKUNAMAYAN (`_okunabilir`; ada bağlı olmayan arıza sınıfı). Okunamayan girdi kopyayı
+    DÜŞÜRMEZ, atlanır — ölçümün girdisini eksiltebileceği için SESSİZ değildir, adıyla loga düşer (Yasa 4:
+    beyanlı atlama). Sınıf süzgecinin yakaladığı ad okunamaz olsa da SINIF satırında sayılır (önce sınıf).
+
+    DB TUTARLI KOPYASI (Kademe C R3 düzeltmesinde 2026-09-28'de bu kaleme not düşülen sınıf): canlı worker
+    yazarken SICAK WAL veritabanının dosya kopyası tutarlı anlık görüntü DEĞİLDİR (ana dosya ile `-wal` ayrı
+    anlarda okunur). DB `copytree`den düşülür ve `storage.tutarli_kopya` (salt-okur kaynak + çevrimiçi yedek
+    API'si) ile TEK dosya olarak yazılır; `-wal`/`-shm` kopyalanmaz. DB kopyalanamazsa hata YÜKSELİR:
+    öğrenme defterleri olmadan ölçüm yanlış koşardı; `main()` hatayı kuyruğa `measure_failed` + neden olarak
+    damgalar. Canlıda DB yoksa (dosya kipi) kum havuzu da DB'siz doğar — bugünkü davranış.
+
+    `obs` KULLANILMAZ, SATIRLAR `log`a GİDER: bu fonksiyon çağrıldığında `config.STATE` HENÜZ CANLI
     state'tir (`run()` içindeki `config.STATE = state` ataması BUNDAN SONRA gelir), yani `obs.log`
     canlı deftere yazardı. `log` stdout'a gider = `logs/composite-prescreen.log`. Yasa 6 okuyanı:
-    çivi `tests/test_prescreen_kum_havuzu_sir_v533.py` (T1) bugün, TSK-215 yarın.
+    çiviler `tests/test_prescreen_kum_havuzu_sir_v533.py` (T1) ve `tests/test_prescreen_kum_havuzu_tek_kaynak_v598.py`
+    bugün, TSK-215 yarın.
 
-    `symlinks=False` KORUNUR (mevcut davranış, bu turda ölçülmedi): `bars` gibi symlink'ler içerik
-    olarak kopyalanır.
+    `symlinks=False` KORUNUR (mevcut davranış): `bars` gibi symlink'ler içerik olarak kopyalanır.
 
-    KADEME C D4 (TSK-020, 2026-09-28) — ÖĞRENME DEFTERLERİ. Kopya `meridian.db`yi de TAŞIR (yukarıdaki
-    `SKIP_COPY` kaçınması; ölçüldü): iki öğrenme defteri göçten sonra kum havuzunda o kopyadan okunur,
-    damga kopyada da doludur — geçmiş görünür. Maddeleştirme yardımcısı yine ÇAĞRILIR ve kararı loga
-    düşer (`kum_havuzu_db_tasiyor`): ön-eleme bir gün DB'yi kopyalamamaya karar verirse (izolasyon)
-    canlı DB içeriği kanonik adla kendiliğinden iner — sprint kum havuzunun R3 kapanışıyla AYNI yol.
-    `store` burada canlı `config.STATE`e bakar (bu fonksiyon `run()`ın `config.STATE = state`
-    atamasından ÖNCE çağrılır); `live` farklı bir kök ise yardımcı hiçbir şey okumaz, beyan eder."""
+    KADEME C D4 (TSK-020, 2026-09-28) — ÖĞRENME DEFTERLERİ. Kopya `meridian.db`yi TAŞIR (yukarıdaki tutarlı
+    kopya; ölçüldü): iki öğrenme defteri göçten sonra kum havuzunda o kopyadan okunur, damga kopyada da
+    doludur — geçmiş görünür. Maddeleştirme yardımcısı yine ÇAĞRILIR ve kararı loga düşer
+    (`kum_havuzu_db_tasiyor`): ön-eleme bir gün DB'yi kopyalamamaya karar verirse (izolasyon) canlı DB
+    içeriği kanonik adla kendiliğinden iner — sprint kum havuzunun R3 kapanışıyla AYNI yol. `store` burada
+    canlı `config.STATE`e bakar (bu fonksiyon `run()`ın `config.STATE = state` atamasından ÖNCE çağrılır);
+    `live` farklı bir kök ise yardımcı hiçbir şey okumaz, beyan eder."""
     hedef = workdir / "state"
     if hedef.exists():
         return hedef
     workdir.mkdir(parents=True, exist_ok=True)
-    from . import sprint, store
-    atlanan: list[str] = []
-    shutil.copytree(live, hedef, symlinks=False,
-                    ignore=sprint._alt_dizin_suzgeci(live, atlanan))
+    # ATOMİK KURULUM (docstring): kopya kardeş `.yarim` dizinine kurulur, `hedef` yalnız sonda doğar.
+    yarim = hedef.with_name(hedef.name + ".yarim")
+    if yarim.exists():
+        # Önceki koşumun yarıda kalan kurulumu: SİLİNMEZ (düşüşün kanıtıdır), damgalı ada kenara alınır.
+        # Damga `time.gmtime` ile: raporun ÜRETİM ZAMANI koşu başına TEK kez `run()`da donar (v182 çivisi
+        # o çağrıyı sayar); bu ad bir rapor zamanı değil, yalnız çakışmasız bir kenar adıdır.
+        damga = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+        kenar = yarim.with_name(f"{yarim.name}-{damga}-p{os.getpid()}")
+        os.replace(yarim, kenar)
+        log(f"[sandbox] önceki yarım kurulum kenara alındı (SİLİNMEDİ, TSK-214): {kenar.name}")
+    from . import sprint, storage, store
+    kok = pathlib.Path(os.fspath(live))
+    atlanan: list[str] = []          # SINIF: sır / geçici artık / yedek artığı — göreli yol, her derinlik
+    konum_atlanan: list[str] = []    # KÖK: sprint'in tam ad kümesi (beyanlı sapmalar hariç)
+    okunamayan: list[str] = []       # her derinlik, göreli yol
+    sinif = sprint._alt_dizin_suzgeci(live, atlanan)
+
+    def _suzgec(dizin, adlar) -> set[str]:
+        """`copytree` kancası: önce SINIF (sprint süzgeci), kökte KONUM (`_kok_atlar`), sonra OKUNAMAYAN."""
+        d = pathlib.Path(os.fspath(dizin))
+        atla = set(sinif(dizin, adlar))
+        kokte = d == kok
+        for ad in adlar:
+            if ad in atla:
+                continue
+            yol = d / ad
+            if kokte and _kok_atlar(ad, dizin=yol.is_dir()):
+                atla.add(ad)
+                konum_atlanan.append(ad)
+            elif not _okunabilir(yol):
+                atla.add(ad)
+                okunamayan.append(yol.relative_to(kok).as_posix())
+        return atla
+
+    shutil.copytree(live, yarim, symlinks=False, ignore=_suzgec)
     if atlanan:
-        log(f"[sandbox] kopyalanmayan (sır/geçici artık, TSK-214): {len(atlanan)} — "
+        log(f"[sandbox] kopyalanmayan (sır/geçici/yedek artığı, TSK-214): {len(atlanan)} — "
             + ", ".join(sorted(atlanan)))
-    madde = store.kum_havuzuna_maddelestir(hedef, canli_state=live)
+    if konum_atlanan:
+        log(f"[sandbox] sprint kök kümesiyle atlanan (konum/izolasyon, TSK-214): {len(konum_atlanan)} — "
+            + ", ".join(sorted(konum_atlanan)))
+    if okunamayan:
+        log(f"[sandbox] okunamayan, atlandı (kopya düşmedi, TSK-214): {len(okunamayan)} — "
+            + ", ".join(sorted(okunamayan)))
+    for ad, ne in _sprint_kok_sapmalari().items():
+        if ne == "tutarli_kopya" and (live / ad).is_file():
+            storage.tutarli_kopya(live / ad, yarim / ad)
+            log(f"[sandbox] {ad} tutarlı kopya (SQLite çevrimiçi yedek; yan dosyalar kopyalanmaz, TSK-214): "
+                f"{(yarim / ad).stat().st_size} bayt")
+    madde = store.kum_havuzuna_maddelestir(yarim, canli_state=live)
     if madde:
         log("[sandbox] öğrenme defterleri (Kademe C D4): "
             + ", ".join(f"{m['varlik']}={m['durum']}" + (f"({m['n']})" if m["n"] is not None else "")
                         for m in madde))
+    # BÜTÜN ADIMLAR BİTTİ: tek `rename` (aynı dizin → aynı dosya sistemi) — `hedef` ya tam doğar ya hiç.
+    os.replace(yarim, hedef)
     return hedef
 
 
