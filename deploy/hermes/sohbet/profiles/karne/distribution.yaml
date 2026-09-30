@@ -1,17 +1,17 @@
 # ÜRETİLMİŞ — elle düzenlenmez; üreteç `ops/sohbet_profili_uret.py`.
-# Kaynak: deploy/hermes/profiles/karne/distribution.yaml (sürüm tabanı, kapı anahtarının adı ve zorunluluğu,
-# yazma kökü — rapor kum havuzu + '-sohbet'); açıklamalar üretecin sohbet sabitleri.
+# Kaynak: deploy/hermes/profiles/karne/distribution.yaml (sürüm tabanı, kapı anahtarının adı ve zorunluluğu);
+# yazma kökü ağ geçidinin ortak kum havuzu, açıklamalar üretecin sohbet sabitleri.
 name: karne
 version: 0.1.0
 description: karne sohbet profili — ÜRETİLMİŞ (rapor profilinden türetildi)
 hermes_requires: '>=0.19.0'
 env_requires:
 - name: HERMES_WRITE_SAFE_ROOT
-  description: Bu profilin yazabileceği tek dizin; tanımsız değişken sınırsız yazma
-    demektir. Çoklu ağ geçidinde değişkenin profil başına mı süreç başına mı okunduğu
-    G3'te ölçülür.
+  description: Ağ geçidinin yazabileceği tek dizin; tanımsız değişken sınırsız yazma
+    demektir. Değişken süreç başına okunur, bu yüzden tek ağ geçidindeki bütün sohbet
+    profilleri bu ortak kum havuzunu paylaşır; dosya ve terminal takımları zaten kapalıdır.
   required: true
-  default: /opt/meridian/var/bots/karne-sohbet
+  default: /opt/meridian/var/bots/sohbet
 - name: BOT_KEY_KARNE
   description: Kapı anahtarı — rapor profiliyle AYNI APISIX tüketicisi. Sohbet profili
     bu anahtarla model çağırır; değer profilin kendi .env dosyasında durur, depoya
@@ -19,8 +19,8 @@ env_requires:
   required: true
 - name: HINDSIGHT_API_KEY
   required: true
-  description: Hindsight kiracı anahtarı; değer G3 biriminin credential'ından, dosyaya
-    yazılmaz
+  description: Hindsight kiracı anahtarı; değer profilin kendi .env dosyasında durur
+    (çoklu ağ geçidinde sırlar profilin .env dosyasından okunur), depoya yazılmaz.
 distribution_owned:
 - SOUL.md
 - config.yaml

@@ -9,6 +9,9 @@ bir SOHBET profili türetir ve `deploy/hermes/sohbet/profiles/<ad>/` altına yaz
   * SOHBET FARKLARI — Meridian MCP girdisi kök yapılandırmadan (`--bot <ad>` ekiyle), platform izin listesi
     yalnız `meridian`, Hindsight bankası `bot-<ad>` ve sırsız, zaman aşımı Hermes'in okuduğu yerde, SOUL
     rapor SOUL'u + tek sohbet bölümü ve bölüm yalnız kadrodaki aracı vaat eder.
+  * BOT AĞ GEÇİDİ (G3) — ikincil profilde `api_server` kapalı, MCP `env:`inde birim adından türeyen credential
+    yolu, ortak bot kum havuzu, `.env`e yönlendiren Hindsight açıklaması; kök (varsayılan) profil çoklu kipte,
+    araçsız, hafızasız, duruşu sef rapor profilinden ve SOUL'u yalnız yönlendirme cümlesi.
 
 YÜKLEYİCİ: üreteç paket değildir; `tests.conftest.betikten_modul_yukle` ile KAYNAKTAN yüklenir (ham
 `loader.exec_module` bayat `__pycache__` koşturabilir ve v334 §B onu yasaklar).
@@ -106,8 +109,10 @@ def test_mcp_girdisi_tek_kaynaktan_ve_bot_argumani(bot):
     kok = yaml.safe_load((KOK / "deploy/hermes/config.yaml").read_text(encoding="utf-8"))["mcp_servers"]["meridian"]
     m = _cfg(bot.ad)["mcp_servers"]["meridian"]
     assert m["enabled"] is True and m["args"] == kok["args"] + ["--bot", bot.ad]
-    for a in ("command", "env", "tools"):
+    for a in ("command", "tools"):
         assert m[a] == kok[a]
+    # G3: `env`e tek ek credential yoludur (aşağıdaki çivi); geri kalanı kökle AYNI kalır.
+    assert {k: v for k, v in m["env"].items() if k != "CREDENTIALS_DIRECTORY"} == kok["env"]
 
 
 @pytest.mark.parametrize("bot", _aktifler(), ids=lambda b: b.ad)
@@ -206,8 +211,14 @@ def test_manifest_kapi_anahtari_ve_yazma_koku_sohbete_ozgu(bot):
     assert anahtar in girdiler and girdiler[anahtar]["required"] == rapor_girdisi["required"]
     assert not re.search(r"\bham\b", girdiler[anahtar]["description"])
     kok = girdiler["HERMES_WRITE_SAFE_ROOT"]
-    assert kok["required"] is True and kok["default"].endswith(f"/bots/{bot.ad}-sohbet")
-    assert "HINDSIGHT_API_KEY" in girdiler
+    # G3 (ölçüldü 2026-09-30): değişken SÜREÇ başına okunur → tek ağ geçidinde bot başına kum havuzu imkânsız;
+    # beyanlı sapma: bütün sohbet profilleri ortak `BOT_KUM_HAVUZU` (rapor kum havuzlarından yine AYRI).
+    assert kok["required"] is True and kok["default"] == _ur().BOT_KUM_HAVUZU
+    assert kok["default"] != next(g for g in r["env_requires"] if g["name"] == "HERMES_WRITE_SAFE_ROOT")["default"]
+    # G3: çoklu kipte sırlar PROFİL `.env`inden okunur (`os.environ`a düşmez) — açıklama operatörü credential'a
+    # değil `.env`e yönlendirmeli; yanlış yönlendirme anahtarsız profil ve sessiz hafızasızlık demektir.
+    hs = girdiler["HINDSIGHT_API_KEY"]["description"]
+    assert "credential" not in hs.casefold() and ".env" in hs
 
 
 @pytest.mark.parametrize("bot", _aktifler(), ids=lambda b: b.ad)
@@ -242,3 +253,125 @@ def test_rapor_profillerine_dokunulmaz(tmp_path):
     once = iz()
     _ur().yaz(kok=tmp_path)
     assert iz() == once
+
+
+# ---- G3 (Parça 1b G3 Task 1, 2026-09-30): bot ağ geçidi — ikincil profil, MCP credential yolu, kök profil ------------
+# Ölçüm kaynağı: plan `docs/superpowers/plans/2026-09-30-konusan-filo-parca1b-g3-bot-agi-gecidi.md` Architecture
+# (A1 Hermes v0.19.0 kaynağından). Tek ağ geçidi (`BOT_BIRIMI`) ayrı bir Hermes kökünde çoklu kipte koşar: kök
+# (varsayılan) profil dinleyiciyi tutar, sohbet profilleri `/p/<ad>/` altında ikincil profildir.
+
+KOK_CONFIG = "deploy/hermes/sohbet/config.yaml"
+KOK_SOUL = "deploy/hermes/sohbet/SOUL.md"
+
+
+def _kok_cfg():
+    return yaml.safe_load((KOK / KOK_CONFIG).read_text(encoding="utf-8"))
+
+
+@pytest.mark.parametrize("bot", _aktifler(), ids=lambda b: b.ad)
+def test_ikincil_profil_api_server_kapali(bot):
+    # Süreç ortamındaki dinleyici anahtarı ikincil profilde de dinleyici açmaya zorlar → ağ geçidi açılışta
+    # `MultiplexConfigError` ile düşer. Dinleyiciyi yalnız kök profil tutar.
+    assert _cfg(bot.ad)["platforms"]["api_server"]["enabled"] is False
+
+
+@pytest.mark.parametrize("bot", _aktifler(), ids=lambda b: b.ad)
+def test_mcp_env_credential_yolu_birim_adindan_turer(bot):
+    # MCP alt süreç ortamı SÜZÜLÜR → `CREDENTIALS_DIRECTORY` geçmez; `bot_hafizasi_ara` Hindsight anahtarını
+    # credential dizininden okur. Yol birim ADINDAN türer: birim yeniden adlandırılıp yol unutulursa araç sessizce
+    # "credential yok" döner (Review Focus 3).
+    u = _ur()
+    env = _cfg(bot.ad)["mcp_servers"]["meridian"]["env"]
+    assert env["CREDENTIALS_DIRECTORY"] == f"/run/credentials/{u.BOT_BIRIMI}"
+
+
+@pytest.mark.xfail(strict=True, raises=AssertionError, reason="Task 2 birimi")
+def test_credential_yolunun_birimi_depoda_var():
+    # Yolun adını verdiği birim depoda olmalı; Task 2 birimi yazınca bu çivi XPASS olur ve xfail kaldırılır.
+    # `raises=AssertionError`: sabit YOKSA (AttributeError) bu gerçek kırmızıdır, beklenen başarısızlık değil.
+    u = _ur()
+    assert (KOK / "deploy/oracle-a1" / u.BOT_BIRIMI).is_file()
+
+
+def test_uret_kok_profil_dosyalarini_icerir():
+    # Kök dosyalar `uret()` çıktısında değilse `--kontrol` onları hiç görmez ve elle yazılmış bir kök bayatlar.
+    assert {KOK_CONFIG, KOK_SOUL} <= set(_ur().uret())
+
+
+def test_kok_profil_coklu_kip_aracsiz_hafizasiz():
+    # Review Focus 1: `/p/` öneksiz istek kök profile düşer; araçlı ya da hafızalı bir kök veri UYDURUR (Parça 0).
+    k = _kok_cfg()
+    assert k["gateway"]["multiplex_profiles"] is True
+    assert k["platform_toolsets"] == {"api_server": []}
+    assert set(YASAK_TAKIMLAR) <= set(k["agent"]["disabled_toolsets"])
+    assert "mcp_servers" not in k or (k["mcp_servers"].get("meridian") or {}).get("enabled") is False
+    assert "memory" not in k
+
+
+def test_kok_profil_durusu_sef_rapor_profilinden():
+    # Duruş mirası: kök de aynı süreçte koşar — kanca, onay ve kapalı takımlar sef rapor profilinden AYNEN gelir.
+    k, r = _kok_cfg(), _rap("sef")
+    for anahtar in ("hooks", "hooks_auto_accept", "approvals", "model"):
+        assert k.get(anahtar) == r.get(anahtar), anahtar
+    assert k["agent"]["disabled_toolsets"] == r["agent"]["disabled_toolsets"]
+    assert k["providers"]["kapi"] == r["providers"]["kapi"]
+    # Eşitlik boş-boşa geçmesin: kaynakta kanca, onay ve ret listesi GERÇEKTEN var.
+    assert any("meridian-guard.sh" in h.get("command", "") for h in k["hooks"]["pre_tool_call"])
+    assert k["hooks_auto_accept"] is True and k["approvals"]["deny"]
+
+
+def test_kok_profil_sohbet_zaman_asimi():
+    # Kök de sohbet ağ geçidinde çağrılır: rapor bütçesiyle (120 sn × 3 deneme) asılmasın.
+    u, k = _ur(), _kok_cfg()
+    assert k["providers"]["custom"]["request_timeout_seconds"] == u.SOHBET_ISTEK_ZAMAN_ASIMI_SN
+    assert k["agent"]["api_max_retries"] == u.SOHBET_API_DENEME
+
+
+def test_kok_soul_yalniz_yonlendirir():
+    s = (KOK / KOK_SOUL).read_text(encoding="utf-8")
+    assert "Bu uç doğrudan kullanılmaz" in s and "/p/<bot>/" in s
+    assert "Bu kök profil; lütfen bir bot seçin." in s
+    # Araç ya da hafıza vaadi yok: kök araçsız ve hafızasızdır, vaat edilen yetenek uydurulur.
+    katli = s.casefold()
+    for vaat in ("araç", "hafıza", "notlar", "oneri_yaz", "is_iste", "bot_hafizasi_ara"):
+        assert vaat not in katli, vaat
+
+
+@pytest.mark.parametrize("goreli", [KOK_CONFIG, KOK_SOUL])
+def test_kontrol_bayat_kok_dosyasini_yakalar(tmp_path, goreli):
+    import shutil
+    shutil.copytree(KOK / "deploy", tmp_path / "deploy")
+    hedef = tmp_path / goreli
+    hedef.write_text(hedef.read_text(encoding="utf-8") + "\n# el ile\n", encoding="utf-8")
+    assert any(goreli in a and a.startswith("ayrışan:") for a in _ur().kontrol(kok=tmp_path))
+
+
+def test_kontrol_eksik_kok_dosyasini_yakalar(tmp_path):
+    import shutil
+    shutil.copytree(KOK / "deploy", tmp_path / "deploy")
+    (tmp_path / KOK_SOUL).unlink()
+    assert any(KOK_SOUL in a and a.startswith("eksik:") for a in _ur().kontrol(kok=tmp_path))
+
+
+def test_kontrol_sohbet_kokundeki_fazla_dosyayi_yakalar(tmp_path):
+    # Sohbet kökünün TAMAMI üretecindir (kök profil + profiller): orada üretilmemiş bir dosya Hermes köküne taşınır.
+    import shutil
+    shutil.copytree(KOK / "deploy", tmp_path / "deploy")
+    (tmp_path / "deploy/hermes/sohbet/el_ile.yaml").write_text("x: 1\n", encoding="utf-8")
+    assert any("deploy/hermes/sohbet/el_ile.yaml" in a and a.startswith("fazla:")
+               for a in _ur().kontrol(kok=tmp_path))
+
+
+def test_komut_satiri_bayat_kokte_bir_doner(tmp_path):
+    # Sözleşme KOMUT SATIRIdır: betik kopyası geçici ağaçta koşar (REPO = betiğin iki üstü), `meridian` PYTHONPATH'ten.
+    import os
+    import shutil
+    shutil.copytree(KOK / "deploy", tmp_path / "deploy")
+    (tmp_path / "ops").mkdir()
+    shutil.copyfile(KOK / "ops/sohbet_profili_uret.py", tmp_path / "ops/sohbet_profili_uret.py")
+    hedef = tmp_path / KOK_SOUL
+    hedef.write_text(hedef.read_text(encoding="utf-8") + "\nel ile\n", encoding="utf-8")
+    r = subprocess.run([sys.executable, "ops/sohbet_profili_uret.py", "--kontrol"], cwd=tmp_path,
+                       capture_output=True, text=True, env={**os.environ, "PYTHONPATH": str(KOK)})
+    assert r.returncode == 1, r.stdout + r.stderr[-2000:]
+    assert KOK_SOUL in r.stdout

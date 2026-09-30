@@ -1,8 +1,11 @@
 # ÜRETİLMİŞ — elle düzenlenmez; üreteç `ops/sohbet_profili_uret.py`.
-# Kaynak: deploy/hermes/profiles/karne/config.yaml (duruş: kanca, onay, kapalı takımlar, model, sağlayıcılar —
-# gerekçeleri orada) + deploy/hermes/config.yaml içindeki mcp_servers → meridian girdisi (--bot karne ekiyle)
-# + üretecin sohbet sabitleri (zaman aşımı, yeniden deneme, hafıza sağlayıcısı, platform izin listesi,
-# ikincil profilde api_server kapalı, MCP credential yolu /run/credentials/meridian-botlar.service).
+# Bot ağ geçidinin KÖK (varsayılan) profili.
+# Birim meridian-botlar.service, Hermes kökü /home/ubuntu/.hermes-botlar (bu dosya oranın config.yaml'ıdır).
+# Dinleyiciyi bu profil tutar; sohbet profilleri çoklu kipte /p/<ad>/ altında sunulur. ARAÇSIZ ve HAFIZASIZ:
+# /p/ öneksiz istek buraya düşer ve araçlı ya da hafızalı bir kök veri uydururdu — platform izin listesi boş,
+# Meridian MCP girdisi ve hafıza sağlayıcısı YOK; SOUL yalnız yönlendirme cümlesi yazdırır.
+# Kaynak: deploy/hermes/profiles/sef/config.yaml (duruş: kanca, onay, kapalı takımlar, model,
+# sağlayıcılar — gerekçeleri orada) + üretecin sabitleri (zaman aşımı, yeniden deneme, çoklu kip).
 # Değiştirmek için kaynağı düzenle ve üreteci --yaz ile koş; tazelik kapısı --kontrol.
 hooks:
   pre_tool_call:
@@ -38,36 +41,16 @@ approvals:
 model:
   provider: custom:kapi
   default: nvidia/nemotron-3-ultra-550b-a55b:free
-  max_tokens: 2000
+  max_tokens: 8000
 providers:
   openrouter:
     request_timeout_seconds: 60
   kapi:
     base_url: http://127.0.0.1:9080/llm/v1
-    key_env: BOT_KEY_KARNE
+    key_env: BOT_KEY_SEF
   custom:
     request_timeout_seconds: 60
-mcp_servers:
-  meridian:
-    enabled: true
-    command: /opt/meridian/.venv/bin/python
-    args:
-    - -m
-    - meridian.mcp_server
-    - --bot
-    - karne
-    env:
-      PYTHONPATH: /opt/meridian
-      MERIDIAN_ROOT: /opt/meridian
-      CREDENTIALS_DIRECTORY: /run/credentials/meridian-botlar.service
-    tools:
-      resources: false
-      prompts: false
+gateway:
+  multiplex_profiles: true
 platform_toolsets:
-  api_server:
-  - meridian
-platforms:
-  api_server:
-    enabled: false
-memory:
-  provider: hindsight
+  api_server: []

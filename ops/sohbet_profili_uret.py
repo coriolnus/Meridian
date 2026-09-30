@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""ops/sohbet_profili_uret.py — her aktif bot için SOHBET profilini rapor profilinden ÜRET (Parça 1b G2).
+"""ops/sohbet_profili_uret.py — her aktif bot için SOHBET profilini rapor profilinden ÜRET (Parça 1b G2) + bot ağ
+geçidinin KÖK (varsayılan) profilini (G3).
 
 NEDEN VAR. Konuşan filonun her botu iki kipte koşar: zamanlanmış RAPOR (`deploy/hermes/profiles/<ad>/`,
 hafızasız, kendi systemd birimi) ve operatörün sorusuna cevap veren SOHBET (`deploy/hermes/sohbet/profiles/<ad>/`,
@@ -10,10 +11,16 @@ taraf hep okunmayan taraf olur. Bu betik ikizi TÜRETİR; duruş rapor profilind
 
 TEK KAYNAK:
   * duruş ve rapor SOUL'u   → `deploy/hermes/profiles/<ad>/` (`config.yaml`, `SOUL.md`, `distribution.yaml`;
-                               manifestten yalnız sürüm tabanı, kapı anahtarının adı/zorunluluğu ve yazma kökü
-                               tabanı — açıklamalar sohbet kipine özgü sabitlerdir)
+                               manifestten yalnız sürüm tabanı ve kapı anahtarının adı/zorunluluğu —
+                               açıklamalar sohbet kipine özgü sabitlerdir)
   * Meridian MCP girdisi     → `deploy/hermes/config.yaml` içindeki mcp_servers → meridian girdisi
-                               (`enabled` true olur, argümanlara `--bot <ad>` eklenir)
+                               (`enabled` true olur, argümanlara `--bot <ad>` eklenir, `env:`e birimin credential
+                               yolu eklenir)
+  * kök (varsayılan) profil  → duruşu `deploy/hermes/profiles/sef/` (kanca, onay, kapalı takımlar, model,
+                               sağlayıcılar); çoklu kip, boş platform izin listesi ve yönlendirme SOUL'u bu
+                               modülün sabitleri (G3)
+  * bot ağ geçidi            → birim adı, ortak kum havuzu ve Hermes kökü BU MODÜLÜN sabitleri (`BOT_BIRIMI`,
+                               `BOT_KUM_HAVUZU`, `KOK_DIZIN`; G3)
   * hangi bot, hangi araç    → `deploy/hermes/kadro.yaml` (`meridian.kadro`; yalnız `aktif` satırlar)
   * Hindsight bağlantısı     → kanal katmanının sabitleri: kök URL `meridian.secrets` (HAFIZA_TABAN_URL),
                                zaman aşımı ve recall bütçesi `meridian.bot_hafiza` (spec §3.4 HINDSIGHT_*)
@@ -36,21 +43,23 @@ KOMUT SATIRI SÖZLEŞMESİ (ops aracı sözleşmesi KOMUT SATIRIdır, `main()` d
 SİLMEZ. Kadroda `aktif`ten çıkan botun sohbet profili SİLİNMEZ, `--kontrol` onu "fazla" diye ADIYLA raporlar
 (ve `--yaz` da uyarır). Silme bir karardır, üretecin yan etkisi değil.
 
-RAPOR PROFİLLERİNE YAZMAZ. Yalnız `deploy/hermes/sohbet/profiles/**` yazılır.
+RAPOR PROFİLLERİNE YAZMAZ. Yalnız `deploy/hermes/sohbet/**` yazılır (kök profil + sohbet profilleri); o dizinin
+tamamı üretecindir — orada üretilmemiş her dosya `--kontrol`de "fazla"dır.
 
 DETERMİNİSTİK: aynı kaynaktan aynı bayt çıkar (sözlük sırası sabit, zaman damgası YOK) — damga olsaydı her
 koşum fark üretir ve `--kontrol` kapısı anlamsızlaşırdı.
 
 SIR YOK: hiçbir sır değeri okunmaz, yazılmaz, basılmaz. `hindsight/config.json`da anahtar alanı YOKTUR (değer
-G3 biriminin credential'ından `HINDSIGHT_API_KEY` ortamıyla gelir); profil `.env`i üretilmez.
+profilin `.env`indeki `HINDSIGHT_API_KEY`dir: çoklu kipte sırlar PROFİL `.env`inden okunur, süreç ortamına düşmez);
+profil `.env`i üretilmez. MCP `env:`indeki `CREDENTIALS_DIRECTORY` bir YOLdur, değer değil.
 
 `meridian.obs`'A ULAŞMAZ: ithal edilenler `meridian.kadro`, `meridian.secrets`, `meridian.bot_hafiza` (+ onun
 `meridian.notify`u); modül düzeylerinde yalnız sabit ve `re.compile` var, `obs` yalnız `meridian.config`in
 fonksiyon gövdelerinde ve üreteç onları çağırmaz (`-X importtime` ile ölçüldü, 2026-09-30). Pytest dışı koşum
 canlı yerel deftere yazmaz; sır dosyası da OKUNMAZ (bu modüllerden yalnız sabitler okunur).
 
-OKUYUCU (Yasa 6): üretilmiş profiller Hermes çoklu ağ geçidinin profil evleridir (kuruluş G3'te); tazelik
-kapısı `--kontrol` ve `tests/test_sohbet_profili_uret_v599.py`dir.
+OKUYUCU (Yasa 6): üretilmiş dosyalar Hermes çoklu ağ geçidinin (`BOT_BIRIMI`, kökü `KOK_DIZIN`) kök ve profil
+evleridir; tazelik kapısı `--kontrol` ve `tests/test_sohbet_profili_uret_v599.py`dir.
 """
 from __future__ import annotations
 
@@ -71,10 +80,37 @@ if str(REPO) not in sys.path:
 
 from meridian import bot_hafiza, kadro as kadro_mod, secrets  # noqa: E402  (kök sys.path'e eklendikten sonra)
 
-SOHBET_KOK = "deploy/hermes/sohbet/profiles"
+#: Bot ağ geçidinin Hermes kökünün depo aynası: kök (varsayılan) profil dosyaları doğrudan burada, sohbet
+#: profilleri `profiles/` altında. Dizinin tamamı üretecindir.
+SOHBET_EV = "deploy/hermes/sohbet"
+SOHBET_KOK = f"{SOHBET_EV}/profiles"
 RAPOR_KOK = "deploy/hermes/profiles"
 KOK_YAPILANDIRMA = "deploy/hermes/config.yaml"
 KADRO_DOSYASI = "deploy/hermes/kadro.yaml"
+
+#: --- BOT AĞ GEÇİDİ (G3; ölçüm kaynağı: G3 planının Architecture bölümü, A1 Hermes v0.19.0, 2026-09-30) ---
+#: Tek Hermes ağ geçidini çoklu kipte koşan systemd birimi. Credential yolu bu ADDAN türer (`BOT_CREDENTIAL_DIZINI`):
+#: birim yeniden adlandırılıp yol unutulursa `bot_hafizasi_ara` sessizce "credential yok" döner.
+BOT_BIRIMI = "meridian-botlar.service"
+#: MCP alt süreç ortamı SÜZÜLÜR (izinli küme + config `env:`) → birimin `CREDENTIALS_DIRECTORY`si MCP sunucusuna
+#: geçmez; sohbet profilinin MCP `env:`ine systemd'nin bu birim için kurduğu sabit yol yazılır.
+BOT_CREDENTIAL_DIZINI = f"/run/credentials/{BOT_BIRIMI}"
+#: `HERMES_WRITE_SAFE_ROOT` SÜREÇ başına okunur → tek ağ geçidinde bot başına kum havuzu İMKÂNSIZ. BEYANLI sapma:
+#: bütün sohbet profilleri bu ortak kum havuzunu paylaşır (dosya/terminal takımları zaten kapalı — ikinci katman);
+#: rapor kum havuzlarından ayrıdır.
+BOT_KUM_HAVUZU = "/opt/meridian/var/bots/sohbet"
+#: Ağ geçidinin Hermes kökü (`HERMES_HOME`): `~/.hermes` DIŞINDA olduğu için kendi başına köktür; `SOHBET_EV` onun
+#: depo aynasıdır.
+KOK_DIZIN = "/home/ubuntu/.hermes-botlar"
+#: Kök profilin duruşunu (kanca, onay, kapalı takımlar, model, sağlayıcılar) miras aldığı rapor profili.
+KOK_DURUS_PROFILI = "sef"
+#: Kök profilin rapor profilinden aldığı üst düzey anahtarlar — BEYAZ LİSTE: rapor profiline ileride eklenen bir
+#: blok (hafıza, MCP) araçsız/hafızasız köke sızmasın.
+KOK_MIRAS_ANAHTARLARI = ("hooks", "hooks_auto_accept", "agent", "approvals", "model", "providers")
+#: `/p/` öneksiz istek kök profile düşer; araçsız model veri UYDURUR (Parça 0). SOUL yalnız yönlendirme cümlesi
+#: yazdırır ve hiçbir yetenek (araç, hafıza) vaat etmez.
+KOK_SOUL = ("Bu, Meridian bot ağ geçidinin kök profilidir. Bu uç doğrudan kullanılmaz; her soru `/p/<bot>/` "
+            "önekiyle bir bota gider. Buraya gelen her mesaja yalnız şunu yaz: Bu kök profil; lütfen bir bot seçin.\n")
 
 #: Model çağrısı başına istek zaman aşımı (sn) — Hermes'in OKUDUĞU yerde yazılır: sağlayıcı girdisinin
 #: `request_timeout_seconds` alanı (kökte `timeout` anahtarı YOK; v329 emsali). Parça 0 v3: ücretsiz model
@@ -109,11 +145,12 @@ SOHBET_KAPI_ANAHTARI_ACIKLAMASI = (
     "profilin kendi .env dosyasında durur, depoya yazılmaz. Anahtar yoksa ya da yanlışsa kapı 401 döner ve bot "
     "sohbet cevabı veremez.")
 SOHBET_YAZMA_KOKU_ACIKLAMASI = (
-    "Bu profilin yazabileceği tek dizin; tanımsız değişken sınırsız yazma demektir. Çoklu ağ geçidinde değişkenin "
-    "profil başına mı süreç başına mı okunduğu G3'te ölçülür.")
-#: Sohbet kum havuzu rapor kum havuzundan AYRIDIR (her bot/kip kendi artefaktının tek yazarı): varsayılan, rapor
-#: manifestinin `HERMES_WRITE_SAFE_ROOT` varsayılanına bu ek konarak TÜRETİLİR — taban dizin ikinci kez yazılmaz.
-SOHBET_YAZMA_KOKU_EKI = "-sohbet"
+    "Ağ geçidinin yazabileceği tek dizin; tanımsız değişken sınırsız yazma demektir. Değişken süreç başına okunur, "
+    "bu yüzden tek ağ geçidindeki bütün sohbet profilleri bu ortak kum havuzunu paylaşır; dosya ve terminal "
+    "takımları zaten kapalıdır.")
+SOHBET_HAFIZA_ANAHTARI_ACIKLAMASI = (
+    "Hindsight kiracı anahtarı; değer profilin kendi .env dosyasında durur (çoklu ağ geçidinde sırlar profilin "
+    ".env dosyasından okunur), depoya yazılmaz.")
 
 SOHBET_BOLUMU_BASLIGI = "## Sohbet kipi"
 #: Açılış bir ÖNCELİK kuralıdır, sıra değil: bölüm rapor metninin SONUNA eklenir, çelişkide bölüm geçerlidir
@@ -185,24 +222,63 @@ def _kadro(kok: pathlib.Path, kadro) -> tuple[kadro_mod.Bot, ...]:
     return kadro_mod.aktif_botlar(kadro if kadro is not None else kadro_mod.kadro_yukle(kok / KADRO_DOSYASI))
 
 
-def _config(rapor_evi: pathlib.Path, bot: kadro_mod.Bot, kok_meridian: dict) -> bytes:
-    cfg = copy.deepcopy(_yaml_oku(rapor_evi / "config.yaml"))
-    girdi = copy.deepcopy(kok_meridian)
-    cfg["mcp_servers"] = {"meridian": {**girdi, "enabled": True, "args": list(girdi["args"]) + ["--bot", bot.ad]}}
-    cfg["platform_toolsets"] = {"api_server": ["meridian"]}
-    cfg["memory"] = {"provider": "hindsight"}
+def _sohbet_cagri_butcesi(cfg: dict, kaynak: str) -> None:
+    """Sohbet ağ geçidinde çağrılan her profile (kök dahil) sohbet zaman aşımı ve yeniden deneme sayısı — YERİNDE."""
     ajan = cfg.get("agent")
     if not isinstance(ajan, dict):
-        raise ValueError(f"{rapor_evi}/config.yaml: 'agent' eşlemesi yok — duruş (kapalı takımlar) miras alınamaz")
+        raise ValueError(f"{kaynak}: 'agent' eşlemesi yok — duruş (kapalı takımlar) miras alınamaz")
     ajan["api_max_retries"] = SOHBET_API_DENEME
     saglayicilar = cfg.setdefault("providers", {})
     for ad in ("custom", "openrouter"):
         saglayicilar.setdefault(ad, {})["request_timeout_seconds"] = SOHBET_ISTEK_ZAMAN_ASIMI_SN
+
+
+def _config(rapor_evi: pathlib.Path, bot: kadro_mod.Bot, kok_meridian: dict) -> bytes:
+    cfg = copy.deepcopy(_yaml_oku(rapor_evi / "config.yaml"))
+    girdi = copy.deepcopy(kok_meridian)
+    cfg["mcp_servers"] = {"meridian": {
+        **girdi, "enabled": True, "args": list(girdi["args"]) + ["--bot", bot.ad],
+        "env": {**(girdi.get("env") or {}), "CREDENTIALS_DIRECTORY": BOT_CREDENTIAL_DIZINI}}}
+    cfg["platform_toolsets"] = {"api_server": ["meridian"]}
+    # İkincil profil dinleyici AÇMAZ: süreç ortamındaki dinleyici anahtarı aksi hâlde burada da dinleyici açmaya
+    # zorlar ve ağ geçidi açılışta düşer (çoklu kip yapılandırma hatası). Dinleyiciyi kök profil tutar.
+    cfg["platforms"] = {"api_server": {"enabled": False}}
+    cfg["memory"] = {"provider": "hindsight"}
+    _sohbet_cagri_butcesi(cfg, f"{rapor_evi}/config.yaml")
     baslik = (
         URETILDI + ".",
         f"Kaynak: {RAPOR_KOK}/{bot.ad}/config.yaml (duruş: kanca, onay, kapalı takımlar, model, sağlayıcılar —",
         f"gerekçeleri orada) + {KOK_YAPILANDIRMA} içindeki mcp_servers → meridian girdisi (--bot {bot.ad} ekiyle)",
-        "+ üretecin sohbet sabitleri (zaman aşımı, yeniden deneme, hafıza sağlayıcısı, platform izin listesi).",
+        "+ üretecin sohbet sabitleri (zaman aşımı, yeniden deneme, hafıza sağlayıcısı, platform izin listesi,",
+        f"ikincil profilde api_server kapalı, MCP credential yolu {BOT_CREDENTIAL_DIZINI}).",
+        "Değiştirmek için kaynağı düzenle ve üreteci --yaz ile koş; tazelik kapısı --kontrol.",
+    )
+    return _yaml_yaz(baslik, cfg)
+
+
+def _kok_config(kok: pathlib.Path) -> bytes:
+    """Bot ağ geçidinin kök (varsayılan) profili: dinleyiciyi tutar, çoklu kipte sohbet profillerini `/p/<ad>/`
+    altında sunar. ARAÇSIZ (boş platform izin listesi, MCP girdisi yok) ve HAFIZASIZ (hafıza sağlayıcısı yok):
+    `/p/` öneksiz bir istek buraya düşer ve araçlı/hafızalı bir kök veri uydururdu (Parça 0). Duruş rapor
+    profilinden BEYAZ LİSTEYLE miras alınır — kök de aynı süreçte koşar."""
+    kaynak = kok / RAPOR_KOK / KOK_DURUS_PROFILI / "config.yaml"
+    rapor = _yaml_oku(kaynak)
+    eksik = [a for a in KOK_MIRAS_ANAHTARLARI if a not in rapor]
+    if eksik:
+        raise ValueError(f"{kaynak}: kök profilin duruşu için {eksik} yok — kök profil türetilemez")
+    cfg = {a: copy.deepcopy(rapor[a]) for a in KOK_MIRAS_ANAHTARLARI}
+    _sohbet_cagri_butcesi(cfg, str(kaynak))
+    cfg["gateway"] = {"multiplex_profiles": True}
+    cfg["platform_toolsets"] = {"api_server": []}
+    baslik = (
+        URETILDI + ".",
+        "Bot ağ geçidinin KÖK (varsayılan) profili.",
+        f"Birim {BOT_BIRIMI}, Hermes kökü {KOK_DIZIN} (bu dosya oranın config.yaml'ıdır).",
+        "Dinleyiciyi bu profil tutar; sohbet profilleri çoklu kipte /p/<ad>/ altında sunulur. ARAÇSIZ ve HAFIZASIZ:",
+        "/p/ öneksiz istek buraya düşer ve araçlı ya da hafızalı bir kök veri uydururdu — platform izin listesi boş,",
+        "Meridian MCP girdisi ve hafıza sağlayıcısı YOK; SOUL yalnız yönlendirme cümlesi yazdırır.",
+        f"Kaynak: {RAPOR_KOK}/{KOK_DURUS_PROFILI}/config.yaml (duruş: kanca, onay, kapalı takımlar, model,",
+        "sağlayıcılar — gerekçeleri orada) + üretecin sabitleri (zaman aşımı, yeniden deneme, çoklu kip).",
         "Değiştirmek için kaynağı düzenle ve üreteci --yaz ile koş; tazelik kapısı --kontrol.",
     )
     return _yaml_yaz(baslik, cfg)
@@ -256,7 +332,6 @@ def _dagitim(rapor_evi: pathlib.Path, bot: kadro_mod.Bot) -> bytes:
     manifest = _yaml_oku(rapor_evi / "distribution.yaml")
     anahtar_adi = f"BOT_KEY_{bot.ad.upper()}"
     kapi = _tek_girdi(manifest, anahtar_adi, "required", rapor_evi)
-    rapor_koku = _tek_girdi(manifest, "HERMES_WRITE_SAFE_ROOT", "default", rapor_evi)
     if "hermes_requires" not in manifest:
         raise ValueError(f"{rapor_evi}/distribution.yaml: hermes_requires yok — sürüm tabanı miras alınamaz")
     veri = {
@@ -266,16 +341,15 @@ def _dagitim(rapor_evi: pathlib.Path, bot: kadro_mod.Bot) -> bytes:
         "hermes_requires": manifest["hermes_requires"],
         "env_requires": [
             {"name": "HERMES_WRITE_SAFE_ROOT", "description": SOHBET_YAZMA_KOKU_ACIKLAMASI, "required": True,
-             "default": f"{rapor_koku['default']}{SOHBET_YAZMA_KOKU_EKI}"},
+             "default": BOT_KUM_HAVUZU},
             {"name": anahtar_adi, "description": SOHBET_KAPI_ANAHTARI_ACIKLAMASI, "required": kapi["required"]},
-            {"name": "HINDSIGHT_API_KEY", "required": True,
-             "description": "Hindsight kiracı anahtarı; değer G3 biriminin credential'ından, dosyaya yazılmaz"},
+            {"name": "HINDSIGHT_API_KEY", "required": True, "description": SOHBET_HAFIZA_ANAHTARI_ACIKLAMASI},
         ],
         "distribution_owned": ["SOUL.md", "config.yaml", "hindsight/config.json"],
     }
     baslik = (URETILDI + ".",
-              f"Kaynak: {RAPOR_KOK}/{bot.ad}/distribution.yaml (sürüm tabanı, kapı anahtarının adı ve zorunluluğu,",
-              f"yazma kökü — rapor kum havuzu + '{SOHBET_YAZMA_KOKU_EKI}'); açıklamalar üretecin sohbet sabitleri.")
+              f"Kaynak: {RAPOR_KOK}/{bot.ad}/distribution.yaml (sürüm tabanı, kapı anahtarının adı ve zorunluluğu);",
+              "yazma kökü ağ geçidinin ortak kum havuzu, açıklamalar üretecin sohbet sabitleri.")
     return _yaml_yaz(baslik, veri)
 
 
@@ -287,7 +361,10 @@ def uret(kok: pathlib.Path = REPO, kadro=None) -> dict[str, bytes]:
     if not isinstance(kok_meridian, dict) or not isinstance(kok_meridian.get("args"), list):
         raise ValueError(f"{KOK_YAPILANDIRMA}: mcp_servers → meridian girdisi (args listesiyle) yok — "
                          "sohbet profilinin araç sunucusu türetilemez")
-    cikti: dict[str, bytes] = {}
+    cikti: dict[str, bytes] = {
+        f"{SOHBET_EV}/config.yaml": _kok_config(kok),
+        f"{SOHBET_EV}/SOUL.md": KOK_SOUL.encode("utf-8"),
+    }
     for bot in sorted(_kadro(kok, kadro), key=lambda b: b.ad):
         rapor_evi = kok / RAPOR_KOK / bot.ad
         if not rapor_evi.is_dir():
@@ -302,7 +379,7 @@ def uret(kok: pathlib.Path = REPO, kadro=None) -> dict[str, bytes]:
 
 
 def _fazlalar(kok: pathlib.Path, beklenen: dict[str, bytes]) -> list[str]:
-    taban = kok / SOHBET_KOK
+    taban = kok / SOHBET_EV
     if not taban.is_dir():
         return []
     return sorted(str(p.relative_to(kok)) for p in taban.rglob("*")
@@ -336,13 +413,14 @@ def kontrol(kok: pathlib.Path = REPO, kadro=None) -> list[str]:
         elif hedef.read_bytes() != icerik:
             bulgular.append(f"ayrışan: {goreli} — kaynaktan geride ya da elle düzenlenmiş (--yaz)")
     for goreli in _fazlalar(kok, beklenen):
-        bulgular.append(f"fazla: {goreli} — kadroda aktif bir botun üretilmiş dosyası değil "
+        bulgular.append(f"fazla: {goreli} — ne kök profilin ne kadroda aktif bir botun üretilmiş dosyası "
                         "(üreteç SİLMEZ; kaldırmak bir karardır)")
     return bulgular
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Aktif botların sohbet profillerini rapor profillerinden üret.")
+    ap = argparse.ArgumentParser(description="Bot ağ geçidinin kök profilini ve aktif botların sohbet profillerini "
+                                             "rapor profillerinden üret.")
     ap.add_argument("--yaz", action="store_true", help="üret ve yaz (yalnız içeriği değişen dosyalar)")
     ap.add_argument("--kontrol", action="store_true", help="yazma; diskteki dosyalar güncel mi (0/1)")
     ns = ap.parse_args(argv)
@@ -355,13 +433,13 @@ def main(argv: list[str] | None = None) -> int:
         for b in bulgular:
             print(b)
         if not bulgular:
-            print(f"güncel: {SOHBET_KOK}")
+            print(f"güncel: {SOHBET_EV}")
         return 1 if bulgular else 0
     yazilan = yaz()
     for y in yazilan:
         print(f"yazıldı: {y}")
     if not yazilan:
-        print(f"değişiklik yok: {SOHBET_KOK}")
+        print(f"değişiklik yok: {SOHBET_EV}")
     fazla = [b for b in kontrol() if b.startswith("fazla:")]
     for b in fazla:
         print(f"UYARI {b}", file=sys.stderr)
