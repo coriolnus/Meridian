@@ -191,6 +191,30 @@ def test_readwritepaths_tam_olarak_mcp_agaci_ve_onekli_hermes_koku():
     assert _kapsar(rwp, u.KOK_DIZIN) and _kapsar(rwp, u.BOT_KUM_HAVUZU)
 
 
+def test_calisma_dizini_kok_opt_meridian_degil():
+    # GİZLİLİK KORUMASI (Tur 3, inceleme M1): Hermes çalışma dizininden `CLAUDE.md`/`AGENTS.md` toplayıp sistem
+    # istemine koyar; `/opt/meridian`de ikisi de var (A1 host'u, ssh yolu, dağıtım disiplini) ve her sohbet isteğiyle
+    # model sağlayıcısına giderdi. Kardeş birimlerin normu `/opt/meridian` olduğundan bir "tutarlılık" düzenlemesi bu
+    # korumayı sessizce geri açardı (brifing birimindeki aynı korumanın emsali v330 çivisi).
+    deger = _tek(_birim_yolu(), "Service", "WorkingDirectory")
+    assert deger == "/" and deger != "/opt/meridian", deger
+
+
+def test_after_kapi_ve_hafiza_birimlerini_siralar_ama_bagimlilik_kurmaz():
+    # Tur 3, inceleme M5: model kapısı ve hafıza açılışta ağ geçidinden ÖNCE kalksın (ilk istekler bağlantı hatası
+    # almasın). Adlar depodaki birim DOSYALARINDAN türer (rolün A1'e kurduğu adlar). Yalnız SIRALAMA: o birimlerden
+    # birinin durması ağ geçidini düşürmemeli — `Wants=`/`Requires=`/`BindsTo=`/`Requisite=`/`PartOf=`de YOK.
+    adlar = {p.name for desen in ("deploy/apisix/apisix.service", "deploy/hindsight/hindsight-api.service")
+             for p in KOK.glob(desen)}
+    assert adlar == {"apisix.service", "hindsight-api.service"}, adlar
+    unit = _bolum(_birim_yolu(), "Unit")
+    after = {ad for a, d in unit if a == "After" for ad in d.split()}
+    assert adlar <= after, after
+    bagimlilik = {ad for a, d in unit if a in {"Wants", "Requires", "BindsTo", "Requisite", "PartOf"}
+                  for ad in d.split()}
+    assert not adlar & bagimlilik, bagimlilik
+
+
 def test_install_bolumu_var_multi_user():
     # Uzun ömürlü servis: `[Install]` var ki ayrı değişikliğin `systemctl enable`ı çalışsın (enable BU turda yok).
     assert _tek(_birim_yolu(), "Install", "WantedBy") == "multi-user.target"

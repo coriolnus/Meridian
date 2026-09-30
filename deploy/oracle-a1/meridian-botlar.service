@@ -25,7 +25,12 @@
 # birimde DURUR: site.yml dağıtımdan ÖNCE koşar.
 [Unit]
 Description=Meridian bot ağ geçidi — Hermes çoklu profil sohbeti (kök ~/.hermes-botlar, profiller /p/<ad>/)
-After=network-online.target
+# SIRALAMA, BAĞIMLILIK DEĞİL: model kapısı (`apisix.service`, port 9080) ve hafıza (`hindsight-api.service`, port
+# 8888) açılışta bu süreçten ÖNCE kalksın ki ilk istekler bağlantı hatası almasın (emsal
+# `meridian-defter-ozeti-retain.service`). `Wants=`/`Requires=` BİLEREK YOK: o birimlerden birinin durması ya da
+# yeniden başlaması ağ geçidini DÜŞÜRMEMELİ — o anki istek hata alır, süreç ayakta kalır. Adlar depodaki birim
+# dosyalarından (`deploy/apisix/apisix.service`, `deploy/hindsight/hindsight-api.service`); v601 çiviler.
+After=network-online.target apisix.service hindsight-api.service
 Wants=network-online.target
 # `OnFailure=` BİLEREK YOK (Rol-1 kararı 2026-09-30): `meridian-fail-notify.service` rapor sınıfı içindir, bot ağ
 # geçidinin bildirim yolu ayrı karardır. `failed`in okuyucusu yine var (Yasa 6): `/api/infra` birimleri
