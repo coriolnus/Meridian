@@ -216,6 +216,17 @@ def _sandbox(workdir: pathlib.Path, live: pathlib.Path, log=print) -> pathlib.Pa
     Yeniden kullanım `--resume`un ön şartıdır: yeni bir kopya, önceki koşunun `inc_cache.json`ını
     da silerdi ve "atlanan" adaylar aslında yeniden ölçülürdü.
 
+    ATOMİK KURULUM (TSK-214 tur 2, inceleme bulgusu — Rol-1: sessiz ölçüm bozulması). Yeniden kullanım
+    kararı yalnız `hedef`in VARLIĞINA bakar; kopya doğrudan `hedef`e kurulsaydı `copytree`den SONRAKİ bir
+    adım (tutarlı DB kopyası, maddeleştirme) düştüğünde DB'siz yarım bir ağaç kalırdı ve sonraki
+    `--resume` onu hazır sayardı — kum havuzunda DB açan kod BOŞ bir veritabanı görür, öğrenme defterleri
+    boş okunur, ölçüm SESSİZCE değişir. Bu yüzden kurulum kardeş `state.yarim` dizininde yapılır ve
+    BÜTÜN adımlar bitince tek `os.replace` ile `hedef`e taşınır (aynı üst dizin = aynı dosya sistemi =
+    atomik ad değişikliği): `hedef` ya tam doğar ya hiç doğmaz. Düşen kurulumun `.yarim` dizini
+    SİLİNMEZ — düşüşün kanıtıdır; sonraki koşum onu zaman damgalı + pid'li bir ada KENARA alır ve loga
+    yazar (`obs` DEĞİL, aşağıdaki gerekçe). BEDEL (beyanlı): kenara alınan dizinler `workdir`de birikir
+    (her biri bir kum havuzu boyutunda); temizlik bu fonksiyonun işi değildir — kalıcı silme yok.
+
     SIR/GEÇİCİ ARTIK SÜZÜLÜR (TSK-214, ölçülmüş vaka A1 2026-09-21 20:39:43Z). Süzgeçsiz kopya
     haftanın TEK bileşik kalemini ölçmeden düşürdü: `shutil.copytree` root sahipli (0600) bir sır
     YEDEĞİNDE (`state/secrets.json.bak-<damga>`) `[Errno 13] Permission denied` topladı ve
@@ -273,6 +284,16 @@ def _sandbox(workdir: pathlib.Path, live: pathlib.Path, log=print) -> pathlib.Pa
     if hedef.exists():
         return hedef
     workdir.mkdir(parents=True, exist_ok=True)
+    # ATOMİK KURULUM (docstring): kopya kardeş `.yarim` dizinine kurulur, `hedef` yalnız sonda doğar.
+    yarim = hedef.with_name(hedef.name + ".yarim")
+    if yarim.exists():
+        # Önceki koşumun yarıda kalan kurulumu: SİLİNMEZ (düşüşün kanıtıdır), damgalı ada kenara alınır.
+        # Damga `time.gmtime` ile: raporun ÜRETİM ZAMANI koşu başına TEK kez `run()`da donar (v182 çivisi
+        # o çağrıyı sayar); bu ad bir rapor zamanı değil, yalnız çakışmasız bir kenar adıdır.
+        damga = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+        kenar = yarim.with_name(f"{yarim.name}-{damga}-p{os.getpid()}")
+        os.replace(yarim, kenar)
+        log(f"[sandbox] önceki yarım kurulum kenara alındı (SİLİNMEDİ, TSK-214): {kenar.name}")
     from . import sprint, storage, store
     kok = pathlib.Path(os.fspath(live))
     atlanan: list[str] = []          # SINIF: sır / geçici artık / yedek artığı — göreli yol, her derinlik
@@ -297,7 +318,7 @@ def _sandbox(workdir: pathlib.Path, live: pathlib.Path, log=print) -> pathlib.Pa
                 okunamayan.append(yol.relative_to(kok).as_posix())
         return atla
 
-    shutil.copytree(live, hedef, symlinks=False, ignore=_suzgec)
+    shutil.copytree(live, yarim, symlinks=False, ignore=_suzgec)
     if atlanan:
         log(f"[sandbox] kopyalanmayan (sır/geçici/yedek artığı, TSK-214): {len(atlanan)} — "
             + ", ".join(sorted(atlanan)))
@@ -309,14 +330,16 @@ def _sandbox(workdir: pathlib.Path, live: pathlib.Path, log=print) -> pathlib.Pa
             + ", ".join(sorted(okunamayan)))
     for ad, ne in _sprint_kok_sapmalari().items():
         if ne == "tutarli_kopya" and (live / ad).is_file():
-            storage.tutarli_kopya(live / ad, hedef / ad)
+            storage.tutarli_kopya(live / ad, yarim / ad)
             log(f"[sandbox] {ad} tutarlı kopya (SQLite çevrimiçi yedek; yan dosyalar kopyalanmaz, TSK-214): "
-                f"{(hedef / ad).stat().st_size} bayt")
-    madde = store.kum_havuzuna_maddelestir(hedef, canli_state=live)
+                f"{(yarim / ad).stat().st_size} bayt")
+    madde = store.kum_havuzuna_maddelestir(yarim, canli_state=live)
     if madde:
         log("[sandbox] öğrenme defterleri (Kademe C D4): "
             + ", ".join(f"{m['varlik']}={m['durum']}" + (f"({m['n']})" if m["n"] is not None else "")
                         for m in madde))
+    # BÜTÜN ADIMLAR BİTTİ: tek `rename` (aynı dizin → aynı dosya sistemi) — `hedef` ya tam doğar ya hiç.
+    os.replace(yarim, hedef)
     return hedef
 
 

@@ -233,7 +233,9 @@ def test_Y3b_tek_kaynak_storage_fonksiyonu_cagrilir_resume_de_cagrilmaz(sandbox_
         monkeypatch.setattr(storage, "tutarli_kopya", _sayan)
         wd = tmp_path / "work"
         hedef = prescreen._sandbox(wd, live, log=lambda s: None)
-        assert cagri == [(live / storage.DB_NAME, hedef / storage.DB_NAME)], cagri
+        # Kopya kardeş `.yarim` dizinine yazılır ve kurulum bitince `hedef`e taşınır (Y7, atomik kurulum).
+        assert cagri == [(live / storage.DB_NAME, wd / "state.yarim" / storage.DB_NAME)], cagri
+        assert (hedef / storage.DB_NAME).is_file() and not (wd / "state.yarim").exists()
         prescreen._sandbox(wd, live, log=lambda s: None)
         assert len(cagri) == 1, "hedef VARKEN tutarlı kopya yeniden koştu — `--resume` sözleşmesi bozuldu"
     finally:
@@ -275,19 +277,25 @@ def test_Y4_kok_karari_sprint_ile_ayni_beyanli_sapmalar_haric():
     assert sapmalar == BEYANLI_SAPMALAR, (
         f"beyanlı sapma kümesi değişti: {sapmalar} — yeni bir sapma kartsız/gerekçesiz doğamaz, "
         f"bir sapmanın kaybı ise (ör. DB atlanırsa) öğrenme defterlerini kum havuzundan düşürür")
-    dizinler = {"bars", "bars_intraday", "intraday_bars", "sprint"}
-    for ad in _korpus():
-        dizin = ad in dizinler
+    # DOSYA/DİZİN TÜRÜ ELLE YAZILMAZ (tur 2, inceleme Minor 5): `SKIP_COPY` adlarının hangisinin dizin
+    # olduğu kaynağın bilgisi değildir ve elle tutulan bir alt küme `SKIP_COPY` büyüdüğünde sessizce
+    # bayatlardı. Sprint'in kök kararı TÜRDEN bağımsızdır (dizin de dosya da atlanır), o yüzden tam ad
+    # kümesinin HER üyesi İKİ türle de sorulur. Desenden türeyen ve meşru adlar yalnız DOSYA olarak
+    # sorulur: desene uyan DİZİNİ ön-eleme bilerek kopyalar (v533 T5, beyanlı fark — `_kok_atlar`).
+    kontrol = [(ad, dizin) for ad in sorted(sprint.SKIP_COPY) for dizin in (True, False)]
+    kontrol += [(ad, False) for ad in _korpus() if ad not in sprint.SKIP_COPY]
+    assert {ad for ad, _ in kontrol} >= set(sprint.SKIP_COPY), "kurulum çipası: tam ad kümesi kapsanmıyor"
+    for ad, dizin in kontrol:
         sprint_atlar = sprint._atlanir(ad)
         on_eleme_atlar = prescreen._kok_atlar(ad, dizin=dizin)
         if ad in BEYANLI_SAPMALAR:
             assert sprint_atlar, f"kurulum çipası: sprint `{ad}`ı atlamıyor — sapma beyanı anlamsız"
             hedefte = (not on_eleme_atlar) or sapmalar[ad] == "tutarli_kopya"
-            assert hedefte, f"beyanlı sapma `{ad}` ön-eleme kum havuzunda YOK"
+            assert hedefte, f"beyanlı sapma `{ad}` (dizin={dizin}) ön-eleme kum havuzunda YOK"
         else:
             assert on_eleme_atlar == sprint_atlar, (
-                f"`{ad}`: sprint atlar={sprint_atlar}, ön-eleme atlar={on_eleme_atlar} — iki kum havuzu "
-                f"aynı ada farklı karar veriyor (tek-kaynak yasası)")
+                f"`{ad}` (dizin={dizin}): sprint atlar={sprint_atlar}, ön-eleme atlar={on_eleme_atlar} — "
+                f"iki kum havuzu aynı ada farklı karar veriyor (tek-kaynak yasası)")
 
 
 def test_Y4b_uretim_yolu_iki_kum_havuzu_ayni_adlari_tasir(sandbox_state):
@@ -402,3 +410,59 @@ def test_Y6_prescreen_kodu_siniflandirma_ve_sqlite_kurmaz():
         assert yasak not in adlar, f"prescreen KODU `{yasak}` kullanıyor — karar tek kaynaktan geçmiyor"
     for gerekli in ("_atlanir", "SKIP_COPY", "_alt_dizin_suzgeci", "tutarli_kopya"):
         assert gerekli in adlar, f"prescreen tek kaynağı (`{gerekli}`) KODDA çağırmıyor"
+
+
+# ==================================================================================================
+# Y7 — ATOMİK KURULUM: yarım kum havuzu `hedef` olarak DOĞMAZ, `--resume` onu hazır SANMAZ (tur 2)
+# ==================================================================================================
+def test_Y7_yarida_kalan_kurulum_hedefi_dogurmaz_sonraki_kosum_tam_kurar(sandbox_state, tmp_path,
+                                                                          monkeypatch):
+    """İNCELEME Minor 1 → Rol-1: IMPORTANT (sessiz ölçüm bozulması). `hedef.exists()` erken dönüşü
+    (`--resume`) `copytree`den SONRAKİ bir adım düşerse DB'siz yarım `workdir/state`i hazır sayardı;
+    kum havuzunda DB açan kod BOŞ bir veritabanı görür, öğrenme defterleri boş okunur, ölçüm sessizce
+    değişir. Sözleşme: kurulum kardeş bir `.yarim` dizininde yapılır ve YALNIZ bütün adımlar bitince
+    `hedef`e atomik taşınır. Yarım kalan dizin SİLİNMEZ (kanıt): sonraki koşum onu zaman damgalı bir ada
+    KENARA alır ve loglar."""
+    live = tmp_path / "live"
+    live.mkdir()
+    _yaz(live, "portfolio.json", '{"mesru":true}')
+    yazan = _sicak_wal_db(live / storage.DB_NAME)
+    try:
+        gercek = storage.tutarli_kopya
+        patla = {"acik": True}
+
+        def _ilk_kosumda_patlar(kaynak, hedef):
+            if patla["acik"]:
+                raise sqlite3.OperationalError("database is locked (v598 Y7 enjeksiyonu)")
+            return gercek(kaynak, hedef)
+
+        monkeypatch.setattr(storage, "tutarli_kopya", _ilk_kosumda_patlar)
+        wd = tmp_path / "work"
+        hedef = wd / "state"
+
+        with pytest.raises(sqlite3.OperationalError):
+            prescreen._sandbox(wd, live, log=lambda s: None)
+        assert not hedef.exists(), (
+            "tutarlı kopya düştüğü hâlde `hedef` DOĞDU — sonraki `--resume` DB'siz yarım kum havuzunu "
+            "hazır sayar ve ölçüm sessizce boş öğrenme defterleriyle koşar")
+        yarim = [p.name for p in wd.iterdir()]
+        assert yarim == ["state.yarim"], f"yarım kurulum kanıt olarak kalmalı (silinmez): {yarim}"
+
+        patla["acik"] = False
+        kayit: list[str] = []
+        donen = prescreen._sandbox(wd, live, log=kayit.append)
+        assert donen == hedef and hedef.is_dir()
+        assert _satirlar(hedef / storage.DB_NAME) == [1, 2], "ikinci koşumun kum havuzunda DB içeriği eksik"
+        assert (hedef / "portfolio.json").exists()
+        kenar = sorted(p.name for p in wd.iterdir() if p.name != "state")
+        assert len(kenar) == 1 and kenar[0].startswith("state.yarim-"), (
+            f"önceki yarım kurulum KENARA alınmalıydı (silinmeden, damgalı adla): {kenar}")
+        assert not (wd / "state.yarim").exists()
+        satir = _log_satiri(kayit, "yarım kurulum")
+        assert kenar[0] in satir, f"kenara alma log satırı yeni adı taşımıyor: {satir}"
+
+        # `--resume` sözleşmesi AYNEN: tam kurulmuş hedef yeniden kullanılır, kopya koşmaz.
+        patla["acik"] = True
+        assert prescreen._sandbox(wd, live, log=lambda s: None) == hedef
+    finally:
+        yazan.close()
