@@ -8781,18 +8781,23 @@ def api_gateway(request: Request):
 # N ile DOĞRUSAL büyür ve N'e TAVAN YOKTUR — bugün N=2 (`meridian-arsiv`, `smoke-067`; ölçüldü
 # 2026-09-02), ama bot bank'leri doğduğunda bu uç 15 sn'lik pano yoklamasının altında kalamayabilir.
 # Tavan/sayfalama UYDURULMADI: ölçülmemiş bir eşik yazmak, ölçülmüş bir sayı gibi okunurdu.
-HAFIZA_TABAN_URL = "http://127.0.0.1:8888"
+#
+# TABAN, ÖNEK VE KİMLİK TAKMA ADDIR (Parça 1b-ön Görev 2, 2026-09-30): kanonik tanım `secrets`te — konuşan
+# filonun hafıza yazıcısı (`bot_hafiza`) bu modülü ithal etmeden aynı değerleri okur. Burada literal ya da
+# ikinci bir türetme yazmak iki kopyayı sessizce ayırırdı; çivi `tests/test_sir_credential_v439.py` I10d.
+HAFIZA_TABAN_URL = secrets_mod.HAFIZA_TABAN_URL
 # A1'de 0600 ve F9 dışı. Bu makinede dosya YOKTUR ve olmaması ihlal değil ÖLÇÜM SONUCUDUR
 # (`KAPI_ENV_DOSYASI` emsali birebir); testler monkeypatch'ler.
 HAFIZA_ENV_DOSYASI = "/opt/hindsight/.env"
-HAFIZA_ANAHTAR_ONEKI = "HINDSIGHT_API_TENANT_API_KEY="
+HAFIZA_ANAHTAR_ONEKI = secrets_mod.HAFIZA_ANAHTAR_ONEKI
 # CREDENTIAL KİMLİĞİ ÖNEKTEN TÜRER (TSK-064 Faz-1A, tek-kaynak yasası): `LoadCredential=<kimlik>:<kaynak>`
 # sözleşmesinde kimlik `$CREDENTIALS_DIRECTORY` altındaki DOSYA ADIDIR ve o ad sır adının TA
 # KENDİSİDİR. İkinci kez elle yazılsaydı iki kopya sessizce ayrışırdı ve okuyucu dosyayı
 # bulamazdı — kanal SESSİZCE ölür, `.env` hâlâ okunduğu için hiçbir şey bozulmaz ve geçiş
 # "yapıldı" sanılırdı (en pahalı hâl). Drop-in ile eşitliği çivili:
-# `deploy/oracle-a1/meridian.service.d/54-hafiza-credential.conf`, çivi v439 bölüm I.
-HAFIZA_KRED_ADI = HAFIZA_ANAHTAR_ONEKI.rstrip("=")
+# `deploy/oracle-a1/meridian.service.d/54-hafiza-credential.conf`, çivi v439 bölüm I. Türetme artık
+# `secrets`te yapılır (yukarıdaki TAKMA AD şerhi); bu ad onun takma adıdır.
+HAFIZA_KRED_ADI = secrets_mod.HAFIZA_KRED_ADI
 # BEYAN, ZORLAYICI DEĞİL: zaman aşımını gerçekten uygulayan `_kapi_getir`in okuduğu
 # `KAPI_ZAMAN_ASIMI_S`dir. Sözleşme sabiti brief'te birebir verildiği için türetme yerine AYRIŞMA
 # ÇİVİSİ kuruldu (`test_zaman_asimi_kopyasi_ayrisirsa_isirir`): ikisi ayrışırsa gövdedeki beyan

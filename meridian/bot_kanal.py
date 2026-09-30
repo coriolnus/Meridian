@@ -15,8 +15,12 @@ DEĞİŞMEZLER.
   * `hatırla:` / `unut:` (Türkçe harf katlamalı, büyük/küçük harf duyarsız — `kadro.ad_katla`)
     modele GİTMEZ. `hatırla` gövdesi `notify.scrub`'dan geçip `Hafiza.yaz`a gider (etiket
     `sabit_not`, `bot:<ad>`, `kanal:<kanal>`); hafıza bağlı değilse bunu AÇIKÇA söyler ve
-    `bot_hafiza_bagli_degil` olayı yazar. `unut` bugün HİÇBİR ŞEY SİLMEZ — yöntem Parça 0 (f)
-    ölçümünü bekler; bunu söyler ve `bot_unut_hazir_degil` olayı yazar. Kalıcı silme bu modülde YOK.
+    `bot_hafiza_bagli_degil` olayı yazar. `unut` gövdesi de `notify.scrub`'dan geçip `Hafiza.unut`a gider:
+    en fazla birkaç bellek GERİ ALINABİLİR biçimde emekliye ayrılır (gerçek uygulama `bot_hafiza.HindsightHafiza`,
+    Parça 0 (f) ölçümü: `state: invalidated`) ve operatöre hangi metinlerin unutulduğu kısa listeyle söylenir;
+    eşleşme yoksa bu da söylenir. Gövdesiz komut hafızaya GİTMEZ ("neyi?" diye sorulur) — boş sorgu rastgele
+    bellek döndürürdü. Hafıza istisnası "YAZILAMADI"/"UNUTULAMADI" + olay olur, sohbet hatasına dönmez; kısmi
+    `unut` hatasında o âna dek unutulanlar (`unutulanlar` özniteliği) yine söylenir. Kalıcı silme bu modülde YOK.
     Tespitin TEK kaynağı `komut_oneki`dir; Telegram dinleyicisi de onu çağırır (yanıt kipinde
     komut, VERİ çitinin arkasında kaybolmasın diye çit kurulmadan ÖNCE — Tur 2, inceleme I-1).
   * KOTA SESSİZ DEĞİL: tavan doluysa bot "bugünlük kotam doldu (n/tavan)" der, taşıyıcı ÇAĞRILMAZ,
@@ -70,8 +74,11 @@ KOMUTLAR = ("hatirla", "unut")
 _HATIRLA_BOS = "Neyi hatırlayayım? `hatırla: <not>` biçiminde yaz."
 _HAFIZA_BAGLI_DEGIL = "Hafızam henüz bağlı değil (Parça 0 ölçümü bekleniyor); not ALINMADI."
 _HAFIZA_YAZILAMADI = "Not YAZILAMADI (hafıza hatası), kayda geçti."
-_UNUT_HAZIR_DEGIL = ("`unut` henüz hazır değil — hafızadan geri alma yöntemi ölçülüyor (Parça 0 f); "
-                     "hiçbir şey silinmedi.")
+_UNUT_BOS = "Neyi unutayım? `unut: <ifade>` biçiminde yaz."
+_UNUT_BAGLI_DEGIL = "Hafızam henüz bağlı değil; hiçbir şey unutulmadı."
+_UNUT_ESLESME_YOK = "Eşleşen bir not bulamadım; hiçbir şey unutulmadı."
+#: "hiçbir şey unutulmadı" DENMEZ: zaman aşımına uğrayan bir PATCH sunucuda yine de uygulanmış olabilir.
+_UNUTULAMADI = "UNUTULAMADI (hafıza hatası), kayda geçti."
 #: Araçsız-veri uyarıları — DONUK (plan 2026-09-29 Parça 1b-ön): ölçüm kartı ve operatör bu metinleri tanır.
 UYARI_ARACSIZ = "⚠️ Bu cevap hiçbir araç çağrısına dayanmıyor — içindeki veri doğrulanmadı."
 UYARI_OLCULEMEDI = "⚠️ Bu cevabın araç kullanımı doğrulanamadı."
@@ -134,6 +141,10 @@ class SayimOlculemedi(ValueError):
 
 class Hafiza(Protocol):
     def yaz(self, bot: str, metin: str, etiketler: tuple[str, ...]) -> bool: ...
+
+    def unut(self, bot: str, ifade: str) -> list[tuple[str, str]]:
+        """Geri alınabilir unutma; emekliye ayrılan `(bellek_id, metin_kesiti)` listesi (boş = eşleşme yok)."""
+        ...
 
 
 class HermesTasiyici:
@@ -343,9 +354,7 @@ def _komut(bot: str, mesaj: str, kanal: str, oturum: str, an: datetime, hafiza: 
         return None
     ad, govde = komut
     if ad == "unut":
-        obs.warn("bot_unut_hazir_degil", bot=bot, kanal=kanal)
-        _defter_yaz(_satir(an, bot, kanal, oturum, "unut", mesaj, _UNUT_HAZIR_DEGIL, hafiza_durumu="hazir_degil"))
-        return _UNUT_HAZIR_DEGIL
+        return _unut(bot, mesaj, govde, kanal, oturum, an, hafiza)
     if not govde:
         cevap, durum = _HATIRLA_BOS, "bos_govde"
     elif hafiza is None:
@@ -364,6 +373,38 @@ def _komut(bot: str, mesaj: str, kanal: str, oturum: str, an: datetime, hafiza: 
             obs.warn("bot_hafiza_yazilamadi", bot=bot, kanal=kanal)
             cevap, durum = _HAFIZA_YAZILAMADI, "yazilamadi"
     _defter_yaz(_satir(an, bot, kanal, oturum, "hatirla", mesaj, cevap, hafiza_durumu=durum))
+    return cevap
+
+
+def _unutulan_listesi(unutulanlar) -> str:
+    """`1) kesit 2) kesit` — kesit hafızadan gelir, operatöre gitmeden ÖNCE `notify.scrub`'dan geçer."""
+    return " ".join(f"{i}) {notify.scrub(kesit)}" for i, (_, kesit) in enumerate(unutulanlar, 1))
+
+
+def _unut(bot: str, mesaj: str, govde: str, kanal: str, oturum: str, an: datetime, hafiza: Hafiza | None) -> str:
+    """`unut:` dalı — geri alınabilir unutma. Defter satırı `unutulan_idler` taşır (geri almanın yerel kaydı)."""
+    unutulanlar: list = []
+    if not govde:
+        cevap, durum = _UNUT_BOS, "bos_govde"
+    elif hafiza is None:
+        obs.warn("bot_hafiza_bagli_degil", bot=bot, kanal=kanal)
+        cevap, durum = _UNUT_BAGLI_DEGIL, "bagli_degil"
+    else:
+        try:
+            unutulanlar = list(hafiza.unut(bot, notify.scrub(govde)))
+        except Exception as e:  # sinyalli: olay + "UNUTULAMADI" cevabı; kısmi unutulanlar operatöre söylenir, sohbet hatasına dönmez
+            obs.warn("bot_hafiza_unut_hatasi", bot=bot, kanal=kanal, sinif=type(e).__name__)
+            unutulanlar = list(getattr(e, "unutulanlar", None) or [])
+            cevap, durum = _UNUTULAMADI, "unutulamadi"
+            if unutulanlar:
+                cevap += f" Yine de unutulanlar (geri alınabilir): {_unutulan_listesi(unutulanlar)}"
+        else:
+            if unutulanlar:
+                cevap, durum = f"Unuttum (geri alınabilir): {_unutulan_listesi(unutulanlar)}", "unutuldu"
+            else:
+                cevap, durum = _UNUT_ESLESME_YOK, "eslesme_yok"
+    _defter_yaz(_satir(an, bot, kanal, oturum, "unut", mesaj, cevap, hafiza_durumu=durum,
+                       unutulan_idler=[kimlik for kimlik, _ in unutulanlar]))
     return cevap
 
 

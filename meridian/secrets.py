@@ -49,6 +49,20 @@ KAYNAKLAR: tuple[str, ...] = ("credential", "env", "file")
 #: systemd'nin credential dizinini bildirdiği ortam değişkeni (systemd ≥247).
 CREDENTIAL_DIZIN_ENV = "CREDENTIALS_DIRECTORY"
 
+# ---- HINDSIGHT (A1 self-host hafıza) — TABAN + KİRACI ANAHTARI KİMLİĞİ, TEK KAYNAK --------------------------
+# NEDEN BURADA (Parça 1b-ön Görev 2, 2026-09-30). Bu üç sabit `api`de doğdu (pano vekili, TSK-091/TSK-064
+# Faz-1A); konuşan filonun hafıza yazıcısı `bot_hafiza` onlara `api`yi (FastAPI uygulamasının TAMAMINI)
+# ithal etmeden ulaşmalı. Kopya yazmak tek-kaynak yasasının yasakladığı hâldir (kimlik ayrışırsa okuyucu
+# credential dosyasını bulamaz, kanal SESSİZCE ölür); bu yüzden kanonik tanım sır erişiminin tek kapısına
+# indi ve `api` bunlara TAKMA AD verir (çivi: `tests/test_sir_credential_v439.py` I10d). Ölçülmüş değerler
+# ve gerekçeleri `api`deki HAFIZA YÜZEYİ bloğunun şerhinde kalır — burada tekrarlanmaz.
+#: Hindsight API kökü (A1, yalnız loopback). Yol öneki (`/v1/default/banks`) çağıranın işidir.
+HAFIZA_TABAN_URL = "http://127.0.0.1:8888"
+#: `/opt/hindsight/.env` satır öneki — kiracı anahtarının adı buradan TÜRER (ikinci kez yazılmaz).
+HAFIZA_ANAHTAR_ONEKI = "HINDSIGHT_API_TENANT_API_KEY="
+#: `LoadCredential=<kimlik>:<kaynak>` kimliği = `credential_oku`nun aradığı DOSYA adı = sır adı.
+HAFIZA_KRED_ADI = HAFIZA_ANAHTAR_ONEKI.rstrip("=")
+
 
 def credential_oku(ad: str) -> str | None:
     """`$CREDENTIALS_DIRECTORY/<ad>` dosyasındaki sırrı döner; kanal ya da değer yoksa `None`.

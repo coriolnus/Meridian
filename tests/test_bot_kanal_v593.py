@@ -23,12 +23,17 @@ class SahteTasiyici:
 
 
 class SahteHafiza:
-    def __init__(self, sonuc=True):
+    def __init__(self, sonuc=True, unut_sonuc=()):
         self.yazilanlar, self.sonuc = [], sonuc
+        self.unutulanlar, self.unut_sonuc = [], list(unut_sonuc)
 
     def yaz(self, bot, metin, etiketler):
         self.yazilanlar.append((bot, metin, etiketler))
         return self.sonuc
+
+    def unut(self, bot, ifade):
+        self.unutulanlar.append((bot, ifade))
+        return list(self.unut_sonuc)
 
 
 def _defter():
@@ -106,11 +111,14 @@ def test_hatirla_hafiza_bagli_degilse_acik_soyler(sandbox_state):
     assert any(e.get("event") == "bot_hafiza_bagli_degil" for e in obs.recent(20))
 
 
-def test_unut_henuz_hazir_degil_ve_sinyalli(sandbox_state):
+def test_unut_hafiza_bagli_degilse_acik_soyler_ve_sinyalli(sandbox_state):
+    # Parça 1b-ön Görev 2 (2026-09-30): "hazır değil" dalı emekli — yöntem ölçüldü ve uygulandı (`bot_hafiza`);
+    # hafıza VERİLMEDİYSE mevcut "bağlı değil" dalına düşer (plan: `hafiza=None` → "bağlı değil").
     t = SahteTasiyici()
     cevap = bk.bota_sor("bekci", "unut: eski not", "telegram", "o", tasiyici=t, simdi=SIMDI)
-    assert t.cagrilar == [] and "henüz hazır değil" in cevap
-    assert _defter()[-1]["tur"] == "unut"
+    assert t.cagrilar == [] and "henüz bağlı değil" in cevap and "hiçbir şey unutulmadı" in cevap
+    s = _defter()[-1]
+    assert (s["tur"], s["hafiza_durumu"]) == ("unut", "bagli_degil")
 
 
 def test_tasiyici_hatasi_defterde_ve_yukari_firlar(sandbox_state):
@@ -169,7 +177,7 @@ def test_hermes_tasiyici_istek_bicimi_ve_jetonsuz_hata(sandbox_state):
 
 def test_unut_olayi_yazilir(sandbox_state):
     bk.bota_sor("bekci", "Unut: eski not", "telegram", "o", tasiyici=SahteTasiyici(), simdi=SIMDI)
-    assert any(e.get("event") == "bot_unut_hazir_degil" and e.get("bot") == "bekci" for e in obs.recent(20))
+    assert any(e.get("event") == "bot_hafiza_bagli_degil" and e.get("bot") == "bekci" for e in obs.recent(20))
 
 
 def test_hatirla_govdesi_hafizaya_scrub_ile_gider(sandbox_state):
@@ -863,3 +871,79 @@ def test_veri_isareti_hisse_isimleri_hisset_dislamasina_ragmen_yakalanir(cevap):
 
 def test_sozluk_onek_dislama_listesi_donuk():
     assert bk.SOZLUK_DISI_ONEK == ("hisset",)
+
+
+# ---- Parça 1b-ön Görev 2: `unut:` dalı gerçek hafıza çağrısı (geri alınabilir `invalidated`, kalıcı silme YOK) ----
+
+def test_unut_hafizaya_gider_ve_unutulanlari_listeler(sandbox_state):
+    t = SahteTasiyici()
+    h = SahteHafiza(unut_sonuc=[("m1", "eski not bir"), ("m2", "eski not iki")])
+    cevap = bk.bota_sor("bekci", "unut: eski not", "telegram", "o", tasiyici=t, hafiza=h, simdi=SIMDI)
+    assert cevap == "Unuttum (geri alınabilir): 1) eski not bir 2) eski not iki"
+    assert t.cagrilar == [] and h.unutulanlar == [("bekci", "eski not")]
+    s = _defter()[-1]
+    assert (s["tur"], s["hafiza_durumu"], s["unutulan_idler"]) == ("unut", "unutuldu", ["m1", "m2"])
+
+
+def test_unut_eslesme_yoksa_acik_soyler(sandbox_state):
+    cevap = bk.bota_sor("bekci", "unut: yok böyle bir şey", "pano", "o", hafiza=SahteHafiza(), simdi=SIMDI)
+    assert cevap == "Eşleşen bir not bulamadım; hiçbir şey unutulmadı."
+    s = _defter()[-1]
+    assert (s["hafiza_durumu"], s["unutulan_idler"]) == ("eslesme_yok", [])
+
+
+def test_unut_hafiza_istisnasi_unutulamadi_der_ve_olay_yazar(sandbox_state):
+    class Patlayan(SahteHafiza):
+        def unut(self, bot, ifade):
+            raise ConnectionError("hindsight kapalı")
+
+    cevap = bk.bota_sor("bekci", "unut: x", "pano", "o", hafiza=Patlayan(), simdi=SIMDI)
+    assert "UNUTULAMADI" in cevap and "hindsight kapalı" not in cevap
+    s = _defter()[-1]
+    assert (s["tur"], s["hafiza_durumu"], s["unutulan_idler"]) == ("unut", "unutulamadi", [])
+    assert any(e.get("event") == "bot_hafiza_unut_hatasi" and e.get("sinif") == "ConnectionError"
+               for e in obs.recent(20))
+
+
+def test_unut_kismi_hatada_emekliye_ayrilanlar_da_soylenir(sandbox_state):
+    # Kısmi hata: 1. bellek zaten `invalidated`; operatör onu bilmezse geri alamaz (Review Focus 2/3).
+    class Kismi(SahteHafiza):
+        def unut(self, bot, ifade):
+            hata = RuntimeError("hindsight HTTP 500")
+            hata.unutulanlar = [("m1", "eski not bir")]
+            raise hata
+
+    cevap = bk.bota_sor("bekci", "unut: eski not", "pano", "o", hafiza=Kismi(), simdi=SIMDI)
+    assert cevap.startswith("UNUTULAMADI") and "1) eski not bir" in cevap and "geri alınabilir" in cevap
+    assert _defter()[-1]["unutulan_idler"] == ["m1"]
+
+
+@pytest.mark.parametrize("mesaj", ["unut:", "unut:   ", "Unut :\n"])
+def test_unut_bos_govde_sorar_hafiza_cagrilmaz(sandbox_state, mesaj):
+    # Boş sorgu recall'da en yakın rastgele bellekleri döndürür — hafızaya HİÇ gidilmez.
+    h = SahteHafiza(unut_sonuc=[("m1", "x")])
+    cevap = bk.bota_sor("bekci", mesaj, "pano", "o", hafiza=h, simdi=SIMDI)
+    assert "neyi unutayım" in cevap.lower() and h.unutulanlar == []
+    assert _defter()[-1]["hafiza_durumu"] == "bos_govde"
+
+
+def test_unut_ifadesi_hafizaya_scrub_ile_gider(sandbox_state):
+    # İfade Hindsight'a sorgu VE `reason` olarak gider (bellek geçmişinde kalır) — hatırla ile aynı süzgeç.
+    anahtar = "sk-or-v1-" + "e" * 64
+    h = SahteHafiza()
+    bk.bota_sor("bekci", f"unut: eski anahtar {anahtar}", "pano", "o", hafiza=h, simdi=SIMDI)
+    assert h.unutulanlar and anahtar not in h.unutulanlar[0][1] and "eski anahtar" in h.unutulanlar[0][1]
+
+
+def test_unut_kesitleri_cevapta_scrub_edilir(sandbox_state):
+    anahtar = "sk-or-v1-" + "f" * 64
+    h = SahteHafiza(unut_sonuc=[("m1", f"anahtar {anahtar}")])
+    cevap = bk.bota_sor("bekci", "unut: anahtar", "pano", "o", hafiza=h, simdi=SIMDI)
+    assert anahtar not in cevap and cevap.startswith("Unuttum (geri alınabilir): 1) anahtar")
+
+
+def test_hazir_degil_dali_emekli():
+    # "hazır değil" metni/olayı artık YALAN olurdu (yöntem uygulandı); iz kalmasın.
+    import inspect
+    kaynak = inspect.getsource(bk)
+    assert "bot_unut_hazir_degil" not in kaynak and not hasattr(bk, "_UNUT_HAZIR_DEGIL")
