@@ -32,6 +32,55 @@
     mode: "0700"
   loop: "{{ bot_adlari }}"
 
+# BOT AĞ GEÇİDİ (konuşan filo Parça 1b G3, 2026-09-30) — `meridian-botlar.service`in iki yazım yolu. Değişkenler
+# `bot_adlari`ndan AYRI (gerekçe `defaults/main.yml` bot ağ geçidi bloğunda); değerleri üretecin sabitleri ve
+# birimin `HERMES_WRITE_SAFE_ROOT`/`HERMES_HOME`u ile tests/test_bot_agi_gecidi_v601.py eşitler.
+# KUM HAVUZU: ağ geçidi TEK süreçtir ve yazma kökünü süreç başına okur → üç sohbet profili tek ortak kum havuzunu
+# paylaşır (rapor kum havuzlarından ayrı). Yukarıdaki görevle aynı gerekçe: `/var` rsync'ten dışlanır, dizini
+# canlıda biri yaratmak ZORUNDA; sahiplik ZORLANIR (root sahipli dizine birim SESSİZCE yazamaz). AYNI dizin ağ
+# geçidinin BAĞLAM dizinidir (kök config `terminal.cwd` — G3 dal sonu I1): Hermes AGENTS.md/CLAUDE.md'yi buradan arar;
+# dizin YOKSA arama süreç cwd'sine düşer, bu yüzden kurulması yazma kökünden de öte bir gizlilik ön koşuludur.
+- name: Sohbet kum havuzu (bot ağ geçidinin ortak yazma kökü)
+  ansible.builtin.file:
+    path: "{{ sohbet_kum_havuzu }}"
+    state: directory
+    owner: "{{ meridian_kullanici }}"
+    group: "{{ meridian_kullanici }}"
+    mode: "0700"
+
+# HERMES KÖKÜ: birim onu `-` önekli `ReadWritePaths` ile alır — dizin YOKSA izin boşa düşer ve Hermes kendi
+# köküne yazamaz (birim açılır ama çalışmaz). 0700: kök ve profiller oturum kayıtları, istek dökümleri (`logs/`)
+# ve `.env`ler taşır; okuyan tek kullanıcı birimin kendisidir. ATA ÖNCE (v553 G gerekçesi): `file` yeni yarattığı
+# ara dizinlere yaprağın ayarını uygular — kök → `profiles/` → `profiles/<ad>/` → `hindsight/` sırası sözleşmedir.
+- name: Bot ağ geçidinin Hermes kökü ve profil dizini
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ meridian_kullanici }}"
+    group: "{{ meridian_kullanici }}"
+    mode: "0700"
+  loop:
+    - "{{ sohbet_kok_dizini }}"
+    - "{{ sohbet_kok_dizini }}/profiles"
+
+- name: Sohbet profil evleri (bot ağ geçidi kökünde)
+  ansible.builtin.file:
+    path: "{{ sohbet_kok_dizini }}/profiles/{{ item }}"
+    state: directory
+    owner: "{{ meridian_kullanici }}"
+    group: "{{ meridian_kullanici }}"
+    mode: "0700"
+  loop: "{{ sohbet_profil_adlari }}"
+
+- name: Sohbet profillerinin Hindsight yapılandırma dizinleri
+  ansible.builtin.file:
+    path: "{{ sohbet_kok_dizini }}/profiles/{{ item }}/hindsight"
+    state: directory
+    owner: "{{ meridian_kullanici }}"
+    group: "{{ meridian_kullanici }}"
+    mode: "0700"
+  loop: "{{ sohbet_profil_adlari }}"
+
 # /opt/veri ve /opt/veri/olcum — ARA DİZİNLER, ADIYLA (TSK-225 açık bulguları → Rol-1 kararı 2026-09-26,
 # TSK-228 turu). İki birim bu yolları ÖNEKSİZ `ReadWritePaths=` ile alır: `meridian-geridolum` → /opt/veri,
 # `meridian-edg085-taban` → /opt/veri/olcum. Öneksiz izin dizin YOKSA birimi hiç açmaz (yüksek sesli, doğru

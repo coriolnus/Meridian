@@ -135,6 +135,7 @@ if "$UV" run pytest -q \
     tests/test_turnover_kablolama_v149.py \
     tests/test_wp2d_pano_beyani_v246.py \
     tests/test_firsat_yuzeyleri_v200.py \
+    tests/test_sohbet_profili_uret_v599.py \
     tests/test_codelaw_kor_nokta_v214.py; then
   echo "  ✓ duman kapsamı YEŞİL"
 else

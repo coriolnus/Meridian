@@ -334,6 +334,41 @@ hermes_ikili_yollari:
   - "/home/{{ meridian_kullanici }}/.local/bin/hermes"
   - "/usr/local/bin/hermes"
 
+# --- bot ağ geçidi (konuşan filo Parça 1b G3, 2026-09-30) — `dizinler.yml` + `hermes.yml` TÜKETİR ---
+# `meridian-botlar.service` tek Hermes ağ geçidini AYRI bir kökte çoklu profil kipinde koşar (birim başlığı). Bu blok
+# `bot_adlari`ndan BİLEREK ayrıdır: o liste rapor kum havuzlarını (`var/bots/<ad>`) ve rapor profil raporunu besler;
+# sohbet ağ geçidi TEK süreçtir, bot başına kum havuzu taşımaz (yazma kökü süreç başına okunur) ve profilleri başka
+# bir kökte yaşar. İki dünyayı tek listede tutmak, bir bota sohbet açmayı rapor kum havuzu açmaya bağlardı.
+# TEK KAYNAK üreteçtir (`ops/sohbet_profili_uret.py::KOK_DIZIN`, `ops/sohbet_profili_uret.py::BOT_KUM_HAVUZU`,
+# `ops/sohbet_profili_uret.py::uret`) — rol envanter okumadığı için kopya kaçınılmaz; iki yönlü eşitlik
+# tests/test_bot_agi_gecidi_v601.py'de (kök/kum havuzu = üreteç sabitleri = birimin `HERMES_HOME`/
+# `HERMES_WRITE_SAFE_ROOT`i; profil adları = depo aynasının dizinleri = kadronun aktif botları; kopya listesi =
+# üretecin çıktısı).
+sohbet_kok_dizini: "/home/{{ meridian_kullanici }}/.hermes-botlar"
+sohbet_kum_havuzu: "{{ repo_kok }}/var/bots/sohbet"
+sohbet_profil_adlari:
+  - sef
+  - bekci
+  - karne
+# Köke kopyalanan ÜRETİLMİŞ dosyalar, `deploy/hermes/sohbet/` ve kökün kendisine GÖRELİ. `.env` bu listeye GİREMEZ:
+# kökün ve profillerin `.env`i (dinleyici, kapı ve Hindsight anahtarları) rotasyon aracının işidir, rol onlara
+# dokunmaz (v601 çivisi hem listeyi hem `hermes.yml` görev gövdesini tarar).
+sohbet_dosyalari:
+  - config.yaml
+  - SOUL.md
+  - profiles/sef/SOUL.md
+  - profiles/sef/config.yaml
+  - profiles/sef/distribution.yaml
+  - profiles/sef/hindsight/config.json
+  - profiles/bekci/SOUL.md
+  - profiles/bekci/config.yaml
+  - profiles/bekci/distribution.yaml
+  - profiles/bekci/hindsight/config.json
+  - profiles/karne/SOUL.md
+  - profiles/karne/config.yaml
+  - profiles/karne/distribution.yaml
+  - profiles/karne/hindsight/config.json
+
 # --- sağlık kontrolü (deploy.sh 16) ---
 saglik_url: "http://127.0.0.1:8080/healthz"
 saglik_deneme: 5

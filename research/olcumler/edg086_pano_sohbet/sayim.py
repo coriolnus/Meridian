@@ -7,7 +7,8 @@ maddelerinin BEŞİNİ, `state/sohbet.jsonl` defterinden:
   2. ARAÇ DİSİPLİNİ — şema-dışı çağrı sayısı + "metin olarak araç çağrısı" (EDG-2026-074 sınıfı).
   3. GECİKME — mesaj→cevap süresinin p50/p95'i, araç turu sayısıyla kırılımlı (tanı).
   4. KOTA — gün başı sohbet çağrı sayısının tepesi/ortalaması, dolu pencere payı, düşen zincir.
-  5. ÖNERİ — `approvals.jsonl`de `kaynak=sohbet` satırlarının onay/ret/bekleme dağılımı (tanı).
+  5. ÖNERİ — `approvals.jsonl`de `kaynak=sohbet` satırlarının onay/ret/bekleme dağılımı (tanı);
+     `oturum: mcp:<bot>` taşıyan MCP bot önerileri pano sayısına GİRMEZ, `oneri_bot`ta ayrı sayılır.
 
 BETİK HÜKÜM VERMEZ (CLAUDE.md §5: "Ölçüm kartına hüküm: Rol-1"). Eşikler karttan OKUNUR ve rapora
 SAYI olarak yazılır; hiçbir çıktıda "geçti/kaldı" yoktur. Pencere dolmadan (kartın `n_alt_mesaj`
@@ -123,6 +124,18 @@ BELIRSIZ_RE = re.compile(r"%\s{0,3}\d+(?:[.,]\d+)?"
 #: Onay defterindeki karar sözlüğü. `api`nin defter taramasıyla AYNI iki değer; bu betik `api`yi
 #: (FastAPI uygulamasını) ithal EDEMEZ, o yüzden sözlük burada donuk ve dar tutulur.
 KARAR_DEGERLERI = ("approve", "reject")
+
+#: MCP BOT ÖNERİSİNİN İŞARETİ (konuşan filo G3, 2026-09-30). `meridian/mcp_server.py::serve`
+#: `--bot` kipinde oturum bağlamını `mcp:<ad>` kurar ve `oneri_yaz` (sohbetin AYNI gövdesi) onu
+#: onay defterinin `oturum` alanına AYNEN yazar; `kaynak` alanı sohbetin `CAGRI_KIND`ı KALIR,
+#: çünkü panonun gelen kutusu satırı o alandan tanır. Yani `kaynak` iki yazıcıyı AYIRMAZ, `oturum`
+#: ayırır. Kartın öneri ölçüsü PANO sohbetinindir; bot önerisi oraya karışsaydı "pano sohbeti kaç
+#: öneri yazdı" sayısı sessizce şişerdi.
+#: BOTSUZ KİP (`oturum: mcp`, öneksiz) BURADA YOK, bilerek: o kipin kaydı yalnız altı getter'dır ve
+#: `oneri_yaz` taşımaz (`tests/test_mcp_bot_alt_kume_v597.py::test_bot_yokken_bugunku_alti_getter`)
+#: — öneri satırı ÜRETEMEZ. Önek ile yazıcının ayrışması türetme çivisiyle bağlı:
+#: `tests/test_edg086_sayim_v450.py::test_GERCEK_iki_yazici_iki_kovaya_ayrisir`.
+MCP_OTURUM_ONEKI = "mcp:"
 
 
 # ======================================================================================
@@ -528,14 +541,35 @@ def kota_olc(satirlar: list[dict], tavan) -> dict:
 # ======================================================================================
 # 5) ÖNERİ — approvals.jsonl (tanı)
 # ======================================================================================
+def bot_onerisi_mi(satir: dict) -> bool:
+    """Öneri satırını MCP BOTU mu yazdı? `oturum` alanı olmayan (G3 öncesi) ya da boş/`None`
+    oturumlu satır PANO sayılır — o defterde bot yazıcısı yoktu (geriye uyum)."""
+    return str(satir.get("oturum") or "").startswith(MCP_OTURUM_ONEKI)
+
+
+def _oneri_dagilimi(oneriler: list[dict], kararlar: dict[str, str]) -> dict:
+    onaylanan = sum(1 for r in oneriler if kararlar.get(str(r.get("id"))) == "approve")
+    reddedilen = sum(1 for r in oneriler if kararlar.get(str(r.get("id"))) == "reject")
+    return {"n": len(oneriler), "onaylanan": onaylanan, "reddedilen": reddedilen,
+            "bekleyen": len(oneriler) - onaylanan - reddedilen, "neden": None}
+
+
 def oneri_olc(yol, baslangic: str | None) -> dict:
+    """`{"pano": dağılım, "bot": dağılım}` — defter TEK kez okunur, öneriler iki kovaya ayrılır.
+
+    KARAR SATIRLARI SÜZÜLMEZ, KİMLİKLE BAĞLANIR: `api.api_approve`un yazdığı karar satırı
+    `{id, decision, reason, ts}`dir, `oturum` TAŞIMAZ; hangi kovaya ait olduğu önerinin kovasından
+    gelir. Kimlik iki yazıcıda ÇAKIŞMAZ: ikisi de aynı gövdeyi (`sohbet._arac_oneri_yaz`) aynı
+    dosya kilidi altında koşar ve sıra numarası defterdeki TÜM sohbet satırlarının sayımından türer."""
     bos = {"n": None, "onaylanan": None, "reddedilen": None, "bekleyen": None}
     if yol is None:
-        return {**bos, "neden": "onay defteri verilmedi (`--onaylar`) ve defterin yanında "
-                                "`approvals.jsonl` yok — öneri sayımı ÖLÇÜLEMEDİ"}
+        neden = ("onay defteri verilmedi (`--onaylar`) ve defterin yanında `approvals.jsonl` "
+                 "yok — öneri sayımı ÖLÇÜLEMEDİ")
+        return {"pano": {**bos, "neden": neden}, "bot": {**bos, "neden": neden}}
     yol = pathlib.Path(yol)
     if not yol.exists():
-        return {**bos, "neden": f"onay defteri bulunamadı: {yol} — öneri sayımı ÖLÇÜLEMEDİ"}
+        neden = f"onay defteri bulunamadı: {yol} — öneri sayımı ÖLÇÜLEMEDİ"
+        return {"pano": {**bos, "neden": neden}, "bot": {**bos, "neden": neden}}
     satirlar, _ = defter_oku(yol)
     kararlar: dict[str, str] = {}
     oneriler: list[dict] = []
@@ -548,10 +582,8 @@ def oneri_olc(yol, baslangic: str | None) -> dict:
             oneriler.append(r)
     if baslangic:
         oneriler, _, _ = pencereye_al(oneriler, baslangic)
-    onaylanan = sum(1 for r in oneriler if kararlar.get(str(r.get("id"))) == "approve")
-    reddedilen = sum(1 for r in oneriler if kararlar.get(str(r.get("id"))) == "reject")
-    return {"n": len(oneriler), "onaylanan": onaylanan, "reddedilen": reddedilen,
-            "bekleyen": len(oneriler) - onaylanan - reddedilen, "neden": None}
+    return {"pano": _oneri_dagilimi([r for r in oneriler if not bot_onerisi_mi(r)], kararlar),
+            "bot": _oneri_dagilimi([r for r in oneriler if bot_onerisi_mi(r)], kararlar)}
 
 
 # ======================================================================================
@@ -644,6 +676,7 @@ def calistir(*, defter, cikti=None, markdown=None, onaylar=None, kart=None,
         olculemeyen.append(f"n_alt_mesaj: {pencere_neden}")
     if kota["dolu_pencere_neden"]:
         olculemeyen.append(f"kota_gunluk_tavan: {kota['dolu_pencere_neden']}")
+    oneri = oneri_olc(onaylar, baslangic)
     return {
         "olcum_zamani": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "kart": str(kart_verisi.get("card_id") or ""),
@@ -659,7 +692,8 @@ def calistir(*, defter, cikti=None, markdown=None, onaylar=None, kart=None,
         "arac": arac_olc(satirlar),
         "gecikme": gecikme_olc(satirlar),
         "kota": kota,
-        "oneri": oneri_olc(onaylar, baslangic),
+        "oneri": oneri["pano"],
+        "oneri_bot": oneri["bot"],
         "model_kirilimi": model_kirilimi(satirlar),
         "olculemeyen": olculemeyen,
         "beyan": ("Bu betik SAYAR, HÜKÜM VERMEZ — eşikler kart EDG-2026-086'dan okunur ve rapora "
@@ -669,7 +703,8 @@ def calistir(*, defter, cikti=None, markdown=None, onaylar=None, kart=None,
                   "DIŞINDA tutulur; modelin konuşup hiç veri OKUMADIĞI satırlar BOŞ PAYDAYLA "
                   "ölçülür. Ölçülemeyen her değer None + neden'dir; `%12`, `yüzde 12`, `1,103`, "
                   "`1.000.000` ve `MU`/`T` gibi kısa sembol adayları 'belirsiz' sayılır, uydurma "
-                  "SAYILMAZ."),
+                  "SAYILMAZ. `oneri` yalnız PANO sohbetinin önerilerini sayar; MCP botlarının "
+                  "(`oturum: mcp:<bot>`) önerileri `oneri_bot`ta AYRI sayılır."),
     }
 
 
@@ -690,8 +725,8 @@ def _esik_hucresi(esikler: dict, ad: str) -> str:
 
 def markdown_uret(sonuc: dict) -> str:
     e = sonuc["esikler"]
-    u, a, g, k, o = (sonuc["uydurma"], sonuc["arac"], sonuc["gecikme"], sonuc["kota"],
-                     sonuc["oneri"])
+    u, a, g, k, o, ob = (sonuc["uydurma"], sonuc["arac"], sonuc["gecikme"], sonuc["kota"],
+                         sonuc["oneri"], sonuc["oneri_bot"])
     satirlar = ["# EDG-2026-086 — pano sohbeti kalite sayımı", ""]
     if sonuc["pencere_doldu"] is not True:
         satirlar += ["## HÜKÜM YOK (betimleyici ara-rapor)", "",
@@ -748,7 +783,11 @@ def markdown_uret(sonuc: dict) -> str:
                  + (f" · neden: {k['dolu_pencere_neden']}" if k["dolu_pencere_neden"] else ""),
                  f"- öneri (tanı): n={_sayi(o['n'])} · onaylanan={_sayi(o['onaylanan'])} · "
                  f"reddedilen={_sayi(o['reddedilen'])} · bekleyen={_sayi(o['bekleyen'])}"
-                 + (f" · neden: {o['neden']}" if o["neden"] else ""), "",
+                 + (f" · neden: {o['neden']}" if o["neden"] else ""),
+                 f"- öneri — MCP botları (tanı; pano sayımına GİRMEZ): n={_sayi(ob['n'])} · "
+                 f"onaylanan={_sayi(ob['onaylanan'])} · reddedilen={_sayi(ob['reddedilen'])} · "
+                 f"bekleyen={_sayi(ob['bekleyen'])}"
+                 + (f" · neden: {ob['neden']}" if ob["neden"] else ""), "",
                  "## Model kırılımı", "", "| Künye | n | uydurma oranı | şema-dışı oranı |",
                  "|---|---|---|---|"]
     for kunye, v in sonuc["model_kirilimi"].items():

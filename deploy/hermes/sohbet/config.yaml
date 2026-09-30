@@ -1,0 +1,61 @@
+# ÜRETİLMİŞ — elle düzenlenmez; üreteç `ops/sohbet_profili_uret.py`.
+# Bot ağ geçidinin KÖK (varsayılan) profili.
+# Birim meridian-botlar.service, Hermes kökü /home/ubuntu/.hermes-botlar (bu dosya oranın config.yaml'ıdır).
+# Dinleyiciyi bu profil tutar; sohbet profilleri çoklu kipte /p/<ad>/ altında sunulur. ARAÇSIZ ve HAFIZASIZ:
+# /p/ öneksiz istek buraya düşer ve araçlı ya da hafızalı bir kök veri uydururdu — platform izin listesi boş,
+# Meridian MCP girdisi ve hafıza sağlayıcısı YOK; SOUL yalnız yönlendirme cümlesi yazdırır.
+# Kökün .env'ine model anahtarı (providers.kapi.key_env) BİLİNÇLİ konmaz: öneksiz istek kapıda 401 ile düşer
+# (model çağrılmaz — uydurma yok, kota yok); SOUL'daki ret cümlesi ikinci katmandır (Rol-1 hükmü, 2026-09-30).
+# terminal.cwd = /opt/meridian/var/bots/sohbet: ağ geçidinin BAĞLAM dizini (AGENTS.md/CLAUDE.md buradan aranır; boş kum havuzu).
+# Kaynak: deploy/hermes/profiles/sef/config.yaml (duruş: kanca, onay, kapalı takımlar, model,
+# sağlayıcılar — gerekçeleri orada) + üretecin sabitleri (zaman aşımı, yeniden deneme, çoklu kip).
+# Değiştirmek için kaynağı düzenle ve üreteci --yaz ile koş; tazelik kapısı --kontrol.
+hooks:
+  pre_tool_call:
+  - matcher: terminal|write_file|patch|edit|apply_patch
+    command: /opt/meridian/ops/meridian-guard.sh
+    timeout: 10
+hooks_auto_accept: true
+agent:
+  disabled_toolsets:
+  - terminal
+  - file
+  - code_execution
+  - browser
+  - web
+  - delegation
+  - cronjob
+  - computer_use
+  - memory
+  - session_search
+  - image_gen
+  - video_gen
+  - tts
+  api_max_retries: 2
+approvals:
+  mode: smart
+  cron_mode: deny
+  deny:
+  - '*dagit.sh*'
+  - '*git push*'
+  - '*git commit*'
+  - '*systemctl*'
+  - '*serve.sh*'
+model:
+  provider: custom:kapi
+  default: nvidia/nemotron-3-ultra-550b-a55b:free
+  max_tokens: 8000
+providers:
+  openrouter:
+    request_timeout_seconds: 60
+  kapi:
+    base_url: http://127.0.0.1:9080/llm/v1
+    key_env: BOT_KEY_SEF
+  custom:
+    request_timeout_seconds: 60
+gateway:
+  multiplex_profiles: true
+platform_toolsets:
+  api_server: []
+terminal:
+  cwd: /opt/meridian/var/bots/sohbet

@@ -51,7 +51,10 @@ SERTLESTIRILEN = ("meridian.service", "meridian-barsarchive.service", "meridian-
                   # o gecikme "sertleştirmesi hiçbir yerde çivili olmayan tek birim" hâlini
                   # doğurdu. Ayrıca `test_uc_birimin_ortak_direktifleri_ayrismiyor` ancak listede
                   # olan birimler arasında ayrışma ölçebilir — dışarıda kalan birim ayrışamaz da.
-                  "meridian-bekci.service")
+                  "meridian-bekci.service",
+                  # Konuşan filo Parça 1b G3 (2026-09-30): bot ağ geçidi — aynı `.venv`in MCP çocuğunu koşar,
+                  # aynı kullanıcı, ağa çıkar (kapı + Hindsight). Kurulduğu turda listeye girer (bekçi dersi).
+                  "meridian-botlar.service")
 
 # Üç birimde de BİREBİR AYNI olması gereken direktifler (ReadWritePaths BİLEREK dışarıda —
 # her birimin yazma envanteri farklıdır ve ayrı testlerde ölçülür).

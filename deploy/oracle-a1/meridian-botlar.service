@@ -1,0 +1,130 @@
+# meridian-botlar.service — konuşan bot filosunun SOHBET ağ geçidi (Parça 1b G3, 2026-09-30).
+#
+# NE: tek bir Hermes ağ geçidi süreci, AYRI bir Hermes kökünde (`HERMES_HOME=/home/ubuntu/.hermes-botlar`) çoklu
+# profil kipinde koşar. Kök (varsayılan) profil dinleyiciyi tutar; sohbet profilleri (`sef`, `bekci`, `karne`)
+# `/p/<ad>/` altında ikincil profil olarak sunulur. Kökün ve profillerin dosyaları ÜRETİLMİŞTİR — kaynak
+# `ops/sohbet_profili_uret.py`, depo aynası `deploy/hermes/sohbet/`; A0 rolü (`tasks/hermes.yml`) onları bu köke
+# kopyalar ve `.env` dosyalarına DOKUNMAZ.
+#
+# NEDEN AYRI BİRİM: rapor profilleri (`~/.hermes/profiles/<ad>`) zamanlanmış, hafızasız ve tek çağrılık koşar
+# (kendi oneshot birimleri); sohbet hafızalı ve uzun ömürlüdür. Parça 0 v3 ölçümü: rapor yolu hafızaya
+# YAZABİLİYOR — tek profil iki işi göremez (üretecin başlığı). `HERMES_HOME` `~/.hermes` DIŞINI gösterdiği için
+# bu dizin KENDİ başına köktür (A1 Hermes v0.19.0 kaynağı, `hermes_constants` `get_default_hermes_root`; G3 planı
+# Architecture): ana kökün `config.yaml`ı ve `.env`i bu sürece görünmez.
+#
+# TEK KAYNAK: birim adı, kök ve kum havuzu üretecin sabitleridir (`ops/sohbet_profili_uret.py::BOT_BIRIMI`,
+# `ops/sohbet_profili_uret.py::KOK_DIZIN`, `ops/sohbet_profili_uret.py::BOT_KUM_HAVUZU`). Bu dosyadaki literal
+# kopyalar, A0 dizin/kopya hedefleri ve sohbet profillerinin MCP `env:`indeki credential yolu
+# (`/run/credentials/<birim adı>`) tests/test_bot_agi_gecidi_v601.py ile eşitlenir: birim yeniden adlandırılıp yol
+# unutulursa `bot_hafizasi_ara` SESSİZCE "credential yok" döner.
+#
+# KURULUM: A0 rolü KOPYALAR (`birim_kaynaklari` glob'u) ama ETKİN ETMEZ — birim `etkin_birimler`de DEĞİLDİR
+# (uzun ömürlü birim ayrı değişiklikle etkin olur; Vault/telemetri emsali) ve dagit bakım penceresinin
+# adaylarında da yoktur. Sıra Rol-1'indir (G3 planı "Rol-1 canlı kontrol listesi"): site.yml → profil `.env`leri
+# → elle başlat + test-ateşle ("kurulu" != "çalışır") → AYRI değişiklikle `etkin_birimler`. dagit [1c] kurulmamış
+# birimde DURUR: site.yml dağıtımdan ÖNCE koşar.
+[Unit]
+Description=Meridian bot ağ geçidi — Hermes çoklu profil sohbeti (kök ~/.hermes-botlar, profiller /p/<ad>/)
+# SIRALAMA, BAĞIMLILIK DEĞİL: model kapısı (`apisix.service`, port 9080) ve hafıza (`hindsight-api.service`, port
+# 8888) açılışta bu süreçten ÖNCE kalksın ki ilk istekler bağlantı hatası almasın (emsal
+# `meridian-defter-ozeti-retain.service`). `Wants=`/`Requires=` BİLEREK YOK: o birimlerden birinin durması ya da
+# yeniden başlaması ağ geçidini DÜŞÜRMEMELİ — o anki istek hata alır, süreç ayakta kalır. Adlar depodaki birim
+# dosyalarından (`deploy/apisix/apisix.service`, `deploy/hindsight/hindsight-api.service`); v601 çiviler.
+After=network-online.target apisix.service hindsight-api.service
+Wants=network-online.target
+# `OnFailure=` BİLEREK YOK (Rol-1 kararı 2026-09-30): `meridian-fail-notify.service` rapor sınıfı içindir, bot ağ
+# geçidinin bildirim yolu ayrı karardır. `failed`in okuyucusu yine var (Yasa 6): `/api/infra` birimleri
+# `deploy/**/*.service` dosyalarından KENDİSİ keşfeder (`meridian/api.py::_infra_birim_adlari`) ve
+# `ActiveState=failed`i "arizali", duran bir `Type=simple`ı "olu" diye sınıflar.
+
+[Service]
+Type=simple
+User=ubuntu
+# ÇALIŞMA DİZİNİ BİLEREK `/`, `/opt/meridian` DEĞİL — İKİNCİ KATMAN; bağlam dizinini `terminal.cwd` belirler (v0.19
+# ölçümü). Hermes bağlam dosyalarını (`AGENTS.md`/`CLAUDE.md`/`.cursorrules`/`.hermes.md`) sistem istemine koyar; ağ
+# geçidinde arama dizini süreç cwd'si DEĞİL `TERMINAL_CWD`dir ve açılışta kök config'in `terminal.cwd`sinden
+# köprülenir (A1 v0.19.0 Hermes `gateway/run.py` + `agent/runtime_cwd.py`, Rol-1 ölçümü 2026-09-30; yerel v0.18.2
+# aynı) — üreteç onu boş kum havuzuna (`/opt/meridian/var/bots/sohbet`) sabitler (G3 dal sonu I1). O dizin YOKSA
+# keşif süreç cwd'sine düşer: `/opt/meridian` depo kökündeki `CLAUDE.md` (A1 host'u, ssh yolu, dağıtım disiplini) o
+# durumda her sohbet isteğiyle model sağlayıcısına giderdi. `/` bağlam dosyası taşımaz ve `ProtectSystem=strict`
+# altında salt-okurdur; kardeş birimlerden `/opt/meridian` kopyalanmasın diye AÇIK yazıldı (systemd varsayılanı).
+WorkingDirectory=/
+# --- KÖK VE YAZMA KISITI — ikisi de sır DEĞİL, ikisi de yalnız burada verilebilir --------------------------------
+# `HERMES_HOME`: ağ geçidinin Hermes kökü. Kök profil dosyaları doğrudan burada, sohbet profilleri `profiles/<ad>/`
+#   altında; çoklu kip varsayılan profili + `<kök>/profiles/*`i sunar (Hermes `hermes_cli/profiles.py`,
+#   `profiles_to_serve`).
+# `HERMES_WRITE_SAFE_ROOT`: ajan araçlarının yazabileceği TEK dizin. Değişken TANIMSIZSA hiçbir yazma kısıtı
+#   UYGULANMAZ (Hermes `agent/file_safety.py`, `if safe_roots:` dalı). SÜREÇ başına okunur → tek ağ geçidinde
+#   bot başına kum havuzu İMKÂNSIZ; BEYANLI sapma: üç sohbet profili ortak `/opt/meridian/var/bots/sohbet`i
+#   paylaşır (dosya/terminal takımları zaten kapalı — ikinci katman) ve rapor kum havuzlarından ayrıdır. AYNI
+#   dizin ağ geçidinin BAĞLAM dizinidir (kök config `terminal.cwd`) — içinde bağlam dosyası olmamalı, BOŞ kalmalı.
+# SIRLAR BURADA YOK: çoklu kipte sırlar PROFİL `.env`inden okunur, süreç ortamına düşmez (Hermes
+#   `agent/secret_scope.py`, `get_secret`) — dinleyici anahtarı kökün, kapı ve Hindsight anahtarları her sohbet
+#   profilinin `.env`inde; beslemesi rotasyon aracıyla (rapor profilleri emsali). Birim dosyası 0644'tür.
+# Hindsight kiracı anahtarı credential'ı (MCP `bot_hafizasi_ara`) G3b sır diliminde drop-in + rotasyon tablosuyla gelir; o güne dek `bot_hafizasi_ara` 'credential yok' döner — birim zaten etkin değil.
+Environment=HERMES_HOME=/home/ubuntu/.hermes-botlar
+Environment=HERMES_WRITE_SAFE_ROOT=/opt/meridian/var/bots/sohbet
+# `~/.local/bin/hermes` ubuntu sahipli sarmalayıcıdır (A1'de ölçüldü 2026-09-30). `--accept-hooks` `gateway` alt
+# ayrıştırıcısının bayrağıdır ve `run`dan ÖNCE gelir (A1 ölçümü); `hooks_auto_accept: true` config'te de var —
+# bayrak ikinci katman: guard kancası etkileşimsiz ağ geçidinde onay beklemesin.
+ExecStart=/home/ubuntu/.local/bin/hermes gateway --accept-hooks run
+# `on-failure`, `always` DEĞİL: operatörün `systemctl stop`u ya da ağ geçidinin temiz çıkışı arıza değildir ve
+# birimi geri getirmemeli; çökme (sıfırdışı çıkış, sinyal, zaman aşımı) getirir.
+Restart=on-failure
+RestartSec=10
+# DURDURMA: `mixed` — SIGTERM yalnız ANA sürece, ardından birimde kalan süreçlerin hepsine SIGKILL. Parça 0 v3
+# ölçümü: ağ geçidi SIGTERM'i yok saydı → SIGKILL gerekti; 30 sn tavanı ÖLÇÜLMEDİ, SEÇİLDİ (G3c'de durdurma
+# süresi ölçülür). `meridian-learn.service`in `control-group` gerekçesi (hermes CLI alt süreçleri SIGTERM
+# almazsa ipliğin bir LLM çağrısının zaman aşımını beklemesi) burada YOK: ağ geçidinin çocukları MCP stdio
+# süreçleridir ve ana süreçle ölür.
+KillMode=mixed
+TimeoutStopSec=30
+
+# ==================================================================================================================
+# H3 SERTLEŞTİRME — filo ortak seti (`tests/test_h3_tur2_v174.py::ORTAK_SET`, meridian.service ile BİREBİR).
+# Gerekçelerin TAM METNİ ve dışarıda bırakılanlar (MemoryDenyWriteExecute · PrivateDevices · PrivateUsers ·
+# ProtectProc/ProcSubset · IPAddressDeny · SystemCallErrorNumber=EPERM): meridian.service. Burada YALNIZ ayrışan
+# kalem (ReadWritePaths) ve bu birime özgü ölçülmemiş kalem (SystemCallFilter) yazılıdır.
+# ==================================================================================================================
+NoNewPrivileges=true
+CapabilityBoundingSet=
+ProtectSystem=strict
+ProtectHome=read-only
+# --- AYRIŞMA — ReadWritePaths: iki yol, ikisi de bir YAZANA bağlı:
+#     `/opt/meridian` — Meridian MCP sunucusu (sohbet profillerinin `mcp_servers.meridian` girdisi,
+#     `/opt/meridian/.venv/bin/python`) bu sürecin ÇOCUĞUDUR ve ad alanını miras alır: onay kaydı
+#     (approvals.jsonl), kilitler (.locks), olay defteri (events.jsonl), iş istekleri (istek/), import anında
+#     `__pycache__` — hepsi `/opt/meridian` altında (G3 planı Global Constraints). Ortak kum havuzu
+#     `/opt/meridian/var/bots/sohbet` da bu satırın kapsamındadır (AYRI yol gerekmez).
+#     `-/home/ubuntu/.hermes-botlar` — Hermes kökü: oturumlar, durum dosyaları, profil `logs/` (istek dökümü
+#     kapatılamaz — Hermes `agent/agent_init.py` şerhi). DARALTILDI: `~/.hermes`in tamamı AÇILMAZ — ana kökün
+#     `config.yaml`ı (her rapor çağrısının guard duruşu) ve `.env`i (model anahtarları) bu süreçten yazılamaz kalır
+#     (meridian-brifing.service "AÇILAN YOL TAM HÂLİYLE" gerekçesiyle aynı sınıf). `-` önekli: A0 dizin görevi
+#     koşmadan kök YOKTUR ve öneksiz yol systemd'ye birimi REDDETTİRİR.
+#     `~/.cache` YOK: ExecStart `uv` değildir. Hermes'in kök DIŞINA (ör. `~/.cache`) yazıp yazmadığı ÖLÇÜLMEDİ —
+#     G3c'de `ProtectHome=read-only` altında ölçülür; yazıyorsa `-/home/ubuntu/.cache` eklenir.
+ReadWritePaths=/opt/meridian -/home/ubuntu/.hermes-botlar
+PrivateTmp=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHostname=true
+RestrictNamespaces=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+# Ağ: çıkış kapıya (APISIX 127.0.0.1 port 9080, model çağrıları) ve Hindsight'a (127.0.0.1 port 8888, hafıza),
+# dinleyici yalnız 127.0.0.1 — liste kardeşlerle BİREBİR aynı; AF_NETLINK'in dışarıda oluşu meridian.service'te.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+SystemCallArchitectures=native
+# ÖLÇÜLMEDİ: `@system-service`in Hermes (Python + aiohttp) ve MCP çocuğuyla uyumu canlıda, G3c'de ölçülür (Rol-1
+# listesi). Filtre bir sistem çağrısını reddederse süreç SIGSYS ile ölür → `Restart=on-failure` + journal'de
+# `signal=SYS` — görünür yön, sessiz bozulma değil.
+SystemCallFilter=@system-service
+
+# [Install] VAR — uzun ömürlü servis. AMA birim `etkin_birimler`de DEĞİL: `enable` ayrı bir değişikliktir (G3c
+# test-ateşlemesinden SONRA); bölüm bugün o değişikliğin `systemctl enable`ı çalışabilsin diye burada.
+[Install]
+WantedBy=multi-user.target
