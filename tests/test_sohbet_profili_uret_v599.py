@@ -116,6 +116,56 @@ def test_soul_rapor_soulu_ile_baslar_bolum_tek(bot):
     assert s.startswith(r) and s.count("## Sohbet kipi") == 1
     bolum = s.split("## Sohbet kipi", 1)[1]
     assert not [ln for ln in bolum.splitlines() if ln.strip() == "SESSIZ"]
+    # Tur 2 (inceleme Minor 1): rapor kısmının tek başına şablon satırını EZEN cümle bölümde durmalı —
+    # yoksa sef/bekci sohbette de o jetonla cevap verebilir (cevapsızlık = sessiz arıza).
+    assert "SESSIZ yazmazsın" in bolum
+
+
+def _bolum(ad):
+    return (KOK / f"deploy/hermes/sohbet/profiles/{ad}/SOUL.md").read_text(encoding="utf-8").split(
+        "## Sohbet kipi", 1)[1]
+
+
+@pytest.mark.parametrize("bot", _aktifler(), ids=lambda b: b.ad)
+def test_soul_rapor_kipi_ifadelerini_ezer(bot):
+    # Tur 2 (inceleme Minor 2/3, Rol-1 metni): rapor SOUL'larındaki "araçların yok / hafızan yok" ve rapor
+    # biçimi/uzunluk kuralları sohbette aracı reddettirmesin, cevabı kırpmasın. Aktif bot kadroda araçsız olamaz.
+    bolum = _bolum(bot.ad)
+    assert "çelişirse bu bölüm geçerlidir" in bolum and "önce gelir" not in bolum
+    assert "o cümleler zamanlanmış rapor içindir. Bu kipte Meridian araçların ve geçmiş konuşmalarından gelen " \
+           "notlar var." in bolum
+    assert "notlar var; aracın yok." not in bolum
+    assert "Rapor biçimi ve uzunluk kuralları (karakter payı, bölüm düzeni) bu kipte uygulanmaz." in bolum
+
+
+def test_aracsiz_bot_arac_vaat_etmez(tmp_path):
+    # Yetenek vaadi mekanizmaya bağlı: araç listesi boş bot "Meridian araçların var" demez.
+    import dataclasses
+    import shutil
+    shutil.copytree(KOK / "deploy", tmp_path / "deploy")
+    from meridian import kadro
+    kd = tuple(dataclasses.replace(b, araclar=()) if b.ad == "karne" else b for b in kadro.kadro_yukle())
+    soul = _ur().uret(kok=tmp_path, kadro=kd)["deploy/hermes/sohbet/profiles/karne/SOUL.md"].decode("utf-8")
+    bolum = soul.split("## Sohbet kipi", 1)[1]
+    assert "- Bu kipte geçmiş konuşmalarından gelen notlar var; aracın yok." in bolum
+    assert "Meridian araçların" not in bolum and "is_iste" not in bolum
+
+
+@pytest.mark.parametrize("bot", _aktifler(), ids=lambda b: b.ad)
+def test_manifest_kapi_anahtari_ve_yazma_koku_sohbete_ozgu(bot):
+    # Tur 2 (inceleme Minor 4): kapı anahtarının adı/zorunluluğu rapor manifestinden, açıklaması sohbet kipine
+    # özgü (rapor düşüş yolunun "ham" anlatımı taşınmaz); yazma kökü beyanlı ve rapor kum havuzundan AYRI.
+    import re
+    m = yaml.safe_load((KOK / f"deploy/hermes/sohbet/profiles/{bot.ad}/distribution.yaml").read_text(encoding="utf-8"))
+    r = yaml.safe_load((KOK / f"deploy/hermes/profiles/{bot.ad}/distribution.yaml").read_text(encoding="utf-8"))
+    girdiler = {g["name"]: g for g in m["env_requires"]}
+    anahtar = f"BOT_KEY_{bot.ad.upper()}"
+    rapor_girdisi = next(g for g in r["env_requires"] if g["name"] == anahtar)
+    assert anahtar in girdiler and girdiler[anahtar]["required"] == rapor_girdisi["required"]
+    assert not re.search(r"\bham\b", girdiler[anahtar]["description"])
+    kok = girdiler["HERMES_WRITE_SAFE_ROOT"]
+    assert kok["required"] is True and kok["default"].endswith(f"/bots/{bot.ad}-sohbet")
+    assert "HINDSIGHT_API_KEY" in girdiler
 
 
 @pytest.mark.parametrize("bot", _aktifler(), ids=lambda b: b.ad)

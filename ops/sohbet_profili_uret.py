@@ -9,7 +9,9 @@ profil iki işi göremez — ikiz zorunlu. İkizi elle yazmak ise bu deponun bas
 taraf hep okunmayan taraf olur. Bu betik ikizi TÜRETİR; duruş rapor profilinde yaşar, burada kopyalanmaz.
 
 TEK KAYNAK:
-  * duruş ve rapor SOUL'u   → `deploy/hermes/profiles/<ad>/` (`config.yaml`, `SOUL.md`, `distribution.yaml`)
+  * duruş ve rapor SOUL'u   → `deploy/hermes/profiles/<ad>/` (`config.yaml`, `SOUL.md`, `distribution.yaml`;
+                               manifestten yalnız sürüm tabanı, kapı anahtarının adı/zorunluluğu ve yazma kökü
+                               tabanı — açıklamalar sohbet kipine özgü sabitlerdir)
   * Meridian MCP girdisi     → `deploy/hermes/config.yaml` içindeki mcp_servers → meridian girdisi
                                (`enabled` true olur, argümanlara `--bot <ad>` eklenir)
   * hangi bot, hangi araç    → `deploy/hermes/kadro.yaml` (`meridian.kadro`; yalnız `aktif` satırlar)
@@ -83,13 +85,38 @@ URETILDI = "ÜRETİLMİŞ — elle düzenlenmez; üreteç `ops/sohbet_profili_ur
 HINDSIGHT_API_URL = "http://127.0.0.1:8888"
 HINDSIGHT_ZAMAN_ASIMI_SN = 10
 
+#: Manifest `env_requires` — kapı anahtarının ADI ve `required` alanı rapor manifestinden gelir (aynı APISIX
+#: tüketicisi); AÇIKLAMA sohbet kipine özgüdür: rapor açıklaması rapor düşüş yolunu anlatır ve kurulu profilin
+#: `.env.EXAMPLE`ını okuyan operatörü rapor akışına yönlendirir (Rol-1 Tur 2).
+SOHBET_KAPI_ANAHTARI_ACIKLAMASI = (
+    "Kapı anahtarı — rapor profiliyle AYNI APISIX tüketicisi. Sohbet profili bu anahtarla model çağırır; değer "
+    "profilin kendi .env dosyasında durur, depoya yazılmaz. Anahtar yoksa ya da yanlışsa kapı 401 döner ve bot "
+    "sohbet cevabı veremez.")
+SOHBET_YAZMA_KOKU_ACIKLAMASI = (
+    "Bu profilin yazabileceği tek dizin; tanımsız değişken sınırsız yazma demektir. Çoklu ağ geçidinde değişkenin "
+    "profil başına mı süreç başına mı okunduğu G3'te ölçülür.")
+#: Sohbet kum havuzu rapor kum havuzundan AYRIDIR (her bot/kip kendi artefaktının tek yazarı): varsayılan, rapor
+#: manifestinin `HERMES_WRITE_SAFE_ROOT` varsayılanına bu ek konarak TÜRETİLİR — taban dizin ikinci kez yazılmaz.
+SOHBET_YAZMA_KOKU_EKI = "-sohbet"
+
 SOHBET_BOLUMU_BASLIGI = "## Sohbet kipi"
-_BOLUM_BASI = (
+#: Açılış bir ÖNCELİK kuralıdır, sıra değil: bölüm rapor metninin SONUNA eklenir, çelişkide bölüm geçerlidir
+#: (Rol-1 Tur 2 — "önce gelir" konumsal olarak yanlış okunabiliyordu).
+_ACILIS = (
     SOHBET_BOLUMU_BASLIGI,
     "",
-    "Bu bölüm yukarıdaki rapor talimatlarından önce gelir. Burada zamanlanmış bir rapor yazmıyorsun: "
-    "operatörün sorusuna cevap veriyorsun.",
+    "Bu bölüm yukarıdaki rapor talimatlarıyla çelişirse bu bölüm geçerlidir. Burada zamanlanmış bir rapor "
+    "yazmıyorsun: operatörün sorusuna cevap veriyorsun.",
     "",
+)
+#: Rapor SOUL'ları "araçların yok", "hafızan yok", "deftere kendin bakamazsın" der; sohbette bu cümleler aracı
+#: reddettirebilir. Ezme maddesi YETENEĞİ MEKANİZMAYA BAĞLAR: araç listesi boş botta "araçların var" denmez.
+_EZME_ARACLI = ("- Yukarıda araçların ya da hafızan olmadığı yazıyorsa, o cümleler zamanlanmış rapor içindir. "
+                "Bu kipte Meridian araçların ve geçmiş konuşmalarından gelen notlar var.")
+_EZME_ARACSIZ = "- Bu kipte geçmiş konuşmalarından gelen notlar var; aracın yok."
+_BOLUM_BASI = (
+    #: Rapor biçimi ve uzunluk payları (ör. karne'nin karakter payı) sohbet cevabını kırpmasın.
+    "- Rapor biçimi ve uzunluk kuralları (karakter payı, bölüm düzeni) bu kipte uygulanmaz.",
     "- Bugünün durumu hakkında yalnız araçlarından gelen veriyle konuş. Araç çağırmadan hiçbir sayı, yüzde, "
     "sembol ya da kaynak yazma.",
     "- Aracın yoksa ya da araç cevap vermediyse bilmediğini söyle ve nedenini yaz. Araç sonucu uydurma; "
@@ -131,9 +158,11 @@ def _vaat_edilir(bot: kadro_mod.Bot, arac: str) -> bool:
 
 
 def sohbet_bolumu(bot: kadro_mod.Bot) -> str:
-    """Botun SOUL'una eklenen sohbet bölümü — sabit metin + yalnız kadrodaki araçlar için koşullu satırlar."""
+    """Botun SOUL'una eklenen sohbet bölümü — sabit metin + araç listesine bağlı ezme maddesi + yalnız kadrodaki
+    araçlar için koşullu satırlar."""
+    ezme = _EZME_ARACLI if bot.araclar else _EZME_ARACSIZ
     kosullu = tuple(satir for arac, satir in _KOSULLU_SATIRLAR if _vaat_edilir(bot, arac))
-    return "\n".join(_BOLUM_BASI + kosullu + _BOLUM_SONU) + "\n"
+    return "\n".join(_ACILIS + (ezme,) + _BOLUM_BASI + kosullu + _BOLUM_SONU) + "\n"
 
 
 def _kadro(kok: pathlib.Path, kadro) -> tuple[kadro_mod.Bot, ...]:
@@ -186,13 +215,20 @@ def _soul(rapor_evi: pathlib.Path, bot: kadro_mod.Bot) -> bytes:
     return (rapor + "\n\n" + sohbet_bolumu(bot)).encode("utf-8")
 
 
+def _tek_girdi(manifest: dict, ad: str, alan: str, rapor_evi: pathlib.Path) -> dict:
+    """Rapor manifestinin `env_requires` listesindeki TEK `ad` girdisi; `alan` taşımalı. Yoksa açık hata."""
+    girdiler = [g for g in (manifest.get("env_requires") or []) if isinstance(g, dict) and g.get("name") == ad]
+    if len(girdiler) != 1 or alan not in girdiler[0]:
+        raise ValueError(f"{rapor_evi}/distribution.yaml: env_requires içinde '{alan}' alanlı tek bir {ad} girdisi "
+                         f"beklenirdi ({len(girdiler)} girdi bulundu) — beyan miras alınamaz")
+    return girdiler[0]
+
+
 def _dagitim(rapor_evi: pathlib.Path, bot: kadro_mod.Bot) -> bytes:
     manifest = _yaml_oku(rapor_evi / "distribution.yaml")
     anahtar_adi = f"BOT_KEY_{bot.ad.upper()}"
-    kapi = [g for g in (manifest.get("env_requires") or []) if isinstance(g, dict) and g.get("name") == anahtar_adi]
-    if len(kapi) != 1:
-        raise ValueError(f"{rapor_evi}/distribution.yaml: env_requires içinde tek bir {anahtar_adi} girdisi "
-                         f"beklenirdi, {len(kapi)} bulundu — kapı anahtarı beyanı miras alınamaz")
+    kapi = _tek_girdi(manifest, anahtar_adi, "required", rapor_evi)
+    rapor_koku = _tek_girdi(manifest, "HERMES_WRITE_SAFE_ROOT", "default", rapor_evi)
     if "hermes_requires" not in manifest:
         raise ValueError(f"{rapor_evi}/distribution.yaml: hermes_requires yok — sürüm tabanı miras alınamaz")
     veri = {
@@ -201,13 +237,17 @@ def _dagitim(rapor_evi: pathlib.Path, bot: kadro_mod.Bot) -> bytes:
         "description": f"{bot.ad} sohbet profili — ÜRETİLMİŞ (rapor profilinden türetildi)",
         "hermes_requires": manifest["hermes_requires"],
         "env_requires": [
-            copy.deepcopy(kapi[0]),
+            {"name": "HERMES_WRITE_SAFE_ROOT", "description": SOHBET_YAZMA_KOKU_ACIKLAMASI, "required": True,
+             "default": f"{rapor_koku['default']}{SOHBET_YAZMA_KOKU_EKI}"},
+            {"name": anahtar_adi, "description": SOHBET_KAPI_ANAHTARI_ACIKLAMASI, "required": kapi["required"]},
             {"name": "HINDSIGHT_API_KEY", "required": True,
              "description": "Hindsight kiracı anahtarı; değer G3 biriminin credential'ından, dosyaya yazılmaz"},
         ],
         "distribution_owned": ["SOUL.md", "config.yaml", "hindsight/config.json"],
     }
-    baslik = (URETILDI + ".", f"Kaynak: {RAPOR_KOK}/{bot.ad}/distribution.yaml (sürüm tabanı, kapı anahtarı beyanı).")
+    baslik = (URETILDI + ".",
+              f"Kaynak: {RAPOR_KOK}/{bot.ad}/distribution.yaml (sürüm tabanı, kapı anahtarının adı ve zorunluluğu,",
+              f"yazma kökü — rapor kum havuzu + '{SOHBET_YAZMA_KOKU_EKI}'); açıklamalar üretecin sohbet sabitleri.")
     return _yaml_yaz(baslik, veri)
 
 
