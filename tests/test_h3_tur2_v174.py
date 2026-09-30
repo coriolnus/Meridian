@@ -54,7 +54,11 @@ SERTLESTIRILEN = ("meridian.service", "meridian-barsarchive.service", "meridian-
                   "meridian-bekci.service",
                   # Konuşan filo Parça 1b G3 (2026-09-30): bot ağ geçidi — aynı `.venv`in MCP çocuğunu koşar,
                   # aynı kullanıcı, ağa çıkar (kapı + Hindsight). Kurulduğu turda listeye girer (bekçi dersi).
-                  "meridian-botlar.service")
+                  "meridian-botlar.service",
+                  # Konuşan filo Parça 1b G4 (2026-09-30): Telegram dinleyicisi — aynı `.venv`, aynı kod tabanı, aynı
+                  # kullanıcı, `state/secrets.json` okuması ve ağa çıkış (Telegram + ağ geçidi + Hindsight). Kurulduğu
+                  # turda listeye girer (bekçi dersi); ayrıca v602 bu listede durduğunu çiviler.
+                  "meridian-telegram.service")
 
 # Üç birimde de BİREBİR AYNI olması gereken direktifler (ReadWritePaths BİLEREK dışarıda —
 # her birimin yazma envanteri farklıdır ve ayrı testlerde ölçülür).

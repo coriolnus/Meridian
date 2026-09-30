@@ -19,8 +19,11 @@ yanıtsız mesaj `tg-<bot>-<YYYYAAGG>`. (c) KOMUT İSTİSNASI (Tur 2, Görev 1 i
 sözleri `bot_kanal.komut_oneki` ile bir komutsa (`hatırla:` · `unut:` · `onayla:` · `geri al:`) çit KURULMAZ — çit
 öne konsaydı `bota_sor` öneki göremez ve not MODELE giderdi; `hatırla` yanıtı nota yanıtlanan ilk satırı kaynak
 etiketi olarak ekler, gövdesiz `unut:` yanıtı yanıtlanan mesajın ilk İÇERİK satırını sorgu yapar
-(`_komut_giden`). `dongu` bir ürün hizmet döngüsüdür; systemd birimi Parça 2 dağıtımında gelir — bu modülde
-`main()` YOK.
+(`_komut_giden`).
+
+HİZMET (Parça 1b G4 Görev 3). `python -m meridian.telegram_dinleyici` → `main()` → `dongu(bota_sor=bot_kanal.bota_sor)`
+— üretim `bota_sor`u (gerçek taşıyıcı + hafıza). Birim `deploy/oracle-a1/meridian-telegram.service` (A0 rolü kopyalar,
+ETKİN ETMEZ; credential drop-in'i G3b sır dilimine ertelendi — birim şerhi). Çivi: tests/test_telegram_birimi_v602.py.
 
 DEĞİŞMEZLER.
   * YALNIZ OPERATÖR (Tur 3, I-3): mesaj yalnız `chat.type == "private"` VE
@@ -43,22 +46,40 @@ DEĞİŞMEZLER.
     tek bir güncellemenin hatası (`telegram_isle_hatasi`) ya da ofset yazım hatası döngüyü
     düşürmez. Yoklama hatası `None` döner ve `dongu` 1, 2, 4, … 60 sn geri çekilir — ağ/jeton
     arızasında API'yi dövüp olay defterini şişiren sıcak döngü yok. Ayrıntı `dongu` docstring'inde.
+  * İLK KOŞUM BİRİKİMİ YENİDEN OYNATMAZ (G4 Görev 3, Rol-1 kararı 5): `telegram_ofset.json` YOKSA ilk yoklama
+    BLOKLAMAZ (`timeout: 0` — yalnız ZATEN birikmiş olanı alır; uzun yoklama operatörün ilk TAZE mesajını da
+    "birikmiş" sayıp yutardı) ve dönen güncellemeler İŞLENMEZ: en yüksek `update_id + 1` yazılır, olay
+    `telegram_ilk_ofset` (atlanan sayısı + yeni ofset). Sayfa dolu gelirse (`GUNCELLEME_SAYFASI`) birikim sürüyor
+    olabilir — atlama bir tur daha sürer. Gerekçe: ofset 0 ile Telegram 24 saatlik birikimi yeniden verir; dinleyici ilk
+    açılışında günlerce önceki soruları (ve pano kurulumundaki `merhaba`yı) cevaplardı. Dosya VARSA bugünkü davranış.
+  * CEVAP 4096'YA BÖLÜNÜR (plan Review Focus 3): `sendMessage` metin tavanı `TELEGRAM_TAVANI`. Bölme `notify.scrub`'DAN
+    SONRA yapılır — sınırı ortadan kesen bir anahtar iki yarım hâlinde desenden kaçmasın, scrub'ın UZATTIĞI metin
+    (`://u:p@` → `://***:***@`) tavanı sonradan aşmasın (`yanitla`nın parça başına scrub'ı scrub'lı metinde
+    büyümez). İmza ve `reply_to` YALNIZ ilk parçada (yanıt zinciri ilk parçanın imzasından sürer); ayrıntı `parcala`.
+    Teslim edilemeyen parça SESSİZ değildir (`telegram_parca_teslim_hatasi`: bot, parça no/toplam, sınıf) ve kalan
+    parçalar YİNE denenir.
+  * ARA BİLDİRİM CEVAPTAN SONRA ASLA GİTMEZ (Review Focus 4): `bota_sor` `ARA_BILDIRIM_ESIGI_S` içinde dönmezse
+    enjekte `bildir` ile BİR kez `ARA_BILDIRIM` (imzasız, operatörün mesajına yanıt) gider; ayrıntı `_AraBildirim`.
+    `bildir` `gonder`den AYRIDIR: tek teslimat yolu yine `notify.yanitla`dır, ama "cevap" ile "bekleme işareti"
+    ayrı sayılır (v592'nin `gidenler[0]` sözleşmesi cevabı gösterir).
   * YASA 6: `telegram_ofset.json`in yazarı ve okuyucusu `dongu`nun kendisidir (süreç yeniden
     başladığında işlenmiş güncelleme ikinci kez cevaplanmasın diye KALICI); aynı modül olduğu için
     statik graf dış okuyucu göremez — beyanı `codelaw.DECLARED_SINKS`te gerekçesiyle durur.
 """
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import re
+import threading
 import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from . import kadro as _kadro, notify, obs, secrets, store
+from . import bot_kanal, kadro as _kadro, notify, obs, secrets, store
 # KOMUT TESPİTİ, YANIT ÇİTİNİN ADI, KAYNAK ETİKETİ ve ALINTI İLK SATIRI İTHAL EDİLİR, KOPYALANMAZ — sahibi `bot_kanal`
 # (bota_sor'un dağıtımı ve dönüş kaydı da onları kullanır; G4 Görev 1 Tur 3: dönüş kaydı yanıt çitini hafızaya
 # yazmadan çözer; G4 Görev 2: gövdesiz `unut:` sorgusu aynı ilk-satır kuralından geçer).
@@ -75,6 +96,18 @@ _ONEK = re.compile(r"^@([A-Za-zÇĞİÖŞÜçğıöşü_]+)[:,]?\s*(.*)$", re.S)
 #: Bot adı [a-z_] — kadro bunu ZORLAR (`kadro.AD_DESENI`). Oturum `tg-<ad>-r<N>` ya da `tg-<ad>-<YYYYAAGG>`.
 _SOHBET_IMZA = re.compile(r"^💬 @([a-z_]+)(?: · (tg-[a-z_]+-r?\d+))?\s*$")
 _POZITIF_TAMSAYI = re.compile(r"[1-9]\d*")
+#: Telegram `sendMessage` metin tavanı (Bot API: "1-4096 characters"). Sayım UTF-16 KOD BİRİMİYLE yapılır: Telegram'ın
+#: karakteri kod noktası mı UTF-16 birimi mi saydığı ÖLÇÜLMEDİ (2026-09-30) — BMP dışı karakteri (emoji) iki saymak
+#: güvenli taraftır: en kötü hâlde gereksiz bir bölme, hiçbir hâlde "message is too long" reddi.
+TELEGRAM_TAVANI = 4096
+#: Bir `getUpdates` yoklamasının en çok getirdiği güncelleme (Bot API `limit`, 1–100). Gövdede AÇIK gönderilir ki ilk
+#: koşumun "sayfa dolu → birikim sürüyor olabilir" kararı sunucunun varsayılanına değil bu sayıya bağlı olsun.
+GUNCELLEME_SAYFASI = 100
+#: Uzun yoklamanın sunucu tarafı bekleme süresi (sn). İlk koşum yoklaması 0 ile (bloklamadan) yapılır — `dongu`.
+UZUN_YOKLAMA_S = 50
+#: `bota_sor` bu kadar saniyede dönmezse operatöre bir kez `ARA_BILDIRIM` gider (Rol-1 kararı 4, G4).
+ARA_BILDIRIM_ESIGI_S = 8
+ARA_BILDIRIM = "⏳ @{ad} düşünüyor…"
 
 
 @dataclass(frozen=True)
@@ -168,10 +201,131 @@ def _sha(x) -> str:
     return hashlib.sha256(str(x).encode()).hexdigest()[:12]
 
 
-def isle(guncelleme: dict, *, yetkili_sohbet: str, bota_sor, gonder, kadro=None,
-         bugun: str | None = None) -> str:
+def _kod_birimi(c: str) -> int:
+    """Bir kod noktasının UTF-16 kod birimi sayısı: BMP dışı (U+FFFF üstü — emoji vb.) iki, diğerleri bir."""
+    return 2 if ord(c) > 0xFFFF else 1
+
+
+def utf16_uzunluk(metin: str) -> int:
+    """UTF-16 kod birimi sayısı. `encode("utf-16")` KULLANILMAZ: eşsiz vekil (surrogate) taşıyan bir model cevabı
+    `UnicodeEncodeError` ile bölmeyi — dolayısıyla cevabı — düşürürdü."""
+    return sum(_kod_birimi(c) for c in metin)
+
+
+def _karakterle_kes(satir: str, sinir: int) -> tuple[str, str]:
+    """`satir`ı ilk `sinir` UTF-16 birimi SIĞAN kod noktasından keser: (baş, kalan). Python `str` dilimi bir kod
+    noktasını bölemez — emoji iki yarıya ayrılmaz. En az bir kod noktası alınır (ilerleme garantisi)."""
+    uz = 0
+    for i, c in enumerate(satir):
+        if uz + _kod_birimi(c) > sinir:
+            k = max(i, 1)
+            return satir[:k], satir[k:]
+        uz += _kod_birimi(c)
+    return satir, ""
+
+
+def parcala(metin: str, *, ilk_butce: int, butce: int = TELEGRAM_TAVANI) -> list[str]:
+    """`metin`i her biri tavana sığan parçalara böler; ilk parçanın bütçesi `ilk_butce` (imza satırı ona eklenir),
+    sonrakilerin `butce`. Satır SINIRINDA böler (parça sınırındaki satır sonu düşer — yalnız satır sınırında bölünen
+    metinde `"\\n".join(parcalar) == metin`); tek başına bütçeyi aşan satır kod noktası sınırında kesilir
+    (`_karakterle_kes`; o kesimde ayraç yoktur). Uzunluk `utf16_uzunluk` ile.
+    Boş/yalnız boşluk parça ÜRETİLMEZ (Telegram boş metni reddeder) — ilk parça hariç: o imzayı taşır, boş kalamaz.
+    Boş `metin` → `[""]` (bugünkü tek mesaj)."""
+    parcalar: list[str] = []
+    cari: str | None = None
+    cari_uz = 0
+    for satir in metin.split("\n"):
+        while True:
+            sinir = max(2, ilk_butce if not parcalar else butce)
+            ek = satir if cari is None else "\n" + satir
+            ek_uz = utf16_uzunluk(ek)
+            if cari_uz + ek_uz <= sinir:
+                cari, cari_uz = (ek if cari is None else cari + ek), cari_uz + ek_uz
+                break
+            if cari is not None:
+                parcalar.append(cari)
+                cari, cari_uz = None, 0
+                continue
+            bas, satir = _karakterle_kes(satir, sinir)
+            parcalar.append(bas)
+    if cari is not None:
+        parcalar.append(cari)
+    return parcalar[:1] + [p for p in parcalar[1:] if p.strip()]
+
+
+def _parcali_gonder(gonder, bot: str, imza: str, cevap: str, reply_to) -> None:
+    """Cevabı ÖNCE scrub'lar, SONRA böler (modül başlığı, CEVAP 4096'YA BÖLÜNÜR); ilk parça `imza` satırı + `reply_to`
+    taşır, sonrakiler çıplak ve yanıtsız. Parça başına teslim hatası olay olur ve kalan parçalar yine denenir."""
+    parcalar = parcala(notify.scrub(cevap), ilk_butce=TELEGRAM_TAVANI - utf16_uzunluk(imza) - 1)
+    toplam = len(parcalar)
+    for no, parca in enumerate(parcalar, 1):
+        metin, hedef = (f"{imza}\n{parca}", reply_to) if no == 1 else (parca, None)
+        try:
+            teslim = gonder(metin, hedef)
+        except Exception as e:  # sinyalli: olay (bot, parça no/toplam, yalnız sınıf adı); kalan parçalar YİNE denenir
+            obs.warn("telegram_parca_teslim_hatasi", bot=bot, parca=no, toplam=toplam, sinif=type(e).__name__)
+            continue
+        if not teslim:
+            obs.warn("telegram_parca_teslim_hatasi", bot=bot, parca=no, toplam=toplam, sinif="teslim_edilemedi")
+
+
+class _AraBildirim:
+    """`bota_sor` uzun sürerse BİR kez "⏳ @<bot> düşünüyor…" — ve cevaptan SONRA ASLA (plan Review Focus 4).
+
+    ÜÇ KATMAN, üçü de gerekli: (1) `kapat()` cevap gönderiminden ÖNCE kilit altında `_kapandi` bayrağını kurar — iplik
+    beklemeyi bitirmiş ama iptal ona yetişmemişse (`Timer.cancel` koşmakta olan işlevi durdurmaz) işlev kilidi alınca
+    bayrağı görür ve SUSAR; (2) işlev koşarken `kapat()` kilidi bekler — ara bildirim o anda gidiyorsa cevaptan ÖNCE
+    tamamlanır (bedel: en kötü hâlde cevap bir bildirim gönderimi kadar — `notify._post` zaman aşımı — gecikir; ters
+    sıra "cevap geldi, sonra düşünüyor…" demekti); (3) `cancel()` bekleyen ipliği bırakır — cevap geldikten sonra
+    eşik dolana dek boşuna yaşamaz. `_gitti` ikinci ateşlemeyi susturur (BİR kez). İplik `daemon`: süreç çıkışını
+    tutmaz. Zamanlayıcı enjekte edilir (`threading.Timer` imzası: `(sure, islev)` + `daemon` · `start` · `cancel`)."""
+
+    def __init__(self, bildir, bot: str, reply_to, esik_s: float, zamanlayici) -> None:
+        self._bildir, self._bot, self._reply_to = bildir, bot, reply_to
+        self._kilit = threading.Lock()
+        self._kapandi = False
+        self._gitti = False
+        self._zamanlayici = zamanlayici(esik_s, self._ates)
+        self._zamanlayici.daemon = True
+        self._zamanlayici.start()
+
+    def _ates(self) -> None:
+        with self._kilit:
+            if self._kapandi or self._gitti:
+                return
+            self._gitti = True
+            try:
+                teslim = self._bildir(ARA_BILDIRIM.format(ad=self._bot), self._reply_to)
+            except Exception as e:  # sinyalli: olay (yalnız sınıf adı); ara bildirim düşse de cevap yolu sürer
+                obs.warn("telegram_ara_bildirim_hatasi", bot=self._bot, sinif=type(e).__name__)
+                return
+            if not teslim:
+                obs.warn("telegram_ara_bildirim_hatasi", bot=self._bot, sinif="teslim_edilemedi")
+
+    def kapat(self) -> None:
+        with self._kilit:
+            self._kapandi = True
+        self._zamanlayici.cancel()
+
+
+def _ara_bildirim_kur(bildir, bot: str, reply_to, zamanlayici) -> _AraBildirim | None:
+    """`bildir` yoksa ara bildirim yok. Zamanlayıcı kurulamazsa (ör. iplik açılamadı) olay + ara bildirimsiz devam —
+    bekleme işareti cevabın önünü kesmez."""
+    if bildir is None:
+        return None
+    try:
+        return _AraBildirim(bildir, bot, reply_to, ARA_BILDIRIM_ESIGI_S, zamanlayici)
+    except Exception as e:  # sinyalli: olay (yalnız sınıf adı); soru ara bildirimsiz sorulur
+        obs.warn("telegram_ara_bildirim_hatasi", bot=bot, sinif=type(e).__name__, kurulamadi=True)
+        return None
+
+
+def isle(guncelleme: dict, *, yetkili_sohbet: str, bota_sor, gonder, bildir=None, kadro=None,
+         bugun: str | None = None, _zamanlayici=threading.Timer) -> str:
     """Tek güncellemeyi işler ve yönlendirme nedenini döner. `bota_sor(bot, metin, kanal, oturum)
-    -> str`, `gonder(metin, reply_to) -> bool` enjekte edilir (test ve hizmet aynı gövdeyi koşar)."""
+    -> str`, `gonder(metin, reply_to) -> bool` enjekte edilir (test ve hizmet aynı gövdeyi koşar).
+    `bildir(metin, reply_to) -> bool` verilirse `bota_sor` `ARA_BILDIRIM_ESIGI_S`i aşınca bir kez ara bildirim
+    gider (`_AraBildirim`; `None` = ara bildirim yok). Cevap `_parcali_gonder` ile tavana bölünür."""
     mesaj = guncelleme.get("message") or {}
     y = yonlendir(mesaj, yetkili_sohbet, kadro)
     mid = mesaj.get("message_id")
@@ -195,13 +349,22 @@ def isle(guncelleme: dict, *, yetkili_sohbet: str, bota_sor, gonder, kadro=None,
     # Komut tespiti ÇİT KURULMADAN ÖNCE, operatörün kendi sözleri üzerinde (Tur 2, I-1).
     komut = komut_oneki(y.metin)
     giden = _komut_giden(mesaj, y.metin, komut) if komut else _bota_giden(mesaj, y.metin)
+    ara = _ara_bildirim_kur(bildir, y.bot, mid, _zamanlayici)
     try:
         cevap = bota_sor(y.bot, giden, "telegram", oturum)
-    except Exception as e:  # sinyalli: operatöre sınıf adıyla cevap + olay; döngü ölmez
-        obs.warn("bot_sohbet_hatasi", bot=y.bot, sinif=type(e).__name__)
-        gonder(f"{imza}\n@{y.bot} şu an cevap veremiyor ({type(e).__name__}). Kayda geçti.", mid)
+    except Exception as e:  # sinyalli: aşağıda olay + operatöre sınıf adıyla cevap; döngü ölmez
+        hata = e
+    else:
+        hata = None
+    finally:
+        # CEVAPTAN (ya da hata cevabından) ÖNCE: bu satırdan sonra ara bildirim ASLA gitmez (`_AraBildirim`).
+        if ara is not None:
+            ara.kapat()
+    if hata is not None:
+        obs.warn("bot_sohbet_hatasi", bot=y.bot, sinif=type(hata).__name__)
+        gonder(f"{imza}\n@{y.bot} şu an cevap veremiyor ({type(hata).__name__}). Kayda geçti.", mid)
         return y.neden
-    gonder(f"{imza}\n{cevap}", mid)
+    _parcali_gonder(gonder, y.bot, imza, cevap, mid)
     return y.neden
 
 
@@ -212,7 +375,7 @@ def _cagir_varsayilan(url: str, govde: dict, zaman_asimi: float) -> dict:
         return json.load(y)
 
 
-def guncellemeleri_al(jeton: str, ofset: int, bekleme_s: int = 50, _cagir=None) -> list[dict] | None:
+def guncellemeleri_al(jeton: str, ofset: int, bekleme_s: int = UZUN_YOKLAMA_S, _cagir=None) -> list[dict] | None:
     """`getUpdates` uzun yoklaması. DÖNÜŞ İKİ ANLAMLIDIR ve karışmaz: liste (boş olabilir) =
     yoklama BAŞARILI; `None` = HATA (istisna ya da gövdede `ok: false`). Ayrım `dongu`nun geri
     çekilmesinin girdisidir — hata boş tur sayılsaydı döngü beklemeden API'yi dövüp olay defterini
@@ -222,7 +385,8 @@ def guncellemeleri_al(jeton: str, ofset: int, bekleme_s: int = 50, _cagir=None) 
     cagir = _cagir or _cagir_varsayilan
     try:
         d = cagir(f"https://api.telegram.org/bot{jeton}/getUpdates",
-                  {"offset": ofset, "timeout": bekleme_s, "allowed_updates": ["message"]}, bekleme_s + 10)
+                  {"offset": ofset, "timeout": bekleme_s, "limit": GUNCELLEME_SAYFASI,
+                   "allowed_updates": ["message"]}, bekleme_s + 10)
     except urllib.error.HTTPError as e:  # sinyalli: sınıf + HTTP KODU; e.url/e.filename/e.msg/str(e) jetonlu URL taşır, BASILMAZ
         obs.warn("telegram_yoklama_hatasi", sinif=type(e).__name__, error_code=getattr(e, "code", None))
         return None
@@ -245,11 +409,34 @@ def _bekleme_s(ardisik_hata: int) -> int:
     return min(GERI_CEKILME_TAVANI_S, 2 ** min(ardisik_hata, 6))
 
 
-def dongu(*, bota_sor, tur_sayisi: int | None = None, _cagir=None, gonder=None,
-          _uyku=time.sleep) -> None:
+def _ofset_yaz(ofset: int) -> None:
+    try:
+        store.write_json(OFSET_DOSYASI, {"ofset": ofset, "ts": time.time()})
+    except Exception as e:  # sinyalli: ofset bellekte ilerler; döngü düşmez (bedel `dongu` docstring'inde)
+        obs.warn("telegram_ofset_yazim_hatasi", sinif=type(e).__name__)
+
+
+def _ilk_kosum_atla(guncellemeler: list, ofset: int) -> int:
+    """İlk koşum sayfasını İŞLEMEDEN geçer: yeni ofset = en yüksek `update_id + 1` (hiç kimlik yoksa ofset aynen),
+    KALICI yazılır ve `telegram_ilk_ofset` olayı atlanan sayısını taşır (içerik değil — yalnız sayı)."""
+    kimlikler = [g["update_id"] for g in guncellemeler
+                 if isinstance(g, dict) and isinstance(g.get("update_id"), int) and not isinstance(g["update_id"], bool)]
+    yeni = max([ofset, *(k + 1 for k in kimlikler)])
+    _ofset_yaz(yeni)
+    obs.warn("telegram_ilk_ofset", atlanan=len(guncellemeler), ofset=yeni)
+    return yeni
+
+
+def dongu(*, bota_sor, tur_sayisi: int | None = None, _cagir=None, gonder=None, bildir=None,
+          _uyku=time.sleep, _zamanlayici=threading.Timer) -> None:
     """Hizmet döngüsü: yokla → her güncelleme için ofseti ilerlet + KALICI yaz → işle.
     `tur_sayisi` None ise sonsuz. Jeton/sohbet yapılandırılmamışsa sessiz no-op DEĞİL, çıkış
-    (`SystemExit`).
+    (`SystemExit`). `gonder` ve `bildir` (ara bildirim) verilmezse ikisi de `notify.yanitla`.
+
+    İLK KOŞUM (G4 Görev 3): `OFSET_DOSYASI` yoksa (okunamıyorsa da — `store.read_json` olayla varsayılana düşer)
+    yoklama `timeout: 0` ile yapılır ve dönen sayfa `_ilk_kosum_atla` ile İŞLENMEDEN geçilir; sayfa
+    `GUNCELLEME_SAYFASI` kadar doluysa atlama bir tur daha sürer, eksik sayfa (boş dahil) ilk koşumu bitirir. Yoklama
+    hatası ilk koşumu bitirmez. Gerekçe modül başlığında (İLK KOŞUM BİRİKİMİ YENİDEN OYNATMAZ).
 
     TESLİM POLİTİKASI — EN-ÇOK-BİR-KEZ (Tur 2, I-2; Rol-1 kararı 2026-09-29). Ofset güncelleme
     İŞLENMEDEN ÖNCE ilerletilir ve diske yazılır; işleme hatası (`telegram_isle_hatasi`, yalnız sınıf
@@ -274,7 +461,10 @@ def dongu(*, bota_sor, tur_sayisi: int | None = None, _cagir=None, gonder=None,
         raise SystemExit("telegram_dinleyici: TELEGRAM_CHAT_ID birebir (özel) sohbet kimliği olmalı — "
                          "pozitif tamsayı; grup/kanal kimliği her üyeyi operatör yapardı. Başlatılmadı.")
     gonder = gonder or (lambda t, r: notify.yanitla(t, reply_to=r))
-    ofset = int((store.read_json(OFSET_DOSYASI, {}) or {}).get("ofset") or 0)
+    bildir = bildir or (lambda t, r: notify.yanitla(t, reply_to=r))
+    kayit = store.read_json(OFSET_DOSYASI, None)
+    ilk_kosum = kayit is None
+    ofset = 0 if ilk_kosum else int((kayit or {}).get("ofset") or 0)
     tur, ardisik_hata = 0, 0
     while tur_sayisi is None or tur < tur_sayisi:
         tur += 1
@@ -284,23 +474,42 @@ def dongu(*, bota_sor, tur_sayisi: int | None = None, _cagir=None, gonder=None,
             _uyku(_bekleme_s(ardisik_hata))
             ardisik_hata += 1
             continue
-        guncellemeler = guncellemeleri_al(jeton, ofset, _cagir=_cagir)
+        guncellemeler = guncellemeleri_al(jeton, ofset, bekleme_s=0 if ilk_kosum else UZUN_YOKLAMA_S,
+                                          _cagir=_cagir)
         if guncellemeler is None:
             _uyku(_bekleme_s(ardisik_hata))
             ardisik_hata += 1
             continue
         ardisik_hata = 0
+        if ilk_kosum:
+            ofset = _ilk_kosum_atla(guncellemeler, ofset)
+            ilk_kosum = len(guncellemeler) >= GUNCELLEME_SAYFASI
+            continue
         for g in guncellemeler:
             try:
                 ofset = int(g["update_id"]) + 1
             except (KeyError, TypeError, ValueError) as e:  # sinyalli: kimliksiz güncelleme atlanır, döngü sürer
                 obs.warn("telegram_isle_hatasi", sinif=type(e).__name__, update_id_yok=True)
                 continue
+            _ofset_yaz(ofset)
             try:
-                store.write_json(OFSET_DOSYASI, {"ofset": ofset, "ts": time.time()})
-            except Exception as e:  # sinyalli: ofset bellekte ilerler; döngü düşmez (bedel docstring'de)
-                obs.warn("telegram_ofset_yazim_hatasi", sinif=type(e).__name__)
-            try:
-                isle(g, yetkili_sohbet=yetkili, bota_sor=bota_sor, gonder=gonder)
+                isle(g, yetkili_sohbet=yetkili, bota_sor=bota_sor, gonder=gonder, bildir=bildir,
+                     _zamanlayici=_zamanlayici)
             except Exception as e:  # sinyalli: en-çok-bir-kez — olay (yalnız sınıf adı), ofset geri alınmaz
                 obs.warn("telegram_isle_hatasi", sinif=type(e).__name__)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """`python -m meridian.telegram_dinleyici` — `meridian-telegram.service`in giriş noktası: üretim `bota_sor`u
+    (`bot_kanal.bota_sor` — gerçek taşıyıcı + hafıza) ile `dongu`. Argüman ALMAZ (bilinmeyen argüman → argparse çıkışı
+    2). Sır yoksa `dongu`nun `SystemExit`i aynen yükselir (sessiz no-op yok); `dongu` sonsuzdur, dönüş yalnız
+    sözleşme içindir."""
+    argparse.ArgumentParser(prog="python -m meridian.telegram_dinleyici",
+                            description="Konuşan bot filosunun Telegram dinleyicisi (getUpdates uzun yoklaması)."
+                            ).parse_args(argv)
+    dongu(bota_sor=bot_kanal.bota_sor)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

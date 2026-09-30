@@ -12098,12 +12098,18 @@ const KEY_GROUPS = [
      "SIRA: (1) Telegram'da @BotFather'a yaz → /newbot → bota bir ad ve @kullanıcı_adı ver. "
      + "(2) BotFather sana `123456789:AA...` biçiminde bir jeton verir — TAMAMINI buraya yapıştır. "
      + "(3) Kaydettikten sonra AŞAĞIDAKİ chat ID alanına geç; jeton tek başına yetmez."],
+    // Konuşan filo G4 (2026-09-30): kimlik ÖZEL sohbetinki olmalı (pozitif sayı) — Telegram dinleyicisi grup/kanal
+    // kimliğiyle BAŞLAMAZ (grubun her üyesi operatör olurdu; `telegram_dinleyici.dongu`). getUpdates tek okuyucuya
+    // izin verir: dinleyici çalışırken tarayıcıdan çağrılırsa ikisinden biri 409 alır.
     ["TELEGRAM_CHAT_ID", "Telegram chat ID",
      "SIRA: (1) Yeni oluşturduğun bota Telegram'dan HERHANGİ bir mesaj gönder (ör. `merhaba`) — "
      + "bu şart: bot sana ilk mesajı atamaz, sohbet ancak sen yazınca doğar. "
      + "(2) Tarayıcıda şunu aç: `https://api.telegram.org/bot<JETON>/getUpdates` (<JETON> yerine "
-     + "yukarıdaki tokenı koy). (3) Dönen JSON'da `\"chat\":{\"id\":123456789` değerini buraya "
-     + "yapıştır (negatif olabilir — grup sohbetlerinde `-100...` ile başlar, eksi işareti DAHİL). "
+     + "yukarıdaki tokenı koy). DİKKAT: bot dinleyicisi çalışırken tarayıcıdan getUpdates ÇAĞIRMA — "
+     + "Telegram aynı anda iki okuyucuya izin vermez (409 çakışması). "
+     + "(3) Dönen JSON'da `\"chat\":{\"id\":123456789` değerini buraya yapıştır: bu senin ÖZEL "
+     + "sohbet kimliğindir, POZİTİF bir sayıdır. Grup/kanal kimliği (eksi işaretli, `-100...`) KULLANMA — "
+     + "bot dinleyicisi onunla başlamaz, çünkü grubun her üyesi operatör olurdu. "
      + "(4) Kaydedince 'Test et' düğmesi çıkar; telefonuna deneme mesajı düşerse kanal AÇIKTIR."],
     ["MERIDIAN_WEBHOOK_URL", "Webhook URL (alternatif)",
      "Telegram YERİNE: alarm metnini POST edeceğin kendi adresin (Slack/Discord incoming webhook "

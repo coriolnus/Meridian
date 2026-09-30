@@ -111,6 +111,8 @@ UZUN_OMURLU_BIRIMLER = {
     "meridian-grafana.service",
     # Konuşan filo Parça 1b G3 (2026-09-30): bot ağ geçidi — rol kopyalar, etkin ETMEZ, asla başlatmaz
     "meridian-botlar.service",
+    # Konuşan filo Parça 1b G4 (2026-09-30): Telegram dinleyicisi — rol kopyalar, etkin ETMEZ, asla başlatmaz
+    "meridian-telegram.service",
 }
 SYSTEMD_MODUL_ANAHTARLARI = (
     "systemd",
