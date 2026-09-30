@@ -23,7 +23,8 @@ SÖZLEŞME (bu dosya çiviler):
       kanonikleşir, `tools.resources/prompts` zorlanır; `enabled` korunur; ikinci çağrı YAZMAZ.
   B2  MCP: yönetilen alanlar kanonikken ek anahtarlar tek başına YAZIM ÜRETMEZ (churn yok).
   B3  MCP: `env` YÖNETİLEN alandır (Rol-1 kararı) — ek değişken kanoniğe çekilir.
-  B4  MCP: sözlük olmayan girdi / bölüm çökertmez; kanonik girdi kurulur, `enabled` eklenmez.
+  B4  MCP: sözlük olmayan girdi / bölüm çökertmez; kanonik girdi kurulur. (Tur 3: `enabled`
+      DAĞITILAN varsayılanla — bugün `false` — kurulur; eskiden eklenmiyordu = K-1 atlatması.)
   K1  Kanca: guard yoksa BAŞA bir kez eklenir; operatör kancaları ve SIRASI korunur; öteki kanca
       olayları dokunulmaz; ikinci çağrı YAZMAZ.
   K2  Kanca: bayat guard girdisi YERİNDE kanonikleşir (konumu korunur, operatör alanları korunur).
@@ -37,17 +38,28 @@ SÖZLEŞME (bu dosya çiviler):
       `transport` (sse/streamable) ve `headers` yalnız `url` varken okunur — Rol-1 üçünü de yönetir.
   G1  (Tur 2) Guard çipi öz-onarımla AYNI tanımı kullanır (`_guard_girdisi_mi`, tek kaynak):
       guard'a benzeyen başka yol "var" sayılmaz; sözlük olmayan kanca girdisi öteki alanları düşürmez.
+  E1  (Tur 3, Rol-1: M4 → Important) Yeni kurulan / `enabled`sız girdi `enabled`ı DAĞITILAN varsayılan
+      profilden (`deploy/hermes/config.yaml` `mcp_servers.meridian.enabled`) alır — kodda sabit YOK;
+      dosya okunamazsa güvenli taraf `False` + uyarı. Anahtarsız sözlük → `hermes_mcp_enabled_eklendi`.
+  M1  (Tur 3) Yönetilen `tools.resources/prompts` kıyası TİP-KATI: `0`/`None`/`"false"` kanonik
+      `False`a ÇEKİLİR (Python'da `0 == False`; Hermes `0`ı AÇIK sayar).
+  M3  (Tur 3) Olaylar YALNIZ başarılı yazımdan sonra: yazıcı OSError fırlatınca düzeltme olayları YOK.
+  M2  (Tur 3) Guard kimliği Hermes'in ayrıştırıcısıyla (`shlex.split(os.path.expanduser(...))`);
+      kanonik guard komutu `shlex.quote`lu → boşluklu kökte kanonik girdi KENDİNİ tanır.
 
 Mutasyon beklentisi: birleştirme yerine bütün-değiştirme → B1 kırmızı; kanca listesi
 bütün-değiştirme → K1/K2 kırmızı; çip `enabled`ı okumazsa → S1/S2 kırmızı; kıyas eski
 (birleştirilmemiş) hedefle → B2 kırmızı; taşıma anahtarı kaldırılmazsa → T1 kırmızı; guard çipi
-alt-dizge eşleşmesine dönerse → G1 kırmızı.
+alt-dizge eşleşmesine dönerse → G1 kırmızı; varsayılan sabit `False`a dönerse → E1 türetme
+kırmızı; kıyas `==`e dönerse → M1 kırmızı; olay yazımdan önce basılırsa → M3 kırmızı; `split()`e
+dönerse → M2 kırmızı.
 """
 from __future__ import annotations
 
 import hashlib
 import json
 import os
+import shlex
 import sys
 
 import pytest
@@ -112,7 +124,7 @@ def _kanonik_komut_alanlari(girdi: dict) -> None:
 
 def _guard() -> dict:
     return {"matcher": "terminal|write_file|patch|edit|apply_patch",
-            "command": os.path.join(hermes._repo_root(), "ops", "meridian-guard.sh"),
+            "command": shlex.quote(os.path.join(hermes._repo_root(), "ops", "meridian-guard.sh")),
             "timeout": 10}
 
 
@@ -177,15 +189,16 @@ def test_B3_mcp_env_YONETILEN_alan_ek_degisken_kanonige_cekilir(tmp_path, monkey
 @pytest.mark.parametrize("mcp_bolumu", [
     {"meridian": None},
     {"meridian": ["liste"]},
+    {"meridian": False},
     None,
-], ids=["girdi_null", "girdi_liste", "bolum_null"])
+], ids=["girdi_null", "girdi_liste", "girdi_false", "bolum_null"])
 def test_B4_sozluk_olmayan_girdi_cokertmez_kanonik_kurulur(tmp_path, monkeypatch, mcp_bolumu):
     yol = _config_kur(tmp_path, monkeypatch, {"model": {"provider": "gemini"},
                                               "mcp_servers": mcp_bolumu})
     out = hermes.config_ensure_integrations()
     assert out["ok"] is True and "mcp_servers.meridian" in out["changed"]
     girdi = _oku(yol)["mcp_servers"]["meridian"]
-    assert "enabled" not in girdi
+    assert girdi.get("enabled") is False, f"K-1 atlatması: girdi AÇIK kuruldu ({girdi.get('enabled')!r})"
     _kanonik_komut_alanlari(girdi)
 
 
@@ -336,7 +349,9 @@ def test_T1b_tasima_anahtari_sabiti_TEK_KAYNAK():
     ("/tmp/meridian-guard.sh", False),              # `ops/` altında değil
     ("/opt/meridian/ops/meridian-guard.sh", True),
     ("/x/ops/meridian-guard.sh --kati", True),      # ilk sözcük guard
-], ids=["bak_uzantili", "ops_disi", "gercek_guard", "argumanli_guard"])
+    ('"/opt/meridian/ops/meridian-guard.sh"', True),  # tırnaklı: Hermes shlex ile ayrıştırır
+    ('"/opt/meridian/ops/meridian-guard.sh', False),  # kapanmamış tırnak: Hermes de koşturamaz
+], ids=["bak_uzantili", "ops_disi", "gercek_guard", "argumanli_guard", "tirnakli", "tirnak_bozuk"])
 def test_G1_guard_cipi_ozonarimla_AYNI_tanimi_kullanir(tmp_path, monkeypatch, komut, beklenen):
     _config_kur(tmp_path, monkeypatch, {"hooks": {"pre_tool_call": [{"command": komut}]}})
     assert hermes.integrations_status()["guard_hook"] is beklenen
@@ -351,3 +366,126 @@ def test_G1b_sozluk_olmayan_kanca_girdisi_OTEKI_alanlari_dusurmez(tmp_path, monk
     st = hermes.integrations_status()
     assert st["guard_hook"] is True
     assert st["prompt_cache"] == "1h", "kanca satırındaki çökme öteki alanları düşürdü"
+
+
+# ----------------------------------------------------------------------------- E1 (Tur 3)
+
+def _kok_kopyasi(tmp_path, monkeypatch, enabled_metni):
+    """Geçici depo kökü: `deploy/hermes/config.yaml`ın kopyası, K-1 satırı `enabled: <metin>`e
+    çevrilmiş; `None` → dosya HİÇ yok. `_repo_root` bu köke çevrilir (türetmenin kaynağı)."""
+    kok = tmp_path / "kok"
+    hedef = kok / "deploy" / "hermes" / "config.yaml"
+    hedef.parent.mkdir(parents=True)
+    if enabled_metni is not None:
+        metin = (mconfig.ROOT / "deploy" / "hermes" / "config.yaml").read_text()
+        assert metin.count("    enabled: false\n") == 1, "önkoşul: K-1 satırı tekil değil"
+        hedef.write_text(metin.replace("    enabled: false\n", f"    enabled: {enabled_metni}\n"))
+    monkeypatch.setattr(hermes, "_repo_root", lambda: str(kok))
+    return str(kok)
+
+
+@pytest.mark.parametrize("dosyadaki,beklenen", [("false", False), ("true", True)],
+                         ids=["dagitim_false", "dagitim_true"])
+def test_E1_yeni_girdinin_enabled_i_DAGITIM_configinden_TURER(tmp_path, monkeypatch, dosyadaki, beklenen):
+    """Tek kaynak: değer kodda sabit DEĞİL. Geçici kopyada `true` yapılınca kurulan girdi `true`
+    olmalı — aksi hâlde "türetme" bir sabitin kılığıdır."""
+    _kok_kopyasi(tmp_path, monkeypatch, dosyadaki)
+    yol = _config_kur(tmp_path, monkeypatch, {"model": {"provider": "gemini"}})
+    assert hermes.config_ensure_integrations()["ok"] is True
+    assert _oku(yol)["mcp_servers"]["meridian"].get("enabled") is beklenen
+
+
+@pytest.mark.parametrize("dosyadaki", [None, "null", "'false'"],
+                         ids=["dosya_yok", "deger_null", "deger_dizge"])
+def test_E1b_dagitim_degeri_OKUNAMAZSA_guvenli_taraf_False_ve_uyari(
+        tmp_path, monkeypatch, sandbox_state, dosyadaki):
+    _kok_kopyasi(tmp_path, monkeypatch, dosyadaki)
+    yol = _config_kur(tmp_path, monkeypatch, {"model": {"provider": "gemini"}})
+    assert hermes.config_ensure_integrations()["ok"] is True
+    assert _oku(yol)["mcp_servers"]["meridian"].get("enabled") is False
+    assert len(_olaylar(sandbox_state, "hermes_mcp_varsayilan_okunamadi")) == 1
+
+
+@pytest.mark.parametrize("mcp_bolumu,neden", [
+    ({"meridian": dict(BAYAT)}, "anahtar_yok"),
+    ({}, "girdi_yok"),
+    ({"meridian": None}, "sozluk_degil"),
+], ids=["anahtarsiz_sozluk", "girdi_yok", "girdi_null"])
+def test_E1c_enabled_EKLENDIGINDE_uyari_yazilir_bir_kez(tmp_path, monkeypatch, sandbox_state,
+                                                        mcp_bolumu, neden):
+    yol = _config_kur(tmp_path, monkeypatch, {"model": {"provider": "gemini"},
+                                              "mcp_servers": mcp_bolumu})
+    assert hermes.config_ensure_integrations()["ok"] is True
+    ev = _olaylar(sandbox_state, "hermes_mcp_enabled_eklendi")
+    assert len(ev) == 1 and ev[0].get("neden") == neden and ev[0].get("enabled") is False, ev
+    once = _parmak_izi(yol)
+    out2 = hermes.config_ensure_integrations()
+    assert out2["changed"] == [] and _parmak_izi(yol) == once
+    assert len(_olaylar(sandbox_state, "hermes_mcp_enabled_eklendi")) == 1, "olay tekrarlandı"
+
+
+@pytest.mark.parametrize("deger", [False, True, "false"], ids=["false", "true", "dizge_false"])
+def test_E1d_mevcut_enabled_DEGISMEZ_uyari_yok(tmp_path, monkeypatch, sandbox_state, deger):
+    yol = _config_kur(tmp_path, monkeypatch, {"model": {"provider": "gemini"},
+                                              "mcp_servers": {"meridian": {"enabled": deger, **BAYAT}}})
+    assert hermes.config_ensure_integrations()["ok"] is True
+    girdi = _oku(yol)["mcp_servers"]["meridian"]
+    assert type(girdi["enabled"]) is type(deger) and girdi["enabled"] == deger
+    assert _olaylar(sandbox_state, "hermes_mcp_enabled_eklendi") == []
+
+
+# ----------------------------------------------------------------------------- M1 (Tur 3)
+
+@pytest.mark.parametrize("deger", [0, 0.0, None, "false"], ids=["int_0", "float_0", "null", "dizge_false"])
+def test_M1_yonetilen_tools_booleanlari_TIP_KATI_kanonige_cekilir(tmp_path, monkeypatch, deger):
+    """Python'da `0 == False` → eski kıyas "fark yok" derdi; Hermes `_parse_boolish(0)`ı AÇIK
+    sayar (yerel 0.18.2) → `resources` yardımcı araçları açılırdı."""
+    yol = _kanonik_taban(tmp_path, monkeypatch)
+    belge = _oku(yol)
+    belge["mcp_servers"]["meridian"]["tools"]["resources"] = deger
+    belge["mcp_servers"]["meridian"]["tools"]["prompts"] = deger
+    _yaz(yol, belge)
+    out = hermes.config_ensure_integrations()
+    assert out["ok"] is True and "mcp_servers.meridian" in out["changed"], f"tip farkı görülmedi: {out}"
+    araclar = _oku(yol)["mcp_servers"]["meridian"]["tools"]
+    assert araclar["resources"] is False and araclar["prompts"] is False, araclar
+    out2 = hermes.config_ensure_integrations()
+    assert out2["changed"] == [], f"ikinci çağrı yine yazdı: {out2['changed']}"
+
+
+# ----------------------------------------------------------------------------- M3 (Tur 3)
+
+def test_M3_yazim_DUSERSE_duzeltme_olaylari_YAZILMAZ(tmp_path, monkeypatch, sandbox_state):
+    _config_kur(tmp_path, monkeypatch, {
+        "model": {"provider": "gemini"},
+        "mcp_servers": {"meridian": {**BAYAT, "url": URL_DEGERI}},   # taşıma + anahtarsız
+    })
+
+    def _dusen_yazici(*a, **kw):
+        raise OSError("salt-okur dosya sistemi (learn birimi geometrisi)")
+
+    monkeypatch.setattr(hermes.store, "write_text", _dusen_yazici)
+    out = hermes.config_ensure_integrations()
+    assert out["ok"] is False, out
+    for ad in ("hermes_mcp_yonetilen_alan_duzeltildi", "hermes_mcp_enabled_eklendi",
+               "agent_integrations_synced"):
+        assert _olaylar(sandbox_state, ad) == [], f"yazılamayan düzeltme olaylandı: {ad}"
+
+
+# ----------------------------------------------------------------------------- M2 (Tur 3)
+
+def test_M2_bosluklu_kokte_kanonik_guard_KENDINI_tanir_ve_yazim_tekrarlanmaz(tmp_path, monkeypatch):
+    kok = tmp_path / "kok bosluk"
+    (kok / "deploy" / "hermes").mkdir(parents=True)
+    monkeypatch.setattr(hermes, "_repo_root", lambda: str(kok))
+    yol = _config_kur(tmp_path, monkeypatch, {"model": {"provider": "gemini"}})
+    assert hermes.config_ensure_integrations()["ok"] is True
+    liste = _oku(yol)["hooks"]["pre_tool_call"]
+    assert len(liste) == 1 and hermes._guard_girdisi_mi(liste[0]), liste
+    assert shlex.split(os.path.expanduser(liste[0]["command"])) == [
+        str(kok / "ops" / "meridian-guard.sh")], "Hermes guard'ı doğru dosya olarak ayrıştıramaz"
+    once = _parmak_izi(yol)
+    out2 = hermes.config_ensure_integrations()
+    assert out2["changed"] == [], f"guard kendini tanımadı, yeniden eklendi: {out2['changed']}"
+    assert _parmak_izi(yol) == once
+    assert len(_oku(yol)["hooks"]["pre_tool_call"]) == 1

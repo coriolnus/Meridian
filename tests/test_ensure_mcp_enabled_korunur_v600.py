@@ -17,7 +17,12 @@ SÖZLEŞME (bu dosya çiviler):
   E2  `enabled: false` + öteki alanlar kanonik → YAZIM YOK (dönüş `changed` boş; dosyanın inode'u,
       mtime'ı ve sha'sı değişmez — atomik yazım tmp+replace olduğu için inode değişimi yazımın
       kendisini ölçer, aynı baytların yeniden yazılması sha'yı değiştirmese bile).
-  E3  `enabled` anahtarı YOKSA eklenmez (yetenek eklenmez, kaldırılmaz) — girdi hiç yokken de.
+  E3  (TSK-258 tur 3'te ÇEVRİLDİ — Rol-1 düzeltmesi) `enabled` anahtarı YOKSA ya da girdi hiç
+      yoksa öz-onarım `enabled`ı DAĞITILAN varsayılan profil değeriyle (`deploy/hermes/config.yaml`
+      `mcp_servers.meridian.enabled`, bugün `false`) EKLER ve `hermes_mcp_enabled_eklendi` uyarısını
+      yazar. Eski hüküm ("yoksa eklenmez") K-1 ışığında YANLIŞTI: anahtarsız girdiyi Hermes AÇIK
+      sayar (`_parse_boolish(cfg.get("enabled", True), default=True)`, yerel 0.18.2) — yani anahtarı
+      silmek ya da girdiyi silip öz-onarıma kurdurmak K-1'i sessizce atlatan bir yoldu.
   E4  `enabled: true` KORUNUR (koruma yön-bağımsız: operatörün değeri aynen taşınır).
   E5  A1 GEOMETRİSİ: `deploy/hermes/config.yaml` BAYT-BAYT (yorumlarıyla) A1 yollarıyla
       (`/opt/meridian`, `/opt/meridian/.venv/bin/python`) okunduğunda öz-onarım HİÇBİR ŞEY yazmaz.
@@ -31,6 +36,7 @@ kırmızı; kıyas korunmuş hedef yerine eski (enabled'sız) hedefle yapılırs
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import sys
 
@@ -131,9 +137,17 @@ def test_E2_enabled_false_ve_kanonik_girdi_YAZIM_YOK(tmp_path, monkeypatch):
 
 # ----------------------------------------------------------------------------- E3
 
-def test_E3_enabled_anahtari_YOKSA_eklenmez(tmp_path, monkeypatch):
-    """Bugünkü davranış korunur: anahtarsız girdi anahtarsız kalır (öz-onarım yetenek kararı
-    VERMEZ — ne açar ne kapatır)."""
+def _olay_sayisi(sandbox_state, ad: str) -> int:
+    yol = sandbox_state / "events.jsonl"
+    if not yol.exists():
+        return 0
+    return sum(1 for l in yol.read_text().splitlines()
+               if l.strip() and json.loads(l).get("event") == ad)
+
+
+def test_E3_enabled_anahtari_YOKSA_dagitim_varsayilaniyla_EKLENIR(tmp_path, monkeypatch, sandbox_state):
+    """TSK-258 tur 3 (Rol-1 düzeltmesi, docstring E3): anahtarsız girdi K-1 atlatmasıdır — Hermes
+    onu AÇIK sayar. Öz-onarım dağıtılan varsayılanı (`false`) ekler ve bunu uyarıyla söyler."""
     yol = _config_kur(tmp_path, monkeypatch, {
         "model": {"provider": "gemini"},
         "mcp_servers": {"meridian": dict(BAYAT)},
@@ -141,17 +155,19 @@ def test_E3_enabled_anahtari_YOKSA_eklenmez(tmp_path, monkeypatch):
     out = hermes.config_ensure_integrations()
     assert out["ok"] is True and "mcp_servers.meridian" in out["changed"]
     girdi = _meridian_girdisi(yol)
-    assert "enabled" not in girdi, f"öz-onarım enabled EKLEDİ: {girdi.get('enabled')!r}"
+    assert girdi.get("enabled") is False, f"K-1 atlatması kapanmadı: {girdi.get('enabled')!r}"
     _kanonik_alanlar_dogru(girdi)
+    assert _olay_sayisi(sandbox_state, "hermes_mcp_enabled_eklendi") == 1
 
 
-def test_E3b_girdi_hic_yokken_de_enabled_eklenmez(tmp_path, monkeypatch):
-    """Girdi hiç yok (ilk kurulum): bugünkü gibi kurulur, `enabled` alanı taşımaz."""
+def test_E3b_girdi_hic_yokken_enabled_false_ile_kurulur(tmp_path, monkeypatch):
+    """Girdi hiç yok (ilk kurulum / Hermes config'i yeniden üretti): girdi dağıtılan varsayılanla
+    (`enabled: false`) kurulur — öz-onarım K-1'i yeniden AÇMAZ."""
     yol = _config_kur(tmp_path, monkeypatch, {"model": {"provider": "gemini"}})
     out = hermes.config_ensure_integrations()
     assert out["ok"] is True and "mcp_servers.meridian" in out["changed"]
     girdi = _meridian_girdisi(yol)
-    assert "enabled" not in girdi
+    assert girdi.get("enabled") is False
     _kanonik_alanlar_dogru(girdi)
 
 

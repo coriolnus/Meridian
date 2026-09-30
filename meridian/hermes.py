@@ -31,6 +31,7 @@ import argparse
 import calendar
 import json
 import os
+import shlex
 import sys
 import threading
 import time
@@ -3352,23 +3353,73 @@ def _hermes_mcp_acik_mi(girdi) -> bool:
 
 def _guard_girdisi_mi(kanca) -> bool:
     """`hooks.pre_tool_call` girdisi Meridian guard'ı mı? Kimlik KOMUT YOLUDUR (Hermes'in kanca
-    onay listesi de `(olay, komut)` çiftine bağlı): komutun ilk sözcüğü `…/ops/meridian-guard.sh`.
-    Kök dizin farkı (bayat kurulum yolu) guard olmayı değiştirmez — alanları kanoniğe çekilir."""
+    onay listesi de `(olay, komut)` çiftine bağlı): Hermes'in koşturacağı argv[0] `…/ops/meridian-guard.sh`.
+    Ayrıştırıcı Hermes'inkiyle AYNI (yerel 0.18.2 `agent/shell_hooks.py`: `shlex.split(os.path.expanduser(
+    command))`) — tırnaklı ve boşluklu yollar Hermes'in gördüğü gibi okunur. Kök dizin farkı (bayat kurulum
+    yolu) guard olmayı değiştirmez — alanları kanoniğe çekilir."""
     if not isinstance(kanca, dict):
         return False
     komut = kanca.get("command")
     if not isinstance(komut, str) or not komut.strip():
         return False
-    ilk = komut.strip().split()[0]
-    return (os.path.basename(ilk) == "meridian-guard.sh"
-            and os.path.basename(os.path.dirname(ilk)) == "ops")
+    try:
+        argv = shlex.split(os.path.expanduser(komut))
+    except ValueError:  # sessiz-yutma: kapanmamış tırnaklı komutu Hermes de ayrıştıramaz, kanca HİÇ koşmaz; guard sayılmaz ve öz-onarım kanonik guard'ı ekler (görünür sonuç: `changed` listesi)
+        return False
+    if not argv:
+        return False
+    return (os.path.basename(argv[0]) == "meridian-guard.sh"
+            and os.path.basename(os.path.dirname(argv[0])) == "ops")
+
+
+def _tip_kati_esit(a, b) -> bool:
+    """`==`in tip-KATI hâli (yönetilen alan kıyası): Python'da `0 == False`, `0.0 == False` doğrudur ama
+    Hermes `_parse_boolish(0)`ı AÇIK sayar (yerel 0.18.2) — `tools.resources: 0` "kanonik" görünüp
+    yardımcı araçları açık bırakıyordu. Tipler de ayrılır; sözlük anahtar SIRASI önemsizdir."""
+    if type(a) is not type(b):
+        return False
+    if isinstance(a, dict):
+        return a.keys() == b.keys() and all(_tip_kati_esit(a[k], b[k]) for k in a)
+    if isinstance(a, list):
+        return len(a) == len(b) and all(_tip_kati_esit(x, y) for x, y in zip(a, b))
+    return a == b
+
+
+# Dağıtılan VARSAYILAN profil config'i — yeni kurulan / `enabled`sız MCP girdisinin `enabled` değerinin TEK
+# kaynağı (TSK-258 tur 3, Rol-1 düzeltmesi: K-1 kararı orada yazılı, kodda sabit YOK). Depo köküne göreli.
+_VARSAYILAN_PROFIL_CONFIG = ("deploy", "hermes", "config.yaml")
+
+
+def _varsayilan_mcp_enabled() -> bool:
+    """`deploy/hermes/config.yaml` `mcp_servers.meridian.enabled` (bugün K-1: `false`). Dosya okunamaz ya
+    da değer bool değilse GÜVENLİ TARAF `False` + uyarı (`hermes_mcp_varsayilan_okunamadi`): bilinmeyen
+    değer yeteneği AÇMA gerekçesi değildir."""
+    import yaml
+    yol = os.path.join(_repo_root(), *_VARSAYILAN_PROFIL_CONFIG)
+    try:
+        with open(yol) as fh:
+            belge = yaml.safe_load(fh)
+    except (OSError, yaml.YAMLError) as e:
+        # YASA-6 OKUYUCU: pano olay akışı + operatör teşhisi (öz-onarım neden `false` seçti?).
+        obs.warn("hermes_mcp_varsayilan_okunamadi", yol=yol, error=type(e).__name__,
+                 detail="dağıtılan varsayılan profil config'i okunamadı — güvenli taraf enabled: false")
+        return False
+    bolum = belge.get("mcp_servers") if isinstance(belge, dict) else None
+    girdi = bolum.get("meridian") if isinstance(bolum, dict) else None
+    deger = girdi.get("enabled") if isinstance(girdi, dict) else None
+    if isinstance(deger, bool):
+        return deger
+    obs.warn("hermes_mcp_varsayilan_okunamadi", yol=yol, error=f"bool_degil:{type(deger).__name__}",
+             detail="dağıtılan varsayılanda mcp_servers.meridian.enabled bool değil — güvenli taraf false")
+    return False
 
 
 def config_ensure_integrations() -> dict:
     """Yerel hermes-agent config.yaml'ına Meridian entegrasyonlarını IDEMPOTENT yazar (Tier 1+2):
       • mcp_servers.meridian — salt-okunur veri sunucumuz (analytics/cf/near-miss/rejim/kalibrasyon).
         BİRLEŞTİRİR: yalnız yönetilen alanlar (command/args/env, tools.resources/prompts) kanoniğe
-        çekilir; operatörün öteki anahtarları (`enabled` kararı, timeout, tools.include …) KORUNUR.
+        çekilir, taşıma anahtarları kaldırılır; operatörün öteki anahtarları (`enabled` kararı, timeout,
+        tools.include …) KORUNUR. `enabled` YOKSA dağıtılan varsayılanla (K-1: false) eklenir.
       • hooks.pre_tool_call — koruma hook'u (state/secrets/mode/emir yüzeylerini sert bloklar).
         BİRLEŞTİRİR: guard girdisi yoksa başa eklenir, varsa yerinde kanonikleşir; öteki kancalar
         ve sıraları KORUNUR.
@@ -3414,12 +3465,16 @@ def config_ensure_integrations() -> dict:
     # BİRLEŞTİRME (TSK-258; TSK-257'nin `enabled` korumasını genelleştirir): öz-onarım YÖNETİLEN alanları
     # onarır, operatör kararlarına dokunmaz. `command/args/env` bütün olarak, `tools` altında yalnız
     # `resources/prompts` kanoniğe çekilir; girdinin öteki anahtarları (`enabled` — K-1 2026-09-30,
-    # `timeout`, `tools.include` araç daraltması …) aynen kalır, `enabled` hiçbir yolda EKLENMEZ. Kıyas
-    # BİRLEŞTİRİLMİŞ hedefle yapılır: yönetilen alan farkı yoksa yazım YOK (churn yok). Sözlük olmayan
-    # girdi (null/liste — Hermes onu atlar) kanonik girdiyle değiştirilir. TAŞIMA anahtarları
-    # (`_MCP_TASIMA_ANAHTARLARI`) da yönetilir: varsa KALDIRILIR — girdi başka bir uca yönelmesin.
+    # `timeout`, `tools.include` araç daraltması …) aynen kalır — mevcut `enabled` DEĞİŞMEZ. Kıyas
+    # BİRLEŞTİRİLMİŞ hedefle ve TİP-KATI yapılır (`_tip_kati_esit`: `tools.resources: 0` Hermes'te AÇIK):
+    # yönetilen alan farkı yoksa yazım YOK (churn yok). TAŞIMA anahtarları (`_MCP_TASIMA_ANAHTARLARI`) da
+    # yönetilir: varsa KALDIRILIR — girdi başka bir uca yönelmesin.
+    # K-1 ATLATMASI KAPALI (tur 3, Rol-1 düzeltmesi — TSK-257'nin "yoksa eklenmez" hükmü YANLIŞTI): girdi
+    # yok / sözlük değil (null/false/liste — Hermes atlar) ya da sözlük ama `enabled`sız (Hermes AÇIK sayar)
+    # ise `enabled` DAĞITILAN varsayılanla (`_varsayilan_mcp_enabled`, bugün false) konur ve uyarılır.
     mevcut_mcp = servers.get("meridian")
-    tasima_kaldirilan = []                         # olay yazım başarısına bağlı (aşağıda)
+    tasima_kaldirilan = []                         # olaylar yazım başarısına bağlı (aşağıda)
+    enabled_eklendi = None                         # (değer, neden)
     if isinstance(mevcut_mcp, dict):
         hedef_mcp = dict(mevcut_mcp)
         tasima_kaldirilan = [k for k in _MCP_TASIMA_ANAHTARLARI if k in hedef_mcp]
@@ -3429,9 +3484,14 @@ def config_ensure_integrations() -> dict:
         araclar = dict(mevcut_mcp["tools"]) if isinstance(mevcut_mcp.get("tools"), dict) else {}
         araclar.update(desired_mcp["tools"])
         hedef_mcp["tools"] = araclar
+        if "enabled" not in hedef_mcp:
+            enabled_eklendi = (_varsayilan_mcp_enabled(), "anahtar_yok")
+            hedef_mcp = {"enabled": enabled_eklendi[0], **hedef_mcp}
     else:
-        hedef_mcp = desired_mcp
-    if mevcut_mcp != hedef_mcp:
+        enabled_eklendi = (_varsayilan_mcp_enabled(),
+                           "sozluk_degil" if "meridian" in servers else "girdi_yok")
+        hedef_mcp = {"enabled": enabled_eklendi[0], **desired_mcp}
+    if not _tip_kati_esit(mevcut_mcp, hedef_mcp):
         servers["meridian"] = hedef_mcp
         changed.append("mcp_servers.meridian")
     # koruma hook'u (matcher: yazma/terminal araçları) — BİRLEŞTİRME (TSK-258): liste BÜTÜN
@@ -3440,9 +3500,11 @@ def config_ensure_integrations() -> dict:
     # `pre_tool_call` yönergelerinde "ilk geçerli yönerge kazanır" (ölçüldü: yerel 0.18.2
     # `hermes_cli/plugins.py`), önde duran bir `approve` guard'ın `block`unu gölgelemesin. Operatör
     # kancaları ve sıraları dokunulmaz. Değer liste değilse (Hermes onu uyarıyla ATLAR) guard'lı tek
-    # elemanlı listeyle değiştirilir.
+    # elemanlı listeyle değiştirilir. Komut `shlex.quote`lu: Hermes `shlex.split` ile ayrıştırır — boşluklu
+    # kökte tırnaksız yol hem yanlış dosyayı koştururdu hem de guard kendini tanımayıp her turda yeniden
+    # eklenirdi (güvenli karakterli yolda `shlex.quote` metni DEĞİŞTİRMEZ: /opt/meridian aynen kalır).
     guard_kanca = {"matcher": "terminal|write_file|patch|edit|apply_patch",
-                   "command": guard, "timeout": 10}
+                   "command": shlex.quote(guard), "timeout": 10}
     hooks = cfg.setdefault("hooks", {}) if isinstance(cfg.get("hooks", {}), dict) else {}
     cfg["hooks"] = hooks
     mevcut_kancalar = hooks.get("pre_tool_call")
@@ -3525,6 +3587,11 @@ def config_ensure_integrations() -> dict:
             obs.warn("hermes_mcp_yonetilen_alan_duzeltildi", anahtarlar=tasima_kaldirilan,
                      detail="mcp_servers.meridian taşıma anahtarları kaldırıldı — girdi yerel stdio "
                             "sunucusuna döndü (url varken Hermes command'ı yok sayar)")
+        if enabled_eklendi:
+            # YASA-6 OKUYUCU: pano olay akışı + operatör teşhisi. Aynı ilke: yalnız BAŞARILI yazımdan sonra.
+            obs.warn("hermes_mcp_enabled_eklendi", enabled=enabled_eklendi[0], neden=enabled_eklendi[1],
+                     detail="mcp_servers.meridian enabled taşımıyordu (Hermes AÇIK sayar) — dağıtılan "
+                            "varsayılan profil değeriyle kuruldu (K-1 atlatması kapatıldı)")
         obs.log("agent_integrations_synced", changed=changed)
         return {"ok": True, "changed": changed}
     except Exception as e:
