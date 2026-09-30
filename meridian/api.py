@@ -4463,10 +4463,16 @@ def _alarm_gunluk() -> dict:
         return {"gun": None, "mekanizmalar": {}, "n_alarm": 0, "n_bastirilan": 0,
                 "durum": "defter_yok",
                 "beyan": "bugün hiç mekanizma-gecikme alarmı üretilmedi (defter yazılmadı)"}
+    # Satır ALANLARI AD AD seçilir (satırlar mekanizma adından bağımsız geneldir, alanlar DEĞİL):
+    # yeni bir sayaç buraya eklenmeden okuyucusuzdur (YASA 6). TSK-259: `veri_disk_esigi` satırı
+    # ileri doldurma koşarken atlanan eşik hükmünü sayar (`atlandi_is_kosuyor`) ve atlanan
+    # ölçümlerin günlük tepesini tutar (`atlanan_tepe_g`, G) — atlamanın BEDELİ burada görünür.
     mek = {k: {"alarm": int((v or {}).get("alarm") or 0),
                "bastirilan": int((v or {}).get("bastirilan") or 0),
                "askida": int((v or {}).get("askida") or 0),
-               "son_askida_neden": (v or {}).get("son_askida_neden")}
+               "son_askida_neden": (v or {}).get("son_askida_neden"),
+               "atlandi_is_kosuyor": int((v or {}).get("atlandi_is_kosuyor") or 0),
+               "atlanan_tepe_g": (v or {}).get("atlanan_tepe_g")}
            for k, v in (doc.get("mekanizmalar") or {}).items() if isinstance(v, dict)}
     return {"gun": doc.get("gun"), "mekanizmalar": mek, "durum": "dolu",
             "n_alarm": sum(v["alarm"] for v in mek.values()),
