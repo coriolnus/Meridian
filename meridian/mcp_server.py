@@ -406,7 +406,8 @@ def serve(stdin=None, stdout=None, bot: str | None = None) -> None:
     """Satır-ayrımlı JSON-RPC döngüsü. EOF'ta çıkar. Bozuk satır → parse error (id yoksa sessiz geç).
 
     `bot` verilirse kadro çözümü ve izin kümesi TEK SATIR OKUNMADAN hesaplanır: aktif olmayan bot
-    `BotAcilamaz` ile döngüye hiç girmez. Oturum bağlamı kadronun kanonik adıyla `mcp:<ad>`dır.
+    `BotAcilamaz` ile döngüye hiç girmez. Oturum bağlamı kadronun kanonik adıyla `mcp:<ad>`dır (önek
+    `sohbet.MCP_OTURUM_ONEKI`den — tek kaynak; pano ucu aynı öneki reddeder, EDG-086 sayımı onunla ayırır).
 
     Yanıt akışı `outp` yönlendirmeden ÖNCE yakalanır; kurulum ve döngü `sys.stdout` stderr'e
     yönlenmişken koşar — araç gövdesinin `obs` satırı protokol akışına karışmaz (modül başlığı)."""
@@ -416,7 +417,13 @@ def serve(stdin=None, stdout=None, bot: str | None = None) -> None:
         b = _bot_coz(bot)
         kayit = _kip_kaydi(b)
         izinli = _izinli(b, kayit)
-        oturum = f"mcp:{b.ad}" if b is not None else "mcp"
+        if b is not None:
+            # Önek TEK KAYNAKTAN (`sohbet.MCP_OTURUM_ONEKI`, G4 Görev 4): EDG-2026-086 sayımı bot önerisini
+            # bu önekle ayırır ve pano ucu aynı öneki reddeder — burada literal bir kopya ayrışabilirdi.
+            from . import sohbet                         # yalnız `--bot` yolu (modül başlığı, İKİ KİP)
+            oturum = f"{sohbet.MCP_OTURUM_ONEKI}{b.ad}"
+        else:
+            oturum = "mcp"
         for line in inp:
             line = line.strip()
             if not line:

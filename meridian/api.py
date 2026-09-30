@@ -7218,7 +7218,11 @@ async def api_sohbet(request: Request):
     """Operatörün sorusu → sunucu tarafı ajan döngüsü → kaynak atıflı cevap.
 
     BOŞ MESAJ 400: cevaplanacak bir soru yokken model çağırmak kotayı boşa harcar ve deftere
-    ölçüm değeri olmayan bir satır yazardı. Yanıt, `sohbet.jsonl` satırının GET ucuyla AYNI
+    ölçüm değeri olmayan bir satır yazardı. `mcp:` ÖNEKLİ OTURUM 400 (G4 Görev 4): o önek MCP bot
+    oturumlarının işaretidir ve EDG-086 sayımı öneriyi onunla bot kovasına ayırır — gerekçe
+    `sohbet.MCP_OTURUM_ONEKI`nin yanında; model çağrılmaz, hiçbir satır yazılmaz.
+
+    Yanıt, `sohbet.jsonl` satırının GET ucuyla AYNI
     ŞEKLİDİR — iki uç ayrı şey döndürseydi ikinci bir gerçek olurdu: `cikti_atiflari` alanı iki
     uçta da kırpılır (`sohbet.atif_alanini_kirp`, bedel gerekçesi orada), DOSYADA durur ve
     sayacın okuduğu yer dosyadır. Tur-2'de yalnız GET kırpılmıştı; POST tur başına 4 sınıf × 200

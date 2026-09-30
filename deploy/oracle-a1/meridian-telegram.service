@@ -17,8 +17,11 @@
 # Hindsight kiracı anahtarı (dönüş kaydı). Drop-in'leri G3b sır diliminde rotasyon tablosuyla TEK dilimde gelir (v447 P6
 # sınıfı); o güne dek her soru "şu an cevap veremiyor" alır ve olay yazılır. Telegram jetonu ve sohbet kimliği bugünkü
 # zincirle okunur (`meridian/secrets.py::get`: credential, sonra ortam, sonra `state/secrets.json`) — değişiklik yok.
-# Jeton ya da sohbet kimliği YOKSA süreç `SystemExit` ile çıkar ve `Restart=on-failure` onu 10 sn arayla yeniden dener
-# (journal'de görünür — sessiz ölü birim değil).
+# Jeton ya da sohbet kimliği YOKSA süreç `SystemExit` ile çıkar; `Restart=on-failure` onu 10 sn arayla yeniden dener AMA
+# sonsuza dek değil: bu kalıcı bir arızadır ve 300 sn içinde beş başarısız başlatmada başlatma sınırı (aşağıda,
+# `StartLimitIntervalSec`/`StartLimitBurst`) birimi `failed`e düşürür — systemd artık denemez. Sır/kimlik düzeltildikten
+# sonra `systemctl reset-failed` + `start` gerekir. `failed` journal'de ve panoda (`/api/infra`) görünür — sessiz ölü
+# birim değil, ama kendiliğinden de geri gelmez.
 [Unit]
 Description=Meridian Telegram dinleyicisi — konuşan bot filosunun Telegram kanalı (getUpdates uzun yoklaması)
 # SIRALAMA, BAĞIMLILIK DEĞİL: bot ağ geçidi (`ops/sohbet_profili_uret.py::BOT_BIRIMI`) açılışta dinleyiciden ÖNCE kalksın

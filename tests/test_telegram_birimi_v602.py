@@ -24,8 +24,10 @@ HİZMETE çeviren beş parçayı çiviler:
   * ARA BİLDİRİM (Review Focus 4) — `bota_sor` `ARA_BILDIRIM_ESIGI_S` (8 sn) içinde dönmezse enjekte `bildir` ile BİR kez
     ara bildirim (1. satır sohbet imzası EKSİZ, 2. satır "⏳ düşünüyor…" — Tur 2: ona yanıt da aynı bota/oturuma gider;
     operatörün mesajına yanıt). Zamanlayıcı cevaptan ÖNCE kapanır (kilit + bayrak + iptal):
-    cevap gittikten sonra ara bildirim ASLA gitmez. Zamanlayıcı enjekte edilir — bu dosyada gerçek `sleep` YOK; tek gerçek
-    iplik çivisi eşik 0 ile `Event` bekler (sınırlı bekleme, yoklama döngüsü değil).
+    cevap gittikten sonra ara bildirim ASLA gitmez. Zamanlayıcı enjekte edilir — bu dosyada gerçek `sleep` YOK. ÜÇ gerçek
+    iplik çivisi var: varsayılan `threading.Timer` yolu (eşik 0, `Event` bekler) ve iki yarış çivisi (uçuştaki
+    ara bildirim ↔ `kapat()`, uçuştayken ikinci ateşleme); üçü de sınırlı `Event.wait`/`join` ile bekler, yoklama döngüsü
+    değil.
   * İLK KOŞUM OFSETİ — `telegram_ofset.json` YOKSA ilk (bloklamayan, `timeout: 0`) yoklamada BİRİKMİŞ güncellemeler
     İŞLENMEZ: en yüksek `update_id + 1` yazılır, `telegram_ilk_ofset` olayı atlanan sayısıyla. Sayfa dolu gelirse
     (`GUNCELLEME_SAYFASI`) birikim sürüyor olabilir — atlama bir tur daha sürer. Dosya varsa bugünkü davranış.
@@ -68,8 +70,10 @@ def _ur():
 # =================================================================================================
 
 def test_birim_dosyasi_depoda_ve_execstart_modulun_kendi_adindan():
-    # ExecStart modül yolunu ELLE taşır; modül yeniden adlandırılırsa birim var olmayan bir modülü koşar ve
-    # `Restart=on-failure` onu 10 sn'de bir sessizce yeniden dener. Ad `td.__name__`den türetilerek kıyaslanır.
+    # ExecStart modül yolunu ELLE taşır; modül yeniden adlandırılırsa birim var olmayan bir modülü koşar,
+    # `Restart=on-failure` onu 10 sn arayla yeniden dener ve 300 sn'de beş başarısız başlatmada başlatma sınırı birimi
+    # `failed`e düşürür — dinleyici hiç çalışmaz, `reset-failed` olmadan geri de gelmez. Ad `td.__name__`den türetilerek
+    # kıyaslanır.
     assert _birim().is_file(), f"deploy/oracle-a1/{BIRIM_ADI} yok"
     assert _tek(_birim(), "Service", "ExecStart") == f"/opt/meridian/.venv/bin/python -m {td.__name__}"
 
@@ -620,7 +624,8 @@ def test_ara_bildirim_kurulamazsa_soru_yine_sorulur(sandbox_state):
 
 
 def test_ara_bildirim_gercek_zamanlayiciyla_eslesir(sandbox_state, monkeypatch):
-    # TEK GERÇEK İPLİK ÇİVİSİ: varsayılan `threading.Timer` imzası ve iplik yolu. Eşik 0 — bekleme yok; `bota_sor`
+    # GERÇEK ZAMANLAYICI ÇİVİSİ (üç gerçek iplik çivisinden biri — ötekiler yukarıdaki iki yarış çivisi): varsayılan
+    # `threading.Timer` imzası ve iplik yolu, enjekte zamanlayıcısız TEK çivi. Eşik 0 — bekleme yok; `bota_sor`
     # ara bildirimin GELDİĞİNİ `Event` ile bekler (sınırlı, yoklama döngüsü değil).
     monkeypatch.setattr(td, "ARA_BILDIRIM_ESIGI_S", 0)
     geldi, olay = threading.Event(), []
