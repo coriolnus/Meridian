@@ -458,9 +458,9 @@ def check_and_alarm() -> None:
         obs.warn("eod_supurme_dedektoru_dustu", error=f"{type(e).__name__}: {e}",
                  detail="EOD süpürme kanıt bekçisi bu poll'da hüküm veremedi — ölçülemeyen hüküm "
                         "'süpürme koştu' sayılmaz")
-    # TSK-131 ALT-İŞ: A1 /opt/veri kapasite eşiği (EDG-066 geri dolumu operatörün 120 G
-    # tavanına yaklaşıyor mu) — bu poll'un kadansında ve KENDİ try'ında, akranlarıyla aynı
-    # yalıtım disiplini. Yerelde/CI'da yol yok: dedektör None döner, alarm YOK, düşüş de yok.
+    # TSK-131 ALT-İŞ + TSK-259: A1 /opt/veri KALICI doluluk eşiği (ileri doldurma koşarken hüküm
+    # atlanır, sayılır) — bu poll'un kadansında ve KENDİ try'ında, akranlarıyla aynı yalıtım
+    # disiplini. Yerelde/CI'da yol yok: dedektör None döner, alarm YOK, düşüş de yok.
     try:
         check_veri_disk_and_alarm()
     except Exception as e:
@@ -4294,11 +4294,45 @@ def check_eod_supurme_and_alarm() -> dict:
 # tekrarlanmaz. Ad `veri_disk_esigi` `EXPECTED` sözlüğünde YOKTUR (bu bir nabız/beat mekanizması
 # değil bir EŞİK sensörüdür, `report()` onu aramaz) ama aynı deftere yazar.
 #
-# OKUYUCU (YASA 6): (1) günlük sayaç — `api._alarm_gunluk()` `mekanizmalar` sözlüğünün HERHANGİ
-# bir anahtarını genel biçimde okur (yeni okuyucu YAZILMADI, var olan genişledi); (2) alarm satırı
-# — mevcut `obs.alarm` zinciri: `notify.inbox` + `/api/alerts` (pano) + bekçi brifingi
-# (`ops/bekci_brifingi.py` inbox'ı okur). Jeton `obs.ALARM_DISK_ESIK` NOTIFY_TOKENS'a
+# OKUYUCU (YASA 6): (1) günlük sayaç — `api._alarm_gunluk()` `mekanizmalar` sözlüğünün HER
+# SATIRINI (mekanizma adından bağımsız) okur, AMA satırın ALANLARINI AD AD seçer (ölçüldü
+# 2026-09-30, TSK-259): `alarm`/`bastirilan`/`askida`/`son_askida_neden` + TSK-259'un
+# `atlandi_is_kosuyor`/`atlanan_tepe_g`'si. Yeni alan oraya AÇIKÇA eklenmeden okuyucusuzdur
+# (`son_kullanilan_g` bu yüzden bugün uçta GÖRÜNMEZ — alarm gövdesi `kullanilan_g`yi zaten taşır);
+# (2) alarm satırı — mevcut `obs.alarm` zinciri: `notify.inbox` + `/api/alerts` (pano) + bekçi
+# brifingi (`ops/bekci_brifingi.py` inbox'ı okur). Jeton `obs.ALARM_DISK_ESIK` NOTIFY_TOKENS'a
 # kendiliğinden girer (obs.py'deki ALARM_ türetmesi).
+#
+# İŞ KOŞARKEN ÖLÇME (TSK-259, operatör kararı 2026-09-30 18:5xZ "iş koşarken ölçme"):
+# ÖLÇÜM (Rol-1, A1 2026-09-30): `DISK_ESIK` 09-25 07:36Z · 09-26 21:39Z · 09-29 08:41Z · 09-30 07:38Z
+# öttü — DÖRDÜ de `meridian-geridolum.service` koşumlarının İÇİNDE (koşum ~25–32 dk, bellek tepesi
+# 9–13 GB; journal "TAVAN aşıldı: yalnız ileri günler dolduruluyor"). Kalıcı kullanım `df` 18:4xZ
+# ≈122 GB (%82), alarm anlarında 142–144 GB: fark ileri doldurmanın GEÇİCİ ham/işleme alanıdır ve
+# iş kendini zaten korur (`geridolum.py::ILERI_DISK_PAYI_BAYT` 15 G · `geridolum.py::bos_bayt`
+# kapısı — ENOSPC'ye yürümez, KIRMIZI çıkar). Alarm neredeyse her gün ötüyor, gerçek KALICI
+# dolmayı gizleyen bir körleşmeye dönüşüyordu. KARAR: iş koşarken eşik HÜKMÜ verilmez; eşik
+# (`VERI_DISK_ESIK_G`) AYNI kalır.
+#   · SIRA: disk ölçümü (ucuz, `shutil.disk_usage`) ÖNCE; iş durumu YALNIZ eşik aşıldığında
+#     sorulur — 300 sn'lik poll eşik altında süreç tablosunu hiç taramaz.
+#   · BEDEL GÖRÜNÜR (Bedel yasası): atlanan her hüküm `veri_disk_esigi` satırında sayılır
+#     (`atlandi_is_kosuyor`, poll başına 1) ve atlanan ölçümlerin günlük tepesi tutulur
+#     (`atlanan_tepe_g`) — kaybedilen şey TAM OLARAK bu iki sayıdır: kaç alarm-adayı ölçüm ve
+#     hangi tepe. Okuyucu `api._alarm_gunluk()` (yukarıda).
+#   · TAKILI İŞ KÖRLÜK YARATMAZ: iş `TASMA_SN`den uzun koşuyorsa hüküm verilir, alarm normal
+#     kurallarla (günlük tavan dahil) çalar ve mesaj işin kaç dakikadır koştuğunu söyler.
+#   · ÖLÇÜLEMEYEN İŞ DURUMU "koşmuyor" SAYILIR: güvenli yön alarmın çalmasıdır; neden alarm
+#     gövdesine (`is_olculemedi_neden`) yazılır.
+#   · TESPİT YÖNTEMİ (a) `/proc` taraması — `geridolum_is_durumu`. SEÇİM ÖLÇÜMÜ (2026-09-30,
+#     `deploy/oracle-a1/`): bekçinin koştuğu `meridian.service` `User=ubuntu`, ProtectProc/
+#     ProcSubset/PrivatePIDs/PrivateUsers YOK (başlıkta "Tur-3 kalemi" diye bilerek dışarıda) ve
+#     beş drop-in'in hiçbiri eklemiyor; `meridian-geridolum.service` de `User=ubuntu` — aynı
+#     kullanıcı, aynı PID ad alanı: sürücü süreci görünür (hidepid mount'u olsa bile kendi
+#     kullanıcısının süreçleri görünür). Öncül `tests/test_disk_alarm_is_kosarken_v605.py`
+#     içinde çivilidir. (b) `systemctl show` REDDEDİLMEDİ ama seçilmedi: bekçiye alt süreç +
+#     D-Bus bağımlılığı sokar ve yalnız birimi görür (elle koşulan sürücüyü değil — oysa disk
+#     tepesini birim değil SÜRÜCÜ üretir). (c) işin flock'unu LOCK_NB ile yoklamak SEÇİLMEDİ:
+#     yoklama anında sürücünün kendi `LOCK_EX|LOCK_NB` başlangıcı "zaten koşuyor" deyip çıkar,
+#     o saatin koşumu kaybolur (`geridolum.py::main`) — bekçi işi ASLA etkilemez.
 #
 # İLK GERÇEK ATEŞLEME BEKLENEN TARİH: ~14 Eylül 2026 (2026-09-05 09:02Z ölçümü: 67 G kullanımda,
 # günde ~17-19 G büyüme — 110 G'ye ~2-3 gün kalır; bu tahmin operatörün büyüme hızı ölçümünden
@@ -4311,6 +4345,19 @@ VERI_DISK_ESIK_G = 140                    # operatör 2026-09-12 "(a) dur, eşi�
                                           # bu eşik artık o kararın erken uyarısı DEĞİL, diskteki
                                           # DİĞER büyümenin bekçisidir (toplam 157 G, 17 G pay).
                                           # Tarihçe: 2026-09-05 → 110 (120 G kararının 10 G öncesi).
+# TSK-259 — ileri doldurma sürücüsünün KİMLİĞİ. TEK KAYNAK `deploy/oracle-a1/meridian-geridolum.
+# service` ExecStart'ıdır (`<venv>/bin/python /opt/veri/geridolum.py`); canlıda deploy/ ağacı
+# okunamadığı için ad burada KOPYADIR ve ayrışma çivisi v605 onu ExecStart'a bağlar.
+GERIDOLUM_BETIK = "geridolum.py"
+PROC_KOK = "/proc"                        # testler sahte bir süreç tablosuna çevirir
+# TAŞMA TAVANI — bundan uzun koşan iş TAKILMIŞ sayılır ve eşik hükmü YİNE verilir. ÖLÇÜM (Rol-1,
+# A1 journal 2026-09-25..30): alarmla çakışan dört ileri koşum 25–32 dk sürdü (CPU 26–32 dk). SEÇİM:
+# 2 sa ≈ en uzun ölçülen koşumun ~4 katı — yavaş bir IEX indirmesine pay bırakır, ama bir günü
+# geçmez (alarm en geç 2 sa gecikir, SONSUZ körlük yok). BİLİNEN BEDEL: geri kip koşumları
+# günlerce sürdü (PID 306299, 09-05→09-10) ve 09-12'den beri tavanda duruyor; geri kip yeniden
+# açılırsa ya da biriken ileri günler tek koşumda art arda işlenirse (her biri ~25–30 dk) koşum
+# 2 sa'i aşar ve alarm "iş X dk'dır koşuyor" notuyla çalar — güvenli yöndür (gürültü, körlük değil).
+TASMA_SN = 2 * 3600
 
 
 def veri_disk_report() -> dict:
@@ -4346,14 +4393,92 @@ def veri_disk_report() -> dict:
 _VERI_DISK_MEK_ADI = "veri_disk_esigi"
 
 
+def _clk_tck() -> int:
+    """`/proc/<pid>/stat` başlangıç alanının birimi (saniye başına tik) — testler sahteler."""
+    import os as _os
+    return int(_os.sysconf("SC_CLK_TCK"))
+
+
+def geridolum_is_durumu() -> dict:
+    """İleri doldurma sürücüsü (`GERIDOLUM_BETIK`) şu an koşuyor mu, kaç saniyedir — `/proc`
+    taramasıyla, SALT OKUR: alt süreç açmaz, işin kilidine dokunmaz, işi hiçbir biçimde etkilemez.
+
+    SÜRÜCÜ İMZASI birim ExecStart'ının biçimidir: argv[0] bir `python*`, argv[1]'in taban adı
+    `GERIDOLUM_BETIK`. Editör (`vim …/geridolum.py`), `python -m py_compile …` ve işçinin
+    `pilot.py` çocukları sürücü SAYILMAZ. Birden çok sürücü görünürse (flock ikinciyi saniyeler
+    içinde çıkarır) EN ESKİsi alınır — taşma için temkinli taraf.
+
+    SÜRE: `/proc/uptime` − `stat` 22. alan (açılıştan beri tik) / `SC_CLK_TCK`. İkisi de açılış
+    saatinden ölçülür; duvar saatine bakılmaz (NTP adımı süreyi bozamaz).
+
+    Dönüş {kosuyor, pid, sure_sn, olculemedi_neden}. `kosuyor=True` ⇒ `sure_sn` ölçülmüştür.
+    ÖLÇÜLEMEYEN HER HÂL "koşmuyor"dur ve `olculemedi_neden` taşır: kök listelenemedi · hiç süreç
+    görünmüyor · eşleşme yok ama okunamayan cmdline var · sürücü göründü ama yaşı ölçülemedi.
+    Güvenli yön alarmın çalmasıdır (operatör kararı TSK-259)."""
+    out = {"kosuyor": False, "pid": None, "sure_sn": None, "olculemedi_neden": None}
+    kok = pathlib.Path(PROC_KOK)
+    try:
+        pidler = sorted(int(p.name) for p in kok.iterdir() if p.name.isdigit())
+    except OSError as e:
+        return {**out, "olculemedi_neden": f"{kok} listelenemedi — {type(e).__name__}: {e}"}
+    if not pidler:
+        return {**out, "olculemedi_neden": (f"{kok} altında hiç süreç görünmüyor (bekçinin kendi "
+                                            "süreci bile) — beklenmedik biçim/yalıtım")}
+    hedef = GERIDOLUM_BETIK.encode()
+    bulunan: list[int] = []
+    okunamayan = 0
+    for pid in pidler:
+        try:
+            ham = (kok / str(pid) / "cmdline").read_bytes()
+        except (FileNotFoundError, ProcessLookupError):  # sessiz-yutma: süreç listeleme ile okuma arasında bitti — normal yarış; bitmiş süreç koşan iş olamaz, ölçüm eksilmez
+            continue
+        except OSError:  # sessiz-yutma: okunamayan süreç SAYILIR; eşleşme bulunmazsa sayı `olculemedi_neden`e yazılır (aşağıda), iş orada gizli olabilir
+            okunamayan += 1
+            continue
+        argv = [a for a in ham.split(b"\0") if a]
+        if (len(argv) >= 2 and argv[0].rsplit(b"/", 1)[-1].startswith(b"python")
+                and argv[1].rsplit(b"/", 1)[-1] == hedef):
+            bulunan.append(pid)
+    if not bulunan:
+        if okunamayan:
+            return {**out, "olculemedi_neden": (
+                f"{okunamayan} sürecin cmdline'ı okunamadı (izin/erişim) — sürücü onların "
+                "arasında olabilir; koşmuyor SAYILDI")}
+        return out
+    try:
+        tck = _clk_tck()
+        uptime_sn = float((kok / "uptime").read_text(encoding="utf-8").split()[0])
+        sureler = {}
+        for pid in bulunan:
+            stat = (kok / str(pid) / "stat").read_text(encoding="utf-8", errors="replace")
+            # `comm` boşluk ve `)` taşıyabilir: alanlar SON `)`ten sonra sayılır (alan 3 = [0])
+            sureler[pid] = uptime_sn - int(stat.rsplit(")", 1)[1].split()[22 - 3]) / tck
+    except (OSError, ValueError, IndexError, ArithmeticError) as e:
+        return {**out, "pid": bulunan[0],
+                "olculemedi_neden": (f"sürücü göründü (pid {bulunan[0]}) ama koşum süresi "
+                                     f"ölçülemedi — {type(e).__name__}: {e}")}
+    pid = max(sureler, key=lambda p: sureler[p])
+    if sureler[pid] < 0:
+        return {**out, "pid": pid,
+                "olculemedi_neden": (f"sürücü göründü (pid {pid}) ama koşum süresi ölçülemedi — "
+                                     f"negatif süre ({sureler[pid]:.0f} sn)")}
+    return {**out, "kosuyor": True, "pid": pid, "sure_sn": round(sureler[pid], 1)}
+
+
 def check_veri_disk_and_alarm() -> dict:
     """Eşik aşımı başına günde EN ÇOK `GUNLUK_ALARM_TAVANI` kez `DISK_ESIK` alarmı — günlük tavan
     MECHANISM_STALE ile AYNI defteri (`ALARM_GUNLUK_FILE`) paylaşır (tek kaynak). Yol yok/
-    ölçülemedi ya da eşik altı → alarm YOK (uydurma yasağı / normal hâl)."""
+    ölçülemedi ya da eşik altı → alarm YOK (uydurma yasağı / normal hâl).
+
+    TSK-259: eşik aşılmışken ileri doldurma sürücüsü `TASMA_SN`den KISA süredir koşuyorsa hüküm
+    VERİLMEZ — ölçüm o işin geçici alanını içerir. Atlama sayılır (`atlandi_is_kosuyor`) ve tepe
+    tutulur (`atlanan_tepe_g`); taşan ya da durumu ölçülemeyen iş hükmü DURDURMAZ. Dönüş,
+    `veri_disk_report()` sözlüğüne eşik aşıldığında `is_durumu` + `atlandi` ekler."""
     from . import obs
     rep = veri_disk_report()
     if not rep["var"] or not rep["esik_asildi"]:
         return rep
+    is_durumu = geridolum_is_durumu()
     # `_satir()` `check_and_alarm()`in içinde tanımlı bir closure'dır, buradan çağrılamaz —
     # AYNI defter/sabitle eşdeğer "satırı bul/aç" mekaniği (iş kuralı DEĞİL, sözlük erişimi).
     doc = _gunluk_oku()
@@ -4362,20 +4487,40 @@ def check_veri_disk_and_alarm() -> dict:
     if not isinstance(satir, dict):
         satir = {}
         mek[_VERI_DISK_MEK_ADI] = satir
+    if is_durumu["kosuyor"] and is_durumu["sure_sn"] < TASMA_SN:
+        # İŞ KOŞARKEN ÖLÇME: hüküm atlanır, atlama ve tepesi SAYILIR (Bedel yasası).
+        satir["atlandi_is_kosuyor"] = int(satir.get("atlandi_is_kosuyor") or 0) + 1
+        onceki = satir.get("atlanan_tepe_g")
+        if not isinstance(onceki, (int, float)) or rep["kullanilan_g"] > onceki:
+            satir["atlanan_tepe_g"] = rep["kullanilan_g"]
+        store.write_json(ALARM_GUNLUK_FILE, doc)
+        return {**rep, "is_durumu": is_durumu, "atlandi": True}
     if int(satir.get("alarm") or 0) >= GUNLUK_ALARM_TAVANI:
         satir["bastirilan"] = int(satir.get("bastirilan") or 0) + 1
         store.write_json(ALARM_GUNLUK_FILE, doc)
-        return rep
+        return {**rep, "is_durumu": is_durumu, "atlandi": False}
     satir["alarm"] = int(satir.get("alarm") or 0) + 1
     satir["son_kullanilan_g"] = rep["kullanilan_g"]
     store.write_json(ALARM_GUNLUK_FILE, doc)
+    # Üç iş hâli mesajın İÇİNDE yazılı (ayrı bir değişkende değil): RUNBOOK ateşleme yerinin mesaj
+    # şablonunu kaynaktan KOPYALAR (`ops/runbook_uret.py`) — operatör üç hâlin metnini orada görür.
     obs.alarm("DISK_ESIK",
               f"/opt/veri kullanımı eşiği aştı: {rep['kullanilan_g']} G / {rep['toplam_g']} G "
-              f"(eşik {rep['esik_g']} G, boş {rep['bos_g']} G) — EDG-066 geri dolumu operatörün "
-              "120 G tavanına yaklaşıyor",
+              f"(eşik {rep['esik_g']} G, boş {rep['bos_g']} G) — "
+              + (f"ileri doldurma işi (pid {is_durumu['pid']}) "
+                 f"{int(is_durumu['sure_sn'] // 60)} dk'dır koşuyor — taşma tavanı "
+                 f"{TASMA_SN // 60} dk aşıldı: iş takılmış olabilir, ölçüm işin geçici alanını "
+                 "da içerir" if is_durumu["kosuyor"] else
+                 f"ileri doldurma işinin durumu ÖLÇÜLEMEDİ ({is_durumu['olculemedi_neden']}) — "
+                 "koşmuyor sayıldı; ölçüm işin geçici alanını içerebilir"
+                 if is_durumu["olculemedi_neden"] else
+                 "ileri doldurma işi koşmuyor: bu KALICI doluluktur"),
               yol=rep["yol"], kullanilan_g=rep["kullanilan_g"], toplam_g=rep["toplam_g"],
-              bos_g=rep["bos_g"], esik_g=rep["esik_g"])
-    return rep
+              bos_g=rep["bos_g"], esik_g=rep["esik_g"],
+              is_kosuyor=is_durumu["kosuyor"], is_pid=is_durumu["pid"],
+              is_sure_sn=is_durumu["sure_sn"],
+              is_olculemedi_neden=is_durumu["olculemedi_neden"])
+    return {**rep, "is_durumu": is_durumu, "atlandi": False}
 
 
 # =============================================================================================
