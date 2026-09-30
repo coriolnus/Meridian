@@ -23,7 +23,7 @@
 ## Review Focus
 1. Hafıza yazımı 10 s zaman aşımına düşerse Telegram cevabı gecikmemeli/düşmemeli (`async: true` + cevaptan bağımsız hata yolu).
 2. `unut:` ilk adımı HİÇBİR şeyi değiştirmemeli (yalnız aday listesi); süresi geçen/yabancı kısa kod reddedilir; başka botun adayını onaylamak mümkün olmamalı.
-3. 4096 bölme: imza yalnız ilk parçada, `reply_to` yalnız ilk parçada; parça sınırı çok baytlı karakteri bölmez; teslimat hatası sessiz kalmaz.
+3. 4096 bölme: HER parça imza taşır (`(i/n)` ekiyle — 2026-09-30 Rol-1 düzeltmesi: yalnız-ilk-parça kuralı 2.+ parçaya yanıtı yanlış bota yönlendiriyordu), ara bildirim de imzalı; `reply_to` yalnız ilk parçada; parça sınırı çok baytlı karakteri bölmez (UTF-16 birimi); teslimat hatası sessiz kalmaz.
 4. Ara bildirim yalnız cevap gecikince gider (eşik) ve cevap geldikten sonra ASLA gitmez (yarış).
 5. Pano `mcp:` reddi yalnız `oturum` BAŞINDA `mcp:` (strip + harf duyarlı, EDG-086 `startswith` ile aynı); `pano-mcp:x` geçer.
 
