@@ -34,6 +34,7 @@ hatasıdır; tetik-geçiş ölçümü değildir (eşik kontrolüdür, gösterge 
 olayları, portfolio.json, trade_plans.jsonl; yazar: intraday_decisions.jsonl. Komşular: barclock,
 hotstate, intraday_shadow, loop."""
 from __future__ import annotations
+import datetime as _dt
 import os
 
 from . import barclock, config, gecikme, hotstate, store, obs
@@ -70,6 +71,35 @@ DONGU_SURESI = gecikme.Histogram(
     kovalar=(0.00025, 0.0005, 0.001, 0.002, 0.003, 0.005, 0.0075, 0.01, 0.015, 0.025, 0.05, 0.1, 0.25, 0.5,
              1.0, 2.5, 5.0, 10.0),
     etiket="outcome", etiket_degerleri=DONGU_SONUCLARI)
+
+# EXE-2026-012 ALETİ — KILL#1 CANLI ÇAPASI, TUR İÇİ ATIF (TSK-020 UYGULA-9 Faz C; kart
+# research/cards/EXE-2026-012-kill1-canli-capa.yaml, `olcum_plani` ALET (1)–(5)). Her işlenen/hatalı olayın tur süresi X
+# ile AYNI olayda planli kol dalında geçen süre Z yan yana, YUVARLAMASIZ kaydedilir; hükmü (Y = X − Z, R = p95(X)/p95(Y))
+# Rol-1'in betiği okur. Kova çözünürlüğü (%33–100) +%10'u ayırt edemediği için bu kayıt `DONGU_SURESI`nin YERİNE değil
+# YANINDA durur:
+#   (1) X = `DONGU_SURESI`ne işlenen değerin KENDİSİ (`gecikme.Olcum` çıkış değeri) — İKİNCİ KRONOMETRE YOK.
+#   (2) Z = `_handle_symbol` planli dal gövdesinin süresi (hata dalı dahil), olaydaki semboller üzerinden TOPLANIR,
+#       AYNI saatle (`gecikme._saat`). Silahlı dal ve plansız semboller Z'ye GİRMEZ.
+#   (3) Kayıt süreç belleğinde, seans başına; yalnız `processed` ve `error` — `skipped` KAYDEDİLMEZ (kapı-önü µs
+#       dönüşleri p95'i işlenen olayın maliyetinden aşağı çekerdi). Alan sırası `ATIF_ALANLARI`. Kayıt olay turu
+#       KAPANDIKTAN sonra eklenir → X'e GİRMEZ.
+#   (4) Toplu yazım `state/` altında tek defter (`ATIF_DEFTERI`), seans başına TEK satır, olay turunun ölçümü DIŞINDA:
+#       seans kapısında dönen ilk olayda ya da kayıtlı bir olayın seansı tampondakinden farklıysa. Satır süreç
+#       başlangıç damgasını (`_SUREC_BASLANGIC`) + pid'i taşır: seans içi yeniden başlatmayı okuyucu bununla ayırır
+#       (yeniden başlatmada kaybolan tampon, o seansın satırında seans açılışından SONRAKİ bir damgayla görünür).
+#   (5) Kapatma: `MERIDIAN_TUR_ATIF=0` (intraday_shadow ENABLED deseni; import anında okunur, varsayılan AÇIK).
+# SINIR (kart kill_list, tasarım §2): OTOMATİK KAPI YOK — hiçbir motor kodu bu defteri okuyup planli kolu
+# kapatamaz/açamaz; okuyucu motor DIŞINDADIR (research/olcumler/exe012_kill1_canli/, Rol-1). BEDEL (kart
+# beyanli_sinirlar 4): kayıt + toplu yazım sıcak yolda ÖLÇÜLMEYEN bir ektir; planli dal kronometresi (iki saat okuması)
+# X'in İÇİNDEDİR. İkisinin ölçüsü tests/test_exe012_alet_v606.py G bölümünde.
+ATIF_ENABLED = os.environ.get("MERIDIAN_TUR_ATIF", "1") != "0"
+ATIF_KART = "EXE-2026-012"
+ATIF_DEFTERI = "exe012_tur_atif.jsonl"
+ATIF_ALANLARI = ("outcome", "x_s", "z_s", "ofset_s", "planli_giris", "planli_yazim")
+# Süreç başlangıç damgası (duvar saati, UTC) ve olay ofsetinin tabanı (X/Z ile AYNI saat: ofset = olayın X ölçümünün
+# başladığı an − bu okuma). Modül içe aktarımı süreç açılışındadır (`api._autostart` tüketiciyi orada kaydeder).
+_SUREC_BASLANGIC = _dt.datetime.now(_dt.timezone.utc).isoformat()
+_SUREC_SAAT0 = gecikme._saat()
 
 
 def reset_plans_cache() -> None:
@@ -114,6 +144,14 @@ class IntradayConsumer:
         self.skipped = {"session": 0, "pencere": 0, "halt": 0, "stale": 0, "no_bars": 0}
         # sabah kancasının gönderim sayacı (pencere açılınca bekleyen silahlı planlar tek kapıdan)
         self.pencere_gonderim_n = 0
+        # EXE-2026-012 ALETİ (tur içi atıf; modül başındaki ATIF bloğu): olay başı birikimler — `on_barfeed_event`
+        # her olayda sıfırlar, `_handle_symbol`un planli dalı doldurur — ve seans tamponu (`_atif_bosalt` deftere
+        # indirir). SÜREÇ-İÇİ; bayrak kapalıyken hiçbiri değişmez.
+        self._atif_z = 0.0
+        self._atif_giris = 0
+        self._atif_yazim = 0
+        self._atif_seans: str | None = None
+        self._atif_olaylar: list[tuple] = []
 
     # ---- ilgi kümesi: açık pozisyonlar ∪ silahlı ∪ GÜNÜN TÜM PLANLARI (O(≤ plan tavanı)) ----
     def _interest_set(self, pf: dict, planned: dict) -> set:
@@ -176,16 +214,71 @@ class IntradayConsumer:
 
         TUR SÜRESİ `DONGU_SURESI`ne işlenir (sonuç etiketiyle). Sarma davranışı DEĞİŞTİRMEZ: dönüş, sayaçlar ve
         yutma sözleşmesi aynı; `except` dalının kendisi yükseltirse (ör. uyarı kanalı düştü) istisna `sure_olc`tan
-        AYNEN geçer ve süre yine `error` etiketiyle kaydedilir."""
-        with gecikme.sure_olc(DONGU_SURESI, "error") as olcum:
-            n0 = self.events_handled
-            try:
-                self._handle(fields)
-            except Exception as e:  # sessiz-yutma DEĞİL: barfeed thread'i korunur, hata kaydedilir ve health'te görünür
-                self.last_error = f"{type(e).__name__}: {e}"[:160]
-                obs.warn("intraday_event_failed", error=self.last_error)
-            else:
-                olcum.etiket_degeri = "processed" if self.events_handled != n0 else "skipped"
+        AYNEN geçer ve süre yine `error` etiketiyle kaydedilir.
+
+        EXE-2026-012 ALETİ (`ATIF_ENABLED`): olay başı birikimler turdan ÖNCE sıfırlanır; tur KAPANDIKTAN sonra
+        (`finally` — X ölçülmüş, istisna yolunda da) `_atif_kaydet` olayı seans tamponuna ekler. Ölçülen turun
+        DIŞINDADIR; özgün istisna AYNEN geçer."""
+        atif = ATIF_ENABLED
+        if atif:
+            self._atif_z, self._atif_giris, self._atif_yazim = 0.0, 0, 0
+        seans_kapisi0 = self.skipped["session"]
+        olcum = gecikme.sure_olc(DONGU_SURESI, "error")
+        try:
+            with olcum:
+                n0 = self.events_handled
+                try:
+                    self._handle(fields)
+                except Exception as e:  # sessiz-yutma DEĞİL: barfeed thread'i korunur, hata kaydedilir ve health'te görünür
+                    self.last_error = f"{type(e).__name__}: {e}"[:160]
+                    obs.warn("intraday_event_failed", error=self.last_error)
+                else:
+                    olcum.etiket_degeri = "processed" if self.events_handled != n0 else "skipped"
+        finally:
+            if atif:
+                self._atif_kaydet(olcum, self.skipped["session"] != seans_kapisi0)
+
+    def _atif_kaydet(self, olcum, seans_kapisinda: bool) -> None:
+        """EXE-2026-012 ALET (3)/(4) — olay turu KAPANDIKTAN sonra çağrılır: bu çağrının süresi X'e GİRMEZ.
+
+        `processed`/`error` olayı seans tamponuna TEK kayıt olarak eklenir (`ATIF_ALANLARI` sırası): X = ölçüm
+        nesnesinin çıkış süresi (histograma işlenen değerin kendisi), Z ve planli giriş/yazım sayıları bu olayın
+        birikimleri, ofset = X ölçümünün başladığı an − `_SUREC_SAAT0`. `skipped` KAYDEDİLMEZ. Tampon iki anda
+        deftere iner: kayıtlı olayın seansı tampondakinden farklıysa (önce eski seans yazılır) ve seans kapısında
+        dönen bir olayda (seans bitti). Yazım hatası `_atif_bosalt`ta adıyla uyarıya düşer; buradan yükselen bir şey yoktur."""
+        sonuc = olcum.etiket_degeri
+        if sonuc in ("processed", "error") and olcum.sure is not None:
+            seans = barclock.session_date()
+            if self._atif_olaylar and seans != self._atif_seans:
+                self._atif_bosalt("seans_degisti")
+            self._atif_seans = seans
+            self._atif_olaylar.append((sonuc, olcum.sure, self._atif_z, olcum.baslangic - _SUREC_SAAT0,
+                                       self._atif_giris, self._atif_yazim))
+        elif seans_kapisinda and self._atif_olaylar:
+            self._atif_bosalt("seans_kapandi")
+
+    def _atif_bosalt(self, neden: str) -> None:
+        """EXE-2026-012 ALET (4) — seans tamponunu `state/` altındaki `ATIF_DEFTERI`ne TEK satır olarak ekler, boşaltır.
+
+        Satır: kart, şema, seans, süreç başlangıç damgası + pid (seans içi yeniden başlatma tespiti), boşaltma nedeni
+        (`seans_kapandi` | `seans_degisti`), yazım anı, alan adları, olay sayısı ve olay listesi (yuvarlamasız).
+        YAZIM DÜŞERSE tampon YİNE boşalır ve kayıp ADIYLA uyarıya düşer (seans + olay sayısı): her sonraki kapı-önü
+        olayda yeniden deneyen bir tampon hem sınırsız büyür hem uyarı seli üretirdi. Seans defterde görünmez; okuyucu
+        onu eksik seans olarak adlandırır. Sıcak yolun `last_error` alanına DOKUNULMAZ (alet arızası karar hattının
+        arızası değildir)."""
+        olaylar, seans = self._atif_olaylar, self._atif_seans
+        self._atif_olaylar = []
+        try:
+            store.append_jsonl(ATIF_DEFTERI, {
+                "kart": ATIF_KART, "sema": 1, "seans": seans,
+                "surec_baslangic": _SUREC_BASLANGIC, "pid": os.getpid(), "bosaltma": neden,
+                "yazim_ts": barclock.now().isoformat(), "alanlar": list(ATIF_ALANLARI),
+                "n": len(olaylar), "olaylar": olaylar})
+        except Exception as e:
+            obs.warn("exe012_defter_yazim_dustu", seans=seans, n=len(olaylar),
+                     error=f"{type(e).__name__}: {e}"[:160],
+                     detail="EXE-2026-012 tur-içi atıf defteri yazılamadı — bu seansın kaydı KAYIP (hüküm penceresinde "
+                            "eksik seans olarak görünür); canlı karar döngüsü etkilenmedi")
 
     def _handle(self, fields: dict) -> None:
         """Tek bir barfeed olayını işler: seans/HALT kapılarını geçer, ilgi kümesini kurar ve olaydaki
@@ -357,17 +450,28 @@ class IntradayConsumer:
         # veriyor; ikinci defter de o kararın yanında yaşıyor. Hesap gölge katmanında, yazım burada.
         # SIRA: önce diske, SONRA tekilleştirme işareti — ters sırada bir yazım hatası planı
         # "yazıldı" sayardı ve o plan o seans bir daha hiç denenmezdi.
+        #
+        # EXE-2026-012 ALET (2): Z = bu dal gövdesinin süresi (hata dalı dahil), AYNI saatle (`gecikme._saat`);
+        # olay başına toplanır (`_atif_z`). `_atif_yazim` satır DİSKE indikten sonra sayılır. Bayrak kapalıyken
+        # saat okunmaz, sayaç değişmez.
         elif fired and plan is not None:
+            t_atif = gecikme._saat() if ATIF_ENABLED else None
             try:
                 from . import intraday_shadow
                 satir = intraday_shadow.planli_satir(plan, last, as_of)
                 if satir is not None:
                     store.append_jsonl(intraday_shadow.PLANLI_ORDERS_FILE, satir)
+                    if t_atif is not None:
+                        self._atif_yazim += 1
                     intraday_shadow.planli_yazildi(satir)
                     self.shadow_planli_written += 1
             except Exception as e:
                 self.last_error = f"shadow_planli: {type(e).__name__}: {e}"[:160]
                 obs.warn("intraday_shadow_planli_failed", ticker=tk, error=self.last_error)
+            finally:
+                if t_atif is not None:
+                    self._atif_giris += 1
+                    self._atif_z += gecikme._saat() - t_atif
         # Faz 4b GÖNDERİM BACAĞI ARTIK YUKARIDA (silahlı kol). Eski
         # `intraday_arm_flag_on_but_4b_not_built` uyarısı kaldırıldı: cümlesi ("4b uygulanmadı")
         # artık YANLIŞ olurdu ve yanlış bir uyarı, susan bir uyarıdan tehlikelidir. Bayrak açıkken
