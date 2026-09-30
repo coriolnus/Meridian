@@ -11,9 +11,9 @@ Kaynak: `research/cards/*.yaml` → `status` alanı. Üretici: `ops/kart_endeksi
 Bayat mı diye sor: `python ops/kart_endeksi_uret.py --kontrol` (çıkış 1 = bayat).
 Konu ve hüküm cümleleri kartın KENDİ metninden KESİLİR (`…`), özetlenmez.
 
-Toplam **121** kart.
+Toplam **122** kart.
 
-### Kayıtlı — ölçüm bekliyor (14)
+### Kayıtlı — ölçüm bekliyor (15)
 
 - **EDG-2026-053** (`registered`) — 15d-A2 (taslak docs/TASARIM-15D-PIT-FAKTOR-SETI-2026-08-23.md K2'den AYNEN): İLK-İFŞA filtreli çeyrek gelir (Revenues) YoY büyümesi ve İVMESİ…
   · HÜKÜM: 2026-08-23 Rol-1 — ön-kayıt (ölçüm 050/051'den biri inince sırada)
@@ -53,6 +53,9 @@ Toplam **121** kart.
 - **EXE-2026-010** (`registered`) — 
   · HÜKÜM: ön-kayıt 2026-08-31; uygulama kart-önce kuralıyla sonra
   · kart: `EXE-2026-010-hakem-ts-anahtari.yaml`
+- **EXE-2026-012** (`registered`) — 
+  · HÜKÜM: 2026-09-30 Rol-1 ön-kayıt (operatör 'şimdi ön-kaydet', 18:5xZ); ADIM-0 betimleme alanlarını doldurur ve kartı DONDURUR; pencere ADIM-0'dan SONRA açılır
+  · kart: `EXE-2026-012-kill1-canli-capa.yaml`
 
 ### Ölçümde (9)
 
