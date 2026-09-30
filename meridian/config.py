@@ -136,6 +136,34 @@ SIR_DESENLERI: tuple[str, ...] = ("secrets.json*", "secrets.*.json", "auth.json*
 # ölçerdi — HALT vakasının sınıfı (bedel yasası). Çivi: `tests/test_gecici_artik_v530.py` çivi 4.
 GECICI_ARTIK_DESENLERI: tuple[str, ...] = ("tmp*.tmp",)
 
+# --- YEDEK ARTIĞI: SIR DEĞİL, GEÇİCİ DEĞİL — KUM HAVUZUNA GİRMEZ (TSK-214, 2026-09-30) ----------
+# ÖLÇÜLEN BOŞLUK (Rol-1, A1 salt-okur, 2026-09-29): sprint kum havuzuna `meridian.db.20260913T211859Z.bak`
+# (+`-wal`/`-shm`) ve `meridian.db.yedek` KOPYALANDI — `sprint.SKIP_COPY` yalnız tam `meridian.db*`
+# adlarını tanıyordu ("denylist yeni artefaktı kaçırır" sınıfı). Aynı adlar ön-eleme kopyasına da
+# giriyordu; biri root sahipli olsaydı C00005 arızası (okunamayan dosya kurulumu düşürür) tekrarlardı.
+# HER DESEN ÖLÇÜLMÜŞ BİR ADDAN/ÜRETİCİDEN DOĞAR:
+#   * `*.bak`    — `meridian.db.<damga>.bak` (`ops/trade_id_yeniden_numarala.py`, `ops/dolum_geri_dolum.py`
+#                  varsayılan yedek dizini `state/`), v204'ün canlı listesinde `earnings.csv.<damga>.bak`.
+#   * `*.bak-*`  — aynı DB yedeğinin SQLite yan dosyaları (`….bak-wal`/`….bak-shm`, A1 2026-09-29),
+#                  dağıtım damgalı yedekler (`goal.yaml.bak-<damga>`, v204) ve `ops/spend_defter_duzeltmesi.py`
+#                  (`<defter>.bak-<damga>`). `secrets.json.bak-*` de bu desene uyar ama yüklem sır ailesini
+#                  DIŞARIDA bırakır (sınıflar AYRIK; gerekçe ve ölçüm `yedek_artigi_mi` docstring'inde).
+#   * `*.sedbak` — elle `sed` yedeği (v204 canlı listesi).
+#   * `*.yedek`  — `meridian-backup.service`in gece yedeği `state/meridian.db.yedek` (A1 2026-09-29).
+# İlk üçü `ops/state_yetim_temizle.sh` ve `deploy/ansible/dagit.yml` [5a] bekçisinin ölçülmüş listesidir;
+# ayrışma çivisi (v598 Y5b) o iki listenin buraya DAHİL olduğunu ölçer. `.yedek` orada YOKTUR ve bu bilinçli
+# bir asimetridir: gece yedeği `state/`te MEŞRUDUR (bekçi yetim saymaz), kum havuzu ise ona hiç ihtiyaç
+# duymaz — `meridian/` ve `ops/` altında `meridian.db.yedek` okuyan kod YOK (grep, 2026-09-30).
+# BEDEL ÖLÇÜLDÜ: `meridian/` hiçbir `state/` defterini bu soneklerle adlandırmaz; `.bak` üreten iki modül
+# (`skill_evolve` → `skills/`, `hermes` → `~/.hermes`) `state/` DIŞINA yazar. Desenler SONDAN çapalıdır:
+# `bak.json`, `yedekler.json`, `notlar.bak.md` eşleşMEZ (v598 Y5).
+# NEDEN `kopyalanmaz_mi`YE GİRMEDİ: o bileşik teşhis paketi (`api.api_debug_export`) ile de paylaşılır ve
+# orada raporlama İKİ sınıflıdır (sır ↔ geçici artık) — yedek adı "geçici artık" diye sayılırdı (uydurma).
+# Teşhis paketi bu adları zaten uzantı süzgeciyle almaz ve gece `tar`ı onları BİLEREK arşivler; yani bu
+# sınıf yalnız KUM HAVUZU sorusudur ve iki kum havuzu yüzeyi (`sprint` kök + alt dizin bacakları, ön-eleme
+# ise sprint üzerinden) onu buradan sorar.
+YEDEK_ARTIK_DESENLERI: tuple[str, ...] = ("*.bak", "*.bak-*", "*.sedbak", "*.yedek")
+
 
 def sir_dosyasi_mi(ad: str, *, tam_adlar: "frozenset[str] | set[str] | None" = None,
                    desenler: "tuple[str, ...] | None" = None) -> bool:
@@ -196,6 +224,29 @@ def gecici_artik_mi(ad: str, *, desenler: "tuple[str, ...] | None" = None) -> bo
     yazılıdır ve aynı platform bağımsızlığı burada da geçerlidir."""
     return any(fnmatch.fnmatchcase(ad, d)
                for d in (GECICI_ARTIK_DESENLERI if desenler is None else desenler))
+
+
+def yedek_artigi_mi(ad: str, *, desenler: "tuple[str, ...] | None" = None) -> bool:
+    """TABAN AD elle ya da bir araçla alınmış bir YEDEK KOPYA mı? (TSK-214, `YEDEK_ARTIK_DESENLERI`)
+
+    SIR ve GEÇİCİ ARTIK yüklemlerinden AYRIDIR: yedeğin içeriği sır DEĞİLDİR (bir defterin ya da DB'nin
+    eski hâlidir) ve yarım kalmış bir yazım da değildir; ayrı sınıf, ayrı rapor. Kum havuzuna girmemesinin
+    iki gerekçesi ölçülmüştür: okuyucusu yoktur (disk) ve root sahipli bir yedek kurulumu düşürür (arıza).
+
+    `desenler` bir ölçüm yüzeyidir (`sir_dosyasi_mi` ile aynı gerekçe) ve varsayılan ÇAĞRI ANINDA okunur:
+    tek kaynağı oynatan bir çivi iki kum havuzu yüzeyini birlikte oynatabilmelidir. `fnmatchcase` —
+    platform bağımsız harf-duyarlı hüküm (gerekçe `sir_dosyasi_mi`da).
+
+    SINIFLAR AYRIKTIR — SIR AİLESİNE GİREN AD YEDEK SAYILMAZ. `secrets.json.bak-<damga>` `*.bak-*`e de uyar;
+    örtüşme "savunma katmanı" olarak bırakıldığında ÖLÇÜLEN bedel (v523 çivi 4, 2026-09-30): sır deseni
+    boşaltıldığında yedek bacağı aynı dosyayı tutuyor ve sır deseninin KAYBI hiçbir kum havuzu çivisini
+    kırmıyordu. Oysa teşhis paketi (`api.api_debug_export`) yedek bacağını HİÇ sormaz — orada o kayıp gerçek
+    bir sızıntı olurdu ve onu yakalayacak ısırık çivisi susmuş olurdu. Sır kararı yalnız sır yükleminden
+    gelir; bu yüklem ondan ARTA KALANI sınıflar (raporlama da böyle: sır adı sır satırında sayılır)."""
+    if sir_dosyasi_mi(ad):
+        return False
+    return any(fnmatch.fnmatchcase(ad, d)
+               for d in (YEDEK_ARTIK_DESENLERI if desenler is None else desenler))
 
 
 def kopyalanmaz_mi(ad: str, *, tam_adlar: "frozenset[str] | set[str] | None" = None,

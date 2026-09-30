@@ -170,8 +170,24 @@ def _desen_atlar(ad: str) -> bool:
     return config.kopyalanmaz_mi(ad, tam_adlar=frozenset(), desenler=SKIP_COPY_PATTERNS)
 
 
+def _yedek_atlar(ad: str) -> bool:
+    """`_atlanir`ın ve `_alt_dizin_suzgeci`nin YEDEK ARTIĞI bacağı (TSK-214, 2026-09-30).
+
+    ÖLÇÜLEN BOŞLUK (Rol-1, A1 salt-okur, 2026-09-29): kum havuzuna `meridian.db.20260913T211859Z.bak`
+    (+yan dosyaları) ve `meridian.db.yedek` KOPYALANDI — `SKIP_COPY` yalnız TAM `meridian.db*` adlarını
+    tanıyordu. Okuyucusu olmayan ~11 MB/kum havuzu; root sahipli bir yedekte ise kurulum düşerdi.
+
+    NEDEN `_desen_atlar`A KATILMADI: o bacak SIR + GEÇİCİ ARTIK desenidir ve v523 çivi 5b onun yanlış-pozitif
+    yüzeyini (ör. `meridian.db.yedek` sır DEĞİLDİR) ayrıca ölçer; yedek bir SIR değildir, ayrı sınıftır.
+    Desenler tek kaynaktadır (`config.YEDEK_ARTIK_DESENLERI`, gerekçe ve bedel orada); bu fonksiyon kök ve alt
+    dizin bacaklarının AYNI yüklemi sormasını sağlayan tek sprint noktasıdır. Ön-eleme kum havuzu aynı kararı
+    buradan (`_atlanir` ve `_alt_dizin_suzgeci` üzerinden) devralır — ayrışma çivisi v598 Y4/Y4b."""
+    return config.yedek_artigi_mi(ad)
+
+
 def _atlanir(ad: str) -> bool:
-    """Kum havuzu kopyasının TEK atlama kararı: tam ad kümesi VEYA desen ailesi.
+    """Kum havuzu kopyasının TEK atlama kararı: tam ad kümesi VEYA desen ailesi VEYA yedek artığı
+    (`_yedek_atlar`, TSK-214). Ön-eleme kum havuzu KÖK kararını buradan türetir (`prescreen._kok_atlar`).
 
     NEDEN TEK YERDE: `_kur_kum_havuzu` bu kararı kendi döngüsünde satır içi verirse çivi ancak
     dosya sistemi kurarak ölçebilir, ve ikinci bir çağıran doğduğu gün karar ÇATALLANIR. Burası
@@ -182,7 +198,7 @@ def _atlanir(ad: str) -> bool:
     deseniyle eşleşir (`*` BOŞ diziyi de eşler). Örtüşme bir SAVUNMA KATMANIDIR — biri kanonik adı
     kümeden düşürse bile dosya atlanmaya devam eder. Örtüşmenin BİLDİRİME sızmaması ayrı bir
     karardır: `_yalniz_desenle_atlanir`."""
-    return ad in SKIP_COPY or _desen_atlar(ad)
+    return ad in SKIP_COPY or _desen_atlar(ad) or _yedek_atlar(ad)
 
 
 def _yalniz_desenle_atlanir(ad: str) -> bool:
@@ -199,7 +215,7 @@ def _yalniz_desenle_atlanir(ad: str) -> bool:
     ATLAMA DARALTILMADI, YALNIZ BİLDİRİM: `_atlanir` örtüşen adı atmaya devam eder (yukarıdaki
     savunma katmanı korunur); burada eksilen tek şey, adı zaten kodda yazılı olan bir girdinin
     rapora ikinci kez girmesidir. Çivi: v523 çivi 10a (saf yüzey) + 10b (üretim yolu, olay kaydı)."""
-    return ad not in SKIP_COPY and _desen_atlar(ad)
+    return ad not in SKIP_COPY and (_desen_atlar(ad) or _yedek_atlar(ad))
 
 
 def _alt_dizin_suzgeci(live: Path, atlanan: list[str]):
@@ -218,9 +234,12 @@ def _alt_dizin_suzgeci(live: Path, atlanan: list[str]):
     çivi (v531) o günü yakalamak için kaynağı ve davranışı ayrı ayrı ölçer.
 
     KARAR TEK YERDEDİR: gövde `config.kopyalanmaz_mi`ye devreder, yani kök bacağı, teşhis paketi ve
-    bu üçüncü yüzey AYNI yüklemi çağırır. TSK-209'da ölçülen ayrışmanın sebebi tam olarak "iki
-    yüzey iki liste tuttu"ydu; üçüncü yüzeyin kendi eşleştiricisini kurması aynı sınıfı geri
-    getirirdi (çivi: v531 çivi 6 davranıştan, çivi 7 kaynaktan ölçer).
+    bu üçüncü yüzey AYNI yüklemi çağırır. YEDEK ARTIĞI bacağı (TSK-214) kök ile AYNI noktadan gelir
+    (`_yedek_atlar`); teşhis paketi o sınıfı sormaz (gerekçe `config.YEDEK_ARTIK_DESENLERI` şerhinde).
+    Ön-eleme kum havuzu bu süzgeci HER DERİNLİKTE (kök dahil) kullanır. TSK-209'da ölçülen
+    ayrışmanın sebebi tam olarak "iki yüzey iki liste tuttu"ydu; üçüncü yüzeyin kendi
+    eşleştiricisini kurması aynı sınıfı geri getirirdi (çivi: v531 çivi 6 davranıştan, çivi 7
+    kaynaktan ölçer).
 
     `SKIP_COPY` BİLEREK SORULMAZ VE BU BİR DARALTMA KAÇINMASIDIR. O küme KÖK sözleşmesidir ve
     içinde KONUMA bağlı adlar vardır (`bars`, `sprint`, `HALT`, `meridian.db` — gerekçeleri boyut
@@ -244,7 +263,7 @@ def _alt_dizin_suzgeci(live: Path, atlanan: list[str]):
         d = Path(os.fspath(dizin))
         atla: set[str] = set()
         for ad in adlar:
-            if not config.kopyalanmaz_mi(ad):
+            if not (config.kopyalanmaz_mi(ad) or _yedek_atlar(ad)):
                 continue
             yol = d / ad
             if yol.is_dir():
