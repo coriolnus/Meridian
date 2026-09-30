@@ -26,6 +26,8 @@ dayanıyor (POZİTİF KONTROL); (e) bankada ham araç JSON'u yok; hafızadan ger
 `bot_hafizasi_ara` (yalnız `hafiza: hepsi`); `--bot <ad>` argümanı `kadro.araclar`a göre `tools/list` süzer, `tools/call` dışarıdakini reddeder;
 çıktılar VERİ çiti + `scrub` + boyut tavanı. KABUL: alt küme iki yönlü çivili; dışarıdaki araç çağrısı reddedilir; çit sızmaz.
 
+**(2026-09-30 06:3xZ v3 notu: K-1 uygulandı, (b) GEÇTİ; `-z` yolu hafızaya YAZABİLİYOR → ikiz profil ZORUNLU; ücretsiz model ~5 dk asılabiliyor → G2 config'ine kapı `request_timeout_seconds` + yedek model zinciri, G3 birimine `TimeoutStopSec`/`KillMode`, G4 Telegram'a ara bildirim.)**
+
 **G2 — Sohbet profilleri üreteci (`ops/sohbet_profili_uret.py`).** Rapor profili (`deploy/hermes/profiles/<ad>/`) DEĞİŞMEZ; üreteç `<ad>-sohbet`
 ikizini TÜRETİR: SOUL = rapor SOUL'u + donuk "## Sohbet kipi" bölümü (hafızan var; hafızadan söylenen her şey TARİHLİ; BUGÜN hakkında yalnız
 araçla konuş; aracın yoksa "bilmiyorum" de, asla sonuç yazma), config = rapor config + `mcp_servers.meridian --bot <ad>` + `platform_toolsets.api_server:
