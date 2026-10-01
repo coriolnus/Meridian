@@ -178,3 +178,20 @@ pencere_acilis_2026_09_25: >
   yazılır" kararı. Araç bunları sırasıyla (okuma + konu-ilgili + atıflı) ve (ilgisiz, atıfsız) saymalı; pencere sonunda PK/NK
   sonucu ayrı raporlanır. Kapanış: ≥7 gün ∧ ≥5 karar → en erken 2026-10-02; üst sınır 21 gün → 2026-10-16.
 
+
+netlestirme_2026_10_01: >
+  (Rol-1, 2026-10-01 19:4xZ — HÜKÜM ÖNCESİ, SAYILAR GÖRÜLMEDEN tanım netleştirmesi; eşikler, τ, W, K, kill-list DEĞİŞMEDİ;
+  kaynak: scratchpad hüküm hazırlığı §6 + hafıza recall (doğrudan benzer yok; aile emsali EDG-083/084/089 KALDI) + memory
+  `olcum-aleti-esikten-sapar` (belirsizlikte geçme yönüne sapmayan tanım seçilir)) (1) K1 paydası S = pencere içindeki UTC
+  takvim günleri (oturum sınırları kart kaynağında ölçülemez; gün = vardiya; payı şişirmez). (2) Pencere ve D: commit/olay
+  zaman damgalarıyla [2026-09-25T10:33:10Z, 2026-10-02T10:33:10Z); hüküm bu andan SONRA. (3) K2 tanımı `esikler` cümlesidir
+  (eşiğin tanımlandığı yer bağlar; olcum_plani'ndaki "çiftlerin oranı" betimleyici rapor). (4) W=48 sa commit saatiyle kesin.
+  (5) K4 paydası D (tam; D_ilgili payda olarak geçme yönüne sapar — betimleyici olarak ayrıca raporlanır); "taze" = okuma
+  anında sayfa `is_stale=false`. (6) τ=0,15 ve sayfa token kümesi kartın yazdığı gibi (tam içerik) DEĞİŞTİRİLMEDEN koşulur
+  (değiştirmek kill #8); PK(b) tutmazsa kill #6 uygulanır. (7) Kill #4 "uygulanmazsa": kural pencere içinde KALDIRILMADI;
+  geç/eksik okumalar (09-26, 09-30 okumasız; 10-01 geç okuma; head -2/-4 kısmi okumalar — kısmi okuma "okuma" sayılır, oturum
+  başı kaydı GET'tir) K1'in kendisinde sayılır, ayrı kill tetiklemez. (8) Kill #6 kapsamı HARFİYEN: PK/NK tutmazsa HİÇBİR
+  sayı hüküm olarak yayılmaz (K1 ve D dahil); kart "GEÇERSİZ — alet doğrulanmadı" kapanır, K1/D yalnız betimleyici ara-rapor
+  olarak tarihli not, ve düzeltilmiş τ + açılışta KAYITLI kalibrasyonla YENİ kart açılır (memory `kill-esigi-adim0da-olculur`
+  dersi: τ kalibrasyon kaydı ADIM-0'da yoktu). (9) Sayım kodu research/olcumler/edg103_okuma_ilgi_atif/ 10-01 akşamı Opus
+  uygulayıcıya; hüküm 10-02 ≥10:33Z, gecikirse en geç 10-16 (kart üst sınırı).
