@@ -67,6 +67,15 @@
 #                                           açılışta), bot ağ geçidi yalnız ETKİNSE; motor yeniden BAŞLAMAZ. Kanıt: kapı
 #                                           `/llm/v1/models` yeni → 200 · eski → 401. Kasaya BAĞLIDIR: doğru yol
 #                                           `--kapi-bot <ad> --vault [--uret]`.
+#   sudo ./sir_rotasyon.sh --tohumla-sohbet → bot ağ geçidinin sohbet `.env`lerinin İLK yazımı (G3b Task 4, 2026-10-01;
+#                                           operatör K-G3b-2). ROTASYON DEĞİLDİR: değer üretmez, sormaz, kasaya yazmaz.
+#                                           Hedef + alan kümesi KOPYA TABLOSUNDAN (`_SOHBET_KOKU` altına yazan `env`
+#                                           satırları), değer her sırrın REFERANSINDAN (Agent render hedefi). YOK olan
+#                                           dosyayı 0600 ubuntu:ubuntu yazar; VAR olana DOKUNMAZ (eksik alanı ADIYLA söyler
+#                                           → çıkış 3, elle). Dizin ya da referans yoksa HİÇBİR ŞEY yazmaz. Restart YOK.
+#                                           `--kuru` ile. SIRA: A0 site.yml (dizinler) → kasaya ilk değer + Agent render
+#                                           (RUNBOOK) → BU → ilk rotasyon. Önce rotasyon koşarsa ön-denetim "hedef dosya
+#                                           YOK" der ve buraya yollar.
 #   ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 #                                           başlayacağını listeler, HİÇBİR ŞEY yazmaz
 #   (koşullu birim) `_KOSULLU_BIRIMLER` YALNIZ ETKİNSE yeniden başlar; değilse "ATLANDI (etkin değil: <durum>)"
@@ -613,6 +622,11 @@ _sir_birimleri() {
     #: reload yetmez — `KAPI_APIKEY` emsali) ve bot ağ geçidi sohbet profilinin `.env`inden AÇILIŞTA okur (KOŞULLU birim).
     #: Motor bu anahtarı KULLANMAZ → `meridian.service` YOK (v604 C4). Rapor botları timer'lı oneshot'tur (beyanlı, restart
     #: yok). Telegram dinleyicisi bot anahtarı OKUMAZ (`API_SERVER_KEY` ile ağ geçidine konuşur).
+    #: AÇIK DIŞLAMA — GLOB'DAN ÖNCE (G3b Task 4; Task 3 incelemesi M4): `BOT_KEY_MERIDIAN` bir BOT anahtarı DEĞİL motorun kapı
+    #: anahtarıdır (`KAPI_APIKEY`ın takma adı; tüketici kapı + MOTOR) ve `--kapi` onu `KAPI_APIKEY` adıyla döndürür. Glob onu
+    #: eşleseydi bir gün `rotasyon_siri: BOT_KEY_MERIDIAN` yazıldığında motor SESSİZCE yeniden başlamazdı. Harita YOK (1):
+    #: çağıran "tüketici birim haritası YOK" ile durur — fail-closed. Çivi: v604 C11.
+    BOT_KEY_MERIDIAN)             return 1 ;;
     BOT_KEY_*)                    echo "apisix.service meridian-botlar.service" ;;
     *) return 1 ;;
   esac
@@ -926,8 +940,13 @@ def _deger_dosyadan(yol: str) -> str:
     return d
 
 
-def _atomik_yaz(hedef: str, icerik: str, mod: str, sahip: str) -> None:
-    """Mod/sahip: `koru` ise hedefin MEVCUTU okunur (os.stat), yoksa argümandan alınır."""
+def _atomik_yaz(hedef: str, icerik: str, mod: str, sahip: str, yalniz_yeni: bool = False) -> None:
+    """Mod/sahip: `koru` ise hedefin MEVCUTU okunur (os.stat), yoksa argümandan alınır.
+
+    `yalniz_yeni` (G3b Task 4, `tohumla-env`): son adım `os.replace` DEĞİL `os.link`tir — çekirdek bağı YALNIZ hedef yoksa
+    kurar ve tek adımda kurar (`FileExistsError`). `os.replace` var olan dosyayı sessizce EZERDİ: çağıranın "yok mu"
+    denetimi ile yazım arasında doğan bir dosya (yarış) kaybolurdu. İçerik yine atomiktir (bağ, chmod/chown'u tamamlanmış
+    geçici dosyaya kurulur); geçici ad `finally` içinde silinir."""
     d = os.path.dirname(hedef) or "."
     st = os.stat(hedef) if os.path.exists(hedef) else None
     fd, gecici = tempfile.mkstemp(dir=d, prefix=".sir-rot-")
@@ -965,8 +984,15 @@ def _atomik_yaz(hedef: str, icerik: str, mod: str, sahip: str) -> None:
                 # üretimde betik sudo altında koşar ve buraya hiç düşmez. Sahiplik korunamadıysa
                 # dosya ZATEN test kökündedir ve canlı bir birimi etkilemez.
                 pass
-        os.replace(gecici, hedef)
-        gecici = ""
+        if yalniz_yeni:
+            try:
+                os.link(gecici, hedef)
+            except FileExistsError:
+                sys.exit(f"hedef ZATEN VAR: {hedef} — var olan dosyaya DOKUNULMAZ (yarış: denetimden sonra doğdu), "
+                         "yazım YAPILMADI")
+        else:
+            os.replace(gecici, hedef)
+            gecici = ""
     finally:
         if gecici and os.path.exists(gecici):
             os.unlink(gecici)
@@ -1188,6 +1214,14 @@ def main(argv: list[str]) -> None:
         except OSError:
             print("OKUNAMADI" if tek else "YOK")
             return
+        except UnicodeDecodeError:
+            # `tek` (yazım kapısı — G3b Task 4, Task 3 incelemesi M2): UTF-8 dışı bayt taşıyan dosyada alan SAYILAMAZ; bu
+            # bir ÖLÇÜM yokluğudur ve adıyla döner (çağıran `olcum_yok`). Eskiden traceback + çıkış 1'di. `tek`SİZ biçim
+            # (beyan dışı tarama) DEĞİŞMEDİ: orada hata metni görünür kalır — "YOK" basmak dosyayı taramadan geçirirdi.
+            if not tek:
+                raise
+            print("OKUNAMADI (UTF-8 değil)")
+            return
         if tek:
             try:
                 _env_satiri(ham, alan)
@@ -1197,6 +1231,28 @@ def main(argv: list[str]) -> None:
             print("VAR")
             return
         print("VAR" if re.search(r"^" + re.escape(alan) + r"=", ham, flags=re.M) else "YOK")
+    elif op == "tohumla-env":        # <hedef> <mod> <sahip> <grup> (<alan> <deger dosyasi>)+ — YALNIZ YOK olan hedef
+        # `--tohumla-sohbet`in (G3b Task 4) TEK yazım yolu: `.env`i SIFIRDAN kurar (`yaz-env` satırın değerini yazar, dosya
+        # KURMAZ). Değer YALNIZ dosyadan (`_deger_dosyadan`: boş → dur); argv'de yalnız ALAN ADI ve dosya YOLU vardır.
+        # Hedef VARSA reddeder — iki katman: önce `lexists` (okunur ileti), sonra `_atomik_yaz(..., yalniz_yeni=True)`
+        # içindeki `os.link` (denetim ile yazım arasındaki yarışı çekirdek kapatır). Bütün denetimler YAZIMDAN ÖNCE.
+        hedef, mod, sahip, grup = argv[2:6]
+        ciftler = argv[6:]
+        if not ciftler or len(ciftler) % 2:
+            sys.exit("tohumla-env: <alan> <değer dosyası> ÇİFTLERİ eksik ya da tek — yazım YAPILMADI")
+        if os.path.lexists(hedef):
+            sys.exit(f"hedef ZATEN VAR: {hedef} — var olan dosyaya DOKUNULMAZ, yazım YAPILMADI")
+        satirlar, gorulen = [], set()
+        for alan, dgr in zip(ciftler[0::2], ciftler[1::2]):
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", alan) or alan in gorulen:
+                sys.exit(f"tohumla-env: alan adı geçersiz ya da çift: {alan!r} — yazım YAPILMADI")
+            gorulen.add(alan)
+            d = _deger_dosyadan(dgr)
+            if "\n" in d or "\r" in d:
+                # Çok satırlı değer `.env`e İKİNCİ bir satır sokar (satır enjeksiyonu) — değer BASILMAZ, yalnız alan.
+                sys.exit(f"tohumla-env: {alan} değeri TEK satır değil — yazım YAPILMADI")
+            satirlar.append(f"{alan}={d}\n")
+        _atomik_yaz(hedef, "".join(satirlar), mod, f"{sahip}:{grup}", yalniz_yeni=True)
     else:
         sys.exit(f"bilinmeyen işlem: {op}")
 
@@ -1477,9 +1533,16 @@ _yaz() {
 # sudo izi altın izle çivili (v538 C7) — kapı o izi DEĞİŞTİRMEZ.
 # Kuru koşum ve `--esitle` bu kapıdan GEÇMEZ: kuru hiçbir şey yazmaz; eşitlemenin ölçüm geçişi eksik kopyayı
 # ZATEN yazımdan (yedek dahil) önce "kopya YOK — eşitleme yarım kalırdı" ile durdurur ve o durdurma korunur.
-# Çiviler: v604 A5 · A6 · A8 (alt komutlar × iki kip) · A9 · A10 · A11 · A16 (alan) · C7 (`--kapi-bot`).
+# ÖLÇÜLEMEDİ ≠ ARIZA (G3b Task 4; Task 3 incelemesi M2): hedef VAR ama alanı SAYILAMIYORSA (okuma izni yok · UTF-8 dışı bayt
+# · yardımcı düştü) hüküm `olcum_yok` (çıkış 2) ve yol + alan ADIYLA — eskiden UTF-8 dışı dosya python traceback'i + çıkış 1
+# veriyordu, okunamayan dosya ise "alan TAM BİR satır değil … elle düzelt" diye (yanıltıcı) raporlanıyordu. Sayım iletisi
+# YALNIZ gerçek sayım hatasında (ALAN YOK · ÇİFT SATIR) basılır. Kesin arıza (dosya YOK · sayım) da varsa hüküm `die`dır
+# (çıkış 1 — bilinen arıza bilinmeyeni ezer) ve ölçülemeyenler aynı iletide sayılır.
+# TOHUMLAMA ÖNERİSİ YOLA GÖREDİR (G3b Task 4): `--tohumla-sohbet` YALNIZ `$_SOHBET_KOKU/` altını ve YALNIZ YOK olan dosyayı
+# kurar; başka bir eksik yol için o komutu önermek yanlış yola sokardı — satır bunu ADIYLA söyler.
+# Çiviler: v604 A5 · A6 · A8 (alt komutlar × iki kip) · A9 · A10 · A11 · A16 (alan) · A16c (ölçülemedi) · C7 (`--kapi-bot`).
 _hedef_on_denetim() {
-  local alt="$1" _alt _sir tur yol alan _mod _sahip _onek eksik="" n=0 m=0 hal neden=""
+  local alt="$1" _alt _sir tur yol alan _mod _sahip _onek eksik="" n=0 m=0 o=0 hal neden=""
   while read -r _alt _sir tur yol alan _mod _sahip _onek; do
     [ "$_alt" = "$alt" ] || continue
     case "$tur" in env|url) ;; *) continue ;; esac
@@ -1490,20 +1553,36 @@ _hedef_on_denetim() {
       continue
     fi
     [ "$tur" = env ] || continue
-    hal="$(py alan-var "$KOK$yol" "$alan" tek)" \
-      || die "ön-denetim ÖLÇÜLEMEDİ: $yol [$alan] alanı okunamadı (yardımcı düştü) — HİÇBİR ŞEY yazılmadı"
-    if [ "$hal" = "VAR" ]; then continue; fi
+    # `||` dalı bir YUTMA değil ADLANDIRMADIR: yardımcının düşüşü aşağıda ÖLÇÜLEMEDİ satırına ve `olcum_yok`a gider.
+    hal="$(py alan-var "$KOK$yol" "$alan" tek)" || hal="ÖLÇÜLEMEDİ (yardımcı düştü)"
+    case "$hal" in
+      VAR) continue ;;
+      OKUNAMADI*|ÖLÇÜLEMEDİ*)
+        echo "!! alan ÖLÇÜLEMEDİ: $yol [$alan] — $hal (dosya VAR ama alan sayılamadı)" >&2
+        o=$((o+1)); continue ;;
+    esac
     echo "!! alan $hal: $yol [$alan]" >&2
     m=$((m+1))
   done < <(_kopyalar)
-  [ -n "$eksik" ] || [ "$m" -gt 0 ] || return 0
-  for yol in $eksik; do echo "!! hedef dosya YOK: $yol" >&2; done
-  [ -z "$eksik" ] || neden="$n hedef dosya YOK — önce: sudo ./sir_rotasyon.sh --tohumla-sohbet
-     (sohbet .env'leri; başka bir yolsa o dosyayı kuran adım)"
+  [ -n "$eksik" ] || [ "$m" -gt 0 ] || [ "$o" -gt 0 ] || return 0
+  for yol in $eksik; do
+    case "$yol" in
+      "$_SOHBET_KOKU"/*) echo "!! hedef dosya YOK: $yol — kurar: sudo ./sir_rotasyon.sh --tohumla-sohbet" >&2 ;;
+      *) echo "!! hedef dosya YOK: $yol — --tohumla-sohbet bu yolu KURMAZ (yalnız $_SOHBET_KOKU/ altı): dosyayı kuran adım" >&2 ;;
+    esac
+  done
+  [ -z "$eksik" ] || neden="$n hedef dosya YOK (yukarıda) — sohbet .env'i ise önce: sudo ./sir_rotasyon.sh --tohumla-sohbet
+     (YALNIZ YOK olan dosyayı kurar: dizini A0 site.yml'den, değeri referanslardan bekler; var olana dokunmaz)"
   [ "$m" = 0 ] || neden="${neden:+$neden;
      }$m hedefte alan TAM BİR satır değil (yukarıda) — --tohumla-sohbet dosyayı YALNIZ YOKSA yazar, var olan
      dosyanın eksik/çift alanını DÜZELTMEZ: elle düzelt (eksikse değersiz '<ALAN>=' satırı ekle — değeri rotasyon
      yazar; çiftse TEK satıra indir) ya da operatöre bırak"
+  if [ -z "$eksik" ] && [ "$m" = 0 ]; then
+    olcum_yok "$(_bayrak "$alt"): $o hedefin alanı ÖLÇÜLEMEDİ (yukarıda — dosya okunamadı: izin ya da UTF-8 dışı bayt).
+     Alan sayılamadan yazım başlamaz (yazım alanı bulamayıp yarıda ölebilirdi). HİÇBİR ŞEY yazılmadı: yedek, değer üretimi, kasa ve kopya
+     satırı yok. Dosyayı (değerini BASMADAN) incele: sudo stat <yol> · sudo file <yol>"
+  fi
+  [ "$o" = 0 ] || neden="$neden; ayrıca $o hedefin alanı ÖLÇÜLEMEDİ (yukarıda)"
   die "$(_bayrak "$alt"): $neden. HİÇBİR ŞEY yazılmadı: yedek, değer
      üretimi, kasa ve kopya satırı yok — rotasyon yarıda kalmadı, hiç başlamadı."
 }
@@ -1968,13 +2047,25 @@ kapi() {
   _uret b64
   _yaz kapi
   _yeniden_baslat kapi
-  _farksal "kapı /models" "$ISLIK/yeni" "$ISLIK/eski" "$KAPI_UC/models" "apikey" "-" "200" "401 403"
+  _kapi_kanit "$ISLIK/yeni" "$ISLIK/eski"
+  echo ">> geri alma: sudo cp -p $YEDEK/etc/meridian/kapi_apikey /etc/meridian/kapi_apikey (+ .env-apisix) ve $(_recete_birimleri $(_birimler kapi)) yeniden başlat"
+}
+
+#: KAPI KANITI — eski yol (`kapi`) ve kasa yolu (`vault_rotasyon` → `_kasa_kaniti`, G3b Task 4) AYNI ölçümü koşar; gövde
+#: TEK yerde (iki kopya sessizce ayrışırdı). `_kapi_kanit <yeni değer dosyası> <eski değer dosyası>`: kapı `/models` iki
+#: hüküm (yeni 200 · eski 401/403) + motorun KENDİ sürecinden kapıya konuşabildiği (`/api/secrets/test/nous` ok:true).
+_kapi_kanit() {
+  _farksal "kapı /models" "$1" "$2" "$KAPI_UC/models" "apikey" "-" "200" "401 403"
   local _kapi_hal; _kapi_hal="$(_nous_hali)"
   [ "$_kapi_hal" = "OK" ] || olcum_yok "motor /api/secrets/test/nous → $_kapi_hal (OK bekleniyordu)
      — motor kapıya konuşamıyor ya da yüzeye ULAŞILAMADI; ikisi aynı şey DEĞİLDİR ve hüküm ikisinde de
      'geçti' olamaz."
   oldu "motor içi kanıt: /api/secrets/test/nous ok:true"
-  echo ">> geri alma: sudo cp -p $YEDEK/etc/meridian/kapi_apikey /etc/meridian/kapi_apikey (+ .env-apisix) ve $(_recete_birimleri $(_birimler kapi)) yeniden başlat"
+}
+
+#: Kanıt planı — kasa yolunun kuru raporu gerçek koşumun ölçeceği yüzeyi söyler (`_kapi_bot_kanit_plani` emsali).
+_kapi_kanit_plani() {
+  echo "  kanıt: GET $KAPI_UC/models (apikey) — yeni → 200 · eski → 401/403; motor /api/secrets/test/nous ok:true"
 }
 
 # KAPININ YÖNETİM ANAHTARI — `--kapi` İLE KARIŞTIRILMAZ. `KAPI_APIKEY` kapının TÜKETİCİ anahtarıdır
@@ -2165,10 +2256,16 @@ kapi_bot() {
   _uret b64
   _yaz "$alt"
   _yeniden_baslat "$alt"
-  _farksal "kapı /models (bot_$bot)" "$ISLIK/yeni" "$ISLIK/eski" "$KAPI_UC/models" "apikey" "-" "200" "401 403"
-  _kapi_bot_botlar_notu
+  _kapi_bot_kanit "$bot" "$ISLIK/yeni" "$ISLIK/eski"
   _envanter_esitlik "$alt"
   echo ">> geri alma: $YEDEK altındaki $(_kopyalar | awk -v a="$alt" '$1==a' | wc -l | tr -d ' ') kopyayı geri koy ve $(_recete_birimleri $(_birimler "$alt")) yeniden başlat"
+}
+
+#: BOT KAPI KANITI — eski yol (`kapi_bot`) ve kasa yolu (`_kasa_kaniti`, G3b Task 4) AYNI ölçüm; gövde TEK yerde.
+#: `_kapi_bot_kanit <ad> <yeni değer dosyası> <eski değer dosyası>`: kapı `/models` iki hüküm + bot ağ geçidi notu.
+_kapi_bot_kanit() {
+  _farksal "kapı /models (bot_$1)" "$2" "$3" "$KAPI_UC/models" "apikey" "-" "200" "401 403"
+  _kapi_bot_botlar_notu
 }
 
 #: Kanıt planı — kuru rapor gerçek koşumun ölçeceği yüzeyi söyler (bedel yasası; `_api_sunucu_kanit_plani` emsali).
@@ -2641,10 +2738,13 @@ for g in kv:
 #: `kapi_apikey` hem takma adı `bot_key_meridian` taşır, ve kapının yan dosyası satırını TAKMA
 #: ADLA yazar. Ada göre sorsaydık `--kapi --vault` rotasyonu kapıyı yeniden başlatmazdı: yan
 #: dosya yeni değere döner, konteyner eski değeri ortamında tutar ve bot 401 alır.
+#: İKİNCİ KİP `alan` (G3b Task 4 — Task 3 incelemesi M1): `<yan dosya>\t<alan>\t<önek | ->` — o kasa yolunu taşıyan HER
+#: satır (`_yan_render_bekle` restart'tan ÖNCE bunları kasadaki yeni değere kıyaslar; kuru plan basar). Aynı sorgu, aynı
+#: yol çözümü: alan kipi dosya kipinin süzgecinin İÇİNDEDİR (v491 T10 mutasyonu ikisini birden ısırır).
 _vault_yan_dosyalari() {
   "$PYTHON_BIN" -c '
 import sys, yaml
-hedef_yol = sys.argv[2]
+hedef_yol, kip = sys.argv[2], sys.argv[3]
 veri = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
 indeks = {g["ad"]: g for g in veri["vault_kv"]}
 def coz(ad):
@@ -2653,8 +2753,13 @@ def coz(ad):
     return indeks[b]["vault_yolu"] if b else g["vault_yolu"]
 for d in veri["vault_dosyalar"]:
     if any(coz(x["sir"]) == hedef_yol for x in d["satirlar"]):
-        print(d["yol"], d.get("yeniden_baslat") or "-", sep="\t")
-' "$VAULT_ENVANTER" "$1"
+        if kip != "alan":
+            print(d["yol"], d.get("yeniden_baslat") or "-", sep="\t")
+            continue
+        for x in d["satirlar"]:
+            if coz(x["sir"]) == hedef_yol:
+                print(d["yol"], x["alan"], x.get("onek") or "-", sep="\t")
+' "$VAULT_ENVANTER" "$1" "${2:-dosya}"
 }
 
 #: Bir kasa sırrının YENİDEN BAŞLATILACAK birimleri — gerçek koşum (`vault_rotasyon`) ile kuru
@@ -2893,6 +2998,11 @@ _vault_kuru_rapor() {
     while IFS=$'\t' read -r yd yb; do
       echo "    · yan dosya: $yd   (yeniden başlat: $yb)"
     done < <(_vault_yan_dosyalari "$yol")
+    # Gerçek koşumun restart ÖNCESİ yan dosya ölçümü (G3b Task 4, `_yan_render_bekle`) — bedel yasası: planda görünür.
+    if _kasa_kaniti "$alt" var; then
+      echo "  yan dosya render kanıtı: restart'tan ÖNCE her alan kasadaki yeni değere BİREBİR (tavan $VAULT_RENDER_TAVAN_S s; aşımda ÖLÇÜLEMEDİ — eski kanal YAZILMAZ, restart YOK):"
+      _yan_alan_plani "$yol"
+    fi
     echo "  eski kanal (iki-kanal dönemi) AYNI pencerede kasadan gelen değerle yazılır:"
     _kopyalar | awk -v a="$alt" -v k="$sir" '$1==a && $2==k {printf "    · %s %s\n", $4, ($5=="-"?"":"["$5"]")}'
     hepsi="$hepsi $(_vault_tuketici_birimleri "$yol" "$sir")"
@@ -2905,6 +3015,8 @@ _vault_kuru_rapor() {
   echo "  değer: $(_kuru_deger_metni "$alt")"
   _deger_kaynagi_beyani "$alt" "$(_bayrak "$alt")"
   echo "  render bekleme tavanı: $VAULT_RENDER_TAVAN_S s (yoklama aralığı $VAULT_RENDER_ARALIK_S s; aşımda ÖLÇÜLEMEDİ, eski kanal YAZILMAZ)"
+  # Restart SONRASI tüketici kanıtı (G3b Task 4) — kanıtı olmayan alt komutta satır YOK (gerçek koşum "ÖLÇÜLMEDİ (None)" der).
+  if _kasa_kaniti "$alt" var; then _kasa_kaniti "$alt" plan; fi
   echo "  ÖN KOŞUL: sudo systemctl stop meridian-tick-watchdog.timer (sonda geri aç)"
   echo "  ÖN KOŞUL: kasa AÇIK (mühürsüz) ve vault-agent AYAKTA olmalı — yoksa render gelmez"
   echo "  yedek dizini: $KOK/root/sir-yedek-<UTC ts>-$alt"
@@ -2964,6 +3076,97 @@ _render_bekle() {
   _gecen_s "$bas"; RENDER_GECEN="$GECEN_S"
 }
 
+#: KASA YOLUNUN TÜKETİCİ KANITI (G3b Task 4 — Task 3 incelemesi M1, Rol-1 0. madde). Genel döngü 2026-10-01'e dek bu alt
+#: komutlarda "değer-doğruluğu ÖLÇÜLMEDİ (None)" basıp geçiyordu: render KANONİK kopyada ölçülüyor, ama kapı değeri docker'ın
+#: İKİNCİ `--env-file`ından (`.env-apisix.vault`, Agent yazar) alır ve aynı anahtarda o KAZANIR — yan dosya render'ı aynı turda
+#: geride kalırsa kapı ESKİ anahtarla açılır, bot 401 alır ve hiçbir satır söylemezdi. Bu alt komutlarda artık iki ölçüm:
+#: (1) restart'tan ÖNCE yan dosya alanları kasadaki yeni değere BİREBİR (`_yan_render_bekle`), (2) restart'tan SONRA eski
+#: yolun AYNI kanıtı (`_farksal` — yeni 200 · eski 401; ESKİ değer yazım ÖNCESİ KASADAN okunan yedektir). Ölçülemezse
+#: `olcum_yok` (çıkış 2) — sessiz başarı yok. Botlar etkin değilken `--api-sunucu` kanıtı Task 2 davranışıyla "ölçülemedi —
+#: birim etkin değil" der (çıkış 0; yeni değer ilk açılışta okunur).
+#: KAPSAM BEYANI (bedel yasası): aynı sınıfın öteki üyeleri — `--tenant` (`.env-cp.vault` DATAPLANE), `--apisix-admin` ve
+#: `--openrouter` (`.env-apisix.vault` · `.env.vault`) — yan dosya ölçümüne BU TURDA girmedi (operatör brief'i üç alt komutu
+#: adlandırdı; o yolların çivi dünyaları yan dosya render'ı modellemiyor). `--openrouter`in kendi kanıtı (kapı chat) vardır.
+#: TEK LİSTE: `_kasa_kaniti <alt> var|plan|kos [yeni] [eski]` — `var` üyelik (yan dosya ölçümü ve kanıt aynı kümeye bakar),
+#: `plan` kuru satırı, `kos` kanıt. Üyelik dışı alt komut 1 döner. Yalnız TEK sırlı alt komutlar (kanıt son sırrın kanonuna
+#: ve yedeğine bakar).
+_kasa_kaniti() {
+  local alt="$1" kip="$2"
+  case "$alt" in
+    kapi|api-sunucu|kapi-bot-*) ;;
+    *) return 1 ;;
+  esac
+  case "$kip" in
+    var) return 0 ;;
+    plan|kos) ;;
+    *) die "_kasa_kaniti: bilinmeyen kip '$kip' (var | plan | kos)" ;;
+  esac
+  case "$alt" in
+    kapi)       if [ "$kip" = plan ]; then _kapi_kanit_plani; else _kapi_kanit "$3" "$4"; fi ;;
+    api-sunucu) if [ "$kip" = plan ]; then _api_sunucu_kanit_plani; else _api_sunucu_kanit "$3" "$4"; fi ;;
+    kapi-bot-*) if [ "$kip" = plan ]; then _kapi_bot_kanit_plani "${alt#kapi-bot-}"
+                else _kapi_bot_kanit "${alt#kapi-bot-}" "$3" "$4"; fi ;;
+  esac
+}
+
+#: YAN DOSYA RENDER BEKLEME — restart'tan ÖNCE (G3b Task 4). `_yan_render_bekle <kasa yolu> <yeni kanon dosyası>`: kasa
+#: yolunu taşıyan HER yan dosya alanı (`_vault_yan_dosyalari <yol> alan` — envanter `vault_dosyalar`, takma ad çözülmüş)
+#: kasadaki yeni değere BİREBİR olana kadar yoklanır (`py esit` — önek soyulur, DEĞER BASILMAZ). Tavan ve aralık kanonik
+#: render'ınkiyle AYNI sabitlerdir (`VAULT_RENDER_TAVAN_S` / `_ARALIK_S`; Agent aynı turda yazar), süre TEK pencerede
+#: ölçülür. Aşılırsa `olcum_yok`: ESKİ KANAL YAZILMAZ ve HİÇBİR birim yeniden BAŞLATILMAZ — kapının eski anahtarla açılması
+#: tam da önlenen hâldir; kasa YENİ değerdedir ve geri alma reçetesi (`_genel_kasa_recetesi`) onu söyler. Yan dosyası
+#: OLMAYAN yol (`api_server_key` — Hermes `.env.vault` okumaz) ADIYLA söylenir.
+#: Okunamayan envanter de `olcum_yok`tur: hangi dosyanın beklendiği bilinmeden restart edilmez. Çivi: v604 C10/C10b.
+_yan_render_bekle() {
+  local yol="$1" kanon="$2" satirlar yd alan onek bas hal bekleyen
+  satirlar="$(_vault_yan_dosyalari "$yol" alan)" \
+    || olcum_yok "yan dosya taraması yapılamadı ($VAULT_ENVANTER) — kapının hangi dosyadan okuduğu bilinmeden
+     restart edilmez. ESKİ KANAL YAZILMADI, birim YENİDEN BAŞLATILMADI."
+  if [ -z "$satirlar" ]; then
+    echo "  · yan dosya YOK ($yol): bu kasa yolunu taşıyan Agent yan dosyası yok — tüketici kanonik kopyadan ya da eski"
+    echo "    kanaldan okur (ölçülecek ikinci render yok)"
+    return 0
+  fi
+  adim "yan dosya render bekle: $yol (restart'tan ÖNCE — tavan $VAULT_RENDER_TAVAN_S s)"
+  _saat_oku; bas="$SAAT_MS"       # MONOTONİK (bkz. `_saat_oku`)
+  while :; do
+    bekleyen=""
+    while IFS=$'\t' read -r yd alan onek; do
+      [ -n "$yd" ] || continue
+      hal="$(py esit dosya "$kanon" - - env "$KOK$yd" "$alan" "$onek")" \
+        || die "yan dosya kıyası ÖLÇÜLEMEDİ (yardımcı düştü): $yd [$alan]"
+      [ "$hal" = "EŞİT" ] || bekleyen="${bekleyen:+$bekleyen · }$yd [$alan] → $hal"
+    done <<< "$satirlar"
+    [ -n "$bekleyen" ] || break
+    _gecen_s "$bas"
+    [ "$GECEN_S" -lt "$VAULT_RENDER_TAVAN_S" ] || olcum_yok "yan dosya render bekleme aşıldı ($VAULT_RENDER_TAVAN_S s): $bekleyen
+     Kanonik kopya kasadaki YENİ değerde ama yan dosya DEĞİL: kapı (docker'ın İKİNCİ --env-file'ı aynı anahtarda KAZANIR)
+     yeniden başlasaydı ESKİ anahtarla açılırdı ve tüketici 401 alırdı. ESKİ KANAL YAZILMADI, birim YENİDEN BAŞLATILMADI;
+     kasa YENİ değerde — geri alma reçetesi aşağıda. Bak: systemctl status vault-agent · journalctl -u vault-agent -n 50 --no-pager"
+    sleep "$VAULT_RENDER_ARALIK_S"
+  done
+  _gecen_s "$bas"
+  while IFS=$'\t' read -r yd alan onek; do
+    [ -n "$yd" ] || continue
+    oldu "yan dosya render ÖLÇÜLDÜ: $yd [$alan] ($GECEN_S s) — kasadaki yeni değerle BİREBİR (DEĞER BASILMAZ)"
+  done <<< "$satirlar"
+}
+
+#: Kuru planın yan dosya alanları — gerçek koşumun `_yan_render_bekle`siyle AYNI sorgu (iki liste yok).
+_yan_alan_plani() {
+  local satirlar yd alan onek
+  satirlar="$(_vault_yan_dosyalari "$1" alan)" \
+    || olcum_yok "yan dosya taraması yapılamadı ($VAULT_ENVANTER) — kuru plan yan dosya ölçümünü SÖYLEYEMEZ"
+  if [ -z "$satirlar" ]; then
+    echo "    · yan dosya YOK — bu kasa yolunu taşıyan Agent yan dosyası yok (ölçülecek ikinci render yok)"
+    return 0
+  fi
+  while IFS=$'\t' read -r yd alan onek; do
+    [ -n "$yd" ] || continue
+    echo "    · $yd [$alan]"
+  done <<< "$satirlar"
+}
+
 #: KANAL BEYANI — genel döngünün SON satırı (TSK-064 iki-kanal kapanışı, 2026-09-29). `_kanal_beyani <alt> <render
 #: hedefleri>`: alt komutun kopya tablosunda render hedefi OLMAYAN bir satır (asıl dosyadaki sır satırı · motor
 #: deposu) varsa iki kanal AÇIKTIR ve eski metin basılır; yoksa "TEK KANAL" — `--tenant` 2026-09-29'dan beri
@@ -2996,7 +3199,7 @@ _kanal_beyani() {
 }
 
 vault_rotasyon() {
-  local alt="$1" bagli ad yol hedef sir birincil poz="" donen="" yazilmadi hedefler=""
+  local alt="$1" bagli ad yol hedef sir birincil poz="" donen="" yazilmadi hedefler="" kanit_yol=""
   echo "=== ROTASYON (KASADAN): $(_bayrak "$alt") --vault ==="
   bagli="$(_vault_kv_satirlari $(_alt_sirlari "$alt"))"
   # BAĞSIZ ALT KOMUT (TSK-064, 2026-09-17; `--db` 2026-09-24'ten beri BAĞLI — bugün böyle bir alt
@@ -3094,6 +3297,12 @@ vault_rotasyon() {
     fi
     oldu "render ÖLÇÜLDÜ: $hedef ($RENDER_GECEN s) — kanonik kopya kasadaki değerle BİREBİR"
     hedefler="$hedefler $hedef"
+    # YAN DOSYA RENDER'I — tüketici kanıtı olan alt komutlarda eski kanaldan ve restart'tan ÖNCE (G3b Task 4; gerekçe
+    # `_kasa_kaniti` şerhinde). Kanıtın ESKİ ayağı bu yolun yedeğidir (`$YEDEK/vault/<yol>`, yukarıda alındı).
+    if _kasa_kaniti "$alt" var; then
+      _yan_render_bekle "$yol" "$ISLIK/vault_yeni_kanon"
+      kanit_yol="$yol"
+    fi
     # `--uret`: değeri operatör GÖRMEDİ — nerede durduğu söylenir (ör. `--dash`ın pano jetonunu elle eşitleyen
     # okur oradan alır); değerin kendisi BASILMAZ.
     [ "$URET" = 0 ] \
@@ -3141,7 +3350,15 @@ vault_rotasyon() {
           [ "$nhal" = "OK" ] || olcum_yok "motor /api/secrets/test/nous → $nhal (OK bekleniyordu; --vault NOUS varlık kanıtı)"
           oldu "motor kanıtı: /api/secrets/test/nous ok:true (VARLIK kanıtı — değer-doğruluğu ÖLÇÜLMEDİ, None)" ;;
       esac ;;
-    *) echo "  değer-doğruluğu bu alt komutta ÖLÇÜLMEDİ (None) — kanıt yüzeyi rotasyon yolundadır." ;;
+    *)
+      # TÜKETİCİ KANITI (G3b Task 4): eski yolun AYNI ölçümü — YENİ = kasadaki değerin kanonu, ESKİ = yazım ÖNCESİ kasa
+      # değerinin yedeği. Kanıtı olmayan alt komutta eski satır AYNEN (kapsam beyanı `_kasa_kaniti` şerhinde).
+      if _kasa_kaniti "$alt" var; then
+        adim "kanıt (tüketici): $(_bayrak "$alt") — YENİ değer (kasa) · ESKİ değer (yazım ÖNCESİ kasa yedeği)"
+        _kasa_kaniti "$alt" kos "$ISLIK/vault_yeni_kanon" "$YEDEK/vault/$kanit_yol"
+      else
+        echo "  değer-doğruluğu bu alt komutta ÖLÇÜLMEDİ (None) — kanıt yüzeyi rotasyon yolundadır."
+      fi ;;
   esac
 
   adim "kanıt: envanter eşitlik ölçümü ($(_bayrak "$alt"))"
@@ -3894,6 +4111,160 @@ esitle() {
 }
 
 # =================================================================================================
+# TOHUMLAMA — BOT AĞ GEÇİDİNİN SOHBET `.env`LERİNİN İLK YAZIMI (`--tohumla-sohbet`; G3b Task 4, 2026-10-01)
+# =================================================================================================
+# NİYE VAR. `_yaz_satir env` bir `.env` KURAMAZ (satırın DEĞERİNİ yazar) ve ön-denetim (`_hedef_on_denetim`) hedef yokken
+# her rotasyonu yazımdan ÖNCE durdurur. Sohbet `.env`leri A1'de BUGÜN YOK (ölçüldü 2026-09-30): A0 dizinleri kurar ama `.env`e
+# dokunmaz (v601). İlk dosyayı kuran tek yol budur — operatör kararı K-G3b-2 "araç oluştursun": YOKSA oluşturur, VARSA
+# dokunmaz; değer ekrana, argv'ye ya da log'a düşmez. ROTASYON DEĞİLDİR: değer üretmez, sormaz, kasaya yazmaz, eşitlemez
+# (`--vault`/`--esitle`/`--uret` ile ayrıştırmada reddedilir).
+# KÜME TABLODAN TÜRER — ikinci liste YOK (tek-kaynak; v604 D9): hedefler = `_kopyalar`ın `$_SOHBET_KOKU/` altına yazan `env`
+# satırları; her hedefin alanları = o yola yazan satırların alanları; her alanın değeri = sırrının tablodaki REFERANS satırı
+# (İLK satır — `esitle` emsali), `py cikar` ile 0600 işlik dosyasına çıkarılır ve yardımcıya YALNIZ YOLU verilir. Tabloya
+# yeni bir sohbet satırı girdiği an tohumlama onu da yazar.
+# SIRA (operatör reçetesi, deploy/oracle-a1/RUNBOOK.md G3b): A0 site.yml (dizinler, 0700 ubuntu) → kasaya ilk değer + Agent
+# render (referanslar) → BU → ilk rotasyon.
+# KAPILAR, hepsi HİÇBİR yazımdan ÖNCE: (0) tablo biçimi (önek yok · referans sohbet kökünün DIŞINDA · aynı alana tek satır);
+# (1) her hedef DİZİNİ VAR — yoksa DUR: araç dizin AÇMAZ (`_dizin_hazirla` root sahipli açardı, hermes evinde yanlış; dizin
+# A0'ın işidir); (2) her REFERANS VAR — yoksa DUR (değer uydurulmaz; ilk değer RUNBOOK borusuyla kasaya, Agent render eder);
+# (3) her referans TEK satırlık dolu bir değer (çok satır `.env`e satır sokardı).
+# YAZIM: YOK olan hedef `py tohumla-env` ile — 0600 ubuntu:ubuntu, `KEY=değer` satırları, aynı dizinde mkstemp + chmod +
+# chown + `os.link` (hedef VARSA reddeder: denetim ile yazım arasındaki yarışı İKİNCİ katman kapatır). VAR olan hedefe
+# DOKUNULMAZ (içerik, mtime, mod, sahip); eksik/çift alanı ADIYLA söylenir ve YAZILMAZ — var olan dosyayı düzeltmek
+# operatörün elidir (rotasyon da o dosyayı ön-denetimde durdurur). Özet `yazıldı N · dokunulmadı M · eksik alanlı K`
+# (K ⊆ M); K > 0 → çıkış 3 (operatör reçetesi elle inceleme ister); alanı ÖLÇÜLEMEYEN VAR dosya → çıkış 2.
+# RESTART YOK: birimler etkin değil (G3c) ve tohumlanan değer referansla AYNIDIR. YEDEK YOK: yazılan her dosya YOKTU.
+# Çiviler: v604 D1–D11.
+_tohum_plani() {
+  # `<hedef>\t<alan>\t<sır>\t<ref tür>\t<ref yol>\t<ref alan>\t<ref önek>\t<önek>\t<alt>` — referans sırrın İLK satırı
+  # (satırlar BİTİŞİK — REFERANS KURALI). awk tablonun TAMAMINI okur (erken çıkış YOK — TABLO BORUSU şerhi).
+  _kopyalar | awk -v k="$_SOHBET_KOKU/" '
+    $2 != s { s = $2; rt = $3; ry = $4; ra = $5; ro = $8 }
+    $3 == "env" && index($4, k) == 1 { print $4 "\t" $5 "\t" $2 "\t" rt "\t" ry "\t" ra "\t" ro "\t" $8 "\t" $1 }'
+}
+
+tohumla_sohbet() {
+  local plan hedefler refs yol alan sir rt ry ra ro onek _alt d dizinler="" hal etiket alanlar
+  local eksik cift okunamaz sorun dizin_yok="" ref_yok="" n=0 m=0 k=0 o=0 elle=""
+  echo "=== TOHUMLAMA: --tohumla-sohbet (sohbet .env'leri — alan kümesi KOPYA TABLOSUNDAN; DEĞER BASILMAZ) ==="
+  [ "$KURU" = 0 ] || echo "  KURU KOŞUM — HİÇBİR ŞEY YAZILMAZ (dosya, dizin, yedek)"
+  plan="$(_tohum_plani)"
+  [ -n "$plan" ] || die "tohumlama planı BOŞ: kopya tablosunda $_SOHBET_KOKU/ altına yazan env satırı YOK — HİÇBİR ŞEY yazılmadı"
+  # (0) BİÇİM — bugünkü tablo bu biçimdedir; değişirse araç SESSİZCE yanlış yazmaz, durur.
+  while IFS=$'\t' read -r yol alan sir rt ry ra ro onek _alt; do
+    [ "$onek" = "-" ] || die "tohumlama önekli satırı desteklemez: $yol [$alan] önek=$onek — tablo değişti, araç güncellenmeli. HİÇBİR ŞEY yazılmadı"
+    case "$ry" in
+      "$_SOHBET_KOKU"/*) die "referans sohbet kökünün İÇİNDE: $sir → $ry — tohumlama kendi hedefinden okuyamaz (tablo sırası bozuk). HİÇBİR ŞEY yazılmadı" ;;
+    esac
+    case "$rt" in dosya|env|url) ;; *) die "referans okunamayan kanalda: $sir ($rt) — HİÇBİR ŞEY yazılmadı" ;; esac
+  done <<< "$plan"
+  cift="$(printf '%s\n' "$plan" | awk -F'\t' 'g[$1 FS $2]++ {print $1 " [" $2 "]"}')"
+  [ -z "$cift" ] || die "aynı hedefin aynı alanına İKİ tablo satırı yazıyor: $cift — tablo bozuk. HİÇBİR ŞEY yazılmadı"
+  hedefler="$(printf '%s\n' "$plan" | awk -F'\t' '!g[$1]++ {print $1}')"
+  refs="$(printf '%s\n' "$plan" | awk -F'\t' '!g[$3]++ {print $3 "\t" $4 "\t" $5 "\t" $6 "\t" $7}')"
+
+  # (1) DİZİNLER — araç dizin AÇMAZ.
+  for yol in $hedefler; do
+    d="$(dirname "$yol")"
+    case " $dizinler " in *" $d "*) continue ;; esac
+    dizinler="${dizinler:+$dizinler }$d"
+    if sudo test -d "$KOK$d"; then echo "  dizin: $d → VAR"; else echo "  dizin: $d → YOK"; dizin_yok="${dizin_yok:+$dizin_yok }$d"; fi
+  done
+  if [ -n "$dizin_yok" ] && [ "$KURU" = 0 ]; then
+    for d in $dizin_yok; do echo "!! dizin YOK: $d" >&2; done
+    die "--tohumla-sohbet: hedef dizini YOK (yukarıda) — önce A0 site.yml (.hermes-botlar dizinlerini 0700 ubuntu kurar).
+     Araç dizin AÇMAZ: root sahipli bir dizin hermes evinde yanlış olurdu. HİÇBİR ŞEY yazılmadı."
+  fi
+
+  # (2) REFERANSLAR — değer okunmaz, yalnız VAR/YOK (`py var`).
+  while IFS=$'\t' read -r sir rt ry ra ro; do
+    etiket=""; [ "$ra" = "-" ] || etiket=" [$ra]"
+    # `||` bir YUTMA değil ADLANDIRMADIR: yardımcının düşüşü VAR olmayan referans olarak aşağıda durdurur.
+    hal="$(py var "$rt" "$KOK$ry" "$ra")" || hal="ÖLÇÜLEMEDİ (yardımcı düştü)"
+    echo "  referans: $sir · $ry$etiket → $hal"
+    [ "$hal" = "VAR" ] || ref_yok="$ref_yok!! referans $hal: $ry$etiket ($sir)"$'\n'
+  done <<< "$refs"
+  if [ -n "$ref_yok" ] && [ "$KURU" = 0 ]; then
+    printf '%s' "$ref_yok" >&2
+    die "--tohumla-sohbet: referans YOK/boş (yukarıda) — önce kasaya değer + Vault Agent render (RUNBOOK: ilk değer
+     borusu); değer UYDURULMAZ. HİÇBİR ŞEY yazılmadı."
+  fi
+
+  # (3) DEĞERLER — işliğe (0700) çıkarılır, TEK satır + dolu olmaları YAZIMDAN ÖNCE ölçülür. Kuru koşum değer okumaz.
+  if [ "$KURU" = 0 ]; then
+    while IFS=$'\t' read -r sir rt ry ra ro; do
+      py cikar "$rt" "$KOK$ry" "$ra" "$ro" "$ISLIK/ref_$sir"
+      sudo awk 'NF { d++ } END { exit !(NR == 1 && d == 1) }' "$ISLIK/ref_$sir" \
+        || die "referans TEK satırlık dolu bir değer değil: $ry ($sir) — .env'e yazılamaz (boş değer ya da satır
+     enjeksiyonu). HİÇBİR ŞEY yazılmadı (DEĞER BASILMAZ)."
+    done <<< "$refs"
+  fi
+
+  # (4) HEDEFLER — YOK olan yazılır, VAR olana dokunulmaz.
+  for yol in $hedefler; do
+    alanlar="$(printf '%s\n' "$plan" | awk -F'\t' -v h="$yol" '$1 == h {printf "%s%s", (n++ ? " " : ""), $2}')"
+    if sudo test -e "$KOK$yol" || sudo test -L "$KOK$yol"; then
+      m=$((m+1)); eksik=""; cift=""; okunamaz=""
+      for alan in $alanlar; do
+        # `||` ADLANDIRMADIR (yukarıdaki gibi): düşüş ÖLÇÜLEMEDİ kovasına gider.
+        hal="$(py alan-var "$KOK$yol" "$alan" tek)" || hal="ÖLÇÜLEMEDİ (yardımcı düştü)"
+        case "$hal" in
+          VAR) ;;
+          "ALAN YOK") eksik="${eksik:+$eksik, }$alan"
+                      _alt="$(printf '%s\n' "$plan" | awk -F'\t' -v h="$yol" -v a="$alan" '$1 == h && $2 == a {print $9}')"
+                      elle="$elle     $yol: değersiz '$alan=' satırı ekle → sudo ./sir_rotasyon.sh $(_bayrak "$_alt") --esitle"$'\n' ;;
+          "ÇİFT SATIR"*) cift="${cift:+$cift, }$alan"
+                         elle="$elle     $yol: '$alan=' satırlarını TEK satıra indir"$'\n' ;;
+          *) okunamaz="${okunamaz:+$okunamaz, }$alan ($hal)" ;;
+        esac
+      done
+      sorun=""
+      [ -z "$eksik" ] || sorun="eksik: $eksik"
+      [ -z "$cift" ] || sorun="${sorun:+$sorun · }çift: $cift"
+      [ -z "$okunamaz" ] || sorun="${sorun:+$sorun · }alan ÖLÇÜLEMEDİ: $okunamaz"
+      [ -z "$eksik$cift" ] || k=$((k+1))
+      [ -z "$okunamaz" ] || o=$((o+1))
+      if [ -z "$sorun" ]; then sorun="alanlar tam"; fi
+      if [ "$KURU" = 0 ]; then
+        echo "  hedef: $yol → VAR ($sorun) — dokunulmadı"
+      else
+        echo "  hedef: $yol → VAR ($sorun) — dokunulmayacak"
+      fi
+      continue
+    fi
+    n=$((n+1))
+    if [ "$KURU" != 0 ]; then
+      echo "  hedef: $yol → YOK — yazılacak alanlar: $alanlar (0600 ubuntu:ubuntu)"
+      continue
+    fi
+    # Argümanlar YALNIZ alan ADI ve değer dosyasının YOLU — değer argv'ye GİRMEZ (v604 D7).
+    set --
+    for alan in $alanlar; do
+      sir="$(printf '%s\n' "$plan" | awk -F'\t' -v h="$yol" -v a="$alan" '$1 == h && $2 == a {print $3}')"
+      set -- "$@" "$alan" "$ISLIK/ref_$sir"
+    done
+    py tohumla-env "$KOK$yol" 0600 ubuntu ubuntu "$@"
+    oldu "yazıldı: $yol (0600 ubuntu:ubuntu; alanlar: $alanlar — değer referanstan, BASILMADI)"
+  done
+
+  if [ "$KURU" != 0 ]; then
+    echo "  plan: yazılacak $n · dokunulmayacak $m · eksik alanlı $k"
+    [ -z "$dizin_yok$ref_yok" ] || echo "  !! GERÇEK KOŞUM DURUR (HİÇBİR ŞEY yazmadan): yukarıdaki dizin/referans YOK satırları — önce A0 site.yml / kasa + Agent render"
+    return 0
+  fi
+  echo "  özet: yazıldı $n · dokunulmadı $m · eksik alanlı $k"
+  echo "  yeniden başlatma YOK: tohumlanan değer referansla AYNI; birimler G3c'de etkinleşir ve ilk açılışta okur."
+  echo "  sonraki: sudo ./sir_rotasyon.sh --envanter (sohbet kopyaları → EŞİT olmalı)"
+  if [ "$k" -gt 0 ]; then
+    echo "!! $k hedefte EKSİK/ÇİFT alan — dosyaya DOKUNULMADI; elle düzelt (rotasyon bu dosyada ön-denetimde durur):" >&2
+    printf '%s' "$elle" >&2
+    [ "$o" = 0 ] || echo "!! ayrıca $o hedefin alanı ÖLÇÜLEMEDİ (yukarıda)" >&2
+    exit 3
+  fi
+  [ "$o" = 0 ] || olcum_yok "$o hedefin alanları ÖLÇÜLEMEDİ (yukarıda — okunamadı: izin ya da UTF-8 dışı bayt); dosyaya DOKUNULMADI"
+}
+
+# =================================================================================================
 KURU=0
 ESITLE=0
 VAULT_KIP=0
@@ -3911,7 +4282,7 @@ while [ "$#" -gt 0 ]; do
     --esitle) ESITLE=1 ;;
     --vault) VAULT_KIP=1 ;;
     --uret) URET=1 ;;
-    --kapi|--tenant|--db|--dash|--openrouter|--apisix-admin|--cp|--api-sunucu|--envanter|--kopyalar)
+    --kapi|--tenant|--db|--dash|--openrouter|--apisix-admin|--cp|--api-sunucu|--tohumla-sohbet|--envanter|--kopyalar)
       [ -z "$ALT" ] || die "iki alt komut verildi: $(_bayrak "$ALT") ve $_a — her koşum TEK sır döndürür"
       ALT="${_a#--}" ;;
     --kapi-bot)
@@ -3921,10 +4292,10 @@ while [ "$#" -gt 0 ]; do
      Liste kabuktaki TEK sabittir (_SOHBET_BOTLARI = A0 sohbet_profil_adlari). HİÇBİR ŞEY yazılmadı."
       [ -z "$ALT" ] || die "iki alt komut verildi: $(_bayrak "$ALT") ve --kapi-bot $_bot — her koşum TEK sır döndürür"
       ALT="kapi-bot-$_bot" ;;
-    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --kapi-bot <ad> | --envanter | --kopyalar [| --kuru | --esitle | --vault | --uret])" ;;
+    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --kapi-bot <ad> | --tohumla-sohbet | --envanter | --kopyalar [| --kuru | --esitle | --vault | --uret])" ;;
   esac
 done
-[ -n "$ALT" ] || die "alt komut ZORUNLU: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --kapi-bot <ad> | --envanter | --kopyalar (+ --kuru)"
+[ -n "$ALT" ] || die "alt komut ZORUNLU: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --kapi-bot <ad> | --tohumla-sohbet | --envanter | --kopyalar (+ --kuru)"
 
 # `--kuru` YALNIZ ROTASYON alt komutlarında anlamlıdır. `--envanter`/`--kopyalar` bayrağı hiç
 # okumaz ve `--envanter --kuru` SESSİZCE tam envanteri koşardı: kuru koşum isteyen operatör
@@ -3932,9 +4303,17 @@ done
 # ama etkisizlik SÖYLENİR — sessiz kabul, olmayan bir sözleşmeyi var gibi gösterir.
 KURU_ONERILIR=0
 case "$ALT" in
-  kapi|tenant|db|dash|openrouter|apisix-admin|cp|api-sunucu|kapi-bot-*) KURU_ONERILIR=1 ;;
+  kapi|tenant|db|dash|openrouter|apisix-admin|cp|api-sunucu|kapi-bot-*|tohumla-sohbet) KURU_ONERILIR=1 ;;
   *) [ "$KURU" = 0 ] || echo "!! --kuru bu alt komutta ETKİSİZDİR: --$ALT zaten hiçbir şey yazmaz." >&2 ;;
 esac
+#: TOHUMLAMA BİR ROTASYON DEĞİLDİR (G3b Task 4): değer üretmez, sormaz, kasaya yazmaz, eşitlemez. `KURU_ONERILIR`
+#: kümesindedir (kuru koşum anlamlıdır), ama `--esitle`/`--vault` kapıları o kümeye bakar — sessiz kabul yerine AÇIK ret,
+#: root kapısından, çalışma dizininden ve her dosyadan ÖNCE (v604 D11).
+if [ "$ALT" = "tohumla-sohbet" ] && { [ "$ESITLE" = 1 ] || [ "$VAULT_KIP" = 1 ] || [ "$URET" = 1 ]; }; then
+  die "--tohumla-sohbet --esitle / --vault / --uret ile verilemez: tohumlama değer üretmez, sormaz, kasaya yazmaz ve
+     eşitlemez — YALNIZ YOK olan sohbet .env'ini referanslardan kurar. Doğrusu: sudo ./sir_rotasyon.sh --tohumla-sohbet [--kuru].
+     HİÇBİR ŞEY yazılmadı."
+fi
 # `--esitle` YALNIZ rotasyon alt komutlarıyla anlamlıdır: neyi eşitleyeceği kopya tablosunun
 # alt komut sütunundan gelir; `--envanter --esitle` ne ölçer ne yazar — sessiz kabul yerine dur.
 [ "$ESITLE" = 0 ] || [ "$KURU_ONERILIR" = 1 ] \
@@ -4013,5 +4392,7 @@ case "$ALT" in
   cp)         cp_erisim ;;
   api-sunucu) api_sunucu ;;
   kapi-bot-*) kapi_bot "${ALT#kapi-bot-}" ;;
+  #: G3b Task 4 — ön-denetim bu alt komutta BOŞ geçer (tabloda `tohumla-sohbet` satırı yok); kendi kapıları `tohumla_sohbet`te.
+  tohumla-sohbet) tohumla_sohbet ;;
   envanter)   envanter ;;
 esac
