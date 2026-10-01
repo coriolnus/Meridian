@@ -22,7 +22,8 @@ DEĞİŞMEZLER.
 
 SAF YAPRAK: yalnız standart kütüphane; hiçbir `meridian` modülünü içe aktarmaz (v585 D6). Okuyucu: `api.metrics`.
 Yazıcılar (gözlem noktaları): `intraday_cycle.IntradayConsumer` (olay turu), `skills.pipeline_run` (faz),
-`store._record_io` (atomik yazım)."""
+`store._record_io` (atomik yazım). İkinci görünüm (EXE-2026-012): `Olcum.sure`/`Olcum.baslangic` — olay turunun
+histograma işlenen süresini KILL#1 canlı çapasının tur-içi atıf kaydı AYNEN okur (ikinci kronometre yok)."""
 from __future__ import annotations
 
 import bisect
@@ -159,15 +160,26 @@ class Histogram:
 class Olcum:
     """`sure_olc`un döndürdüğü bağlam yöneticisi. Çıkışta (normal YA DA istisna yolunda) geçen süreyi
     `etiket_degeri` ile kaydeder ve istisnayı ASLA yutmaz (`__exit__` False döner). Gövde, `with … as` ile aldığı
-    nesnenin `etiket_degeri` alanını çıkıştan önce değiştirebilir (ör. olayın sonucu gövde bitince bilinir)."""
+    nesnenin `etiket_degeri` alanını çıkıştan önce değiştirebilir (ör. olayın sonucu gövde bitince bilinir).
 
-    __slots__ = ("histogram", "etiket_degeri", "_t0")
+    TEK ÖLÇÜM, İKİ GÖRÜNÜM (EXE-2026-012, 2026-09-30): çıkıştan sonra `sure` histograma işlenen değerin KENDİSİDİR
+    (aynı float, yuvarlamasız) ve `baslangic` saatin giriş okumasıdır (`_saat` ölçeğinde). Süreyi ikinci bir görünümde
+    isteyen çağıran (KILL#1 canlı çapası, `intraday_cycle.IntradayConsumer._atif_kaydet`) İKİNCİ bir kronometre
+    kurmaz, bunları okur — iki kronometre aynı turu iki ayrı değerle ölçer ve kartın tanık eşi ayrışırdı."""
+
+    __slots__ = ("histogram", "etiket_degeri", "_t0", "sure")
 
     def __init__(self, histogram: Histogram, etiket_degeri=None):
-        """Ölçülecek histogram ve başlangıç etiketi (istisna yolunda geçerli kalacak değer)."""
+        """Ölçülecek histogram ve başlangıç etiketi (istisna yolunda geçerli kalacak değer); `sure` çıkışa dek None."""
         self.histogram = histogram
         self.etiket_degeri = etiket_degeri
         self._t0 = None
+        self.sure = None
+
+    @property
+    def baslangic(self):
+        """Saatin `__enter__` okuması (`_saat` ölçeğinde); girilmemişse None."""
+        return self._t0
 
     def __enter__(self) -> "Olcum":
         """Saati başlatır."""
@@ -175,8 +187,9 @@ class Olcum:
         return self
 
     def __exit__(self, exc_type, exc, tb) -> bool:
-        """Süreyi kaydeder; istisna varsa AYNEN yükselmesi için False döner."""
-        self.histogram.gozlemle(_saat() - self._t0, self.etiket_degeri)
+        """Süreyi `sure`ye yazar ve AYNI değeri kaydeder; istisna varsa AYNEN yükselmesi için False döner."""
+        self.sure = _saat() - self._t0
+        self.histogram.gozlemle(self.sure, self.etiket_degeri)
         return False
 
 

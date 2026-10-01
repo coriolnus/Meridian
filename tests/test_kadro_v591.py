@@ -104,7 +104,7 @@ def test_bot_bul_turkce_harfleri_katlar(yazim, ad):
 
 @pytest.mark.parametrize("ad", ["bekçi", "bot2", "iki kelime", "a-b"])
 def test_dogrulama_ad_yalniz_ascii_kucuk_harf_ve_alt_cizgi(tmp_path, ad):
-    # Telegram yönlendirme desenleri (`telegram_dinleyici._SOHBET_IMZA`) adın [a-z_] olduğunu
+    # Telegram yönlendirme desenleri (`bot_kanal._SOHBET_IMZA`) adın [a-z_] olduğunu
     # varsayar; kadro bu varsayımı ZORLAR — aksi hâlde o botun cevabına yanıt sessizce @sef'e düşerdi.
     with pytest.raises(ValueError, match=r"'ad'=.* yalnız \[a-z_\]"):
         kadro.kadro_yukle(_yaz(tmp_path, [_gecerli(ad=ad)]))

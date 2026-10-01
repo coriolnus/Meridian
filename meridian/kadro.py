@@ -22,10 +22,10 @@ HAFIZA_KIPLERI = ("kendi", "hepsi")
 #: Sohbet kaydının DIŞINDAKİ araç sunucusu araçları — `mcp_server` bunları `--bot` kipinde sunar (Parça 1b G1);
 #: çivi v597 kayıtla eşitliği, v591 bilinen kümeyi ölçer.
 PLANLI_ARACLAR = ("is_iste", "bot_hafizasi_ara")
-#: Bot adının izinli biçimi. Telegram yönlendirme desenleri (`telegram_dinleyici` modülündeki
-#: `_SOHBET_IMZA`, `_ONEK`) ve oturum kimliği biçimi (`tg-<ad>-…`) adın bu kümede olduğunu varsayar;
-#: kadro varsayımı ZORLAR — rakamlı ya da Türkçe harfli bir ad, o botun cevabına yanıtı sessizce
-#: varsayılan bota düşürürdü.
+#: Bot adının izinli biçimi. Telegram yönlendirme desenleri (`bot_kanal` modülündeki sohbet imzası
+#: tanıyıcısı `_SOHBET_IMZA` ve `telegram_dinleyici` modülündeki `_ONEK`) ve oturum kimliği biçimi
+#: (`tg-<ad>-…`) adın bu kümede olduğunu varsayar; kadro varsayımı ZORLAR — rakamlı ya da Türkçe harfli
+#: bir ad, o botun cevabına yanıtı sessizce varsayılan bota düşürürdü.
 AD_DESENI = re.compile(r"[a-z_]+")
 #: Türkçe harf katlaması — operatör "@bekçi"/"@ŞEF" yazar, kadro adı ASCII'dir. BÜYÜK harfler de
 #: DOĞRUDAN ASCII küçüğe iner: "İ".lower() Python'da "i" + BİRLEŞTİRİCİ NOKTA (U+0307) verir, yani

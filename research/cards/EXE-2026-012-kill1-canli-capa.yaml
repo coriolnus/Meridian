@@ -1,0 +1,197 @@
+# EXE-2026-012 — KILL#1 canlı çapası: planli kol yazımının karar döngüsü p95'ine etkisi, TUR İÇİ ATIFLA (TSK-020 UYGULA-9 Faz C)
+# TASLAK 2026-09-30 (ajan, scratchpad; makine YAML doğrulaması koşulmadı — brief kısıtı). Rol-1 okur, düzeltir, ön-kayıt commit'iyle
+# research/cards/'a koyar. Selef EXE-2026-003'ün kill-list'ine DOKUNULMAZ: bu kart yalnız KILL#1'in ÖLÇÜM YOLUNU sentetik vekilden
+# (v217) canlı ölçüme taşır. Tasarım: docs/TASARIM-TELEMETRI-PROMETHEUS-2026-09-28.md §2 (telemetri gözlemdir) + §4 Faz C.
+# İçerik-adresli çapalar (HEAD 9b4bd0f1fb481f334d0727ab43b6c368cb5db546, 2026-09-30):
+#   meridian/intraday_cycle.py blob 144f2b206a8904c4e0b38473ce9e756193725357 (DONGU_SURESI, IntradayConsumer.on_barfeed_event, _handle_symbol)
+#   meridian/gecikme.py        blob 8db8e92b65b8002b7d9b7209b471bdba539ad8e4 (Histogram, sure_olc)
+#   meridian/intraday_shadow.py blob 9e5437a5a7906cf3987db18c666e1762e226347d (PLANLI_ENABLED, planli_satir, planli_yazildi)
+#   tests/test_golge_planli_kol_v217.py blob 6cebd99483b33a8d656337045b7f28be30e71d7b (sentetik vekil, _p95, _kill1_olcum)
+#   research/cards/EXE-2026-003-golge-planli-kol.yaml blob 03985ec9d806c3cd53501913110d4b6e4123d79e (KILL#1 metni)
+#   docs/TASARIM-TELEMETRI-PROMETHEUS-2026-09-28.md blob aaab073f3921e4ce86a3e3d3b5a457bd3db199d1
+# kart_benzer (Rol-1, 2026-09-30): EXE-2026-003 0,11 (selef) · öteki ≤0,04 · KALDI/NO-GO benzeri YOK.
+# Hafıza (Rol-1 recall 2026-09-30): doğrudan benzer kayıt yok; 2026-08-30'da v217 çivisi otoriter suite'te "alet-gürültüsü" diye itildi
+#   (bu kartın varlık nedeni). memory: olcum-aleti-esikten-sapar · kill-esigi-adim0da-olculur · kart-esigi-birimi-tolerans-tuzagi.
+# Emsal: EDG-2026-019 kill#1 "p95_pay" (olay başına pay, süreç-içi MANDAL — otomatik kapatır); bu kart bilerek mandal KURMAZ.
+
+card_id: EXE-2026-012
+status: registered   # 2026-09-30 Rol-1 ön-kayıt (operatör 'şimdi ön-kaydet', 18:5xZ); ADIM-0 betimleme alanlarını doldurur ve kartı DONDURUR; pencere ADIM-0'dan SONRA açılır
+family: golge_planli_kol_kill1_canli_capa
+on_kayit: 2026-09-30  # Rol-1 commit tarihi
+selef: EXE-2026-003
+ref:
+  - "EXE-2026-003 kill_criteria[0] (KILL#1, 2026-08-09 donduruldu) + ara_olcum_2026_08_22 ('p95 döngü enstrümanı yok → ölçülemedi + beyanlı vekil')"
+  - "tests/test_golge_planli_kol_v217.py::test_p95_dongu_suresi_kart_tavanini_ASMIYOR (sentetik vekil; -n 4 altında 24 koşumun 17'sinde ÖLÇÜLEMEDİ — TSK-213)"
+  - "docs/TASARIM-TELEMETRI-PROMETHEUS-2026-09-28.md §2 sınır, §4 Faz C"
+  - "meridian/intraday_cycle.py DONGU_SURESI şerhi: '+%10'luk bir kaymayı histogram_quantile ÇÖZEMEZ — Faz C kartı istatistiğini buna göre kurar'"
+  - "EDG-2026-019 kill1_kaydi_2026_08_23 + skill_gorus._sure_kaydi (p95_pay emsali, mandal)"
+  - "EDG-2026-078 kill#1 'aktif kill yolu yok; elle değerlendirilir' (Rol-1-okur emsali)"
+  - "ROADMAP TSK-020 [UYGULA-9] (2026-09-30 18:4xZ: seri 09-29 07:45Z'den beri; processed 2971 · skipped 224 · error 0)"
+
+hipotez: >
+  EXE-2026-003 planli kolu — tetiği kesilen silahlanmamış GO/REVIEW planının gölge satırı: `_handle_symbol` içindeki planli-kol dalı
+  (`intraday_shadow.planli_satir` → `store.append_jsonl(intraday_shadow.PLANLI_ORDERS_FILE)` → `intraday_shadow.planli_yazildi`) —
+  canlı karar döngüsünün p95 süresini +%10'dan fazla ARTIRMAZ. Ölçü: pencerenin her işlenen (outcome=processed) barfeed olayı için tur
+  süresi X ile AYNI olayda planli dalda geçen toplam süre Z birlikte kaydedilir; karşı-olgusal "kol yokken" tur süresi Y = X − Z;
+  R = p95(X) / p95(Y), havuzlanmış. Hipotez: R ≤ 1,10 (tavan EXE-2026-003 KILL#1'den AYNEN).
+
+kill1_yorumu: >
+  Donuk metin: "planli kol yazımı canlı sıcak yolda ölçülebilir gecikme yaratıyorsa (p95 döngü süresi +%10'dan fazla artarsa) kol
+  kapatılır". Bu kartın okuması: "döngü" = `IntradayConsumer.on_barfeed_event` turunun tamamı — DONGU_SURESI'nin sardığı sınır, v217
+  düzeneğinin ölçtüğü sınırla aynı. Evren YALNIZ outcome=processed: `skipped` (seans dışı / 9:45 ET öncesi pencere / HALT) µs dönüşlerdir
+  ve p95'i işlenen olayın maliyetinden AŞAĞI çekerdi (geçme yönlü sapma; Faz B etiketi tam bunun için). `error` havuza girmez, sayısı
+  raporlanır. processed ⟹ RTH ∧ giriş penceresi açık ∧ HALT yok — ayrı saat süzgeci GEREKMEZ. "+%10 artış" = p95(kol varken) /
+  p95(kol yokken) > 1,10 (GÖRELİ oran — mutlak ms değil). "Kol yokken" = aynı olaydan planli dal süresi çıkarılmış hâl (birinci
+  mertebe karşı-olgu); v217'nin tabanı `PLANLI_ENABLED=False` dalın erken-dönüş maliyetini (µs) hâlâ taşır, Y onu da çıkarır → R
+  hafifçe BÜYÜR (KILL yönü, beyanlı).
+
+esikler:
+  # Aşağıdaki beş değer ÖDÜNÇTÜR (kaynaklı), bu kartta ÜRETİLMEDİ; ADIM-0 dondurma commit'inden sonra değişmez (yeni eşik = yeni kart).
+  tavan_R: 1.10            # EXE-2026-003 KILL#1 — 2026-08-09; "sınırda payı" YOK (TSK-213 Rol-1 ruling 2026-09-24)
+  ci_seviye: 0.95          # EXE-2026-003 ikincil hat ile aynı
+  bootstrap_B: 10000       # EXE-2026-003 / faz5_cikis.BOOTSTRAP_N; tohum faz5_cikis.BOOTSTRAP_TOHUM (11); küme = seans
+  pencere_seans: 20        # EXE-2026-003 penceresi
+  n_yazim_min: 10          # EXE-2026-003 kill#2 tabanından ödünç — BİRİM FARKI beyanlı: burada yazım olayı (defter satırı) sayılır, dolum değil; dolum ⊆ yazım
+  p95_tanimi: "v217 `_p95` ile özdeş: sıralı dizide round(0,95·(n−1)) indeksli eleman — kova ara-değerlemesi YOK, havuz = pencerenin tüm processed olayları"
+  # ADIM-0 doldurur — BETİMLEMEDİR, eşik DEĞİLDİR, hükmü değiştirmez (her null için ne ölçüleceği adim0 alanında):
+  seans_basi_processed_olay: null      # ADIM-0a
+  p95_kovasi_prometheus: null          # ADIM-0a — yalnız KOVA KİMLİĞİ (değer değil)
+  f_giris: null                        # ADIM-0b — planli dala girilen processed olay payı
+  f_yazim: null                        # ADIM-0b — planli satırın diske indiği processed olay payı
+  beklenen_yazim_20_seans: null        # ADIM-0b — n_yazim_min'e ulaşılabilirlik
+  alet_olay_basi_maliyeti_us: null     # ADIM-0c (PK testinden) — sıcak yolda ölçülmeyen alet eki
+  defter_satir_boyutu_kb: null         # ADIM-0c
+  tanik_ilk_seans: null                # ADIM-0c — eşit / tanıksız / kusurlu
+  R_adim0_seansi: null                 # ADIM-0c — kayda geçer, HÜKÜM DEĞİL, pencereye girmez
+
+k_registry: {registered_at: null, trial_ids: [EXE-012-kill1-canli-atif]}
+# K=1: tek istatistik (R) × tek tavan × tek pencere; iki bakış beyanlı (20 seans + ÖLÇÜLEMEDİ'de bir kez +20). Tanılar hüküm üretmez → K'ye
+# girmez. Seanslar arası A/B (planli kolu kapat/aç) bu kartta YOK — operatör isterse AYRI kart, kendi K'si (notlar S1).
+
+olcum_plani:
+  - "ALET (KART SONRASI kod — Opus, TDD, tam suite + dağıtım): (1) X = DONGU_SURESI'ne işlenen değerin KENDİSİ (tek ölçüm, iki görünüm; ikinci kronometre YASAK); (2) Z = `_handle_symbol` planli-kol dalı gövdesinin süresi, olay içindeki semboller üzerinden toplanır, AYNI saatle (`gecikme._saat`); (3) olay kaydı (yalnız processed ve error olayları; skipped kaydedilmez) süreç belleğinde seans başına: outcome, X, Z, olay ofseti (s), planli giriş sayısı, planli yazım sayısı — YUVARLAMASIZ; kayıt X ölçüldükten SONRA eklenir (X'e girmez); (4) seans başına TOPLU yazım `state/` altında tek defter (ad implementasyonda), processed ölçümüne GİRMEYEN bir noktada; satır süreç başlangıç damgasını taşır (seans içi yeniden başlatma tespiti); (5) kapatma yolu olur (intraday_shadow ENABLED deseni), varsayılan açık; (6) okuyucu (Yasa 6): research/olcumler/exe012_kill1_canli/ betiği — codelaw beyanı implementasyon turunda."
+  - "HÜKÜM EVRENİ: pencerenin TEMİZ seanslarının processed olayları. Temiz = seans içinde yeniden başlatma yok ∧ tanık 'kusurlu' değil. Y = X − Z; R = p95(X_havuz) / p95(Y_havuz); CI = seans-kümeli bootstrap (yerine koyarak seans çekilir, seçilen seansın TÜM olayları havuza girer; faz5_cikis.tarih_kumeli_bootstrap ile aynı kural, istatistik ortalama değil R — gövde paylaşımı implementasyonda, kopya yasağı)."
+  - "ÜÇLÜ HÜKÜM (sınırda pay YOK): R_nokta > 1,10 → KILL · R_nokta ≤ 1,10 ∧ CI_üst ≤ 1,10 → YEŞİL · R_nokta ≤ 1,10 ∧ CI_üst > 1,10 → ÖLÇÜLEMEDİ. Geçerlilik ihlali (kill_list) → ÖLÇÜLEMEDİ ya da GEÇERSİZ, adıyla."
+  - "SEANS TANIĞI (Prometheus — GÖZLEM, hüküm girdisi değil): defterdeki X'ler DONGU_SURESI.kovalar ile bisect_left (le) kuralıyla binlenir; outcome=processed için kova başına sayım, Prometheus `meridian_intraday_cycle_seconds_bucket{outcome=processed}` sayaçlarının iki SEANS-DIŞI sınır anındaki (9:45 ET öncesi ve 16:00 ET sonrası, arada sayaç sıfırlanması yok) ham değer farkına EŞİT olmalı (processed tanım gereği yalnız bu aralıkta doğar; skipped ve error aralık dışında da doğabildiği için tanığa girmez, error farkı adıyla raporlanır). Sınırda örnek yoksa seans 'tanıksız' (dışlanmaz, adıyla); örnek var ve sayım farklıysa 'kusurlu' (alet kusuru)."
+  - "TANILAR (hüküm üretmez, K'ye girmez): t1 seans başına R_s ve en kötü seans · t2 yazım olayları: n, Z medyan/maks, en kötü olayın X'i (v217 en_kotu_olay_ms karşılığı) · t3 kuyruk: p99(X)/p99(Y), maks(X)/maks(Y), Y'nin p95 komşuluğu q0,94/q0,96 (istatistiğin kırılganlığı) · t4 EDG-2026-019 biçimli pay: olay başına Z/Y'nin p95'i (kartlar arası kıyas) · t5 dolaylı etki izi: her yazım olayından önceki 60 s ile sonraki 60 s (bir bar periyodu) içindeki olayların Y medyanı ve p95'i · t6 f_giris, f_yazim, error sayısı ve Z>0 olan error olayları."
+  - "DONDURMA: ham defter kesiti + betik çıktısı research/olcumler/exe012_kill1_canli/ altında commit'lenir; hüküm o BLOB'lara bağlanır (defter state/'te versiyonsuz, Prometheus 30 gün/2 GiB saklar — kaynak silinir)."
+
+adim0:
+  - "ADIM-0a (≥ 2026-10-13, Rol-1, A1 salt-okur; Prometheus 127.0.0.1:9095): seri başlangıcından (2026-09-29 07:45Z) itibaren seans başına processed/skipped/error olay sayısı (sayacın seans-dışı iki sınır anı farkı; DST 2026-11-01 — sınırlar ET'den türetilir); processed p95'in düştüğü KOVA (değer değil); ≥ 50 ms kovalarındaki pay (ağ dalları: _pencere_gonderim/_faz4b). Çıktı dosyaya dondurulur."
+  - "ADIM-0b (A1 defterleri, salt-okur): 2026-08-16'dan beri seans başına planli yazım sayısı (intraday_shadow_planli_orders.jsonl satırları) ve planli dala giriş yapılan olay sayısı (intraday_decisions.jsonl: fired=true ∧ plan_source=planned, decision_as_of ile olaya gruplanır); payda ADIM-0a'nın örtüşen seanslardaki processed sayısı → f_giris, f_yazim; 20 seansta beklenen yazım vs n_yazim_min=10. f_yazim ≥ %5 ise beyanli_sinirlar(1) karta sayıyla düzeltilir."
+  - "ADIM-0c (alet dağıtımından sonraki İLK seans — pencereye GİRMEZ): tanık eşit mi; defter satır boyutu; R_0 ve Z dağılımına ilk bakış (kayda geçer, hüküm değil); PK testinde ölçülen alet olay-başı maliyeti karta yazılır."
+  - "DONMA: ADIM-0 sayıları karta TARİHLİ yazılır + commit → kart DONAR; pencere bir sonraki seansla açılır. ADIM-0 bitmeden hüküm YOK."
+
+kill_list:
+  - "R_nokta > 1,10 → EXE-2026-003 KILL#1 TETİKLENDİ: planli kol kapatılır (`MERIDIAN_SHADOW_PLANLI=0`; import anında okunur → işçi yeniden başlatması ister); silahli kol ve EXE-2026-002 zinciri dokunulmaz. Eylem ELLE ve Rol-1'indir (yeniden başlatma yetkisi: notlar S3) — OTOMATİK DEĞİL."
+  - "OTOMATİK KAPI YASAĞI (tasarım §2 'telemetri gözlemdir'): hiçbir motor kodu R'yi, bu kartın defterini ya da Prometheus'u okuyup kolu kapatamaz/açamaz; kodda böyle bir mandal bulunursa ölçüm GEÇERSİZ. Hüküm Rol-1'in betikle okuduğu bir ÖLÇÜMDÜR; aynı turda bu karta + K defterine + EXE-2026-003'e işaretçi olarak yazılır."
+  - "Prometheus/Grafana hükmün GİRDİSİ olamaz (yalnız ADIM-0 betimlemesi + seans tanığı). R'nin herhangi bir bileşeni histogram_quantile'dan ya da kova sayımından türetilirse GEÇERSİZ (kova göreli genişliği %33–100, tavan %10)."
+  - "Tek kaynak: X, DONGU_SURESI'ne işlenen değerin aynısı değilse (ikinci kronometre, yuvarlama) ya da Z planli dal gövdesi dışında bir süreyi kapsıyorsa GEÇERSİZ."
+  - "Pencerede ≥ 1 'kusurlu' tanıklı seans varsa kök nedeni bulunup karta yazılmadan hüküm VERİLMEZ; kusurlu seans pencereden düşer."
+  - "Seans içi yeniden başlatmalı seans pencereye girmez; 20 TEMİZ seans dolana dek pencere uzar."
+  - "Pencerede yazım olayı < 10 → ÖLÇÜLEMEDİ (kol pencerede fiilen çalışmadı); Rol-1 EXE-2026-003 kill#2'yi aynı pencereyle okur."
+  - "PK-1/PK-2/NK/PK-3'ten biri beklenen sonucu vermezse ya da hüküm mantığı çivileri mutasyonla ısırmazsa hiçbir sayı yorumlanmaz."
+  - "Kart-önce: alet kodu ya da research/olcumler/exe012_kill1_canli/ betiği bu kartın ön-kayıt commit'inden ÖNCE yazılırsa GEÇERSİZ."
+  - "Eşikler + p95 tanımı ADIM-0 dondurma commit'inden sonra değişmez; ÖLÇÜLEMEDİ 'sınırda payı' ile YEŞİL'e çevrilmez; ADIM-0c seansı pencereye katılmaz."
+
+pozitif_kontrol: >
+  YOL-TUTARLI, yalnız test ortamı (sandbox_state; canlıya enjeksiyon YOK): gerçek `IntradayConsumer.on_barfeed_event` → gerçek planli
+  dal → gerçek alet (X, Z kaydı) → gerçek seans-sonu defter yazımı → research/olcumler/exe012_kill1_canli/ betiğinin KENDİSİ → üçlü
+  hüküm. Olay bileşimi v217 gibi ≥ 5 sembol/olay; silahli + planli + plansız sembol karışık; tekilleştirme dönüşleri dahil. Gecikme
+  meşgul-bekleme ile enjekte edilir (TSK-213 deseni; uyku değil). Tek-fonksiyon birim çağrısı PK sayılmaz.
+  PK-1 DUYARLILIK: planli dal gövdesine her girişte, önceden ölçülmüş p95(Y)'nin %20'si (tavanın iki katı) kadar gecikme; olayların
+  tamamında planli giriş var → hüküm KILL.
+  PK-2 ÖZGÜLLÜK: AYNI gecikme planli dalın DIŞINA (silahli dal ya da karar defteri yazımı) → p95(X) ≥ %20 artar ama Z onu soğurmaz →
+  hüküm YEŞİL.
+  NK: `PLANLI_ENABLED=False` → R − 1 = ε (dal erken-dönüşü + kronometre) raporlanır; hüküm YEŞİL.
+  PK-3 KÖRLÜK (bedel yasası): p95(Y)'nin ≥ 10 katı gecikme YALNIZ yazım olaylarına, yazım olayı payı < %5 → hüküm YEŞİL kalır AMA t2/t3
+  gecikmeyi sayıyla gösterir — istatistiğin nadir-ağır olaya yapısal körlüğü ölçülmüş olur.
+  TANIK EŞİ: defter X'lerinin kova sayımı = DONGU_SURESI.anlik() processed sayımı (Prometheus tanığının süreç-içi karşılığı).
+  HÜKÜM MANTIĞI: elle kurulmuş girdiyle deterministik çiviler (KILL / YEŞİL / ÖLÇÜLEMEDİ; R_nokta > tavan her durumda KILL).
+  MUTASYON (her biri en az bir çiviyi kırmalı): Z'yi dal dışına genişletmek (PK-2) · X'i ikinci kronometreyle almak (tanık eşi) ·
+  skipped olayları havuza katmak (evren çivisi) · CI_üst koşulunu kaldırmak (ÖLÇÜLEMEDİ çivisi) · tavana pay eklemek (sınır çivisi).
+  ALET BEDELİ: aynı test düzeneğinde alet açık/kapalı olay süresi farkı ölçülür → ADIM-0c alet_olay_basi_maliyeti_us.
+
+veri_penceresi: >
+  Başlangıç = max(2026-10-13 [tasarım ön şartı: Faz B verisi ≥ 14 gün; seri 2026-09-29 07:45Z'den beri], ADIM-0c seansından sonraki
+  ilk seans). Uzunluk 20 TEMİZ seans (≈ 4 hafta; ABD tatilleri seans değildir, yarım gün seanslar girer). ÖLÇÜLEMEDİ → bir kez +20
+  temiz seans (ikinci bakış); yine ÖLÇÜLEMEDİ → nihai ÖLÇÜLEMEDİ, operatöre bildirilir, kol EXE-2026-003'ün öteki hükümlerine göre durur
+  (ÖLÇÜLEMEDİ ≠ KILL — UYDURMA YASAĞI; v217 üçlü hüküm felsefesiyle aynı). DST 2026-11-01 pencerede: defter barclock.session_date ile
+  çalışır, etkilenmez; tanık sınır anları ET'den türetilir. GERİ-DOLUM YOK: alet öncesi veri (Z ölçülmedi) hükme girmez.
+
+basari_tanimi: >
+  (1) Dağıtımdan ÖNCE test ortamında PK-1 KILL, PK-2 YEŞİL, NK YEŞİL + ε raporlu, PK-3 YEŞİL + tanıda görünür; hüküm mantığı çivileri
+  yeşil ve listelenen mutasyonların her biri kırmızı. (2) ADIM-0 sayıları karta tarihli + dondurma commit'i. (3) 20 temiz seans; her
+  seansta tanık 'eşit' ya da 'tanıksız' adıyla. (4) Üçlü hüküm R_nokta + %95 CI + t1–t6 ile Rol-1 tarafından AYNI turda bu karta + K
+  defterine + EXE-2026-003'e işaretçi olarak yazılır; ham kesit + çıktı commit'li BLOB'a bağlı. (5) Hüküm KILL/YEŞİL ise KILL#1'in
+  resmî ölçümü bu kart olur; v217 sentetiği regresyon çivisi rolüne geçer (v217_kaderi).
+
+beyanli_sinirlar:
+  - "(1) YAPISAL KÖRLÜK: planli yazım seansta seyrek (Ağustos ara ölçümü: fırsat 0–3/seans; processed olay/seans ≈ 1.650 KABA TÜRETME — 2971 olay / ≈ 675 pencere-içi dakika, 09-29/30; ADIM-0 ölçer) → f_yazim binde birkaç ya da daha az. X = Y + Z ve yazımsız olaylarda Z ≤ δ iken q95(X) ≤ q(0,95+f)(Y) + δ: olayların < %5'ine düşen maliyet, büyüklüğü ne olursa olsun, p95'i yalnız Y'nin p(95+f) yüzdeliğine taşıyabilir. KILL#1 metni nadir-ağır gecikmeyi GÖRMEZ; sürekli olay-başı maliyeti (ör. tekilleştirme bozulup defterin her olayda okunması — TSK-213 mutasyon sınıfı) GÖRÜR. Nadir-ağır gecikme t2/t3'te raporlanır; ona ayrı kill = yeni eşik = OPERATÖR KARARI + yeni kart (notlar S2)."
+  - "(2) BİRİNCİ MERTEBE ATIF: Z yalnız dalın DOĞRUDAN süresidir; dolaylı etkiler (sayfa önbelleği, GC, kilit çekişmesi, sonraki olaylara taşan G/Ç) ölçülmez → R gerçek etkinin ALT sınırıdır: GEÇME yönlü, büyüklüğü bilinmeyen sapma. t5 kaba iz verir (piyasa hareketliliğiyle karışır, hüküm değil); dolaylı etkiyi ölçmenin tek yolu seanslar arası A/B'dir (ayrı kart, notlar S1)."
+  - "(3) Y, `PLANLI_ENABLED=False` tabanından dalın erken-dönüş maliyeti kadar küçüktür → R hafifçe büyür (KILL yönü)."
+  - "(4) Kayıt X ölçüldükten SONRA eklenir → X'e girmez; alet maliyeti sıcak yolda ÖLÇÜLMEYEN bir ektir — PK düzeneğinde ölçülür, karta yazılır."
+  - "(5) Hüküm penceresine bağlıdır: plan üreticisi değişir de f_giris/f_yazim ADIM-0b'nin tarihsel üst değerini aşarsa yeniden ölçüm tetiği (Rol-1 kaydı; yeni hüküm = yeni kart)."
+  - "(6) Bu kart EDG-2026-019/078'in kill#1'lerini ÇAPALAMAZ (aynı yasa, farklı yüzey); alet deseni onlar için ayrı kartlarla kullanılabilir."
+
+telemetri_ilkesi_uzlasmasi: >
+  Tasarım §2: "Telemetri GÖZLEMDİR, karar yüzeyi DEĞİL: hiçbir kapı/kill kararı Prometheus'tan okumaz." Uzlaşma üç katlıdır.
+  (a) Hükmün girdisi Prometheus DEĞİL, bu kartın kendi defteridir (kart-sahipli ölçüm aleti; okuyucusu Rol-1'in betiği). Zorunlu da:
+  DONGU_SURESI kovaları +%10'u çözemez (kova göreli genişliği 1–25 ms bandında %33–100; ayrıntı notlarda). (b) Hüküm otomatik kapı
+  değildir: Rol-1 okur, karta yazar, KILL eylemi elle yapılır; EDG-2026-019'un süreç-içi 'p95 mandalı' deseni burada bilerek KURULMAZ.
+  (c) Prometheus iki gözlem işi yapar: ADIM-0'da seansları betimler ve seans tanığı olarak defterin sayımını bağımsız doğrular; tanık
+  tutmazsa sonuç 'alet kusuru'dur ve kol hakkında HİÇBİR YÖNDE hüküm üretmez. Grafana'daki DONGU_SURESI eğrisi gözlem kalır; KILL#1 bir
+  ölçüm kartının hükmüyle işler.
+
+v217_kaderi: >
+  Hüküm SONRASI v217 `test_p95_dongu_suresi_kart_tavanini_ASMIYOR` EMEKLİ EDİLMEZ ve bu kartın pozitif kontrolü DEĞİLDİR. PK değil,
+  çünkü yolu farklıdır (sentetik döngüde bayrak A/B'si; canlı aletin kaydı ve betiği yok) — yol-tutarsız PK CLAUDE.md §5'e aykırı olurdu.
+  Emekli değil, çünkü canlı ölçüm etkiyi ancak DAĞITIMDAN SONRA görür; sentetik çivi olay-başı maliyet regresyonunu DAĞITIMDAN ÖNCE
+  yakalar (TSK-213 mutasyonu ~60 µs/sembol → boşta seri 8/8 KIRMIZI). Yeni rolü: dağıtım öncesi regresyon çivisi; ÖLÇÜLEMEDİ skip'i
+  artık "KILL#1 ölçülmedi" anlamına gelmez. Hüküm turunda Rol-1: CLAUDE.md §6 3. katmandaki "kart EXE-2026-003 KILL#1'in fiilî ölçümü bu
+  seri adımdır" cümlesini ve v217 şerhini günceller; `P95_TAVAN=1.10` ve karttan okuma çivisi AYNEN kalır.
+
+karar_notlari:
+  soru1_taban: >
+    SEÇİLEN (b) TUR İÇİ ATIF — ama histogramla DEĞİL, olay başına yuvarlamasız kayıtla: iki histogramın oranı kova çözünürlüğüne
+    takılır ve Y = X − Z olay başına çıkarılmadıkça karşı-olgu kurulamaz. (a) seanslar arası A/B BU KARTTA YOK: bayrak import anında
+    okunur (her geçiş işçi yeniden başlatması), kapalı seanslar EXE-2026-003 verisini kaybeder, seanslar arası p95 oynaklığı bugünkü
+    kovalarla ölçülemez bile (%33–100) — ama dolaylı etkiyi yalnız A/B görür → OPERATÖR KARARI S1 (öneri: hayır; istenirse ayrı kart).
+    (c1) Prometheus'a ince kovalı (~%5) yeni histogram REDDEDİLDİ: hüküm Prometheus'tan okunurdu (§2 ihlali), saklama 30 gün, ara-değerleme
+    hatası hâlâ eşiğin yarısı. (c2) EDG-019 biçimli p95 pay birincil DEĞİL (donuk metin 'p95 döngü süresi artışı' der, pay değil) → t4 tanı.
+    (c3) sentetik düzeneği A1'de koşmak REDDEDİLDİ (canlı süreç değil, A1 CPU'sunu işçiyle paylaşır).
+  soru2_metrik: >
+    Metrik: DONGU_SURESI'nin ölçtüğü değer (meridian_intraday_cycle_seconds), outcome=processed; zaman süzgeci gerekmez (processed
+    tanım gereği seans + 9:45 ET sonrası). p95: v217 _p95 tanımı, havuzlanmış, kesin. Kova çözünürlüğü: sınırlar 0,25/0,5/1/2/3/5/7,5/10/
+    15/25/50/100/250/500/1000/2500/5000/10000 ms; göreli genişlik 1–25 ms bandında %33 (7,5→10) ile %100 (1→2) arası — +%10 en iyi kovada
+    3,3×, olası p95 kovasında (1–2 ms; sentetik p95 1,2–1,8 ms) 10× çözünürlük altında. histogram_quantile hükümde KULLANILMAZ.
+  soru3_telemetri: "telemetri_ilkesi_uzlasmasi + kill_list maddeleri 'OTOMATİK KAPI YASAĞI' ve 'Prometheus/Grafana hükmün GİRDİSİ olamaz'"
+  soru4_v217: "v217_kaderi"
+  soru5_k_kill_pencere_basari: "k_registry · kill_list · veri_penceresi · basari_tanimi"
+  operator_kararlari:
+    - "S1 KARAR (operatör 2026-09-30 19:1xZ, AskUserQuestion): tur içi ölçüm — seanslar arası A/B YOK (dolaylı etki beyanlı sınır; istenirse ayrı kart)"
+    - "S2 KARAR (operatör 2026-09-30 19:1xZ): nadir-ağır gecikme YALNIZ TANI olarak raporlanır, ayrı kill kuralı YOK"
+    - "S3 KARAR (operatör 2026-09-30 19:1xZ): KILL çıkarsa Rol-1 piyasa kapalıyken kolu kapatır (işçi yeniden başlatması) ve anında push bildirimi atar — operatör onayı ÖNCEDEN verildi"
+
+cost_model: yok   # icra ölçümü değil; bedel: alet olay-başı eki + seans başına tek toplu defter yazımı (boyut ADIM-0c) — beyanli_sinirlar(4)
+
+netlestirme_2026_10_01: >
+  (Rol-1, 2026-10-01 08:0xZ — ADIM-0 ÖNCESİ TANIM NETLEŞTİRMESİ; eşik, K, kill-list DEĞİŞMEDİ; hüküm betiği
+  research/olcumler/exe012_kill1_canli/hukum.py B dilimi raporu "Rol-1 kararı" maddeleri) (1) "seans içinde yeniden başlatma
+  yok" → süreç başlangıcı seans AÇILIŞINDAN (09:30 ET) sonra ise seans temiz DEĞİL (betik `--yeniden-baslatma-esigi acilis`;
+  09:45 giriş penceresi yorumu daha gevşek olduğu için seçilmedi — ölçüm aleti eşikten geçme yönünde sapmasın). (2) Geçerlilik
+  üçlü hükümden ÖNCE uygulanır: kill-list'in "yazım < n_yazim_min → ÖLÇÜLEMEDİ" maddesi PK bölümündeki "R > tavan → her durumda
+  KILL" cümlesinden önce gelir; nihai hüküm ÖLÇÜLEMEDİ olur, üçlü sonuç (`tavan_asildi`) yine raporlanır; PK beklentileri üçlü
+  sonuca karşı okunur (NK kol kapalı → yazım 0 → nihai ÖLÇÜLEMEDİ, üçlü YEŞİL — beklenen). (3) Yazım sayısı birimi kartın
+  harfiyle "defter satırı"; olay sayısı yanında raporlanır. (4) İkinci bakış = toplam 40 temiz seans (ilk 20 + 20). (5) Kusurlu
+  tanığın kök nedeni karta yazılmadan o seans hükme GİRMEZ (betik `--kusurlu-kok-neden-kartta`). (6) Tanık sınırları erken kapanış
+  günlerinde takvim kapanışı (13:00 ET). (7) Betik A1'de piyasa SAATLERİ DIŞINDA koşulur (B=10.000 ~20 s CPU — ölçtüğü p95'i
+  şişirmesin). (8) ADIM-0 donmasında içerik-adresli çapalar YENİ bloblarla yazılır: meridian/intraday_cycle.py, meridian/gecikme.py,
+  meridian/olcum_araclari.py, meridian/faz5_cikis.py, tests/test_golge_planli_kol_v217.py (_p95 gövdesi taşındı), hukum.py.
+
+netlestirme_2026_10_01b: >
+  (Rol-1, 2026-10-01 09:0xZ — ADIM-0 ÖNCESİ, dal sonu inceleme I-3; eşik/K/kill DEĞİŞMEDİ) Pozitif kontrollerde gecikme
+  meşgul-bekleme yerine SANAL SAAT ile enjekte edilir (gerçek tüketici → gerçek planlı dal → gerçek alet → gerçek seans sonu
+  defter yazımı → hüküm betiğinin kendisi yolu AYNEN korunur; makine yükünden bağımsız, deterministik). Bedel: yazım G/Ç'sinin
+  gerçek maliyeti PK'lerde sınanmaz — o maliyet v606 G1'de (alet olay-başı maliyeti) ölçülür ve ADIM-0c'de canlıda kayda geçer.
+  PK-1 "+%20" = olay başına planlı dalın TOPLAM eki (giriş sayısına bölünür; hedef R ≈ 1,20 — tavanın iki katı aşım).

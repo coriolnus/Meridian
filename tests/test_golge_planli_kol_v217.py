@@ -31,7 +31,7 @@ import time
 import pytest
 
 from meridian import barclock as bc, config, faz5_cikis, intraday_cycle as ic, \
-    intraday_shadow as ish, store
+    intraday_shadow as ish, olcum_araclari, store
 
 UTC = dt.timezone.utc
 RTH = dt.datetime(2026, 7, 23, 14, 46, 30, tzinfo=UTC)      # 10:46:30 ET — RTH açık
@@ -525,9 +525,10 @@ _TUR = 4                  # A/B/B/A serpiştirme: makine gürültüsü iki kola 
                           # o anki gürültüsü belirlerdi, kolun maliyeti değil.
 
 
-def _p95(vals: list[float]) -> float:
-    s = sorted(vals)
-    return s[min(len(s) - 1, int(round(0.95 * (len(s) - 1))))]
+# p95 TANIMI TEK KAYNAKTA (2026-10-01, EXE-2026-012 B dilimi): sıralı dizide round(0,95·(n−1)) indeksli eleman —
+# gövde `meridian.olcum_araclari.p95`e TAŞINDI, bayt-eşit (v607 A1); KILL#1 canlı çapasının hüküm betiği AYNI nesneyi
+# kullanır (kart EXE-2026-012 `p95_tanimi`: "v217 `_p95` ile özdeş").
+_p95 = olcum_araclari.p95
 
 
 def _dongu_olc(monkeypatch, sandbox_state, *, planli_acik: bool) -> list[float]:

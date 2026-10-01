@@ -122,14 +122,48 @@ def _auth_posture_check() -> None:
         obs.warn("public_bind", detail=f"host={host} — TLS'in ters vekilde sonlandığından emin ol")
 
 
+# EXE-2026-012 ALETİ — KAPANIŞTA BOŞALTMA (Rol-1 kararı 2026-09-30, düzeltme turu 1). `_autostart` intraday tüketicisini
+# barfeed'e KAYDETTİĞİ yaşam döngüsünde referansı buraya koyar; `_lifespan` kapanış kolu YALNIZ bu referansı boşaltır.
+# Kayıt koşulu canlı işçinin koşuludur (piyasa akışı açık + Alpaca kâğıt anahtarı); sandbox'sız bir TestClient yaşam
+# döngüsü tüketici kaydetmez → kapanış hiçbir şey yazmaz (gerçek yerel `state/` korunur). Referans her yaşam döngüsünün
+# BAŞINDA sıfırlanır: doğrudan `_autostart()` çağıran bir testin bıraktığı kayıt sonraki kapanışa taşınmaz.
+_ATIF_KAPANIS_TUKETICI = None
+
+
+def _kapanis_atif_bosalt() -> None:
+    """`_lifespan` kapanış kolu: bu yaşam döngüsünde kaydedilmiş intraday tüketicisinin EXE-2026-012 seans tamponunu
+    deftere indirir (`IntradayConsumer.kapanista_bosalt`; boş tampon satır yazmaz). KAPANIŞI ASLA BOZMAZ: arıza
+    adıyla (yalnız TÜR) uyarıya düşer; uyarı kanalı da düşerse yutulur (işaretli)."""
+    global _ATIF_KAPANIS_TUKETICI
+    tuketici, _ATIF_KAPANIS_TUKETICI = _ATIF_KAPANIS_TUKETICI, None
+    if tuketici is None:
+        return
+    try:
+        tuketici.kapanista_bosalt()
+    except Exception as e:
+        try:
+            obs.warn("exe012_kapanis_bosaltma_dustu", tur=type(e).__name__,
+                     detail="EXE-2026-012 kapanışta seans tamponu deftere inemedi — bu seansın kaydı KAYIP (hüküm "
+                            "penceresinde eksik seans); kapanış sürdü")
+        except Exception:  # sessiz-yutma: kapanışta uyarı kanalı da düştü — alet arızası işçinin kapanışını bozamaz
+            pass
+
+
 @asynccontextmanager
 async def _lifespan(_app):
     """Açılışta süpervizör/zamanlayıcı/Hermes'i ayağa kaldır (yerel çalıştırmada serve.sh bayrakları).
     `@app.on_event("startup")` FastAPI'de kullanımdan kalktı ve her test koşusunda DeprecationWarning
-    basıyordu — gürültü, gerçek uyarıları gizler. Davranış birebir aynı."""
+    basıyordu — gürültü, gerçek uyarıları gizler. Davranış birebir aynı.
+    KAPANIŞ KOLU (EXE-2026-012): bu yaşam döngüsünde kaydedilen intraday tüketicisinin atıf tamponu boşaltılır
+    (`_kapanis_atif_bosalt`)."""
+    global _ATIF_KAPANIS_TUKETICI
+    _ATIF_KAPANIS_TUKETICI = None
     _auth_posture_check()
     _autostart()
-    yield
+    try:
+        yield
+    finally:
+        _kapanis_atif_bosalt()
 
 
 # `openapi_url=None` DE KAPALI — docs_url/redoc_url'i kapatmak YETMEZ. FastAPI her rota
@@ -636,7 +670,9 @@ def _autostart():
             # yoksa ilk olaylar callback=None ile ACK'lenip kaybolurdu. Emir GÖNDERMEZ (Faz 4a gözlem).
             if os.environ.get("MERIDIAN_INTRADAY", "1") != "0":
                 from . import intraday_cycle
-                barfeed.register(intraday_cycle.consumer().on_barfeed_event)
+                global _ATIF_KAPANIS_TUKETICI
+                _ATIF_KAPANIS_TUKETICI = intraday_cycle.consumer()        # kapanış boşaltmasının TEK kaynağı
+                barfeed.register(_ATIF_KAPANIS_TUKETICI.on_barfeed_event)
             barfeed.start()           # idempotent daemon thread (redis-py senkron; event-loop'a dokunmaz)
 
 
@@ -4463,10 +4499,16 @@ def _alarm_gunluk() -> dict:
         return {"gun": None, "mekanizmalar": {}, "n_alarm": 0, "n_bastirilan": 0,
                 "durum": "defter_yok",
                 "beyan": "bugün hiç mekanizma-gecikme alarmı üretilmedi (defter yazılmadı)"}
+    # Satır ALANLARI AD AD seçilir (satırlar mekanizma adından bağımsız geneldir, alanlar DEĞİL):
+    # yeni bir sayaç buraya eklenmeden okuyucusuzdur (YASA 6). TSK-259: `veri_disk_esigi` satırı
+    # ileri doldurma koşarken atlanan eşik hükmünü sayar (`atlandi_is_kosuyor`) ve atlanan
+    # ölçümlerin günlük tepesini tutar (`atlanan_tepe_g`, G) — atlamanın BEDELİ burada görünür.
     mek = {k: {"alarm": int((v or {}).get("alarm") or 0),
                "bastirilan": int((v or {}).get("bastirilan") or 0),
                "askida": int((v or {}).get("askida") or 0),
-               "son_askida_neden": (v or {}).get("son_askida_neden")}
+               "son_askida_neden": (v or {}).get("son_askida_neden"),
+               "atlandi_is_kosuyor": int((v or {}).get("atlandi_is_kosuyor") or 0),
+               "atlanan_tepe_g": (v or {}).get("atlanan_tepe_g")}
            for k, v in (doc.get("mekanizmalar") or {}).items() if isinstance(v, dict)}
     return {"gun": doc.get("gun"), "mekanizmalar": mek, "durum": "dolu",
             "n_alarm": sum(v["alarm"] for v in mek.values()),

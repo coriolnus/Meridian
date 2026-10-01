@@ -454,7 +454,7 @@ def test_isle_yanitta_unut_ciplak_soz_gider(sandbox_state):
 
 
 # ---- Parça 1b G4 Görev 2 (Rol-1 kararı 5): yanıtta GÖVDESİZ `unut:` → yanıtlanan mesajın ilk satırı SORGU olur ----
-# Gövde doluysa bugünkü gibi çıplak söz (yukarıdaki çivi). Satır `bot_kanal.alinti_ilk_satiri` ile: ÖNCE scrub, SONRA
+# Gövde doluysa bugünkü gibi çıplak söz (yukarıdaki çivi). Satır `bot_kanal.alinti_icerik_satiri` ile: ÖNCE scrub, SONRA
 # `KAYNAK_ETIKETI_TAVANI` (≤80) — `kaynak_etiketi` ile aynı tek kaynak. Bot cevabının imza satırı (`💬 @ad · oturum`)
 # içerik değildir: atlanır, ilk İÇERİK satırı sorgu olur.
 

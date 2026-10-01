@@ -48,8 +48,9 @@ DEĞİŞMEZLER.
     aşağıdaki hata yolları bunu operatöre/deftere SÖYLER (sessiz kalınmaz). Testler sahtelerini AÇIKÇA verir.
   * DÖNÜŞ KAYDI (spec §3.4, 2026-09-30 düzeltmesi: Hermes `auto_retain` KAPALI, dönüşü YALNIZ bu katman yazar):
     başarılı her `tur: sohbet` turu `Hafiza.donus_yaz(bot, scrub(operatör sözleri), scrub(cevap), etiketler)` çağırır —
-    Telegram yanıt kipinde yanıtlanan metnin VERİ çiti hafızaya GİTMEZ, yerine `(yanıt: <ilk satır>)` kaynak etiketi
-    (`_hafiza_mesaji`; modele giden metin alıntıyı TAŞIR); `cevap` operatörün gördüğü ÖNEKLİ metindir (araçsız-veri
+    Telegram yanıt kipinde yanıtlanan metnin VERİ çiti hafızaya GİTMEZ, yerine `(yanıt: <ilk İÇERİK satırı>)` kaynak
+    etiketi (`_hafiza_mesaji`; sohbet imzası ve araçsız-veri uyarısı içerik sayılmaz — tek kural
+    `alinti_icerik_satiri`; modele giden metin alıntıyı TAŞIR); `cevap` operatörün gördüğü ÖNEKLİ metindir (araçsız-veri
     uyarısı hafızada da kalır); etiketler `bot:<ad>`, `kanal:<kanal>`, `DONUS_ETIKETI` + `arac_siz_veri is True`
     ise `arac_siz_veri`, sayı ölçülemediyse `arac_olculemedi`. Defter sohbet satırı: `hafiza_durumu: kabul_edildi`
     (async KABUL — bankaya işlendi DEĞİL), `hafiza_islem_kimligi`, `hafiza_sure_s`. HAFIZA CEVABI DÜŞÜRMEZ: istisna →
@@ -125,8 +126,11 @@ _BEKLEYEN_OKUNAMADI = "Bekleyen unutma kaydı OKUNAMADI; hiçbir şey değişmed
 #: "hiçbir şey unutulmadı" DENMEZ: zaman aşımına uğrayan bir PATCH sunucuda yine de uygulanmış olabilir.
 _UNUTULAMADI = "UNUTULAMADI (hafıza hatası), kayda geçti."
 _GERI_ALINAMADI = "GERİ ALINAMADI (hafıza hatası), kayda geçti."
-#: `unut:` iki adımının bekleyen aday kaydı (Rol-1 kararı 1, 2026-09-30): `{kod: {bot, idler, kesitler, ifade, ts, son,
-#: durum}}` (+ onaydan sonra `unutulan_idler`/`denenen`/`kalan`); yazım `store.update_json` (kilitli, atomik).
+#: `unut:` iki adımının bekleyen aday kaydı (Rol-1 kararı 1, 2026-09-30) — ALANLARIN TEK TAM LİSTESİ burasıdır
+#: (`codelaw.DECLARED_SINKS` gerekçesi buraya gösterir; ayrışma çivisi v608 alanları koddan ölçer):
+#: `{kod: {bot, idler, kesitler, ifade, ts, son, durum}}`; aynı botun yeni aday listesi `bekliyor` kaydı düşürünce o
+#: kayda `yerine_gecen` (yeni kod); onaydan sonra `unutulan_idler`/`denenen`/`kalan`; `geri al` denendikten sonra
+#: `geri_alinan_idler`. Yazım `store.update_json` (kilitli, atomik).
 UNUT_BEKLEYEN = "bot_unut_bekleyen.json"
 #: Kısa kodun ömrü: `onayla: unut <kod>` bu süre içinde gelmezse kayıt `suresi_doldu` olur.
 UNUT_ONAY_OMRU = timedelta(minutes=15)
@@ -179,8 +183,32 @@ DONUS_ETIKETI = "sohbet_donusu"
 #: Telegram yanıt kipinde yanıtlanan mesajın bota giden VERİ çitinin adı — TEK KAYNAK burası (G4 Görev 1 Tur 3,
 #: inceleme I-1): üretici `telegram_dinleyici._bota_giden` ithal eder, dönüş kaydı (`_hafiza_mesaji`) çözer.
 ALINTI_CIT_ADI = "yanitlanan_mesaj"
-#: Yanıt kaynak etiketinin (yanıtlanan mesajın ilk satırı) karakter tavanı — `kaynak_etiketi`.
+#: Yanıt kaynak etiketinin (yanıtlanan mesajın ilk İÇERİK satırı) karakter tavanı — `alinti_icerik_satiri`.
 KAYNAK_ETIKETI_TAVANI = 80
+#: Telegram SOHBET İMZASI — bot cevabının her parçasının ve ara bildirimin İLK satırı: `💬 @<bot> · <oturum>`, çok
+#: parçalıda sonunda `PARCA_EKI` (` (i/n)`). TEK KAYNAK burası (G4 kalıntıları M-2, 2026-10-01): Telegram dinleyicisi
+#: üretirken de yönlendirirken de bunları İTHAL eder; alıntının içerik satırı (`alinti_icerik_satiri`) imzayı AYNI
+#: tanıyıcıyla atlar. İki kopya ayrışsaydı yönlendirme ile hafıza etiketi farklı satırı "imza" sayardı. Dinleyiciden
+#: buraya TAŞINDI: dinleyici bu modülü ithal eder, ters yön döngüsel ithal olurdu.
+SOHBET_IMZA = "💬 @{ad}"
+#: İmza satırında bot ile oturum arasındaki ayraç — yanıt zincirinin oturumu cevabın KENDİSİNDE taşınır.
+OTURUM_AYRACI = " · "
+#: Çok parçalı cevapta her parçanın imza satırının sonuna eklenen sıra eki; tek parçada YOK (eski biçim aynen).
+PARCA_EKI = " ({no}/{toplam})"
+#: Sohbet imza satırının TANIYICISI. Bot adı [a-z_] — kadro bunu ZORLAR (`kadro.AD_DESENI`). Oturum `tg-<ad>-r<N>` ya da
+#: `tg-<ad>-<YYYYAAGG>`. Desen `PARCA_EKI`ni TANIR ama oturum grubuna KATMAZ (G4 Görev 3 Tur 2): hangi parçaya yanıt
+#: verilirse verilsin aynı bot + aynı oturum. Elle yazılmış bir kopyadır; üreticiye gidiş-dönüş çivisiyle bağlı (v602).
+_SOHBET_IMZA = re.compile(r"^💬 @([a-z_]+)(?: · (tg-[a-z_]+-r?\d+))?(?: \([1-9]\d*/[1-9]\d*\))?\s*$")
+#: Telegram ARA BİLDİRİM balonunun 2. satırı (1. satırı eksiz sohbet imzası): `bota_sor` eşiği aşınca dinleyici BİR kez
+#: gönderir (`telegram_dinleyici._AraBildirim`; eşik dinleyicinin `ARA_BILDIRIM_ESIGI_S`i). TEK KAYNAK burası (G4
+#: kalıntıları Tur 2, inceleme M-1, 2026-10-01): dinleyici İTHAL eder; içerik kuralı bu satırı da atlar — balona yanıt
+#: Tur 2 kararıyla aynı bota/oturuma gider ve "⏳ düşünüyor…" etiket ya da `unut:` sorgusu olmamalı. İmza sabitleriyle
+#: aynı nedenle buraya taşındı (dinleyici bu modülü ithal eder; ters yön döngüsel ithal olurdu).
+ARA_BILDIRIM = "⏳ düşünüyor…"
+#: Alıntıda İÇERİK SAYILMAYAN tam satırlar: araçsız-veri uyarıları (`_onekle` onları cevabın başına koyar; Telegram'da
+#: imzanın hemen altında durur) ve ara bildirim satırı. Metin kopyalanmaz, sabitlerin kendisi kullanılır (G4 kalıntıları
+#: M-3; ara bildirim Tur 2).
+_ICERIK_DISI_SATIRLAR = (UYARI_ARACSIZ, UYARI_OLCULEMEDI, ARA_BILDIRIM)
 #: Monotonik saat — taşıyıcı (`sure_s`) ve dönüş kaydı (`hafiza_sure_s`) süreleri. Modül düzeyinde ki çiviler sahte
 #: saatle süre alanlarını ölçebilsin.
 _saat = time.monotonic
@@ -783,18 +811,29 @@ def _geri_al(bot: str, mesaj: str, govde: str, kanal: str, oturum: str, an: date
     return cevap
 
 
-def alinti_ilk_satiri(alinti: str) -> str:
-    """Yanıtlanan mesajın ilk satırı: ÖNCE `notify.scrub`, SONRA `KAYNAK_ETIKETI_TAVANI` (ters sıra yarım anahtarı
-    süzgeçten kaçırırdı). TEK KAYNAK: `kaynak_etiketi` ve Telegram'ın gövdesiz `unut:` sorgusu
+def alinti_icerik_satiri(alinti: str) -> str:
+    """Yanıtlanan mesajın ilk İÇERİK satırı — TEK KURAL (G4 kalıntıları M-2/M-3, 2026-10-01). Baştan atlananlar: boş
+    satırlar, sohbet imza satırı (`_SOHBET_IMZA`, parça ekli dahil — bot cevabının her parçası ve ara bildirim onunla
+    başlar) ve araçsız-veri uyarıları (`_ICERIK_DISI_SATIRLAR`; satırın TAMAMI eşleşirse). İlk kalan satır ÖNCE
+    `notify.scrub`, SONRA `KAYNAK_ETIKETI_TAVANI` (ters sıra yarım anahtarı süzgeçten kaçırırdı). Rapor alıntısında ilk
+    satır (rapor başlığı) İÇERİKTİR — rapor imzası sohbet imzası değildir. İçerik satırı yoksa `""`: imza ya da uyarı
+    içerik diye UYDURULMAZ. TÜKETİCİLER (hepsi bu kuraldan geçer — iki kural ayrışıyordu, inceleme M-2):
+    `kaynak_etiketi` (Telegram `hatırla:` yanıtı + dönüş kaydı) ve Telegram'ın gövdesiz `unut:` sorgusu
     (`telegram_dinleyici._komut_giden`, G4 Görev 2 — Rol-1 kararı 5)."""
-    return notify.scrub(str(alinti).strip().split("\n", 1)[0].strip())[:KAYNAK_ETIKETI_TAVANI]
+    for satir in str(alinti).split("\n"):
+        satir = satir.strip()
+        if satir and not _SOHBET_IMZA.match(satir) and satir not in _ICERIK_DISI_SATIRLAR:
+            return notify.scrub(satir)[:KAYNAK_ETIKETI_TAVANI]
+    return ""
 
 
-def kaynak_etiketi(alinti: str) -> str:
-    """`(yanıt: <yanıtlanan mesajın ilk satırı>)` — satır `alinti_ilk_satiri`ndan (scrub SONRA tavan). TEK KAYNAK:
-    Telegram `hatırla:` yanıtı (`telegram_dinleyici._komut_giden`) ve dönüş kaydı (`_hafiza_mesaji`) aynı etiketi
-    buradan alır."""
-    return f"(yanıt: {alinti_ilk_satiri(alinti)})"
+def kaynak_etiketi(alinti: str) -> str | None:
+    """`(yanıt: <yanıtlanan mesajın ilk İÇERİK satırı>)` — satır `alinti_icerik_satiri`ndan (tek kural; scrub SONRA
+    tavan). İçerik satırı yoksa `None`: etiket UYDURULMAZ (imza ya da uyarı etikete girmez, boş `(yanıt: )` de yazılmaz)
+    ve çağıran etiketsiz sürer. TEK KAYNAK: Telegram `hatırla:` yanıtı (`telegram_dinleyici._komut_giden`) ve dönüş
+    kaydı (`_hafiza_mesaji`) aynı etiketi buradan alır."""
+    satir = alinti_icerik_satiri(alinti)
+    return f"(yanıt: {satir})" if satir else None
 
 
 def _hafiza_mesaji(mesaj: str) -> str:
@@ -802,15 +841,14 @@ def _hafiza_mesaji(mesaj: str) -> str:
     adlı bir VERİ çiti taşıyorsa (bugün onu yalnız Telegram yanıt kipi üretir, ama hangi kanaldan gelirse gelsin aynı
     işlem uygulanır) çit bir ALINTIDIR: hafızaya "Operatör:" diye girerse alıntı (rapor ya da botun eski cevabı)
     yanlış atfedilir ve uzun alıntıda operatörün sorusu `bot_hafiza.DONUS_TAVANI`nın dışına düşer. Çit çıkarılır,
-    yerine `kaynak_etiketi` kalır. Çit grameri `skill_gorus_llm.veri_bloku_ayir`dan çözülür (jetonlar elle yazılmaz).
-    Başka adlı ya da metnin ortasındaki çit OLDUĞU GİBİ kalır (anlamı uydurulmaz). Modele ve deftere giden metin
-    DEĞİŞMEZ."""
+    yerine `kaynak_etiketi` kalır (alıntının içerik satırı yoksa etiket de yoktur — yalnız sözler gider). Çit grameri
+    `skill_gorus_llm.veri_bloku_ayir`dan çözülür (jetonlar elle yazılmaz). Başka adlı ya da metnin ortasındaki çit
+    OLDUĞU GİBİ kalır (anlamı uydurulmaz). Modele ve deftere giden metin DEĞİŞMEZ."""
     ayrik = skill_gorus_llm.veri_bloku_ayir(mesaj, ALINTI_CIT_ADI)
     if ayrik is None:
         return mesaj
     alinti, sozler = ayrik
-    etiket = kaynak_etiketi(alinti)
-    return f"{etiket}\n{sozler}" if sozler else etiket
+    return "\n".join(p for p in (kaynak_etiketi(alinti), sozler) if p)
 
 
 def _donus_kaydi(bot: str, mesaj: str, cevap: str, kanal: str, arac_siz_veri: bool | None,

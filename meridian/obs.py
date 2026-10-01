@@ -98,12 +98,18 @@ ALARM_ONAYLI_PLAN_GONDERILMEDI = "ONAYLI_PLAN_GONDERILMEDI"
 # değil, YANLIŞ sinyali DOĞRUSUYLA değiştirmektir: "iplik canlı" (v302) + "havuz iş bitirmiyor"
 # (bu jeton). İkisi ayrı olgudur; biri ötekinin yerine geçemez.
 ALARM_ARAMA_HAVUZU_OLU = "ARAMA_HAVUZU_OLU"  # işçi havuzu tavan boyunca TEK İŞ bitirmedi — teslimat arızası, canlılık değil
-# TSK-131 ALT-İŞ (2026-09-05): A1 /opt/veri (EDG-066 tick geri dolumu) hiçbir sensörle
-# izlenmiyordu. Operatörün 120 G tavanı (ROADMAP TSK-131, `deploy/oracle-a1/geridolum.py::
-# TAVAN_BAYT` — TEK KAYNAK) o kararın 10 G ÖNCESİNDE haber verir; jeton bu yüzden kendi adını
-# hak ediyor (DATA_QUALITY/MECHANISM_STALE'ın anlattığı olgu bu DEĞİL — "disk operatör tavanına
-# yaklaşıyor" bir KAPASİTE uyarısıdır). Üretici: `watchdog.check_veri_disk_and_alarm`.
-ALARM_DISK_ESIK = "DISK_ESIK"  # /opt/veri kullanımı operatör tavanına yaklaşıyor (erken uyarı)
+# TSK-131 ALT-İŞ (2026-09-05) + TSK-259 (2026-09-30): A1 /opt/veri (EDG-066 tick arşivi, ayrı
+# disk) hiçbir sensörle izlenmiyordu. Eşik 2026-09-12'den beri 140 G'dir (operatör "(a) dur, eşiği
+# 140 G'ye taşı"; `meridian/watchdog.py::VERI_DISK_ESIK_G`): geri dolum kendi 120 G tavanında durdu
+# (`deploy/oracle-a1/geridolum.py::TAVAN_BAYT`) ve jeton artık diskteki KALICI büyümenin bekçisidir.
+# TSK-259 (operatör 2026-09-30 "iş koşarken ölçme"): ileri doldurma işi koşarken eşik hükmü
+# VERİLMEZ — ölçüm işin geçici alanını içerir, iş kendini kendi disk payı kapısıyla korur; atlanan
+# hüküm sayılır (`veri_disk_esigi` satırında `atlandi_is_kosuyor` + `atlanan_tepe_g`,
+# `/api/diagnostics`). İş 2 saatten uzun koşarsa ya da durumu ölçülemezse hüküm YİNE verilir ve
+# mesaj bunu söyler. Jeton kendi adını hak ediyor (DATA_QUALITY/MECHANISM_STALE'ın anlattığı olgu bu
+# DEĞİL — "disk kalıcı olarak doluyor" bir KAPASİTE uyarısıdır). Üretici:
+# `watchdog.check_veri_disk_and_alarm`.
+ALARM_DISK_ESIK = "DISK_ESIK"  # /opt/veri KALICI doluluğu 140 G eşiğini aştı (ileri doldurma koşarken hüküm verilmez)
 # TSK-064 FAZ-2 (2026-09-14): sır kasası (Vault) Faz-2'nin YENİ körlük sınıfını getirir ve iki
 # jeton onu ikiye ayırır — çünkü iki hâl AYRI operatör eylemi ister ve tek jeton onları
 # karıştırırdı (emsal: HEARTBEAT_STALE ile MECHANISM_STALE ayrımı; "canlılık ≠ ilerleme").

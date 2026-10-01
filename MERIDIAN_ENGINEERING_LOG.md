@@ -4123,3 +4123,35 @@ canlıyla aynı (ilk "FARKLI" ölçümüm süreç ikamesindeki stdin hatasıydı
 - **Açık:** G3 planı (bot kökü `~/.hermes-botlar`, `meridian-botlar.service`, `API_SERVER_KEY`, profil `.env` rotasyon aracıyla; kapılar:
   EDG-086 sayımı `oturum` ile ayrılır, `.path` etkin, MCP alt sürecine credential mirası, çoklu kipte duruş profil başına) · TSK-214
   canlı kanıtı sonraki haftalık bileşik ön-eleme · TSK-240 Vault ×2 operatörde.
+
+### 39. PERŞEMBE: G4 + TSK-258 + TSK-259 + urllib3 → DAĞITIM #88 (2026-10-01, model Opus 5.5)
+
+- **Dağıtım #88 (07:28–07:32Z, main HEAD 7fe14465 = deployed_sha):** önce A0 site.yml (kuru `failed=0 changed=6` → uygula
+  `ok=58 changed=6 failed=0`: `~/.hermes-botlar` kök/profil/hindsight dizinleri + sohbet profil dosyaları + `meridian-botlar.service` ve
+  `meridian-telegram.service` birim dosyaları — ikisi de `disabled inactive`, etkinleştirme G3c'de); sonra dagit kuru (silme 0, [1c] birim
+  ↔ /etc aynı, [0b] kilit taze + uv audit temiz, [5c] taze, F9 yalnız Vault ×2 — TSK-240) → uygula `a1 ok=62 changed=5 failed=0`, healthz
+  200, [5b] koşan birimler dağıtılan kodu taşıyor. meridian + learn aktif, NRestarts 0; K-1 `enabled: False`, `~/.hermes/config.yaml`
+  09-30 06:28Z'den beri dokunulmamış (TSK-258 birleştirici öz-onarım canlıda K-1'i ezmiyor). Uyarılar yalnız bilinen üçlü
+  (`parallel_probes_failed` learn durdurma saniyesi, `korumasiz_motor_disi_pozisyon`, `warmup_coverage_short`).
+- **Kaçan pencere (kendi hatam):** dağıtım dün 22:23Z oturum-içi zamanlanmış görevle planlanmıştı; oturum kullanım sınırına takıldı, sınır
+  kalkınca kendiliğinden devam etmedim — operatör 07:2xZ'de sordu. Dağıtım açılış öncesi pencerede yapıldı (memory `oturum-cron-guvenilmez`
+  sınıfı: oturum-içi zamanlayıcı askıda ateşlemez; sınır sonrası ilk iş bekleyen pencerenin durumu ölçülür).
+- **Giden:** G4 (Telegram kanal kablolaması — `bota_sor` üretim hafıza kaydı, unut iki adım, dinleyici + birim, 4096 bölme her parça
+  imzalı, pano `mcp:` reddi), TSK-258 (öz-onarım birleştirir, K-1 değişmezi), `urllib3` 2.7.0 → 2.8.0 (GHSA-vxq7-64xx-v4gw — CI uv audit
+  kırmızısının kök nedeni; yalnız `requests ← alpaca-py` live extra yolu, A1 venv'inde de KURULU DEĞİL → canlı etki yok), TSK-259
+  (DISK_ESIK ileri doldurma koşarken eşik hükmü vermez — 4 alarmın 4'ü koşum içindeydi; /proc taraması; A1'de hidepid yok + aynı kullanıcı
+  + argv ölçüldü), RUNBOOK + tipografi korpusu, EXE-2026-012 ön-kayıt (KILL#1 canlı çapası), ROADMAP operatör kararları (kadro aşamalı,
+  disk alarmı, hız kartı S1–S3). Suite 16696/0 (HEAD eşit 7fe14465) + KILL#1 (ilk seri koşum eşzamanlı ajan pytest'iyle ÖLÇÜLEMEDİ, tek
+  başına geçti); CI 7fe14465 success.
+- **Ölçüm bulgusu (G3b'yi değiştirdi):** Hermes `/p/<profil>/` isteği `API_SERVER_KEY`i PROFİL `.env`inden alır (fail-closed) — G3
+  tasarımının "yalnız kök `.env`" kararı üç botu 401'e düşürürdü; G3b-R1: tek sır, dört kopya.
+- **Açık:** TSK-259 canlı kanıtı bu sabahki ileri doldurma koşumunda (07:30Z başladı) · G3b Task 2 uçuşta · EXE-012 A dilimi
+  yeniden-inceleme uçuşta, B dilimi (hüküm betiği + PK) sırada · operatör: Debug Export (TSK-209) + "düşün" düğmesi (TSK-233).
+- **Dağıtım #89 (09:56–09:58Z, main HEAD ae11e5f0 = deployed_sha):** EXE-2026-012 aleti + hüküm betiği (TSK-020 UYGULA-9 Faz C). Birim/`/etc`
+  değişikliği yok → site.yml gerekmedi (kuru: [1c] aynı, silme 0, F9 yalnız Vault ×2, uv audit temiz). Uygula `a1 ok=62 changed=5 failed=0`,
+  healthz 200, [5b] taze; meridian + learn aktif NRestarts 0; uyarılar bilinen üçlü. Defter `state/exe012_tur_atif.jsonl` henüz YOK
+  (beklenen: ilk satır seans sonrası ilk olayda ya da düzgün kapanışta). ADIM-0c = bugünkü RTH seansı (pencereye GİRMEZ); pencere en
+  erken 10-13. Suite 16766/0 (HEAD eşit) + KILL#1; CI ae11e5f0 success. İnceleme zinciri: A dilimi görev incelemesi (1I) → düzeltme →
+  yeniden inceleme (0C/0I) → B dilimi → Opus dal sonu (3I: gevşek eşik, tanıksız hüküm, PK-1 büyüklüğü) → düzeltme; faz5 altın değerleri
+  eski gövdeden bağımsız doğrulandı (refaktör bayt-eşit).
+- **TSK-259 KAPANDI (08:5xZ):** ilk ileri doldurma koşumunda tepe 141,9 G, DISK_ESIK çalmadı, atlama sayacı 5; koşum sonrası ≈123 G.

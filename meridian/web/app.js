@@ -4792,16 +4792,23 @@ const OLAY_YUZEYLERI = {
     // SÖZLEŞME ihlali anlatır (veri/defter kendi kuralını çiğnedi), bu ise sözleşme İHLAL
     // ETMEDEN önce gelen bir KAPASİTE erken uyarısıdır (ARAMA_HAVUZU_OLU'nun `teslimat`
     // sınıfını doğurduğu gerekçenin ikizi: olgu mevcut sınıflardan HİÇBİRİ değil).
+    // TSK-259 (2026-09-30): metin 09-12 kararına (eşik 140 G; geri dolum 120 G tavanında durdu) ve
+    // operatörün "iş koşarken ölçme" kararına çekildi — eski metin 09-05'in eşiğini ve geri dolum
+    // tavanını anlatıyordu, yani alarmın bugün ne ölçtüğünü YANLIŞ söylüyordu (çivi v605).
     ad: "Kapasite eşiği (disk)",
-    ozet: "Bir kaynak (A1 /opt/veri diski) operatörün kendi koyduğu tavana yaklaşıyor — ARIZA " +
-          "değil, sözleşme ihlalinden ÖNCE gelen bir erken uyarıdır.",
+    ozet: "A1 /opt/veri diskinin KALICI doluluğu operatörün 140 G eşiğini aştı — ARIZA değil, " +
+          "disk dolmadan ÖNCE gelen bir kapasite uyarısıdır.",
     jetonlar: ["DISK_ESIK"],
-    neOldu: "A1 /opt/veri (EDG-066 tick geri dolumunun kalıcı+geçici alanı) operatörün kendi " +
-            "koyduğu 120 G tavanına yaklaşıyor (ROADMAP TSK-131, " +
-            "<code>deploy/oracle-a1/geridolum.py::TAVAN_BAYT</code> — tek kaynak). " +
-            "<code>watchdog.check_veri_disk_and_alarm</code> bu jetonu o tavandan 10 G ÖNCE " +
-            "(110 G kullanım) basar. DATA_QUALITY/MECHANISM_STALE'ın anlattığı olgu bu " +
-            "DEĞİLDİR: veri bozulmadı, mekanizma durmadı — disk doluyor.",
+    neOldu: "A1 /opt/veri (EDG-066 tick arşivi, ayrı disk) kullanımı 140 G eşiğini aştı " +
+            "(<code>meridian/watchdog.py::VERI_DISK_ESIK_G</code>, operatör kararı 2026-09-12). " +
+            "Geri dolum kendi 120 G tavanında durdu " +
+            "(<code>deploy/oracle-a1/geridolum.py::TAVAN_BAYT</code>); eşik artık diskteki KALICI " +
+            "büyümenin bekçisidir. İleri doldurma işi koşarken eşik hükmü VERİLMEZ — ölçüm işin " +
+            "geçici alanını içerir ve iş kendini kendi disk payı kapısıyla korur " +
+            "(<code>deploy/oracle-a1/geridolum.py::bos_bayt</code>). İş 2 saatten uzun koşarsa ya " +
+            "da durumu ölçülemezse alarm YİNE çalar ve mesaj bunu söyler. DATA_QUALITY/" +
+            "MECHANISM_STALE'ın anlattığı olgu bu DEĞİLDİR: veri bozulmadı, mekanizma durmadı — " +
+            "disk kalıcı olarak doluyor.",
     kaynak: "meridian/obs.py::ALARM_DISK_ESIK · meridian/watchdog.py::check_veri_disk_and_alarm",
     degerler: () => [
       // Bu turda /api/diagnostics'e disk raporu BAĞLANMADI (TSK-131 alt-iş kapsamı sensör +
@@ -4811,9 +4818,15 @@ const OLAY_YUZEYLERI = {
     ],
     adimlar: [
       "Alarm gövdesi kullanılan/toplam/boş G ile eşik G'sini taşır (<code>kullanilan_g</code>, " +
-      "<code>toplam_g</code>, <code>bos_g</code>, <code>esik_g</code>) — olay kaydı kendi kanıtını taşır.",
+      "<code>toplam_g</code>, <code>bos_g</code>, <code>esik_g</code>) ve ileri doldurma işinin " +
+      "durumunu (<code>is_kosuyor</code>, <code>is_sure_sn</code>, <code>is_olculemedi_neden</code>) — " +
+      "olay kaydı kendi kanıtını taşır.",
       "Günde en fazla BİR kez ateşlenir (mandal, <code>state/watchdog_alarm_gunluk.json</code>); " +
       "eşik aşımı sürerken bastırılan tekrarlar orada SAYILIDIR, sessiz değildir.",
+      "İş koşarken atlanan hükümler de SAYILIDIR: <code>/api/diagnostics</code> ucundaki bekçi " +
+      "alarm defterinde <code>veri_disk_esigi</code> satırı, <code>atlandi_is_kosuyor</code> " +
+      "(atlanan poll sayısı) ve <code>atlanan_tepe_g</code> (atlanan ölçümlerin günlük tepesi) — " +
+      "atlamanın bedeli orada görünür.",
       "Yol yerelde/CI'da yoktur (A1 gerçeği) — bu sınıf yalnız A1'de canlı ateşlenir.",
     ],
     cozum: null,

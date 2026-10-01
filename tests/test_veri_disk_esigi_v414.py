@@ -65,6 +65,13 @@ def diskli(sandbox_state, monkeypatch, tmp_path):
     yol.mkdir()
     monkeypatch.setattr(watchdog, "VERI_DISK_YOLU", str(yol))
     monkeypatch.setattr(watchdog, "_now", lambda: 1_800_000_000.0)  # sabit gün (UTC)
+    # TSK-259 (2026-09-30): eşik aşılınca bekçi ileri doldurma sürücüsünü `/proc`ta arar. Bu
+    # dosyanın sahneleri "iş koşmuyor" hâlidir; GERÇEK süreç tablosu okunmasın diye sürücüsüz
+    # sahte bir kök verilir (iş-koşuyor sahneleri tests/test_disk_alarm_is_kosarken_v605.py).
+    proc = tmp_path / "proc"
+    (proc / "1").mkdir(parents=True)
+    (proc / "1" / "cmdline").write_bytes(b"/sbin/init\0")
+    monkeypatch.setattr(watchdog, "PROC_KOK", str(proc))
     return yol
 
 

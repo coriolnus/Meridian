@@ -821,6 +821,94 @@ drop-in'inde, bu cetvelde ve v587'de birlikte değişir. CPU tavanı öldürmez,
 birimin `CPUQuota=`su ve bu cetvelin `NanoCpus` satırıyla birlikte değişir. **Geri alma:** `--memory` (ve/veya
 `--cpus`) satırı kaldırılır → `site.yml` → aynı restart.
 
+## Bot ağ geçidi sırları — G3b (Parça 1b, 2026-10-01)
+
+Konuşan bot filosunun ağ geçidi (`meridian-botlar.service`) ve Telegram dinleyicisi (`meridian-telegram.service`) için
+sırların İLK kurulumu. Plan: `docs/superpowers/plans/2026-09-30-konusan-filo-parca1b-g3b-sirlar.md` (operatör kararları
+K-G3b-1/2/3; Rol-1 kararları G3b-R1..R6). Değer hiçbir adımda ekrana, argv'ye ya da log'a düşmez; doğrulamalar yalnız
+sahip/mod/boyut ve alan ADI basar. K-G3b-3: kasa ve A1 adımlarını Rol-1 dener; sınıflandırıcı engellerse aynı bloğu
+operatör koşar.
+
+Neyin nereye gittiği (G3b-R1, Hermes v0.19 profil kapsamı ölçümü): `API_SERVER_KEY` TEK sır, DÖRT kopya — ağ geçidi kökü
+`~/.hermes-botlar/.env` (dinleyici açılışı) + her sohbet profili `~/.hermes-botlar/profiles/<ad>/.env` (`/p/<ad>/` isteği
+anahtarı profilin kendi `.env`inden alır; yoksa 401) + Telegram birimine credential (`55-api-sunucu-credential.conf`).
+Profil `.env`leri ayrıca `BOT_KEY_<AD>` (APISIX tüketicisi) ve `HINDSIGHT_API_KEY` (kiracı anahtarı) taşır.
+
+**0. Önkoşul.** G3b dalı main'de ve `dagit` ile A1'de: yeni `sir_rotasyon.sh` (`--api-sunucu`, `--kapi-bot <ad>`,
+`--tohumla-sohbet`), `deploy/vault/policies/meridian-agent.hcl` + `deploy/vault/agent.hcl` (`api_server_key` şablonu)
+`/opt/meridian/deploy/` altına gelir. Botlar ve Telegram birimi etkin DEĞİL (`etkinleştirme G3c'de`).
+
+**1. A0 rolü** — botlar/telegram drop-in dizinleri + `LoadCredential` drop-in'leri (`54-hafiza-credential.conf` ×2,
+`55-api-sunucu-credential.conf`); hiçbir birim etkinleştirilmez:
+
+```bash
+ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/site.yml --check --diff
+ansible-playbook -i deploy/ansible/inventory.ini deploy/ansible/site.yml
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'systemctl is-enabled meridian-botlar.service meridian-telegram.service; ls /etc/systemd/system/meridian-botlar.service.d /etc/systemd/system/meridian-telegram.service.d'
+# beklenen: disabled · disabled · 54-hafiza-credential.conf · 54-hafiza-credential.conf 55-api-sunucu-credential.conf
+```
+
+Bilinen check-kipi sınırı (Grafana bölümündeki aynı sınıf): yeni drop-in dizinleri ilk `--check`te yoktur ve "Drop-in
+dosyaları" görevi o öğeler için `Destination directory … does not exist` ile düşer. Temiz kuru koşum için önce
+`ssh … 'sudo install -d -m 0755 /etc/systemd/system/meridian-botlar.service.d /etc/systemd/system/meridian-telegram.service.d'`.
+
+**2. `API_SERVER_KEY` kasaya** (G3b-R6: ilk değer araçla değil borudan; politika ÖNCE, değer İKİNCİ, Agent SON; G3b-R5
+hex 64 kr — Hermes ≥16 kr ve yer tutucu olmayan değer ister):
+
+```bash
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo bash -s' <<'KASA'
+set -euo pipefail
+export VAULT_ADDR=http://127.0.0.1:8200
+trap 'rm -f /root/.vault-token' EXIT
+/usr/local/bin/vault login -no-print - < /etc/vault/admin.token >/dev/null
+/usr/local/bin/vault policy write meridian-agent /opt/meridian/deploy/vault/policies/meridian-agent.hcl
+openssl rand -hex 32 | tr -d '\n' | /usr/local/bin/vault kv put secret/meridian/api_server_key value=- >/dev/null
+install -o root -g vault -m 0640 /opt/meridian/deploy/vault/agent.hcl /etc/vault/agent.hcl
+systemctl restart vault-agent
+KASA
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo stat -c "%a %U %s" /etc/meridian/api_server_key'
+# beklenen: 400 root 64   (BOYUT ÖLÇÜLÜR: kasada yol yokken Agent boş dosya render edebilir — 0/1 bayt ise DUR)
+```
+
+Agent yeniden başlaması tüketicileri yeniden başlatmaz. Bot anahtarları (`/etc/meridian/bot_key_<ad>`, 48 bayt) ve
+kiracı anahtarı (`/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY`, 64 bayt) kasada 09-14'ten beri dolu (2026-09-30 ölçüldü).
+
+**3. Sohbet `.env`lerini tohumla** (K-G3b-2: araç; dosya YOKSA 0600 ubuntu:ubuntu yazar, VARSA dokunmaz ve eksik alanı
+adıyla söyler; alan kümesi rotasyon tablosundan türer; referans ya da dizin yoksa HİÇBİR dosya yazmadan durur):
+
+```bash
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo /opt/meridian/deploy/oracle-a1/sir_rotasyon.sh --tohumla-sohbet --kuru'
+# beklenen: dört hedef "YOK — yazılacak alanlar: …", bütün referanslar VAR; sıfır yazım. "GERÇEK KOŞUM DURUR" satırı = eksik dizin/referans (önce adım 1–2)
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo /opt/meridian/deploy/oracle-a1/sir_rotasyon.sh --tohumla-sohbet'
+# beklenen özet: yazıldı 4 · dokunulmadı 0 · eksik alanlı 0. Çıkış 3 = var olan dosyada eksik ya da ÇİFT alan (elle düzelt);
+# çıkış 2 = var olan dosyanın alanı okunamadı (ör. UTF-8 dışı). İkisinde de VAR OLAN dosyaya dokunulmaz; karışık durumda
+# YOK olan dosyalar yine yazılır. Değerlerin BOŞ olmadığını da araç ölçer (boş alan = eksik); ek denetim:
+#   ssh … 'sudo /opt/meridian/deploy/oracle-a1/sir_rotasyon.sh --envanter'   (kopyalar referansla EŞİT mi — değer basmaz)
+ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'for f in /home/ubuntu/.hermes-botlar/.env /home/ubuntu/.hermes-botlar/profiles/*/.env; do echo "$f [$(stat -c "%U:%G %a" "$f")]: $(grep -o "^[A-Z_]*=" "$f" | tr -d = | tr "\n" " ")"; done'
+# beklenen: hepsi ubuntu:ubuntu 600; kök: API_SERVER_KEY · profiller: API_SERVER_KEY BOT_KEY_<AD> HINDSIGHT_API_KEY
+```
+
+İkinci `--tohumla-sohbet` koşumu hiçbir şey yazmaz (idempotent).
+
+**4. Ancak bundan sonra rotasyon.** `--tenant`, `--api-sunucu`, `--kapi-bot <ad>` ve `--esitle` sohbet `.env`leri yokken
+yazım ÖNCESİ ön-denetimde durur (eksik yol ve alanı adıyla basar; kasaya hiçbir şey yazılmaz). Botlar/Telegram etkin
+değilken rotasyon onları BAŞLATMAZ: `ATLANDI (etkin değil: <durum>)` satırı basılır, kanıt "ölçülemedi" der (beklenen).
+`--kapi-bot <ad>` APISIX'i yeniden başlatır (`$env://` yalnız açılışta çözülür — birkaç saniye kapı kesintisi). Kasa kipinde (`--vault`) araç APISIX'i ancak `.env-apisix.vault` yan dosyası YENİ değere render olunca
+yeniden başlatır ve kapıyı yeni anahtar 200 / eski anahtar 401 ile ölçer; render gelmezse ya da kanıt ölçülemezse
+`ÖLÇÜLEMEDİ` basıp çıkış 2 verir (sessiz başarı yok) — aynı kanıt `--kapi --vault` ve `--api-sunucu --vault` için de geçerli;
+istisna: botlar etkin değilken `--api-sunucu --vault` kanıtı "ölçülemedi — birim etkin değil" der ve çıkış 0'dır (beklenen).
+`API_SERVER_KEY` (ve bütün kasa-bağlı sırlar) YALNIZ `--vault` ile döndürülür: kipsiz eski yol kasayı değiştirmez, Agent bir
+sonraki render'da kanonik kopyayı eski kasa değeriyle ezer ve Telegram credential'ı ile ağ geçidi `.env`leri AYRIŞIR.
+
+**5. G3c test-ateşlemesi** — G3 planının "Rol-1 canlı kontrol listesi" (özellikle 4b: `/p/<bot>/v1/models` Bearer ile
+200, yanlış anahtarla 401; hafıza okuma zaman aşımı yüzeyi).
+
+**Geri alma** — yeni `.env`leri SİLMEDEN yedek dizinine taşı (önce `sudo install -d -m 0700 -o ubuntu -g ubuntu /home/ubuntu/backups/g3b-<UTC>`,
+sonra `sudo mv … /home/ubuntu/backups/g3b-<UTC>/`); drop-in'ler
+etkin olmayan birimde zararsızdır; kasadaki `api_server_key` kullanılmadan kalabilir (Agent hedefi yalnız Telegram
+birimi okur). Rotasyon geri alımı aracın kendi yedeği ve bastığı reçeteyledir (yalnız etkin birimleri yeniden başlatır).
+
+
 ## TSK-064 iki-kanal kapanışı — kiracı anahtarı ve hindsight-cp yalnız Vault kanalından (2026-09-29)
 
 Hindsight kiracı anahtarının ve CP ortamının ESKİ kopyaları kapanır: `/opt/hindsight/.key` (0600 ubuntu — tek
