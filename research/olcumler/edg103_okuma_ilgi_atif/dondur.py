@@ -34,8 +34,12 @@ ve commit kaynak başına yazılır, denetlenebilir).
 SENTETİK İŞARET (kill #7): destek olmayan herhangi bir kaynağının metni kartın `[PK-…]`/`[NK-…]`
 işaretini taşıyan karar `sentetik_isaretler` alır; sayım onu D'den çıkarıp AYRI listeler.
 
-ÇIKIŞ: 0 donduruldu · 1 girdi eksik (gerekli sayfa anlık görüntüsü — kimlikleri ve çekme komutu stderr'e)
-ya da git/kaynak okunamadı · 2 kullanım (kirli ağaç, dolu hedef dizin, biçimsiz `--sayfa`, kart yok).
+SIR DENETİMİ (kill #5, netleştirme b (10)): dondurulacak HER dosya yazılmadan önce `sayim.notify_taramasi` ile
+(notify sır desenleri — yanlış-pozitifsiz katman) taranır; eşleşmede hiçbir şey yazılmaz, stderr'e yalnız dosya adı +
+satır no + desen adı basılır (değer asla).
+
+ÇIKIŞ: 0 donduruldu · 1 girdi eksik (gerekli sayfa anlık görüntüsü — kimlikleri ve çekme komutu stderr'e),
+sır deseni eşleşti ya da git/kaynak okunamadı · 2 kullanım (kirli ağaç, dolu hedef dizin, biçimsiz `--sayfa`, kart yok).
 
 CLI (sözleşme KOMUT SATIRIdır; Rol-1, ana checkout'ta, pencere KAPANDIKTAN sonra):
     .venv/bin/python research/olcumler/edg103_okuma_ilgi_atif/dondur.py --repo . \\
@@ -286,6 +290,12 @@ def dondur(repo: pathlib.Path, okuma_baytlari: bytes, sayfalar: dict, girdi: pat
             yazilacak[f"{SAYIM.SAYFA_DIZINI}/{kimlik}.md"] = yol.read_bytes()
         except OSError as e:
             raise DondurmaHatasi(f"sayfa dosyası okunamadı: {yol} ({type(e).__name__})") from e
+    # kill #5 / netleştirme b (10): girdi DEPOYA girer → yazmadan ÖNCE her dosya notify sır desenleriyle taranır;
+    # eşleşmede HİÇBİR ŞEY yazılmaz. Yalnız dosya adı, satır no ve desen adı basılır, değer ASLA (inceleme I4).
+    bulgular = SAYIM.notify_taramasi({ad: bayt.decode("utf-8", errors="replace") for ad, bayt in yazilacak.items()})
+    if bulgular:
+        raise DondurmaHatasi(f"SIR DENETİMİ (kill #5): {len(bulgular)} notify desen eşleşmesi — girdi YAZILMADI: "
+                             + "; ".join(f"{b['kaynak']} {b['yer']} {b['denetci']}" for b in bulgular[:20]))
     (girdi / SAYIM.SAYFA_DIZINI).mkdir(parents=True, exist_ok=True)
     for ad, bayt in yazilacak.items():
         (girdi / ad).write_bytes(bayt)

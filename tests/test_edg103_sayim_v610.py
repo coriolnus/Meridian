@@ -22,6 +22,11 @@ HER KOŞUM ALT SÜREÇTİR (sözleşme KOMUT SATIRIdır) ve `-B` ile: betikler `
 ekler; test sürecine `sys.path` mutasyonu sızmasın, mutasyon turunda bayat pyc oluşmasın (v334 sınıfı).
 GERÇEK DEPOYA ve A1'e DOKUNULMAZ: girdi dizinleri `tmp_path` altında kurulur; `dondur.py` testi kendi
 sentetik git deposunu kurar (v547 deseni).
+
+KART FİKSTÜRÜ (CLAUDE.md §5 blob kuralı; inceleme I1): çiviler CANLI kartı değil, kartın 55e5799a blob'unun
+`tests/fikstur/edg103/` altındaki KOPYASINI okur (içerik-adresli: git blob özeti `KART_BLOB` ile çivili) —
+hüküm paragrafı karta yazılınca çiviler kırılmaz. Canlı kart yalnız A3 AYRIŞMA çivisinde okunur: aletin
+okuduğu alanlar (τ, W, pencere, eşikler, PK/NK, kill-list) fikstürle aynı kalmalı; ayrışırsa fikstür bayattır.
 """
 from __future__ import annotations
 
@@ -43,7 +48,9 @@ KOK = pathlib.Path(__file__).resolve().parents[1]
 DIZIN = KOK / "research" / "olcumler" / "edg103_okuma_ilgi_atif"
 SAYIM = DIZIN / "sayim.py"
 DONDUR = DIZIN / "dondur.py"
-KART = KOK / "research" / "cards" / "EDG-2026-103-hafiza-sayfa-okuma-ilgi-atif.yaml"
+KART_CANLI = KOK / "research" / "cards" / "EDG-2026-103-hafiza-sayfa-okuma-ilgi-atif.yaml"
+KART = KOK / "tests" / "fikstur" / "edg103" / "EDG-2026-103-kart-55e5799a.yaml"
+KART_BLOB = "83182d4ea32b70eabc6930964e8a06713baf12e7"   # `git rev-parse 55e5799a:<kart yolu>`
 OKUMA_MODUL = KOK / "deploy" / "hindsight" / "hafiza_okuma_kaydi.py"
 
 UTC = dt.timezone.utc
@@ -213,9 +220,35 @@ def test_A1_gercek_kart_cozumlenir_ve_varsayilan_senaryoda_alet_dogrulanir(tmp_p
     assert veri["pk_nk"]["tuttu"] is True, veri["pk_nk"]
     assert veri["gecerlilik"]["alet_dogrulandi"] is True
     assert [m["no"] for m in veri["kill_list"]] == list(range(1, 9))
+    assert veri["D"]["deger"] == 5 and _kill(veri, 2)["durum"] == "TETİKLENMEDİ", "D = n_min sınırı: yeterli"
+    maddeler = [n["madde"] for n in veri["netlestirme_uygulamasi"]]
+    assert any(m.startswith("c (5) DÜZELTME") for m in maddeler) and any(m.startswith("b (1a)") for m in maddeler)
     assert all(m["madde"] for m in veri["kill_list"]), "kill maddesi KART metniyle anılmalı"
     assert set(veri["kolonlar"]) == {"K1", "K2", "K3", "K4"}
     assert md and "K1" in md and "PK/NK" in md and "Kill-list" in md
+
+
+def test_A0_kart_fiksturu_icerik_adresli_blob(tmp_path):
+    veri = KART.read_bytes()
+    assert hashlib.sha1(b"blob %d\0" % len(veri) + veri).hexdigest() == KART_BLOB, \
+        "fikstür kart 55e5799a blob'u değil — kopya değiştirilmiş"
+
+
+def _arac_alanlari(veri: dict) -> dict:
+    p = veri["parametreler"]
+    return {"tau": p["tau"], "W": p["W_saat"], "pencere": p["pencere"], "n_min": p["n_min_karar"],
+            "esikler": p["esikler"], "k4": p["k4_atif_turleri"], "pk": veri["pk_nk"]["pk"]["metin"],
+            "nk": veri["pk_nk"]["nk"]["metin"], "ek_nk": (veri["pk_nk"]["ek_nk"]["sayfa"], veri["pk_nk"]["ek_nk"]["ifade"]),
+            "kill": [m["madde"] for m in veri["kill_list"]]}
+
+
+def test_A3_AYRISMA_canli_kartin_alet_alanlari_fiksturle_ayni(tmp_path, okm):
+    """Canlı kart yalnız burada okunur: aletin okuduğu alanlar fikstürle AYNI kalmalı. Hüküm paragrafı gibi
+    alet-dışı eklemeler bu çiviyi kırmaz; τ/W/pencere/eşik/PK/NK/kill değişirse fikstür bayattır."""
+    fikstur, _ = sonuc(tmp_path, okm, ad="fikstur")
+    canli_metin = KART_CANLI.read_text(encoding="utf-8")
+    canli, _ = sonuc(tmp_path, okm, ad="canli", kart=canli_metin, kart_acilis=canli_metin)
+    assert _arac_alanlari(canli) == _arac_alanlari(fikstur)
 
 
 def test_A2_kart_pk_nk_metinleri_kartin_alanindan_okunur(tmp_path, okm):
@@ -321,19 +354,51 @@ def test_D2_tau_siniri_tam_015_iceride(tmp_path, okm):
     assert oku["en_yuksek_jaccard"] == "3/20"
 
 
+def test_D3_K2_ve_K3_alt_esige_ESIT_gecer(tmp_path, okm):
+    okumalar = _varsayilan_okumalar(okm) + [_satir(okm, "2026-09-26T00:00:00Z")]
+    kararlar = [_karar("2026-09-26T01:00:00Z", tokenler=TEST_TOKENLARI[:10], atif=["sayfa"]),
+                _karar("2026-09-26T02:00:00Z", tokenler=TEST_TOKENLARI[:10])] + [
+        _karar(f"2026-09-2{g}T12:00:00Z") for g in (7, 8, 9)]
+    veri, _ = sonuc(tmp_path, okm, okumalar=okumalar, kararlar=kararlar)
+    k = veri["kolonlar"]
+    assert (k["K2"]["pay"], k["K2"]["payda"], k["K2"]["karsilastirma"]) == (1, 2, "GEÇTİ"), "K2 = 0,50 = eşik"
+    assert (k["K3"]["pay"], k["K3"]["payda"], k["K3"]["karsilastirma"]) == (1, 2, "GEÇTİ"), "K3 = 0,50 = eşik"
+
+
+def _pencere_sonu(metin: str, yeni_son: str) -> str:
+    assert metin.count("2026-10-02T10:33:10Z)") == 1
+    return metin.replace("2026-10-02T10:33:10Z)", f"{yeni_son})")
+
+
+def test_D4_K1_alt_esige_ESIT_gecer(tmp_path, okm):
+    """S = 10 gün (pencere 10-04'e uzatılmış kart kopyası) · 9 dolu gün → 9/10 = 0,90 = eşik → GEÇTİ."""
+    kart = _pencere_sonu(KART.read_text(encoding="utf-8"), "2026-10-04T10:33:10Z")
+    okumalar = _varsayilan_okumalar(okm) + [
+        _satir(okm, f"2026-{a:02d}-{g:02d}T07:30:00Z") for a, g in
+        ((9, 26), (9, 27), (9, 28), (9, 29), (9, 30), (10, 1), (10, 2), (10, 3))] + [
+        _satir(okm, "2026-10-05T08:00:00Z", kimlik="meridian-hedef-sapma", etiket="olcum-anlik")]
+    veri, _ = sonuc(tmp_path, okm, okumalar=okumalar, kart=kart,
+                    kunye=_kunye(dondurma_ani="2026-10-05T09:00:00+00:00"))
+    k1 = veri["kolonlar"]["K1"]
+    assert (k1["pay"], k1["payda"], k1["karsilastirma"]) == (9, 10, "GEÇTİ")
+
+
 # ================================================================================================
-# E — K3 ve K4 (payda D)
+# E — K3 ve K4 (netleştirme c: K4 paydası atıflı kararlar; D ve D_ilgili betimleyici)
 # ================================================================================================
 
-def test_E1_K4_paydasi_D_ve_taze_olculemez_ust_sinir(tmp_path, okm):
+def test_E1_K4_paydasi_atifli_kararlar_ve_taze_olculemez_ust_sinir(tmp_path, okm):
+    """Netleştirme c: K4 paydası `esikler`deki "atıflı kararlar" (sayfa/recall/memory/kart_benzer atfı taşıyan);
+    D paydası ve D_ilgili paydası yalnız betimleyici."""
     okumalar = _varsayilan_okumalar(okm) + [_satir(okm, "2026-09-26T00:00:00Z")]
     ilgili = TEST_TOKENLARI[:10]
     kararlar = [
         _karar("2026-09-26T01:00:00Z", tokenler=ilgili, atif=["recall"]),            # 0 K4 adayı
         _karar("2026-09-26T02:00:00Z", tokenler=ilgili, atif=["memory"]),            # 1 K4 adayı
         _karar("2026-09-26T03:00:00Z", tokenler=ilgili, atif=["sayfa", "recall"]),   # 2 sayfa SEÇİLDİ
-    ] + [_karar(f"2026-09-2{g}T12:00:00Z", atif=["recall"]) for g in (6, 7, 8, 9)] + [
-        _karar(f"2026-09-30T1{s}:00:00Z", atif=["recall"]) for s in (0, 1, 2)]
+        _karar("2026-09-27T12:00:00Z", atif=["recall"]),                             # 3 atıflı, ilgisiz
+        _karar("2026-09-28T12:00:00Z", atif=["kart_benzer"]),                        # 4 atıflı, ilgisiz
+    ] + [_karar(f"2026-09-30T1{s}:00:00Z") for s in range(5)]                       # 5-9 atıfsız
     veri, _ = sonuc(tmp_path, okm, okumalar=okumalar, kararlar=kararlar)
     k = veri["kolonlar"]
     assert veri["D"]["deger"] == 10
@@ -341,18 +406,54 @@ def test_E1_K4_paydasi_D_ve_taze_olculemez_ust_sinir(tmp_path, okm):
     assert (k["K3"]["pay"], k["K3"]["payda"]) == (1, 3)
     k4 = k["K4"]
     assert k4["deger"] is None and "is_stale" in k4["neden"]
-    assert k4["payda"] == 10
-    assert k4["ust_sinir"] == {"pay": 2, "payda": 10, "kesir": "2/10", "deger": 0.2}
+    assert k4["payda"] == 5 and k4["atifli_karar"] == [0, 1, 2, 3, 4]
+    assert k4["ust_sinir"] == {"pay": 2, "payda": 5, "kesir": "2/5", "deger": 0.4}
+    assert k4["aday_karar"] == [0, 1]
     assert k4["karsilastirma"] == "GEÇTİ", "üst sınır ≤ 0,50 → K4 kesin olarak eşiğin altında"
+    assert k4["betimleyici_D_paydasi"] == {"pay": 2, "payda": 10, "kesir": "2/10", "deger": 0.2}
     assert k4["betimleyici_D_ilgili_paydasi"]["payda"] == 3
 
 
-def test_E2_K4_adaysizsa_kesin_sifir(tmp_path, okm):
+def test_E2_D_ilgili_bossa_K3_ve_K4_olculemez(tmp_path, okm):
     veri, _ = sonuc(tmp_path, okm)
     k4 = veri["kolonlar"]["K4"]
-    assert (k4["pay"], k4["payda"], k4["deger"]) == (0, 5, 0.0) and k4["karsilastirma"] == "GEÇTİ"
+    assert (k4["pay"], k4["deger"], k4["karsilastirma"]) == (None, None, "ÖLÇÜLEMEDİ")
+    assert "D_ilgili boş" in k4["neden"]
     k3 = veri["kolonlar"]["K3"]
     assert k3["deger"] is None and k3["karsilastirma"] == "ÖLÇÜLEMEDİ", "D_ilgili boş → 0/0"
+
+
+def test_E3_K4_ust_sinir_esige_ESIT_gecer(tmp_path, okm):
+    okumalar = _varsayilan_okumalar(okm) + [_satir(okm, "2026-09-26T00:00:00Z")]
+    kararlar = [_karar("2026-09-26T01:00:00Z", tokenler=TEST_TOKENLARI[:10], atif=["recall"]),   # aday
+                _karar("2026-09-26T02:00:00Z", tokenler=TEST_TOKENLARI[:10], atif=["sayfa"])] + [
+        _karar(f"2026-09-2{g}T12:00:00Z") for g in (7, 8, 9)]
+    veri, _ = sonuc(tmp_path, okm, okumalar=okumalar, kararlar=kararlar)
+    k4 = veri["kolonlar"]["K4"]
+    assert k4["ust_sinir"]["kesir"] == "1/2" and k4["esik"]["deger"] == 0.5
+    assert k4["karsilastirma"] == "GEÇTİ", "K4 ≤ eşik: tam eşitlik GEÇER (üst eşik)"
+
+
+def test_E4_K4_atif_turu_suzgeci_bos_beyan_ve_diger_ne_aday_ne_payda(tmp_path, okm):
+    okumalar = _varsayilan_okumalar(okm) + [_satir(okm, "2026-09-26T00:00:00Z")]
+    ilgili = TEST_TOKENLARI[:10]
+    kararlar = [_karar("2026-09-26T01:00:00Z", tokenler=ilgili, atif=["recall"]),
+                _karar("2026-09-26T02:00:00Z", tokenler=ilgili, atif=["bos_beyan"]),
+                _karar("2026-09-26T03:00:00Z", tokenler=ilgili, atif=["diger"]),
+                _karar("2026-09-27T12:00:00Z", atif=["memory"]), _karar("2026-09-28T12:00:00Z")]
+    veri, _ = sonuc(tmp_path, okm, okumalar=okumalar, kararlar=kararlar)
+    k4 = veri["kolonlar"]["K4"]
+    assert k4["aday_karar"] == [0] and k4["atifli_karar"] == [0, 3]
+    assert k4["ust_sinir"]["kesir"] == "1/2"
+
+
+def test_E5_D_ilgili_doluyken_aday_yoksa_K4_kesin_sifir(tmp_path, okm):
+    okumalar = _varsayilan_okumalar(okm) + [_satir(okm, "2026-09-26T00:00:00Z")]
+    kararlar = [_karar("2026-09-26T01:00:00Z", tokenler=TEST_TOKENLARI[:10], atif=["sayfa"])] + [
+        _karar(f"2026-09-2{g}T12:00:00Z", atif=["recall"]) for g in (6, 7, 8, 9)]
+    veri, _ = sonuc(tmp_path, okm, okumalar=okumalar, kararlar=kararlar)
+    k4 = veri["kolonlar"]["K4"]
+    assert (k4["pay"], k4["payda"], k4["deger"], k4["karsilastirma"]) == (0, 5, 0.0, "GEÇTİ")
 
 
 # ================================================================================================
@@ -377,7 +478,7 @@ def test_F1_PK_b_tutmazsa_GECERSIZ_ve_sayilar_yalniz_betimleyici(tmp_path, okm):
     assert "hüküm DEĞİL" in md and GECERSIZ_ALET in md
 
 
-@pytest.mark.parametrize("bacak", ["a", "c", "nk_atif", "nk_ilgi", "ek_nk"])
+@pytest.mark.parametrize("bacak", ["a", "c", "nk_atif", "nk_ilgi", "nk_gercek", "ek_nk", "ek_nk_govde"])
 def test_F2_her_PK_NK_bacagi_tek_basina_GECERSIZ_yapar(tmp_path, okm, bacak):
     kw = {}
     if bacak == "a":
@@ -394,13 +495,22 @@ def test_F2_her_PK_NK_bacagi_tek_basina_GECERSIZ_yapar(tmp_path, okm, bacak):
     elif bacak == "nk_ilgi":
         kw["sayfalar"] = {"meridian-hedef-sapma": PK_SAYFASI + " EDG-102 kuru adımı çıktısı /opt/veri/olcum/"
                                                                "edg102/ altına yazılır"}
+    elif bacak == "nk_gercek":
+        # NK kararıyla örtüşen sayfa PK sayfası DEĞİL: yalnız pencere içi GERÇEK bir okumanın sayfası (10:40,
+        # NK kararından 4,5 dk önce) — NK ayağı gerçek okumaları da taramalı, yalnız pk okumasını değil
+        kw["okumalar"] = _varsayilan_okumalar(okm) + [_satir(okm, "2026-09-25T10:40:00Z")]
+        kw["sayfalar"] = {"test-sayfa": "EDG-102 kuru adımı çıktısı /opt/veri/olcum/edg102/ altına yazılır kararı"}
     elif bacak == "ek_nk":
         kw["sayfalar"] = {"nk-kripto-madencilik": "# Kripto Madencilik\n\nMadencilik özeti: hash oranı."}
+    elif bacak == "ek_nk_govde":
+        # ifade gövdede geçiyor ama sayfanın HÜKMÜ (başlığı) artık onu taşımıyor (inceleme M3)
+        kw["sayfalar"] = {"nk-kripto-madencilik": "# Kripto Madencilik — 3 kayıt\n\nEskiden bankada yok idi."}
     veri, _ = sonuc(tmp_path, okm, **kw)
     assert veri["pk_nk"]["tuttu"] is False
     assert veri["hukum"] == GECERSIZ_ALET and "kolonlar" not in veri
     yollar = {"a": ("pk", "a_okuma"), "c": ("pk", "c_atif"), "nk_atif": ("nk", "atifsiz"),
-              "nk_ilgi": ("nk", "ilgisiz"), "ek_nk": ("ek_nk", None)}
+              "nk_ilgi": ("nk", "ilgisiz"), "nk_gercek": ("nk", "ilgisiz"), "ek_nk": ("ek_nk", None),
+              "ek_nk_govde": ("ek_nk", None)}
     ust, alt = yollar[bacak]
     dugum = veri["pk_nk"][ust] if alt is None else veri["pk_nk"][ust][alt]
     assert dugum["tuttu"] is False
@@ -416,7 +526,7 @@ def test_G1_uc_turlu_kolon_sonucu(tmp_path, okm):
         ((9, 26), (9, 27), (9, 28), (9, 29), (9, 30), (10, 1), (10, 2))]
     veri, _ = sonuc(tmp_path, okm, okumalar=okumalar)
     sonuclar = {k: v["karsilastirma"] for k, v in veri["kolonlar"].items()}
-    assert sonuclar == {"K1": "GEÇTİ", "K2": "KALDI", "K3": "ÖLÇÜLEMEDİ", "K4": "GEÇTİ"}
+    assert sonuclar == {"K1": "GEÇTİ", "K2": "KALDI", "K3": "ÖLÇÜLEMEDİ", "K4": "ÖLÇÜLEMEDİ"}
     assert veri["hukum"].startswith("ALET DOĞRULANDI")
     assert "betimleyici_ara_rapor" not in veri
 
@@ -427,6 +537,26 @@ def test_G2_D_n_min_altinda_dort_kol_olculemedi(tmp_path, okm):
     for kolon in veri["kolonlar"].values():
         assert kolon["karsilastirma"] == "ÖLÇÜLEMEDİ" and "örnek yetersiz" in kolon["neden"]
     assert _kill(veri, 2)["durum"].startswith("ÖLÇÜLEMEDİ")
+
+
+def test_G3_kill2_pencere_tam_21_gunde_ve_D_n_min_altinda_TETIKLENIR(tmp_path, okm):
+    kart = _pencere_sonu(KART.read_text(encoding="utf-8"), "2026-10-16T10:33:10Z")   # bas + 21 gün TAM
+    okumalar = _varsayilan_okumalar(okm) + [
+        _satir(okm, "2026-10-16T11:00:00Z", kimlik="meridian-hedef-sapma", etiket="olcum-anlik")]
+    veri, _ = sonuc(tmp_path, okm, okumalar=okumalar, kart=kart, kararlar=_varsayilan_kararlar()[:4],
+                    kunye=_kunye(dondurma_ani="2026-10-16T12:00:00+00:00"))
+    assert _kill(veri, 2)["durum"] == "TETİKLENDİ"
+
+
+def test_G4_kill4_tetikliyken_D_n_min_altinda_K1_yine_KALDI(tmp_path, okm):
+    """Kart kill #4: "'ölçülemedi' değil KALDI" — n_min dalı K1'i ÖLÇÜLEMEDİ'ye EZMEZ (inceleme M2)."""
+    kunye = _kunye(kural_0_5={"anahtar": "sayfa_oku.sh meridian-hedef-sapma", "iz": [
+        {"commit": "4" * 40, "zaman": "2026-09-25T06:00:00+00:00", "adet": 1},
+        {"commit": "5" * 40, "zaman": "2026-09-28T06:00:00+00:00", "adet": 0}]})
+    veri, _ = sonuc(tmp_path, okm, kararlar=_varsayilan_kararlar()[:4], kunye=kunye)
+    k = veri["kolonlar"]
+    assert k["K1"]["karsilastirma"] == "KALDI" and "kill #4" in k["K1"]["neden"]
+    assert {k[x]["karsilastirma"] for x in ("K2", "K3", "K4")} == {"ÖLÇÜLEMEDİ"}
 
 
 # ================================================================================================
@@ -466,6 +596,14 @@ def test_H2_tau_W_acilistan_sonra_degistiyse_kill8_GECERSIZ(tmp_path, okm):
     assert veri["hukum"].startswith("GEÇERSİZ") and "kolonlar" not in veri
 
 
+def test_H4_esik_acilistan_sonra_degistiyse_GECERSIZ(tmp_path, okm):
+    metin = KART.read_text(encoding="utf-8")
+    assert metin.count("k2_konu_ilgisi_alt: 0.50") == 1
+    veri, _ = sonuc(tmp_path, okm, kart=metin.replace("k2_konu_ilgisi_alt: 0.50", "k2_konu_ilgisi_alt: 0.40"))
+    assert veri["hukum"] == "GEÇERSİZ — eşik açılıştan sonra değişti (CLAUDE.md §5)"
+    assert "kolonlar" not in veri
+
+
 def test_H3_kart_ici_tau_tutarsizsa_sayim_yapilmaz(tmp_path, okm):
     metin = KART.read_text(encoding="utf-8").replace("τ=0,15", "τ=0,20")
     r, veri, _ = kos(girdi_yaz(tmp_path / "g", okm, kart=metin, kart_acilis=metin), tmp_path)
@@ -477,10 +615,15 @@ def test_H3_kart_ici_tau_tutarsizsa_sayim_yapilmaz(tmp_path, okm):
 # I — diğer kill maddeleri, pencere kapanışı, girdi bütünlüğü
 # ================================================================================================
 
-def test_I1_kill5_sir_benzeri_okuma_satiri_akisi_kapatir(tmp_path, okm):
+@pytest.mark.parametrize("yer", ["okuma_satiri", "sayfa_goruntusu"])
+def test_I1_kill5_sir_deseni_akisi_kapatir(tmp_path, okm, yer):
+    """Kill #5 dondurulan HER metni kapsar (inceleme I4): okuma kaydı satırı ve sayfa anlık görüntüsü."""
     gizli = "Bearer abcdefghijklmnopqrstuvwxyz0123"
-    okumalar = _varsayilan_okumalar(okm) + [_satir(okm, "2026-09-27T08:00:00Z", ad=gizli)]
-    girdi = girdi_yaz(tmp_path / "g", okm, okumalar=okumalar)
+    if yer == "okuma_satiri":
+        girdi = girdi_yaz(tmp_path / "g", okm,
+                          okumalar=_varsayilan_okumalar(okm) + [_satir(okm, "2026-09-27T08:00:00Z", ad=gizli)])
+    else:
+        girdi = girdi_yaz(tmp_path / "g", okm, sayfalar={"test-sayfa": TEST_SAYFASI + f"\nAuthorization: {gizli}"})
     r, veri, md = kos(girdi, tmp_path)
     assert r.returncode == 0, r.stderr
     assert veri["hukum"].startswith("AKIŞ KAPATILDI")
@@ -497,14 +640,17 @@ def test_I2_kill1_enstrumantasyon_kart_oncesi_GECERSIZ(tmp_path, okm):
     assert veri["hukum"].startswith("GEÇERSİZ") and "kolonlar" not in veri
 
 
-def test_I3_kill4_kural_pencerede_kaldirildiysa_K1_KALDI(tmp_path, okm):
+@pytest.mark.parametrize("iz", [
+    [{"commit": "4" * 40, "zaman": "2026-09-25T06:00:00+00:00", "adet": 1},       # pencerede kaldırıldı
+     {"commit": "5" * 40, "zaman": "2026-09-28T06:00:00+00:00", "adet": 0},
+     {"commit": "6" * 40, "zaman": "2026-09-29T06:00:00+00:00", "adet": 1}],
+    [{"commit": "7" * 40, "zaman": "2026-09-27T06:00:00+00:00", "adet": 1}],       # pencere başında kural YOKTU
+], ids=["pencerede_kaldirildi", "pencere_basinda_yoktu"])
+def test_I3_kill4_kural_pencerede_kaldirildiysa_K1_KALDI(tmp_path, okm, iz):
     okumalar = _varsayilan_okumalar(okm) + [
         _satir(okm, f"2026-{a:02d}-{g:02d}T07:30:00Z") for a, g in
         ((9, 26), (9, 27), (9, 28), (9, 29), (9, 30), (10, 1), (10, 2))]
-    kunye = _kunye(kural_0_5={"anahtar": "sayfa_oku.sh meridian-hedef-sapma", "iz": [
-        {"commit": "4" * 40, "zaman": "2026-09-25T06:00:00+00:00", "adet": 1},
-        {"commit": "5" * 40, "zaman": "2026-09-28T06:00:00+00:00", "adet": 0},
-        {"commit": "6" * 40, "zaman": "2026-09-29T06:00:00+00:00", "adet": 1}]})
+    kunye = _kunye(kural_0_5={"anahtar": "sayfa_oku.sh meridian-hedef-sapma", "iz": iz})
     veri, _ = sonuc(tmp_path, okm, okumalar=okumalar, kunye=kunye)
     assert _kill(veri, 4)["durum"] == "TETİKLENDİ"
     k1 = veri["kolonlar"]["K1"]
@@ -525,6 +671,15 @@ def test_I5_pencere_kapanmadan_dondurulduysa_ARA_rapor(tmp_path, okm):
                     kunye=_kunye(dondurma_ani="2026-10-02T07:30:00+00:00"))
     assert veri["hukum"].startswith("ARA RAPOR")
     assert "kolonlar" not in veri and "hüküm DEĞİL" in veri["betimleyici_ara_rapor"]["etiket"]
+
+
+def test_I10_kapanis_kaniti_tam_pencere_sonunda_yeterli(tmp_path, okm):
+    """Dondurma anı ve okuma kaydının son satırı TAM pencere sonundaysa kapanış kanıtlıdır (≥, iki koşul)."""
+    okumalar = [r for r in _varsayilan_okumalar(okm) if r["etiket"] != "olcum-anlik"] + [
+        _satir(okm, "2026-10-02T10:33:10Z", kimlik="meridian-hedef-sapma", etiket="olcum-anlik")]
+    veri, _ = sonuc(tmp_path, okm, okumalar=okumalar, kunye=_kunye(dondurma_ani="2026-10-02T10:33:10+00:00"))
+    assert veri["gecerlilik"]["pencere_kapanis_kaniti"] is True
+    assert veri["hukum"].startswith("ALET DOĞRULANDI")
 
 
 def test_I6_zamansiz_karar_varsa_hesap_yapilmaz(tmp_path, okm):
@@ -573,12 +728,17 @@ def _sentetik_kart() -> str:
     return metin.replace("2026-10-02T10:33:10Z)", "2026-09-28T10:33:10Z)")
 
 
-def _bloksuz(metin: str, *anahtarlar: str) -> str:
+#: Kartın HER netleştirme alanı (a, b, c, …) — fikstür açılış sürümünü kurarken hepsini söker (inceleme C1:
+#: yalnız ilk netleştirme sökülünce karta eklenen `…01b` açılış sürümünde kalıyordu).
+NETLESTIRME = re.compile(r"netlestirme_\d{4}_\d{2}_\d{2}[a-z]?")
+
+
+def _bloksuz(metin: str, *anahtarlar: str, desen: re.Pattern | None = None) -> str:
     out, atla = [], False
     for satir in metin.splitlines(keepends=True):
         m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)\s*:", satir)
         if m:
-            atla = m.group(1) in anahtarlar
+            atla = m.group(1) in anahtarlar or bool(desen and desen.fullmatch(m.group(1)))
         if not atla:
             out.append(satir)
     return "".join(out)
@@ -592,6 +752,10 @@ ROADMAP_2 = """# ROADMAP
 - **[TSK-903] sentetik kalem** — status: ACTIVE · owner: Rol-1
   What: (2026-09-27 09:0xZ KARAR [Rol-1] ikinci not) (2026-09-26 12:0xZ KARAR [Rol-1] ilk not, hafıza: recall benzer yok) düz metin
 """
+#: 09-27'de ilk notun bir KOPYASI eklenir, 09-28'de silinir: notun adedi üç commit'te değişir → giriş commit'i
+#: `--reverse` ile EN ESKİSİ (09-26) olmalı; sıra ters olsaydı damga 09-28'e kayardı.
+ROADMAP_2 = ROADMAP_2 + "  Kopya: (2026-09-26 12:0xZ KARAR [Rol-1] ilk not, hafıza: recall benzer yok)\n"
+ROADMAP_3 = ROADMAP_2.split("  Kopya:")[0]
 GUNLUK_1 = "# Günlük\n\n## 2026-09-20 başlangıç\n\nmetin\n"
 #: 09-26 commit'i ESKİ (09-20) başlığın altına bir KARAR paragrafı ekler: birimin damgası başlığın değil,
 #: işaretli satırın giriş commit'idir (başlık damgası kararı pencere dışına iterdi — alt sayım).
@@ -611,9 +775,10 @@ def sentetik_depo(tmp_path):
     kart_yolu.parent.mkdir(parents=True)
     _git(depo, "init", "-q", "-b", "main")
     kart = _sentetik_kart()
-    kart_yolu.write_text(_bloksuz(kart, "pencere_acilis_2026_09_25", "netlestirme_2026_10_01"), encoding="utf-8")
-    (depo / "CLAUDE.md").write_text("5. Rol-1 isen A1'de `~/bin/sayfa_oku.sh meridian-hedef-sapma` oku\n",
-                                    encoding="utf-8")
+    kart_yolu.write_text(_bloksuz(kart, "pencere_acilis_2026_09_25", desen=NETLESTIRME), encoding="utf-8")
+    # §0-5 kuralı ilk commit'te YOK, pencereden önce 09:30'da EKLENİR: kural izi pencere başındaki durumu
+    # pencereden önceki SONUNCU commit'ten okumalı (`max(once)`), ilkinden değil
+    (depo / "CLAUDE.md").write_text("5. Rol-1 isen A1'de zihin modeli sayfasını oku\n", encoding="utf-8")
     (depo / "ROADMAP.md").write_text("# ROADMAP\n", encoding="utf-8")
     (depo / "MERIDIAN_ENGINEERING_LOG.md").write_text(GUNLUK_1, encoding="utf-8")
     _git(depo, "add", "--", KART_GORELI, "CLAUDE.md", "ROADMAP.md", "MERIDIAN_ENGINEERING_LOG.md")
@@ -622,33 +787,44 @@ def sentetik_depo(tmp_path):
     (depo / "deploy" / "hindsight" / "hafiza_okuma_kaydi.py").write_text("# kayıt\n", encoding="utf-8")
     _git(depo, "add", "--", "deploy/hindsight/hafiza_okuma_kaydi.py")
     _git(depo, "commit", "-q", "-m", "TSK-222 enstrümantasyon", tarih="2026-09-25T09:03:25Z")
+    (depo / "CLAUDE.md").write_text("5. Rol-1 isen A1'de `~/bin/sayfa_oku.sh meridian-hedef-sapma` oku\n",
+                                    encoding="utf-8")
+    _git(depo, "add", "--", "CLAUDE.md")
+    _git(depo, "commit", "-q", "-m", "CLAUDE.md §0-5", tarih="2026-09-25T09:30:00Z")
     _git(depo, "commit", "-q", "--allow-empty", "-m", "TSK-901 → DONE: sınır öncesi",
          tarih="2026-09-25T10:33:09Z")
     _git(depo, "commit", "-q", "--allow-empty", "-m", "TSK-902 → DONE: sınırda",
          tarih="2026-09-25T10:33:10Z")
-    kart_yolu.write_text(_bloksuz(kart, "netlestirme_2026_10_01"), encoding="utf-8")
+    kart_yolu.write_text(_bloksuz(kart, desen=NETLESTIRME), encoding="utf-8")
     _git(depo, "add", "--", KART_GORELI)
     _git(depo, "commit", "-q", "-m", "EDG-103 pencere açıldı", tarih="2026-09-25T10:44:38Z")
+    # TSK-903 (09-26): işaretsiz commit 01:00'de DESTEK olur (damgaya girmez), işaretli commit 13:00'te ikinci
+    # karar kaynağıdır — kararın damgası kaynaklarının EN ERKENİ (12:00 ROADMAP notu)
+    _git(depo, "commit", "-q", "--allow-empty", "-m", "TSK-903: kod dilimi", tarih="2026-09-26T01:00:00Z")
     for metin_rm, metin_gn, tarih in ((ROADMAP_1, GUNLUK_2, "2026-09-26T12:00:00Z"),
                                       (ROADMAP_2, GUNLUK_2, "2026-09-27T09:00:00Z"),
-                                      (ROADMAP_2, GUNLUK_3, "2026-09-28T11:00:00Z")):
+                                      (ROADMAP_3, GUNLUK_3, "2026-09-28T11:00:00Z")):
         (depo / "ROADMAP.md").write_text(metin_rm, encoding="utf-8")
         (depo / "MERIDIAN_ENGINEERING_LOG.md").write_text(metin_gn, encoding="utf-8")
         _git(depo, "add", "--", "ROADMAP.md", "MERIDIAN_ENGINEERING_LOG.md")
         _git(depo, "commit", "-q", "-m", "Gunluk ve ROADMAP notu", tarih=tarih)
+        if tarih.startswith("2026-09-26"):
+            _git(depo, "commit", "-q", "--allow-empty", "-m", "TSK-903 → ACTIVE: pencere içi",
+                 tarih="2026-09-26T13:00:00Z")
     kart_yolu.write_text(kart, encoding="utf-8")          # netleştirme pencere SONRASI eklenir (gerçekteki gibi)
     _git(depo, "add", "--", KART_GORELI)
     _git(depo, "commit", "-q", "-m", "EDG-103 netleştirme", tarih="2026-09-28T12:00:00Z")
     return depo
 
 
-def _dondur(depo, tmp_path, okm, *, sayfalar=("meridian-hedef-sapma", "nk-kripto-madencilik"), ad="girdi"):
+def _dondur(depo, tmp_path, okm, *, sayfalar=("meridian-hedef-sapma", "nk-kripto-madencilik"), ad="girdi",
+            icerik_ust=None):
     okuma = tmp_path / "okuma.jsonl"
     okumalar = _varsayilan_okumalar(okm)[:3] + [
         _satir(okm, "2026-09-28T11:00:00Z", kimlik="meridian-hedef-sapma", etiket="olcum-anlik")]
     okuma.write_text("".join(json.dumps(r, sort_keys=True) + "\n" for r in okumalar), encoding="utf-8")
     ek = []
-    icerik = {"meridian-hedef-sapma": PK_SAYFASI, "nk-kripto-madencilik": NK_SAYFASI}
+    icerik = {"meridian-hedef-sapma": PK_SAYFASI, "nk-kripto-madencilik": NK_SAYFASI, **(icerik_ust or {})}
     for kimlik in sayfalar:
         yol = tmp_path / f"cekilen-{kimlik}.md"
         yol.write_text(_sayfa_md(kimlik, icerik[kimlik]), encoding="utf-8")
@@ -671,8 +847,13 @@ def test_J1_dondur_giris_commiti_damgasi_ve_sayim_ucu_uca(sentetik_depo, tmp_pat
     zaman = {(z["kimlik"], z["tarih"]): z for z in zl}
     assert zaman[("TSK-901", "2026-09-25")]["zaman"] == "2026-09-25T10:33:09+00:00"
     assert zaman[("TSK-902", "2026-09-25")]["zaman"] == "2026-09-25T10:33:10+00:00"
-    # ilk not 09-27'de aynı satıra ikinci not eklenince DEĞİŞMEZ: damga notun GİRİŞ commit'idir
-    assert zaman[("TSK-903", "2026-09-26")]["zaman"] == "2026-09-26T12:00:00+00:00"
+    # ilk not 09-27'de aynı satıra ikinci not eklenince ve kopyası eklenip silinince DEĞİŞMEZ: damga notun
+    # GİRİŞ commit'idir (`--reverse`); 13:00 işaretli commit ikinci kaynaktır, damga kaynakların EN ERKENİ (`min`)
+    t903 = zaman[("TSK-903", "2026-09-26")]
+    assert t903["zaman"] == "2026-09-26T12:00:00+00:00"
+    assert sorted(k["ref"]["tur"] for k in t903["kaynaklar"]) == ["git", "roadmap"], "destek damgaya girdi"
+    assert all(k["zaman"] for k in t903["kaynaklar"]), t903["kaynaklar"]
+    assert {k["zaman"] for k in t903["kaynaklar"]} == {"2026-09-26T12:00:00+00:00", "2026-09-26T13:00:00+00:00"}
     assert zaman[("TSK-903", "2026-09-27")]["zaman"] == "2026-09-27T09:00:00+00:00"
     (sentetik,) = [z for z in zl if z["sentetik_isaretler"]]
     assert sentetik["sentetik_isaretler"] == ["[PK-EDG-103]"]
@@ -685,8 +866,9 @@ def test_J1_dondur_giris_commiti_damgasi_ve_sayim_ucu_uca(sentetik_depo, tmp_pat
     assert kunye["kart"]["ilk_commit"]["zaman"] == "2026-09-25T08:05:07+00:00"
     assert kunye["enstrumantasyon"]["ilk_commit"]["zaman"] == "2026-09-25T09:03:25+00:00"
     assert kunye["pk_nk_zamani"] == "2026-09-25T10:44:38+00:00"
-    assert [i["adet"] for i in kunye["kural_0_5"]["iz"]] == [1]
-    assert "netlestirme_2026_10_01" not in (girdi / "kart_acilis.yaml").read_text(encoding="utf-8")
+    # pencere başındaki durum pencereden önceki SONUNCU commit'tir (09:30, kural VAR); ilki (08:05) kuralsızdı
+    assert [(i["zaman"], i["adet"]) for i in kunye["kural_0_5"]["iz"]] == [("2026-09-25T09:30:00+00:00", 1)]
+    assert not re.search(r"^netlestirme_", (girdi / "kart_acilis.yaml").read_text(encoding="utf-8"), re.M)
     rs, veri, _ = kos(girdi, tmp_path)
     assert rs.returncode == 0, rs.stderr
     assert veri["pk_nk"]["tuttu"] is True, veri["pk_nk"]
@@ -696,7 +878,17 @@ def test_J1_dondur_giris_commiti_damgasi_ve_sayim_ucu_uca(sentetik_depo, tmp_pat
     assert (None, "2026-09-20") in kimlikler, "eski başlık altına pencerede eklenen karar D'de"
     assert all(t != "2026-09-28" for _k, t in kimlikler)
     assert _kill(veri, 7)["kanit"]["sentetik_karar"] == 1
-    assert _kill(veri, 1)["durum"] == "TETİKLENMEDİ"
+    assert _kill(veri, 1)["durum"] == "TETİKLENMEDİ" and _kill(veri, 4)["durum"] == "TETİKLENMEDİ"
+
+
+def test_J4_dondur_sir_deseni_eslesirse_hicbir_sey_yazmaz_ve_degeri_basmaz(sentetik_depo, tmp_path, okm):
+    gizli = "abcdefghijklmnopqrstu123"
+    r, girdi = _dondur(sentetik_depo, tmp_path, okm,
+                       icerik_ust={"meridian-hedef-sapma": PK_SAYFASI + f"\nAuthorization: Bearer {gizli}"})
+    assert r.returncode == 1, r.stderr
+    assert "sayfalar/meridian-hedef-sapma.md" in r.stderr and "notify:bearer" in r.stderr
+    assert gizli not in r.stderr + r.stdout
+    assert not girdi.exists()
 
 
 def test_J2_dondur_eksik_sayfayi_adiyla_soyler_ve_hicbir_sey_yazmaz(sentetik_depo, tmp_path, okm):

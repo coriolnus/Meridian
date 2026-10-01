@@ -35,7 +35,8 @@ TANIMLAR (kart + netleştirme; UYGULANDIĞI YER sembolle):
   K2        ≥1 D kararıyla eşleşen gerçek okuma / gerçek okuma — `esikler` cümlesi, netleştirme (3);
             "okuma-karar çifti oranı" (olcum_plani) yalnız BETİMLEYİCİ ................... `kolonlari_hesapla`
   K3        D_ilgili içinde `sayfa` atıflı / |D_ilgili| (D_ilgili boşsa 0/0 → ÖLÇÜLEMEDİ)
-  K4        payda D — netleştirme (5); pay: K4 atıf türü (kart: recall/memory/kart_benzer) taşıyan, `sayfa`
+  K4        payda `esikler`deki "atıflı kararlar" — netleştirme c ((5)'i düzeltir; D paydası betimleyici; D_ilgili
+            boşsa ÖLÇÜLEMEDİ); pay: K4 atıf türü (kart: recall/memory/kart_benzer) taşıyan, `sayfa`
             taşımayan ve ilgili bir TAZE sayfa okuması olan karar. "Taze" = okuma anında is_stale=false;
             okuma kaydı o alanı TAŞIMAZ → taze ölçülemez: K4 değeri None, yalnız "hepsi taze" varsayımlı
             ÜST sınır verilir; karşılaştırma ancak üst sınır eşiği geçmiyorsa kesindir ... `_k4`
@@ -453,6 +454,12 @@ def _k_sonuc(pay, payda, esik_adi, esik, neden=None, **ek) -> dict:
 
 
 def _k4(D, d_ilgili_okumalar, k4_turleri, esik_adi, esik) -> dict:
+    """K4 — netleştirme c ((5)'in DÜZELTMESİ): payda kartın donmuş `esikler` cümlesindeki "atıflı kararlar" =
+    D'de bir hafıza KAYNAĞI atfı (sayfa ya da K4 türleri) taşıyan kararlar; D paydası yalnız betimleyici.
+    `bos_beyan`/`diger` kaynak atfı DEĞİLDİR, paydaya girmez (dar payda → oran büyür → geçme yönüne sapmaz).
+    D_ilgili boşsa fazlalık hiç sınanmamıştır: K3 gibi ÖLÇÜLEMEDİ ("0/… GEÇTİ" basılmaz)."""
+    kaynak_turleri = {SAYFA_TURU} | set(k4_turleri)
+    atifli = [d["sira"] for d in D if d["atif"] & kaynak_turleri]
     kesin, belirsiz = [], []
     for j, d in enumerate(D):
         if SAYFA_TURU in d["atif"] or not (d["atif"] & set(k4_turleri)) or j not in d_ilgili_okumalar:
@@ -462,10 +469,14 @@ def _k4(D, d_ilgili_okumalar, k4_turleri, esik_adi, esik) -> dict:
             kesin.append(d["sira"])
         elif any(t is None for t in tazelik):
             belirsiz.append(d["sira"])
-    n = len(D)
+    n = len(atifli)
     alt, ust = (Fraction(len(kesin), n), Fraction(len(kesin) + len(belirsiz), n)) if n else (None, None)
     d_ilgili = len(d_ilgili_okumalar)
-    if not belirsiz:
+    if not d_ilgili_okumalar:
+        sonuc = {"pay": None, "payda": n, "kesir": None, "deger": None,
+                 "esik": {"ad": esik_adi, "deger": float(esik), "yon": "≤"}, "karsilastirma": "ÖLÇÜLEMEDİ",
+                 "neden": "D_ilgili boş — fazlalık sınanmadı (K3 ile aynı; netleştirme c)"}
+    elif not belirsiz:
         sonuc = _k_sonuc(len(kesin), n, esik_adi, esik)
     else:
         if ust is not None and karsilastir(ust, esik_adi, esik) == "GEÇTİ":
@@ -478,7 +489,9 @@ def _k4(D, d_ilgili_okumalar, k4_turleri, esik_adi, esik) -> dict:
                  "esik": {"ad": esik_adi, "deger": float(esik), "yon": "≤"},
                  "karsilastirma": kars, "neden": TAZE_NEDENI.format(s=OKUMA.SEMA)}
     sonuc.update({"alt_sinir": oran(len(kesin), n), "ust_sinir": oran(len(kesin) + len(belirsiz), n),
-                  "aday_karar": belirsiz + kesin,
+                  "aday_karar": belirsiz + kesin, "atifli_karar": atifli,
+                  "payda_tanimi": "esikler 'atıflı kararlar': D'de " + "/".join(sorted(kaynak_turleri)) + " atfı taşıyan",
+                  "betimleyici_D_paydasi": oran(len(kesin) + len(belirsiz), len(D)),
                   "betimleyici_D_ilgili_paydasi": oran(len(kesin) + len(belirsiz), d_ilgili)})
     return sonuc
 
@@ -489,8 +502,6 @@ def kolonlari_hesapla(kart: dict, okumalar: list[dict], D: list[dict], sayfa_tok
     S, dolu = k1_gunleri(okumalar, kart["bas"], kart["son"])
     k1 = _k_sonuc(len(dolu), len(S), *esik["K1"], S_gunleri=[g.isoformat() for g in S],
                   dolu_gunler=[g.isoformat() for g in dolu], okuma_sayisi=len(okumalar))
-    if kural_kaldirildi:
-        k1.update({"karsilastirma": "KALDI", "neden": "kill #4: §0-5 kuralı pencere içinde kaldırıldı → K1 KALDI"})
     okuma_ozet, ilgili_okumalar, cift, eslesme = [], {}, 0, 0
     for r in okumalar:
         P = sayfa_tok[r["kimlik"]]
@@ -522,6 +533,8 @@ def kolonlari_hesapla(kart: dict, okumalar: list[dict], D: list[dict], sayfa_tok
         for kolon in kolonlar.values():
             kolon.update({"karsilastirma": "ÖLÇÜLEMEDİ",
                           "neden": f"örnek yetersiz: D={len(D)} < n_min_karar={kart['n_min']} (kart esikler)"})
+    if kural_kaldirildi:   # n_min'den SONRA: kart kill #4 "'ölçülemedi' değil KALDI" der (inceleme M2)
+        k1.update({"karsilastirma": "KALDI", "neden": "kill #4: §0-5 kuralı pencere içinde kaldırıldı → K1 KALDI"})
     return kolonlar
 
 
@@ -545,7 +558,7 @@ def pk_nk_denetle(kart, satirlar, gercek, sayfalar, pk_nk_zamani) -> dict:
         if icinde:
             nk_ayrinti.append({"okuma_ts": r["ts"], "kimlik": r["kimlik"],
                                "jaccard": None if J is None else f"{J.numerator}/{J.denominator}", "ilgili": ilgili})
-    ek_icerik = sayfalar[ek["sayfa"]]["icerik"]
+    ek_baslik = next((s.strip() for s in sayfalar[ek["sayfa"]]["icerik"].splitlines() if s.strip()), "")
     sonuc = {
         "pk": {"metin": pk["metin"], "okuma_etiketi": pk["etiket"], "sayfa": pk["sayfa"],
                "karar_zamani": pk_nk_zamani.isoformat(),
@@ -556,8 +569,10 @@ def pk_nk_denetle(kart, satirlar, gercek, sayfalar, pk_nk_zamani) -> dict:
         "nk": {"metin": nk["metin"], "karar_zamani": pk_nk_zamani.isoformat(),
                "atifsiz": {"tuttu": not nk_atif, "atif_turleri": sorted(nk_atif)},
                "ilgisiz": {"tuttu": not any(x["ilgili"] for x in nk_ayrinti), "ayrinti": nk_ayrinti}},
-        "ek_nk": {"sayfa": ek["sayfa"], "ifade": ek["ifade"],
-                  "tuttu": ek["ifade"].casefold() in ek_icerik.casefold()},
+        # kart: sayfa "'bankada yok' HÜKMÜNÜ taşımalı" — hüküm sayfanın başlığıdır; gövdede geçen ifade
+        # (ör. "… bankada yok DEĞİL") hükmü kanıtlamaz (inceleme M3)
+        "ek_nk": {"sayfa": ek["sayfa"], "ifade": ek["ifade"], "baslik": ek_baslik,
+                  "tuttu": ek_baslik.startswith("#") and ek["ifade"].casefold() in ek_baslik.casefold()},
     }
     sonuc["tuttu"] = all((sonuc["pk"]["a_okuma"]["tuttu"], sonuc["pk"]["b_ilgi"]["tuttu"],
                           sonuc["pk"]["c_atif"]["tuttu"], sonuc["nk"]["atifsiz"]["tuttu"],
@@ -593,13 +608,21 @@ _JETON_AYRACI = re.compile(r"[\s\"'(),;:]+")
 _SHA_KIMLIK = re.compile(r"sha256:[0-9a-f]{64}")
 
 
-def sir_denetimi(okuma_metni: str, satirlar: list[dict], envanter: dict) -> dict:
-    """Kill #5: okuma kaydı + karar envanteri. Bulgu DEĞERİ asla yazılmaz — yalnız yer ve denetçi adı."""
+def notify_taramasi(metinler: dict[str, str]) -> list[dict]:
+    """notify sır desenleriyle satır satır tarama (yanlış-pozitifsiz katman). dondur.py yazmadan ÖNCE dondurulacak
+    HER dosyaya, sayım kill #5'te dondurulmuş her metne uygular — tek tanım. Bulgu DEĞERİ asla dönmez."""
     desenler = notify_desenleri()
-    bulgular = []
-    for no, ham in enumerate(okuma_metni.splitlines(), 1):
-        bulgular += [{"kaynak": "okuma.jsonl", "yer": f"satır {no}", "denetci": f"notify:{ad}"}
-                     for ad, d in desenler if d.search(ham)]
+    return [{"kaynak": ad, "yer": f"satır {no}", "denetci": f"notify:{dad}"}
+            for ad, metin in metinler.items() for no, satir in enumerate(metin.splitlines(), 1)
+            for dad, d in desenler if d.search(satir)]
+
+
+def sir_denetimi(okuma_metni: str, satirlar: list[dict], envanter: dict, ek_metinler: dict[str, str]) -> dict:
+    """Kill #5: okuma kaydı + karar envanteri (notify + `_sir_benzeri`) ve dondurulan öteki metinler (sayfa
+    görüntüleri, karar_zamanlari, künye — YALNIZ notify: sayfalar sır ADLARI ve uzun yol jetonları taşır,
+    `_sir_benzeri` orada yanlış-pozitif verir). Bulgu DEĞERİ asla yazılmaz — yalnız yer ve denetçi adı."""
+    desenler = notify_desenleri()
+    bulgular = notify_taramasi({"okuma.jsonl": okuma_metni, **ek_metinler})
     for r in satirlar:
         for alan in ("betik", "kip", "ad", "bank", "butce", "durum", "hata", "etiket", "kimlik"):
             deger = r.get(alan)
@@ -721,7 +744,10 @@ def say(girdi: pathlib.Path) -> dict:
         raise GirdiHatasi(f"sayfa anlık görüntüsü yok: {', '.join(eksik)}")
     sayfalar = {k: sayfa_goruntusu(girdi / SAYFA_DIZINI / f"{k}.md", k) for k in sorted(gerekli)}
     sayfa_tok = {k: s["tokenler"] for k, s in sayfalar.items()}
-    sir = sir_denetimi(okuma_metni, satirlar, envanter)
+    ek_metinler = {p.relative_to(girdi).as_posix(): p.read_text(encoding="utf-8", errors="replace")
+                   for p in sorted((girdi / SAYFA_DIZINI).glob("*.md"))}
+    ek_metinler.update({ad: (girdi / ad).read_text(encoding="utf-8") for ad in ("karar_zamanlari.json", "kunye.json")})
+    sir = sir_denetimi(okuma_metni, satirlar, envanter, ek_metinler)
     kural = kural_kaldirildi_mi(kunye["kural_0_5"]["iz"], bas, son)
     esik_ayni = (kart["n_min"], kart["kolon_esikleri"]) == (kart_acilis["n_min"], kart_acilis["kolon_esikleri"])
     pk_nk = None if sir["bulgu_sayisi"] else pk_nk_denetle(kart, satirlar, gercek, sayfalar, pk_nk_zamani)
@@ -793,8 +819,8 @@ NETLESTIRME_UYGULAMASI = [
     {"madde": "(3) K2 tanımı `esikler` cümlesi", "uygulama": "`kolonlari_hesapla`: K2 = eşleşen okuma / okuma; "
      "çift oranı betimleyici"},
     {"madde": "(4) W=48 sa commit saatiyle kesin", "uygulama": "`ilgili_mi`: 0 ≤ Δ < W (saniye çözünürlüğü)"},
-    {"madde": "(5) K4 paydası D; taze = okuma anında is_stale=false",
-     "uygulama": "`_k4`: payda D, D_ilgili paydası betimleyici; is_stale kayıtta yok → üst sınır"},
+    {"madde": "(5) K4 paydası D — GEÇERSİZ, netleştirme c ile DEĞİŞTİRİLDİ (aşağıda)",
+     "uygulama": "uygulanmaz; 'taze = okuma anında is_stale=false' kısmı (5a) ile birlikte geçerli"},
     {"madde": "(6) τ ve sayfa token kümesi tam içerik, değiştirilmeden",
      "uygulama": "`esik_alanlari` (τ karttan) + `sayfa_goruntusu` (normalize_tokens(tam içerik))"},
     {"madde": "(7) kill #4: kaldırılma; geç/eksik/kısmi okuma K1'de",
@@ -802,6 +828,18 @@ NETLESTIRME_UYGULAMASI = [
     {"madde": "(8) kill #6 HARFİYEN", "uygulama": "`say`: PK/NK tutmazsa kolon/D üst düzeyde YOK; "
      "K1 ve D yalnız 'hüküm DEĞİL' etiketli betimleyici"},
     {"madde": "(9) sayım kodu bu dizinde", "uygulama": "sayim.py + dondur.py; çivi tests/test_edg103_sayim_v610.py"},
+    {"madde": "b (1a) S = pencereyle kesişen 8 UTC günü", "uygulama": "`pencere_gunleri` (yarım uç günler dahil)"},
+    {"madde": "b (4a) W yarı-açık 0 ≤ Δ < 48 sa", "uygulama": "`ilgili_mi`"},
+    {"madde": "b (5a) taze ölçülemez → K4 None + üst sınır; kıyas yalnız kesinse",
+     "uygulama": "`_k4` + `okuma_tazeligi` (şema is_stale taşırsa betik durur)"},
+    {"madde": "b (6a) EK NK kill #6 kapsamında harfiyen",
+     "uygulama": "`pk_nk_denetle`: ifade sayfanın BAŞLIK satırında (kartın 'hükmünü taşımalı'sı)"},
+    {"madde": "b (10) girdi/ depoya girer, sır taşımaz",
+     "uygulama": "dondur.py yazmadan önce her dosyayı notify desenleriyle tarar, eşleşmede YAZMAZ; sayım kill #5 "
+                 "aynı taramayı `notify_taramasi` ile dondurulmuş her metne uygular"},
+    {"madde": "c (5) DÜZELTME: K4 paydası `esikler`deki 'atıflı kararlar'; D paydası betimleyici",
+     "uygulama": "`_k4`: payda = D'de sayfa/recall/memory/kart_benzer atfı taşıyan kararlar (`atifli_karar`); "
+                 "`betimleyici_D_paydasi`; D_ilgili boşsa ÖLÇÜLEMEDİ"},
 ]
 
 
