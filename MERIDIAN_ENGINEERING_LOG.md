@@ -4168,3 +4168,11 @@ canlıyla aynı (ilk "FARKLI" ölçümüm süreç ikamesindeki stdin hatasıydı
 - **§0-5 eksiği (kendi hatam):** bugünkü vardiya başında (07:2xZ) `sayfa_oku.sh meridian-hedef-sapma` okunmadı; 17:0xZ'de okundu
   (tazeleme 13:06Z, karar girmedi → kaynak yazılmadı). EDG-2026-103 kill-list'i "§0-5 uygulanmazsa K1 KALDI" der — pencere hükmünde
   (≥10-02) bu gün adıyla değerlendirilir; kural kaldırılmadı, bir vardiyada geç uygulandı.
+- **Dağıtım #90 (22:05–22:13Z, main HEAD 8de98200 = deployed_sha):** G3b bot sırları + G4 kalıntıları + TSK-260 (yazım yolu fd çekirdeği).
+  Önce `/etc/systemd/system/meridian-{botlar,telegram}.service.d` önceden kuruldu (temiz check), site.yml kuru `failed=0 changed=3` →
+  uygula `ok=59 changed=3 failed=0` (birim şerhleri, üç credential drop-in, üç sohbet manifesti); dagit kuru silme 0, [1c] aynı, uv audit
+  temiz, F9 yalnız Vault ×2 → uygula `a1 ok=62 changed=5 failed=0`, healthz 200. Botlar/Telegram `disabled inactive`, DropInPaths doğru
+  (botlar 54-hafiza; telegram 54-hafiza + 55-api-sunucu); K-1 False; uyarılar bilinen iki. EXE-2026-012 ADIM-0c: `state/exe012_tur_atif.jsonl`
+  20:01Z'de yazıldı, 282 KB (kart tahmini 109 KB/seans → ~2,6×; ADIM-0c kaydına). TSK-261 (kopya yolları) güvenlik incelemesinde —
+  kapanana dek `--openrouter` KOŞULMAZ. EDG-2026-103 sayım aleti dalda (hüküm 10-02 ≥10:33Z; prova: PK(b) τ'ya yapısal erişilemez →
+  büyük olasılıkla GEÇERSİZ); Rol-1 kendi netleştirme (5) hatasını (K4 paydası) incelemeyle düzeltti.
