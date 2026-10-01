@@ -1855,9 +1855,10 @@ def _dosya_imzasi(p: pathlib.Path) -> tuple:
 
 def _sahiplik_kaydi(tmp_path: pathlib.Path) -> tuple[pathlib.Path, pathlib.Path]:
     """Sahiplik ÖLÇÜMÜ (çivi makinesinde `ubuntu` YOK — yardımcının işaretli emsali chown'u atlar): yardımcı sürecine
-    `sitecustomize` ile `pwd/grp` `ubuntu` → 1000/1001 ve kayıt tutan `os.chown` verilir. Kayıttaki (uid, gid) YALNIZ
-    yardımcı `ubuntu:ubuntu` istediyse 1000/1001 olur — istenen sahip böyle ölçülür, çivi makinesinde hiçbir şey chown
-    edilmez."""
+    `sitecustomize` ile `pwd/grp` `ubuntu` → 1000/1001 ve kayıt tutan `os.chown`/`os.fchown` verilir. Kayıttaki (uid, gid)
+    YALNIZ yardımcı `ubuntu:ubuntu` istediyse 1000/1001 olur — istenen sahip böyle ölçülür, çivi makinesinde hiçbir şey chown
+    edilmez. G3b dal sonu M1: yazım artık DOSYA TANITICISINA `fchown` yapar (yol tabanlı chown bir bağı izlerdi) — tanıtıcının
+    yolu `F_GETPATH` (macOS) ya da `/proc/self/fd` (Linux) ile okunur."""
     site = tmp_path / "site_v604"
     site.mkdir()
     log = tmp_path / "chown.log"
@@ -1873,7 +1874,17 @@ def _sahiplik_kaydi(tmp_path: pathlib.Path) -> tuple[pathlib.Path, pathlib.Path]
         "    def _chown(yol, uid, gid, *a, **k):\n"
         "        with open(_LOG, 'a', encoding='utf-8') as fh:\n"
         "            fh.write('%s\\t%s\\t%s\\n' % (os.path.dirname(os.fspath(yol)), uid, gid))\n"
-        "    os.chown = _chown\n", encoding="utf-8")
+        "    os.chown = _chown\n"
+        "    def _fd_yolu(fd):\n"
+        "        try:\n"
+        "            import fcntl\n"
+        "            return fcntl.fcntl(fd, fcntl.F_GETPATH, bytes(1024)).split(bytes(1), 1)[0].decode()\n"
+        "        except (ImportError, AttributeError, OSError):\n"
+        "            return os.readlink('/proc/self/fd/%d' % fd)\n"
+        "    def _fchown(fd, uid, gid):\n"
+        "        with open(_LOG, 'a', encoding='utf-8') as fh:\n"
+        "            fh.write('%s\\t%s\\t%s\\n' % (os.path.dirname(_fd_yolu(fd)), uid, gid))\n"
+        "    os.fchown = _fchown\n", encoding="utf-8")
     return site, log
 
 
@@ -1947,19 +1958,34 @@ def test_D3_var_olan_dosyada_eksik_alan_raporlanir_yazilmaz(tmp_path):
     _iddia(all(_p(kok, y).is_file() for y in plan), "YOK olan dosyalar yazılmadı")
 
 
-@pytest.mark.parametrize("ref", [API_REF, "/etc/meridian/bot_key_karne"], ids=["api_server_key", "tek_hedefin_referansi"])
-def test_D4_referans_yoksa_hicbir_dosya_yazilmaz(tmp_path, ref):
-    """Bir referans (Agent render hedefi) YOK: hiçbir sohbet `.env`i oluşmaz — o referansa İHTİYACI OLMAYAN hedefler de;
-    çıkış ≠ 0, ileti yolu ADIYLA söyler. İki dünya: `api_server_key` (brief — dört hedefin HEPSİ ister) ve
-    `bot_key_karne` (YALNIZ karne profili ister): ikincisi, referans denetimi yazımdan SONRAYA (hedef başına, tembel)
-    kayarsa sef/bekçi/kök dosyalarının karneden ÖNCE yazılacağını ölçer — brief M2'nin ısırdığı yer burasıdır."""
+KARNE_REF = "/etc/meridian/bot_key_karne"
+
+
+@pytest.mark.parametrize("ref,icerik,ileti", [
+    (API_REF, None, "referans YOK: {ref}"),
+    (KARNE_REF, None, "referans YOK: {ref}"),
+    (KARNE_REF, "", "referans BOŞ: {ref}"),
+    (KARNE_REF, "   \n", "referans TEK satırlık dolu bir değer değil: {ref}"),
+    (KARNE_REF, "SAHTE-SATIR-1\nSAHTE-SATIR-2\n", "referans TEK satırlık dolu bir değer değil: {ref}"),
+], ids=["api_server_key_yok", "tek_hedefin_referansi_yok", "bos", "yalniz_bosluk", "cok_satirli"])
+def test_D4_referans_yoksa_hicbir_dosya_yazilmaz(tmp_path, ref, icerik, ileti):
+    """Bir referans (Agent render hedefi) YOK, BOŞ, yalnız boşluk ya da ÇOK SATIRLI (Agent boş/bozuk render edebilir — RUNBOOK
+    adım 2'nin uyarısı; dal sonu M5): hiçbir sohbet `.env`i oluşmaz — o referansa İHTİYACI OLMAYAN hedefler de; çıkış ≠ 0,
+    ileti yolu ve hâli ADIYLA söyler, değer basılmaz. `api_server_key` dünyası brief'inkidir (dört hedefin HEPSİ ister);
+    `bot_key_karne` YALNIZ karne profilinin referansıdır: denetim yazımdan SONRAYA (hedef başına, tembel) kayarsa sef/bekçi
+    dosyaları karneden ÖNCE yazılırdı (brief M2 mutasyonunun ısırdığı yer). İki kapı katmanı ayrı ölçülür: `py var` (YOK/BOŞ)
+    ve tek-satır+dolu kapısı (boşluk/çok satır) — biri gevşerse kendi parametresi kırmızı."""
     kok, ortam = _sahte_ortam(tmp_path)
     plan, _ = _tohum_plani()
     _tohum_sil(kok, *plan)
-    _p(kok, ref).unlink()
+    if icerik is None:
+        _p(kok, ref).unlink()
+    else:
+        _p(kok, ref).write_text(icerik, encoding="utf-8")
     once = _imzalar(kok)
     r = _kos(BETIK, ortam, TOHUMLA)
-    _iddia(r.returncode != 0 and f"referans YOK: {ref}" in r.stderr, _ozet(r))
+    _iddia(r.returncode != 0 and ileti.format(ref=ref) in r.stderr, _ozet(r))
+    _iddia("SAHTE-SATIR" not in r.stdout + r.stderr, "referans değeri çıktıya düştü")
     _iddia(not [y for y in plan if _p(kok, y).exists()], "referans yokken sohbet .env YAZILDI")
     _iddia(_imzalar(kok) == once and not _yedekler(kok), "dosya değişti / yedek alındı")
 
@@ -2061,10 +2087,19 @@ def test_D9_alan_kumesi_tablodan_turetilir(tmp_path):
     _iddia({API_SIR, SOHBET_TENANT_ALANI, _bot_sir("sef")} <= set(icerik), f"tablonun öteki alanları: {sorted(icerik)}")
 
 
+def _yardimci_kos(yardimci: pathlib.Path, op: str, *args: str, on: str = "") -> subprocess.CompletedProcess:
+    """Gömülü yardımcıyı DOĞRUDAN koşar; `on` yardımcıdan ÖNCE çalışan yama kodudur (yarış / root / bağ hâli modeli)."""
+    kod = (on + "import runpy, sys\n"
+           f"sys.argv = {[str(yardimci), op, *args]!r}\n"
+           f"runpy.run_path({str(yardimci)!r}, run_name='__main__')\n")
+    return subprocess.run([sys.executable, "-c", kod], capture_output=True, text=True)
+
+
 def test_D10_tohumla_env_yardimcisi_var_olan_hedefi_reddeder(tmp_path):
-    """İkinci savunma — yardımcı DOĞRUDAN: (a) hedef yoksa `ALAN=değer` 0600 yazar; (b) hedef VARSA reddeder, dosya bayt,
-    inode ve mtime olarak aynı; (c) YARIŞ: ön denetim (`lexists`) "yok" dese de dosya arada doğmuşsa `os.link` reddeder —
-    `os.replace` olsaydı EZERDİ; (d) tek sayıda alan/değer argümanı reddedilir, dosya oluşmaz. Geçici dosya kalmaz."""
+    """İkinci savunma — yardımcı DOĞRUDAN (imza `<kök> <hedef> <mod> <sahip> <grup> (<alan> <değer>)+`, dal sonu M1): (a) hedef
+    yoksa `ALAN=değer` 0600 yazar ve doğrulama hükmünü basar; (b) hedef VARSA reddeder, dosya bayt, inode ve mtime olarak aynı;
+    (c) YARIŞ: ön denetim (`lexists`) "yok" dese de dosya arada doğmuşsa `os.link` reddeder — `os.replace` olsaydı EZERDİ;
+    (d) tek sayıda alan/değer argümanı reddedilir, dosya oluşmaz. Geçici dosya kalmaz."""
     yardimci = _yardimci(tmp_path)
     dizin = tmp_path / "hedef"
     dizin.mkdir()
@@ -2073,26 +2108,175 @@ def test_D10_tohumla_env_yardimcisi_var_olan_hedefi_reddeder(tmp_path):
     dgr.write_text("SAHTE-D10-0001\n", encoding="utf-8")
     dgr2 = tmp_path / "deger2"
     dgr2.write_text("SAHTE-D10-0002\n", encoding="utf-8")
+    ortak = (str(dizin),)
 
-    def kos(*args: str, on: str = "") -> subprocess.CompletedProcess:
-        kod = (on + "import runpy, sys\n"
-               f"sys.argv = {[str(yardimci), 'tohumla-env', *args]!r}\n"
-               f"runpy.run_path({str(yardimci)!r}, run_name='__main__')\n")
-        return subprocess.run([sys.executable, "-c", kod], capture_output=True, text=True)
-
-    r = kos(str(hedef), "0600", "ubuntu", "ubuntu", "ALAN", str(dgr))
+    r = _yardimci_kos(yardimci, "tohumla-env", *ortak, str(hedef), "0600", "ubuntu", "ubuntu", "ALAN", str(dgr))
     _iddia(r.returncode == 0 and hedef.read_text(encoding="utf-8") == "ALAN=SAHTE-D10-0001\n"
-           and (hedef.stat().st_mode & 0o777) == 0o600, f"(a) {r.returncode} {r.stderr}")
+           and (hedef.stat().st_mode & 0o777) == 0o600 and "DOĞRULANDI" in r.stdout, f"(a) {r.returncode} {r.stderr}")
     once = _dosya_imzasi(hedef)
-    r = kos(str(hedef), "0600", "ubuntu", "ubuntu", "ALAN", str(dgr2))
+    r = _yardimci_kos(yardimci, "tohumla-env", *ortak, str(hedef), "0600", "ubuntu", "ubuntu", "ALAN", str(dgr2))
     _iddia(r.returncode != 0 and "VAR" in r.stderr and _dosya_imzasi(hedef) == once, f"(b) {r.returncode} {r.stderr}")
-    r = kos(str(hedef), "0600", "ubuntu", "ubuntu", "ALAN", str(dgr2), on="import os\nos.path.lexists = lambda p: False\n")
+    r = _yardimci_kos(yardimci, "tohumla-env", *ortak, str(hedef), "0600", "ubuntu", "ubuntu", "ALAN", str(dgr2),
+                      on="import os\nos.path.lexists = lambda p: False\n")
     _iddia(r.returncode != 0 and _dosya_imzasi(hedef) == once, f"(c) yarışta EZİLDİ ya da kabul edildi: {r.returncode}")
     yeni = dizin / ".env-d"
-    r = kos(str(yeni), "0600", "ubuntu", "ubuntu", "ALAN", str(dgr), "TEK")
+    r = _yardimci_kos(yardimci, "tohumla-env", *ortak, str(yeni), "0600", "ubuntu", "ubuntu", "ALAN", str(dgr), "TEK")
     _iddia(r.returncode != 0 and not yeni.exists(), f"(d) {r.returncode} {r.stderr}")
     _iddia(sorted(q.name for q in dizin.iterdir()) == [".env"], f"geçici dosya kaldı: {sorted(q.name for q in dizin.iterdir())}")
     _iddia("SAHTE-D10" not in r.stderr, "değer stderr'e düştü")
+
+
+#: root dalının modeli — `os.geteuid` 0 ve `ubuntu` adı verilen uid/gid'e çözülür (yardımcı `pwd`/`grp`ı içeride ithal eder).
+def _root_yamasi(uid: int, gid: int) -> str:
+    return ("import os, pwd, grp\nos.geteuid = lambda: 0\n"
+            f"class _K:\n    pw_uid = {uid}\nclass _G:\n    gr_gid = {gid}\n"
+            "_p, _g = pwd.getpwnam, grp.getgrnam\n"
+            "pwd.getpwnam = lambda a: _K() if a == 'ubuntu' else _p(a)\n"
+            "grp.getgrnam = lambda a: _G() if a == 'ubuntu' else _g(a)\n")
+
+
+#: Yazım SONRASI ölçümün modeli — `os.link` hedefe YAZILAN dosyayı değil başka bir inode'u bağlar (yarışta değişen ad).
+_LINK_YEMI = ("import os\n_l = os.link\n"
+              "def _sahte(src, dst, *, src_dir_fd=None, dst_dir_fd=None, follow_symlinks=True):\n"
+              "    os.close(os.open('yem', os.O_WRONLY | os.O_CREAT, 0o600, dir_fd=dst_dir_fd))\n"
+              "    return _l('yem', dst, src_dir_fd=src_dir_fd, dst_dir_fd=dst_dir_fd, follow_symlinks=follow_symlinks)\n"
+              "os.link = _sahte\n")
+
+
+@pytest.mark.parametrize("hal", ["bag_ebeveyn", "bag_kok", "kok_disi", "grup_yazar", "root_sahip_yanlis",
+                                 "root_sahip_dogru", "yazim_dogrulamasi"])
+def test_D10b_tohumla_env_DIZIN_BAGINI_izlemez_ve_YAZIMI_olcer(tmp_path, hal):
+    """Dal sonu M1 (CWE-59) — yardımcı katmanı (kabuğun dizin kapısı geçilmiş/yarışılmış olsa bile): zincir kökten aşağı bağ
+    İZLENMEDEN açılır. Ret: ebeveyn ya da kök SEMBOLİK BAĞ (bağın hedef dizininde `.env` DOĞMAZ) · hedef kökün DIŞINDA · bileşen
+    grup/diğer YAZILABİLİR · root iken bileşen sahibi `ubuntu` değil · yazılan inode ölçümde tutmuyor (DOĞRULANAMADI). Kabul:
+    root iken doğru sahip → hüküm sahibi ölçülmüş basar. Hiçbir hâlde değer çıktıya düşmez, geçici dosya kalmaz."""
+    yardimci = _yardimci(tmp_path)
+    kok = tmp_path / "kok_d"
+    (kok / "profil").mkdir(parents=True)
+    disari = tmp_path / "disari"
+    disari.mkdir()
+    dgr = tmp_path / "deger"
+    dgr.write_text("SAHTE-D10B-0001\n", encoding="utf-8")
+    hedef_kok, hedef, on, beklenen = kok, kok / "profil" / ".env", "", "RED"
+    if hal == "bag_ebeveyn":
+        shutil.rmtree(kok / "profil")
+        (kok / "profil").symlink_to(disari, target_is_directory=True)
+        beklenen = "SEMBOLİK BAĞ"
+    elif hal == "bag_kok":
+        bag = tmp_path / "kok_bag"
+        bag.symlink_to(kok, target_is_directory=True)
+        hedef_kok, hedef, beklenen = bag, bag / "profil" / ".env", "SEMBOLİK BAĞ"
+    elif hal == "kok_disi":
+        hedef, beklenen = disari / ".env", "DIŞINDA"
+    elif hal == "grup_yazar":
+        (kok / "profil").chmod(0o777)
+        beklenen = "YAZABİLİR"
+    elif hal == "root_sahip_yanlis":
+        on, beklenen = _root_yamasi(os.getuid() + 4242, os.getgid()), "sahibi uid"
+    elif hal == "root_sahip_dogru":
+        on, beklenen = _root_yamasi(os.getuid(), os.getgid()), ""
+    else:
+        on, beklenen = _LINK_YEMI, "DOĞRULANAMADI"
+    r = _yardimci_kos(yardimci, "tohumla-env", str(hedef_kok), str(hedef), "0600", "ubuntu", "ubuntu", "ALAN", str(dgr), on=on)
+    if hal == "root_sahip_dogru":
+        _iddia(r.returncode == 0 and f"DOĞRULANDI: normal dosya, 0600, sahip {os.getuid()}:{os.getgid()}" in r.stdout
+               and hedef.read_text(encoding="utf-8") == "ALAN=SAHTE-D10B-0001\n", f"{r.returncode}\n{r.stdout}\n{r.stderr}")
+    else:
+        _iddia(r.returncode != 0 and beklenen in r.stderr, f"{hal}: {r.returncode}\n{r.stderr}")
+        if hal != "yazim_dogrulamasi":
+            _iddia(not hedef.exists() and not (disari / ".env").exists(), f"{hal}: dosya YAZILDI")
+    kalan = [q for d in (kok, kok / "profil", disari) if d.is_dir() for q in d.iterdir() if q.name.startswith(".sir-rot-")]
+    _iddia(not kalan and "SAHTE-D10B" not in r.stdout + r.stderr, f"geçici dosya kaldı / değer düştü: {kalan}")
+
+
+@pytest.mark.parametrize("deger", ["", "   ", '""'], ids=["degersiz", "yalniz_bosluk", "bos_tirnak"])
+def test_D3b_var_olan_dosyada_BOS_alan_eksik_sayilir(tmp_path, deger):
+    """Dal sonu M2: VAR olan dosyada alan TAM 1 satır ama DEĞERSİZ (`ALAN=`, yalnız boşluk, `""`) — eskiden "VAR (alanlar tam)",
+    `eksik alanlı 0`, çıkış 0 diyordu ve ilk işaret G3c'de 401 olurdu. Artık "boş: ALAN" (eksik sayılır), çıkış 3, dosya
+    BAYT-EŞİT, elle reçete (`--esitle` değeri referanstan yazar) stderr'de. Ön-denetim (rotasyon) değersiz satırı yer tutucu sayar
+    — A16b DEĞİŞMEDİ."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    plan, _ = _tohum_plani()
+    var_olan = _profil_env("bekci")
+    _tohum_sil(kok, *[y for y in plan if y != var_olan])
+    _alan_yaz(kok, var_olan, API_SIR, deger)
+    p = _p(kok, var_olan)
+    once = _dosya_imzasi(p)
+    r = _kos(BETIK, ortam, TOHUMLA)
+    _iddia(r.returncode == 3, f"çıkış {r.returncode} (3 bekleniyordu)\n{_ozet(r)}")
+    _iddia(f"{var_olan} → VAR (boş: {API_SIR})" in r.stdout and "alanlar tam" not in r.stdout.split(var_olan, 1)[1].splitlines()[0],
+           _ozet(r))
+    _iddia(f"'{API_SIR}=' satırı DEĞERSİZ" in r.stderr and "--api-sunucu --esitle" in r.stderr, _ozet(r))
+    _iddia(_dosya_imzasi(p) == once and "yazıldı 3 · dokunulmadı 1 · eksik alanlı 1" in r.stdout, _ozet(r))
+
+
+def _profili_baga_cevir(kok: pathlib.Path, ad: str) -> pathlib.Path:
+    """`profiles/<ad>` → kök DIŞINDA gerçek bir dizine SEMBOLİK BAĞ (dal sonu sondası P1'in sahnesi). Döner: bağın hedefi."""
+    dizin = _p(kok, str(pathlib.PurePosixPath(_profil_env(ad)).parent))
+    disari = kok / "opt" / f"disari_{ad}"
+    disari.mkdir(parents=True)
+    shutil.rmtree(dizin)
+    dizin.symlink_to(disari, target_is_directory=True)
+    return disari
+
+
+@pytest.mark.parametrize("hal", ["profil_bag", "kok_bag", "ara_dizin_grup_yazar"])
+def test_D12_DIZIN_sembolik_bag_ya_da_gevsek_izin_HICBIR_sey_yazilmaz(tmp_path, hal):
+    """Dal sonu M1 (CWE-59), uçtan uca: (profil_bag) `profiles/karne` başka bir dizine bağ — sonda P1 eskiden çıkış 0 verip
+    `.env`i bağın hedefine yazıyordu; (kok_bag) `.hermes-botlar`ın kendisi bağ; (ara_dizin_grup_yazar) `profiles/` 0777 (zincirin
+    ARA bileşeni). Hepsinde: çıkış ≠ 0, dizin ADIYLA "REDDEDİLDİ", HİÇBİR sohbet `.env`i yazılmaz (bağdan bağımsız hedefler de —
+    kapı bütün dizinler için yazımdan ÖNCE), bağın hedef dizininde `.env` DOĞMAZ. Kuru koşum aynı hükmü basar, durmaz, yazmaz."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    plan, _ = _tohum_plani()
+    _tohum_sil(kok, *plan)
+    koku = _sohbet_koku()
+    if hal == "profil_bag":
+        disari, reddedilen = _profili_baga_cevir(kok, "karne"), str(pathlib.PurePosixPath(_profil_env("karne")).parent)
+        neden = "SEMBOLİK BAĞ"
+    elif hal == "kok_bag":
+        disari = kok / "opt" / "hb_gercek"
+        _p(kok, koku).rename(disari)
+        _p(kok, koku).symlink_to(disari, target_is_directory=True)
+        reddedilen, neden = koku, "SEMBOLİK BAĞ"
+    else:
+        disari = None
+        _p(kok, f"{koku}/profiles").chmod(0o777)
+        reddedilen, neden = _profil_env("sef").rsplit("/", 1)[0], "YAZABİLİR"
+    once = _imzalar(kok)
+    rk = _kos(BETIK, ortam, TOHUMLA, "--kuru")
+    _iddia(rk.returncode == 0 and f"dizin: {reddedilen} → REDDEDİLDİ" in rk.stdout and "GERÇEK KOŞUM DURUR" in rk.stdout,
+           _ozet(rk))
+    r = _kos(BETIK, ortam, TOHUMLA)
+    _iddia(r.returncode != 0 and f"dizin REDDEDİLDİ: {reddedilen}" in r.stderr and neden in r.stderr, _ozet(r))
+    _iddia(not [y for y in plan if os.path.lexists(_p(kok, y))], "sohbet .env YAZILDI")
+    if disari is not None:
+        _iddia(not list(disari.rglob(".env")), "bağın hedef dizininde .env DOĞDU")
+    _iddia(_imzalar(kok) == once and not _yedekler(kok), "dosya değişti / yedek alındı")
+
+
+@pytest.mark.parametrize("hal", ["sarkik", "hedefli"])
+def test_D13_HEDEF_sembolik_bag_okunmaz_SEBEP_adiyla_cikis_2(tmp_path, hal):
+    """Dal sonu M4: hedef `.env` bir SEMBOLİK BAĞ (sarkık ya da bir dosyaya) — içerik okunmaz (bağ izlenmez), bağa dokunulmaz;
+    son çıkış-2 iletisi gerçek sebebi hedef başına söyler ("SEMBOLİK BAĞ (sarkık …" / "(izlenmez …"), eski genel cümle ("izin
+    ya da UTF-8") YOK. Öteki YOK hedefler yazılır (rehin alınmaz)."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    plan, _ = _tohum_plani()
+    bagli = _profil_env("sef")
+    _tohum_sil(kok, *plan)
+    hedef = kok / "opt" / "bag_hedefi.env"
+    if hal == "hedefli":
+        hedef.write_text("SAHTE_ICERIK=dokunulmaz\n", encoding="utf-8")
+        once = _dosya_imzasi(hedef)
+    _p(kok, bagli).symlink_to(hedef)
+    r = _kos(BETIK, ortam, TOHUMLA)
+    beklenen = "SEMBOLİK BAĞ (sarkık" if hal == "sarkik" else "SEMBOLİK BAĞ (izlenmez"
+    _iddia(r.returncode == 2 and f"{bagli}: {beklenen}" in r.stderr and "izin ya da UTF-8" not in r.stderr, _ozet(r))
+    _iddia(_p(kok, bagli).is_symlink() and os.readlink(_p(kok, bagli)) == str(hedef), "bağa DOKUNULDU")
+    if hal == "hedefli":
+        _iddia(_dosya_imzasi(hedef) == once, "bağın hedefi DEĞİŞTİ")
+    else:
+        _iddia(not hedef.exists(), "sarkık bağın hedefi YARATILDI")
+    _iddia("yazıldı 3 · dokunulmadı 1 · eksik alanlı 0" in r.stdout, _ozet(r))
 
 
 @pytest.mark.parametrize("ek", [("--vault",), ("--esitle",), ("--uret",), ("--vault", "--uret")],
