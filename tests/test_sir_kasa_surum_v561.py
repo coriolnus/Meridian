@@ -84,7 +84,9 @@ SURUM_OLDU = "  ✓ kasa sürümü (yazım ÖNCESİ): {n} — geri alma: vault k
 ROLLBACK_SATIRI = "        vault kv rollback -version={n} {yol}"
 RECETE_BASI = ">> GERİ ALMA"
 KASA_ONCE = "sıra: ÖNCE kasa, SONRA dosya"
-DOSYA_ADIMI = "sudo cp -p "
+#: Reçetenin DOSYA geri alma adımı. TSK-261 (2026-10-01): `sudo cp -p $YEDEK/<yol> /<yol>` → aracın kendi bağ izlemeyen yolu
+#: (`sudo <betik> --geri-al $YEDEK`) — root `cp` hedef bağını izlerdi (bilinçli güncelleme; sıra/kapsam iddiaları değişmedi).
+DOSYA_ADIMI = " --geri-al "
 GEREKMEZ = "GEREKMEZ"
 HICBIR = "HİÇBİR ŞEY yazılmadı"
 IKINCI_SIR = "bu sır YAZILMADI; bu turda ÖNCE yazılan kasa yolu VAR — reçete aşağıda"
@@ -190,7 +192,7 @@ def _recete_ihlalleri(r: subprocess.CompletedProcess, beklenen: list[tuple[str, 
         ih.append("reçete başlığı 'ÖNCE kasa, SONRA dosya' demiyor")
     dosya = _satir_indeksi(rec, DOSYA_ADIMI)
     if dosya is None:
-        ih.append("reçetede dosya adımı (sudo cp -p) yok")
+        ih.append("reçetede dosya adımı (--geri-al) yok")
     for yol, n in beklenen:
         satir = ROLLBACK_SATIRI.format(n=n, yol=yol)
         if satir not in rec:
@@ -544,8 +546,11 @@ def test_F1_VAULTSUZ_eski_yol_recetesi_AYNEN_kasa_satiri_YOK(tmp_path):
     rec = _recete(r.stderr)
     yedek = sorted((kok / "root").glob("sir-yedek-*-tenant"))
     _iddia(len(yedek) == 1, f"yedek dizini sayısı {len(yedek)}")
+    # TSK-261 (2026-10-01): ikinci satır `sudo cp -p <yedek>/<yol> /<yol>`du — root `cp` hedef bağını izlerdi; reçete artık
+    # aracın kendi bağ izlemeyen geri alma yolunu gösterir (bilinçli güncelleme; üç satır, birim satırı AYNEN).
     beklenen = [">> GERİ ALMA (bu koşum YEDEK aldı — başarıda da arızada da geçerli):",
-                f"     sudo cp -p {yedek[0]}/<yol> /<yol>   (yedek ağacı üretim yollarını AYNEN taşır)",
+                f"     sudo {BETIK} --geri-al {yedek[0]}   (yedekteki kopyaları üretim yollarına bağ İZLEMEDEN geri koyar; "
+                "önce --kuru ile bak)",
                 f"     sonra yeniden başlat: {TENANT_BIRIMLER}"]
     _iddia(rec == beklenen, _maskeli("reçete değişti:\n" + "\n".join(rec)))
     _iddia("kv rollback" not in r.stderr and "kasa sürümü" not in r.stdout, _ozet(r))
@@ -558,7 +563,7 @@ def test_F1_VAULTSUZ_eski_yol_recetesi_AYNEN_kasa_satiri_YOK(tmp_path):
 SURUM_CAGRISI = '    _kasa_surumu "$yol" "$yazilmadi"\n'
 RECETE_KV = '          echo "        vault kv rollback -version=$surum $yol"\n'
 RECETE_KASA_BASI = '        echo "     1) kasa (yönetici jetonuyla)'
-RECETE_DOSYA = '        echo "     3) eski kanal: sudo cp -p $YEDEK/<yol> /<yol>   (yedek ağacı üretim yollarını AYNEN taşır; render hedefi 1–2 ile kasadan döner)"\n'
+RECETE_DOSYA = '        echo "     3) eski kanal: sudo $0 --geri-al $YEDEK   (yedekteki kopyaları bağ İZLEMEDEN geri koyar; render hedefi 1–2 ile kasadan döner)"\n'
 GECERSIZ_KAPI = "    ''|*[!0-9]*|0) die \"kasa sürümü geçersiz:"
 KURU_ECHO = '    echo "  kasa sürümü      : ÖNCE current_version'
 IKINCI_METIN = '    [ -z "$GENEL_KASA_SATIRLARI" ] || yazilmadi='
