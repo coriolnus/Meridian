@@ -1865,8 +1865,34 @@ anahtarının kopyasıdır ve `--tenant` yazar. Kanıt CP'nin
 kendi giriş ucudur (POST /api/auth/login, gövde `key`):
 yeni → 200, eski → 401. Kasaya BAĞLIDIR: doğru yol
 `--cp --vault` (aşağıda); eski yol uyarıyla koşar.
+sudo ./sir_rotasyon.sh --api-sunucu   → API_SERVER_KEY (bot ağ geçidinin dinleyici anahtarı; G3b, 2026-10-01). TEK
+sır, DÖRT `.env` kopyası — kök + her sohbet profili (Hermes PROFİL
+kapsamı: `/p/<ad>/` isteğinin anahtarı o profilin `.env`inden okunur) — +
+Telegram dinleyicisinin credential'ı; referans Agent render hedefi. Kanıt:
+botlar ETKİNSE `/health/detailed` yeni → 200 · eski → 401; değilse
+"KANIT: ölçülemedi — … etkin değil (<durum>)" satırı, çıkış 0. Kasaya
+BAĞLIDIR: doğru yol `--api-sunucu --vault`; İLK değer RUNBOOK borusuyla.
+sudo ./sir_rotasyon.sh --kapi-bot <sef|bekci|karne> → BOT_KEY_<AD> (bir botun KAPI tüketici anahtarı — `bot_<ad>`
+key-auth; G3b Task 3, 2026-10-01). TEK bot, DÖRT kopya birlikte (operatör
+K-G3b-1): Agent render hedefi `/etc/meridian/bot_key_<ad>` (REFERANS) ·
+`.env-apisix` · rapor profili `.env` · sohbet profili `.env`. Ad `_SOHBET_BOTLARI`
+ile TAM eşleşmeli (başka her ad hiçbir şeye dokunmadan reddedilir; liste bu
+satırda belge olarak durur — ayrışma çivisi v604 C3). Kapı RESTART (`$env://`
+açılışta), bot ağ geçidi yalnız ETKİNSE; motor yeniden BAŞLAMAZ. Kanıt: kapı
+`/llm/v1/models` yeni → 200 · eski → 401. Kasaya BAĞLIDIR: doğru yol
+`--kapi-bot <ad> --vault [--uret]`.
+sudo ./sir_rotasyon.sh --tohumla-sohbet → bot ağ geçidinin sohbet `.env`lerinin İLK yazımı (G3b Task 4, 2026-10-01;
+operatör K-G3b-2). ROTASYON DEĞİLDİR: değer üretmez, sormaz, kasaya yazmaz.
+Hedef + alan kümesi KOPYA TABLOSUNDAN (`_SOHBET_KOKU` altına yazan `env`
+satırları), değer her sırrın REFERANSINDAN (Agent render hedefi). YOK olan
+dosyayı 0600 ubuntu:ubuntu yazar; VAR olana DOKUNMAZ (eksik alanı ADIYLA söyler
+→ çıkış 3, elle). Dizin ya da referans yoksa HİÇBİR ŞEY yazmaz. Restart YOK.
+`--kuru` ile. SIRA: A0 site.yml (dizinler) → kasaya ilk değer + Agent render
+(RUNBOOK) → BU → ilk rotasyon. Önce rotasyon koşarsa ön-denetim "hedef dosya
+YOK" der ve buraya yollar.
 ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 başlayacağını listeler, HİÇBİR ŞEY yazmaz
+(koşullu birim) `_KOSULLU_BIRIMLER` YALNIZ ETKİNSE yeniden başlar; değilse "ATLANDI (etkin değil: <durum>)"
 sudo ./sir_rotasyon.sh --<alt> --vault  → KASADAN ROTASYON (TSK-064 Faz-2 DALGA-2, 2026-09-14):
 yeni değer operatörden alınır (`--uret` ile betik İÇİNDE
 üretilir — aşağıda) ve ÖNCE KASAYA konur;
@@ -1888,7 +1914,7 @@ gövdeleriyle ayrışması çivili — v557), uzunluğu denetlenir, render
 hedefindeki ESKİ değerle AYNI olamaz, hiçbir yere BASILMAZ. Takma
 ad, render kanıtı, eski kanal, restart, kanıt ve geri alma AYNEN —
 yalnız değerin KAYNAĞI değişir. Yalnız --kapi | --tenant | --dash |
---apisix-admin; --openrouter (anahtarı sağlayıcı üretir) ve --db
+--apisix-admin | --api-sunucu | --kapi-bot <ad>; --openrouter (anahtarı sağlayıcı üretir) ve --db
 (kendi dalı, bu turun kapsamı dışı) AÇIK hatayla reddedilir,
 --vault'suz verilemez; --cp --vault değeri ZATEN üretir (bayrak
 etkisiz, söylenir). `--kuru` ile birleşir. Hedef kullanım:
@@ -1949,8 +1975,9 @@ aynı okunur biçimde tutarlar. `mod=koru`/`sahip=koru` satırları (ubuntu sahi
 profilleri; 2026-09-29'a dek `/opt/hindsight/.key` de) root altında da MEVCUT sahip ve izinle yazılır: root'un
 yazıyor olması, dosyayı root'a DEVRETMEK değildir.
 
-DEĞER ÜRETİMİ. `--kapi`/`--db`/`--dash`: `openssl rand -base64 36 | tr '+/' '-_'` → 48 karakter
-URL-güvenli. `--tenant` ve `--cp`: `openssl rand -hex 32` → 64 hex (CP anahtarının biçim beklentisi
+DEĞER ÜRETİMİ. `--kapi`/`--db`/`--dash`/`--kapi-bot <ad>`: `openssl rand -base64 36 | tr '+/' '-_'` → 48 karakter
+URL-güvenli (bot anahtarlarının A1'deki mevcut değerleri de 48 bayt — ölçüldü 2026-09-30). `--tenant`, `--cp` ve `--api-sunucu`: `openssl rand -hex 32` → 64 hex (Hermes dinleyicisi ≥16
+karakter ve yer tutucu olmayan değer ister — Rol-1 G3b-R5; CP anahtarının biçim beklentisi
 YOK — hindsight-control-plane 0.9.2 `api/auth/login` yalnız sabit-zamanlı eşitlik kıyaslar; birim
 şerhinin 2026-09-01 üretim reçetesi de `openssl rand -hex 32`dir). Üretimden SONRA uzunluk denetlenir;
 boş ya da yalnız boşluk olan değer bir ARIZADIR (bir kez ölçüldü: boş credential dosyası birimi
