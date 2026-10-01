@@ -4176,3 +4176,9 @@ canlıyla aynı (ilk "FARKLI" ölçümüm süreç ikamesindeki stdin hatasıydı
   20:01Z'de yazıldı, 282 KB (kart tahmini 109 KB/seans → ~2,6×; ADIM-0c kaydına). TSK-261 (kopya yolları) güvenlik incelemesinde —
   kapanana dek `--openrouter` KOŞULMAZ. EDG-2026-103 sayım aleti dalda (hüküm 10-02 ≥10:33Z; prova: PK(b) τ'ya yapısal erişilemez →
   büyük olasılıkla GEÇERSİZ); Rol-1 kendi netleştirme (5) hatasını (K4 paydası) incelemeyle düzeltti.
+- **G3b CANLI KURULUM (22:13–22:2xZ, Rol-1 — K-G3b-3, sınıflandırıcı engellemedi):** RUNBOOK G3b adım 2: Vault `policy write meridian-agent`
+  → `api_server_key` boruyla (`openssl rand -hex 32 | vault kv put … value=-`; değer görülmedi) → `agent.hcl` kurulumu + vault-agent
+  restart → `/etc/meridian/api_server_key` 400 root 64 (Agent: rendered → api_server_key). Adım 3: `--tohumla-sohbet --kuru` (4 YOK, 5
+  referans VAR, dizinler kurala uygun) → gerçek: yazıldı 4 · dokunulmadı 0 · eksik 0; dört dosya ubuntu:ubuntu 600, alan ADLARI doğru.
+  `--envanter`: API_SERVER_KEY ×4 + BOT_KEY_{SEF,BEKCI,KARNE} ×3 (apisix + rapor + sohbet) + tenant sohbet kopyaları EŞİT. Beyan dışı
+  tarama: `/home/ubuntu/.hermes/.env [GEMINI_API_KEY]` (rotasyon tablosu dışı sır — G3b'den bağımsız, önceden var; ayrı not).
