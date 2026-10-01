@@ -89,10 +89,10 @@ from . import bot_kanal, kadro as _kadro, notify, obs, secrets, store
 # KOMUT TESPİTİ, YANIT ÇİTİNİN ADI, KAYNAK ETİKETİ, ALINTININ İÇERİK SATIRI ve SOHBET İMZASI (üretici sabitleri +
 # tanıyıcı) İTHAL EDİLİR, KOPYALANMAZ — sahibi `bot_kanal` (bota_sor'un dağıtımı ve dönüş kaydı da onları kullanır;
 # G4 Görev 1 Tur 3: dönüş kaydı yanıt çitini hafızaya yazmadan çözer; G4 kalıntıları M-2/M-3, 2026-10-01: hatırla
-# etiketi, dönüş kaydı ve gövdesiz `unut:` sorgusu TEK içerik-satırı kuralından geçer — imza ve araçsız-veri uyarısı
-# içerik sayılmaz; imza deseni bu yüzden `bot_kanal`a taşındı).
-from .bot_kanal import (ALINTI_CIT_ADI, OTURUM_AYRACI, PARCA_EKI, SOHBET_IMZA, _SOHBET_IMZA, alinti_icerik_satiri,
-                        kaynak_etiketi, komut_oneki)
+# etiketi, dönüş kaydı ve gövdesiz `unut:` sorgusu TEK içerik-satırı kuralından geçer — imza, araçsız-veri uyarısı ve
+# ara bildirim satırı içerik sayılmaz; imza deseni ve `ARA_BILDIRIM` bu yüzden `bot_kanal`a taşındı).
+from .bot_kanal import (ALINTI_CIT_ADI, ARA_BILDIRIM, OTURUM_AYRACI, PARCA_EKI, SOHBET_IMZA, _SOHBET_IMZA,
+                        alinti_icerik_satiri, kaynak_etiketi, komut_oneki)
 # ÇİT GRAMERİ İTHAL EDİLİR, KOPYALANMAZ — sahibi `skill_gorus_llm` (`sohbet` de oradan alır).
 from .skill_gorus_llm import _veri_bloku
 
@@ -110,9 +110,9 @@ GUNCELLEME_SAYFASI = 100
 #: Uzun yoklamanın sunucu tarafı bekleme süresi (sn). İlk koşum yoklaması 0 ile (bloklamadan) yapılır — `dongu`.
 UZUN_YOKLAMA_S = 50
 #: `bota_sor` bu kadar saniyede dönmezse operatöre bir kez ara bildirim gider (Rol-1 kararı 4, G4): 1. satır sohbet
-#: imzası (EKSİZ), 2. satır `ARA_BILDIRIM` — imza sayesinde ona verilen yanıt da aynı bota ve oturuma gider (Tur 2).
+#: imzası (EKSİZ), 2. satır `ARA_BILDIRIM` (metni `bot_kanal`dan ithal — içerik kuralı onu atlar, G4 kalıntıları Tur 2)
+#: — imza sayesinde ona verilen yanıt da aynı bota ve oturuma gider (Tur 2).
 ARA_BILDIRIM_ESIGI_S = 8
-ARA_BILDIRIM = "⏳ düşünüyor…"
 
 
 @dataclass(frozen=True)
@@ -291,7 +291,7 @@ def _parcali_gonder(gonder, bot: str, imza: str, cevap: str, reply_to) -> None:
 
 
 class _AraBildirim:
-    """`bota_sor` uzun sürerse BİR kez "<imza>\n⏳ düşünüyor…" — ve cevaptan SONRA ASLA (plan Review Focus 4).
+    """`bota_sor` uzun sürerse BİR kez "<imza>\n<`ARA_BILDIRIM`>" — ve cevaptan SONRA ASLA (plan Review Focus 4).
 
     ÜÇ KATMAN, üçü de gerekli: (1) `kapat()` cevap gönderiminden ÖNCE kilit altında `_kapandi` bayrağını kurar — iplik
     beklemeyi bitirmiş ama iptal ona yetişmemişse (`Timer.cancel` koşmakta olan işlevi durdurmaz) işlev kilidi alınca
@@ -299,12 +299,12 @@ class _AraBildirim:
     tamamlanır (ters sıra "cevap geldi, sonra düşünüyor…" demekti). BEDEL: en kötü hâlde cevap, uçuştaki bildirim
     gönderimi bitene dek gecikir — ve bu süre `notify._post`un zaman aşımıyla SINIRLI DEĞİLDİR (G4 dal sonu M-6; karar
     T3 M-5 durur, yalnız sayı düzeltildi): zaman aşımı soket İŞLEMİ başınadır (bağlanma, el sıkışma, her okuma; duvar
-    saati değil) ve DNS çözümlemesini (`getaddrinfo`) HİÇ kapsamaz — ölçüldü 2026-10-01, yerel CPython 3.12.7: takılan
-    çözümleyicide 0,3 s zaman aşımlı istek 1,52 s bekledi. Çözümleme payının tavanı çözümleyicinin kendi zaman
-    aşımlarıdır (glibc resolv.conf varsayılanı ad sunucusu başına 5 s × 2 deneme); A1'in çözümleyici yapılandırması
-    depodan ölçülemez (G3c); (3) `cancel()` bekleyen ipliği bırakır — cevap geldikten sonra
-    eşik dolana dek boşuna yaşamaz. `_gitti` ikinci ateşlemeyi susturur (BİR kez). İplik `daemon`: süreç çıkışını
-    tutmaz. Zamanlayıcı enjekte edilir (`threading.Timer` imzası: `(sure, islev)` + `daemon` · `start` · `cancel`)."""
+    saati değil) ve DNS çözümlemesini (`getaddrinfo`) HİÇ kapsamaz — `getaddrinfo` yavaşlatma BENZETİMİYLE ölçüldü
+    (2026-10-01, yerel CPython 3.12.7; gerçek çözümleyici DEĞİL): `getaddrinfo` 1,5 s geciktirilince 0,3 s zaman aşımlı
+    istek 1,52 s bekledi. Çözümleme payının tavanı çözümleyicinin kendi zaman aşımlarıdır (glibc resolv.conf
+    varsayılanı ad sunucusu başına 5 s × 2 deneme); A1 çözümleyicisi ölçülmedi — G3c; (3) `cancel()` bekleyen ipliği
+    bırakır — cevap geldikten sonra eşik dolana dek boşuna yaşamaz. `_gitti` ikinci ateşlemeyi susturur (BİR kez).
+    İplik `daemon`: süreç çıkışını tutmaz. Zamanlayıcı enjekte edilir (`threading.Timer` imzası: `(sure, islev)` + `daemon` · `start` · `cancel`)."""
 
     def __init__(self, bildir, bot: str, metin: str, reply_to, esik_s: float, zamanlayici) -> None:
         self._bildir, self._bot, self._metin, self._reply_to = bildir, bot, metin, reply_to

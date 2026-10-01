@@ -199,9 +199,16 @@ PARCA_EKI = " ({no}/{toplam})"
 #: `tg-<ad>-<YYYYAAGG>`. Desen `PARCA_EKI`ni TANIR ama oturum grubuna KATMAZ (G4 Görev 3 Tur 2): hangi parçaya yanıt
 #: verilirse verilsin aynı bot + aynı oturum. Elle yazılmış bir kopyadır; üreticiye gidiş-dönüş çivisiyle bağlı (v602).
 _SOHBET_IMZA = re.compile(r"^💬 @([a-z_]+)(?: · (tg-[a-z_]+-r?\d+))?(?: \([1-9]\d*/[1-9]\d*\))?\s*$")
+#: Telegram ARA BİLDİRİM balonunun 2. satırı (1. satırı eksiz sohbet imzası): `bota_sor` eşiği aşınca dinleyici BİR kez
+#: gönderir (`telegram_dinleyici._AraBildirim`; eşik dinleyicinin `ARA_BILDIRIM_ESIGI_S`i). TEK KAYNAK burası (G4
+#: kalıntıları Tur 2, inceleme M-1, 2026-10-01): dinleyici İTHAL eder; içerik kuralı bu satırı da atlar — balona yanıt
+#: Tur 2 kararıyla aynı bota/oturuma gider ve "⏳ düşünüyor…" etiket ya da `unut:` sorgusu olmamalı. İmza sabitleriyle
+#: aynı nedenle buraya taşındı (dinleyici bu modülü ithal eder; ters yön döngüsel ithal olurdu).
+ARA_BILDIRIM = "⏳ düşünüyor…"
 #: Alıntıda İÇERİK SAYILMAYAN tam satırlar: araçsız-veri uyarıları (`_onekle` onları cevabın başına koyar; Telegram'da
-#: imzanın hemen altında durur). Metin kopyalanmaz, sabitlerin kendisi kullanılır (G4 kalıntıları M-3).
-_ICERIK_DISI_SATIRLAR = (UYARI_ARACSIZ, UYARI_OLCULEMEDI)
+#: imzanın hemen altında durur) ve ara bildirim satırı. Metin kopyalanmaz, sabitlerin kendisi kullanılır (G4 kalıntıları
+#: M-3; ara bildirim Tur 2).
+_ICERIK_DISI_SATIRLAR = (UYARI_ARACSIZ, UYARI_OLCULEMEDI, ARA_BILDIRIM)
 #: Monotonik saat — taşıyıcı (`sure_s`) ve dönüş kaydı (`hafiza_sure_s`) süreleri. Modül düzeyinde ki çiviler sahte
 #: saatle süre alanlarını ölçebilsin.
 _saat = time.monotonic

@@ -180,16 +180,65 @@ def test_govdesiz_unut_yalniz_imza_ve_uyari_varsa_govdesiz_gider(sandbox_state, 
 # =================================================================================================
 
 def test_alinti_kurali_ve_imza_deseni_tek_kaynak():
-    for ad in ("SOHBET_IMZA", "OTURUM_AYRACI", "PARCA_EKI", "_SOHBET_IMZA", "alinti_icerik_satiri", "kaynak_etiketi"):
+    for ad in ("SOHBET_IMZA", "OTURUM_AYRACI", "PARCA_EKI", "_SOHBET_IMZA", "ARA_BILDIRIM", "alinti_icerik_satiri",
+               "kaynak_etiketi"):
         assert getattr(td, ad) is getattr(bk, ad), ad
     atananlar = {h.id for n in ast.parse(inspect.getsource(td)).body if isinstance(n, ast.Assign)
                  for h in n.targets if isinstance(h, ast.Name)}
-    assert not atananlar & {"SOHBET_IMZA", "OTURUM_AYRACI", "PARCA_EKI", "_SOHBET_IMZA"}
+    assert not atananlar & {"SOHBET_IMZA", "OTURUM_AYRACI", "PARCA_EKI", "_SOHBET_IMZA", "ARA_BILDIRIM"}
     tanimlar = {n.name for n in ast.parse(inspect.getsource(td)).body if isinstance(n, ast.FunctionDef)}
     assert "_alinti_icerik_satiri" not in tanimlar                         # ikinci kural emekli
     assert not hasattr(bk, "alinti_ilk_satiri")                            # imzayı içerik sayan eski kural emekli
     kaynak = inspect.getsource(td)
-    assert bk.UYARI_ARACSIZ not in kaynak and bk.UYARI_OLCULEMEDI not in kaynak
+    assert bk.UYARI_ARACSIZ not in kaynak and bk.UYARI_OLCULEMEDI not in kaynak and bk.ARA_BILDIRIM not in kaynak
+
+
+# =================================================================================================
+# Tur 2 (inceleme M-1) — ara bildirim balonu ("⏳ düşünüyor…") da İÇERİK DEĞİLDİR
+# =================================================================================================
+
+class _HemenZamanlayici:
+    """`threading.Timer` ikizi: `start` işlevi HEMEN koşar — `bota_sor` eşiği aşmış gibi ara bildirim GERÇEK yoldan
+    (`isle` → `_AraBildirim`) gider. Gerçek bekleme yok."""
+
+    def __init__(self, sure, fn):
+        self.fn, self.daemon = fn, None
+
+    def start(self):
+        self.fn()
+
+    def cancel(self):
+        pass
+
+
+def _ara_bildirim_balonu():
+    """`@bekci` sorusu uzun sürünce operatöre giden GERÇEK ara bildirim metni (imza + `ARA_BILDIRIM`)."""
+    balonlar = []
+    td.isle({"update_id": 1, "message": _mesaj("@bekci durum?")}, yetkili_sohbet=YETKILI,
+            bota_sor=lambda *a: "geç cevap", gonder=lambda t, r: True,
+            bildir=lambda t, r: balonlar.append(t) or True, bugun="20260929", _zamanlayici=_HemenZamanlayici)
+    (balon,) = balonlar
+    return balon
+
+
+def test_ara_bildirim_balonuna_yanitta_icerik_yok_unut_govdesiz_hatirla_etiketsiz(sandbox_state):
+    balon = _ara_bildirim_balonu()
+    assert balon == f"💬 @bekci · tg-bekci-20260929\n{bk.ARA_BILDIRIM}"           # girdi gerçek balon
+    assert bk.alinti_icerik_satiri(balon) == "" and bk.kaynak_etiketi(balon) is None
+    giden, h = _yanit_turu(balon, "unut:")
+    assert giden == "unut:" and h.aday_sorgulari == []                           # sorgu uydurulmaz → "Neyi unutayım?"
+    giden, h = _yanit_turu(balon, "hatırla: yarın bak")
+    assert giden == "hatırla: yarın bak" and h.yazilanlar[0][1] == "yarın bak"
+    _, h = _yanit_turu(balon, "acele etme")
+    assert h.donusler[0][1] == "acele etme"                                      # dönüş kaydında da etiket yok
+
+
+def test_ara_bildirim_balonuna_yanit_ayni_bota_ve_ayni_oturuma_gider(sandbox_state):
+    # Tur 2 kararı (yönlendirme doğruluğu): balon imzalıdır, ona yanıt aynı bota ve oturuma gider — içerik kuralı
+    # bunu bozmaz (yönlendirme imza satırına, içerik kuralı imzadan SONRAKİ satırlara bakar).
+    balon, cagrilar = _ara_bildirim_balonu(), []
+    _telegram("acele etme", bota_sor=lambda bot, m, k, o: cagrilar.append((bot, o)) or "tamam", yanit=balon)
+    assert cagrilar == [("bekci", "tg-bekci-20260929")]
 
 
 # =================================================================================================
