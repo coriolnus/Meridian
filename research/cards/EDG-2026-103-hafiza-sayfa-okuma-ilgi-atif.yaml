@@ -204,3 +204,13 @@ netlestirme_2026_10_01b: >
   sınır raporlanır, kıyas ancak üst sınır eşiğin geçme yönünde kesin karar veriyorsa yapılır, aksi ÖLÇÜLEMEDİ. (6a) Ek NK
   ("bankada yok" ifadesi) kill #6 kapsamında harfiyen. (10) Dondurulan girdi (`research/olcumler/edg103_okuma_ilgi_atif/girdi/`,
   sayfa görüntüleri dahil) EDG-083/084 `sayfalar/` emsaliyle depoya girer (sır taşımaz; kart blob'a bağlanır).
+
+netlestirme_2026_10_01c: >
+  (Rol-1, 2026-10-02 00:1xZ yerel / 2026-10-01 21:1xZ — DÜZELTME: `netlestirme_2026_10_01` (5) HATALIYDI; sayım aleti incelemesi I3
+  yakaladı) (5) K4 paydasını `esikler` cümlesindeki "atıflı kararlar"dan D'ye çevirmiştim, bunu "geçme yönüne sapmayan" sanarak; tersi
+  doğru: K4 eşiği üst sınırdır (≤), payda büyüdükçe oran küçülür → D paydası GEÇME yönüne sapar. Kartın DONMUŞ `esikler` cümlesi
+  bağlar (K2 için (3)'te verdiğim ilkenin aynısı): K4 paydası = `esikler`deki "atıflı kararlar"; D paydası yalnız betimleyici. (5)
+  geçersiz, bu satır yerine geçer. Dürüstlük kaydı: inceleme ajanı aleti depo verisiyle bir kez PROVA etti (A1 okuma kaydı değil); Rol-1
+  K4 ile ilgili ara sayıları (atıflı 19 / D 73) bu düzeltmeden ÖNCE gördü — düzeltme kartın donmuş metnine DÖNÜŞTÜR ve sıkı yöndedir;
+  ayrıca kill #6 yolunda (PK(b) yapısal olarak τ'ya erişemiyor — prova: J=0,0099, 111 gerçek kararın en yükseği 0,079) K2–K4 hiç
+  yayılmaz.
