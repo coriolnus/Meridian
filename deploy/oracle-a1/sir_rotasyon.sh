@@ -76,6 +76,16 @@
 #                                           `--kuru` ile. SIRA: A0 site.yml (dizinler) → kasaya ilk değer + Agent render
 #                                           (RUNBOOK) → BU → ilk rotasyon. Önce rotasyon koşarsa ön-denetim "hedef dosya
 #                                           YOK" der ve buraya yollar.
+#   sudo ./sir_rotasyon.sh --geri-al <yedek-dizini> → YEDEKTEN GERİ ALMA (TSK-261, 2026-10-01). ROTASYON DEĞİLDİR: bir
+#                                           koşumun yedeğindeki (`/root/sir-yedek-<UTC ts>-<alt>/`) kopyaları üretim
+#                                           yollarına geri koyar — YALNIZ o alt komutun tablo yolları (alt komut dizin
+#                                           adından), bağ İZLEMEDEN (yardımcının fd-tabanlı yazım çekirdeği), mod/sahip
+#                                           yedekten. Kasa yedeği (`vault/`) GİRMEZ (kasa reçetesinin işi). DOSYA BÜTÜN
+#                                           DÖNER: yedekten sonra değişmiş BAŞKA alanların ADLARI basılır (değer asla).
+#                                           Yazmadan ÖNCE mevcut hâli yeni bir yedeğe alır (yolu basılır — geri almanın
+#                                           geri alınması o yedekten). Restart YAPMAZ, birim listesini basar. Yazımda
+#                                           reddedilen hedef ADIYLA söylenir, ötekiler geri konur (çıkış 1); geri konacak
+#                                           dosya YOKSA çıkış 1. Bütün geri alma reçeteleri bunu gösterir. `--kuru` ile.
 #   ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 #                                           başlayacağını listeler, HİÇBİR ŞEY yazmaz
 #   (koşullu birim) `_KOSULLU_BIRIMLER` YALNIZ ETKİNSE yeniden başlar; değilse "ATLANDI (etkin değil: <durum>)"
@@ -233,9 +243,10 @@
 # okunduğunu söylemezdi.
 #
 # YEDEK. Her koşum ÖNCE `/root/sir-yedek-<UTC ts>-<alt komut>/` (0700 root) altına dokunacağı her
-# dosyayı `cp -p` ile alır. Ad SANİYE taşır: aynı sırrı gün içinde iki kez döndürmek ilk yedeği
+# dosyayı bağ İZLEMEDEN kopyalar (yardımcının `kopyala` işlemi — mod/sahip korunur, kaynak bağsa yedek
+# ALINMAZ ve rotasyon başlamaz; TSK-261). Ad SANİYE taşır: aynı sırrı gün içinde iki kez döndürmek ilk yedeği
 # EZMEZ. Geri alma reçetesi RUNBOOK'ta değil burada, çünkü okunacağı an bu betiğin çıktısıdır:
-# kasasız yol → `sudo cp -p <yedek>/<yol> <yol>` + ilgili birimleri yeniden başlat. `--vault` yolu
+# kasasız yol → `sudo ./sir_rotasyon.sh --geri-al <yedek>` + ilgili birimleri yeniden başlat. `--vault` yolu
 # (TSK-064, 2026-09-26) → ÖNCE kasa: `vault kv rollback -version=<N> <yol>` (N = `kv put` ÖNCESİ
 # `current_version`, her kasa yolu için ayrı kaydedilir), SONRA dosya — ters sırada Agent render'ı
 # geri konan dosyayı kasadaki yeni değerle tekrar ezer. `kv rollback`un kendisi düşerse (politika · ağ ·
@@ -678,6 +689,9 @@ _sohbet_botu_mu() {
 _bayrak() {
   case "$1" in
     kapi-bot-*) printf -- '--kapi-bot %s\n' "${1#kapi-bot-}" ;;
+    #: `--geri-al` (TSK-261) de değer ALAN bir bayraktır: önerilen satır dizini taşımazsa operatörün yapıştırdığı komut
+    #: "YEDEK DİZİNİ ister" ile düşerdi.
+    geri-al)    printf -- '--geri-al %s\n' "${GERI_AL_DIZINI:-<yedek-dizini>}" ;;
     *)          printf -- '--%s\n' "$1" ;;
   esac
 }
@@ -1100,14 +1114,16 @@ def _gecici_sil(dfd: int, gecici: str) -> None:
         pass
 
 
-def _gecici_yaz(dfd: int, icerik: str, mod: int, uid: int, gid: int, olculur: bool) -> tuple[str, os.stat_result]:
+def _gecici_yaz(dfd: int, icerik: str | bytes, mod: int, uid: int, gid: int, olculur: bool) -> tuple[str, os.stat_result]:
     """Dizin tanıtıcısı içinde YENİ bir geçici dosya kurar (`O_EXCL|O_NOFOLLOW` — var olan bir ada/bağa AÇILMAZ), içeriği yazar,
     sahip ve modu DOSYA TANITICISINA verir: önce `fchown` (uid -1 → sahiplik değişmez), sonra `fchmod` — mod son verilir, çünkü
-    Linux root'un chown'unda S_ISUID/S_ISGID'i silebilir; istenen mod TAM olarak kalsın. Döner: `(geçici ad, yazılan fstat)`."""
+    Linux root'un chown'unda S_ISUID/S_ISGID'i silebilir; istenen mod TAM olarak kalsın. Döner: `(geçici ad, yazılan fstat)`.
+    `bytes` içerik AYNEN (ikili) yazılır — `kopyala` (TSK-261) yedeği bayt bayt taşır, metin kipi CRLF'yi çevirirdi."""
     gecici = f".sir-rot-{os.urandom(8).hex()}"
     fd = os.open(gecici, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=dfd)
+    kip = {"mode": "wb"} if isinstance(icerik, bytes) else {"mode": "w", "encoding": "utf-8"}
     try:
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        with os.fdopen(fd, **kip) as fh:
             fh.write(icerik)
             fh.flush()
             if uid != -1:
@@ -1139,9 +1155,12 @@ def _gecici_dogrula(dfd: int, gecici: str, yazilan: os.stat_result, yol: str) ->
 
 
 def _yazim_kusurlari(dfd: int, ad: str, yazilan: os.stat_result, mod: int, uid: int, gid: int | None,
-                     olculur: bool) -> list[str]:
+                     olculur: bool, yol: str) -> list[str]:
     """Yazım SONRASI ölçüm (`lstat`, dizin tanıtıcısı içinde): AYNI inode · normal dosya · beklenen mod · beklenen sahip (root
-    iken; `gid` None → yalnız uid). Döner: kusur listesi (boş = doğrulandı)."""
+    iken; `gid` None → yalnız uid). Döner: kusur listesi (boş = doğrulandı).
+    YOL DA ÖLÇÜLÜR (TSK-261; TSK-260 incelemesi M2): tanıtıcı tutulurken dizin YENİDEN ADLANDIRILIRSA yazım taşınan dizine iner
+    ve tanıtıcıya göre ölçüm onu doğru sanar — çıkış 0, ama tüketicinin okuduğu YOLDAKİ dosya eski kalır (inceleme sondası P2).
+    Bu yüzden yoldaki ad (`lstat` — ara dizinler tüketicinin gördüğü gibi izlenir, son bileşen izlenmez) YAZILAN inode olmalıdır."""
     try:
         son = os.stat(ad, dir_fd=dfd, follow_symlinks=False)
     except FileNotFoundError:
@@ -1155,12 +1174,19 @@ def _yazim_kusurlari(dfd: int, ad: str, yazilan: os.stat_result, mod: int, uid: 
         kusur.append(f"mod {son.st_mode & 0o7777:04o} (beklenen {mod:04o})")
     if olculur and uid != -1 and (son.st_uid != uid or (gid is not None and son.st_gid != gid)):
         kusur.append(f"sahip {son.st_uid}:{son.st_gid} (beklenen {uid}:{'*' if gid is None else gid})")
+    try:
+        yoldaki = os.lstat(yol)
+    except OSError:
+        yoldaki = None
+    if yoldaki is None or (yoldaki.st_dev, yoldaki.st_ino) != (yazilan.st_dev, yazilan.st_ino):
+        kusur.append("YOLDAKİ dosya yazılan inode DEĞİL (dizin tanıtıcısı tutulurken dizin yeniden adlandırılmış/taşınmış "
+                     "olabilir — yazım yoldan GÖRÜNMÜYOR, tüketici eski dosyayı okur)")
     return kusur
 
 
-def _yeni_dosya_yaz(dfd: int, ad: str, icerik: str, mod: int, uid: int, gid: int, olculur: bool) -> str:
-    """TOHUMLAMA: dizin tanıtıcısı içinde YALNIZ YOK olan `ad`ı kurar (bağlama — hedef VARSA `FileExistsError`); sonra ölçer.
-    Döner: doğrulama hükmü (çıktıya basılır — değer DEĞİL)."""
+def _yeni_dosya_yaz(dfd: int, ad: str, icerik: str, mod: int, uid: int, gid: int, olculur: bool, yol: str) -> str:
+    """TOHUMLAMA: dizin tanıtıcısı içinde YALNIZ YOK olan `ad`ı kurar (bağlama — hedef VARSA `FileExistsError`); sonra ölçer
+    (`yol` — yoldaki inode da, `_yazim_kusurlari`). Döner: doğrulama hükmü (çıktıya basılır — değer DEĞİL)."""
     gecici, yazilan = _gecici_yaz(dfd, icerik, mod, uid, gid, olculur)
     try:
         _gecici_dogrula(dfd, gecici, yazilan, ad)
@@ -1170,7 +1196,7 @@ def _yeni_dosya_yaz(dfd: int, ad: str, icerik: str, mod: int, uid: int, gid: int
             sys.exit(f"hedef ZATEN VAR: {ad} — var olan dosyaya DOKUNULMAZ (yarış: denetimden sonra doğdu), yazım YAPILMADI")
     finally:
         _gecici_sil(dfd, gecici)
-    kusur = _yazim_kusurlari(dfd, ad, yazilan, mod, uid, gid, olculur)
+    kusur = _yazim_kusurlari(dfd, ad, yazilan, mod, uid, gid, olculur, yol)
     if kusur:
         sys.exit(f"yazım DOĞRULANAMADI: {ad} — {'; '.join(kusur)}. Dosya YERİNDE bırakıldı (bizim olmayabilir): elle incele")
     if olculur:
@@ -1182,13 +1208,15 @@ def _yeni_dosya_yaz(dfd: int, ad: str, icerik: str, mod: int, uid: int, gid: int
 _BAG_REDDI = "SEMBOLİK BAĞ (izlenmez — yazım bağın hedefine GİTMEZ, bağ ezilmez)"
 
 
-def _hedef_ac(hedef: str, mod: str, sahip: str) -> SimpleNamespace | str:
+def _hedef_ac(hedef: str, mod: str | int, sahip: str | tuple[int, int]) -> SimpleNamespace | str:
     """ROTASYON HEDEFİNİN TEK DENETİM GÖVDESİ — yazım (`_atomik_yaz`) ve yazım ÖNCESİ ön-denetim (`hedef-denetle` ←
     `_hedef_on_denetim`) buradan geçer; ikisi ayrışamaz. Zinciri `_capa`dan aşağı `_dizin_ac` ile açar (izinli sahipler
     `{root, hedefin sahibi}`), hedefi dizin tanıtıcısı içinde `lstat` eder: bağ ya da normal dosya değil → RED. `koru` mod/sahip
     bu `lstat`tan (bağ izlenmez); `koru` için yol ile alınan ilk `lstat` (izinli kümenin kaynağı) ile tanıtıcıdaki `lstat` AYNI
     inode olmalıdır — değilse zincir yarışta değişmiştir. Döner: açık hedef (`dfd` çağıranın kapatmasıdır) ya da RED dizgesi
-    (tanıtıcı kapalı). `koru` ama hedef YOK → eski ileti ile durur ("mod=koru ama dosya YOK")."""
+    (tanıtıcı kapalı). `koru` ama hedef YOK → eski ileti ile durur ("mod=koru ama dosya YOK").
+    `kopyala` (TSK-261) aynı gövdeden geçer: KAYNAK `koru koru` ile açılır; HEDEF kaynağın modu (`int`) ve sayısal sahibiyle
+    (`(uid, gid)`) — eski root kopyasının `-p` ile koruduğu mod/sahibin bağ izlemeyen karşılığı."""
     yol = os.path.normpath(os.path.abspath(hedef))
     dizin, ad = os.path.split(yol)
     olculur = os.geteuid() == 0
@@ -1204,6 +1232,8 @@ def _hedef_ac(hedef: str, mod: str, sahip: str) -> SimpleNamespace | str:
         uid, gid = st0.st_uid, st0.st_gid
     elif sahip == "-":
         uid = gid = -1
+    elif isinstance(sahip, tuple):
+        uid, gid = sahip
     else:
         k, _, g = sahip.partition(":")
         uid, gid, _ = _kimlik(k, g)
@@ -1228,36 +1258,54 @@ def _hedef_ac(hedef: str, mod: str, sahip: str) -> SimpleNamespace | str:
     if sahip == "koru":
         uid, gid = st.st_uid, st.st_gid
     bek_uid, bek_gid = (os.geteuid(), None) if sahip == "-" else (uid, gid)
+    if mod == "koru":
+        mod_n = st.st_mode & 0o7777
+    else:
+        mod_n = mod if isinstance(mod, int) else int(mod, 8)
     return SimpleNamespace(dfd=dfd, yol=yol, ad=ad, st=st, olculur=olculur, uid=uid, gid=gid, bek_uid=bek_uid,
-                           bek_gid=bek_gid, mod=(st.st_mode & 0o7777) if mod == "koru" else int(mod, 8))
+                           bek_gid=bek_gid, mod=mod_n)
 
 
-def _tanitictan_oku(h: SimpleNamespace) -> str:
-    """Oku-değiştir-yaz'ın ESKİ içeriği: denetlenen hedef, AYNI dizin tanıtıcısından `O_NOFOLLOW` ile açılır ve inode'u
-    denetlenenle aynı olmalıdır. Metin kipi `open()` ile AYNIDIR (UTF-8, evrensel satır sonu — eski `_oku` davranışı)."""
+def _tanitictan_oku(h: SimpleNamespace, ikili: bool = False) -> str | bytes:
+    """Oku-değiştir-yaz'ın ESKİ içeriği (ve `kopyala`nın KAYNAĞI): denetlenen hedef, AYNI dizin tanıtıcısından `O_NOFOLLOW` ile
+    açılır ve inode'u denetlenenle aynı olmalıdır. Metin kipi `open()` ile AYNIDIR (UTF-8, evrensel satır sonu — eski `_oku`
+    davranışı); `ikili` → bayt AYNEN (`kopyala`: yedek/geri alma eski root kopyası gibi bayt-eşit olmalı).
+    FIFO ASKISI YOK (TSK-261; TSK-260 incelemesi M1): denetim `lstat`ından SONRA ad bir FIFO'ya çevrilirse `O_RDONLY` açılışı
+    bir yazarı SÜRESİZ bekler — root rotasyonu ortada asılır, önceki satırlar yazılmış kalır (sonda P1). Açılış `O_NONBLOCK`tur
+    (normal dosyada etkisiz; FIFO'da yazarsız hemen döner), tanıtıcı `fstat` ile NORMAL DOSYA ve aynı inode diye ölçülür, ancak
+    ondan sonra engelleyici kipe dönülüp okunur."""
     if h.st is None:
         sys.exit(f"hedef YOK: {h.yol} — eski içerik okunamaz, yazım YAPILMADI")
     try:
-        fd = os.open(h.ad, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=h.dfd)
+        fd = os.open(h.ad, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=h.dfd)
     except OSError as hata:
         sys.exit(f"hedef açılamadı ({hata.strerror}): {h.yol} — denetimden sonra bağa çevrilmiş olabilir, yazım YAPILMADI")
-    with os.fdopen(fd, encoding="utf-8") as fh:
-        st = os.fstat(fh.fileno())
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode):
+            sys.exit(f"hedef açılışta normal dosya DEĞİL (yarış — FIFO/aygıt/dizine çevrilmiş olabilir): {h.yol} — okunmadı, "
+                     "yazım YAPILMADI")
         if (st.st_dev, st.st_ino) != (h.st.st_dev, h.st.st_ino):
             sys.exit(f"hedef denetimden sonra DEĞİŞTİ (yarış): {h.yol} — yazım YAPILMADI")
+        os.set_blocking(fd, True)
+    except BaseException:
+        os.close(fd)
+        raise
+    with os.fdopen(fd, "rb") if ikili else os.fdopen(fd, encoding="utf-8") as fh:
         return fh.read()
 
 
-def _atomik_yaz(hedef: str, icerik: str | Callable[[str], str], mod: str, sahip: str) -> None:
+def _atomik_yaz(hedef: str, icerik: str | bytes | Callable[[str], str], mod: str | int,
+                sahip: str | tuple[int, int]) -> None:
     """ROTASYONUN TEK YAZIM GÖVDESİ — bağ İZLEMEYEN, tanıtıcı tabanlı, atomik (TSK-260). `yaz-dosya` · `yaz-env` · `yaz-url` ·
     `bosalt` ve bütün çalışma dizini çıktıları buradan geçer. ATOMİKTİR: yarım yazılmış bir credential dosyası birimi açılmaz
     hâle getirir.
 
-    `icerik` dizge ya da `eski içerik → yeni içerik` fonksiyonudur (oku-değiştir-yaz: `yaz-env`/`yaz-url`; eski içerik
-    `_tanitictan_oku` ile DENETLENEN dosyadan okunur). Mod/sahip: `koru` ise hedefin MEVCUDU (`lstat`), değilse argümandan; sahip
-    `-` → sahiplik değişmez (yazan süreç). Sıra: `_hedef_ac` → `_gecici_yaz` → `_gecici_dogrula` → dizin tanıtıcısı içinde
-    yerine koyma → `_yazim_kusurlari`. Başarıda HİÇBİR ŞEY basılmaz (`--db`nin altın izi stdout'u pinler — v538 C7); ret ADLI
-    iletiyle ve "yazım YAPILMADI" ile `sys.exit`tir."""
+    `icerik` dizge, bayt (`kopyala`) ya da `eski içerik → yeni içerik` fonksiyonudur (oku-değiştir-yaz: `yaz-env`/`yaz-url`; eski
+    içerik `_tanitictan_oku` ile DENETLENEN dosyadan okunur). Mod/sahip: `koru` ise hedefin MEVCUDU (`lstat`), değilse argümandan
+    (`kopyala`: kaynağın modu ve sayısal sahibi); sahip `-` → sahiplik değişmez (yazan süreç). Sıra: `_hedef_ac` → `_gecici_yaz` →
+    `_gecici_dogrula` → dizin tanıtıcısı içinde yerine koyma → `_yazim_kusurlari` (tanıtıcı + YOL). Başarıda HİÇBİR ŞEY basılmaz
+    (`--db`nin altın izi stdout'u pinler — v538 C7); ret ADLI iletiyle ve "yazım YAPILMADI" ile `sys.exit`tir."""
     h = _hedef_ac(hedef, mod, sahip)
     if isinstance(h, str):
         sys.exit(f"{h} — yazım YAPILMADI ({hedef})")
@@ -1270,12 +1318,61 @@ def _atomik_yaz(hedef: str, icerik: str | Callable[[str], str], mod: str, sahip:
             os.replace(gecici, h.ad, src_dir_fd=h.dfd, dst_dir_fd=h.dfd)
         finally:
             _gecici_sil(h.dfd, gecici)
-        kusur = _yazim_kusurlari(h.dfd, h.ad, yazilan, h.mod, h.bek_uid, h.bek_gid, h.olculur)
+        kusur = _yazim_kusurlari(h.dfd, h.ad, yazilan, h.mod, h.bek_uid, h.bek_gid, h.olculur, h.yol)
         if kusur:
             sys.exit(f"yazım DOĞRULANAMADI: {h.yol} — {'; '.join(kusur)}. Dosya YERİNDE bırakıldı (bizim olmayabilir): "
                      "elle incele")
     finally:
         os.close(h.dfd)
+
+
+def _kopyala(kaynak: str, hedef: str) -> None:
+    """BAĞ İZLEMEYEN KOPYA (`cp`nin mod/sahip koruyan `-p` biçiminin karşılığı) — aracın BÜTÜN kopya yollarının TEK gövdesi
+    (TSK-261): yedek alma (`_yedek_al`), negatif kontrol yedeği ve GERİ ALMASI (`_negatif_kontrol` · `_negatif_geri_al`), `--db`nin
+    eski DSN kopyası ve `--geri-al`. Eskiden kabuk root olarak `cp` koşuyordu ve İKİ uçta da bağ izliyordu: hedefte öngörülebilir
+    `$hedef.yeni` adı (dizin sahibi onu önceden bir root dosyasına bağlarsa root o dosyayı yedeğin içeriğiyle EZER, `-p` sahibini
+    verir — kök kod yürütmeye yeter), kaynakta da bağlı bir kaynak (seçilen dosyanın içeriği yedeğe, oradan ubuntu dizinine).
+    KAYNAK yazımın denetim gövdesiyle açılır (`_hedef_ac` `koru koru`: zincir bağ izlenmeden, bileşen izin/sahip kuralı, kaynak
+    bağ ya da normal dosya değilse RED) ve `_tanitictan_oku` ile BAYT olarak okunur (`O_NOFOLLOW|O_NONBLOCK`, fstat normal dosya +
+    aynı inode). HEDEF `_atomik_yaz` ile yazılır (öngörülebilir ad YOK — geçici ad rastgele ve `O_EXCL|O_NOFOLLOW`, zincir ve
+    hedef bağ izlenmez, yazım sonrası tanıtıcı + yol ölçülür); mod ve sahip KAYNAĞIN (`-p`). Zaman damgaları TAŞINMAZ (bedel:
+    yedeğin mtime'ı yedek anıdır, geri konan dosyanınki geri alma anı — hiçbir okuyucu mtime'a bakmaz). Değer basılmaz."""
+    k = _hedef_ac(kaynak, "koru", "koru")
+    if isinstance(k, str):
+        sys.exit(f"KAYNAK {k} — kaynak okunmadı, kopya YAPILMADI ({kaynak})")
+    try:
+        icerik = _tanitictan_oku(k, ikili=True)
+    finally:
+        os.close(k.dfd)
+    _atomik_yaz(hedef, icerik, k.st.st_mode & 0o7777, (k.st.st_uid, k.st.st_gid))
+
+
+def _guvenli_metin(yol: str) -> str:
+    """Bağ İZLEMEDEN ve FIFO'da askıda kalmadan okunan metin — yazımın denetim gövdesi (`_hedef_ac` koru + `_tanitictan_oku`).
+    Yalnız `alan-farki` okur (TSK-261 inceleme I2: `--geri-al`ın "dosyanın tamamı döner" uyarısı); ret adlı iletiyle çıkıştır."""
+    h = _hedef_ac(yol, "koru", "koru")
+    if isinstance(h, str):
+        sys.exit(f"{h} — okunmadı, alan farkı ÖLÇÜLEMEDİ")
+    try:
+        return _tanitictan_oku(h)
+    finally:
+        os.close(h.dfd)
+
+
+def _alan_haritasi(tur: str, ham: str) -> dict[str, str]:
+    """Çok anahtarlı bir kopyanın `ad → ham değer` haritası (YALNIZ kıyas için — hiçbir çıktıya girmez). `env`: `^AD=` satırları
+    (aynı ad birden çok kez geçerse hepsi birleşir: çift satır da fark sayılır); `api`: motor deposunun (JSON) üst düzey anahtarları."""
+    if tur == "api":
+        veri = json.loads(ham)
+        if not isinstance(veri, dict):
+            sys.exit("motor deposu JSON sözlüğü değil — alan farkı ÖLÇÜLEMEDİ")
+        return {k: json.dumps(v, sort_keys=True) for k, v in veri.items()}
+    harita: dict[str, str] = {}
+    for satir in ham.splitlines():
+        m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$", satir)
+        if m:
+            harita[m.group(1)] = harita.get(m.group(1), "") + "\0" + m.group(2)
+    return harita
 
 
 class AlanArizasi(Exception):
@@ -1559,9 +1656,26 @@ def main(argv: list[str]) -> None:
         if dfd is None:
             sys.exit(f"hedef dizini {hukum} — yazım YAPILMADI ({hedef})")
         try:
-            print(_yeni_dosya_yaz(dfd, os.path.basename(hedef), "".join(satirlar), int(mod, 8), uid, gid, olculur))
+            print(_yeni_dosya_yaz(dfd, os.path.basename(hedef), "".join(satirlar), int(mod, 8), uid, gid, olculur, hedef))
         finally:
             os.close(dfd)
+    elif op == "kopyala":            # <kaynak> <hedef> — bağ İZLEMEYEN kopya, mod/sahip kaynağın (TSK-261)
+        # Kabuğun BÜTÜN kopya yolları (yedek · negatif kontrol yedeği ve geri alması · `--db` eski DSN · `--geri-al`) buradan
+        # geçer; kabukta root `cp` KALMADI (v611 F1s). Başarıda hiçbir şey basılmaz; ret adlı iletiyle (`_kopyala`).
+        _kopyala(*argv[2:4])
+    elif op == "alan-farki":         # <env|api> <yedek> <güncel> [hariç alan…] → AYNI | FARKLI: <ad…> — DEĞER BASILMAZ
+        # `--geri-al` (TSK-261 inceleme I2): çok anahtarlı bir dosya BÜTÜN döner; yedekten sonra değişmiş BAŞKA alanların (geri
+        # alınan alt komutun kendi alanları HARİÇ) ADLARI önceden söylenir. Yalnız adlar basılır; değerler yalnız kıyaslanır.
+        tur, yedek, guncel = argv[2:5]
+        haric = set(argv[5:])
+        try:
+            a = _alan_haritasi(tur, _guvenli_metin(yedek))
+            b = _alan_haritasi(tur, _guvenli_metin(guncel))
+        except ValueError as hata:
+            # Yasa 4 — sessiz değil: UTF-8 dışı bayt ya da bozuk JSON ADIYLA çıkıştır; çağıran "ÖLÇÜLEMEDİ" der.
+            sys.exit(f"alan farkı ÖLÇÜLEMEDİ ({type(hata).__name__}) — değer basılmadı")
+        fark = sorted(ad for ad in set(a) | set(b) if ad not in haric and a.get(ad) != b.get(ad))
+        print(f"FARKLI: {' '.join(fark)}" if fark else "AYNI")
     elif op == "hedef-denetle":      # <hedef> <mod> <sahip> → TAMAM | RED: <neden> — YAZIM YOK
         # Rotasyonun yazım ÖNCESİ ön-denetimi (`_hedef_on_denetim`, TSK-260): yazımın koşacağı AYNI gövde (`_hedef_ac` —
         # zincir bağ izlenmeden · bileşen izin/sahip · hedef bağ/normal dosya). Bağlı ya da gevşek bir hedef rotasyonu
@@ -1616,9 +1730,12 @@ _geri_alma_recetesi() {
   # pahalıya mal olurdu. Yutulan tek şey stderr metnidir; ÖLÇÜLEMEDİ hâli sessiz DEĞİL, görünür
   # bir dizgeyle beyan edilir (aşağıdaki `(birim listesi ölçülemedi)`).
   birimler="$(_birimler "$ALT" 2>/dev/null || echo '(birim listesi ölçülemedi)')"
+  # REÇETE ARACIN KENDİ GÜVENLİ YOLUNU GÖSTERİR (TSK-261): `sudo cp -p <yedek>/<yol> /<yol>` operatörün elinde root
+  # olarak hedef BAĞINI izlerdi — tam da bu koşumun "DOĞRULANAMADI" ile durduğu (bağa çevrilmiş hedef) anda.
+  # `--geri-al` yalnız bu alt komutun tablo yollarını, bağ İZLEMEDEN, yedeğin mod/sahibiyle geri koyar.
   # shellcheck disable=SC2086
   echo ">> GERİ ALMA (bu koşum YEDEK aldı — başarıda da arızada da geçerli):
-     sudo cp -p $YEDEK/<yol> /<yol>   (yedek ağacı üretim yollarını AYNEN taşır)
+     sudo $0 --geri-al $YEDEK   (yedekteki kopyaları üretim yollarına bağ İZLEMEDEN geri koyar; önce --kuru ile bak)
      sonra yeniden başlat: $(_recete_birimleri $birimler)" >&2
   return 0
 }
@@ -1657,21 +1774,28 @@ _curl_kod() {
 # Ad SANİYE + alt komut taşır: aynı sırrı gün içinde iki kez döndürmek ilk yedeği EZMEZ. Dizin
 # 0700 root: yedek de sır taşır ve bir yedek dosyası, kaynağından daha gevşek izinliyse rotasyonun
 # kazandığını yedek geri verir.
+# KAYNAK BAĞ İZLENMEDEN OKUNUR (TSK-261, CWE-59): kopya yardımcının `kopyala` işlemidir — kaynak yazımın
+# denetim gövdesiyle açılır (zincir bağ izlenmeden, bileşen izin/sahip kuralı, kaynak bağ ya da normal dosya
+# değilse RED) ve BAYT olarak taşınır; mod ve sahip kaynağın (eski `cp -p`nin koruduğu iki şey). Eskiden root
+# `cp` KAYNAK bağını izliyordu: ubuntu `.env`ini ön-denetimden sonra bir sır dosyasına bağlarsa o dosyanın
+# içeriği yedeğe, negatif kontrolün geri alması ya da reçete ile oradan ubuntu dizinine giderdi. Bağlı kaynak
+# artık ADIYLA reddedilir ve rotasyon BAŞLAMAZ (hiçbir kopya yazılmadan önce). Varlık `-L` ile de sorulur:
+# `test -e` bağı izler, sarkık bir bağ "dosya yok" diye sessizce ATLANIRDI. Çivi: v611 B1.
 _yedek_al() {
   local alt="$1" yol hedef aday
-  # SIRA: aday → YARAT → ata. `YEDEK` globaldir ve `_geri_alma_recetesi`nin TEK kapısıdır
+  # SIRA: aday → YARAT → KOPYALA → ata. `YEDEK` globaldir ve `_geri_alma_recetesi`nin TEK kapısıdır
   # (`[ -n "$YEDEK" ]`), yani atama "yedek ALINDI" beyanıdır. Atamayı `install -d`den ÖNCE
   # yapmak o beyanı yalana çevirirdi: dizin doğmadan (disk dolu · yetki · aynı saniyede ikinci
   # koşum) düşen bir koşumda EXIT trap ">> GERİ ALMA (bu koşum YEDEK aldı…)" basar ve operatör
   # VAR OLMAYAN bir dizinden geri koymaya çalışır — reçetenin kendi şerhinin yasakladığı hâl.
   # Ölçüldü (inceleme D7/Y2, 2026-09-08): `install` şimi düşürüldü → dizin HİÇ doğmadı, reçete
-  # YİNE basıldı, çıkış 1. Çivi: `test_P14`.
+  # YİNE basıldı, çıkış 1. Çivi: `test_P14`. Aynı gerekçeyle atama artık KOPYALARDAN da sonradır
+  # (TSK-261): bir kaynak reddedilirse yedek YARIMDIR ve hiçbir kopya yazılmamıştır — reçete basılmaz.
   aday="$KOK/root/sir-yedek-$(date -u +%Y%m%dT%H%M%SZ)-$alt"
   [ ! -e "$aday" ] || die "yedek dizini ZATEN VAR: $aday (aynı saniyede ikinci koşum?)"
   # `install -o <kullanıcı> -g <grup>` — İKİ AYRI BAYRAK. Tek `-o root:root` HATA verir
   # (ölçüldü 2026-09-07: `install: invalid user`), ve o hata `set -e` altında pencereyi yakar.
   sudo install -d -m 0700 -o root -g root "$aday"
-  YEDEK="$aday"
   while read -r _alt _sir tur yol alan _mod _sahip _onek; do
     [ "$_alt" = "$alt" ] || continue
     # `api` satırının disk karşılığı da YEDEKLENİR (bkz. `_disk_yolu`): negatif kontrol o kopyayı
@@ -1679,14 +1803,18 @@ _yedek_al() {
     # ya da yetki reddediyorsa `POST` ile geri koymak da mümkün olmaz, dosya geri yazımı olur.
     yol="$(_disk_yolu "$tur" "$yol")" || continue
     hedef="$KOK$yol"
-    if sudo test -e "$hedef"; then
-      sudo install -d -m 0700 -o root -g root "$YEDEK$(dirname "$yol")"
-      sudo cp -p "$hedef" "$YEDEK$yol"
+    if sudo test -e "$hedef" || sudo test -L "$hedef"; then
+      sudo install -d -m 0700 -o root -g root "$aday$(dirname "$yol")"
+      py kopyala "$hedef" "$aday$yol" \
+        || die "yedek ALINAMADI: $yol — kaynak bağ İZLENMEDEN okunamadı (yardımcının adlı reddi yukarıda).
+     İşlem (rotasyon / geri alma) BAŞLAMADI: hiçbir kopya yazılmadı, hiçbir birim yeniden başlatılmadı (yarım yedek: $aday).
+     Kaynağı değerini BASMADAN incele: sudo stat -c '%U:%G %a %F %n' $yol ve üst dizinleri"
       oldu "yedek: $yol"
     else
       echo "  · yedek ATLANDI (dosya yok): $yol"
     fi
   done < <(_kopyalar)
+  YEDEK="$aday"
   echo "  yedek dizini: $YEDEK"
 }
 
@@ -1845,12 +1973,13 @@ _yaz() {
 # `_islik_kur`un yazdığı dosyadır — kapı bu yüzden çalışma dizininden SONRA; çalışma dizini bir YAZIM değildir (0700
 # geçici, çıkışta silinir — yedek, kasa, kopya değil). İleti iki sınıfı AYIRIR: dosya YOKSA `--tohumla-sohbet` (dosyayı
 # kurar); alan eksik/çiftse tohumlama ÇARE DEĞİLDİR (var olan dosyaya dokunmaz) — elle düzeltme ya da operatör.
-# KAPSAM = `_yaz_satir`ın hedefi YARATAMADIĞI türler (`env` · `url`). `dosya` satırının hedefini betik KENDİSİ
+# VARLIK KAPSAMI = `_yaz_satir`ın hedefi YARATAMADIĞI türler (`env` · `url`). `dosya` satırının hedefini betik KENDİSİ
 # kurar (mod/sahip açıkken): Faz-1C öncesi `--apisix-admin` (v447 R7) ve render hedefi yokken
 # `--vault --uret` (v557 F2) o sözleşmeye dayanır. `dosya … koru` satırı (bugün tabloda YOK) yazım anındaki
-# kendi kapısıyla durur (v447 K7c). `api`/`sql` dosya değildir.
-# `sudo test` DEĞİL, düz `[ -f ]`: kapı root kapısının ARKASINDADIR (sudo no-op olurdu) ve eski `--db` yolunun
-# sudo izi altın izle çivili (v538 C7) — kapı o izi DEĞİŞTİRMEZ.
+# kendi kapısıyla durur (v447 K7c). `sql` dosya değildir; `api`nin disk karşılığı (motor deposu) YOKSA yedek ve geri
+# alma ona dokunmaz. (BAĞ/İZİN kapsamı daha geniştir — aşağıda: bütün disk yolları.)
+# `sudo test` DEĞİL, düz `[ -f ]`/`[ -L ]`: kapı root kapısının ARKASINDADIR (sudo no-op olurdu) ve eski `--db` yolunun
+# sudo izi altın izle çivili (v538 C7) — varlık soruları o ize satır EKLEMEZ (yalnız `hedef-denetle` ekler, aşağıda).
 # Kuru koşum ve `--esitle` bu kapıdan GEÇMEZ: kuru hiçbir şey yazmaz; eşitlemenin ölçüm geçişi eksik kopyayı
 # ZATEN yazımdan (yedek dahil) önce "kopya YOK — eşitleme yarım kalırdı" ile durdurur ve o durdurma korunur.
 # ÖLÇÜLEMEDİ ≠ ARIZA (G3b Task 4; Task 3 incelemesi M2): hedef VAR ama alanı SAYILAMIYORSA (okuma izni yok · UTF-8 dışı bayt
@@ -1860,27 +1989,44 @@ _yaz() {
 # (çıkış 1 — bilinen arıza bilinmeyeni ezer) ve ölçülemeyenler aynı iletide sayılır.
 # TOHUMLAMA ÖNERİSİ YOLA GÖREDİR (G3b Task 4): `--tohumla-sohbet` YALNIZ `$_SOHBET_KOKU/` altını ve YALNIZ YOK olan dosyayı
 # kurar; başka bir eksik yol için o komutu önermek yanlış yola sokardı — satır bunu ADIYLA söyler.
-# BAĞ / İZİN DE SORULUR (TSK-260, 2026-10-01; CWE-59): `env` hedefi için `py hedef-denetle` yazımın koşacağı AYNI gövdeyi
-# (`_hedef_ac`) koşar — zincir bağ izlenmeden açılır, her bileşen bağ değil · grup/diğer yazamaz · sahibi root ya da hedefin
-# sahibi (root iken); hedefin kendisi bağ ya da normal dosya değilse RED. Yazım anı ret TEK BAŞINA tablodaki ÖNCEKİ satırları
-# yazıp o hedefte dururdu (yarım rotasyon, ALAN sınıfının bağ biçimi). Yol başına BİR kez; RED/ölçülemeyen yolun alanı sorulmaz.
-# KAPSAM YİNE `env`dir: ubuntu'nun yazabildiği dizinler (hermes · `.hermes-botlar` · `/opt/hindsight`) yalnız `env` satırlarında
-# yaşar; `url`/`dosya` hedefleri root dizinlerindedir (`/etc/…`) ve yazım anı denetimi onları da kapsar — `url` için burada
-# yardımcı çağrılmaz (eski `--db` yolunun sudo izi altın izle çivili, v538 C7).
+# BAĞ / İZİN DE SORULUR (TSK-260, 2026-10-01; CWE-59): `py hedef-denetle` yazımın koşacağı AYNI gövdeyi (`_hedef_ac`) koşar —
+# zincir bağ izlenmeden açılır, her bileşen bağ değil · grup/diğer yazamaz · sahibi root ya da hedefin sahibi (root iken);
+# hedefin kendisi bağ ya da normal dosya değilse RED. Yazım anı ret TEK BAŞINA tablodaki ÖNCEKİ satırları yazıp o hedefte
+# dururdu (yarım rotasyon, ALAN sınıfının bağ biçimi). Yol başına BİR kez; RED/ölçülemeyen yolun alanı sorulmaz.
+# KAPSAM BÜTÜN DİSK YOLLARIDIR (TSK-261; TSK-260 incelemesi M3) — `env` · `url` · `dosya` · `api` (motor deposunun disk
+# karşılığı, `_disk_yolu`). TSK-260'ta yalnız `env`ti ("url/dosya root dizinlerinde, yazım anı denetimi yeter"); ama eski `--db`
+# yolunda tablo sırası `sql` (ALTER ROLE) → `url`dir ve url'nin yazım-anı RED'i ALTER'dan SONRA görülürdü: parola değişmiş,
+# DSN eski → hindsight DB'ye bağlanamaz (geri alınamayan kanal). `api` yolu (`state/secrets.json`, dizin ubuntu 700) negatif
+# kontrolün yedek + geri alma hedefidir ve `koru koru` ile sorulur (yazanı motorun kendisidir; sahibi ubuntu). `dosya` satırının
+# hedefini betik KURAR (mod/sahip açıkken — v447 R7 / v557 F2): hedef YOKSA dizini varsa zincir yine sorulur (yoksa dizini
+# `_dizin_hazirla` kurar), `koru` + YOK satırı yazım anındaki kendi kapısıyla durur (v447 K7c). Bağ `-L` ile AYRI sorulur:
+# `-f`/`-e` bağı İZLER — sarkık bir bağ "hedef dosya YOK — --tohumla-sohbet" diye yanlış adlanıyordu (TSK-260 incelemesi M8);
+# artık hedef-denetle onu ADIYLA ("SEMBOLİK BAĞ") reddeder. Bedel (bedel yasası): eski `--db` yolunun altın izine yazımdan
+# ÖNCE bir `hedef-denetle` satırı girer (v538 C7 bilinçli güncellendi); ret metni ve çıkış kodu `env` hâliyle aynıdır.
 # Çiviler: v604 A5 · A6 · A8 (alt komutlar × iki kip) · A9 · A10 · A11 · A16 (alan) · A16c (ölçülemedi) · C7 (`--kapi-bot`) ·
-# v609 F (bağ/izin — rotasyon hiç başlamaz).
+# v609 F (bağ/izin — rotasyon hiç başlamaz) · v611 E (url/dosya/api — yedek, ALTER ROLE ve istemden ÖNCE).
 _hedef_on_denetim() {
   local alt="$1" _alt _sir tur yol alan _mod _sahip _onek eksik="" n=0 m=0 o=0 r=0 hal neden="" denetlenen="" atlanan=""
   while read -r _alt _sir tur yol alan _mod _sahip _onek; do
     [ "$_alt" = "$alt" ] || continue
-    case "$tur" in env|url) ;; *) continue ;; esac
-    if [ ! -f "$KOK$yol" ]; then
-      case " $eksik " in *" $yol "*) continue ;; esac
-      eksik="${eksik:+$eksik }$yol"
-      n=$((n+1))
-      continue
-    fi
-    [ "$tur" = env ] || continue
+    case "$tur" in
+      env|url)
+        if [ ! -f "$KOK$yol" ] && [ ! -L "$KOK$yol" ]; then
+          case " $eksik " in *" $yol "*) continue ;; esac
+          eksik="${eksik:+$eksik }$yol"
+          n=$((n+1))
+          continue
+        fi ;;
+      dosya)
+        if [ ! -e "$KOK$yol" ] && [ ! -L "$KOK$yol" ]; then
+          case "$_mod/$_sahip" in *koru*) continue ;; esac
+          [ -e "$(dirname "$KOK$yol")" ] || [ -L "$(dirname "$KOK$yol")" ] || continue
+        fi ;;
+      api)
+        yol="$(_disk_yolu api "$yol")"; _mod=koru; _sahip=koru
+        [ -e "$KOK$yol" ] || [ -L "$KOK$yol" ] || continue ;;
+      *) continue ;;
+    esac
     case " $atlanan " in *" $yol "*) continue ;; esac
     case " $denetlenen " in
       *" $yol "*) ;;
@@ -1895,6 +2041,8 @@ _hedef_on_denetim() {
                   atlanan="${atlanan:+$atlanan }$yol"; o=$((o+1)); continue ;;
          esac ;;
     esac
+    # ALAN yalnız `env` satırında sorulur (url/dosya/api'nin alanı yok — dosyanın TAMAMI değerdir).
+    [ "$tur" = env ] || continue
     # `||` dalı bir YUTMA değil ADLANDIRMADIR: yardımcının düşüşü aşağıda ÖLÇÜLEMEDİ satırına ve `olcum_yok`a gider.
     hal="$(py alan-var "$KOK$yol" "$alan" tek)" || hal="ÖLÇÜLEMEDİ (yardımcı düştü)"
     case "$hal" in
@@ -2395,7 +2543,7 @@ kapi() {
   _yaz kapi
   _yeniden_baslat kapi
   _kapi_kanit "$ISLIK/yeni" "$ISLIK/eski"
-  echo ">> geri alma: sudo cp -p $YEDEK/etc/meridian/kapi_apikey /etc/meridian/kapi_apikey (+ .env-apisix) ve $(_recete_birimleri $(_birimler kapi)) yeniden başlat"
+  echo ">> geri alma: sudo $0 --geri-al $YEDEK (kapi_apikey + .env-apisix) ve $(_recete_birimleri $(_birimler kapi)) yeniden başlat"
 }
 
 #: KAPI KANITI — eski yol (`kapi`) ve kasa yolu (`vault_rotasyon` → `_kasa_kaniti`, G3b Task 4) AYNI ölçümü koşar; gövde
@@ -2439,7 +2587,7 @@ apisix_admin() {
   _farksal "kapı admin /routes" "$ISLIK/yeni" "$ISLIK/eski" \
            "$ADMIN_KOK/routes" "X-API-KEY" "-" "200" "401 403"
   _birimsiz_tuketici_beyani apisix-admin
-  echo ">> geri alma: $YEDEK altındaki iki kopyayı geri koy ve $(_recete_birimleri $(_birimler apisix-admin)) yeniden başlat"
+  echo ">> geri alma: sudo $0 --geri-al $YEDEK (iki kopya) ve $(_recete_birimleri $(_birimler apisix-admin)) yeniden başlat"
 }
 
 #: BİRİM OLMAYAN TÜKETİCİ BEYANI — restart kümesine GİRMEYEN okuyucu ADIYLA (bedel yasası: "neden
@@ -2467,7 +2615,7 @@ tenant() {
            "$HINDSIGHT/v1/default/banks" "Authorization" "Bearer" "200" "401 403"
   _envanter_esitlik tenant
   # Kopya SAYISI yazılmaz, tablodan okunur: 2026-09-29'a kadar "üç kopya"ydı (`.key` + `.env-cp` emekli).
-  echo ">> geri alma: $YEDEK altındaki $(_kopyalar | awk '$1=="tenant"' | wc -l | tr -d ' ') kopyayı geri koy ve $(_recete_birimleri $(_birimler tenant)) yeniden başlat"
+  echo ">> geri alma: sudo $0 --geri-al $YEDEK ($(_kopyalar | awk '$1=="tenant"' | wc -l | tr -d ' ') kopya) ve $(_recete_birimleri $(_birimler tenant)) yeniden başlat"
 }
 
 # CP ERİŞİM ANAHTARI — ESKİ YOL (TSK-226b, 2026-09-26). `tenant()` emsali, adım adım: yedek → ESKİ değer
@@ -2498,7 +2646,7 @@ cp_erisim() {
   _yeniden_baslat cp
   _cp_kanit "$ISLIK/yeni" "$ISLIK/eski"
   _envanter_esitlik cp
-  echo ">> geri alma: $YEDEK altındaki $(_kopyalar | awk '$1=="cp"' | wc -l | tr -d ' ') kopyayı geri koy ve $(_recete_birimleri $(_birimler cp)) yeniden başlat"
+  echo ">> geri alma: sudo $0 --geri-al $YEDEK ($(_kopyalar | awk '$1=="cp"' | wc -l | tr -d ' ') kopya) ve $(_recete_birimleri $(_birimler cp)) yeniden başlat"
 }
 
 #: Kanıt ucunun planı — eski yolun kuru raporu ve kasa yolunun kuru planı AYNI uçtan söz eder.
@@ -2545,7 +2693,7 @@ api_sunucu() {
   _yeniden_baslat api-sunucu
   _api_sunucu_kanit "$ISLIK/yeni" "$ISLIK/eski"
   _envanter_esitlik api-sunucu
-  echo ">> geri alma: $YEDEK altındaki $(_kopyalar | awk '$1=="api-sunucu"' | wc -l | tr -d ' ') kopyayı geri koy ve $(_recete_birimleri $(_birimler api-sunucu)) yeniden başlat"
+  echo ">> geri alma: sudo $0 --geri-al $YEDEK ($(_kopyalar | awk '$1=="api-sunucu"' | wc -l | tr -d ' ') kopya) ve $(_recete_birimleri $(_birimler api-sunucu)) yeniden başlat"
 }
 
 #: Kanıt ucunun planı — kuru rapor gerçek koşumun ölçeceği yüzeyi söyler (bedel yasası: "ölçülemedi" de önceden görünür).
@@ -2605,7 +2753,7 @@ kapi_bot() {
   _yeniden_baslat "$alt"
   _kapi_bot_kanit "$bot" "$ISLIK/yeni" "$ISLIK/eski"
   _envanter_esitlik "$alt"
-  echo ">> geri alma: $YEDEK altındaki $(_kopyalar | awk -v a="$alt" '$1==a' | wc -l | tr -d ' ') kopyayı geri koy ve $(_recete_birimleri $(_birimler "$alt")) yeniden başlat"
+  echo ">> geri alma: sudo $0 --geri-al $YEDEK ($(_kopyalar | awk -v a="$alt" '$1==a' | wc -l | tr -d ' ') kopya) ve $(_recete_birimleri $(_birimler "$alt")) yeniden başlat"
 }
 
 #: BOT KAPI KANITI — eski yol (`kapi_bot`) ve kasa yolu (`_kasa_kaniti`, G3b Task 4) AYNI ölçüm; gövde TEK yerde.
@@ -2646,12 +2794,14 @@ db() {
   _agent_hedefi_uyarisi db
   [ "$KURU" = 0 ] || { _kuru_rapor db; return 0; }
   _yedek_al db
-  sudo cp -p "$YEDEK/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL" "$ISLIK/eski_url"
+  # Kaynak root'un 0700 yedeğidir (saldırgan yüzeyi yok); kopya yine `kopyala`dan geçer — araçta root `cp` KALMASIN
+  # diye (TSK-261: sınıf bir örnekle kapanmaz; v611 F1s statik çivisi "kabukta `cp` yok" der, istisna listesi tutmaz).
+  py kopyala "$YEDEK/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL" "$ISLIK/eski_url"
   _uret b64
   _yaz db
   _yeniden_baslat db
   _db_kanit "$ISLIK/eski_url"
-  echo ">> geri alma: eski parolayı ALTER ROLE ile geri koy + $YEDEK altındaki DSN'i geri yaz"
+  echo ">> geri alma: eski parolayı ALTER ROLE ile geri koy + DSN'i geri yaz: sudo $0 --geri-al $YEDEK"
 }
 
 # `--db` KANITI — eski yol (`db`) ve kasa yolu (`vault_db_rotasyon`, TSK-064 2026-09-24) AYNI ölçümü
@@ -2711,8 +2861,8 @@ dash() {
   echo "  · pano PAROLA oturumu ayrı bir sırdır ve ETKİLENMEDİ."
   echo "  · operatörün YEREL .env kopyası bu betiğin kapsamı DIŞINDA — Rol-1 ayrıca eşitler."
   # TEK KOPYA (TSK-064 (d-1), 2026-09-17): `.dash.env` 2026-09-14'te silindi ve tablodan çıktı —
-  # reçete olmayan bir dosyayı geri koymayı önermez.
-  echo ">> geri alma: sudo cp -p $YEDEK/etc/meridian/dash_token /etc/meridian/dash_token ve meridian.service yeniden başlat"
+  # reçete olmayan bir dosyayı geri koymayı önermez (`--geri-al` yalnız tablonun yollarını yazar).
+  echo ">> geri alma: sudo $0 --geri-al $YEDEK (dash_token) ve meridian.service yeniden başlat"
 }
 
 # -------------------------------------------------------------------------------------------------
@@ -2722,35 +2872,32 @@ dash() {
 # Tek dürüst yol FARK yaratmaktır: bilerek bozuk bir değer yazılır, yüzey BAŞARISIZ olmalıdır.
 # Başarısız OLMUYORSA kanıt anahtara bağlı değildir ve operatörün TAZE anahtarı boşa gitmesin
 # diye betik yazımdan ÖNCE durur. Ölçüm KENDİ ARDINI TOPLAR: trap her yolda geri yükler.
-# HEDEF ÖNCE SİLİNİR. Credential kaynakları 0400'dür ve `cp` HEDEFİ yazmak için açar: salt-okunur
-# bir dosyanın üzerine `cp` "Permission denied" verir. Bu, v447 H5'in yakaladığı GERÇEK bir
-# arızaydı — `|| true` onu YUTUYORDU ve negatif kontrol bilerek bozuk değeri diskte bırakıyordu.
-# `rm -f` dosyanın değil DİZİNİN yazma iznini ister; `cp -p` sonra yedeğin mod/sahibiyle geri kurar.
+# GERİ ALMA YARDIMCININ YAZIM ÇEKİRDEĞİNDEN GEÇER (TSK-261, CWE-59 — her `--openrouter`in OLAĞAN yolu).
+# İkinci biçim `sudo cp -p <yedek> "$hedef.yeni" && sudo mv -f …` yazıyordu: `.yeni` ÖNGÖRÜLEBİLİR bir addır
+# ve hedef dizinlerin çoğu ubuntu'nundur (hermes profilleri · `/opt/hindsight` · `/opt/meridian/state`). Dizin
+# sahibi `.yeni`yi önceden bir root dosyasına bağlarsa root `cp` bağı İZLER, o dosyayı yedeğin (yani ubuntu'nun
+# kendi dosyasının) içeriğiyle EZER ve `-p` sahibini ubuntu'ya verir — `/root/.bashrc` ya da
+# `/etc/profile.d/*.sh` ile kök kod yürütmeye yeter; `mv -f` ardından bağı hedefin yerine koyar. Servis kimlikleri
+# NoNewPrivileges taşır, yani bu bir sandbox kaçışıdır (TSK-260 güvenlik incelemesi §6). Yeni yol `py kopyala`:
+# öngörülebilir ad YOK (geçici ad rastgele, `O_EXCL|O_NOFOLLOW`), zincir ve hedef bağ izlenmez (bağsa yazım YOK
+# + adlı ret), mod/sahip yedeğin (eski `-p`), yerine koyma ATOMİK, yazım sonrası tanıtıcı + yol ölçülür.
+# HEDEF ASLA ARADAN KALDIRILMAZ (ilk biçimin `rm -f` + `cp` dersi — v447 P4): `/etc/meridian/nous_api_key` bir
+# `LoadCredential` KAYNAĞIDIR ve kaynak YOKSA systemd birimi HİÇ BAŞLATMAZ. Yerine koyma atomiktir; yazım
+# düşerse hedef ESKİ (bozuk) hâliyle YERİNDE durur ve aşağıda BAĞIRILIR. 0400 bir hedefin üzerine yazma izni
+# DOSYANIN değil DİZİNİNDİR (yerine koyma onu kullanır).
 _negatif_geri_al() {
   local cift yedek hedef basarisiz=""
   for cift in $GERI_AL_LISTESI; do
     yedek="${cift%%|*}"; hedef="${cift#*|}"
-    # HEDEF ASLA ARADAN KALDIRILMAZ. İlk biçim `rm -f "$hedef"` + `cp -p` yazıyordu ve `cp`
-    # düştüğünde hedef HİÇ YOK kalıyordu. `/etc/meridian/nous_api_key` bir `LoadCredential`
-    # KAYNAĞIDIR ve kaynak dosya YOKSA systemd birimi HİÇ BAŞLATMAZ (drop-in'lerin kendi şerhi):
-    # yani "bozuk değer taşıyor olabilir" diye teşhis edilen hâlin gerçeği "birim bir daha
-    # AÇILMIYOR" olurdu. Yeni yol yan dosyaya yazıp ATOMİK `mv` ile yerine koyar; `cp` düşerse
-    # hedef ESKİ hâliyle YERİNDE durur. `rm -f` gerekmez: 0400 bir hedefin üzerine yazma izni
-    # DOSYANIN değil DİZİNİNDİR ve `mv -f` onu kullanır.
-    if sudo cp -p "$yedek" "$hedef.yeni" && sudo mv -f "$hedef.yeni" "$hedef"; then
-      :
-    else
-      sudo rm -f "$hedef.yeni" || true   # sessiz-yutma: yarım kalan yan dosyanın silinememesi
-      # asıl hükmü (GERİ ALMA BAŞARISIZ) DEĞİŞTİRMEZ ve o hüküm hemen aşağıda bağırılır.
-      basarisiz="$basarisiz $hedef"      # sessiz-yutma DEĞİL: hata BİRİKTİRİLİR — burada durmak
-      # öteki dosyaları geri alınmamış bırakırdı.
-    fi
+    # sessiz-yutma DEĞİL: hata BİRİKTİRİLİR (yardımcının adlı reddi stderr'de durur) — burada durmak öteki
+    # dosyaları geri alınmamış bırakırdı; hüküm hemen aşağıda bağırılır.
+    py kopyala "$yedek" "$hedef" || basarisiz="$basarisiz $hedef"
   done
   GERI_AL_LISTESI=""
   # `die` DEĞİL `return 1`: bu fonksiyon EXIT trap'in İÇİNDEN de çağrılır ve trap içinde `exit`
   # etmek, arkasından gelen TEMİZLİĞİ yutar (bkz. `_negatif_trap`). Hükmü çağıran verir.
   [ -z "$basarisiz" ] || { echo "!! GERİ ALMA BAŞARISIZ:$basarisiz
-     Bu dosyalar BİLEREK BOZUK değer taşıyor OLABİLİR. Yedekten elle geri koy: $YEDEK
+     Bu dosyalar BİLEREK BOZUK değer taşıyor OLABİLİR. Yedekten geri koy (bağ İZLEMEDEN): sudo $0 --geri-al $YEDEK
      Bir kaynak dosya YOKSA birim BAŞLAMAZ (LoadCredential sözleşmesi): ÖNCE dosyayı geri koy,
      SONRA yeniden başlat." >&2; return 1; }
   return 0
@@ -2842,8 +2989,12 @@ _negatif_kontrol() {
     # ölçümü onu SİLER (bkz. `_api_sil`). Kümeden dışarıda kalsaydı ölçüm kendi sildiği kopyayı
     # geri koyamaz, motor rotasyon sonrası bir fallback'i EKSİK kalırdı.
     yol="$(_disk_yolu "$tur" "$yol")" || continue
-    sudo test -e "$KOK$yol" || continue
-    sudo cp -p "$KOK$yol" "$ISLIK/nk-$(echo "$yol" | tr '/' '_')"
+    sudo test -e "$KOK$yol" || sudo test -L "$KOK$yol" || continue
+    # Yedek de `kopyala`dan geçer (TSK-261): kaynak bağ izlenmeden okunur — bağlı bir hedefin GÖSTERDİĞİ dosya
+    # geri alma ile bu hedefe yazılmaz. Ret, hiçbir bozuk değer yazılmadan ÖNCE durdurur (trap henüz kurulmadı).
+    py kopyala "$KOK$yol" "$ISLIK/nk-$(echo "$yol" | tr '/' '_')" \
+      || die "negatif kontrol yedeği ALINAMADI: $yol — kaynak bağ İZLENMEDEN okunamadı (adlı ret yukarıda).
+     Hiçbir bozuk değer YAZILMADI; operatörün anahtarı YAZILMADI."
     GERI_AL_LISTESI="$GERI_AL_LISTESI $ISLIK/nk-$(echo "$yol" | tr '/' '_')|$KOK$yol"
   done < <(_kopyalar)
   # shellcheck disable=SC2064
@@ -3020,7 +3171,7 @@ openrouter() {
     # /run/credentials · state/secrets.json) ancak bu adımdan sonra aynı değeri taşır.
     _yaz openrouter NOUS_API_KEY "$ISLIK/nous" "api"
   fi
-  echo ">> geri alma: $YEDEK altındaki kopyaları geri koy ve $(_recete_birimleri $(_birimler openrouter)) yeniden başlat"
+  echo ">> geri alma: sudo $0 --geri-al $YEDEK ve $(_recete_birimleri $(_birimler openrouter)) yeniden başlat"
 }
 
 # =================================================================================================
@@ -3765,7 +3916,7 @@ _genel_kasa_recetesi() {
           hedefler="$hedefler $hedef"
         done <<< "$GENEL_KASA_SATIRLARI"
         echo "     2) render: kasadaki ESKİ değere BİREBİR olana kadar bekle:$hedefler"
-        echo "     3) eski kanal: sudo cp -p $YEDEK/<yol> /<yol>   (yedek ağacı üretim yollarını AYNEN taşır; render hedefi 1–2 ile kasadan döner)"
+        echo "     3) eski kanal: sudo $0 --geri-al $YEDEK   (yedekteki kopyaları bağ İZLEMEDEN geri koyar; render hedefi 1–2 ile kasadan döner)"
         # shellcheck disable=SC2086
         echo "     4) sonra yeniden başlat: $(_recete_birimleri $birimler)"
       } >&2 ;;
@@ -4057,7 +4208,8 @@ CP_ESKI_KANAL_YOK_METNI="YOK — kopya tablosunda cp env satırı yok (TSK-064 i
 _cp_kasa_recetesi() {
   local birim eski_kanal
   birim="$(_sir_birimleri HINDSIGHT_CP_ACCESS_KEY || echo '(birim listesi ölçülemedi)')"
-  eski_kanal="$(_kopyalar | awk -v y="$YEDEK" '$1=="cp" && $3=="env" && !g {printf "sudo cp -p %s%s %s", y, $4, $4; g=1}')"
+  # Reçete aracın kendi geri alma yolunu gösterir (TSK-261 — root `cp` hedef bağını izlerdi).
+  eski_kanal="$(_kopyalar | awk -v y="$YEDEK" -v b="$0" '$1=="cp" && $3=="env" && !g {printf "sudo %s --geri-al %s", b, y; g=1}')"
   [ -n "$eski_kanal" ] || eski_kanal="$CP_ESKI_KANAL_YOK_METNI — geri konacak dosya yok"
   case "$CP_KASA_EVRE" in
     yedek)
@@ -4451,7 +4603,7 @@ esitle() {
       adim "kanıt 2: referans değer upstream'de geçerli mi (kapı chat/completions)"
       _model_gerekli
       local hal; hal="$(_kapi_chat_hali)"
-      [ "$hal" = "OK" ] || olcum_yok "kapı chat/completions → $hal (OK bekleniyordu) — REFERANS upstream'de geçersiz olabilir; eşitleme KÖTÜ bir değeri yaymış olabilir, yedekten geri al: $YEDEK"
+      [ "$hal" = "OK" ] || olcum_yok "kapı chat/completions → $hal (OK bekleniyordu) — REFERANS upstream'de geçersiz olabilir; eşitleme KÖTÜ bir değeri yaymış olabilir, yedekten geri al (bağ İZLEMEDEN): sudo $0 --geri-al $YEDEK"
       oldu "kapı kanıtı: chat/completions 200 · gövdede choices (referans değer upstream'de GEÇERLİ)" ;;
     *) echo "  değer-doğruluğu bu alt komutta eşitlemeyle ÖLÇÜLMEZ (None) — kanıt yüzeyi rotasyon yolundadır ($(_bayrak "$alt"))." ;;
   esac
@@ -4644,11 +4796,135 @@ ${olcemedi%$'\n'}"
 }
 
 # =================================================================================================
+# YEDEKTEN GERİ ALMA — `--geri-al <yedek-dizini>` (TSK-261, 2026-10-01)
+# =================================================================================================
+# NİYE VAR. Bütün geri alma reçeteleri operatöre `sudo cp -p <yedek>/<yol> /<yol>` basıyordu: root `cp` HEDEF bağını izler
+# (öngörülebilir bir yan ad bile gerekmez — hedefin kendisi ya da bir üst dizini bağsa yazım ağacın dışına gider). Reçetenin
+# en çok okunduğu an da tam o andır: yazım sonrası ölçüm "DOĞRULANAMADI" ile durmuş (hedef yarışta bağa çevrilmiş) bir koşum.
+# Reçete artık aracın KENDİ yolunu gösterir: yedekteki her kopya yardımcının `kopyala` işlemiyle (rotasyonun yazım çekirdeği —
+# zincir ve hedef bağ izlenmez, geçici ad rastgele, mod/sahip yedekten, yerine koyma atomik, yazım sonrası ölçüm) geri konur.
+# ÖLÇÜLEN SEÇENEKLER (en az dokunan): (a) `install -m -o -g` reçetesi — yol tabanlıdır (zincirdeki bağı izler) ve genel `<yol>`
+# reçetesi dosya başına modu/sahibi bilemez; (b) kendi kendine yeten bir python satırı — çekirdeğin KOPYASI olurdu (tek-kaynak);
+# (c) yardımcıyı yedeğe bırakmak — kodun bayat ikinci kopyası + dosya başına elle adım. Alt komut çekirdeğe yeni bir şey
+# EKLEMEZ (`kopyala` zaten yedek ve negatif kontrol geri alması için vardır); ayrıştırma + bu gövde kadardır.
+# KAPSAM — İZİN LİSTESİ, DİZİN TARAMASI DEĞİL: dizin adı `sir-yedek-<UTC ts>-<alt>` olmalı ve `<alt>` kopya tablosunda
+# bulunmalıdır; geri konan yollar YALNIZ o alt komutun tablo satırlarının disk karşılıklarıdır (`_disk_yolu`) — yedekte başka
+# bir dosya olsa da yazılmaz. Kasa yedeği (`vault/`) tabloda olmadığından girmez (kasa reçetesi: `kv rollback` / STDIN `kv put`).
+# Dizin yedek kökünün (`$KOK/root`) DOĞRUDAN çocuğu olmalı ve bağ olmamalı. Dosyanın kendisi `kopyala`da ölçülür.
+# DAVRANIŞ: restart YOK (eski reçetenin ikinci satırı gibi birim listesi basılır — geri almanın zamanını operatör seçer).
+# ÖNCE YEDEK (inceleme I2, 2026-10-02): kuru OLMAYAN koşum yazmaya başlamadan önce mevcut hâli `_yedek_al <alt>` ile alır — aracın
+# "her koşum ÖNCE dokunacağı her dosyayı yedekler" değişmezi. Gerekçe ölçüldü (inceleme sondası S2): yedek BÜTÜN dosyadır ve
+# çok anahtarlı kopyalar (`.env-apisix` · `/opt/hindsight/.env` · hermes `.env`leri · motor deposu `state/secrets.json`) geri
+# alındığında, yedekten SONRA başka bir rotasyonun yazdığı alanlar da eskiye döner (`--kapi` yedeği `--openrouter`ın yeni
+# anahtarını siler; iptal edilmiş bir anahtar sessizce geri gelir). Ön yedek bunu geri alınabilir yapar: yolu stdout'a basılır
+# (`_yedek_al`ın "yedek dizini:" satırı) ve çıkış reçetesi (`_geri_alma_recetesi`, `YEDEK` dolu) "geri almanın geri alınmasını"
+# gösterir. Ön yedeğin kaynağı reddedilirse (hedef bağ — `kopyala` bağ izlemez) HİÇBİR dosya geri konmaz (`_yedek_al` durur).
+# BÜTÜN DOSYA UYARISI: geri konacak her çok anahtarlı dosya için (`env` · `api`) yedek ile mevcut hâl yardımcının `alan-farki`
+# işlemiyle kıyaslanır ve yedekten sonra değişmiş BAŞKA alanların (geri alınan alt komutun kendi alanları hariç) ADLARI basılır —
+# `--kuru`da ÖNCEDEN, gerçek koşumda yazımla birlikte. Değer basılmaz.
+# SIFIR DOSYA BAŞARI DEĞİLDİR (inceleme M5): yedekte alt komutun hiçbir tablo yolu yoksa (yanlış dizin) çıkış 1 + "geri konacak
+# dosya YOK" — ön yedek alınmadan, kuru koşumda da. "geri alma tamam: 0 dosya" + çıkış 0, birimleri boşuna yeniden başlatan bir
+# operatöre/otomasyona "geri alındı" demekti (uydurma yasağı).
+# Bir hedef YAZIM anında reddedilirse (ön yedekten sonra bağa çevrilmiş · gevşek dizin · yedekte okunamayan dosya) o dosya ADIYLA
+# söylenir ve ÖTEKİLER yine geri konur (`_negatif_geri_al` emsali: ilk retten durmak öteki kopyaları yeni değerde bırakırdı);
+# sonda çıkış 1. Değer BASILMAZ.
+# Çiviler: v611 F2 (bayt/mod eşit · kuru · restart yok · ön yedek) · F3 (ret biçimleri) · F4a/F4b (bağlı hedef: yedek alınamaz /
+# yarışta adıyla, ötekiler geri konur) · F6 (bütün dosya uyarısı + geri almanın geri alınması) · F7 (motor deposu) · F8 (sıfır dosya).
+geri_al() {
+  local dizin="${1%/}" ad alt _alt _sir tur yol _alan _mod _sahip _onek n=0 basarisiz="" gorulen="" plan="" not_satiri
+  [ "$(dirname "$dizin")" = "$KOK/root" ] \
+    || die "--geri-al: '$dizin' bir yedek dizini DEĞİL — $KOK/root/sir-yedek-<UTC ts>-<alt> biçiminde, yedek kökünün
+     DOĞRUDAN çocuğu olmalı (koşumun bastığı 'yedek dizini:' satırındaki yol). HİÇBİR ŞEY yazılmadı."
+  ad="${dizin##*/}"
+  alt="$(printf '%s\n' "$ad" | sed -n 's/^sir-yedek-[0-9]\{8\}T[0-9]\{6\}Z-\(.*\)$/\1/p')"
+  [ -n "$alt" ] || die "--geri-al: '$ad' bir yedek dizini adı DEĞİL (sir-yedek-<UTC ts>-<alt>). HİÇBİR ŞEY yazılmadı."
+  _kopyalar | awk -v a="$alt" '$1==a {b=1} END{exit !b}' \
+    || die "--geri-al: yedeğin alt komutu ($alt) kopya tablosunda YOK — hangi yolların geri konacağı bilinmez. HİÇBİR ŞEY yazılmadı."
+  if sudo test -L "$dizin"; then die "--geri-al: yedek dizini SEMBOLİK BAĞ ($dizin) — izlenmez. HİÇBİR ŞEY yazılmadı."; fi
+  sudo test -d "$dizin" || die "--geri-al: yedek dizini YOK: $dizin. HİÇBİR ŞEY yazılmadı."
+  echo "=== GERİ ALMA: $dizin → $(_bayrak "$alt") kopyaları (bağ İZLENMEZ; mod/sahip yedekten; DEĞER BASILMAZ) ==="
+  [ "$KURU" = 0 ] || echo "  KURU KOŞUM — HİÇBİR ŞEY YAZILMAZ (ön yedek dahil)"
+  # PLAN — yedekte bulunan tablo yolları; yazım ve ön yedek bundan SONRA.
+  while read -r _alt _sir tur yol _alan _mod _sahip _onek; do
+    [ "$_alt" = "$alt" ] || continue
+    yol="$(_disk_yolu "$tur" "$yol")" || continue
+    case " $gorulen " in *" $yol "*) continue ;; esac
+    gorulen="${gorulen:+$gorulen }$yol"
+    if ! sudo test -e "$dizin$yol" && ! sudo test -L "$dizin$yol"; then
+      echo "  · yedekte YOK (o koşumda dosya yoktu — yedek ATLANMIŞTI): $yol"
+      continue
+    fi
+    plan="${plan:+$plan }$yol"
+  done < <(_kopyalar)
+  [ -n "$plan" ] || die "--geri-al: yedekte $(_bayrak "$alt") alt komutunun HİÇBİR tablo yolu yok — geri konacak dosya YOK
+     (yanlış yedek dizini?). '0 dosya geri kondu' bir başarı DEĞİLDİR. HİÇBİR ŞEY yazılmadı (ön yedek dahil)."
+  # Çıkış reçetesi (`_geri_alma_recetesi`, `$ALT`ı okur) geri alınan alt komutun BİRİMLERİNİ bassın: ön yedekle geri almanın geri
+  # alınması "sudo $0 --geri-al <ön yedek>" + o birimlerin yeniden başlatılmasıdır.
+  ALT="$alt"
+  if [ "$KURU" = 0 ]; then
+    adim "ÖNCE mevcut hâl yedeklenir (geri almanın geri alınması bu yedekten)"
+    _yedek_al "$alt"
+  else
+    echo "  (gerçek koşum ÖNCE mevcut hâli yedekler: $KOK/root/sir-yedek-<UTC ts>-$alt — geri almanın geri alınması o yedekten)"
+  fi
+  for yol in $plan; do
+    not_satiri="$(_butun_dosya_notu "$alt" "$yol" "$dizin")"
+    if [ "$KURU" != 0 ]; then
+      echo "  geri konacak: $yol"
+      [ -z "$not_satiri" ] || echo "$not_satiri"
+      continue
+    fi
+    # `||` ADLANDIRMADIR (yutma değil): yardımcının adlı reddi stderr'de durur, yol biriktirilir ve sonda bağırılır.
+    if py kopyala "$dizin$yol" "$KOK$yol"; then
+      oldu "geri kondu: $yol"
+      [ -z "$not_satiri" ] || echo "$not_satiri"
+      n=$((n+1))
+    else
+      echo "!! geri KONAMADI: $yol (yardımcının adlı reddi yukarıda)" >&2
+      basarisiz="${basarisiz:+$basarisiz }$yol"
+    fi
+  done
+  echo "  sonra yeniden başlat: $(_recete_birimleri $(_birimler "$alt"))"
+  [ "$KURU" = 0 ] || return 0
+  [ -z "$basarisiz" ] || die "--geri-al: $n dosya geri kondu, şunlar KONAMADI: $basarisiz — hedef bağ ya da zincir/izin
+     kuralına aykırı olabilir (yardımcının adlı reddi yukarıda). Değeri BASMADAN incele: sudo stat -c '%U:%G %a %F %n' <yol>"
+  oldu "geri alma tamam: $n dosya (birimleri yukarıdaki satırla yeniden başlat)"
+}
+
+#: BÜTÜN DOSYA NOTU — `_butun_dosya_notu <alt> <yol> <yedek dizini>` → tek satır (ya da tek değerli türde hiçbir şey). Çok
+#: anahtarlı kopya (`env` · `api`) BÜTÜN döner: yedekten sonra değişmiş BAŞKA alanların ADLARI söylenir — alt komutun kendi
+#: alanları (tablodaki `env` alanları · `api` satırının sır kimliği = depo anahtarı) hariç. Değer basılmaz (`alan-farki`).
+#: `dosya`/`url` kopyası tek değerdir ("başka alan" yok). Kıyas ölçülemezse bunu ADIYLA söyler — uyarı susmaz.
+_butun_dosya_notu() {
+  local alt="$1" yol="$2" dizin="$3" _alt sir tur y d _alan _m _s _o ilk="" haric="" hal
+  while read -r _alt sir tur y _alan _m _s _o; do
+    [ "$_alt" = "$alt" ] || continue
+    d="$(_disk_yolu "$tur" "$y")" || continue
+    [ "$d" = "$yol" ] || continue
+    [ -n "$ilk" ] || ilk="$tur"
+    case "$tur" in env) haric="$haric $_alan" ;; api) haric="$haric $sir" ;; esac
+  done < <(_kopyalar)
+  case "$ilk" in env|api) ;; *) return 0 ;; esac
+  if ! sudo test -e "$KOK$yol" && ! sudo test -L "$KOK$yol"; then
+    echo "    · hedef şu an YOK — yedekteki dosya bütün olarak kurulur"; return 0
+  fi
+  # `||` ADLANDIRMADIR: yardımcının düşüşü (bağ · UTF-8/JSON değil) aşağıda "ÖLÇÜLEMEDİ" satırına gider, uyarı susmaz.
+  # shellcheck disable=SC2086
+  hal="$(py alan-farki "$ilk" "$dizin$yol" "$KOK$yol" $haric)" || hal="ÖLÇÜLEMEDİ"
+  case "$hal" in
+    AYNI) echo "    · DOSYANIN TAMAMI yedekteki hâline döner; yedekten sonra değişmiş başka alan YOK" ;;
+    FARKLI:*) echo "    !! DOSYANIN TAMAMI döner — yedekten sonra değişmiş BAŞKA alanlar da ESKİYE döner:${hal#FARKLI:} (değer basılmaz; o sırlar için sonra kendi rotasyonu ya da --esitle gerekebilir)" ;;
+    *) echo "    !! DOSYANIN TAMAMI döner — BAŞKA alanların farkı ÖLÇÜLEMEDİ (yukarıda): öteki alanlar da yedekteki hâline döner" ;;
+  esac
+}
+
+# =================================================================================================
 KURU=0
 ESITLE=0
 VAULT_KIP=0
 URET=0
 ALT=""
+GERI_AL_DIZINI=""   # `--geri-al <yedek-dizini>` (TSK-261) — okuyan: `geri_al` · `_bayrak`
 #: İKİ JETONLU BAYRAK (G3b Task 3, 2026-10-01): `--kapi-bot <ad>` değer ALIR, `for _a in "$@"` onu göremezdi → `while`/`shift`.
 #: Öteki bayrakların davranışı BİREBİR (tek jeton, aynı `case`). Ad, bayraktan SONRAKİ jetondur — ne olursa olsun
 #: (`--kuru` bile): ad gibi görünmeyen bir jetonu "ad yok" sayıp bayrak diye tüketmek `--kapi-bot --kuru`yu kuru koşuma
@@ -4671,10 +4947,18 @@ while [ "$#" -gt 0 ]; do
      Liste kabuktaki TEK sabittir (_SOHBET_BOTLARI = A0 sohbet_profil_adlari). HİÇBİR ŞEY yazılmadı."
       [ -z "$ALT" ] || die "iki alt komut verildi: $(_bayrak "$ALT") ve --kapi-bot $_bot — her koşum TEK sır döndürür"
       ALT="kapi-bot-$_bot" ;;
-    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --kapi-bot <ad> | --tohumla-sohbet | --envanter | --kopyalar [| --kuru | --esitle | --vault | --uret])" ;;
+    #: `--geri-al <yedek-dizini>` (TSK-261) — `--kapi-bot` gibi SONRAKİ jetonu değer olarak alır (ne olursa olsun); dizin
+    #: `geri_al`da doğrulanır (yedek kökünün çocuğu · ad biçimi · alt komut tabloda · bağ değil).
+    --geri-al)
+      [ "$#" -gt 0 ] || die "--geri-al YEDEK DİZİNİ ister: --geri-al /root/sir-yedek-<UTC ts>-<alt> (koşumun 'yedek dizini:'
+     satırındaki yol) — HİÇBİR ŞEY yazılmadı"
+      GERI_AL_DIZINI="$1"; shift
+      [ -z "$ALT" ] || die "iki alt komut verildi: $(_bayrak "$ALT") ve --geri-al — geri alma bir rotasyonla birlikte koşmaz"
+      ALT="geri-al" ;;
+    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --kapi-bot <ad> | --tohumla-sohbet | --geri-al <yedek-dizini> | --envanter | --kopyalar [| --kuru | --esitle | --vault | --uret])" ;;
   esac
 done
-[ -n "$ALT" ] || die "alt komut ZORUNLU: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --kapi-bot <ad> | --tohumla-sohbet | --envanter | --kopyalar (+ --kuru)"
+[ -n "$ALT" ] || die "alt komut ZORUNLU: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --kapi-bot <ad> | --tohumla-sohbet | --geri-al <yedek-dizini> | --envanter | --kopyalar (+ --kuru)"
 
 # `--kuru` YALNIZ ROTASYON alt komutlarında anlamlıdır. `--envanter`/`--kopyalar` bayrağı hiç
 # okumaz ve `--envanter --kuru` SESSİZCE tam envanteri koşardı: kuru koşum isteyen operatör
@@ -4682,9 +4966,16 @@ done
 # ama etkisizlik SÖYLENİR — sessiz kabul, olmayan bir sözleşmeyi var gibi gösterir.
 KURU_ONERILIR=0
 case "$ALT" in
-  kapi|tenant|db|dash|openrouter|apisix-admin|cp|api-sunucu|kapi-bot-*|tohumla-sohbet) KURU_ONERILIR=1 ;;
+  kapi|tenant|db|dash|openrouter|apisix-admin|cp|api-sunucu|kapi-bot-*|tohumla-sohbet|geri-al) KURU_ONERILIR=1 ;;
   *) [ "$KURU" = 0 ] || echo "!! --kuru bu alt komutta ETKİSİZDİR: --$ALT zaten hiçbir şey yazmaz." >&2 ;;
 esac
+#: GERİ ALMA BİR ROTASYON DEĞİLDİR (TSK-261): değer üretmez, sormaz, kasaya yazmaz, eşitlemez — tohumlamanın gerekçesiyle AÇIK
+#: ret, root kapısından ve her dosyadan ÖNCE (`KURU_ONERILIR` kümesinde: kuru koşum anlamlıdır).
+if [ "$ALT" = "geri-al" ] && { [ "$ESITLE" = 1 ] || [ "$VAULT_KIP" = 1 ] || [ "$URET" = 1 ]; }; then
+  die "--geri-al --esitle / --vault / --uret ile verilemez: geri alma yedekteki dosyaları yerine koyar — değer üretmez,
+     kasaya yazmaz, eşitlemez (kasa geri alımı reçetenin kendi satırıdır). Doğrusu: sudo ./sir_rotasyon.sh --geri-al <yedek-dizini> [--kuru].
+     HİÇBİR ŞEY yazılmadı."
+fi
 #: TOHUMLAMA BİR ROTASYON DEĞİLDİR (G3b Task 4): değer üretmez, sormaz, kasaya yazmaz, eşitlemez. `KURU_ONERILIR`
 #: kümesindedir (kuru koşum anlamlıdır), ama `--esitle`/`--vault` kapıları o kümeye bakar — sessiz kabul yerine AÇIK ret,
 #: root kapısından, çalışma dizininden ve her dosyadan ÖNCE (v604 D11).
@@ -4773,5 +5064,8 @@ case "$ALT" in
   kapi-bot-*) kapi_bot "${ALT#kapi-bot-}" ;;
   #: G3b Task 4 — ön-denetim bu alt komutta BOŞ geçer (tabloda `tohumla-sohbet` satırı yok); kendi kapıları `tohumla_sohbet`te.
   tohumla-sohbet) tohumla_sohbet ;;
+  #: TSK-261 — ön-denetim burada da BOŞ geçer (tabloda `geri-al` satırı yok); her dosya `kopyala`da yazım anında ölçülür ve
+  #: reddedilen ADIYLA söylenir, ötekiler geri konur (`geri_al` şerhi).
+  geri-al)    geri_al "$GERI_AL_DIZINI" ;;
   envanter)   envanter ;;
 esac

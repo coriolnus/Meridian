@@ -160,12 +160,20 @@ os.execvp("/usr/bin/id", ["/usr/bin/id"] + sys.argv[1:])
 '''
 
 SIM_SUDO = '''#!/usr/bin/env python3
-"""Gerçek sudo gibi: çocuğu BAŞKA bir kimlikle koşar. `-u <ad>` o adın uid'ini verir."""
+"""Gerçek sudo gibi: çocuğu BAŞKA bir kimlikle koşar. `-u <ad>` o adın uid'ini verir.
+
+`SAHTE_GERI_KOY_KIRIK=1` iken YALNIZ negatif kontrolün GERİ ALMA yazımı düşer (`python3 <yardımcı> kopyala <İŞLİK>/nk-… <hedef>`).
+TSK-261'e (2026-10-01) kadar bu model `SIM_CP`deydi (`SAHTE_CP_KIRIK`, kaynak `nk-`): geri alma `sudo cp -p … "$hedef.yeni"` idi.
+Geri alma artık yardımcının bağ izlemeyen `kopyala` işlemidir — model aynı DAR dalı (yalnız `nk-` KAYNAKLI kopya; yedek alma ve
+negatif kontrolün kendi yedeği `nk-`yi HEDEF olarak taşır, düşmez) yeni çağrı biçiminde taşır: P4/P5'in ölçtüğü dal değişmedi."""
 import os, sys
 UIDLER = {"root": "0", "postgres": "999", "ubuntu": "1000"}
 a = sys.argv[1:]
 with open(os.path.join(os.environ["SIR_ROT_KOK"], ".sahte", "argv.log"), "a") as fh:
     fh.write("sudo " + " ".join(a) + "\\n")
+if (os.environ.get("SAHTE_GERI_KOY_KIRIK") == "1" and len(a) >= 4 and a[0] == "python3" and a[2] == "kopyala"
+        and "/nk-" in a[3]):
+    sys.stderr.write("kopyala: Permission denied\\n"); sys.exit(1)
 hedef = "0"
 if a and a[0] == "-u":
     hedef = UIDLER.get(a[1], "1001"); a = a[2:]
@@ -185,18 +193,12 @@ os.execv("/bin/rm", ["/bin/rm"] + a)
 '''
 
 SIM_CP = '''#!/usr/bin/env python3
-"""`SAHTE_CP_KIRIK=1` iken YALNIZ negatif kontrolün GERİ ALMA kopyası düşer (kaynak `<ISLIK>/nk-…`).
-
-Bayrak BİLEREK DAR. "Her `cp` düşsün" deseydik koşum `_yedek_al` adımında kesilir ve ölçülmek
-istenen dala (geri alma başarısız → çalışma dizini + çıkış kodu ne oluyor) HİÇ VARILMAZDI —
-modellenmeyen bir dal ölçülemez (tur-3'ün dersi). Geri alma kopyalarının kaynağı `nk-` önekli
-sahne dosyalarıdır; yedek alma ve `--db` o öneki kullanmaz."""
+"""DÜZ GEÇİŞ. TSK-261'den (2026-10-01) beri betik `cp` ÇAĞIRMAZ — yedek, negatif kontrol yedeği ve geri alması, `--db`nin eski
+DSN kopyası ve `--geri-al` yardımcının bağ izlemeyen `kopyala` işleminden geçer (v611 F1s statik çivisi). Geri alma ARIZASININ
+modeli (`nk-` kaynaklı kopya düşer — Bayrak BİLEREK DAR: "her kopya düşsün" deseydik koşum `_yedek_al`da kesilir ve ölçülmek
+istenen dala HİÇ VARILMAZDI, tur-3'ün dersi) `SIM_SUDO`ya taşındı: `SAHTE_GERI_KOY_KIRIK`."""
 import os, sys
-a = sys.argv[1:]
-konum = [x for x in a if not x.startswith("-")]
-if os.environ.get("SAHTE_CP_KIRIK") == "1" and konum and "/nk-" in konum[0]:
-    sys.stderr.write("cp: Permission denied\\n"); sys.exit(1)
-os.execv("/bin/cp", ["/bin/cp"] + a)
+os.execv("/bin/cp", ["/bin/cp"] + sys.argv[1:])
 '''
 
 SIM_STAT = '''#!/usr/bin/env python3
@@ -914,7 +916,7 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
                  SAHTE_UID="0", TMPDIR=str(tmp_path))
     for bayrak in ("SAHTE_KOR", "SAHTE_MOTOR_OLU", "SAHTE_RM_KIRIK", "SAHTE_PING_GOVDESIZ",
                    "SAHTE_HAZIR_N", "SAHTE_HEALTHZ_KOD", "SAHTE_HEALTH_KOD",
-                   "SAHTE_CP_KIRIK", "SAHTE_STAT_KIRIK", "SAHTE_INSTALL_KIRIK"):
+                   "SAHTE_GERI_KOY_KIRIK", "SAHTE_STAT_KIRIK", "SAHTE_INSTALL_KIRIK"):
         ortam.pop(bayrak, None)
     return kok, ortam
 
@@ -1235,7 +1237,9 @@ def test_E1_tenant_REFERANS_tek_render_hedefi_KOPYALAR_sohbet_profilleri(tmp_pat
     assert len(SOHBET_BOTLARI) >= 1, "sohbet bot listesi boş — çivi kör (pozitif kontrol)"
     assert len(satirlar) == kopya and satirlar[0].endswith("→ VAR (referans kopya)"), satirlar
     assert all(s.endswith("→ EŞİT") for s in satirlar[1:]), satirlar
-    assert f"altındaki {kopya} kopyayı geri koy" in r.stdout, r.stdout
+    # TSK-261 (2026-10-01): reçete "<yedek> altındaki N kopyayı geri koy" diyordu (operatörü elle root `cp`ye yolluyordu —
+    # hedef bağını izler); artık aracın bağ izlemeyen yolunu gösterir. Kopya SAYISI iddiası AYNEN korunur.
+    assert f"--geri-al {_yedek_dizini(kok)} ({kopya} kopya)" in r.stdout, r.stdout
 
 
 # E2–E4 2026-09-29'da `--kapi`nin `.env-apisix` satırına TAŞINDI: ölçtükleri sınıflar (`koru` izin/sahip · env
@@ -1706,7 +1710,8 @@ def test_K1b_KULLANIM_blogu_sudo_ile_yaziyor():
     metin = BETIK.read_text(encoding="utf-8")
     baslik = metin.split("set -euo pipefail", 1)[0]
     for alt in ("--kapi", "--tenant", "--db", "--dash", "--openrouter", "--envanter", "--cp", "--api-sunucu",
-                "--kapi-bot <"):   # 2026-10-01 G3b Task 3: `--kapi-bot <ad listesi>` (liste ↔ bot listesi: v604 C3)
+                "--kapi-bot <",    # 2026-10-01 G3b Task 3: `--kapi-bot <ad listesi>` (liste ↔ bot listesi: v604 C3)
+                "--geri-al <"):    # 2026-10-01 TSK-261: reçetelerin gösterdiği güvenli geri alma yolu
         assert f"sudo ./sir_rotasyon.sh {alt}" in baslik, f"KULLANIM satırı sudo'suz: {alt}"
     assert "NİYE ROOT" in baslik, "kapının GEREKÇESİ belgede yok"
 
@@ -3274,10 +3279,11 @@ def test_P4_GERI_ALMA_DUSERSE_temizlik_KOSAR_cikis_2_ve_hedef_YERINDE(tmp_path):
       (c) hedef ARADAN KALDIRILMAZ — `rm` sonra `cp` sırası, `cp` düştüğünde bir
           `LoadCredential` KAYNAĞINI YOK ediyordu ve kaynağı olmayan birim HİÇ BAŞLAMAZ.
 
-    Dünya: geri alma `cp`si düşer (`SAHTE_CP_KIRIK`) VE hazırlık aşılır (`SAHTE_HAZIR_N`) —
-    ikincisi şart, çünkü geri almanın İLK KEZ TRAP İÇİNDE koştuğu yol ancak böyle doğar."""
+    Dünya: geri alma YAZIMI düşer (`SAHTE_GERI_KOY_KIRIK` — TSK-261'den beri `kopyala`; önce `cp`ydi, `SAHTE_CP_KIRIK`)
+    VE hazırlık aşılır (`SAHTE_HAZIR_N`) — ikincisi şart, çünkü geri almanın İLK KEZ TRAP İÇİNDE koştuğu yol ancak böyle
+    doğar."""
     kok, ortam = _sahte_ortam(tmp_path)
-    ortam["SAHTE_CP_KIRIK"] = "1"
+    ortam["SAHTE_GERI_KOY_KIRIK"] = "1"
     ortam["SAHTE_HAZIR_N"] = "999999"
     r = _kos(BETIK, ortam, "--openrouter", girdi=f"{YENI_NOUS}\n{YENI_OR}\n")
     assert r.returncode == 2, (r.returncode, r.stdout + r.stderr)
@@ -3293,7 +3299,7 @@ def test_P5_MUT_ESKI_TRAP_bicimi_temizligi_YUTAR_ve_kodu_BOZAR(tmp_path):
     `return 1` etmesi. Mutant ilk biçime döner (`trap 'a; b'` + `die`) ve ölçülen iki arıza da
     geri gelir: çalışma dizini kalır, çıkış kodu 2→1 olur."""
     kok, ortam = _sahte_ortam(tmp_path)
-    ortam["SAHTE_CP_KIRIK"] = "1"
+    ortam["SAHTE_GERI_KOY_KIRIK"] = "1"
     ortam["SAHTE_HAZIR_N"] = "999999"
     m = _mutant(
         tmp_path,

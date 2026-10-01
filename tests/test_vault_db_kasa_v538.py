@@ -629,16 +629,23 @@ ALTIN_DB_KURU: dict = {
     ],
     "stderr": []
 }
+#: TSK-261 (2026-10-01) — BİLİNÇLİ GÜNCELLEME, dört kalem, gerisi BİREBİR (rc · systemctl · dosyalar · öteki stdout/stderr):
+#:   (1) argv başına `hedef-denetle <url> koru koru` — ön-denetim url satırını da sorar (TSK-260 incelemesi M3): url'nin yazım-anı
+#:       RED'i eskiden ALTER ROLE'dan SONRA görülürdü (parola değişir, DSN eski kalır → hindsight DB'den kopar);
+#:   (2)(3) iki `sudo cp -p` → `kopyala` (yedek alma + eski DSN kopyası; bağ izlemeyen tek gövde — root `cp` bağ izliyordu);
+#:   (4) iki reçete satırı `sudo cp -p <yedek>/<yol> /<yol>` / "<yedek> altındaki DSN'i geri yaz" → `sudo <BETIK> --geri-al
+#:       <yedek>` (aracın kendi bağ izlemeyen geri alma yolu). Fark koşumdan ÖLÇÜLDÜ, elle yazılmadı (scratchpad tsk261).
 ALTIN_DB_GERCEK: dict = {
     "rc": 0,
     "argv": [
+        "sudo python3 <T>/sir-rot.X/yardimci.py hedef-denetle <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL koru koru",
         "sudo install -d -m 0700 -o root -g root <T>/kok/root/sir-yedek-TS-db",
         "install -d -m 0700 -o root -g root <T>/kok/root/sir-yedek-TS-db",
         "sudo test -e <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL",
         "sudo install -d -m 0700 -o root -g root <T>/kok/root/sir-yedek-TS-db/etc/hindsight/creds",
         "install -d -m 0700 -o root -g root <T>/kok/root/sir-yedek-TS-db/etc/hindsight/creds",
-        "sudo cp -p <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL <T>/kok/root/sir-yedek-TS-db/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL",
-        "sudo cp -p <T>/kok/root/sir-yedek-TS-db/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL <T>/sir-rot.X/eski_url",
+        "sudo python3 <T>/sir-rot.X/yardimci.py kopyala <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL <T>/kok/root/sir-yedek-TS-db/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL",
+        "sudo python3 <T>/sir-rot.X/yardimci.py kopyala <T>/kok/root/sir-yedek-TS-db/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL <T>/sir-rot.X/eski_url",
         "sudo python3 <T>/sir-rot.X/yardimci.py sql-uret <T>/sir-rot.X/rol.sql hindsight <T>/sir-rot.X/yeni",
         "sudo -u postgres psql -v ON_ERROR_STOP=1 -q -f -",
         "psql -v ON_ERROR_STOP=1 -q -f -",
@@ -681,11 +688,11 @@ ALTIN_DB_GERCEK: dict = {
         "  ✓ kanıt ucu DSN'den türetildi: hindsight@127.0.0.1:5432/hindsight (parola BASILMAZ)",
         "  ✓ yeni parola: select 1 → 1",
         "  ✓ eski parola: FATAL (kanıt parolaya BAĞLI)",
-        ">> geri alma: eski parolayı ALTER ROLE ile geri koy + <T>/kok/root/sir-yedek-TS-db altındaki DSN'i geri yaz"
+        ">> geri alma: eski parolayı ALTER ROLE ile geri koy + DSN'i geri yaz: sudo <BETIK> --geri-al <T>/kok/root/sir-yedek-TS-db"
     ],
     "stderr": [
         ">> GERİ ALMA (bu koşum YEDEK aldı — başarıda da arızada da geçerli):",
-        "     sudo cp -p <T>/kok/root/sir-yedek-TS-db/<yol> /<yol>   (yedek ağacı üretim yollarını AYNEN taşır)",
+        "     sudo <BETIK> --geri-al <T>/kok/root/sir-yedek-TS-db   (yedekteki kopyaları üretim yollarına bağ İZLEMEDEN geri koyar; önce --kuru ile bak)",
         "     sonra yeniden başlat: hindsight-api.service"
     ]
 }
@@ -742,7 +749,10 @@ def test_C8b_KANIT_duserse_KASA_YOLUNUN_geri_alma_RECETESI_basilir(tmp_path):
     assert "ALTER ROLE UYGULANDI" in r.stderr, r.stderr
     assert f"vault kv rollback -version={ESKI_SURUM} {DB_KASA}" in r.stderr, r.stderr
     assert f"restart {BIRIM}" in r.stderr, r.stderr
-    assert "sudo cp -p" not in r.stderr, "kasa yolunda DOSYA kopyası reçetesi basıldı (Agent ezer)"
+    # TSK-261 (2026-10-01; inceleme I1): jeton `sudo cp -p` → `--geri-al`; eski jetonla nöbet KÖR kalmıştı. Nöbet GENEL dosya
+    # reçetesinin BAŞLIĞINA bağlı (kasa dalının `return 0`ı kalkarsa öter — mutasyonla ölçüldü) + yeni jeton da yok.
+    assert ">> GERİ ALMA (bu koşum YEDEK aldı" not in r.stderr and "--geri-al" not in r.stderr, \
+        "kasa yolunda DOSYA geri alma reçetesi basıldı (Agent ezer)"
     _sir_yok(r, kok, log)
 
 
