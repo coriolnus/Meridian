@@ -572,9 +572,9 @@ _Üretildi: `python ops/roadmap_cephe_ozeti.py --yaz` · kaynak: açık TSK kale
 | PRG-11 Strateji ve Seçilim | 1 | 0 | 0 | 1 | 0 | 0 | TSK-179 |
 | PRG-12 Bot Filosu | 8 | 3 | 0 | 5 | 0 | 0 | TSK-010 · TSK-018 · TSK-061 · TSK-196 · TSK-200 · TSK-252 · TSK-253 · TSK-254 |
 | PRG-13 Kalıcı Hafıza | 11 | 1 | 0 | 10 | 0 | 0 | TSK-015 · TSK-060 · TSK-142 · TSK-161 · TSK-163 · TSK-164 · TSK-165 · TSK-166 · TSK-168 · TSK-169 · TSK-170 |
-| PRG-14 Altyapı ve Sır | 4 | 2 | 0 | 1 | 1 | 0 | TSK-020 · TSK-176 · TSK-240 · TSK-260 |
+| PRG-14 Altyapı ve Sır | 5 | 2 | 1 | 1 | 1 | 0 | TSK-020 · TSK-176 · TSK-240 · TSK-260 · TSK-261 |
 | PRG-15 Mikro-yapı ve Tick | 4 | 1 | 0 | 3 | 0 | 0 | TSK-013 · TSK-066 · TSK-067 · TSK-068 |
-| **Toplam** | 54 | 15 | 0 | 35 | 4 | 0 | — |
+| **Toplam** | 55 | 15 | 1 | 35 | 4 | 0 | — |
 <!-- CEPHE-OZETI:BITIR -->
 
 > ⚠ **BU BLOK 2026-08-13 ANLIK GÖRÜNTÜSÜDÜR (Ö-49 şerhi, 2026-08-22):** içindeki en az üç kalem SONRADAN KAPANDI — /api/diagnostics arızası (v243, 08-14) · N1 bildirim kanalı (08-22 CANLI) · beyin zinciri (08-14'te değişti). Güncel durum §2 TAHTA + §7 günlüktedir; bu blok tarihçe.
@@ -2446,6 +2446,10 @@ _(taşındı: §4-35b, eski satır :1924-1930 — 2026-08-23)_
   What: (2026-10-01 16:4xZ AÇILDI [Rol-1; G3b dal sonu düzeltme turu uygulayıcı kaygısı-1, dal öncesinden var]: G3b tohumlama yolu (`tohumla-env`) CWE-59'a karşı kapatıldı (kökten bileşen bileşen nofollow + realpath + sahip/mod, fd üzerinden chown, os.link, yazım sonrası lstat — 87d194b3); AYNI sınıf rotasyonun kendi yazım yolunda AÇIK: `_atomik_yaz` mkstemp + yol tabanlı chown + os.replace — ubuntu kimliği geçici adı yarış penceresinde bir bağa çevirirse root o hedefin sahibini ubuntu'ya verebilir. ubuntu zaten sudo grubunda olduğu için ayrıcalık yükseltmesi bugün anlamsız (savunma derinliği); etkisi tohumlamadakinden büyük. İş: `_atomik_yaz`ı tohumlamanın fd-tabanlı desenine taşı (O_NOFOLLOW dizin açılışı, fchown/fchmod, dir_fd ile replace) + sınıf çivisi (hedef dizin/dosya bağsa yazım YOK). 'Sınıf bir örnekle kapanmaz' (memory).)
   Why: Aynı hata sınıfının bir örneği kapatılıp ötekisi açık bırakılırsa güvenlik iddiası yanlış güvence olur.
   Ref: PRG-14 · TSK-252 (G3b) · `deploy/oracle-a1/sir_rotasyon.sh` (`_atomik_yaz`, `tohumla_sohbet`) · G3b final-review M1 + final-fix-report kaygı 1.
+- **[TSK-261] Sır rotasyon aracının kopya-tabanlı yolları — `_negatif_geri_al` öngörülebilir `$hedef.yeni` adına `sudo cp -p` (+ `mv -f`), `_yedek_al` `sudo cp -p` kaynağı izler, basılan geri alma reçeteleri `sudo cp -p <yedek> /<yol>`; aynı CWE-59 sınıfının TSK-260 dışında kalan örnekleri** — status: QUEUED · born: 2026-10-01 · owner: rol1 · size: S · trigger: —
+  What: (2026-10-01 19:2xZ AÇILDI [Rol-1; TSK-260 uygulayıcı kaygı 2]: `api` türü disk yolu `/opt/meridian/state/secrets.json` (dizin ubuntu 700 — ölçüldü 19:18Z): ubuntu `secrets.json.yeni` adını önceden bağ olarak kurarsa root `cp` bağı izleyip bağın hedefini ezer ve `-p` ile sahibini ubuntu'ya verir — TSK-260'ta kapatılandan daha GENİŞ bir ilkel (ubuntu bugün sudo grubunda → savunma derinliği). İş: geri alma ve yedek yollarını TSK-260'ın fd-tabanlı çekirdeğine (`_atomik_yaz` / `hedef-denetle`) bağla; basılan reçeteleri `install`/aracın kendi geri alma alt komutuna çevir; v447 J/K (`SIM_CP` `nk-` modeli) birlikte güncellenir. TSK-260 birleştikten SONRA (aynı dosya).)
+  Why: Sınıf bir örnekle kapanmaz — aynı aracın yazım yolu kapatılıp kopya yolu açık bırakılırsa güvenlik iddiası yanlış güvence olur.
+  Ref: PRG-14 · TSK-260 · `deploy/oracle-a1/sir_rotasyon.sh` (`_negatif_geri_al`, `_yedek_al`) · `.superpowers/sdd/tsk260/report.md` kaygı 2.
 
 
 - **[TSK-253] Konuşan filo Parça 2 — Telegram dinleyicisi canlıya (birim + A0 dizin/ReadWritePaths + 4096 karakter bölme + ilk koşum ofseti + canlı TELEGRAM_CHAT_ID pozitif mi ölçümü + pano getUpdates kurulum talimatı güncellemesi + 'yabancı mesaj' olaylarının okuyucusu)** — status: GATED(TSK-252 canlı) · born: 2026-09-29 · owner: rol1 · size: M · trigger: TSK-252 kapanışı
