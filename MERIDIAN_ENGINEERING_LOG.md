@@ -4147,3 +4147,11 @@ canlıyla aynı (ilk "FARKLI" ölçümüm süreç ikamesindeki stdin hatasıydı
   tasarımının "yalnız kök `.env`" kararı üç botu 401'e düşürürdü; G3b-R1: tek sır, dört kopya.
 - **Açık:** TSK-259 canlı kanıtı bu sabahki ileri doldurma koşumunda (07:30Z başladı) · G3b Task 2 uçuşta · EXE-012 A dilimi
   yeniden-inceleme uçuşta, B dilimi (hüküm betiği + PK) sırada · operatör: Debug Export (TSK-209) + "düşün" düğmesi (TSK-233).
+- **Dağıtım #89 (09:56–09:58Z, main HEAD ae11e5f0 = deployed_sha):** EXE-2026-012 aleti + hüküm betiği (TSK-020 UYGULA-9 Faz C). Birim/`/etc`
+  değişikliği yok → site.yml gerekmedi (kuru: [1c] aynı, silme 0, F9 yalnız Vault ×2, uv audit temiz). Uygula `a1 ok=62 changed=5 failed=0`,
+  healthz 200, [5b] taze; meridian + learn aktif NRestarts 0; uyarılar bilinen üçlü. Defter `state/exe012_tur_atif.jsonl` henüz YOK
+  (beklenen: ilk satır seans sonrası ilk olayda ya da düzgün kapanışta). ADIM-0c = bugünkü RTH seansı (pencereye GİRMEZ); pencere en
+  erken 10-13. Suite 16766/0 (HEAD eşit) + KILL#1; CI ae11e5f0 success. İnceleme zinciri: A dilimi görev incelemesi (1I) → düzeltme →
+  yeniden inceleme (0C/0I) → B dilimi → Opus dal sonu (3I: gevşek eşik, tanıksız hüküm, PK-1 büyüklüğü) → düzeltme; faz5 altın değerleri
+  eski gövdeden bağımsız doğrulandı (refaktör bayt-eşit).
+- **TSK-259 KAPANDI (08:5xZ):** ilk ileri doldurma koşumunda tepe 141,9 G, DISK_ESIK çalmadı, atlama sayacı 5; koşum sonrası ≈123 G.
