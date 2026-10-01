@@ -15,10 +15,11 @@ TEK KAYNAK:
                                açıklamalar sohbet kipine özgü sabitlerdir)
   * Meridian MCP girdisi     → `deploy/hermes/config.yaml` içindeki mcp_servers → meridian girdisi
                                (`enabled` true olur, argümanlara `--bot <ad>` eklenir, `env:`e birimin credential
-                               yolu eklenir)
+                               yolu eklenir); KÖK config'te her aktif bot için AYRI bir sunucu (`mcp_sunucu_adi`,
+                               G3d) — profil config'i yalnız izin listesinde kendi sunucusunun ADINI taşır
   * kök (varsayılan) profil  → duruşu `deploy/hermes/profiles/sef/` (kanca, onay, kapalı takımlar, model,
-                               sağlayıcılar); çoklu kip, boş platform izin listesi ve yönlendirme SOUL'u bu
-                               modülün sabitleri (G3)
+                               sağlayıcılar); çoklu kip, `no_mcp` izin listesi, bot başına MCP sunucuları ve
+                               yönlendirme SOUL'u bu modülün sabitleri (G3, G3d)
   * bot ağ geçidi            → birim adı, ortak kum havuzu ve Hermes kökü BU MODÜLÜN sabitleri (`BOT_BIRIMI`,
                                `BOT_KUM_HAVUZU`, `KOK_DIZIN`; G3)
   * hangi bot, hangi araç    → `deploy/hermes/kadro.yaml` (`meridian.kadro`; yalnız `aktif` satırlar)
@@ -115,13 +116,38 @@ KOK_DURUS_PROFILI = "sef"
 #: kendiliğinden yayılır).
 KOK_MIRAS_ANAHTARLARI = ("hooks", "hooks_auto_accept", "agent", "approvals", "model", "providers")
 #: BEYANLI İSTİSNA — rapor profilinde bulunsa da köke GEÇMEYEN üst anahtarlar: kök bunları kendisi kurar (bağlam dizini, çoklu
-#: kip, boş izin listesi) ya da hiç taşımaz (hafıza, MCP girdisi). Kaynağın bu iki kümenin hiçbirinde olmayan bir
-#: üst anahtarı v599 yön çivisinde öter: yeni bir duruş anahtarı köke SESSİZCE eksik kalmaz, bir karar ister.
+#: kip, `no_mcp` izin listesi, bot başına MCP sunucuları — G3d) ya da hiç taşımaz (hafıza). Kaynağın bu iki kümenin
+#: hiçbirinde olmayan bir üst anahtarı v599 yön çivisinde öter: yeni bir duruş anahtarı köke SESSİZCE eksik kalmaz, bir
+#: karar ister.
 KOK_MIRAS_DISI = ("mcp_servers", "memory", "platform_toolsets", "platforms", "gateway", "terminal")
 #: `/p/` öneksiz istek kök profile düşer; araçsız model veri UYDURUR (Parça 0). SOUL yalnız yönlendirme cümlesi
 #: yazdırır ve hiçbir yetenek (araç, hafıza) vaat etmez.
 KOK_SOUL = ("Bu, Meridian bot ağ geçidinin kök profilidir. Bu uç doğrudan kullanılmaz; her soru `/p/<bot>/` "
             "önekiyle bir bota gider. Buraya gelen her mesaja yalnız şunu yaz: Bu kök profil; lütfen bir bot seçin.\n")
+
+#: --- MCP SUNUCULARI KÖKTE, BOT BAŞINA (G3d, Ruling G3d-R1, 2026-10-02; kanıt A1 Hermes v0.19.0 kaynağı) ---
+#: Hermes MCP keşfi SÜREÇ düzeyindedir ve ağ geçidi açılışında YALNIZ BİR KEZ, profil kapsamı olmadan KÖK config'ten
+#: koşar (`gateway/run.py::start_gateway` → `tools/mcp_tool.py::discover_mcp_tools`); profil config'indeki
+#: `mcp_servers`i keşif HİÇ okumaz. G3c canlı ölçümü: kökte girdi yokken hiçbir sunucu başlamadı, botların aracı yoktu
+#: ve model araç çağrısını metin olarak uydurdu. Sunucular süreç-global ve ADLA anahtarlıdır (`register_mcp_servers`) →
+#: bot başına AYRI ad şart: tek ortak ad üç profilde TEK sunucu olur ve ilk gelenin `--bot`u kazanır (yetki
+#: yükselmesi). Profilin izin listesi YALNIZ kendi sunucusunun adıdır; sunucu kapısı kimliği `--bot`tan aldığı için
+#: ad↔argüman ve profil↔ad eşlemesi asıl güvenlik kontrolüdür (çiviler v612). G3 planının "kökte mcp_servers YOK"
+#: kuralı bu kararla TERSİNE döndü. Desen TEK yerde: yeni aktif bot = kökte yeni sunucu + profilinde izin listesi.
+MCP_SUNUCU_ADI = "meridian-{ad}"
+#: Kökün KENDİ (`/p/` öneksiz) istekleri için izin listesi. `[]` MCP'yi KAPATMAZ: Hermes `_get_platform_tools` listede
+#: açık MCP adı ve `no_mcp` yoksa config'te etkin HER sunucuyu ekler — öneksiz istek üç botun BİRLEŞİM araç kümesini
+#: alırdı. İkinci kat: sunucu adları kökün `agent.disabled_toolsets`ine de eklenir (Hermes onu EN SON uygular).
+#: BEDEL: `no_mcp` geçerli bir takım adı değildir → Hermes'in #38798 uyarısı (süreç başına, PLATFORM başına bir kez)
+#: kök için bir kez basılabilir ve aynı süreçte sonraki profil uyarılarını maskeleyebilir; araç varlığı uyarıdan değil
+#: oturumdaki `role: tool` mesajlarından ölçülür.
+KOK_IZIN_LISTESI = ("no_mcp",)
+
+
+def mcp_sunucu_adi(ad: str) -> str:
+    """Botun kökteki MCP sunucusunun adı (ve profil izin listesindeki tek girdisi)."""
+    return MCP_SUNUCU_ADI.format(ad=ad)
+
 
 #: Model çağrısı başına istek zaman aşımı (sn) — Hermes'in OKUDUĞU yerde yazılır: sağlayıcı girdisinin
 #: `request_timeout_seconds` alanı (kökte `timeout` anahtarı YOK; v329 emsali). Parça 0 v3: ücretsiz model
@@ -263,15 +289,45 @@ def _sohbet_cagri_butcesi(cfg: dict, kaynak: str) -> None:
         hedef[yol[-1]] = deger
 
 
-def _config(rapor_evi: pathlib.Path, bot: kadro_mod.Bot, kok_meridian: dict) -> bytes:
-    cfg = copy.deepcopy(_yaml_oku(rapor_evi / "config.yaml"))
+def _dizgeler(deger):
+    """İç içe yapıdaki her dizge (eşleme anahtarları dahil)."""
+    if isinstance(deger, dict):
+        for k, v in deger.items():
+            yield from _dizgeler(k)
+            yield from _dizgeler(v)
+    elif isinstance(deger, (list, tuple)):
+        for v in deger:
+            yield from _dizgeler(v)
+    elif isinstance(deger, str):
+        yield deger
+
+
+def _mcp_girdisi(kok_meridian: dict, ad: str) -> dict:
+    """Botun KÖKTEKİ MCP sunucu girdisi: kaynak girdi AYNEN + `enabled: true` + `--bot <ad>` + `env:`e birimin
+    credential yolu. `${…}` yer tutucusu REDDEDİLİR: keşif profil kapsamı olmadan koşar, Hermes yer tutucuyu
+    kapsamlı sır deposundan çözmeye çalışıp hata atar, `_load_mcp_config` hatayı yutup `{}` döner — kökteki BÜTÜN
+    MCP sessizce kapanırdı (ölçüm: Hermes v0.19.0 `agent/secret_scope.py::get_secret`)."""
     girdi = copy.deepcopy(kok_meridian)
-    cfg["mcp_servers"] = {"meridian": {
-        **girdi, "enabled": True, "args": list(girdi["args"]) + ["--bot", bot.ad],
+    sonuc = {
+        **girdi, "enabled": True, "args": list(girdi["args"]) + ["--bot", ad],
         # Değişken ADI okuyucunun sabitinden (`secrets.credential_oku` onu okur): ad ayrışırsa araç sessizce
         # "credential yok" döner — literal yazılmaz (tek kaynak).
-        "env": {**(girdi.get("env") or {}), secrets.CREDENTIAL_DIZIN_ENV: BOT_CREDENTIAL_DIZINI}}}
-    cfg["platform_toolsets"] = {"api_server": ["meridian"]}
+        "env": {**(girdi.get("env") or {}), secrets.CREDENTIAL_DIZIN_ENV: BOT_CREDENTIAL_DIZINI}}
+    yer_tutucu = sorted({s for s in _dizgeler(sonuc) if "${" in s})
+    if yer_tutucu:
+        raise ValueError(f"{KOK_YAPILANDIRMA}: mcp_servers → meridian girdisinde ${{…}} yer tutucusu var "
+                         f"({yer_tutucu}) — bot ağ geçidinin kökünde MCP keşfi kapsamsız koşar, yer tutucu "
+                         "çözülemez ve kökteki bütün MCP sunucuları sessizce kapanır")
+    return sonuc
+
+
+def _config(rapor_evi: pathlib.Path, bot: kadro_mod.Bot) -> bytes:
+    cfg = copy.deepcopy(_yaml_oku(rapor_evi / "config.yaml"))
+    # G3d: sunucu girdisi KÖKTE (`_kok_config`). Profil `mcp_servers`i keşif için ETKİSİZ, izin sınıflaması için de
+    # gereksiz (Hermes izin listesindeki açık adı doğrudan geçirir); rapor profilinden ileride miras gelecek bir girdi
+    # ise `_get_platform_tools`ta PROFİL config'inden "etkin sunucu" sayılır → bilinçli olarak ATILIR.
+    cfg.pop("mcp_servers", None)
+    cfg["platform_toolsets"] = {"api_server": [mcp_sunucu_adi(bot.ad)]}
     # İkincil profil dinleyici AÇMAZ: süreç ortamındaki dinleyici anahtarı aksi hâlde burada da dinleyici açmaya
     # zorlar ve ağ geçidi açılışta düşer (çoklu kip yapılandırma hatası). Dinleyiciyi kök profil tutar.
     cfg["platforms"] = {"api_server": {"enabled": False}}
@@ -280,19 +336,21 @@ def _config(rapor_evi: pathlib.Path, bot: kadro_mod.Bot, kok_meridian: dict) -> 
     baslik = (
         URETILDI + ".",
         f"Kaynak: {RAPOR_KOK}/{bot.ad}/config.yaml (duruş: kanca, onay, kapalı takımlar, model, sağlayıcılar —",
-        f"gerekçeleri orada) + {KOK_YAPILANDIRMA} içindeki mcp_servers → meridian girdisi (--bot {bot.ad} ekiyle)",
-        "+ üretecin sohbet sabitleri (zaman aşımı, yeniden deneme, hafıza sağlayıcısı, platform izin listesi,",
-        f"ikincil profilde api_server kapalı, MCP credential yolu {BOT_CREDENTIAL_DIZINI}).",
+        "gerekçeleri orada) + üretecin sohbet sabitleri (zaman aşımı, yeniden deneme, hafıza sağlayıcısı,",
+        "ikincil profilde api_server kapalı, platform izin listesi).",
+        f"Platform izin listesi YALNIZ {mcp_sunucu_adi(bot.ad)}: botun MCP sunucusu (--bot {bot.ad}) bu profilde DEĞİL,",
+        "ağ geçidi KÖKÜNÜN config.yaml'ında tanımlıdır — Hermes MCP keşfi yalnız açılışta ve yalnız kökten koşar.",
         "Değiştirmek için kaynağı düzenle ve üreteci --yaz ile koş; tazelik kapısı --kontrol.",
     )
     return _yaml_yaz(baslik, cfg)
 
 
-def _kok_config(kok: pathlib.Path) -> bytes:
+def _kok_config(kok: pathlib.Path, botlar: tuple[kadro_mod.Bot, ...], kok_meridian: dict) -> bytes:
     """Bot ağ geçidinin kök (varsayılan) profili: dinleyiciyi tutar, çoklu kipte sohbet profillerini `/p/<ad>/`
-    altında sunar. ARAÇSIZ (boş platform izin listesi, MCP girdisi yok) ve HAFIZASIZ (hafıza sağlayıcısı yok):
-    `/p/` öneksiz bir istek buraya düşer ve araçlı/hafızalı bir kök veri uydururdu (Parça 0). Duruş rapor
-    profilinden BEYAZ LİSTEYLE miras alınır — kök de aynı süreçte koşar."""
+    altında sunar ve ağ geçidinin TEK MCP keşif kaynağıdır — her aktif bot için ayrı sunucu (`mcp_sunucu_adi`,
+    `--bot <ad>`; G3d). Kendi isteklerinde ARAÇSIZ (`no_mcp` + sunucu adları kapalı takımlarda) ve HAFIZASIZ (hafıza
+    sağlayıcısı yok): `/p/` öneksiz bir istek buraya düşer ve araçlı/hafızalı bir kök veri uydururdu (Parça 0). Duruş
+    rapor profilinden BEYAZ LİSTEYLE miras alınır — kök de aynı süreçte koşar."""
     kaynak = kok / RAPOR_KOK / KOK_DURUS_PROFILI / "config.yaml"
     rapor = _yaml_oku(kaynak)
     eksik = [a for a in KOK_MIRAS_ANAHTARLARI if a not in rapor]
@@ -300,22 +358,35 @@ def _kok_config(kok: pathlib.Path) -> bytes:
         raise ValueError(f"{kaynak}: kök profilin duruşu için {eksik} yok — kök profil türetilemez")
     cfg = {a: copy.deepcopy(rapor[a]) for a in KOK_MIRAS_ANAHTARLARI}
     _sohbet_cagri_butcesi(cfg, str(kaynak))
+    sunucular = {mcp_sunucu_adi(b.ad): _mcp_girdisi(kok_meridian, b.ad) for b in botlar}
+    if len(sunucular) != len(botlar):
+        raise ValueError(f"MCP_SUNUCU_ADI={MCP_SUNUCU_ADI!r} bot başına ayrı ad üretmiyor — tek ortak sunucu ilk "
+                         "gelen botun --bot kimliğiyle bütün profillere hizmet ederdi")
+    # İkinci kat (`KOK_IZIN_LISTESI` şerhi): kapalı takımlar duruştan AYNEN + sunucu adları.
+    kapali = list(cfg["agent"].get("disabled_toolsets") or [])
+    cfg["agent"]["disabled_toolsets"] = kapali + [a for a in sunucular if a not in kapali]
     cfg["gateway"] = {"multiplex_profiles": True}
-    cfg["platform_toolsets"] = {"api_server": []}
+    cfg["mcp_servers"] = sunucular
+    cfg["platform_toolsets"] = {"api_server": list(KOK_IZIN_LISTESI)}
     # Bağlam dizini (gerekçe `BOT_KUM_HAVUZU` şerhinde): yalnız kökte — ağ geçidi yalnız kökünkini köprüler.
     cfg["terminal"] = {"cwd": BOT_KUM_HAVUZU}
     baslik = (
         URETILDI + ".",
         "Bot ağ geçidinin KÖK (varsayılan) profili.",
         f"Birim {BOT_BIRIMI}, Hermes kökü {KOK_DIZIN} (bu dosya oranın config.yaml'ıdır).",
-        "Dinleyiciyi bu profil tutar; sohbet profilleri çoklu kipte /p/<ad>/ altında sunulur. ARAÇSIZ ve HAFIZASIZ:",
-        "/p/ öneksiz istek buraya düşer ve araçlı ya da hafızalı bir kök veri uydururdu — platform izin listesi boş,",
-        "Meridian MCP girdisi ve hafıza sağlayıcısı YOK; SOUL yalnız yönlendirme cümlesi yazdırır.",
+        "Dinleyiciyi bu profil tutar; sohbet profilleri çoklu kipte /p/<ad>/ altında sunulur.",
+        "MCP SUNUCULARI BURADA (G3d): Hermes MCP keşfi yalnız açılışta ve yalnız bu kök config'ten koşar. Her aktif bot",
+        f"için AYRI sunucu {mcp_sunucu_adi('<ad>')} (--bot <ad>); her profilin izin listesi yalnız kendi sunucusunun adıdır.",
+        "Sunucu girdilerinde ${...} yer tutucusu YOK: keşif kapsamsız koşar, yer tutucu çözülemez ve MCP sessizce kapanır.",
+        "Kendi isteklerinde ARAÇSIZ ve HAFIZASIZ: /p/ öneksiz istek buraya düşer ve araçlı ya da hafızalı bir kök veri",
+        "uydururdu — platform izin listesi [no_mcp] ([] MCP'yi KAPATMAZ: etkin her sunucu eklenirdi) ve sunucu adları",
+        "agent.disabled_toolsets'te (ikinci kat); hafıza sağlayıcısı YOK; SOUL yalnız yönlendirme cümlesi yazdırır.",
         "Kökün .env'ine model anahtarı (providers.kapi.key_env) BİLİNÇLİ konmaz: öneksiz istek kapıda 401 ile düşer",
         "(model çağrılmaz — uydurma yok, kota yok); SOUL'daki ret cümlesi ikinci katmandır (Rol-1 hükmü, 2026-09-30).",
         f"terminal.cwd = {BOT_KUM_HAVUZU}: ağ geçidinin BAĞLAM dizini (AGENTS.md/CLAUDE.md buradan aranır; boş kum havuzu).",
         f"Kaynak: {RAPOR_KOK}/{KOK_DURUS_PROFILI}/config.yaml (duruş: kanca, onay, kapalı takımlar, model,",
-        "sağlayıcılar — gerekçeleri orada) + üretecin sabitleri (zaman aşımı, yeniden deneme, çoklu kip).",
+        f"sağlayıcılar — gerekçeleri orada) + {KOK_YAPILANDIRMA} içindeki mcp_servers → meridian girdisi (bot başına",
+        "--bot ekiyle) + üretecin sabitleri (zaman aşımı, yeniden deneme, çoklu kip, izin listesi).",
         "Değiştirmek için kaynağı düzenle ve üreteci --yaz ile koş; tazelik kapısı --kontrol.",
     )
     return _yaml_yaz(baslik, cfg)
@@ -400,18 +471,20 @@ def uret(kok: pathlib.Path = REPO, kadro=None) -> dict[str, bytes]:
     if not isinstance(kok_meridian, dict) or not isinstance(kok_meridian.get("args"), list):
         raise ValueError(f"{KOK_YAPILANDIRMA}: mcp_servers → meridian girdisi (args listesiyle) yok — "
                          "sohbet profilinin araç sunucusu türetilemez")
+    # Kökün sunucu kümesi ile profiller AYNI bot listesinden: yeni aktif bot = kökte sunucu + profilinde izin listesi.
+    botlar = tuple(sorted(_kadro(kok, kadro), key=lambda b: b.ad))
     cikti: dict[str, bytes] = {
-        f"{SOHBET_EV}/config.yaml": _kok_config(kok),
+        f"{SOHBET_EV}/config.yaml": _kok_config(kok, botlar, kok_meridian),
         f"{SOHBET_EV}/SOUL.md": KOK_SOUL.encode("utf-8"),
     }
-    for bot in sorted(_kadro(kok, kadro), key=lambda b: b.ad):
+    for bot in botlar:
         rapor_evi = kok / RAPOR_KOK / bot.ad
         if not rapor_evi.is_dir():
             raise ValueError(f"aktif @{bot.ad} için rapor profili yok ({RAPOR_KOK}/{bot.ad}) — "
                              "sohbet profili türetilemez")
         hedef = f"{SOHBET_KOK}/{bot.ad}"
         cikti[f"{hedef}/SOUL.md"] = _soul(rapor_evi, bot)
-        cikti[f"{hedef}/config.yaml"] = _config(rapor_evi, bot, kok_meridian)
+        cikti[f"{hedef}/config.yaml"] = _config(rapor_evi, bot)
         cikti[f"{hedef}/distribution.yaml"] = _dagitim(rapor_evi, bot)
         cikti[f"{hedef}/hindsight/config.json"] = _hindsight(bot)
     return cikti

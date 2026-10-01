@@ -1,14 +1,19 @@
 # ÜRETİLMİŞ — elle düzenlenmez; üreteç `ops/sohbet_profili_uret.py`.
 # Bot ağ geçidinin KÖK (varsayılan) profili.
 # Birim meridian-botlar.service, Hermes kökü /home/ubuntu/.hermes-botlar (bu dosya oranın config.yaml'ıdır).
-# Dinleyiciyi bu profil tutar; sohbet profilleri çoklu kipte /p/<ad>/ altında sunulur. ARAÇSIZ ve HAFIZASIZ:
-# /p/ öneksiz istek buraya düşer ve araçlı ya da hafızalı bir kök veri uydururdu — platform izin listesi boş,
-# Meridian MCP girdisi ve hafıza sağlayıcısı YOK; SOUL yalnız yönlendirme cümlesi yazdırır.
+# Dinleyiciyi bu profil tutar; sohbet profilleri çoklu kipte /p/<ad>/ altında sunulur.
+# MCP SUNUCULARI BURADA (G3d): Hermes MCP keşfi yalnız açılışta ve yalnız bu kök config'ten koşar. Her aktif bot
+# için AYRI sunucu meridian-<ad> (--bot <ad>); her profilin izin listesi yalnız kendi sunucusunun adıdır.
+# Sunucu girdilerinde ${...} yer tutucusu YOK: keşif kapsamsız koşar, yer tutucu çözülemez ve MCP sessizce kapanır.
+# Kendi isteklerinde ARAÇSIZ ve HAFIZASIZ: /p/ öneksiz istek buraya düşer ve araçlı ya da hafızalı bir kök veri
+# uydururdu — platform izin listesi [no_mcp] ([] MCP'yi KAPATMAZ: etkin her sunucu eklenirdi) ve sunucu adları
+# agent.disabled_toolsets'te (ikinci kat); hafıza sağlayıcısı YOK; SOUL yalnız yönlendirme cümlesi yazdırır.
 # Kökün .env'ine model anahtarı (providers.kapi.key_env) BİLİNÇLİ konmaz: öneksiz istek kapıda 401 ile düşer
 # (model çağrılmaz — uydurma yok, kota yok); SOUL'daki ret cümlesi ikinci katmandır (Rol-1 hükmü, 2026-09-30).
 # terminal.cwd = /opt/meridian/var/bots/sohbet: ağ geçidinin BAĞLAM dizini (AGENTS.md/CLAUDE.md buradan aranır; boş kum havuzu).
 # Kaynak: deploy/hermes/profiles/sef/config.yaml (duruş: kanca, onay, kapalı takımlar, model,
-# sağlayıcılar — gerekçeleri orada) + üretecin sabitleri (zaman aşımı, yeniden deneme, çoklu kip).
+# sağlayıcılar — gerekçeleri orada) + deploy/hermes/config.yaml içindeki mcp_servers → meridian girdisi (bot başına
+# --bot ekiyle) + üretecin sabitleri (zaman aşımı, yeniden deneme, çoklu kip, izin listesi).
 # Değiştirmek için kaynağı düzenle ve üreteci --yaz ile koş; tazelik kapısı --kontrol.
 hooks:
   pre_tool_call:
@@ -31,6 +36,9 @@ agent:
   - image_gen
   - video_gen
   - tts
+  - meridian-bekci
+  - meridian-karne
+  - meridian-sef
   api_max_retries: 2
 approvals:
   mode: smart
@@ -55,7 +63,54 @@ providers:
     request_timeout_seconds: 60
 gateway:
   multiplex_profiles: true
+mcp_servers:
+  meridian-bekci:
+    enabled: true
+    command: /opt/meridian/.venv/bin/python
+    args:
+    - -m
+    - meridian.mcp_server
+    - --bot
+    - bekci
+    env:
+      PYTHONPATH: /opt/meridian
+      MERIDIAN_ROOT: /opt/meridian
+      CREDENTIALS_DIRECTORY: /run/credentials/meridian-botlar.service
+    tools:
+      resources: false
+      prompts: false
+  meridian-karne:
+    enabled: true
+    command: /opt/meridian/.venv/bin/python
+    args:
+    - -m
+    - meridian.mcp_server
+    - --bot
+    - karne
+    env:
+      PYTHONPATH: /opt/meridian
+      MERIDIAN_ROOT: /opt/meridian
+      CREDENTIALS_DIRECTORY: /run/credentials/meridian-botlar.service
+    tools:
+      resources: false
+      prompts: false
+  meridian-sef:
+    enabled: true
+    command: /opt/meridian/.venv/bin/python
+    args:
+    - -m
+    - meridian.mcp_server
+    - --bot
+    - sef
+    env:
+      PYTHONPATH: /opt/meridian
+      MERIDIAN_ROOT: /opt/meridian
+      CREDENTIALS_DIRECTORY: /run/credentials/meridian-botlar.service
+    tools:
+      resources: false
+      prompts: false
 platform_toolsets:
-  api_server: []
+  api_server:
+  - no_mcp
 terminal:
   cwd: /opt/meridian/var/bots/sohbet
