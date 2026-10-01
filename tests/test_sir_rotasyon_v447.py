@@ -90,6 +90,12 @@ ESKI = {
     #: Agent render hedefi AYNI değeri taşır. Hermes ≥16 karakter ister; tohum o sınırın üstündedir.
     "api": "SAHTE-ESKI-APISUNUCU-0001",
 }
+#: KAPI TÜKETİCİ ANAHTARLARI (`BOT_KEY_<AD>`, G3b Task 3 2026-10-01) — bot başına AYRI sır; kapı (`.env-apisix`), rapor
+#: profili, sohbet profili ve Agent render hedefi (`/etc/meridian/bot_key_<ad>`) AYNI değeri taşır. 2026-10-01'e dek
+#: sahne `sahte-<ad>` yazıyordu (küçük harfli `sahte-` negatif kontrol işaretçisinin önekiyle ÇAKIŞAN ve ESKI'de olmadığı
+#: için sızıntı denetimlerine GİRMEYEN tohum); artık ESKI'dedir → bütün "değer basılmaz" çivileri bu tohumları da arar.
+#: Rapor profilleri sabit üçlüdür (`~/.hermes/profiles/{bekci,karne,sef}` — sahne aşağıda).
+ESKI.update({f"bot_{p}": f"SAHTE-ESKI-BOT-{p.upper()}-0001" for p in ("bekci", "karne", "sef")})
 DSN = ("postgresql://hindsight:" + ESKI["pg"] +
        "@127.0.0.1:5432/hindsight?sslmode=disable&application_name=hindsight-api")
 
@@ -124,7 +130,10 @@ UYE_ALANLARI = tuple(f"HINDSIGHT_API_{yuzey}_LLM_{n}_API_KEY"
 #: sohbet profili `.env` kopyaları (+3, `HINDSIGHT_API_KEY`) ve YENİ alt komut `api-sunucu` (+5: render hedefi REFERANS +
 #: kök `.env` + üç sohbet profili `.env`i — Hermes PROFİL kapsamı ölçümü). Bot başı satırlar `_SOHBET_BOTLARI`
 #: döngüsünden türer: bot sayısı değişince bu sayı da değişir ve bilinçli güncellenir (yeni bot = +2 satır).
-KOPYA_SAYISI = 32
+#: 2026-10-01 (G3b Task 3): +12 = 44 — SAYILDI (`--kopyalar | wc -l`, aynı gün): bot başı iç alt komut `kapi-bot-<ad>` (operatör
+#: K-G3b-1), bot başına DÖRT satır (Agent render hedefi REFERANS + `.env-apisix` + rapor profili + sohbet profili) × 3 bot.
+#: Yeni bot artık +6 satırdır (tenant 1 · api-sunucu 1 · kapi-bot 4); hepsi `_SOHBET_BOTLARI` döngüsünden.
+KOPYA_SAYISI = 44
 
 
 # =================================================================================================
@@ -283,6 +292,35 @@ def _betik_sohbet_sabiti(ad: str) -> str | None:
 SOHBET_KOKU = _betik_sohbet_sabiti("_SOHBET_KOKU")
 SOHBET_BOTLARI = tuple((_betik_sohbet_sabiti("_SOHBET_BOTLARI") or "").split())
 
+
+#: BOT BAŞI ALT KOMUT AİLESİ — `kapi-bot-<ad>` (G3b Task 3, 2026-10-01; Rol-1 G3b-R2: bot başına İÇ alt ad). Küme
+#: betikten DEĞİL A0 rolünün `sohbet_profil_adlari`ndan türer (betikten bağımsız dış çapa — elle yazılmaz, operatör
+#: 2026-09-30 "bot sayısından bağımsız"); betiğin `_SOHBET_BOTLARI`ıyla eşitliği v604 B9/C3 çivisidir. Alt komut
+#: kümelerini pinleyen çiviler (v522 · v557 · v561 · v447 N10) bu demeti ekler.
+def _a0_sohbet_botlari() -> tuple[str, ...]:
+    d = yaml.safe_load((KOK_DEPO / "deploy/ansible/roles/meridian_a1/defaults/main.yml").read_text(encoding="utf-8"))
+    return tuple(d["sohbet_profil_adlari"])
+
+
+KAPI_BOT_ALTLARI = tuple(f"kapi-bot-{b}" for b in _a0_sohbet_botlari())
+
+
+def alt_argv(alt: str) -> list[str]:
+    """İç alt ad → komut satırı. `kapi-bot-<ad>` İKİ jetondur (`--kapi-bot <ad>`); `--kapi-bot-<ad>` diye bir bayrak
+    YOKTUR (betik "bilinmeyen argüman" ile reddeder — v604 C2)."""
+    return ["--kapi-bot", alt[len("kapi-bot-"):]] if alt.startswith("kapi-bot-") else [f"--{alt}"]
+
+
+def alt_bayragi(alt: str) -> str:
+    """Operatörün yapıştıracağı biçim (betiğin `_bayrak` yardımcısının çivi tarafı)."""
+    return " ".join(alt_argv(alt))
+
+
+def alt_fonksiyonu(alt: str) -> str:
+    """Eski yol fonksiyon ADI: `alt.replace("-", "_")`; bot ailesi TEK gövde paylaşır (`kapi_bot <ad>` — bot sayısıyla
+    büyüyen ince fonksiyonlar YOK, operatör 2026-09-30)."""
+    return "kapi_bot" if alt.startswith("kapi-bot-") else alt.replace("-", "_")
+
 SIM_SYSTEMCTL = '''#!/usr/bin/env python3
 """`restart` systemd'nin yaptığını yapar: LoadCredential kaynağını /run/credentials altına koyar.
 
@@ -356,6 +394,27 @@ if len(a) >= 2 and a[0] == "restart":
             etkin = ""
         with open(os.path.join(KOK, ".sahte", "apisix_etkin_admin"), "w") as fh:
             fh.write(etkin)
+        # KAPI TÜKETİCİ ANAHTARLARI (`$env://BOT_KEY_<AD>`; G3b Task 3, 2026-10-01). docker İKİ `--env-file` alır ve
+        # aynı anahtarda SONRAKİNİ geçerli sayar (`.env-apisix` → `.env-apisix.vault`, drop-in 50): açılışta çözülen
+        # bot anahtarları O SIRAYLA fotoğraflanır ve sahte curl `/llm/v1/models`in bot yüzünü ONLARA kıyaslar —
+        # restart'sız bir `--kapi-bot` canlıda 401 alır, şim onu ölçebilmeli. `BOT_KEY_MERIDIAN` HARİÇ: motor
+        # tüketicisi tarihî modelde `/etc/meridian/kapi_apikey`in o anki içeriğiyle ölçülür (v447 D bölümü).
+        botlar = {}
+        for _dosya in ("/opt/apisix/.env-apisix", "/opt/apisix/.env-apisix.vault"):
+            try:
+                with open(KOK + _dosya, encoding="utf-8") as fh:
+                    for _s in fh:
+                        _ad, _esit, _d = _s.partition("=")
+                        if not _esit or not _ad.startswith("BOT_KEY_") or _ad == "BOT_KEY_MERIDIAN":
+                            continue
+                        _d = _d.strip()
+                        if len(_d) >= 2 and _d[0] == _d[-1] and _d[0] in chr(34) + chr(39):
+                            _d = _d[1:-1]
+                        botlar[_ad] = _d
+            except OSError:
+                continue   # sessiz-yutma: yan dosya YOKSA (v447 sahnesi, kasasız dünya) docker onu da almaz
+        with open(os.path.join(KOK, ".sahte", "apisix_etkin_botlar"), "w") as fh:
+            json.dump(botlar, fh)
     if birim == "meridian-botlar.service" and SOHBET_KOKU:
         # BOT AĞ GEÇİDİ dinleyici anahtarını (`API_SERVER_KEY`) YALNIZ AÇILIŞTA kök `.env`den okur (Hermes
         # `connect()`; G3b ölçümü 2026-09-30). apisix emsali: açılışta çözülen değer `.sahte/`a yazılır ve sahte
@@ -537,7 +596,17 @@ if os.environ.get("SAHTE_MOTOR_OLU") == "1" and "/api/" in url:
 
 govde, kod = "", "404"
 if url.endswith("/llm/v1/models"):
-    kod = "200" if KOR or basliklar.get("apikey") == oku("/etc/meridian/kapi_apikey") else "401"
+    # İki tüketici sınıfı (`deploy/apisix/routes.yaml` `/llm/v1/models` whitelist'i): motor (`motor_meridian`,
+    # KAPI_APIKEY — tarihî model: dosyanın O ANKİ içeriği) ve botlar (`bot_<ad>`, G3b Task 3 — AÇILIŞTA çözülen değer,
+    # `apisix_etkin_botlar`; boş değer hiçbir anahtarla eşleşmez).
+    try:
+        with open(os.path.join(KOK, ".sahte", "apisix_etkin_botlar"), encoding="utf-8") as fh:
+            bot_anahtarlari = {v for v in json.load(fh).values() if v}
+    except (OSError, ValueError):
+        bot_anahtarlari = set()
+    sunulan = basliklar.get("apikey")
+    kod = ("200" if KOR or sunulan == oku("/etc/meridian/kapi_apikey") or (sunulan and sunulan in bot_anahtarlari)
+           else "401")
 elif url.endswith("/chat/completions"):
     if not KOR and basliklar.get("apikey") != oku("/etc/meridian/kapi_apikey"):
         kod = "401"
@@ -753,10 +822,14 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
         f'OPENROUTER_API_KEY="{ESKI["or"]}"\n'
         f'OPENROUTER_AUTH="Bearer {ESKI["or"]}"\n'
         "PANO_GIRIS_PAROLA=sahte-parola\n"
-        "BOT_KEY_BEKCI=sahte-bekci\n"
-        "BOT_KEY_KARNE=sahte-karne\n"
-        "BOT_KEY_SEF=sahte-sef\n"
+        f"BOT_KEY_BEKCI={ESKI['bot_bekci']}\n"
+        f"BOT_KEY_KARNE={ESKI['bot_karne']}\n"
+        f"BOT_KEY_SEF={ESKI['bot_sef']}\n"
         f"BOT_KEY_MERIDIAN='{ESKI['kapi']}'\n")
+    # KAPI TÜKETİCİ ANAHTARLARININ Agent RENDER HEDEFLERİ (G3b Task 3, 2026-10-01): `--kapi-bot <ad>`ın REFERANSI
+    # (Rol-1 G3b-R3; A1'de VAR, root:root 0400, 48 bayt — ölçüldü 2026-09-30). Değer `.env-apisix` satırıyla EŞİT.
+    for p in ("bekci", "karne", "sef"):
+        (kok / f"etc/meridian/bot_key_{p}").write_text(ESKI[f"bot_{p}"] + "\n")
     (kok / "opt/meridian/.env").write_text(
         "NOUS_MODEL=sahte/model-mini\n"
         "NOUS_ENDPOINT=http://kapi/llm/v1\n"
@@ -767,7 +840,7 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
     for p in ("bekci", "karne", "sef"):
         (kok / f"home/ubuntu/.hermes/profiles/{p}/.env").write_text(
             f"HERMES_HOME=/home/ubuntu/.hermes/profiles/{p}\n"
-            f"BOT_KEY_{p.upper()}=sahte-{p}\n"
+            f"BOT_KEY_{p.upper()}={ESKI[f'bot_{p}']}\n"
             f"OPENROUTER_API_KEY={ESKI['or']}\n")
     # GLOBAL hermes env (2026-09-13, TSK-181): motorun `hermes._agent_call` (review/generic) yolu
     # profil değil BU dosyayı okur; 09-08 rotasyonu onu atladı ve eski anahtar 4 gün 401 aldı.
@@ -788,7 +861,7 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
         for p in SOHBET_BOTLARI:
             (sohbet / "profiles" / p).mkdir(parents=True, exist_ok=True)
             (sohbet / "profiles" / p / ".env").write_text(
-                f"BOT_KEY_{p.upper()}=sahte-{p}\n"
+                f"BOT_KEY_{p.upper()}={ESKI.get(f'bot_{p}', f'SAHTE-ESKI-BOT-{p.upper()}-0001')}\n"
                 f"HINDSIGHT_API_KEY={ESKI['tenant']}\n"
                 f"API_SERVER_KEY={ESKI['api']}\n")
         (kok / "etc/meridian/api_server_key").write_text(ESKI["api"] + "\n")
@@ -801,6 +874,10 @@ def _sahte_ortam(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
          "ALPACA_API_KEY": "SAHTE-ALPACA-0001"}, ensure_ascii=False) + "\n")
     # KAPI ZATEN AYAKTA ve açılışta ESKİ admin anahtarını çözmüş durumda (canlının hâli).
     (kok / ".sahte/apisix_etkin_admin").write_text(ESKI["admin"])
+    # Kapının key-auth tüketicileri de AÇILIŞTA çözülmüş durumda (`$env://BOT_KEY_<AD>`; G3b Task 3) — şim `restart`ta
+    # yeniden fotoğraflar (`SIM_SYSTEMCTL` apisix dalı).
+    (kok / ".sahte/apisix_etkin_botlar").write_text(json.dumps(
+        {f"BOT_KEY_{p.upper()}": ESKI[f"bot_{p}"] for p in ("bekci", "karne", "sef")}))
     (kok / ".sahte/pg_parola").write_text(ESKI["pg"])
     (kok / ".sahte/pg_hedef").write_text("127.0.0.1 5432 hindsight hindsight\n")
     (kok / ".sahte/argv.log").write_text("")
@@ -897,7 +974,8 @@ def test_A0_kopya_tablosu_BOS_DEGIL_pozitif_kontrol():
     k = _betik_kopyalari()
     assert len(k) == KOPYA_SAYISI, k
     assert {x["alt"] for x in k} == {"kapi", "tenant", "db", "dash", "openrouter", "apisix-admin", "cp",
-                                     "api-sunucu"}   # 2026-10-01 G3b: bot ağ geçidi dinleyici anahtarı
+                                     "api-sunucu",   # 2026-10-01 G3b: bot ağ geçidi dinleyici anahtarı
+                                     *KAPI_BOT_ALTLARI}   # 2026-10-01 G3b Task 3: bot başı kapı anahtarı (A0 listesi)
     assert {x["tur"] for x in k} == {"dosya", "env", "url", "api", "sql"}
 
 
@@ -1052,14 +1130,15 @@ def test_C1_kuru_kosum_HICBIR_SEY_yazmaz(tmp_path):
 
 
 @pytest.mark.parametrize("alt", ["--kapi", "--tenant", "--db", "--dash", "--openrouter",
-                                 "--apisix-admin", "--api-sunucu"])
+                                 "--apisix-admin", "--api-sunucu",
+                                 *[alt_bayragi(a) for a in KAPI_BOT_ALTLARI]])   # 2026-10-01 G3b Task 3
 def test_C2_her_alt_komutun_kuru_kosumu_BIRIMLERI_soyler(tmp_path, alt):
     """"Hangi birimler yeniden başlayacak" sorusunun cevabı ölçülür, varsayılmaz: worker'ı
     durdurma kararı buna bağlıdır. `--openrouter` listeye TUR 2'de girdi: ilk turda o alt komut
     kuru koşumda bile iki gerçek anahtar istiyordu (girdisiz koşum çıkış 1 verirdi), yani kapsam
     boşluğu tam da parametre listesinin eksik olduğu yerdeydi."""
     _, ortam = _sahte_ortam(tmp_path)
-    r = _kos(BETIK, ortam, alt, "--kuru")
+    r = _kos(BETIK, ortam, *alt.split(), "--kuru")     # `--kapi-bot <ad>` iki jetondur
     assert r.returncode == 0, r.stdout + r.stderr
     assert "yeniden başlatılacak:" in r.stdout
     assert ".service" in r.stdout.split("yeniden başlatılacak:")[1]
@@ -1184,18 +1263,24 @@ def test_E3_env_satiri_TEK_kalir_komsu_YENMEZ(tmp_path):
     assert _kos(BETIK, ortam, "--kapi").returncode == 0
     ham = (kok / "opt/apisix/.env-apisix").read_text()
     assert ham.count("BOT_KEY_MERIDIAN=") == 1, ham.count("BOT_KEY_MERIDIAN=")
-    assert "BOT_KEY_BEKCI=sahte-bekci" in ham and "PANO_GIRIS_PAROLA=sahte-parola" in ham, "komşu satır YENDİ"
+    assert f"BOT_KEY_BEKCI={ESKI['bot_bekci']}" in ham and "PANO_GIRIS_PAROLA=sahte-parola" in ham, "komşu satır YENDİ"
 
 
 def test_E4_alan_IKI_KEZ_varsa_betik_DURUR(tmp_path):
     """`^AD=` satırı 0 ya da >1 ise yazım hedefsizdir. Sessizce "sonuncuyu" yazmak, ayrışmayı
     ROTASYONUN KENDİSİNİN üretmesi demek olurdu."""
+    # 2026-10-01 (G3b Task 3; Task 2 incelemesi M1): durma noktası ÖNE kaydı — çift satır artık yazım ANINDA
+    # (`yaz-env` "2 kez bulundu") değil, HİÇBİR yazımdan önce ön-denetimde yakalanır (aynı kural: `_env_satiri`).
+    # Hüküm güçlendi: çıkış ≠ 0 + hâl ADIYLA + yedek YOK + dosyalar bayt-eşit (eskiden credential kaynağı yazılmıştı).
     kok, ortam = _sahte_ortam(tmp_path)
     p = kok / "opt/apisix/.env-apisix"
     p.write_text(p.read_text() + f"BOT_KEY_MERIDIAN='{ESKI['kapi']}'\n")
+    once = {q: q.read_bytes() for q in kok.rglob("*") if q.is_file() and ".sahte" not in q.parts}
     r = _kos(BETIK, ortam, "--kapi")
     assert r.returncode != 0
-    assert "2 kez bulundu" in (r.stdout + r.stderr)
+    assert "alan ÇİFT SATIR (2): /opt/apisix/.env-apisix [BOT_KEY_MERIDIAN]" in r.stderr, r.stderr
+    assert not list((kok / "root").glob("sir-yedek-*")), "çift satırda yedek alındı (yazım başladı)"
+    assert {q: q.read_bytes() for q in kok.rglob("*") if q.is_file() and ".sahte" not in q.parts} == once
 
 
 # =================================================================================================
@@ -1620,7 +1705,8 @@ def test_K1b_KULLANIM_blogu_sudo_ile_yaziyor():
     ayrışırsa operatör belgeye uyar, betik durur ve bakım penceresi yanar."""
     metin = BETIK.read_text(encoding="utf-8")
     baslik = metin.split("set -euo pipefail", 1)[0]
-    for alt in ("--kapi", "--tenant", "--db", "--dash", "--openrouter", "--envanter", "--cp", "--api-sunucu"):
+    for alt in ("--kapi", "--tenant", "--db", "--dash", "--openrouter", "--envanter", "--cp", "--api-sunucu",
+                "--kapi-bot <"):   # 2026-10-01 G3b Task 3: `--kapi-bot <ad listesi>` (liste ↔ bot listesi: v604 C3)
         assert f"sudo ./sir_rotasyon.sh {alt}" in baslik, f"KULLANIM satırı sudo'suz: {alt}"
     assert "NİYE ROOT" in baslik, "kapının GEREKÇESİ belgede yok"
 
@@ -2523,7 +2609,9 @@ def test_M4_TAVAN_asilirsa_OLCULEMEDI_ve_HICBIR_KALICI_YAZIM(tmp_path):
 #: bu turun kapsamı dışı). `--api-sunucu` (YENİ): iki koşullu tüketici, ucu olan yalnız botlar → 1.
 @pytest.mark.parametrize("alt,bekleyen", [("--kapi", 2), ("--tenant", 4), ("--db", 1),
                                           ("--dash", 1), ("--openrouter", 3),
-                                          ("--apisix-admin", 1), ("--cp", 1), ("--api-sunucu", 1)])
+                                          ("--apisix-admin", 1), ("--cp", 1), ("--api-sunucu", 1),
+                                          # 2026-10-01 (G3b Task 3): kapı (`/healthz`) + bot ağ geçidi (`/health`) → 2.
+                                          *[(alt_bayragi(a), 2) for a in KAPI_BOT_ALTLARI]])
 def test_M7_KURU_KOSUM_bekleme_BEDELINI_de_soyler(tmp_path, alt, bekleyen):
     """BEDEL YASASI. Bekleme bakım penceresine SÜRE ekler; kuru koşum operatörün koşacağı İLK
     komuttur ve o süreyi orada görmelidir (C2'nin "hangi birimler" sorusunun ikinci yarısı).
@@ -2535,7 +2623,7 @@ def test_M7_KURU_KOSUM_bekleme_BEDELINI_de_soyler(tmp_path, alt, bekleyen):
     D5: satır başına bir birim (tek satırda değil) ve her satır KABUL ÖLÇÜTÜNÜ + TAVANI da taşır —
     "ne kadar bekleyebilir" sorusunun cevabı artık birim başına farklıdır."""
     _, ortam = _sahte_ortam(tmp_path)
-    r = _kos(BETIK, ortam, alt, "--kuru")
+    r = _kos(BETIK, ortam, *alt.split(), "--kuru")     # `--kapi-bot <ad>` iki jetondur
     assert r.returncode == 0, r.stdout + r.stderr
     birimler = r.stdout.split("yeniden başlatılacak:")[1].splitlines()[0].split()
     bas = r.stdout.split("  hazırlık beklemesi (")[1]
@@ -2779,8 +2867,10 @@ def test_N10_SIR_BIRIM_HARITASI_envanterle_AYRISMAZ(tmp_path):
     betikte: dict[str, set[str]] = {}
     # 2026-09-26 (TSK-226b): `--cp` eklendi — envanter CP satırlarını taşıyor, betik haritası da taşımalı.
     # 2026-10-01 (G3b): `--api-sunucu` — iki koşullu tüketici (botlar · telegram) envanterde de `.service` jetonuyla.
-    for alt in ("--kapi", "--tenant", "--db", "--dash", "--openrouter", "--apisix-admin", "--cp", "--api-sunucu"):
-        r = _kos(BETIK, ortam, alt, "--kuru")
+    # 2026-10-01 (G3b Task 3): `--kapi-bot <ad>` her bot için — `BOT_KEY_<AD>` → kapı + bot ağ geçidi (koşullu).
+    for alt in ("--kapi", "--tenant", "--db", "--dash", "--openrouter", "--apisix-admin", "--cp", "--api-sunucu",
+                *[alt_bayragi(a) for a in KAPI_BOT_ALTLARI]):
+        r = _kos(BETIK, ortam, *alt.split(), "--kuru")
         assert r.returncode == 0, r.stdout + r.stderr
         # YALNIZ sır→birim bölümü okunur: "hazırlık beklemesi" bloğu da "    · " ile başlar ve
         # onu da yutmak haritayı birim adlarıyla kirletirdi (bölüm sınırı, sezgisel değil).
@@ -2826,6 +2916,9 @@ def test_N11_RESTART_ISTEMEYEN_tuketiciler_BEYANLI():
         # (tüketicisi `.env-cp` satırında `.service`le yazılıydı). İki-kanal kapanışında `.env-cp` satırı çıktı ve
         # restart tüketicisi (hindsight-cp.service, yan dosya üzerinden) REFERANS satırının kendisine yazıldı (N10).
     }
+    # 2026-10-01 (G3b Task 3): `kapi-bot-<ad>` rapor profili satırları AYNI beyanı ("hermes <ad> profili") kullanır; bot
+    # listesinden türetilir ki yeni bir botun rapor satırı bu çiviyi sahte kırmızıya düşürmesin (bot sayısından bağımsız).
+    beyanli |= {f"hermes {b} profili" for b in _a0_sohbet_botlari()}
     servissiz = {k["tuketici"] for k in _envanter_kopyalari()
                  if not re.search(r"[a-z0-9-]+\.service", k["tuketici"])}
     assert servissiz <= beyanli, f"beyansız restart-istemeyen tüketici: {servissiz - beyanli}"
@@ -3043,10 +3136,14 @@ def test_O9_UYE_alani_CIFT_SATIRSA_yazim_DURUR_ve_TAZE_ANAHTAR_yazilmaz(tmp_path
     satir = [s for s in r0.stdout.splitlines() if f"/opt/hindsight/.env [{alan}]" in s]
     assert satir and "ÇİFT SATIR (2)" in satir[0], satir
 
-    # (2) YAZIM: durur ve alanı ADIYLA söyler.
+    # (2) YAZIM: durur ve alanı ADIYLA söyler. 2026-10-01 (G3b Task 3; Task 2 incelemesi M1): durma noktası negatif
+    # kontrolün yazımından (yardımcının "yazım YAPILMADI"sı + trap geri alımı) daha da ÖNEYE — ön-denetime — kaydı: aynı
+    # kural (`_env_satiri`) HİÇBİR yazımdan, yedekten ve restart'tan önce sorulur. Negatif kontrol artık HİÇ koşmaz.
     r = _kos(BETIK, ortam, "--openrouter", girdi=f"{YENI_NOUS}\n{YENI_OR}\n")
     assert r.returncode != 0, r.stdout + r.stderr
-    assert alan in (r.stdout + r.stderr) and "yazım YAPILMADI" in (r.stdout + r.stderr)
+    assert f"alan ÇİFT SATIR (2): /opt/hindsight/.env [{alan}]" in r.stderr, r.stderr
+    assert "HİÇBİR ŞEY yazılmadı" in r.stderr and not _birim_sirasi(kok), "ön-denetimden önce yazım/restart oldu"
+    assert not list((kok / "root").glob("sir-yedek-*")), "çift satırda yedek alındı"
 
     # (3) TAZE ANAHTAR HİÇBİR KOPYADA YOK ve eski değerler yerinde (H5 ile aynı disiplin).
     ham = "\n".join(x.read_text(encoding="utf-8", errors="ignore")

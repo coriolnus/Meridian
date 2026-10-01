@@ -87,7 +87,7 @@ template {
   error_on_missing_key = true
 }
 
-# bot_key_bekci — tüketici: vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --vault render kanıtı — hermes bekci profili ROTASYON KANALIYLA beslenir (yan dosya 2026-09-15'te kaldırıldı: hermes-agent .env.vault OKUMAZ)
+# bot_key_bekci — tüketici: vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --kapi-bot bekci --vault render kanıtı ve --envanter/--esitle REFERANSI — kapı (.env-apisix), hermes bekci rapor profili ve bekci sohbet profili ROTASYON KANALIYLA beslenir (hermes-agent .env.vault OKUMAZ)
 template {
   contents    = "{{ with secret \"secret/data/meridian/bot_key_bekci\" }}{{ .Data.data.value }}{{ end }}"
   destination = "/etc/meridian/bot_key_bekci"
@@ -95,7 +95,7 @@ template {
   error_on_missing_key = true
 }
 
-# bot_key_karne — tüketici: vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --vault render kanıtı — hermes karne profili ROTASYON KANALIYLA beslenir (yan dosya 2026-09-15'te kaldırıldı: hermes-agent .env.vault OKUMAZ)
+# bot_key_karne — tüketici: vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --kapi-bot karne --vault render kanıtı ve --envanter/--esitle REFERANSI — kapı (.env-apisix), hermes karne rapor profili ve karne sohbet profili ROTASYON KANALIYLA beslenir (hermes-agent .env.vault OKUMAZ)
 template {
   contents    = "{{ with secret \"secret/data/meridian/bot_key_karne\" }}{{ .Data.data.value }}{{ end }}"
   destination = "/etc/meridian/bot_key_karne"
@@ -103,7 +103,7 @@ template {
   error_on_missing_key = true
 }
 
-# bot_key_sef — tüketici: vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --vault render kanıtı — hermes sef profili ROTASYON KANALIYLA beslenir (yan dosya 2026-09-15'te kaldırıldı: hermes-agent .env.vault OKUMAZ)
+# bot_key_sef — tüketici: vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --kapi-bot sef --vault render kanıtı ve --envanter/--esitle REFERANSI — kapı (.env-apisix), hermes sef rapor profili ve sef sohbet profili ROTASYON KANALIYLA beslenir (hermes-agent .env.vault OKUMAZ)
 template {
   contents    = "{{ with secret \"secret/data/meridian/bot_key_sef\" }}{{ .Data.data.value }}{{ end }}"
   destination = "/etc/meridian/bot_key_sef"

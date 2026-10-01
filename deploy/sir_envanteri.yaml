@@ -249,7 +249,7 @@ dosyalar:
 # böylece HİÇ sorulmadan düştü: dosyanın okuyucusu kalmadı, sözlük esnetilmedi.
 
 rotasyon_kopyalari:
-  olcum: "2026-09-07 22:0xZ — A1, elle rotasyon penceresi (yalnız AD ve YOL okundu; değer basılmadı) · EK 2026-09-08 08:0xZ — /opt/hindsight/.env failover ÜYE anahtarları (altı satır) ölçüldü ve eklendi · EK 2026-09-26 (TSK-226b) — CP erişim anahtarının iki satırı DEPODAN türetildi (birim EnvironmentFile + vault_kv.hedef); A1'de yol/ad ÖLÇÜLMEDİ — ilk `--envanter` ölçer · EK 2026-09-29 (TSK-064 iki-kanal kapanışı) — `/opt/hindsight/.key` ve iki `/opt/hindsight/.env-cp` satırı `emekli_kopyalar`a taşındı (Rol-1 A1 ölçümü 2026-09-29: `.env-cp.vault` 0400 root, `.env-cp` ile AYNI iki ad) · EK 2026-09-29 11:32Z — `.key` ve `.env-cp` A1'den KALDIRILDI (yedek dizininin `orijinal/` alt dizinine TAŞINDI; `--envanter` iki emekli kopya için YOK dedi) · EK 2026-10-01 (G3b Task 2) — bot ağ geçidi: `api-sunucu` (API_SERVER_KEY: render hedefi + kök + sohbet profili `.env`leri) ve kiracı anahtarının sohbet profili kopyaları DEPODAN türetildi (Hermes PROFİL kapsamı ölçümü, Rol-1 2026-09-30); A1'de dosyalar BUGÜN YOK — ilk `--envanter` ölçer; bot başı satırlar `ops/sir_envanteri_bot_uret.py` ile üretilir"
+  olcum: "2026-09-07 22:0xZ — A1, elle rotasyon penceresi (yalnız AD ve YOL okundu; değer basılmadı) · EK 2026-09-08 08:0xZ — /opt/hindsight/.env failover ÜYE anahtarları (altı satır) ölçüldü ve eklendi · EK 2026-09-26 (TSK-226b) — CP erişim anahtarının iki satırı DEPODAN türetildi (birim EnvironmentFile + vault_kv.hedef); A1'de yol/ad ÖLÇÜLMEDİ — ilk `--envanter` ölçer · EK 2026-09-29 (TSK-064 iki-kanal kapanışı) — `/opt/hindsight/.key` ve iki `/opt/hindsight/.env-cp` satırı `emekli_kopyalar`a taşındı (Rol-1 A1 ölçümü 2026-09-29: `.env-cp.vault` 0400 root, `.env-cp` ile AYNI iki ad) · EK 2026-09-29 11:32Z — `.key` ve `.env-cp` A1'den KALDIRILDI (yedek dizininin `orijinal/` alt dizinine TAŞINDI; `--envanter` iki emekli kopya için YOK dedi) · EK 2026-10-01 (G3b Task 2) — bot ağ geçidi: `api-sunucu` (API_SERVER_KEY: render hedefi + kök + sohbet profili `.env`leri) ve kiracı anahtarının sohbet profili kopyaları DEPODAN türetildi (Hermes PROFİL kapsamı ölçümü, Rol-1 2026-09-30); A1'de dosyalar BUGÜN YOK — ilk `--envanter` ölçer; bot başı satırlar `ops/sir_envanteri_bot_uret.py` ile üretilir · EK 2026-10-01 (G3b Task 3) — `kapi-bot-<ad>` (BOT_KEY_<AD>: render hedefi + `.env-apisix` + rapor + sohbet profili `.env`i) DEPODAN türetildi; render hedefleri ve `.env-apisix` satırları A1'de VAR (Rol-1 2026-09-30), sohbet `.env`leri YOK — ilk `--envanter` ölçer"
   kaynak_betik: "deploy/oracle-a1/sir_rotasyon.sh"
 
   kopyalar:
@@ -620,6 +620,116 @@ rotasyon_kopyalari:
       sahip: null
       tuketici: "meridian-botlar.service (Hermes karne sohbet profili — /p/karne/ isteğinin anahtarı PROFİL kapsamından, AÇILIŞTA okunur; birim YALNIZ ETKİNSE yeniden başlar)"
     # <<< ÜRETİLDİ
+    # ---- KAPI TÜKETİCİ ANAHTARLARI — `BOT_KEY_<AD>` (G3b Task 3, 2026-10-01) -----------------------------------------
+    # `sir_rotasyon.sh --kapi-bot <ad>` (iç alt ad `kapi-bot-<ad>`, Rol-1 G3b-R2): bir botun kapı anahtarının DÖRT kopyası
+    # birlikte döner (operatör K-G3b-1). REFERANS Agent render hedefidir (`vault_kv.bot_key_<ad>.hedef`, G3b-R3 — emsal
+    # `hindsight_cp_access_key`); kapı `.env-apisix` satırını ESKİ kanal olarak okur (yan dosya `.env-apisix.vault` AYNI
+    # kasa yolundan render edilir ve docker'da SONRA gelir — kazanır), rapor ve sohbet profilleri hermes `.env`idir (C sınıfı:
+    # `.env.vault` OKUNMAZ, kanal rotasyonun kendisidir). AİLE BOT BAŞINA bir alt komuttur: bölge `alt_ailesi` türündedir —
+    # her bot için tablonun `kapi-bot-<ad>` satırları SIRAYLA, tüketici metni yolun şablonundan (`{ad}` bot adıyla değişir)
+    # ÜRETİLİR (`ops/sir_envanteri_bot_uret.py`, `--kontrol` çivisi v604 B12 · C9). Şablon satırları elle, arası üretilir.
+    # >>> ÜRETİLDİ alt_ailesi kapi-bot-{ad}
+    # şablon /etc/meridian/bot_key_{ad} | tuketici: apisix.service (yan dosya .env-apisix.vault AYNI kasa yolundan render edilir — $env:// açılışta çözülür, RESTART) · Vault Agent render hedefi — sir_rotasyon.sh --kapi-bot {ad} --vault render kanıtı ve --envanter/--esitle REFERANSI
+    # şablon /opt/apisix/.env-apisix | tuketici: apisix.service ($env:// çözümü — RESTART gerekir, reload yetmez; key-auth tüketicisi bot_{ad})
+    # şablon /home/ubuntu/.hermes/profiles/{ad}/.env | tuketici: hermes {ad} profili
+    # şablon /home/ubuntu/.hermes-botlar/profiles/{ad}/.env | tuketici: meridian-botlar.service (Hermes {ad} sohbet profili — kapı anahtarını providers.kapi.key_env ile AÇILIŞTA okur; birim YALNIZ ETKİNSE yeniden başlar)
+    - alt_komut: kapi-bot-sef
+      sir: BOT_KEY_SEF
+      tur: dosya
+      yol: "/etc/meridian/bot_key_sef"
+      alan: null
+      mod: "400"
+      sahip: "root"
+      tuketici: "apisix.service (yan dosya .env-apisix.vault AYNI kasa yolundan render edilir — $env:// açılışta çözülür, RESTART) · Vault Agent render hedefi — sir_rotasyon.sh --kapi-bot sef --vault render kanıtı ve --envanter/--esitle REFERANSI"
+    - alt_komut: kapi-bot-sef
+      sir: BOT_KEY_SEF
+      tur: env
+      yol: "/opt/apisix/.env-apisix"
+      alan: BOT_KEY_SEF
+      mod: null
+      sahip: null
+      tuketici: "apisix.service ($env:// çözümü — RESTART gerekir, reload yetmez; key-auth tüketicisi bot_sef)"
+    - alt_komut: kapi-bot-sef
+      sir: BOT_KEY_SEF
+      tur: env
+      yol: "/home/ubuntu/.hermes/profiles/sef/.env"
+      alan: BOT_KEY_SEF
+      mod: null
+      sahip: null
+      tuketici: "hermes sef profili"
+    - alt_komut: kapi-bot-sef
+      sir: BOT_KEY_SEF
+      tur: env
+      yol: "/home/ubuntu/.hermes-botlar/profiles/sef/.env"
+      alan: BOT_KEY_SEF
+      mod: null
+      sahip: null
+      tuketici: "meridian-botlar.service (Hermes sef sohbet profili — kapı anahtarını providers.kapi.key_env ile AÇILIŞTA okur; birim YALNIZ ETKİNSE yeniden başlar)"
+    - alt_komut: kapi-bot-bekci
+      sir: BOT_KEY_BEKCI
+      tur: dosya
+      yol: "/etc/meridian/bot_key_bekci"
+      alan: null
+      mod: "400"
+      sahip: "root"
+      tuketici: "apisix.service (yan dosya .env-apisix.vault AYNI kasa yolundan render edilir — $env:// açılışta çözülür, RESTART) · Vault Agent render hedefi — sir_rotasyon.sh --kapi-bot bekci --vault render kanıtı ve --envanter/--esitle REFERANSI"
+    - alt_komut: kapi-bot-bekci
+      sir: BOT_KEY_BEKCI
+      tur: env
+      yol: "/opt/apisix/.env-apisix"
+      alan: BOT_KEY_BEKCI
+      mod: null
+      sahip: null
+      tuketici: "apisix.service ($env:// çözümü — RESTART gerekir, reload yetmez; key-auth tüketicisi bot_bekci)"
+    - alt_komut: kapi-bot-bekci
+      sir: BOT_KEY_BEKCI
+      tur: env
+      yol: "/home/ubuntu/.hermes/profiles/bekci/.env"
+      alan: BOT_KEY_BEKCI
+      mod: null
+      sahip: null
+      tuketici: "hermes bekci profili"
+    - alt_komut: kapi-bot-bekci
+      sir: BOT_KEY_BEKCI
+      tur: env
+      yol: "/home/ubuntu/.hermes-botlar/profiles/bekci/.env"
+      alan: BOT_KEY_BEKCI
+      mod: null
+      sahip: null
+      tuketici: "meridian-botlar.service (Hermes bekci sohbet profili — kapı anahtarını providers.kapi.key_env ile AÇILIŞTA okur; birim YALNIZ ETKİNSE yeniden başlar)"
+    - alt_komut: kapi-bot-karne
+      sir: BOT_KEY_KARNE
+      tur: dosya
+      yol: "/etc/meridian/bot_key_karne"
+      alan: null
+      mod: "400"
+      sahip: "root"
+      tuketici: "apisix.service (yan dosya .env-apisix.vault AYNI kasa yolundan render edilir — $env:// açılışta çözülür, RESTART) · Vault Agent render hedefi — sir_rotasyon.sh --kapi-bot karne --vault render kanıtı ve --envanter/--esitle REFERANSI"
+    - alt_komut: kapi-bot-karne
+      sir: BOT_KEY_KARNE
+      tur: env
+      yol: "/opt/apisix/.env-apisix"
+      alan: BOT_KEY_KARNE
+      mod: null
+      sahip: null
+      tuketici: "apisix.service ($env:// çözümü — RESTART gerekir, reload yetmez; key-auth tüketicisi bot_karne)"
+    - alt_komut: kapi-bot-karne
+      sir: BOT_KEY_KARNE
+      tur: env
+      yol: "/home/ubuntu/.hermes/profiles/karne/.env"
+      alan: BOT_KEY_KARNE
+      mod: null
+      sahip: null
+      tuketici: "hermes karne profili"
+    - alt_komut: kapi-bot-karne
+      sir: BOT_KEY_KARNE
+      tur: env
+      yol: "/home/ubuntu/.hermes-botlar/profiles/karne/.env"
+      alan: BOT_KEY_KARNE
+      mod: null
+      sahip: null
+      tuketici: "meridian-botlar.service (Hermes karne sohbet profili — kapı anahtarını providers.kapi.key_env ile AÇILIŞTA okur; birim YALNIZ ETKİNSE yeniden başlar)"
+    # <<< ÜRETİLDİ
 
   # =================================================================================================
   # EMEKLİ KOPYALAR — TSK-064 iki-kanal kapanışı (2026-09-29; Rol-1 kararı, dash-token (d-1) üslubu)
@@ -892,40 +1002,59 @@ vault_kv:
       - {tur: env_satiri, dosya: "/home/ubuntu/.hermes/profiles/sef/.env", alan: OPENROUTER_API_KEY, onek: null}
       - {tur: env_satiri, dosya: "/home/ubuntu/.hermes/.env", alan: OPENROUTER_API_KEY, onek: null}
 
-  # BOT ANAHTARLARI — `rotasyon_siri: null` VE BU BİR BEYAN: bugün hiçbir alt komut bu üçünü
-  # döndürmüyor (rotasyon tablosunda satırları YOK). Kopya listesi o yüzden ADIYLA yazılıdır ve
-  # iki uçludur: kapının key-auth tüketici tanımı (`.env-apisix`) ile botun kendi profili. İkisi
-  # ayrışırsa bot kapıdan 401 alır — ve bu, taşımadan ÖNCE ölçülmesi gereken tam olarak o hâldir.
+  # BOT ANAHTARLARI — 2026-10-01 (G3b Task 3) KASAYA BAĞLANDI (`rotasyon_siri: BOT_KEY_<AD>`): `sir_rotasyon.sh --kapi-bot
+  # <ad>` bir botun anahtarını DÖRT kopyasıyla birlikte döndürür (operatör K-G3b-1). O güne dek `rotasyon_siri: null` bir
+  # BEYANDI (hiçbir alt komut döndürmüyordu; tüketicideki "ROTASYON KANALIYLA beslenir" cümlesi ileriye dönüktü — rapor
+  # profili `.env`i ELLE dolduruldu). `kaynak` artık tablonun REFERANSIDIR — Agent render hedefi (Rol-1 G3b-R3; v520 A5
+  # kuralı "kaynak = referans", emsal `hindsight_cp_access_key`); `.env-apisix` satırı `kopya_kaynaklari`na geçti ve
+  # liste bot başına ÜRETİLİR (v491 A5 küme eşitliği: `.env-apisix` · rapor `.env` · sohbet `.env`). Kasa girdisi sır
+  # başına tek girdidir (doğal olarak bot başına — plan Global Constraints), elle yazılır.
+  # BEDEL (bedel yasası): `vault_sir_koy.sh` bot anahtarlarını artık `.env-apisix`ten TOHUMLAYAMAZ — kaynağı kasadan render
+  # edilmiş dosyadır ve sıfırdan bir kurulumda (yeni A1) o dosya yoktur; o hâlde değer kasaya doğrudan konur (`vault kv put …
+  # value=-`, STDIN). A1'de kasa 2026-09-14'ten beri dolu ve render hedefleri ölçüldü (2026-09-30: root:root 0400, 48 bayt);
+  # betik yeniden koşulmaz. Eşitlik kapısı (kopya_kaynaklari) sohbet `.env`leri YOKKEN "kopya OKUNAMADI" ile durur (K7 emsali).
   - ad: bot_key_bekci
     vault_yolu: "secret/meridian/bot_key_bekci"
     hedef: "/etc/meridian/bot_key_bekci"
     mod: "0400"
     sahip: "root"
-    tuketici: "vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --vault render kanıtı — hermes bekci profili ROTASYON KANALIYLA beslenir (yan dosya 2026-09-15'te kaldırıldı: hermes-agent .env.vault OKUMAZ)"
-    rotasyon_siri: null
-    kaynak: {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: BOT_KEY_BEKCI, onek: null}
+    tuketici: "vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --kapi-bot bekci --vault render kanıtı ve --envanter/--esitle REFERANSI — kapı (.env-apisix), hermes bekci rapor profili ve bekci sohbet profili ROTASYON KANALIYLA beslenir (hermes-agent .env.vault OKUMAZ)"
+    rotasyon_siri: BOT_KEY_BEKCI
+    kaynak: {tur: dosya, dosya: "/etc/meridian/bot_key_bekci", alan: null, onek: null}
     kopya_kaynaklari:
+      # >>> ÜRETİLDİ kopya_kaynaklari BOT_KEY_BEKCI
+      - {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: BOT_KEY_BEKCI, onek: null}
       - {tur: env_satiri, dosya: "/home/ubuntu/.hermes/profiles/bekci/.env", alan: BOT_KEY_BEKCI, onek: null}
+      - {tur: env_satiri, dosya: "/home/ubuntu/.hermes-botlar/profiles/bekci/.env", alan: BOT_KEY_BEKCI, onek: null}
+      # <<< ÜRETİLDİ
   - ad: bot_key_karne
     vault_yolu: "secret/meridian/bot_key_karne"
     hedef: "/etc/meridian/bot_key_karne"
     mod: "0400"
     sahip: "root"
-    tuketici: "vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --vault render kanıtı — hermes karne profili ROTASYON KANALIYLA beslenir (yan dosya 2026-09-15'te kaldırıldı: hermes-agent .env.vault OKUMAZ)"
-    rotasyon_siri: null
-    kaynak: {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: BOT_KEY_KARNE, onek: null}
+    tuketici: "vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --kapi-bot karne --vault render kanıtı ve --envanter/--esitle REFERANSI — kapı (.env-apisix), hermes karne rapor profili ve karne sohbet profili ROTASYON KANALIYLA beslenir (hermes-agent .env.vault OKUMAZ)"
+    rotasyon_siri: BOT_KEY_KARNE
+    kaynak: {tur: dosya, dosya: "/etc/meridian/bot_key_karne", alan: null, onek: null}
     kopya_kaynaklari:
+      # >>> ÜRETİLDİ kopya_kaynaklari BOT_KEY_KARNE
+      - {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: BOT_KEY_KARNE, onek: null}
       - {tur: env_satiri, dosya: "/home/ubuntu/.hermes/profiles/karne/.env", alan: BOT_KEY_KARNE, onek: null}
+      - {tur: env_satiri, dosya: "/home/ubuntu/.hermes-botlar/profiles/karne/.env", alan: BOT_KEY_KARNE, onek: null}
+      # <<< ÜRETİLDİ
   - ad: bot_key_sef
     vault_yolu: "secret/meridian/bot_key_sef"
     hedef: "/etc/meridian/bot_key_sef"
     mod: "0400"
     sahip: "root"
-    tuketici: "vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --vault render kanıtı — hermes sef profili ROTASYON KANALIYLA beslenir (yan dosya 2026-09-15'te kaldırıldı: hermes-agent .env.vault OKUMAZ)"
-    rotasyon_siri: null
-    kaynak: {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: BOT_KEY_SEF, onek: null}
+    tuketici: "vault_dosyalar şablonu (/opt/apisix/.env-apisix.vault) · sir_rotasyon.sh --kapi-bot sef --vault render kanıtı ve --envanter/--esitle REFERANSI — kapı (.env-apisix), hermes sef rapor profili ve sef sohbet profili ROTASYON KANALIYLA beslenir (hermes-agent .env.vault OKUMAZ)"
+    rotasyon_siri: BOT_KEY_SEF
+    kaynak: {tur: dosya, dosya: "/etc/meridian/bot_key_sef", alan: null, onek: null}
     kopya_kaynaklari:
+      # >>> ÜRETİLDİ kopya_kaynaklari BOT_KEY_SEF
+      - {tur: env_satiri, dosya: "/opt/apisix/.env-apisix", alan: BOT_KEY_SEF, onek: null}
       - {tur: env_satiri, dosya: "/home/ubuntu/.hermes/profiles/sef/.env", alan: BOT_KEY_SEF, onek: null}
+      - {tur: env_satiri, dosya: "/home/ubuntu/.hermes-botlar/profiles/sef/.env", alan: BOT_KEY_SEF, onek: null}
+      # <<< ÜRETİLDİ
 
   # `BOT_KEY_MERIDIAN` MOTORUN kapı anahtarıdır ve `KAPI_APIKEY` ile AYNI değerdir — kopya kümesi
   # rotasyon tablosundan TÜRER (`--kapi` iki kopya yazar). Ad `bot_key_meridian`dir çünkü yan

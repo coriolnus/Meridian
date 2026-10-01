@@ -63,7 +63,7 @@ from tests import test_sir_recete_tek_satir_v568 as v568
 from tests import test_sir_uret_v557 as v557
 from tests import test_vault_db_kasa_v538 as v538
 from tests import test_vault_dalga1_baglama_v521 as v521
-from tests.test_sir_rotasyon_v447 import BETIK, ENVANTER, ESKI, _dosya_imzalari, _kos
+from tests.test_sir_rotasyon_v447 import BETIK, ENVANTER, ESKI, _dosya_imzalari, _kos, alt_argv
 
 KOK_DEPO = pathlib.Path(__file__).resolve().parents[1]
 
@@ -405,7 +405,7 @@ def _kuru_ihlalleri(r, kok, log, alt, yollar) -> list[str]:
 def test_B1_KURU_her_kasa_yolu_icin_ESKI_deger_YEDEKLENIR_satiri_KASAYA_cagri_YOK(tmp_path, alt):
     kok, ortam, log, _ = _dunya(tmp_path)
     once = _dosya_imzalari(kok)
-    r = _kos(BETIK, ortam, f"--{alt}", "--vault", "--kuru")
+    r = _kos(BETIK, ortam, *alt_argv(alt), "--vault", "--kuru")   # `kapi-bot-<ad>` → `--kapi-bot <ad>` (G3b Task 3)
     ih = _kuru_ihlalleri(r, kok, log, alt, v561.KURU_ALTLAR[alt])
     if _dosya_imzalari(kok) != once:
         ih.append("kuru koşum dosya yazdı")

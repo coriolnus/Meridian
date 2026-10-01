@@ -302,7 +302,9 @@ def _mesaj_parcalari() -> tuple[str, str, str]:
 
 
 def _ayristirici_bayraklari(metin: str) -> set[str]:
-    dongu = re.search(r'(?ms)^for _a in "\$@"; do\n  case "\$_a" in\n(.*?)^  esac\ndone', metin)
+    # 2026-10-01 (G3b Task 3): ayrıştırıcı `while`/`shift` döngüsüne döndü (`--kapi-bot <ad>` iki jetondur); gövde aynı `case`.
+    dongu = re.search(r'(?ms)^(?:for _a in "\$@"; do|while \[ "\$#" -gt 0 \]; do\n  _a="\$1"; shift)\n'
+                      r'  case "\$_a" in\n(.*?)^  esac\ndone', metin)
     assert dongu, "sir_rotasyon.sh ana ayrıştırıcısı bulunamadı (ölçüm kör)"
     return {b for d in re.findall(r"(?m)^\s*([-\w|]+)\)", dongu.group(1)) for b in d.split("|")}
 

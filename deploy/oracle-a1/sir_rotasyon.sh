@@ -58,6 +58,15 @@
 #                                           botlar ETKİNSE `/health/detailed` yeni → 200 · eski → 401; değilse
 #                                           "KANIT: ölçülemedi — … etkin değil (<durum>)" satırı, çıkış 0. Kasaya
 #                                           BAĞLIDIR: doğru yol `--api-sunucu --vault`; İLK değer RUNBOOK borusuyla.
+#   sudo ./sir_rotasyon.sh --kapi-bot <sef|bekci|karne> → BOT_KEY_<AD> (bir botun KAPI tüketici anahtarı — `bot_<ad>`
+#                                           key-auth; G3b Task 3, 2026-10-01). TEK bot, DÖRT kopya birlikte (operatör
+#                                           K-G3b-1): Agent render hedefi `/etc/meridian/bot_key_<ad>` (REFERANS) ·
+#                                           `.env-apisix` · rapor profili `.env` · sohbet profili `.env`. Ad `_SOHBET_BOTLARI`
+#                                           ile TAM eşleşmeli (başka her ad hiçbir şeye dokunmadan reddedilir; liste bu
+#                                           satırda belge olarak durur — ayrışma çivisi v604 C3). Kapı RESTART (`$env://`
+#                                           açılışta), bot ağ geçidi yalnız ETKİNSE; motor yeniden BAŞLAMAZ. Kanıt: kapı
+#                                           `/llm/v1/models` yeni → 200 · eski → 401. Kasaya BAĞLIDIR: doğru yol
+#                                           `--kapi-bot <ad> --vault [--uret]`.
 #   ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 #                                           başlayacağını listeler, HİÇBİR ŞEY yazmaz
 #   (koşullu birim) `_KOSULLU_BIRIMLER` YALNIZ ETKİNSE yeniden başlar; değilse "ATLANDI (etkin değil: <durum>)"
@@ -82,7 +91,7 @@
 #                                           hedefindeki ESKİ değerle AYNI olamaz, hiçbir yere BASILMAZ. Takma
 #                                           ad, render kanıtı, eski kanal, restart, kanıt ve geri alma AYNEN —
 #                                           yalnız değerin KAYNAĞI değişir. Yalnız --kapi | --tenant | --dash |
-#                                           --apisix-admin | --api-sunucu; --openrouter (anahtarı sağlayıcı üretir) ve --db
+#                                           --apisix-admin | --api-sunucu | --kapi-bot <ad>; --openrouter (anahtarı sağlayıcı üretir) ve --db
 #                                           (kendi dalı, bu turun kapsamı dışı) AÇIK hatayla reddedilir,
 #                                           --vault'suz verilemez; --cp --vault değeri ZATEN üretir (bayrak
 #                                           etkisiz, söylenir). `--kuru` ile birleşir. Hedef kullanım:
@@ -143,8 +152,8 @@
 # profilleri; 2026-09-29'a dek `/opt/hindsight/.key` de) root altında da MEVCUT sahip ve izinle yazılır: root'un
 # yazıyor olması, dosyayı root'a DEVRETMEK değildir.
 #
-# DEĞER ÜRETİMİ. `--kapi`/`--db`/`--dash`: `openssl rand -base64 36 | tr '+/' '-_'` → 48 karakter
-# URL-güvenli. `--tenant`, `--cp` ve `--api-sunucu`: `openssl rand -hex 32` → 64 hex (Hermes dinleyicisi ≥16
+# DEĞER ÜRETİMİ. `--kapi`/`--db`/`--dash`/`--kapi-bot <ad>`: `openssl rand -base64 36 | tr '+/' '-_'` → 48 karakter
+# URL-güvenli (bot anahtarlarının A1'deki mevcut değerleri de 48 bayt — ölçüldü 2026-09-30). `--tenant`, `--cp` ve `--api-sunucu`: `openssl rand -hex 32` → 64 hex (Hermes dinleyicisi ≥16
 # karakter ve yer tutucu olmayan değer ister — Rol-1 G3b-R5; CP anahtarının biçim beklentisi
 # YOK — hindsight-control-plane 0.9.2 `api/auth/login` yalnız sabit-zamanlı eşitlik kıyaslar; birim
 # şerhinin 2026-09-01 üretim reçetesi de `openssl rand -hex 32`dir). Üretimden SONRA uzunluk denetlenir;
@@ -496,6 +505,20 @@ api-sunucu API_SERVER_KEY dosya /etc/meridian/api_server_key - 0400 root:root -
 KOPYA_SON
   echo "api-sunucu API_SERVER_KEY env $_SOHBET_KOKU/.env API_SERVER_KEY koru koru -"
   _sohbet_satirlari api-sunucu API_SERVER_KEY API_SERVER_KEY
+  # KAPI TÜKETİCİ ANAHTARLARI (G3b Task 3, 2026-10-01) — bot başına İÇ alt ad `kapi-bot-<ad>` (Rol-1 G3b-R2), bot başına
+  # BİTİŞİK dört satır: REFERANS Agent render hedefi (`vault_kv.bot_key_<ad>.hedef`, G3b-R3) · kapının key-auth tüketicisi
+  # (`.env-apisix`, `$env://BOT_KEY_<AD>` — açılışta çözülür) · rapor profili (timer'lı oneshot, `.env`i her koşuda okur)
+  # · sohbet profili (`providers.kapi.key_env`). Döngü İÇ fonksiyona ÇIKARILMADI: v522 `_tablo_cekirdegi` `_kopyalar`ı
+  # iki sabit + `_sohbet_satirlari` ile keser — yeni bir yardımcı orada sessizce eksik kalırdı. Büyük harf `tr` ile
+  # (bash 3.2: `${b^^}` YOK) ve `LC_ALL=C` altında: Türkçe yerelde büyütme `i`yi `İ`ye çevirebilir — `BOT_KEY_BEKCİ`.
+  local b B
+  for b in $_SOHBET_BOTLARI; do
+    B="$(printf '%s' "$b" | LC_ALL=C tr 'a-z' 'A-Z')"
+    echo "kapi-bot-$b BOT_KEY_$B dosya /etc/meridian/bot_key_$b - 0400 root:root -"
+    echo "kapi-bot-$b BOT_KEY_$B env /opt/apisix/.env-apisix BOT_KEY_$B koru koru -"
+    echo "kapi-bot-$b BOT_KEY_$B env /home/ubuntu/.hermes/profiles/$b/.env BOT_KEY_$B koru koru -"
+    echo "kapi-bot-$b BOT_KEY_$B env $_SOHBET_KOKU/profiles/$b/.env BOT_KEY_$B koru koru -"
+  done
 }
 
 #: `--cp` SATIRLARI (TSK-226b, 2026-09-26). REFERANS Vault Agent'ın kanonik tek-değer kopyasıdır
@@ -586,6 +609,11 @@ _sir_birimleri() {
     #: Bot ağ geçidinin dinleyici anahtarı (G3b, 2026-10-01): Hermes onu kök ve profil `.env`lerinden AÇILIŞTA okur
     #: (restart gerekir); Telegram dinleyicisi credential'dan (`LoadCredential`, 55 drop-in). İkisi de KOŞULLU birim.
     API_SERVER_KEY)               echo "meridian-botlar.service meridian-telegram.service" ;;
+    #: Bir botun KAPI tüketici anahtarı (G3b Task 3, 2026-10-01): kapı `$env://BOT_KEY_<AD>`ı YALNIZ açılışta çözer (RESTART,
+    #: reload yetmez — `KAPI_APIKEY` emsali) ve bot ağ geçidi sohbet profilinin `.env`inden AÇILIŞTA okur (KOŞULLU birim).
+    #: Motor bu anahtarı KULLANMAZ → `meridian.service` YOK (v604 C4). Rapor botları timer'lı oneshot'tur (beyanlı, restart
+    #: yok). Telegram dinleyicisi bot anahtarı OKUMAZ (`API_SERVER_KEY` ile ağ geçidine konuşur).
+    BOT_KEY_*)                    echo "apisix.service meridian-botlar.service" ;;
     *) return 1 ;;
   esac
 }
@@ -615,6 +643,29 @@ _KOSULLU_BIRIMLER="meridian-botlar.service meridian-telegram.service"
 _kosullu_birim_mi() {
   case " $_KOSULLU_BIRIMLER " in *" $1 "*) return 0 ;; esac
   return 1
+}
+
+#: SOHBET BOTU MU — `--kapi-bot <ad>`ın TEK ad kapısı (G3b Task 3, 2026-10-01). Ad listeye KELİME KELİME, TAM eşitlikle
+#: sorulur: `case " $liste "` deseni "sef bekci" gibi boşluklu bir adı da kabul ederdi; büyük harf (`BEKCI`), yol
+#: karakteri (`bekci/../sef`), boş ad ve bilinmeyen bot (`yok`, `meridian`) reddedilir. Ret AYRIŞTIRMADADIR — root
+#: kapısından, çalışma dizininden, kasadan ve her dosyadan ÖNCE (v604 C2).
+_sohbet_botu_mu() {
+  local b
+  for b in $_SOHBET_BOTLARI; do
+    if [ "$b" = "$1" ]; then return 0; fi
+  done
+  return 1
+}
+
+#: OPERATÖR BAYRAĞI — iç alt ad → komut satırı (G3b Task 3). `kapi-bot-<ad>` bir İÇ addır (Rol-1 G3b-R2); komut
+#: satırındaki karşılığı İKİ jetondur (`--kapi-bot <ad>`) ve `--kapi-bot-<ad>` diye bir bayrak YOKTUR — basılsaydı
+#: operatörün yapıştırdığı satır "bilinmeyen argüman" ile düşerdi. Operatöre KOMUT öneren her satır bayrağı buradan alır
+#: (v604 C6). Öteki alt komutlarda `--<alt>` — davranış birebir.
+_bayrak() {
+  case "$1" in
+    kapi-bot-*) printf -- '--kapi-bot %s\n' "${1#kapi-bot-}" ;;
+    *)          printf -- '--%s\n' "$1" ;;
+  esac
 }
 
 #: REÇETE BİRİM LİSTESİ — koşullu birim operatöre ÇIPLAK "yeniden başlat" diye verilmez (G3b Task 2, Task 1 incelemesi M1).
@@ -1122,12 +1173,28 @@ def main(argv: list[str]) -> None:
             if m and m.group(1) not in gorulen:
                 gorulen.add(m.group(1))
                 print(m.group(1))
-    elif op == "alan-var":           # <hedef> <alan>  → dosyada `^alan=` var mı (bool)
+    elif op == "alan-var":           # <hedef> <alan> [tek] → dosyada `^alan=` var mı (bool)
+        # `tek` (G3b Task 3 — yazım öncesi ön-denetim, `_hedef_on_denetim`): kural `yaz-env`inkiyle AYNI FONKSİYONDUR
+        # (`_env_satiri`: TAM 1 satır — 0 ya da >1 yazımı durdurur), yani kapıdan geçen her hedefi `yaz-env` yazabilir.
+        # Çıktı: VAR | ALAN YOK | ÇİFT SATIR (n) | DOSYA YOK | OKUNAMADI. `tek`SİZ biçim (beyan dışı tarama) "EN AZ bir
+        # satır" der ve DEĞİŞMEDİ: çift satır orada da bir kopyadır, `esit` onu ayrıca ÇİFT SATIR diye raporlar.
         hedef, alan = argv[2:4]
+        tek = argv[4:5] == ["tek"]
         try:
             ham = _oku(hedef)
+        except FileNotFoundError:
+            print("DOSYA YOK" if tek else "YOK")
+            return
         except OSError:
-            print("YOK")
+            print("OKUNAMADI" if tek else "YOK")
+            return
+        if tek:
+            try:
+                _env_satiri(ham, alan)
+            except AlanArizasi as ariza:
+                print(f"ÇİFT SATIR ({ariza.adet})" if ariza.adet > 1 else "ALAN YOK")
+                return
+            print("VAR")
             return
         print("VAR" if re.search(r"^" + re.escape(alan) + r"=", ham, flags=re.M) else "YOK")
     else:
@@ -1293,6 +1360,9 @@ _uret_sinifi() {
     #: `api-sunucu` (G3b, Rol-1 G3b-R5): Hermes ≥16 karakter ve yer tutucu olmayan değer ister (`has_usable_secret`) —
     #: kiracı emsali, 64 hex. AYRI kol: v557 mutasyon çapası `tenant)` satırını tek başına değiştirir.
     api-sunucu) echo hex ;;
+    #: `kapi-bot-<ad>` (G3b Task 3): kapı tüketici anahtarı — `kapi` emsali b64 (48 kr; A1'deki mevcut değerler de 48 bayt,
+    #: ölçüldü 2026-09-30). Bot başı İÇ alt ad ailesi TEK kolda (glob) — bot sayısıyla büyümez.
+    kapi-bot-*) echo b64 ;;
     *) return 1 ;;
   esac
 }
@@ -1390,8 +1460,15 @@ _yaz() {
 # tabloda ÖNCEKİ satırlar YENİ değerle yazılmış olurdu; tüketiciler yeniden başlamaz — yarım rotasyon. Yeni
 # sohbet `.env`leri (G3b: `--tohumla-sohbet` kurar) tabloya girdiği an bu hâl her rotasyonda doğardı.
 # Artık aynı soru dağıtım kapısında, HİÇBİR yazımdan (yedek · değer üretimi · kasa · ilk satır) ÖNCE sorulur ve
-# eksik her yol ADIYLA basılır. Çağrı TEK noktadadır (dağıtım bloğu, root kapısından sonra, `_islik_kur`dan
-# önce): eski yol, kasa yolunun üç dalı (genel döngü · `--db` · `--cp`) ve yedi alt komut aynı kapıdan geçer.
+# eksik her yol ADIYLA basılır. Çağrı TEK noktadadır (dağıtım bloğu, root kapısından ve `_islik_kur`dan SONRA):
+# eski yol, kasa yolunun üç dalı (genel döngü · `--db` · `--cp`) ve bütün alt komutlar aynı kapıdan geçer.
+# ALAN DA SORULUR (G3b Task 3, 2026-10-01; Task 2 incelemesi M1 — ölçüldü X5): dosya VAR ama `^<alan>=` satırı yoksa
+# (ya da ikiyse) `yaz-env` yazımın ORTASINDA ölüyordu — referans ve önceki kopyalar YENİ değerde, alanı eksik kopya eski:
+# aynı yarım rotasyon, dosya değil ALAN sınıfında. Kural `yaz-env`inkiyle AYNI fonksiyondur (yardımcının `alan-var …
+# tek` kipi → `_env_satiri`, TAM 1 satır): kapıdan geçen her `env` hedefini yazım GERÇEKTEN yazabilir. Yardımcı
+# `_islik_kur`un yazdığı dosyadır — kapı bu yüzden çalışma dizininden SONRA; çalışma dizini bir YAZIM değildir (0700
+# geçici, çıkışta silinir — yedek, kasa, kopya değil). İleti iki sınıfı AYIRIR: dosya YOKSA `--tohumla-sohbet` (dosyayı
+# kurar); alan eksik/çiftse tohumlama ÇARE DEĞİLDİR (var olan dosyaya dokunmaz) — elle düzeltme ya da operatör.
 # KAPSAM = `_yaz_satir`ın hedefi YARATAMADIĞI türler (`env` · `url`). `dosya` satırının hedefini betik KENDİSİ
 # kurar (mod/sahip açıkken): Faz-1C öncesi `--apisix-admin` (v447 R7) ve render hedefi yokken
 # `--vault --uret` (v557 F2) o sözleşmeye dayanır. `dosya … koru` satırı (bugün tabloda YOK) yazım anındaki
@@ -1400,21 +1477,34 @@ _yaz() {
 # sudo izi altın izle çivili (v538 C7) — kapı o izi DEĞİŞTİRMEZ.
 # Kuru koşum ve `--esitle` bu kapıdan GEÇMEZ: kuru hiçbir şey yazmaz; eşitlemenin ölçüm geçişi eksik kopyayı
 # ZATEN yazımdan (yedek dahil) önce "kopya YOK — eşitleme yarım kalırdı" ile durdurur ve o durdurma korunur.
-# Çiviler: v604 A5 · A6 · A8 (yedi alt komut × iki kip) · A9 · A10 · A11.
+# Çiviler: v604 A5 · A6 · A8 (alt komutlar × iki kip) · A9 · A10 · A11 · A16 (alan) · C7 (`--kapi-bot`).
 _hedef_on_denetim() {
-  local alt="$1" _alt _sir tur yol _alan _mod _sahip _onek eksik="" n=0
-  while read -r _alt _sir tur yol _alan _mod _sahip _onek; do
+  local alt="$1" _alt _sir tur yol alan _mod _sahip _onek eksik="" n=0 m=0 hal neden=""
+  while read -r _alt _sir tur yol alan _mod _sahip _onek; do
     [ "$_alt" = "$alt" ] || continue
     case "$tur" in env|url) ;; *) continue ;; esac
-    if [ -f "$KOK$yol" ]; then continue; fi
-    case " $eksik " in *" $yol "*) continue ;; esac
-    eksik="${eksik:+$eksik }$yol"
-    n=$((n+1))
+    if [ ! -f "$KOK$yol" ]; then
+      case " $eksik " in *" $yol "*) continue ;; esac
+      eksik="${eksik:+$eksik }$yol"
+      n=$((n+1))
+      continue
+    fi
+    [ "$tur" = env ] || continue
+    hal="$(py alan-var "$KOK$yol" "$alan" tek)" \
+      || die "ön-denetim ÖLÇÜLEMEDİ: $yol [$alan] alanı okunamadı (yardımcı düştü) — HİÇBİR ŞEY yazılmadı"
+    if [ "$hal" = "VAR" ]; then continue; fi
+    echo "!! alan $hal: $yol [$alan]" >&2
+    m=$((m+1))
   done < <(_kopyalar)
-  [ -n "$eksik" ] || return 0
+  [ -n "$eksik" ] || [ "$m" -gt 0 ] || return 0
   for yol in $eksik; do echo "!! hedef dosya YOK: $yol" >&2; done
-  die "--$alt: $n hedef dosya YOK — önce: sudo ./sir_rotasyon.sh --tohumla-sohbet
-     (sohbet .env'leri; başka bir yolsa o dosyayı kuran adım). HİÇBİR ŞEY yazılmadı: yedek, değer
+  [ -z "$eksik" ] || neden="$n hedef dosya YOK — önce: sudo ./sir_rotasyon.sh --tohumla-sohbet
+     (sohbet .env'leri; başka bir yolsa o dosyayı kuran adım)"
+  [ "$m" = 0 ] || neden="${neden:+$neden;
+     }$m hedefte alan TAM BİR satır değil (yukarıda) — --tohumla-sohbet dosyayı YALNIZ YOKSA yazar, var olan
+     dosyanın eksik/çift alanını DÜZELTMEZ: elle düzelt (eksikse değersiz '<ALAN>=' satırı ekle — değeri rotasyon
+     yazar; çiftse TEK satıra indir) ya da operatöre bırak"
+  die "$(_bayrak "$alt"): $neden. HİÇBİR ŞEY yazılmadı: yedek, değer
      üretimi, kasa ve kopya satırı yok — rotasyon yarıda kalmadı, hiç başlamadı."
 }
 
@@ -1801,7 +1891,7 @@ _kosullu_kuru_notu() {
 _kuru_rapor() {
   local alt="$1" _alt sir tur yol alan _m _s onek satir uc kabul onceki="" carpan tavan
   local _ONESHOT_SATIR
-  echo "=== KURU KOŞUM: --$alt (HİÇBİR ŞEY YAZILMADI) ==="
+  echo "=== KURU KOŞUM: $(_bayrak "$alt") (HİÇBİR ŞEY YAZILMADI) ==="
   while read -r _alt sir tur yol alan _m _s onek; do
     [ "$_alt" = "$alt" ] || continue
     case "$tur" in
@@ -1862,7 +1952,7 @@ _kuru_rapor() {
   case " $(_birimler "$alt") " in
     *" hindsight-api.service "*)
       echo "  tavanı yükseltmek gerekirse (DÜZ sudo ortam değişkenini DÜŞÜRÜR):"
-      echo "    sudo env HAZIR_TAVAN_S_hindsight_api=$(_hazir_tavan hindsight-api.service) ./deploy/oracle-a1/sir_rotasyon.sh --$alt" ;;
+      echo "    sudo env HAZIR_TAVAN_S_hindsight_api=$(_hazir_tavan hindsight-api.service) ./deploy/oracle-a1/sir_rotasyon.sh $(_bayrak "$alt")" ;;
   esac
   echo "  yedek dizini: $KOK/root/sir-yedek-<UTC ts>-$alt"
 }
@@ -2043,6 +2133,64 @@ _api_sunucu_kanit() {
   durum="$(sudo systemctl is-active meridian-botlar.service || true)"
   echo "  KANIT: ölçülemedi — meridian-botlar.service etkin değil (${durum:-ÖLÇÜLEMEDİ}); kopyalar YAZILDI, yeni değer"
   echo "         birimin ilk açılışında okunur (değer-doğruluğu None)"
+}
+
+# BİR BOTUN KAPI TÜKETİCİ ANAHTARI — ESKİ YOL `--kapi-bot <ad>` (G3b Task 3, 2026-10-01). `kapi()` emsali, adım adım:
+# referans kapısı → yedek → ESKİ değer → üret (`b64`) → tablodaki DÖRT kopya → restart (kapı; bot ağ geçidi yalnız
+# ETKİNSE) → kanıt (kapı `/models`) → envanter eşitliği.
+# DÖRT KOPYA BİRLİKTE (operatör K-G3b-1, 2026-09-30): kapının key-auth tüketicisi `bot_<ad>` (`.env-apisix`
+# `BOT_KEY_<AD>`), rapor profili ve sohbet profili AYNI değeri taşımak ZORUNDADIR — biri eski kalırsa o yüzey kapıdan 401
+# alır. REFERANS Agent render hedefidir (Rol-1 G3b-R3; emsal `--cp`/`--api-sunucu`): ESKİ değer onun YEDEĞİNDEN okunur ve
+# referans yoksa uydurulmaz — kapı yedekten ÖNCE durur, HİÇBİR ŞEY yazılmaz. İÇ ALT AD `kapi-bot-<ad>` (G3b-R2): tablo
+# güdümlü makine (`_birimler` · `_alt_sirlari` · `_yedek_al` · `_kuru_rapor` · `_envanter_esitlik`) süzgeçsiz doğrudur;
+# gövde bot sayısıyla BÜYÜMEZ (tek fonksiyon, ad argümanla — operatör 2026-09-30 "bot sayısından bağımsız"). Ad, buraya
+# gelmeden ayrıştırmada `_sohbet_botu_mu` ile doğrulanmıştır.
+# NEGATİF KONTROL YOK, GEREKMİYOR: kapı anahtarı İSTEKTE alır (`apikey` başlığı) → "eski değerle 401" DOĞRUDAN ölçülür
+# (`kapi()`/`apisix_admin()` emsali). Sır kasaya BAĞLIDIR; uyarı yazımdan ÖNCE `--kapi-bot <ad> --vault`ı gösterir (eski
+# yolun `/etc/meridian/bot_key_<ad>` yazımı ve kapının yan dosyası `.env-apisix.vault` Agent'ındır — kasadaki ESKİ değerle
+# ezilebilir; doğru yol kasa yoludur).
+kapi_bot() {
+  local bot="$1" alt="kapi-bot-$1" sir ref_yol
+  sir="$(_alt_sirlari "$alt")"
+  [ -n "$sir" ] || die "--kapi-bot $bot: kopya tablosunda satır YOK (iç alt ad $alt) — HİÇBİR ŞEY yazılmadı"
+  echo "=== ROTASYON: $sir (kapı tüketici anahtarı bot_$bot — kapı + rapor profili + sohbet profili) ==="
+  _agent_hedefi_uyarisi "$alt"            # TSK-064 takip (2) — gerekçe `kapi()` şerhinde
+  [ "$KURU" = 0 ] || { _kuru_rapor "$alt"; _kapi_bot_kanit_plani "$bot"; return 0; }
+  ref_yol="$(_kopyalar | awk -v a="$alt" '$1==a && !y {print $4; y=1}')"   # erken `exit` YOK: TABLO BORUSU şerhi
+  sudo test -s "$KOK$ref_yol" \
+    || die "--kapi-bot $bot ESKİ değer okunamaz: referans kopya ($ref_yol) YOK/boş — Agent render hedefidir (kasa
+     secret/meridian/bot_key_$bot); önce vault-agent ve kasa. HİÇBİR ŞEY yazılmadı (yedek dahil)."
+  _yedek_al "$alt"
+  py cikar dosya "$YEDEK$ref_yol" - - "$ISLIK/eski"
+  _uret b64
+  _yaz "$alt"
+  _yeniden_baslat "$alt"
+  _farksal "kapı /models (bot_$bot)" "$ISLIK/yeni" "$ISLIK/eski" "$KAPI_UC/models" "apikey" "-" "200" "401 403"
+  _kapi_bot_botlar_notu
+  _envanter_esitlik "$alt"
+  echo ">> geri alma: $YEDEK altındaki $(_kopyalar | awk -v a="$alt" '$1==a' | wc -l | tr -d ' ') kopyayı geri koy ve $(_recete_birimleri $(_birimler "$alt")) yeniden başlat"
+}
+
+#: Kanıt planı — kuru rapor gerçek koşumun ölçeceği yüzeyi söyler (bedel yasası; `_api_sunucu_kanit_plani` emsali).
+_kapi_bot_kanit_plani() {
+  echo "  kanıt: GET $KAPI_UC/models (apikey, tüketici bot_$1) — yeni → 200 · eski → 401/403; bot ağ geçidi ETKİNSE yeniden"
+  echo "         başlar ve /health hazırlığı beklenir, DEĞİLSE sohbet kopyası yazılır ve ilk açılışta okunur"
+}
+
+#: BOT AĞ GEÇİDİ NOTU — kapı kanıtından SONRA. Ağ geçidi ETKİNSE yeniden başlatıldı ve `/health` hazırlığı `_yeniden_baslat`
+#: içinde ÖLÇÜLDÜ (kimliksiz uç — anahtarın kendisini ölçmez); sohbet kopyasının değer-doğruluğu dosya EŞİTLİĞİDİR
+#: (`_envanter_esitlik`, hemen ardından). Etkin DEĞİLSE durum ADIYLA söylenir — sessiz atlama yok (bedel yasası).
+_kapi_bot_botlar_notu() {
+  local durum
+  if sudo systemctl is-active --quiet meridian-botlar.service; then
+    echo "  · bot ağ geçidi ETKİN: yeniden başladı, /health hazırlığı yukarıda ÖLÇÜLDÜ; sohbet kopyasının değer-doğruluğu"
+    echo "    dosya eşitliğidir (envanter, aşağıda)"
+    return 0
+  fi
+  # sessiz-yutma: `is-active` etkin OLMAYAN birimde 3 döner (beklenen); okunan şey DURUM ADIDIR ve okunamazsa satır
+  # "ÖLÇÜLEMEDİ" der — not bir durum UYDURMAZ.
+  durum="$(sudo systemctl is-active meridian-botlar.service || true)"
+  echo "  · bot ağ geçidi etkin değil (${durum:-ÖLÇÜLEMEDİ}): sohbet kopyası YAZILDI, yeni değer birimin ilk açılışında okunur"
 }
 
 db() {
@@ -2613,7 +2761,7 @@ _agent_hedefi_bas() {
     if [ "$bag" = "BAGLI" ]; then
       [ -n "$aralik" ] || aralik="$(_render_araligi_metni)"
       echo "     Vault Agent bu dosyayı kasadan render eder — aralık: $aralik"
-      echo "     Bu sır kasaya BAĞLI — kasa yolunu kullanın: sudo $0 --$alt --vault"
+      echo "     Bu sır kasaya BAĞLI — kasa yolunu kullanın: sudo $0 $(_bayrak "$alt") --vault"
     else
       echo "     Kasadaki değer rotasyonla AYNI pencerede elle güncellenmeli (değer STDIN'den, BASILMADAN:"
       echo "     vault kv put $kasa value=-) ve render ölçülmeli (dosya kasadaki yeni değere eşit mi)."
@@ -2634,7 +2782,7 @@ _agent_hedefi_uyarisi() {
   # taramanın yapılıp yapılamadığıdır ve bir satır aşağıda "UYARI ÖLÇÜLEMEDİ" diye ADIYLA basılır.
   if ! tablo="$(_agent_hedefleri "$alt" 2>/dev/null)"; then
     echo "  !! UYARI ÖLÇÜLEMEDİ — Vault Agent render hedefi taraması yapılamadı ($PYTHON_BIN + PyYAML · $VAULT_ENVANTER)."
-    echo "     --$alt kopyalarından biri Agent'ın render hedefi OLABİLİR: eski yol yazımı kasadaki değerle ezilebilir."
+    echo "     $(_bayrak "$alt") kopyalarından biri Agent'ın render hedefi OLABİLİR: eski yol yazımı kasadaki değerle ezilebilir."
     return 0
   fi
   _agent_hedefi_bas "$tablo"
@@ -2655,7 +2803,7 @@ _vault_kapsam_beyani() {
     if printf '%s\n' "$tablo" | awk -F'\t' -v k="$sir" '$1==k{b=1} END{exit !b}'; then
       _agent_hedefi_bas "$tablo" "$sir"
     else
-      echo "  · KAPSAM DIŞI (kasaya bağlı DEĞİL): $sir — eski yolla döner: sudo $0 --$alt"
+      echo "  · KAPSAM DIŞI (kasaya bağlı DEĞİL): $sir — eski yolla döner: sudo $0 $(_bayrak "$alt")"
     fi
   done
 }
@@ -2671,13 +2819,16 @@ _vault_kapsam_beyani() {
 #: `--uret` (TSK-226c, 2026-09-26): kasa yolu da değeri betik İÇİNDE üretir → beyan "sizden İSTER" DEMEZ
 #: (yalan beyan olurdu), kaynağı söyler. `db` listede kalır: `--db --vault --uret` ayrıştırmada reddedilir,
 #: yani `URET=1` iken buraya hiç ulaşmaz. `${URET:-0}`: fonksiyon çivilerde betikten KESİLİP koşar (v522 B3).
+#: `_deger_kaynagi_beyani <alt> [bayrak]` — bayrak operatörün yazacağı biçimdir (`_bayrak`; G3b Task 3: `kapi-bot-<ad>` →
+#: `--kapi-bot <ad>`); verilmezse `--<alt>` (fonksiyon çivilerde TEK BAŞINA kesilip koşar — v522 B3 · v557 A2 · v556).
 _deger_kaynagi_beyani() {
+  local bayrak="${2:---$1}"
   case "$1" in
-    kapi|tenant|db|dash|apisix-admin|api-sunucu)
+    kapi|tenant|db|dash|apisix-admin|api-sunucu|kapi-bot-*)
       if [ "${URET:-0}" = 1 ]; then
-        echo "  · DEĞER KAYNAĞI: betik İÇİNDE üretilir (--uret) — eski yol (sudo $0 --$1) ile AYNI yöntem; SORULMAZ, hiçbir yere BASILMAZ."
+        echo "  · DEĞER KAYNAĞI: betik İÇİNDE üretilir (--uret) — eski yol (sudo $0 $bayrak) ile AYNI yöntem; SORULMAZ, hiçbir yere BASILMAZ."
       else
-        echo "  · DEĞER KAYNAĞI: bu yol değeri ÜRETMEZ, sizden İSTER — eski yol (sudo $0 --$1) değeri"
+        echo "  · DEĞER KAYNAĞI: bu yol değeri ÜRETMEZ, sizden İSTER — eski yol (sudo $0 $bayrak) değeri"
         echo "    betik İÇİNDE üretir. Güçlü rastgele bir değer girin (ekrana yansımaz, hiçbir yere BASILMAZ)."
       fi ;;
   esac
@@ -2725,7 +2876,7 @@ _kuru_deger_metni() {
 
 _vault_kuru_rapor() {
   local alt="$1" bagli="$2" ad yol hedef sir birincil yd yb hepsi=""
-  echo "=== KURU KOŞUM: --$alt --vault (HİÇBİR ŞEY YAZILMADI, KASAYA DOKUNULMADI) ==="
+  echo "=== KURU KOŞUM: $(_bayrak "$alt") --vault (HİÇBİR ŞEY YAZILMADI, KASAYA DOKUNULMADI) ==="
   _vault_kapsam_beyani "$alt" "$bagli"
   # Döngü ALT KABUKTA DEĞİL (here-string): restart planı döngüden SONRA basılır ve boru ile
   # beslenen bir `while` `hepsi`yi alt kabukta bırakırdı.
@@ -2752,7 +2903,7 @@ _vault_kuru_rapor() {
   _kosullu_kuru_notu $(_sirala $hepsi)
   _birimsiz_tuketici_beyani "$alt"
   echo "  değer: $(_kuru_deger_metni "$alt")"
-  _deger_kaynagi_beyani "$alt"
+  _deger_kaynagi_beyani "$alt" "$(_bayrak "$alt")"
   echo "  render bekleme tavanı: $VAULT_RENDER_TAVAN_S s (yoklama aralığı $VAULT_RENDER_ARALIK_S s; aşımda ÖLÇÜLEMEDİ, eski kanal YAZILMAZ)"
   echo "  ÖN KOŞUL: sudo systemctl stop meridian-tick-watchdog.timer (sonda geri aç)"
   echo "  ÖN KOŞUL: kasa AÇIK (mühürsüz) ve vault-agent AYAKTA olmalı — yoksa render gelmez"
@@ -2846,7 +2997,7 @@ _kanal_beyani() {
 
 vault_rotasyon() {
   local alt="$1" bagli ad yol hedef sir birincil poz="" donen="" yazilmadi hedefler=""
-  echo "=== ROTASYON (KASADAN): --$alt --vault ==="
+  echo "=== ROTASYON (KASADAN): $(_bayrak "$alt") --vault ==="
   bagli="$(_vault_kv_satirlari $(_alt_sirlari "$alt"))"
   # BAĞSIZ ALT KOMUT (TSK-064, 2026-09-17; `--db` 2026-09-24'ten beri BAĞLI — bugün böyle bir alt
   # komut YOK): düz "eski yolla döndür" cümlesi, kopya bir Agent render hedefiyse YANLIŞ bir
@@ -2854,9 +3005,9 @@ vault_rotasyon() {
   # kasaya HİÇBİR ŞEY yazılmaz.
   if [ -z "$bagli" ]; then
     _vault_kapsam_beyani "$alt" ""
-    die "--vault: --$alt alt komutunun kasaya BAĞLI sırrı YOK
+    die "--vault: $(_bayrak "$alt") alt komutunun kasaya BAĞLI sırrı YOK
      (envanterde hiçbir vault_kv girdisi bu alt komutun sırlarını rotasyon_siri ile göstermiyor).
-     Eski yol: sudo $0 --$alt — önce yukarıdaki kapsam beyanını oku (UYARI varsa kasa AYNI
+     Eski yol: sudo $0 $(_bayrak "$alt") — önce yukarıdaki kapsam beyanını oku (UYARI varsa kasa AYNI
      pencerede elle güncellenir). Kasaya HİÇBİR ŞEY yazılmadı."
   fi
   # `--db` AYRI DALDIR (TSK-064, tasarım §3): kasa TAM DSN taşır ama rotasyonun sırrı yalnız PAROLA
@@ -2884,7 +3035,7 @@ vault_rotasyon() {
     # sırda "kasaya HİÇBİR ŞEY yazılmadı" YANLIŞ olurdu (ilk sır kasada), yalnız OPENROUTER'ı döndürmek
     # imkânsızlaşırdı ve `_oku_gizli`nin kendi istemi ("boş = bu bacağı atla") yalan söylerdi. Eski
     # yolun `openrouter()` sözleşmesiyle AYNI: her anahtar ayrı sorulur, hiçbiri verilmezse durulur.
-    _deger_kaynagi_beyani "$alt"          # istemden HEMEN önce (TSK-064 takip (4))
+    _deger_kaynagi_beyani "$alt" "$(_bayrak "$alt")"   # istemden HEMEN önce (TSK-064 takip (4))
     # `--uret` (TSK-226c): istem YOK — değer eski yolun yöntemiyle AYNI dosyaya üretilir (`_vault_uret`).
     # Buradan sonrası (yedek · kanon · kasa · render · eski kanal · restart · kanıt) iki kipte BİREBİR (v557 C3).
     if [ "$URET" = 1 ]; then
@@ -2993,7 +3144,7 @@ vault_rotasyon() {
     *) echo "  değer-doğruluğu bu alt komutta ÖLÇÜLMEDİ (None) — kanıt yüzeyi rotasyon yolundadır." ;;
   esac
 
-  adim "kanıt: envanter eşitlik ölçümü (--$alt)"
+  adim "kanıt: envanter eşitlik ölçümü ($(_bayrak "$alt"))"
   _envanter_esitlik "$alt"
   _kanal_beyani "$alt" "$hedefler"
 }
@@ -3038,10 +3189,10 @@ _genel_kasa_recetesi() {
   birimler="$(_birimler "$ALT" 2>/dev/null || echo '(birim listesi ölçülemedi)')"
   case "$GENEL_KASA_EVRE" in
     yedek)
-      echo ">> GERİ ALMA (--$ALT --vault): GEREKMEZ — kasaya YAZILMADI, eski kanal YAZILMADI, birim YENİDEN BAŞLATILMADI (yedek: $YEDEK)." >&2 ;;
+      echo ">> GERİ ALMA ($(_bayrak "$ALT") --vault): GEREKMEZ — kasaya YAZILMADI, eski kanal YAZILMADI, birim YENİDEN BAŞLATILMADI (yedek: $YEDEK)." >&2 ;;
     kasa)
       {
-        echo ">> GERİ ALMA (--$ALT --vault — kasaya YENİ değer yazıldı ya da yazımı DENENDİ; başarıda da arızada da geçerli; sıra: ÖNCE kasa, SONRA dosya):"
+        echo ">> GERİ ALMA ($(_bayrak "$ALT") --vault — kasaya YENİ değer yazıldı ya da yazımı DENENDİ; başarıda da arızada da geçerli; sıra: ÖNCE kasa, SONRA dosya):"
         echo "     1) kasa (yönetici jetonuyla) — dosyadan ÖNCE: kasa YENİ değerdeyken geri konan dosyayı Agent bir sonraki render'da EZER"
         while IFS=$'\t' read -r yol surum hedef; do
           [ -n "$yol" ] || continue
@@ -3671,7 +3822,7 @@ envanter() {
 esitle() {
   local alt="$1" _alt sir tur yol alan mod sahip onek etiket sonuc onceki=""
   local ref_tur ref_yol ref_alan ref_onek n_ayri=0 n_esit=0 n_atlanan=0 sirlar=""
-  echo "=== EŞİTLEME: --$alt (referans kopya → AYRI kopyalar; DEĞER üretilmez, sorulmaz, BASILMAZ) ==="
+  echo "=== EŞİTLEME: $(_bayrak "$alt") (referans kopya → AYRI kopyalar; DEĞER üretilmez, sorulmaz, BASILMAZ) ==="
   while read -r _alt sir tur yol alan mod sahip onek; do
     [ "$_alt" = "$alt" ] || continue
     etiket=""; [ "$alan" = "-" ] || etiket=" [$alan]"
@@ -3719,13 +3870,13 @@ esitle() {
     [ "$sonuc" = "AYRI" ] || continue
     _yaz_satir "$sir" "$tur" "$yol" "$alan" "$mod" "$sahip" "$onek" "$ISLIK/ref_$sir"
   done < <(_kopyalar)
-  adim "kanıt 1: envanter yeniden ölçümü (--$alt)"
+  adim "kanıt 1: envanter yeniden ölçümü ($(_bayrak "$alt"))"
   local rapor; rapor="$(_envanter_esitlik "$alt")"
   echo "$rapor"
   if printf '%s\n' "$rapor" | grep -q "→ AYRI"; then
     olcum_yok "eşitleme sonrası hâlâ AYRI kopya var (yukarıda) — yedek: $YEDEK"
   fi
-  oldu "envanter: --$alt kopyaları EŞİT"
+  oldu "envanter: $(_bayrak "$alt") kopyaları EŞİT"
   echo "  yeniden başlatma YAPILMADI (eşitleme sözleşmesi). Yazılan sırların tüketici birimleri:"
   # shellcheck disable=SC2046
   for sir in $sirlar; do echo "    · $sir → $(_recete_birimleri $(_sir_birimleri "$sir"))"; done
@@ -3738,7 +3889,7 @@ esitle() {
       local hal; hal="$(_kapi_chat_hali)"
       [ "$hal" = "OK" ] || olcum_yok "kapı chat/completions → $hal (OK bekleniyordu) — REFERANS upstream'de geçersiz olabilir; eşitleme KÖTÜ bir değeri yaymış olabilir, yedekten geri al: $YEDEK"
       oldu "kapı kanıtı: chat/completions 200 · gövdede choices (referans değer upstream'de GEÇERLİ)" ;;
-    *) echo "  değer-doğruluğu bu alt komutta eşitlemeyle ÖLÇÜLMEZ (None) — kanıt yüzeyi rotasyon yolundadır (--$alt)." ;;
+    *) echo "  değer-doğruluğu bu alt komutta eşitlemeyle ÖLÇÜLMEZ (None) — kanıt yüzeyi rotasyon yolundadır ($(_bayrak "$alt"))." ;;
   esac
 }
 
@@ -3748,19 +3899,32 @@ ESITLE=0
 VAULT_KIP=0
 URET=0
 ALT=""
-for _a in "$@"; do
+#: İKİ JETONLU BAYRAK (G3b Task 3, 2026-10-01): `--kapi-bot <ad>` değer ALIR, `for _a in "$@"` onu göremezdi → `while`/`shift`.
+#: Öteki bayrakların davranışı BİREBİR (tek jeton, aynı `case`). Ad, bayraktan SONRAKİ jetondur — ne olursa olsun
+#: (`--kuru` bile): ad gibi görünmeyen bir jetonu "ad yok" sayıp bayrak diye tüketmek `--kapi-bot --kuru`yu kuru koşuma
+#: çevirirdi. Ad `_sohbet_botu_mu` ile TAM eşitlikle doğrulanır; geçersiz ad root kapısından, çalışma dizininden, kasadan ve
+#: her dosyadan ÖNCE burada durur (v604 C2). İç alt ad `kapi-bot-<ad>` (Rol-1 G3b-R2).
+while [ "$#" -gt 0 ]; do
+  _a="$1"; shift
   case "$_a" in
     --kuru) KURU=1 ;;
     --esitle) ESITLE=1 ;;
     --vault) VAULT_KIP=1 ;;
     --uret) URET=1 ;;
     --kapi|--tenant|--db|--dash|--openrouter|--apisix-admin|--cp|--api-sunucu|--envanter|--kopyalar)
-      [ -z "$ALT" ] || die "iki alt komut verildi: --$ALT ve $_a — her koşum TEK sır döndürür"
+      [ -z "$ALT" ] || die "iki alt komut verildi: $(_bayrak "$ALT") ve $_a — her koşum TEK sır döndürür"
       ALT="${_a#--}" ;;
-    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --envanter | --kopyalar [| --kuru | --esitle | --vault | --uret])" ;;
+    --kapi-bot)
+      [ "$#" -gt 0 ] || die "--kapi-bot bot ADI ister: --kapi-bot <$(echo $_SOHBET_BOTLARI | tr ' ' '|')> — HİÇBİR ŞEY yazılmadı"
+      _bot="$1"; shift
+      _sohbet_botu_mu "$_bot" || die "--kapi-bot: geçersiz bot adı '$_bot' — geçerli adlar (TAM eşleşme, küçük harf): $_SOHBET_BOTLARI.
+     Liste kabuktaki TEK sabittir (_SOHBET_BOTLARI = A0 sohbet_profil_adlari). HİÇBİR ŞEY yazılmadı."
+      [ -z "$ALT" ] || die "iki alt komut verildi: $(_bayrak "$ALT") ve --kapi-bot $_bot — her koşum TEK sır döndürür"
+      ALT="kapi-bot-$_bot" ;;
+    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --kapi-bot <ad> | --envanter | --kopyalar [| --kuru | --esitle | --vault | --uret])" ;;
   esac
 done
-[ -n "$ALT" ] || die "alt komut ZORUNLU: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --envanter | --kopyalar (+ --kuru)"
+[ -n "$ALT" ] || die "alt komut ZORUNLU: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --kapi-bot <ad> | --envanter | --kopyalar (+ --kuru)"
 
 # `--kuru` YALNIZ ROTASYON alt komutlarında anlamlıdır. `--envanter`/`--kopyalar` bayrağı hiç
 # okumaz ve `--envanter --kuru` SESSİZCE tam envanteri koşardı: kuru koşum isteyen operatör
@@ -3768,19 +3932,19 @@ done
 # ama etkisizlik SÖYLENİR — sessiz kabul, olmayan bir sözleşmeyi var gibi gösterir.
 KURU_ONERILIR=0
 case "$ALT" in
-  kapi|tenant|db|dash|openrouter|apisix-admin|cp|api-sunucu) KURU_ONERILIR=1 ;;
+  kapi|tenant|db|dash|openrouter|apisix-admin|cp|api-sunucu|kapi-bot-*) KURU_ONERILIR=1 ;;
   *) [ "$KURU" = 0 ] || echo "!! --kuru bu alt komutta ETKİSİZDİR: --$ALT zaten hiçbir şey yazmaz." >&2 ;;
 esac
 # `--esitle` YALNIZ rotasyon alt komutlarıyla anlamlıdır: neyi eşitleyeceği kopya tablosunun
 # alt komut sütunundan gelir; `--envanter --esitle` ne ölçer ne yazar — sessiz kabul yerine dur.
 [ "$ESITLE" = 0 ] || [ "$KURU_ONERILIR" = 1 ] \
-  || die "--esitle yalnız rotasyon alt komutlarıyla: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu (+ --esitle [--kuru]); --$ALT ile anlamsız"
+  || die "--esitle yalnız rotasyon alt komutlarıyla: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --kapi-bot <ad> (+ --esitle [--kuru]); --$ALT ile anlamsız"
 # `--vault` de YALNIZ rotasyon alt komutlarıyla anlamlıdır ve `--esitle` ile BİRLİKTE VERİLEMEZ:
 # ikisi zıt yönlerdir. `--esitle` mevcut REFERANS kopyayı ötekilere taşır (değer üretilmez),
 # `--vault` YENİ bir değeri kasaya koyup oradan yayar. Sessizce biri ötekini yutarsa operatör
 # "eşitledim" sanarken taze bir anahtar yazılmış olurdu.
 [ "$VAULT_KIP" = 0 ] || [ "$KURU_ONERILIR" = 1 ] \
-  || die "--vault yalnız rotasyon alt komutlarıyla: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu (+ --vault [--kuru]); --$ALT ile anlamsız"
+  || die "--vault yalnız rotasyon alt komutlarıyla: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --kapi-bot <ad> (+ --vault [--kuru]); --$ALT ile anlamsız"
 [ "$VAULT_KIP" = 0 ] || [ "$ESITLE" = 0 ] \
   || die "--vault ile --esitle birlikte verilemez: biri KASADAN yeni değer yayar, öteki mevcut referansı kopyalara taşır"
 # `--uret` (TSK-226c, 2026-09-26) YALNIZ `--vault` ile ve YALNIZ genel kasa döngüsünün üreticileriyle anlamlıdır
@@ -3792,7 +3956,7 @@ if [ "$URET" = 1 ]; then
     # Öneri YALNIZ geçerli bir biçim varsa basılır (`--envanter --vault --uret` diye bir sözleşme YOK —
     # olmayan biçimi önermek hata metnini yanlış yola sokar; `_KURU_ONERI` emsali, inceleme B6).
     _URET_ONERI=""
-    _uret_sinifi "$ALT" >/dev/null && _URET_ONERI=" Doğrusu: sudo $0 --$ALT --vault --uret."
+    _uret_sinifi "$ALT" >/dev/null && _URET_ONERI=" Doğrusu: sudo $0 $(_bayrak "$ALT") --vault --uret."
     die "--uret yalnız --vault ile anlamlıdır: kasa yolunun istemi yerine değeri betik İÇİNDE üretir (eski yol
      değeri ZATEN üretir ama kasaya bağlı sırda yazımı Agent render'ıyla ezilir).$_URET_ONERI HİÇBİR ŞEY yazılmadı."
   fi
@@ -3804,7 +3968,7 @@ if [ "$URET" = 1 ]; then
      sudo $0 --db --vault (istemle). HİÇBİR ŞEY yazılmadı." ;;
     cp) echo "!! --uret bu yolda ETKİSİZDİR: --cp --vault değeri ZATEN betik İÇİNDE üretir (vault_cp_rotasyon, TSK-226b)." >&2 ;;
     *) _uret_sinifi "$ALT" >/dev/null \
-         || die "--uret: --$ALT için üretim sınıfı YOK (_uret_sinifi) — HİÇBİR ŞEY yazılmadı." ;;
+         || die "--uret: $(_bayrak "$ALT") için üretim sınıfı YOK (_uret_sinifi) — HİÇBİR ŞEY yazılmadı." ;;
   esac
 fi
 
@@ -3826,16 +3990,17 @@ _UID="$(id -u)"
 # Kuru koşum önerisi YALNIZ rotasyon alt komutlarında basılır: `--envanter --kuru` diye bir
 # sözleşme YOK ve olmayan bir biçimi önermek, hata metnini yanlış bir yola sokar (inceleme B6).
 _KURU_ONERI=""
-[ "$KURU_ONERILIR" = 0 ] || _KURU_ONERI="   (kuru koşumda: sudo ./sir_rotasyon.sh --$ALT --kuru)"
+[ "$KURU_ONERILIR" = 0 ] || _KURU_ONERI="   (kuru koşumda: sudo ./sir_rotasyon.sh $(_bayrak "$ALT") --kuru)"
 [ "$_UID" = 0 ] || die "bu betik ROOT olarak koşar; şu an uid=$_UID.
-     Doğrusu: sudo ./sir_rotasyon.sh --$ALT$_KURU_ONERI
+     Doğrusu: sudo ./sir_rotasyon.sh $(_bayrak "$ALT")$_KURU_ONERI
      Sebep: kanıt girdileri (curl -K cfg · PGPASSFILE · SQL) 0600 root yazılır; onları çağıran
      kimlikle okutmak HER kanıtı 000 yapar ve rotasyon doğrulanamaz."
 
-# YAZIM ÖNCESİ HEDEF ÖN-DENETİMİ (G3b) — bütün yazım yollarının (kasa dalı · eski yol alt komutları) ÖNÜNDE,
-# TEK nokta; kuru koşum ve eşitleme hariç (gerekçe `_hedef_on_denetim` şerhinde).
-if [ "$KURU" = 0 ] && [ "$ESITLE" = 0 ] && [ "$KURU_ONERILIR" = 1 ]; then _hedef_on_denetim "$ALT"; fi
 _islik_kur
+# YAZIM ÖNCESİ HEDEF ÖN-DENETİMİ (G3b) — bütün yazım yollarının (kasa dalı · eski yol alt komutları) ÖNÜNDE,
+# TEK nokta; kuru koşum ve eşitleme hariç (gerekçe `_hedef_on_denetim` şerhinde). Çalışma dizininden SONRA (G3b Task 3):
+# alan denetimi gömülü yardımcıyı (`yaz-env`in kuralı) ister; çalışma dizini bir yazım DEĞİLDİR (v604 A10).
+if [ "$KURU" = 0 ] && [ "$ESITLE" = 0 ] && [ "$KURU_ONERILIR" = 1 ]; then _hedef_on_denetim "$ALT"; fi
 if [ "$VAULT_KIP" = 1 ]; then vault_rotasyon "$ALT"; exit 0; fi
 if [ "$ESITLE" = 1 ]; then esitle "$ALT"; exit 0; fi
 case "$ALT" in
@@ -3847,5 +4012,6 @@ case "$ALT" in
   apisix-admin) apisix_admin ;;
   cp)         cp_erisim ;;
   api-sunucu) api_sunucu ;;
+  kapi-bot-*) kapi_bot "${ALT#kapi-bot-}" ;;
   envanter)   envanter ;;
 esac

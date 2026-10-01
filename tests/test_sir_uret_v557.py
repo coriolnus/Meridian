@@ -50,8 +50,8 @@ import pytest
 from tests import test_cp_rotasyon_v556 as v556
 from tests import test_rotasyon_operator_mesajlari_v522 as v522
 from tests import test_vault_dalga1_baglama_v521 as v521
-from tests.test_sir_rotasyon_v447 import (BETIK, ENVANTER, ESKI, SOHBET_BOTLARI, _dosya_imzalari, _env_alan, _kos,
-                                          _sahte_ortam)
+from tests.test_sir_rotasyon_v447 import (BETIK, ENVANTER, ESKI, KAPI_BOT_ALTLARI, SOHBET_BOTLARI, _dosya_imzalari,
+                                          _env_alan, _kos, _sahte_ortam, alt_fonksiyonu)
 
 KOK_DEPO = pathlib.Path(__file__).resolve().parents[1]
 
@@ -70,8 +70,9 @@ TENANT_BIRIMLER = {"hindsight-api.service", "hindsight-cp.service", "meridian.se
 #: bu turun kapsamı dışıdır (brief). `cp` DIŞARIDA: kendi dalı değeri ZATEN üretir. A1 bu kümeyi
 #: betiğin `_uret_sinifi`nden ve eski yol gövdelerinden AYRICA türetir.
 #: 2026-10-01 (G3b Task 2): `api-sunucu` genel kasa döngüsünden geçer ve eski yolu `_uret hex` (Rol-1 G3b-R5).
-URETILEBILIR = {"kapi", "tenant", "dash", "apisix-admin", "api-sunucu"}
-TUM_ALTLAR = ("kapi", "tenant", "db", "dash", "openrouter", "apisix-admin", "cp", "api-sunucu")
+#: 2026-10-01 (G3b Task 3): bot başı iç alt komutlar `kapi-bot-<ad>` (b64, `kapi` emsali; küme A0 listesinden — v447).
+URETILEBILIR = {"kapi", "tenant", "dash", "apisix-admin", "api-sunucu", *KAPI_BOT_ALTLARI}
+TUM_ALTLAR = ("kapi", "tenant", "db", "dash", "openrouter", "apisix-admin", "cp", "api-sunucu", *KAPI_BOT_ALTLARI)
 
 ISTEM = "(boş = bu bacağı atla)"                 # `_oku_gizli`nin istem metni (stderr)
 ISTEM_DEGERI = "SAHTE-ISTEM-0557"                # istem çağrılırsa kasaya giden değer budur
@@ -329,7 +330,7 @@ def _uret_sinifi_olcum(betik: pathlib.Path = BETIK) -> dict[str, str | None]:
 
 def _eski_yol_sinifi(alt: str, betik: pathlib.Path = BETIK) -> list[str]:
     """Eski yol fonksiyon GÖVDESİNDEKİ `_uret <sınıf>` çağrıları (v522 `_uret_cagiran_altlar` deseni)."""
-    return re.findall(r"^\s*_uret\s+(\w+)\s*$", v521._fonksiyon(alt.replace("-", "_"), betik), re.M)
+    return re.findall(r"^\s*_uret\s+(\w+)\s*$", v521._fonksiyon(alt_fonksiyonu(alt), betik), re.M)
 
 
 # =================================================================================================

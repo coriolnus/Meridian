@@ -20,11 +20,25 @@ BÖLGE SÖZLEŞMESİ. Envanterde iki tür işaretli bölge vardır; işaretçile
 
     <girinti># >>> ÜRETİLDİ kopya_kaynaklari <sır>
     <girinti># <<< ÜRETİLDİ
-        → bir `vault_kv` takma adının `kopya_kaynaklari` öğeleri: o sırrın sohbet profili satırları (`env_satiri`).
+        → bir `vault_kv` girdisinin `kopya_kaynaklari` öğeleri: o sırrın tablodaki REFERANS (ilk) satırı DIŞINDAKİ bütün
+          `env`/`dosya` satırları (`env_satiri`/`dosya`) — v491 A5'in `{kaynak} ∪ kopya_kaynaklari` = tablo kuralının aynası
+          (kaynak = referans, v520 A5). 2026-10-01'e dek "o sırrın sohbet profili satırları"ydı; kiracı anahtarında iki tanım
+          AYNI satırları verir (referans render hedefi + yalnız sohbet kopyaları), bot anahtarlarında (G3b Task 3) referans
+          dışı kopyalar kapı + rapor + sohbet `.env`idir — genel tanım ikisini birden doğru üretir.
+
+    <girinti># >>> ÜRETİLDİ alt_ailesi <alt komut şablonu — {ad} bot adıyla değişir>
+    <girinti># şablon <yol şablonu> | tuketici: <metin şablonu>      (bir ya da daha çok satır — ELLE, korunur)
+    <girinti># <<< ÜRETİLDİ
+        → BOT BAŞI ALT KOMUT AİLESİ (G3b Task 3, 2026-10-01; Task 2 incelemesi M6): `kapi-bot-<ad>` gibi aile BOT BAŞINA
+          bir alt komuttur ve satırlarının hepsi o bota aittir (referans render hedefi · `.env-apisix` · rapor · sohbet).
+          Her bot için (liste sırasıyla) tablonun o alt komuta ait satırları SIRAYLA yazılır; tüketici metni satırın
+          yolunu karşılayan şablondan gelir. Satırı karşılamayan ya da hiçbir satırı karşılamayan şablon SÖZLEŞME hatasıdır.
 
 "Bot başı satır" = yolu `<_SOHBET_KOKU>/profiles/<bot>/.env` olan satır, `<bot>` ∈ `_SOHBET_BOTLARI`. Tabloda bot başı
 satırı olan her (alt komut, sır) çiftinin BİR `kopyalar` bölgesi olmak ZORUNDADIR (yoksa çıkış 1: işaretsiz aile ayna
-dışında kalırdı) ve her bölgenin ailesi DOLU olmalıdır (boş bölge = bayat işaretçi, çıkış 1).
+dışında kalırdı) ve her bölgenin ailesi DOLU olmalıdır (boş bölge = bayat işaretçi, çıkış 1). "Bot başı alt komut" = adı
+`<önek>-<bot>` olan alt komut; önek ailesi BÜTÜN botları kapsamak ZORUNDADIR ve BİR `alt_ailesi` bölgesi taşır — o
+ailelerin sohbet satırları `kopyalar` ailelerine KARIŞMAZ (aile başına tek bot olurdu: "bot listesini kapsamıyor").
 
 KOMUT SATIRI SÖZLEŞMESİ (ops aracı sözleşmesi KOMUT SATIRIdır, `main()` değil):
 
@@ -58,8 +72,9 @@ KOK = pathlib.Path(__file__).resolve().parents[1]
 BETIK = KOK / "deploy" / "oracle-a1" / "sir_rotasyon.sh"
 ENVANTER = KOK / "deploy" / "sir_envanteri.yaml"
 
-BAS_RE = re.compile(r"^(?P<girinti>[ ]*)# >>> ÜRETİLDİ (?P<tur>kopyalar|kopya_kaynaklari) (?P<arg>.+?)\s*$")
+BAS_RE = re.compile(r"^(?P<girinti>[ ]*)# >>> ÜRETİLDİ (?P<tur>kopyalar|kopya_kaynaklari|alt_ailesi) (?P<arg>.+?)\s*$")
 SON_RE = re.compile(r"^[ ]*# <<< ÜRETİLDİ\s*$")
+SABLON_RE = re.compile(r"^[ ]*# şablon (?P<yol>\S+) \| tuketici: (?P<metin>.+?)\s*$")
 
 
 class Sozlesme(Exception):
@@ -91,11 +106,27 @@ def tablo(betik: pathlib.Path) -> tuple[list[str], str, list[list[str]]]:
     return botlar, kok, satirlar
 
 
+def bot_alt_onekleri(botlar: list[str], satirlar: list[list[str]]) -> set[str]:
+    """BOT BAŞI ALT KOMUT aileleri — adı `<önek>-<bot>` olan alt komutların önekleri. Önek ailesi BÜTÜN botları kapsamak
+    zorundadır: bir botun alt komutu eksikse o bot ayna dışında kalırdı (SÖZLEŞME). Sıra/kapsam tablodan ölçülür."""
+    altlar = list(dict.fromkeys(s[0] for s in satirlar))
+    onekler = {a[: -len(b) - 1] for a in altlar for b in botlar if a.endswith("-" + b) and len(a) > len(b) + 1}
+    for onek in sorted(onekler):
+        eksik = [b for b in botlar if f"{onek}-{b}" not in altlar]
+        if eksik:
+            raise Sozlesme(f"bot başı alt komut ailesi `{onek}-<bot>` bot listesini kapsamıyor — eksik: {eksik}")
+    return onekler
+
+
 def bot_aileleri(botlar: list[str], kok: str, satirlar: list[list[str]]) -> dict[tuple[str, str], list[tuple[str, list[str]]]]:
-    """(alt komut, sır) → [(bot, satır)] — yalnız sohbet profili `.env`ine yazan satırlar, tablo sırasıyla."""
+    """(alt komut, sır) → [(bot, satır)] — yalnız sohbet profili `.env`ine yazan satırlar, tablo sırasıyla. Bot başı alt
+    komut ailelerinin (`bot_alt_onekleri`) satırları HARİÇ: onların aynası `alt_ailesi` bölgesidir."""
     desen = re.compile(re.escape(kok) + r"/profiles/([^/]+)/\.env")
+    bot_altlari = {f"{o}-{b}" for o in bot_alt_onekleri(botlar, satirlar) for b in botlar}
     aileler: dict[tuple[str, str], list[tuple[str, list[str]]]] = {}
     for s in satirlar:
+        if s[0] in bot_altlari:
+            continue
         m = desen.fullmatch(s[3])
         if not m:
             continue
@@ -124,19 +155,70 @@ def _kopyalar_blogu(girinti: str, sablon: str, aile: list[tuple[str, list[str]]]
     return out
 
 
-def _kopya_kaynaklari_blogu(girinti: str, aile: list[tuple[str, list[str]]]) -> list[str]:
+def _kopya_kaynaklari_blogu(girinti: str, sir: str, satirlar: list[list[str]]) -> list[str]:
+    """`sir`in tablodaki REFERANS (ilk okunabilir) satırı DIŞINDAKİ `env`/`dosya` satırları — v491 A5 eşleme sözlüğüyle."""
+    okunur = [s for s in satirlar if s[1] == sir and s[2] in ("env", "dosya", "url")]
+    if not okunur:
+        raise Sozlesme(f"{sir} sırrının tabloda okunabilir satırı YOK (bayat işaretçi)")
     out: list[str] = []
-    for _bot, (_alt, _sir, _tur, yol, alan, _m, _s, onek) in aile:
+    for _alt, _sir, tur, yol, alan, _m, _s, onek in okunur[1:]:
+        if tur not in ("env", "dosya"):
+            raise Sozlesme(f"{sir}: referans dışı `{tur}` satırı kopya kaynağı olamaz (v491 A5 sözlüğü env|dosya): {yol}")
         onek_j = "null" if onek == "-" else f'"{onek}"'
-        out.append(f'{girinti}- {{tur: env_satiri, dosya: "{yol}", alan: {alan}, onek: {onek_j}}}')
+        alan_j = "null" if alan == "-" else alan
+        tur_j = "env_satiri" if tur == "env" else "dosya"
+        out.append(f'{girinti}- {{tur: {tur_j}, dosya: "{yol}", alan: {alan_j}, onek: {onek_j}}}')
+    if not out:
+        raise Sozlesme(f"{sir} sırrının referans dışı kopyası YOK (bayat işaretçi)")
     return out
 
 
-def uret(envanter_metni: str, aileler: dict[tuple[str, str], list[tuple[str, list[str]]]]) -> str:
-    """Envanter metnindeki her işaretli bölgenin İÇİNİ yeniden yazar; işaretçiler ve bölge dışı AYNEN kalır."""
+def _alt_ailesi_blogu(girinti: str, sablon_alt: str, sablonlar: list[tuple[str, str]], botlar: list[str],
+                      satirlar: list[list[str]]) -> list[str]:
+    """Bot başı alt komut ailesi: her bot için (liste sırasıyla) tablonun `sablon_alt.replace("{ad}", bot)` satırları
+    SIRAYLA; tüketici yolu karşılayan TEK şablondan. Mod/sahip tablonun açık değerinden (`0400 root:root` → "400"/"root"),
+    `koru` → null (envanterin elle yazılmış emsal satırlarıyla aynı biçim)."""
+    if "{ad}" not in sablon_alt:
+        raise Sozlesme(f"alt_ailesi şablonu {{ad}} içermeli: {sablon_alt!r}")
+    if not sablonlar:
+        raise Sozlesme(f"alt_ailesi {sablon_alt}: hiç `# şablon <yol> | tuketici: <metin>` satırı yok")
+    for _yol, metin in sablonlar:
+        if '"' in metin or "\\" in metin:
+            raise Sozlesme(f"tüketici şablonu çift tırnak/ters bölü taşıyamaz: {metin!r}")
+    kullanilan: set[str] = set()
+    out: list[str] = []
+    for bot in botlar:
+        alt = sablon_alt.replace("{ad}", bot)
+        blok = [s for s in satirlar if s[0] == alt]
+        if not blok:
+            raise Sozlesme(f"alt_ailesi {sablon_alt}: tabloda `{alt}` satırı YOK")
+        for _alt, sir, tur, yol, alan, mod, sahip, onek in blok:
+            eslesen = [(ys, m) for ys, m in sablonlar if ys.replace("{ad}", bot) == yol]
+            if len(eslesen) != 1:
+                raise Sozlesme(f"alt_ailesi {sablon_alt}: `{yol}` satırını karşılayan TEK şablon yok ({len(eslesen)})")
+            kullanilan.add(eslesen[0][0])
+            mod_j = "null" if mod == "koru" else f'"{mod.lstrip("0") or "0"}"'
+            sahip_j = "null" if sahip == "koru" else f'"{sahip.split(":", 1)[0]}"'
+            out += [f"{girinti}- alt_komut: {alt}", f"{girinti}  sir: {sir}", f"{girinti}  tur: {tur}",
+                    f'{girinti}  yol: "{yol}"', f"{girinti}  alan: {'null' if alan == '-' else alan}",
+                    f"{girinti}  mod: {mod_j}", f"{girinti}  sahip: {sahip_j}"]
+            if onek != "-":
+                out.append(f"{girinti}  onek: {onek}")
+            out.append(f'{girinti}  tuketici: "{eslesen[0][1].replace("{ad}", bot)}"')
+    bos = [ys for ys, _ in sablonlar if ys not in kullanilan]
+    if bos:
+        raise Sozlesme(f"alt_ailesi {sablon_alt}: hiçbir satırı karşılamayan (bayat) şablon: {bos}")
+    return out
+
+
+def uret(envanter_metni: str, botlar: list[str], kok: str, satirlar: list[list[str]]) -> str:
+    """Envanter metnindeki her işaretli bölgenin İÇİNİ yeniden yazar; işaretçiler, şablon satırları ve bölge dışı AYNEN kalır."""
+    aileler = bot_aileleri(botlar, kok, satirlar)
+    onekler = bot_alt_onekleri(botlar, satirlar)
     girdi = envanter_metni.splitlines(keepends=True)
     cikti: list[str] = []
     kullanilan: set[tuple[str, str]] = set()
+    kullanilan_onek: set[str] = set()
     i = 0
     while i < len(girdi):
         satir = girdi[i]
@@ -156,6 +238,25 @@ def uret(envanter_metni: str, aileler: dict[tuple[str, str], list[tuple[str, lis
         if j >= len(girdi):
             raise Sozlesme(f"satır {i + 1}: bölge kapanmıyor (`# <<< ÜRETİLDİ` yok)")
         girinti, tur, arg = m.group("girinti"), m.group("tur"), m.group("arg")
+        if tur == "alt_ailesi":
+            # Şablon satırları başlığın PARÇASIDIR (elle, korunur); üretilen blok onlardan sonra başlar.
+            k = i + 1
+            sablonlar: list[tuple[str, str]] = []
+            while k < j and SABLON_RE.match(girdi[k].rstrip("\n")):
+                sm = SABLON_RE.match(girdi[k].rstrip("\n"))
+                sablonlar.append((sm.group("yol"), sm.group("metin")))
+                cikti.append(girdi[k])
+                k += 1
+            sablon_alt = arg.strip()
+            onek = sablon_alt.replace("-{ad}", "") if sablon_alt.endswith("-{ad}") else None
+            if onek is None or onek not in onekler:
+                raise Sozlesme(f"satır {i + 1}: alt_ailesi {sablon_alt} tabloda bot başı alt komut ailesi DEĞİL (bayat işaretçi)")
+            kullanilan_onek.add(onek)
+            yeni = _alt_ailesi_blogu(girinti, sablon_alt, sablonlar, botlar, satirlar)
+            cikti.extend(s + "\n" for s in yeni)
+            cikti.append(girdi[j])
+            i = j + 1
+            continue
         if tur == "kopyalar":
             if " | tuketici: " not in arg:
                 raise Sozlesme(f"satır {i + 1}: `kopyalar` işaretçisi `| tuketici: <şablon>` taşımıyor")
@@ -170,16 +271,20 @@ def uret(envanter_metni: str, aileler: dict[tuple[str, str], list[tuple[str, lis
             yeni = _kopyalar_blogu(girinti, sablon.strip(), aileler[anahtar])
         else:
             sir = arg.split()[0] if arg.split() else ""
-            aile = [x for (_a, s), al in aileler.items() if s == sir for x in al]
-            if not aile:
-                raise Sozlesme(f"satır {i + 1}: {sir} sırrının tabloda bot başı satırı YOK (bayat işaretçi)")
-            yeni = _kopya_kaynaklari_blogu(girinti, aile)
+            try:
+                yeni = _kopya_kaynaklari_blogu(girinti, sir, satirlar)
+            except Sozlesme as e:
+                raise Sozlesme(f"satır {i + 1}: {e}") from e
         cikti.extend(s + "\n" for s in yeni)
         cikti.append(girdi[j])
         i = j + 1
     eksik = sorted(set(aileler) - kullanilan)
     if eksik:
         raise Sozlesme(f"bot başı satır ailesinin envanterde `kopyalar` bölgesi YOK: {eksik} — ayna dışında kalırdı")
+    eksik_onek = sorted(onekler - kullanilan_onek)
+    if eksik_onek:
+        raise Sozlesme(f"bot başı alt komut ailesinin envanterde `alt_ailesi` bölgesi YOK: "
+                       f"{[o + '-{ad}' for o in eksik_onek]} — ayna dışında kalırdı")
     metin = "".join(cikti)
     yaml.safe_load(metin)          # sözdizimi kapısı: üretim bozuk YAML YAZAMAZ (hata çıkış 1'e döner — main)
     return metin
@@ -198,7 +303,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         botlar, kok, satirlar = tablo(a.betik)
         eski = a.envanter.read_text(encoding="utf-8")
-        yeni = uret(eski, bot_aileleri(botlar, kok, satirlar))
+        yeni = uret(eski, botlar, kok, satirlar)
     except (Sozlesme, yaml.YAMLError, OSError) as e:
         print(f"SÖZLEŞME HATASI — üretim YAPILMADI: {e}", file=sys.stderr)
         return 1

@@ -371,7 +371,7 @@ def test_kopya_gorevi_0600_yedekli_birim_kullanicisinin():
 
 
 def test_hermes_gorev_govdesinde_env_yok():
-    # Profil `.env`leri (kapı anahtarı, Hindsight anahtarı) ve kökün `.env`i (dinleyici anahtarı) rotasyon aracının
+    # Profil `.env`leri (kapı · Hindsight · dinleyici anahtarı) ve kökün `.env`i (dinleyici anahtarı) rotasyon aracının
     # işidir; rolün görev gövdesinde (yorum satırları dışı) `.env` dizgesi HİÇ geçmez — kopya listesine girmesinin
     # ilk adımı da budur.
     govde = "\n".join(s for s in HERMES_YML.read_text(encoding="utf-8").splitlines()

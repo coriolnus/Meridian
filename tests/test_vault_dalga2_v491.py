@@ -102,14 +102,17 @@ HERMES_ENV_KOPYALARI = (
 #: operatör kararı (2026-09-30, kadroda 21 bot) bot başı her listeyi TEK bot listesinden türetmeyi ister — kaynak A0 rolünün
 #: `sohbet_profil_adlari` + `sohbet_kok_dizini` değişkenleridir (envanterden BAĞIMSIZ bir dış çapa). Kök `.env`
 #: `API_SERVER_KEY`, her profil `API_SERVER_KEY` + `HINDSIGHT_API_KEY` (Hermes PROFİL kapsamı ölçümü, Rol-1 2026-09-30).
-#: Task 3 `BOT_KEY_<AD>` sohbet kopyalarını buraya ekler.
+#: 2026-10-01 (G3b Task 3): her profil ayrıca `BOT_KEY_<AD>` (botun kapı tüketici anahtarı — `--kapi-bot <ad>`, kasaya
+#: BAĞLI `bot_key_<ad>`). Alan adı da A0 listesinden türer (`<AD>` = adın büyük harfi).
 def _sohbet_env_kopyalari() -> tuple[tuple[str, str], ...]:
     d = yaml.safe_load((REPO / "deploy/ansible/roles/meridian_a1/defaults/main.yml").read_text(encoding="utf-8"))
     kok = d["sohbet_kok_dizini"].replace("{{ meridian_kullanici }}", d["meridian_kullanici"])
-    profiller = [f"{kok}/profiles/{ad}/.env" for ad in d["sohbet_profil_adlari"]]
+    adlar = list(d["sohbet_profil_adlari"])
+    profiller = [f"{kok}/profiles/{ad}/.env" for ad in adlar]
     return (((f"{kok}/.env", "API_SERVER_KEY"),)
             + tuple((y, "API_SERVER_KEY") for y in profiller)
-            + tuple((y, "HINDSIGHT_API_KEY") for y in profiller))
+            + tuple((y, "HINDSIGHT_API_KEY") for y in profiller)
+            + tuple((f"{kok}/profiles/{ad}/.env", f"BOT_KEY_{ad.upper()}") for ad in adlar))
 
 
 SOHBET_ENV_KOPYALARI = _sohbet_env_kopyalari()

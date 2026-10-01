@@ -26,6 +26,12 @@ bot listesi kabukta TEK sabit (`_SOHBET_BOTLARI`), envanter aynası üreteçle (
 Task 1 incelemesinin taşınan maddeleri: M1 (reçeteler koşullu birimi `try-restart` ile anar — B11), M2 (ön-denetimin
 alt komut süzgeci + tekilleştirme — B10), M3 (A7-r3 / A14 yeni gerçeğe çevrildi).
 
+BÖLÜM C (G3b Task 3, 2026-10-01) — `--kapi-bot <ad>`: bir botun kapı tüketici anahtarı (`BOT_KEY_<AD>`) dört kopyasıyla
+(Agent render hedefi REFERANS · `.env-apisix` · rapor profili · sohbet profili) birlikte döner (operatör K-G3b-1); iç alt ad
+`kapi-bot-<ad>` (Rol-1 G3b-R2), bot listesi kabukta TEK sabit. Task 2 incelemesinin taşınan maddeleri: M1 (ön-denetim ALAN
+varlığını da sorar — A16), M5 (`--api-sunucu --vault` gerçek koşum B15 · envanter/eşitleme ayrışma senaryosu B16), M6
+(üretecin bot başı alt komut ailesi — C9).
+
 ÇIKTI DİSİPLİNİ: iddialar bool'a indirgenir (`_iddia`); mesajlar bilinen tohumları ve uzun jetonları
 maskeler. Bu dosyadaki her değer SAHTEdir.
 """
@@ -48,12 +54,16 @@ from tests import test_vault_db_kasa_v538 as v538
 from tests.test_sir_rotasyon_v447 import (
     BETIK,
     ESKI,
+    KAPI_BOT_ALTLARI,
     KOSULLU_BIRIMLER,
+    _env_alan,
     _betik_kopyalari,
     _birim_sirasi,
     _kos,
     _mutant,
     _sahte_ortam,
+    alt_argv,
+    alt_bayragi,
 )
 
 KOK_DEPO = pathlib.Path(__file__).resolve().parents[1]
@@ -494,16 +504,20 @@ def _dagitim_blogu() -> str:
 
 
 def test_A10_on_denetim_DAGITIM_kapisinda_TEK_noktada_butun_yollarin_ONUNDE():
-    """Çağrı noktası: root kapısından SONRA, çalışma dizini (`_islik_kur`) ve bütün yazım yollarından
+    """Çağrı noktası: root kapısından ve çalışma dizininden (`_islik_kur`) SONRA, bütün yazım yollarından
     (kasa dalı · eşitleme · eski yol alt komutları) ÖNCE; betikte TEK çağrı (tek-kaynak). Kuru koşum ve
-    eşitleme kapıdan geçmez (kuru hiçbir şey yazmaz; eşitlemenin kendi durdurması var — A9)."""
+    eşitleme kapıdan geçmez (kuru hiçbir şey yazmaz; eşitlemenin kendi durdurması var — A9).
+    2026-10-01 (G3b Task 3, Task 2 incelemesi M1): ön-denetim ALAN VARLIĞINI da sorar ve kural `yaz-env`inkiyle AYNI
+    fonksiyondur (gömülü yardımcının `_env_satiri`i) — yardımcı `_islik_kur`un yazdığı dosyadır, o yüzden kapı çalışma
+    dizininden SONRA. Çalışma dizini bir YAZIM değildir (0700 geçici, çıkışta silinir; yedek/kasa/kopya değil) — A5/A6/A16
+    "hiçbir yazım yok" sözleşmesini aynen ölçer."""
     metin = BETIK.read_text(encoding="utf-8")
     cagrilar = [s for s in metin.splitlines()
                 if "_hedef_on_denetim " in s and not s.lstrip().startswith("#")
                 and not s.lstrip().startswith("_hedef_on_denetim()")]
     _iddia(len(cagrilar) == 1, f"TEK çağrı beklendi: {cagrilar}")
     blok = _dagitim_blogu()
-    sira = [blok.find(x) for x in ('_hedef_on_denetim "$ALT"', "\n_islik_kur\n", 'vault_rotasyon "$ALT"',
+    sira = [blok.find(x) for x in ("\n_islik_kur\n", '_hedef_on_denetim "$ALT"', 'vault_rotasyon "$ALT"',
                                     'esitle "$ALT"', '\n  kapi)       kapi ;;')]
     _iddia(all(i >= 0 for i in sira) and sira == sorted(sira), f"dağıtım bloğunda sıra: {sira}")
     satir = cagrilar[0]
@@ -549,6 +563,69 @@ def test_A11b_dosya_hedefi_YOKKEN_on_denetim_KESMEZ(tmp_path):
     _iddia(r.returncode == 0 and "hedef dosya YOK" not in r.stderr,
            f"dosya hedefi ön-denetime takıldı\n{_ozet(r)}")
     _iddia((kok / "etc/meridian/apisix_admin_key").exists(), "dosya hedefi KURULMADI")
+
+
+# =================================================================================================
+# A16 — ön-denetim ALAN VARLIĞINI da sorar (G3b Task 3; Task 2 incelemesi M1 → Rol-1 IMPORTANT)
+# =================================================================================================
+# Ölçüm (Task 2 incelemesi X5): bekçinin sohbet `.env`i VAR ama `HINDSIGHT_API_KEY=` satırı YOK → `--tenant` dosya
+# kapısından geçiyordu; yedek alındı, render hedefi ve şefin kopyası YENİ değerle yazıldı, bekçide `yaz-env` "satırı 0 kez
+# bulundu" ile öldü, restart yok — Review Focus 2'nin yasakladığı yarım rotasyon, dosya değil ALAN sınıfında. Kapı artık
+# her `env` hedefinin alanını, `yaz-env`in AYNI kuralıyla (TAM 1 satır, `_env_satiri`) HİÇBİR yazımdan önce sınar.
+
+def _alan_bozuk_sahne(kok: pathlib.Path, bozukluk: str) -> None:
+    y = kok / EKSIK_YOL.lstrip("/")
+    satirlar = y.read_text(encoding="utf-8").splitlines(True)
+    _iddia(sum(s.startswith(EKSIK_ALAN + "=") for s in satirlar) == 1, "sahne: alan tam bir kez değil (pozitif kontrol)")
+    if bozukluk == "alan_yok":
+        y.write_text("".join(s for s in satirlar if not s.startswith(EKSIK_ALAN + "=")), encoding="utf-8")
+    else:
+        y.write_text("".join(satirlar) + f"{EKSIK_ALAN}={ESKI['tenant']}\n", encoding="utf-8")
+
+
+@pytest.mark.parametrize("kip", ["eski", "vault"])
+@pytest.mark.parametrize("bozukluk,hal", [("alan_yok", "ALAN YOK"), ("cift_satir", "ÇİFT SATIR (2)")],
+                         ids=["alan_yok", "cift_satir"])
+def test_A16_on_denetim_ALAN_eksik_ya_da_CIFTSE_HICBIR_yazim_yok(tmp_path, kip, bozukluk, hal):
+    """Dosya VAR, alan yok ya da iki kez: kasaya put · yedek · değer üretimi · ilk satır HİÇBİRİ yok; render hedefi ve öteki
+    kopyaların sha256'sı aynı; restart yok; istem açılmaz. stderr yolu VE alanı ADIYLA söyler ve `--tohumla-sohbet`in bu
+    hâli düzeltmediğini (yalnız YOKSA yazar) + elle düzeltme yolunu söyler."""
+    kok, ortam, kasa_log = v521._kasa_ortami(tmp_path)
+    _alan_bozuk_sahne(kok, bozukluk)
+    ek = ("--vault",) if kip == "vault" else ()
+    once = _imzalar(kok)
+    r = _kos(BETIK, ortam, "--tenant", *ek, girdi=GIRDI)
+    ih = []
+    if r.returncode == 0:
+        ih.append("çıkış 0 — alan sorunlu hedefte koşum DURMADI")
+    if f"alan {hal}: {EKSIK_YOL} [{EKSIK_ALAN}]" not in r.stderr:
+        ih.append("stderr yolu + alanı + hâli ADIYLA söylemiyor")
+    if "YALNIZ YOKSA" not in r.stderr or "elle" not in r.stderr:
+        ih.append("stderr tohumlamanın bu hâli düzeltmediğini / elle düzeltmeyi söylemiyor")
+    if _yedekler(kok):
+        ih.append("yedek dizini OLUŞTU")
+    if _imzalar(kok) != once:
+        ih.append("dosya DEĞİŞTİ (sha256) — yarım rotasyon")
+    if kasa_log.exists() and v521._kv_put_yollari(kasa_log):
+        ih.append("kasaya `kv put` YAPILDI")
+    if _systemctl_log(kok):
+        ih.append("birim yeniden BAŞLATILDI")
+    if "(boş = bu bacağı atla)" in r.stderr or "yeni değer üretildi" in r.stdout:
+        ih.append("değer istemi AÇILDI / değer ÜRETİLDİ")
+    _iddia(not ih, f"--tenant {' '.join(ek)} [{bozukluk}]:\n" + "\n".join(ih) + "\n" + _ozet(r))
+
+
+def test_A16b_alan_DEGERSIZ_tek_satirsa_on_denetim_GECER_ve_rotasyon_yazar(tmp_path):
+    """Ters yüz (kural `yaz-env`inkiyle AYNI — "alan VAR" = TAM 1 satır, değer boş olabilir): elle eklenen değersiz
+    `HINDSIGHT_API_KEY=` satırı kapıdan geçer ve rotasyon değeri kendisi yazar — iletinin önerdiği elle düzeltme ÇALIŞIR."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    y = kok / EKSIK_YOL.lstrip("/")
+    y.write_text("".join(s if not s.startswith(EKSIK_ALAN + "=") else f"{EKSIK_ALAN}=\n"
+                         for s in y.read_text(encoding="utf-8").splitlines(True)), encoding="utf-8")
+    r = _kos(BETIK, ortam, "--tenant")
+    _iddia(r.returncode == 0, _ozet(r))
+    yeni = (kok / TENANT_KRED_KAYNAK.lstrip("/")).read_text(encoding="utf-8").strip()
+    _iddia(yeni != ESKI["tenant"] and _env_alan(y, EKSIK_ALAN) == yeni, "değersiz satır yeni değeri almadı")
 
 
 # =================================================================================================
@@ -1047,7 +1124,9 @@ def test_B12b_YENI_BOT_envanteri_BAYAT_yapar_uygula_tamamlar(tmp_path):
     veri = yaml.safe_load(env.read_text(encoding="utf-8"))
     yol = f"{_sohbet_koku()}/profiles/yenibot/.env"
     satirlar = {(k["alt_komut"], k["sir"], k["alan"]) for k in veri["rotasyon_kopyalari"]["kopyalar"] if k["yol"] == yol}
-    _iddia(satirlar == {("tenant", TENANT_SIR, SOHBET_TENANT_ALANI), ("api-sunucu", API_SIR, API_SIR)}, f"{satirlar}")
+    # 2026-10-01 (G3b Task 3): yeni botun sohbet `.env`ine `kapi-bot-<ad>` ailesinin satırı da yazar (C9 bloğun tamamını ölçer).
+    _iddia(satirlar == {("tenant", TENANT_SIR, SOHBET_TENANT_ALANI), ("api-sunucu", API_SIR, API_SIR),
+                        ("kapi-bot-yenibot", "BOT_KEY_YENIBOT", "BOT_KEY_YENIBOT")}, f"{satirlar}")
     kk = [k for g in veri["vault_kv"] for k in (g.get("kopya_kaynaklari") or []) if k["dosya"] == yol]
     _iddia(kk == [{"tur": "env_satiri", "dosya": yol, "alan": SOHBET_TENANT_ALANI, "onek": None}], f"{kk}")
 
@@ -1103,3 +1182,425 @@ def test_B14_STATIK_kopya_tablosu_borusunda_ERKEN_cikan_okuyucu_YOK():
     erken = [s.strip() for s in satirlar
              if re.search(r"exit\s*\}", s.replace("END{exit", "")) or re.search(r"\|\s*(head|grep\s+-[a-z]*[qm])", s)]
     _iddia(not erken, "erken çıkan tablo okuyucusu:\n" + "\n".join(erken))
+
+
+# --- B15/B16 — Task 2 incelemesinin çivi boşlukları (M5, G3b Task 3 turunda) -------------------------
+
+def _kasa_dunyasi(tmp_path: pathlib.Path, tohumlar: dict[str, str]):
+    """v556 kasa dünyası (Agent render hedefini VE yan dosyaları yazar; `kv get`/`metadata` kasadaki ESKİ değeri sunar)
+    + verilen kasa yollarının ESKİ değerleri — A1 gerçeği: bağlı yollar DOLUDUR (dalga-1/2 `vault_sir_koy.sh`)."""
+    kok, ortam, log, durum = v556._cp_ortami(tmp_path)
+    veri = json.loads(durum.read_text(encoding="utf-8"))
+    veri.update({y: [d] for y, d in tohumlar.items()})
+    durum.write_text(json.dumps(veri), encoding="utf-8")
+    return kok, ortam, log, durum
+
+
+def _kasa_sizintisi(r: subprocess.CompletedProcess, kok: pathlib.Path, log: pathlib.Path, deger: str) -> list[str]:
+    ih = _deger_ciktida_yok(r, kok, deger)
+    if log.exists() and deger in log.read_text(encoding="utf-8"):
+        ih.append("yeni değer kasa argv günlüğünde")
+    return ih
+
+
+def test_B15_api_sunucu_KASA_URET_gercek_kosum_bes_kopya_ayni_sizinti_yok(tmp_path):
+    """M5(a): aracın DOĞRU yolu (`--api-sunucu --vault --uret`) gerçek koşar — `kv put` TEK yol (api_server_key), render
+    hedefi + kök + üç profil `.env`i AYNI yeni 64-hex değeri taşır (eskiden farklı), koşullu birimler etkin değil → restart
+    YOK (ATLANDI), değer stdout/stderr/şim argv/kasa argv'de YOK. Kasa yolunda değer-doğruluğu ÖLÇÜLMEZ (None, K3) ve
+    satır bunu SÖYLER."""
+    kasa_yolu = "secret/meridian/api_server_key"
+    kok, ortam, log, _ = _kasa_dunyasi(tmp_path, {kasa_yolu: ESKI["api"]})
+    r = _kos(BETIK, ortam, "--api-sunucu", "--vault", "--uret")
+    _iddia(r.returncode == 0, _ozet(r))
+    degerler = _api_degerleri(kok)
+    _iddia(len(set(degerler)) == 1 and degerler[0] != ESKI["api"], "beş kopya AYNI yeni değeri taşımıyor")
+    _iddia(bool(re.fullmatch(r"[0-9a-f]{64}", degerler[0] or "")), "yeni değer 64 küçük hex değil")
+    _iddia(v521._kv_put_yollari(log) == [kasa_yolu], f"kasa put yolları: {v521._kv_put_yollari(log)}")
+    _iddia(_systemctl_log(kok) == [], f"etkin olmayan birim yeniden başlatıldı: {_systemctl_log(kok)}")
+    for b in (BOTLAR, TELEGRAM):
+        _iddia(f"ATLANDI (etkin değil: inactive): {b}" in r.stdout, f"{b} ATLANDI yok\n{_ozet(r)}")
+    _iddia("değer-doğruluğu bu alt komutta ÖLÇÜLMEDİ (None)" in r.stdout, _ozet(r))
+    ih = _kasa_sizintisi(r, kok, log, degerler[0])
+    _iddia(not ih, "\n".join(ih))
+
+
+def _alan_yaz(kok: pathlib.Path, yol: str, alan: str, deger: str) -> None:
+    p = _p(kok, yol)
+    satirlar = p.read_text(encoding="utf-8").splitlines(True)
+    _iddia(sum(s.startswith(alan + "=") for s in satirlar) == 1, f"{yol}: {alan} tam bir kez değil")
+    p.write_text("".join(f"{alan}={deger}\n" if s.startswith(alan + "=") else s for s in satirlar), encoding="utf-8")
+
+
+BOZUK_KOPYA = "SAHTE-BOZUK-KOPYA-0001"
+
+
+@pytest.mark.parametrize("alt,sir,alan,profil", [
+    ("api-sunucu", API_SIR, API_SIR, "karne"),
+    ("tenant", TENANT_SIR, SOHBET_TENANT_ALANI, "sef"),
+    ("kapi-bot-karne", "BOT_KEY_KARNE", "BOT_KEY_KARNE", "karne"),
+], ids=["api-sunucu", "tenant", "kapi-bot"])
+def test_B16_envanter_AYRIYI_gorur_esitle_YALNIZ_ayrigi_yazar(tmp_path, alt, sir, alan, profil):
+    """M5(c) — Review Focus 5'in son cümlesi KOŞAN bir çiviyle: bir sohbet kopyası bozulunca `--envanter` onu `→ AYRI` gösterir
+    (öteki kopyalar EŞİT); `--<alt> --esitle` YALNIZ o dosyayı yazar (öteki her dosyanın sha256'sı aynı), restart YOK, değer
+    referansa eşitlenir ve yeniden ölçümde EŞİT'tir. Tablo güdümlüdür: yeni satırlar (sohbet kopyaları, `kapi-bot-<ad>`)
+    ayrıca kodlanmadan kapsanır."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    hedef = _profil_env(profil)
+    _alan_yaz(kok, hedef, alan, BOZUK_KOPYA)
+    r = _kos(BETIK, ortam, "--envanter")
+    _iddia(r.returncode == 0, _ozet(r))
+    satirlar = [s for s in r.stdout.splitlines() if s.startswith(f"  {sir} · ")]
+    _iddia(f"  {sir} · {hedef} [{alan}] → AYRI" in satirlar, f"bozulan kopya AYRI görünmüyor\n{_ozet(r)}")
+    _iddia(sum(s.endswith("→ AYRI") for s in satirlar) == 1, f"AYRI satırı tam bir değil: {satirlar}")
+    # İmza içerik + KİMLİK: yazım `_atomik_yaz` (mkstemp + `os.replace`) ile olur ve EŞİT bir kopyayı aynı değerle yeniden
+    # yazmak içeriği değiştirmez ama dosyayı DEĞİŞTİRİR (yeni inode, yeni mtime) — "yalnız ayrığı yazar" sözleşmesi ancak
+    # böyle ölçülür (ölçüldü: yalnız sha256 kıyası AYRI süzgecini kaldıran mutasyona KÖRDÜ — rapor M7).
+    def imza() -> dict[str, tuple]:
+        return {str(q.relative_to(kok)): (hashlib.sha256(q.read_bytes()).hexdigest(), q.stat().st_ino, q.stat().st_mtime_ns)
+                for q in kok.rglob("*") if q.is_file() and ".sahte" not in q.parts}
+    once = imza()
+    r2 = _kos(BETIK, ortam, *alt_argv(alt), "--esitle")
+    _iddia(r2.returncode == 0, _ozet(r2))
+    sonra = imza()
+    degisen = sorted(k for k in set(once) | set(sonra) if once.get(k) != sonra.get(k) and not k.startswith("root/"))
+    _iddia(degisen == [hedef.lstrip("/")], f"eşitleme YALNIZ ayrığı yazmadı: {degisen}")
+    _iddia(_systemctl_log(kok) == [], f"eşitleme yeniden başlattı: {_systemctl_log(kok)}")
+    ref = next(x for x in _betik_kopyalari() if x["sir"] == sir)
+    ref_deger = (_dosya_degeri(kok, ref["yol"]) if ref["tur"] == "dosya" else _alan(kok, ref["yol"], ref["alan"]))
+    _iddia(_alan(kok, hedef, alan) == ref_deger and ref_deger != BOZUK_KOPYA, "kopya referansa eşitlenmedi")
+    _iddia(BOZUK_KOPYA not in r.stdout + r.stderr + r2.stdout + r2.stderr and ref_deger not in r2.stdout + r2.stderr,
+           "bir değer çıktıya düştü")
+    r3 = _kos(BETIK, ortam, "--envanter")
+    _iddia(f"  {sir} · {hedef} [{alan}] → EŞİT" in r3.stdout.splitlines(), _ozet(r3))
+
+
+# =================================================================================================
+# BÖLÜM C (G3b Task 3, 2026-10-01) — `--kapi-bot <ad>`: BİR BOTUN KAPI ANAHTARI TÜM KOPYALARIYLA BİRLİKTE DÖNER
+# =================================================================================================
+# Operatör kararı K-G3b-1 (2026-09-30): kapı tüketicisi (`.env-apisix` `BOT_KEY_<AD>` — `$env://` açılışta çözülür,
+# RESTART), rapor profili (`~/.hermes/profiles/<ad>/.env`) ve sohbet profili (`~/.hermes-botlar/profiles/<ad>/.env`) AYNI
+# turda yazılır; REFERANS Agent'ın render hedefidir (`/etc/meridian/bot_key_<ad>`, Rol-1 G3b-R3). İç alt ad
+# `kapi-bot-<ad>` (G3b-R2): tablo güdümlü makine (`_birimler` · `_alt_sirlari` · `_yedek_al` · `_kuru_rapor` ·
+# `_envanter_esitlik`) süzgeçsiz doğru çalışır. Bot listesi kabukta TEK sabittir (`_SOHBET_BOTLARI`).
+
+APISIX_ENV = "/opt/apisix/.env-apisix"
+RAPOR_PROFIL_KOKU = "/home/ubuntu/.hermes/profiles"
+
+
+def _bot_sir(ad: str) -> str:
+    return f"BOT_KEY_{ad.upper()}"
+
+
+def _bot_ref(ad: str) -> str:
+    return f"/etc/meridian/bot_key_{ad}"
+
+
+def _bot_kopyalari(ad: str) -> list[tuple[str, str]]:
+    """`(tür, yol)` — tablodaki SIRA: referans render hedefi, kapı, rapor profili, sohbet profili (brief Task 3)."""
+    return [("dosya", _bot_ref(ad)), ("env", APISIX_ENV), ("env", f"{RAPOR_PROFIL_KOKU}/{ad}/.env"),
+            ("env", _profil_env(ad))]
+
+
+def _bot_degerleri(kok: pathlib.Path, ad: str) -> list[str | None]:
+    return [_dosya_degeri(kok, _bot_ref(ad))] + [_alan(kok, y, _bot_sir(ad)) for _, y in _bot_kopyalari(ad)[1:]]
+
+
+def _diger_satirlar(kok: pathlib.Path, yol: str, alan: str) -> list[str]:
+    return [s for s in _p(kok, yol).read_text(encoding="utf-8").splitlines() if not s.startswith(alan + "=")]
+
+
+# --- C1 — yalnız kendi botunu döndürür ----------------------------------------------------------------
+
+@pytest.mark.parametrize("kip", ["eski", "kasa"])
+def test_C1_kapi_bot_yalniz_kendi_botunu_dondurur(tmp_path, kip):
+    """`--kapi-bot bekci` (eski yol ve `--vault --uret`): `BOT_KEY_BEKCI`in DÖRT kopyası (render hedefi · `.env-apisix` ·
+    rapor `.env` · sohbet `.env`) AYNI yeni değeri taşır (48 kr b64url, eskiden farklı). Öteki botların bütün kopyaları,
+    `.env-apisix`in ve bekçi `.env`lerinin öteki satırları bayt-eşit; tablonun bekçi bloğu DIŞINDA hiçbir dosya değişmez.
+    Değer hiçbir çıktıda/argv'de yok. Kapı yeniden başlar (`$env://` açılışta); botlar etkin değil → ATLANDI. Eski yolun
+    kanıtı kapı `/models` (yeni → 200 · eski → 401); kasa yolunda `kv put` TEK yol."""
+    ad, digerler = "bekci", [b for b in _sohbet_profilleri() if b != "bekci"]
+    kasa_yolu = f"secret/meridian/bot_key_{ad}"
+    if kip == "eski":
+        kok, ortam = _sahte_ortam(tmp_path)
+        log, args = None, ("--kapi-bot", ad)
+    else:
+        kok, ortam, log, _ = _kasa_dunyasi(tmp_path, {kasa_yolu: ESKI["bot_bekci"]})
+        args = ("--kapi-bot", ad, "--vault", "--uret")
+    _iddia(set(_bot_degerleri(kok, ad)) == {ESKI["bot_bekci"]}, "tohum: dört kopya eşit değil (pozitif kontrol)")
+    once = _imzalar(kok)
+    komsu = {y: _diger_satirlar(kok, y, _bot_sir(ad)) for _, y in _bot_kopyalari(ad)[1:]}
+    r = _kos(BETIK, ortam, *args)
+    _iddia(r.returncode == 0, _ozet(r))
+    degerler = _bot_degerleri(kok, ad)
+    _iddia(len(set(degerler)) == 1 and degerler[0] != ESKI["bot_bekci"], "dört kopya AYNI yeni değeri taşımıyor")
+    _iddia(bool(re.fullmatch(r"[A-Za-z0-9_-]{48}", degerler[0] or "")), "yeni değer 48 kr b64url değil (sınıf b64)")
+    for b in digerler:
+        _iddia(set(_bot_degerleri(kok, b)) == {ESKI[f"bot_{b}"]}, f"{b}: başka botun anahtarı DEĞİŞTİ")
+    for y, satirlar in komsu.items():
+        _iddia(_diger_satirlar(kok, y, _bot_sir(ad)) == satirlar, f"{y}: öteki satırlar DEĞİŞTİ")
+    sonra = _imzalar(kok)
+    izinli = {y.lstrip("/") for _, y in _bot_kopyalari(ad)} | ({"opt/apisix/.env-apisix.vault"} if kip == "kasa" else set())
+    degisen = {k for k in set(once) | set(sonra) if once.get(k) != sonra.get(k) and not k.startswith("root/")}
+    _iddia(degisen <= izinli, f"bekçi bloğu DIŞINDA dosya değişti: {sorted(degisen - izinli)}")
+    ih = _deger_ciktida_yok(r, kok, degerler[0]) if log is None else _kasa_sizintisi(r, kok, log, degerler[0])
+    _iddia(not ih, "\n".join(ih))
+    _iddia(_systemctl_log(kok) == ["apisix.service"], f"restart: {_systemctl_log(kok)}")
+    _iddia(f"ATLANDI (etkin değil: inactive): {BOTLAR}" in r.stdout, f"botlar ATLANDI yok\n{_ozet(r)}")
+    if kip == "eski":
+        _iddia(f"kapı /models (bot_{ad}): yeni→200 · eski→401" in r.stdout, f"kapı kanıtı yok\n{_ozet(r)}")
+    else:
+        _iddia(v521._kv_put_yollari(log) == [kasa_yolu], f"kasa put yolları: {v521._kv_put_yollari(log)}")
+
+
+def test_C1b_kapi_bot_kaniti_ANAHTARA_BAGLI_degilse_cikis_2(tmp_path):
+    """İki hüküm birden: kapı anahtara KÖR olursa (`SAHTE_KOR`) eski anahtar da 200 alır → `ÖLÇÜLEMEDİ`, çıkış 2."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    ortam["SAHTE_KOR"] = "1"
+    r = _kos(BETIK, ortam, "--kapi-bot", "bekci")
+    _iddia(r.returncode == 2 and "ÖLÇÜLEMEDİ" in r.stderr and "kapı /models (bot_bekci)" in r.stderr, _ozet(r))
+
+
+def test_C1c_referans_YOKSA_hicbir_sey_yazilmaz(tmp_path):
+    """Referans Agent render hedefidir (G3b-R3); yoksa ESKİ değer UYDURULMAZ — eski yol yedekten ÖNCE durur: yedek, değer
+    üretimi, kopya yazımı ve restart YOK; ileti yolu ADIYLA söyler (`api_sunucu` B4d emsali)."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    _p(kok, _bot_ref("bekci")).unlink()
+    once = _imzalar(kok)
+    r = _kos(BETIK, ortam, "--kapi-bot", "bekci")
+    _iddia(r.returncode != 0 and _bot_ref("bekci") in r.stderr, _ozet(r))
+    _iddia(_imzalar(kok) == once and not _yedekler(kok) and not _systemctl_log(kok), f"referanssız koşum YAZDI\n{_ozet(r)}")
+
+
+# --- C2 — geçersiz ad: kasaya ve dosyaya dokunmadan ret -------------------------------------------------
+
+GECERSIZ = [
+    ("bos", ["--kapi-bot", "", "--vault"], "geçersiz bot adı"),
+    ("meridian", ["--kapi-bot", "meridian", "--vault"], "geçersiz bot adı"),
+    ("buyuk_harf", ["--kapi-bot", "BEKCI", "--vault"], "geçersiz bot adı"),
+    ("yol", ["--kapi-bot", "bekci/../sef", "--vault"], "geçersiz bot adı"),
+    ("bosluklu", ["--kapi-bot", "sef bekci", "--vault"], "geçersiz bot adı"),
+    ("bilinmeyen", ["--kapi-bot", "yok", "--vault"], "geçersiz bot adı"),
+    ("bayrak_ad", ["--kapi-bot", "--kuru", "--vault"], "geçersiz bot adı"),
+    ("argumansiz", ["--kapi-bot"], "bot ADI ister"),
+    ("ic_ad_bayrak", ["--kapi-bot-bekci"], "bilinmeyen argüman"),
+    ("iki_bot", ["--kapi-bot", "bekci", "--kapi-bot", "sef"], "iki alt komut"),
+]
+
+
+@pytest.mark.parametrize("args,ileti", [(a, i) for _, a, i in GECERSIZ], ids=[k for k, _, _ in GECERSIZ])
+def test_C2_gecersiz_bot_adi_hicbir_sey_yazmadan_reddedilir(tmp_path, args, ileti):
+    """Ad TEK listeye (`_SOHBET_BOTLARI`) TAM eşitlikle sorulur — büyük harf, yol karakteri, boşluk, boş, bayrak gibi
+    görünen ad ve bilinmeyen bot AYRIŞTIRMADA reddedilir: kasa şimi hiç çağrılmaz, `is-active`/restart yok, yedek yok,
+    sahnedeki her dosyanın sha256'sı aynı. Ret ayrıştırma katmanındadır (ileti ADIYLA) — derindeki tablo kapıları
+    (satırı olmayan alt komut) ikinci savunmadır, birinci değil."""
+    kok, ortam, kasa_log = v521._kasa_ortami(tmp_path)
+    once = _imzalar(kok)
+    r = _kos(BETIK, ortam, *args, girdi=GIRDI)
+    ih = []
+    if r.returncode == 0:
+        ih.append("çıkış 0 — geçersiz ad KABUL edildi")
+    if ileti not in r.stderr:
+        ih.append(f"stderr ayrıştırma iletisini ({ileti!r}) taşımıyor")
+    if kasa_log.exists():
+        ih.append("kasa şimi ÇAĞRILDI")
+    if _is_active_sorulari(kok) or _systemctl_log(kok):
+        ih.append("systemctl'e soruldu / restart yapıldı")
+    if _yedekler(kok) or _imzalar(kok) != once:
+        ih.append("yedek alındı ya da dosya değişti")
+    _iddia(not ih, f"{args}:\n" + "\n".join(ih) + "\n" + _ozet(r))
+
+
+# --- C3 — bot listesi tek kaynak; tablo blokları ---------------------------------------------------------
+
+def test_C3_bot_listesi_tek_kaynaktan_ve_tablo_bloklari():
+    """Kabuktaki bot kümesi (`_SOHBET_BOTLARI`) = A0 `sohbet_profil_adlari` = `deploy/hermes/sohbet/profiles/*` dizinleri;
+    `--kopyalar`ın `kapi-bot-*` alt komutları TAM bu kümedir ve her botun bloğu dört satırdır (referans render hedefi İLK,
+    `.env-apisix`, rapor, sohbet — BİTİŞİK, alan `BOT_KEY_<AD>`). Kabukta `kapi-bot-<ad>` LİTERALİ yok (ikinci liste yok);
+    başlığın KULLANIM satırındaki ad listesi (belge — kopya kaçınılmaz) bot listesiyle AYNI."""
+    kabuk = _betik_sabiti("_SOHBET_BOTLARI")
+    dizinler = sorted(p.name for p in (KOK_DEPO / "deploy/hermes/sohbet/profiles").iterdir() if p.is_dir())
+    _iddia(set(kabuk) == set(_sohbet_profilleri()) == set(dizinler), f"{kabuk} · {_sohbet_profilleri()} · {dizinler}")
+    _iddia(set(KAPI_BOT_ALTLARI) == {f"kapi-bot-{b}" for b in kabuk}, f"v447 KAPI_BOT_ALTLARI: {KAPI_BOT_ALTLARI}")
+    k = _betik_kopyalari()
+    _iddia({x["alt"] for x in k if x["alt"].startswith("kapi-bot-")} == {f"kapi-bot-{b}" for b in kabuk},
+           f"tablonun kapi-bot alt komutları: {sorted({x['alt'] for x in k if x['alt'].startswith('kapi-bot-')})}")
+    for b in kabuk:
+        blok = [x for x in k if x["alt"] == f"kapi-bot-{b}"]
+        _iddia([(x["tur"], x["yol"]) for x in blok] == _bot_kopyalari(b), f"{b} bloğu: {[(x['tur'], x['yol']) for x in blok]}")
+        _iddia({x["sir"] for x in blok} == {_bot_sir(b)}, f"{b}: sır kimliği {sorted({x['sir'] for x in blok})}")
+        _iddia(blok[0]["mod"] == "0400" and blok[0]["sahip"] == "root:root" and blok[0]["alan"] is None, f"{b}: {blok[0]}")
+        _iddia(all(x["alan"] == _bot_sir(b) and x["mod"] == x["sahip"] == "koru" for x in blok[1:]), f"{b}: {blok[1:]}")
+    metin = BETIK.read_text(encoding="utf-8")
+    govde = "\n".join(s for s in metin.splitlines() if not s.lstrip().startswith("#"))
+    _iddia(not [b for b in kabuk if f"kapi-bot-{b}" in govde], "kabukta kapi-bot-<ad> LİTERALİ (ikinci liste)")
+    m = re.findall(r"^#\s+sudo \./sir_rotasyon\.sh --kapi-bot <([^>]*)>", metin, re.M)
+    _iddia(len(m) == 1 and m[0].split("|") == kabuk, f"KULLANIM satırının ad listesi: {m} ≠ {kabuk}")
+
+
+# --- C4 — restart: kapı her zaman, botlar yalnız etkinse, motor ASLA ---------------------------------------
+
+@pytest.mark.parametrize("etkin", [False, True], ids=["botlar_etkin_degil", "botlar_etkin"])
+def test_C4_kapi_bot_apisix_restart_botlar_yalniz_etkinse(tmp_path, etkin):
+    """`BOT_KEY_<AD>`in tüketicileri kapı (`$env://` AÇILIŞTA — reload yetmez, restart) ve bot ağ geçidi (profil `.env`i,
+    açılışta). Motor bu anahtarı KULLANMAZ → `meridian.service` YENİDEN BAŞLAMAZ; Telegram dinleyicisine SORULMAZ bile.
+    Botlar etkin değilse ATLANDI; etkinse kapıdan SONRA restart + `/health` hazırlığı (credential satırı YOK — denetim
+    istenmez). Rapor botları timer'lı oneshot'tur, `.env`i her koşuda okur (restart yok)."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    ortam["SIR_ROT_BOTLAR"] = BOTLAR_KOK
+    if etkin:
+        _etkin_botlar(kok, BOTLAR)
+    r = _kos(BETIK, ortam, "--kapi-bot", "karne")
+    _iddia(r.returncode == 0, _ozet(r))
+    log = _systemctl_log(kok)
+    _iddia("apisix.service" in log and "meridian.service" not in log, f"restart: {log}")
+    _iddia(set(_is_active_sorulari(kok)) == {BOTLAR}, f"is-active: {_is_active_sorulari(kok)}")
+    if etkin:
+        _iddia(log == ["apisix.service", BOTLAR], f"restart sırası: {log}")
+        _iddia("hazır: meridian-botlar" in r.stdout and "ATLANDI" not in r.stdout, _ozet(r))
+        _iddia(f"/run/credentials/{BOTLAR}/" not in r.stdout + r.stderr, "botlar için credential denetimi İSTENDİ")
+    else:
+        _iddia(log == ["apisix.service"], f"restart: {log}")
+        _iddia(f"ATLANDI (etkin değil: inactive): {BOTLAR}" in r.stdout, _ozet(r))
+        _iddia(not [u for u in _url_log(kok) if u.startswith(BOTLAR_KOK)], "etkin olmayan botlar YOKLANDI")
+
+
+# --- C5 — envanter bağı tabloyla birebir ------------------------------------------------------------------
+
+def test_C5_BOT_KEY_baglari_tabloyla_birebir():
+    """Envanter `bot_key_<ad>`: `rotasyon_siri: BOT_KEY_<AD>` (kasaya BAĞLI — `--kapi-bot <ad> --vault`), `kaynak` = REFERANS
+    render hedefi (G3b-R3, emsal `hindsight_cp_access_key`), `{kaynak} ∪ kopya_kaynaklari` = tablonun o sırra ait satırları
+    (v491 A5'in genel kuralı — bu çivi ona işaret eden POZİTİF KONTROLdür: bot girdileri A5'in atladığı dalga-1/bağsız
+    kollara DÜŞMÜYOR). Tüketici beyanı rotasyon komutunu adıyla taşır ve LoadCredential DEMEZ (v485 F2)."""
+    veri = yaml.safe_load(ENVANTER_YOLU.read_text(encoding="utf-8"))
+    kv = {g["ad"]: g for g in veri["vault_kv"]}
+    tablo = _betik_kopyalari()
+    tur_esleme = {"env": "env_satiri", "dosya": "dosya"}
+    for b in _sohbet_profilleri():
+        g = kv.get(f"bot_key_{b}")
+        _iddia(g is not None, f"vault_kv.bot_key_{b} yok")
+        _iddia(g.get("rotasyon_siri") == _bot_sir(b) and "ayni_deger" not in g and "kaynak" in g,
+               f"bot_key_{b}: A5'in BİREBİR kolunda değil: rotasyon_siri={g.get('rotasyon_siri')!r}")
+        _iddia(g["kaynak"] == {"tur": "dosya", "dosya": _bot_ref(b), "alan": None, "onek": None}, f"kaynak: {g['kaynak']}")
+        _iddia(g["hedef"] == _bot_ref(b), f"hedef: {g['hedef']}")
+        beklenen = {(tur_esleme[x["tur"]], x["yol"], x["alan"], x["onek"]) for x in tablo if x["sir"] == _bot_sir(b)}
+        gercek = {(k["tur"], k["dosya"], k["alan"], k["onek"]) for k in [g["kaynak"], *(g.get("kopya_kaynaklari") or [])]}
+        _iddia(gercek == beklenen and len(beklenen) == 4, f"bot_key_{b}: {sorted(gercek ^ beklenen)}")
+        _iddia(f"--kapi-bot {b}" in g["tuketici"] and "LoadCredential" not in g["tuketici"]
+               and "vault_dosyalar" in g["tuketici"], f"bot_key_{b} tüketici: {g['tuketici']!r}")
+
+
+# --- C6 — kuru plan: operatöre giden her komut GERÇEK bayrakla --------------------------------------------
+
+@pytest.mark.parametrize("kip", ["eski", "kasa"])
+def test_C6_kuru_plan_dort_kopya_ve_komutlar_GERCEK_bayrakla(tmp_path, kip):
+    """`--kapi-bot <ad> --kuru` (ve `--vault --kuru`): dört kopya planda, kapı restart + botlar "YALNIZ ETKİNSE" notu, hiçbir
+    şey yazılmaz. İç alt ad komut satırına SIZMAZ: `--kapi-bot-<ad>` diye bir bayrak yoktur (C2) ve operatöre basılan her
+    komut `--kapi-bot <ad>` biçimindedir (eski yol uyarısının `--vault` önerisi dahil)."""
+    kok, ortam, kasa_log = v521._kasa_ortami(tmp_path)
+    ek = ("--vault",) if kip == "kasa" else ()
+    once = _imzalar(kok)
+    r = _kos(BETIK, ortam, "--kapi-bot", "sef", *ek, "--kuru")
+    _iddia(r.returncode == 0, _ozet(r))
+    _iddia(f"KURU KOŞUM: --kapi-bot sef" in r.stdout, f"kuru başlığı\n{_ozet(r)}")
+    for _, y in _bot_kopyalari("sef"):
+        _iddia(y in r.stdout, f"planda yok: {y}\n{_ozet(r)}")
+    _iddia(f"    · {BOTLAR} — şu an: inactive → ATLANACAK" in r.stdout.splitlines(), _ozet(r))
+    _iddia(not re.search(r"--kapi-bot-", r.stdout + r.stderr), "iç alt ad komut satırı biçiminde basıldı")
+    if kip == "eski":
+        _iddia(f"sudo {BETIK} --kapi-bot sef --vault" in r.stdout, f"eski yol uyarısı kasa yolunu göstermiyor\n{_ozet(r)}")
+        _iddia("/llm/v1/models (apikey, tüketici bot_sef)" in r.stdout, f"kanıt planı yok\n{_ozet(r)}")
+    else:
+        _iddia("kasaya yazılacak : secret/meridian/bot_key_sef" in r.stdout, _ozet(r))
+        _iddia(f"eski yol (sudo {BETIK} --kapi-bot sef)" in r.stdout, f"değer kaynağı beyanı bayrağı\n{_ozet(r)}")
+    _iddia(_imzalar(kok) == once and not _yedekler(kok) and not _systemctl_log(kok) and not kasa_log.exists(),
+           "kuru koşum YAZDI / kasaya dokundu")
+
+
+# --- C7 — ön-denetim bot başı alt komutu da kapsar ---------------------------------------------------------
+
+@pytest.mark.parametrize("kip", ["eski", "kasa"])
+def test_C7_sohbet_env_YOKKEN_kapi_bot_HIC_yazmaz_ama_ozge_bot_KOSAR(tmp_path, kip):
+    """A1 bugün: sohbet `.env`leri YOK (tohumlama Task 4). `--kapi-bot bekci` HİÇBİR yazım yapmadan durur (yolu ADIYLA);
+    ön-denetimin alt komut süzgeci başka botu durdurmaz — karnenin `.env`i yerindeyse `--kapi-bot karne` KOŞAR."""
+    if kip == "eski":
+        kok, ortam = _sahte_ortam(tmp_path)
+        kasa_log, ek = None, ()
+    else:
+        kok, ortam, kasa_log, _ = _kasa_dunyasi(tmp_path, {"secret/meridian/bot_key_bekci": ESKI["bot_bekci"],
+                                                           "secret/meridian/bot_key_karne": ESKI["bot_karne"]})
+        ek = ("--vault", "--uret")
+    _eksik_hedefi_sil(kok)
+    once = _imzalar(kok)
+    r = _kos(BETIK, ortam, "--kapi-bot", "bekci", *ek)
+    _iddia(r.returncode != 0 and f"hedef dosya YOK: {EKSIK_YOL}" in r.stderr and TOHUMLA in r.stderr, _ozet(r))
+    _iddia(not _yedekler(kok) and _imzalar(kok) == once and not _systemctl_log(kok), f"YAZDI\n{_ozet(r)}")
+    if kasa_log is not None:
+        _iddia(not v521._kv_put_yollari(kasa_log), "kasaya put YAPILDI")
+    r2 = _kos(BETIK, ortam, "--kapi-bot", "karne", *ek)
+    _iddia(r2.returncode == 0, f"başka botun eksik hedefi karneyi durdurdu\n{_ozet(r2)}")
+
+
+# --- C8 — envanter sahnede bot anahtarlarını EŞİT görür, beyan dışı bağırmaz ---------------------------------
+
+def test_C8_envanter_bot_anahtarlari_ESIT_beyan_disi_YOK(tmp_path):
+    """`BOT_KEY_<AD>` artık bir sır KİMLİĞİDİR (`_aranan_adlar` birinci kaynağı) → `.env-apisix` · rapor · sohbet `.env`lerinde
+    duran her `BOT_KEY_*` satırı ya tabloda ya BEYAN DIŞI'dır. Sahne (canlının varacağı dünya): her botun dört kopyası EŞİT,
+    beyan dışı kopya YOK (yalnız spec Bulgu-2'nin pano jetonu kopyaları — v447 I3)."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    r = _kos(BETIK, ortam, "--envanter")
+    _iddia(r.returncode == 0, _ozet(r))
+    for b in _sohbet_profilleri():
+        satirlar = [s for s in r.stdout.splitlines() if s.startswith(f"  {_bot_sir(b)} · ")]
+        _iddia(len(satirlar) == 4 and satirlar[0].endswith("→ VAR (referans kopya)")
+               and all(s.endswith("→ EŞİT") for s in satirlar[1:]), f"{b}: {satirlar}")
+    beyan_disi = [s for s in r.stdout.splitlines() if "BEYAN DIŞI" in s and "BOT_KEY_" in s]
+    _iddia(not beyan_disi, "bot anahtarı BEYAN DIŞI:\n" + "\n".join(beyan_disi))
+
+
+# --- C9 — üretecin bot başı alt komut ailesi (M6) -----------------------------------------------------------
+
+def test_C9_URETEC_kapi_bot_ailesi_YENI_BOTTA_dort_satir_uretir(tmp_path):
+    """Task 2 incelemesi M6: üreteç "aile = bütün botlar" varsayımını `kapi-bot-<ad>` (aile başına TEK bot, alt komut başına
+    dört satır) için genişletir. Yeni bot → `--kontrol` BAYAT; `--uygula` (kopya envanter) yeni botun `kapi-bot-<ad>`
+    bloğunu SIRAYLA ve şablondaki tüketici metinleriyle yazar; ikinci `--kontrol` 0. Kasa girdisi (`vault_kv.bot_key_<ad>`)
+    sır başına elle yazılır (plan Global Constraints) — üreteç onu UYDURMAZ."""
+    betik = _yeni_botlu_betik(tmp_path)
+    env = tmp_path / "envanter.yaml"
+    env.write_text(ENVANTER_YOLU.read_text(encoding="utf-8"), encoding="utf-8")
+    r = _uretec("--uygula", betik=betik, envanter=env)
+    _iddia(r.returncode == 0, f"{r.stdout}\n{r.stderr}")
+    _iddia(_uretec("--kontrol", betik=betik, envanter=env).returncode == 0, "uygula sonrası bayat")
+    veri = yaml.safe_load(env.read_text(encoding="utf-8"))
+    blok = [k for k in veri["rotasyon_kopyalari"]["kopyalar"] if k["alt_komut"] == "kapi-bot-yenibot"]
+    beklenen = [("dosya", "/etc/meridian/bot_key_yenibot", None), ("env", APISIX_ENV, "BOT_KEY_YENIBOT"),
+                ("env", f"{RAPOR_PROFIL_KOKU}/yenibot/.env", "BOT_KEY_YENIBOT"),
+                ("env", f"{_sohbet_koku()}/profiles/yenibot/.env", "BOT_KEY_YENIBOT")]
+    _iddia([(k["tur"], k["yol"], k["alan"]) for k in blok] == beklenen, f"yenibot bloğu: {blok}")
+    _iddia(all(k["sir"] == "BOT_KEY_YENIBOT" for k in blok) and "yenibot" in blok[2]["tuketici"]
+           and "{ad}" not in "".join(k["tuketici"] for k in blok), f"tüketici şablonu: {[k['tuketici'] for k in blok]}")
+    _iddia("bot_key_yenibot" not in {g["ad"] for g in veri["vault_kv"]}, "üreteç kasa girdisi UYDURDU")
+
+
+@pytest.mark.parametrize("bozma", ["satir", "bolge", "sablon"])
+def test_C9b_URETEC_kapi_bot_bolgesi_bozulursa_kontrol_OTER(tmp_path, bozma):
+    """`--kontrol` ısırır: (satır) üretilmiş bir `kapi-bot-*` satırı elle değişirse BAYAT (1); (bölge) aile işaretçisi
+    kaldırılırsa ayna dışında kalan aile SÖZLEŞME hatası (1); (şablon) bir yolun tüketici şablonu silinirse o satır
+    üretilemez — SÖZLEŞME hatası (1). Üçünde de envanter YAZILMAZ."""
+    ham = ENVANTER_YOLU.read_text(encoding="utf-8")
+    if bozma == "satir":
+        capa = '      yol: "/opt/apisix/.env-apisix"\n      alan: BOT_KEY_SEF\n'
+        _iddia(ham.count(capa) == 1, "çapa tek değil")
+        bozuk = ham.replace(capa, '      yol: "/opt/apisix/.env-apisix"\n      alan: BOT_KEY_YANLIS\n')
+    elif bozma == "bolge":
+        bas = ham.index("# >>> ÜRETİLDİ alt_ailesi kapi-bot-{ad}")
+        son = ham.index("# <<< ÜRETİLDİ", bas) + len("# <<< ÜRETİLDİ")
+        bozuk = ham[:bas] + "# (bölge kaldırıldı)" + ham[son:]
+    else:
+        satirlar = [s for s in ham.splitlines(True) if s.lstrip().startswith("# şablon /home/ubuntu/.hermes/profiles/")]
+        _iddia(len(satirlar) == 1, f"şablon satırı tek değil: {satirlar}")
+        bozuk = ham.replace(satirlar[0], "", 1)
+    env = tmp_path / "envanter.yaml"
+    env.write_text(bozuk, encoding="utf-8")
+    r = _uretec("--kontrol", envanter=env)
+    _iddia(r.returncode == 1, f"bozulan bölge yakalanmadı ({bozma}): {r.returncode}\n{r.stdout}\n{r.stderr}")
+    _iddia(env.read_text(encoding="utf-8") == bozuk, "--kontrol envanteri YAZDI")
