@@ -879,8 +879,9 @@ _islik_kur() {
 """sir_rotasyon.sh'in dosya yazma/okuma yardımcısı — DEĞER YALNIZ DOSYADAN OKUNUR.
 
 Hiçbir işlem sır değerini stdout'a, stderr'e ya da bir argümana koymaz; basılan tek şey
-KARAR'dır (EŞİT/AYRI/VAR/YOK). Bütün yazımlar aynı dizinde geçici dosya + `os.replace` ile
-ATOMİKTİR: yarım yazılmış bir credential dosyası birimi açılmaz hâle getirir.
+KARAR'dır (EŞİT/AYRI/VAR/YOK). Bütün yazımlar aynı dizinde geçici dosya + yerine koyma ile
+ATOMİKTİR: yarım yazılmış bir credential dosyası birimi açılmaz hâle getirir. Yazımlar BAĞ
+İZLEMEZ ve tanıtıcı tabanlıdır (`_atomik_yaz` — TSK-260; tohumlamayla ortak çekirdek).
 """
 from __future__ import annotations
 
@@ -889,7 +890,7 @@ import os
 import re
 import stat
 import sys
-import tempfile
+from types import SimpleNamespace
 from urllib.parse import quote, unquote, urlsplit, urlunsplit
 
 ONEKLER = {"-": "", "Bearer": "Bearer "}
@@ -941,64 +942,49 @@ def _deger_dosyadan(yol: str) -> str:
     return d
 
 
-def _atomik_yaz(hedef: str, icerik: str, mod: str, sahip: str) -> None:
-    """Mod/sahip: `koru` ise hedefin MEVCUTU okunur (os.stat), yoksa argümandan alınır."""
-    d = os.path.dirname(hedef) or "."
-    st = os.stat(hedef) if os.path.exists(hedef) else None
-    fd, gecici = tempfile.mkstemp(dir=d, prefix=".sir-rot-")
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
-            fh.write(icerik)
-        if mod == "koru":
-            if st is None:
-                sys.exit(f"mod=koru ama dosya YOK: {hedef}")
-            os.chmod(gecici, st.st_mode & 0o7777)
-        else:
-            os.chmod(gecici, int(mod, 8))
-        if sahip == "koru":
-            if st is None:
-                sys.exit(f"sahip=koru ama dosya YOK: {hedef}")
-            uid, gid = st.st_uid, st.st_gid
-        elif sahip == "-":
-            uid = gid = -1
-        else:
-            import grp
-            import pwd
-            k, _, g = sahip.partition(":")
-            try:
-                uid, gid = pwd.getpwnam(k).pw_uid, grp.getgrnam(g).gr_gid
-            except KeyError:
-                # Yasa 4 — sessiz-yutma: adı olmayan kullanıcı/grup YALNIZ çivi makinesinde olur
-                # (macOS'ta `root` grubu YOKTUR, karşılığı `wheel`). A1'de `root:root` vardır ve
-                # buraya hiç düşülmez; düşülürse sahiplik DEĞİŞMEZ, dosya ZATEN test kökündedir.
-                uid = gid = -1
-        if uid != -1:
-            try:
-                os.chown(gecici, uid, gid)
-            except PermissionError:
-                # Yasa 4 — sessiz-yutma: root DEĞİLKEN (yalnız v447 çivisi) chown yapılamaz;
-                # üretimde betik sudo altında koşar ve buraya hiç düşmez. Sahiplik korunamadıysa
-                # dosya ZATEN test kökündedir ve canlı bir birimi etkilemez.
-                pass
-        os.replace(gecici, hedef)
-        gecici = ""
-    finally:
-        if gecici and os.path.exists(gecici):
-            os.unlink(gecici)
+# --- BAĞ İZLEMEYEN YAZIM — TOHUMLAMA VE ROTASYONUN ORTAK ÇEKİRDEĞİ (G3b dal sonu M1 + TSK-260, CWE-59) -----------------
+# SINIF. Hedef dizinlerin bir kısmı UBUNTU sahiplidir: hermes profilleri (`~/.hermes/…`), bot ağ geçidi (`~/.hermes-botlar/…`,
+# A0 0700), `/opt/hindsight` (755 ubuntu — A1 ölçümü 2026-09-15, `deploy/vault/vault-agent.service` başlığı). Ubuntu kimliğinde
+# koşan biri bir dizin bileşenini ya da hedefin kendisini sembolik bağa çevirirse YOL tabanlı yazım (`mkstemp(dir=…)` · yola
+# `chmod`/`chown` · yola `replace`/`link`) bağı İZLER: root yazımı ağacın DIŞINA götürür (dal sonu sondası
+# P1: çıkış 0, dosya `/opt/…` altında), geçici adı chown'dan önce bağa çevrilen bir ROOT dosyasının sahibini/modunu değiştirir
+# ya da hedef bağın içeriğini okuyup bağı düz dosyayla ezer. Rotasyonun yazım yolu (`_atomik_yaz`) 2026-10-01'e dek tam bu
+# biçimdeydi (TSK-260 — "sınıf bir örnekle kapanmaz": tohumlama 87d194b3'te kapanmıştı).
+# DESEN (iki yolun TEK gövdesi — `_dizin_ac` · `_gecici_yaz` · `_gecici_dogrula` · `_yazim_kusurlari`):
+#   (1) dizin zinciri GÜVEN ÇAPASINDAN aşağı bileşen bileşen `O_NOFOLLOW|O_DIRECTORY` ile açılır (openat — denetim ile kullanım
+#       AYNI dosya tanıtıcısıdır) ve her bileşen tanıtıcıdan (`fstat`) ölçülür: bağ değil · dizin · grup/diğer YAZAMAZ (grup
+#       yazma YALNIZ root iken ve grup sahibine ÖZELSE zararsız — `_ozel_grup_mu`) · sahibi İZİNLİ kümede (root iken);
+#       `realpath` beklenen yolla aynı (ikinci katman);
+#   (2) geçici dosya o tanıtıcıya göre `O_EXCL|O_NOFOLLOW` açılır, sahip ve mod DOSYA TANITICISINA (`fchown` → `fchmod`)
+#       verilir — yol tabanlı chown/chmod YOK: ad yarışta bağa çevrilse de tanıtıcı AÇILAN inode'u gösterir;
+#   (3) yerine koyma/bağlama ÖNCESİ geçici ad yeniden ölçülür (yarışta değiştiyse hedefe DOKUNULMAZ); yerine koyma
+#       (`os.replace`, rotasyon) ya da bağlama (`os.link(follow_symlinks=False)`, tohumlama — hedef VARSA `FileExistsError`) AYNI
+#       dizin tanıtıcısı içinde;
+#   (4) yazım SONRASI hedef `lstat` ile ölçülür: AYNI inode · normal dosya · beklenen mod · beklenen sahip (root iken).
+# İZİNLİ SAHİP KÜMESİ iki yolda farklıdır ve bu BİLİNÇLİDİR: tohumlama `{ubuntu}` ister (dizinler A0'ın ubuntu dizinleridir; root
+# sahipli bir bileşen hermes'in okuyamayacağı bir ağaç demektir); rotasyon `{root, hedefin sahibi}` ister — "dizin, hedefin
+# yazılacağı kullanıcı dışında kimse tarafından yazılamaz" (OpenSSH `safe_path` kuralı: her bileşen root'un ya da kullanıcının,
+# grup/diğer yazamaz; Debian yamasıyla grup kullanıcıya özelse grup yazması zararsız). Ölçülen A1 hâlinin hepsi bu kurala uyar: `/etc/meridian` · `/etc/hindsight/creds` 0755 root (2026-09-07),
+# `/opt/apisix` root sahipli + `.env-apisix` root (2026-09-15), `/opt/hindsight` 755 ubuntu + `.env` 600 ubuntu, hermes ve
+# `.hermes-botlar` ağaçları ubuntu. Root DEĞİLKEN (yalnız çivi makinesi: dizinler test kullanıcısınındır) sahip ÖLÇÜLMEZ ve bu
+# BEYANLA söylenir; bağ ve grup/diğer yazma denetimi her kimlikte koşar.
 
 
-# --- BAĞ İZLEMEYEN YENİ DOSYA YAZIMI (`tohumla-env` · `dizin-denetle`; G3b dal sonu M1, CWE-59) ----------------------------
-# Tohumlamanın hedef dizinleri UBUNTU sahiplidir (`/home/ubuntu/.hermes-botlar/…`, A0 0700): ubuntu kimliğinde koşan biri bir
-# dizin bileşenini sembolik bağa çevirirse yol tabanlı yazım (`mkstemp(dir=…)` · `os.chown(yol)` · `os.link`) bağı İZLER ve
-# root `.env`i hedef ağacın DIŞINA kurar (dal sonu sondası P1: çıkış 0, dosya `/opt/…` altında); yol tabanlı `chown` bir bağı
-# izlerse ROOT dosyasının sahibini ubuntu'ya çevirirdi. Bu yüzden: (1) dizin zinciri KÖKTEN aşağı bileşen bileşen
-# `O_NOFOLLOW|O_DIRECTORY` ile açılır (openat — denetim ile kullanım AYNI dosya tanıtıcısıdır, arada değiştirilemez) ve her
-# bileşen `fstat` ile ölçülür: bağ değil, dizin, grup/diğer YAZAMAZ, sahibi beklenen kullanıcı (root iken); `realpath` beklenen
-# yolla aynı; (2) geçici dosya o tanıtıcıya göre `O_EXCL|O_NOFOLLOW` açılır, mod/sahip DOSYA TANITICISINA (`fchmod`/`fchown`)
-# verilir, yol tabanlı chmod/chown YOK; (3) `os.link(..., follow_symlinks=False)` aynı dizin tanıtıcısı içinde — hedef VARSA
-# `FileExistsError`; (4) yazım SONRASI hedef `lstat` ile ölçülür: AYNI inode, normal dosya, beklenen mod, beklenen sahip (root
-# iken). Root DEĞİLKEN (yalnız çivi makinesi: dizinler test kullanıcısınındır) sahip ÖLÇÜLMEZ ve bu BEYANLA söylenir.
-# Aynı sınıfın `yaz-env` (`koru` satırları, ubuntu sahipli hermes `.env`leri) üyesi dal öncesinden vardır — ayrı kalem.
+def _kok() -> str:
+    """Rotasyon hedeflerinin GÜVEN ÇAPASI: betiğin `KOK`u. Kabuktaki TEST KANCASIYLA AYNI değişkendir (`SIR_ROT_KOK` — çivi onu
+    tmp köke çevirir); üretimde boştur → `/` (A1'de `sudo` ortamı da sıfırlar: değişken yardımcıya hiç ulaşmaz, sonuç yine `/`)."""
+    return os.path.normpath(os.path.abspath(os.environ.get("SIR_ROT_KOK") or os.sep))
+
+
+def _capa(dizin: str) -> str:
+    """Hedef dizinini içeren EN DERİN güvenilir çapa: (1) betiğin kökü (`_kok`); (2) yardımcının KENDİ dizini — betiğin 0700
+    çalışma dizini (`_islik_kur`), bütün çalışma çıktıları (`cikar` · `kanit-cfg` · `pgpass` · `json-govde` · `sql-uret` ·
+    `yaz-url <işlik>`) oraya yazılır. O dizine güvenmeyen bir denetim koştuğu kodun KENDİSİNE güvenmektedir: bu çapa yeni bir
+    güven varsayımı EKLEMEZ. (Üretimde işlik `/tmp` altındadır ve `/tmp` 1777'dir — kökten yürüyen zincir orada dururdu.)
+    İkisinin de dışındaki bir hedef `_dizin_ac`ta "DIŞINDA" ile reddedilir."""
+    adaylar = [c for c in (_kok(), os.path.dirname(os.path.abspath(__file__)))
+               if dizin == c or dizin.startswith(c.rstrip(os.sep) + os.sep)]
+    return max(adaylar, key=len) if adaylar else _kok()
 
 
 def _kimlik(sahip: str, grup: str) -> tuple[int, int, bool]:
@@ -1017,41 +1003,71 @@ def _kimlik(sahip: str, grup: str) -> tuple[int, int, bool]:
         return -1, -1, False
 
 
-def _dizin_kusuru(st: os.stat_result, uid: int, olculur: bool) -> str | None:
+def _ozel_grup_mu(st: os.stat_result) -> bool:
+    """Grup yazma biti ZARARSIZ mı: dizinin grubunun TEK üyesi dizinin sahibi mi (kullanıcıya ÖZEL grup)? Üyeler = birincil grubu
+    bu olan hesaplar (`pwd` taraması) ∪ ek üyeler (`gr_mem`). Ubuntu varsayılanında `USERGROUPS_ENAB` + pam_umask kullanıcı
+    oturumuna umask 002 verir (A1'de ÖLÇÜLMEDİ — varsayılan beyanı): ubuntu'nun ssh oturumunda elle açtığı bir dizin 0775
+    ubuntu:ubuntu doğar ve grubun tek üyesi ubuntu'dur — "hedefin sahibi dışında kimse yazamaz" kuralını BOZMAZ. Emsal: Debian OpenSSH `secure_permissions` (StrictModes, user-private-group
+    yaması). Yalnız root iken sorulur; ad/grup çözülemezse False (zararsızlık GÖSTERİLEMEDİ → ret)."""
+    import grp
+    import pwd
+    try:
+        gr = grp.getgrgid(st.st_gid)
+        sahip = pwd.getpwuid(st.st_uid).pw_name
+    except KeyError:
+        return False
+    return ({p.pw_name for p in pwd.getpwall() if p.pw_gid == st.st_gid} | set(gr.gr_mem)) == {sahip}
+
+
+def _dizin_kusuru(st: os.stat_result, izinli: frozenset[int], olculur: bool) -> str | None:
+    """Bir zincir bileşeninin kusuru (yoksa None). Kural: bileşeni hedefin yazılacağı kullanıcı (ve root) DIŞINDA kimse
+    yazamaz — diğer-yazma her zaman ret; grup-yazma ret, YALNIZ root iken ve grup sahibine ÖZELSE (`_ozel_grup_mu`) zararsız;
+    sahip `izinli` kümede (root iken — bkz. bölüm şerhi: tohumlama `{ubuntu}`, rotasyon `{root, hedefin sahibi}`). Root
+    DEĞİLKEN (yalnız çivi makinesi) grup üyeliği ölçülmez ve grup-yazma KATI kuralla reddedilir."""
     if stat.S_ISLNK(st.st_mode):
         return "SEMBOLİK BAĞ (izlenmez)"
     if not stat.S_ISDIR(st.st_mode):
         return "dizin değil"
-    if st.st_mode & 0o022:
-        return f"grup/diğer YAZABİLİR (mod {st.st_mode & 0o7777:04o}; A0 0700 kurar)"
-    if olculur and st.st_uid != uid:
-        return f"sahibi uid {st.st_uid} (beklenen {uid})"
+    if st.st_mode & 0o002:
+        return f"grup/diğer YAZABİLİR (mod {st.st_mode & 0o7777:04o})"
+    if st.st_mode & 0o020 and not (olculur and _ozel_grup_mu(st)):
+        ek = "; grup yalnız sahibine özel DEĞİL" if olculur else ""
+        return f"grup/diğer YAZABİLİR (mod {st.st_mode & 0o7777:04o}{ek})"
+    if olculur and st.st_uid not in izinli:
+        return f"sahibi uid {st.st_uid} (beklenen {' ya da '.join(str(u) for u in sorted(izinli))})"
     return None
 
 
-def _dizin_ac(kok: str, dizin: str, uid: int, olculur: bool) -> tuple[int | None, str | None]:
-    """`kok` (beklenen kök — `_SOHBET_KOKU`) → `dizin` zincirini bağ İZLEMEDEN açar. Döner `(fd, None)` ya da `(None, hüküm)`:
-    hüküm `YOK` ya da `RED: <bileşen>: <neden>`. Kökün ÜSTÜ (A1: `/home/ubuntu`, ubuntu onu değiştiremez — `/home` root'undur)
-    yol ile açılır; kök ve altı bileşen bileşen."""
+def _dizin_ac(kok: str, dizin: str, izinli: frozenset[int], olculur: bool) -> tuple[int | None, str | None]:
+    """`kok` (güven çapası — tohumlamada `_SOHBET_KOKU`, rotasyonda `_capa`) → `dizin` zincirini bağ İZLEMEDEN açar. Döner
+    `(fd, None)` ya da `(None, hüküm)`: hüküm `YOK` ya da `RED: <bileşen>: <neden>`. Kökün ÜSTÜ yol ile açılır (A1: `/home/ubuntu`
+    — ubuntu onu değiştiremez, `/home` root'undur; çapa `/` ise üstü yoktur ve kök tanıtıcıdan ölçülür); kök ve altı bileşen
+    bileşen."""
     kok, dizin = os.path.normpath(kok), os.path.normpath(dizin)
     if not (os.path.isabs(kok) and os.path.isabs(dizin)):
         return None, "RED: yol mutlak değil"
-    if dizin != kok and not dizin.startswith(kok + os.sep):
+    kok_on = kok.rstrip(os.sep) + os.sep
+    if dizin != kok and not dizin.startswith(kok_on):
         return None, f"RED: {dizin}: beklenen kökün ({kok}) DIŞINDA"
-    parcalar = [os.path.basename(kok)] + ([] if dizin == kok else dizin[len(kok) + 1:].split(os.sep))
+    ust = os.path.dirname(kok)
+    parcalar = ([os.path.basename(kok)] if kok != ust else []) + ([] if dizin == kok else dizin[len(kok_on):].split(os.sep))
     try:
-        fd = os.open(os.path.dirname(kok), os.O_RDONLY | os.O_DIRECTORY)
+        fd = os.open(ust, os.O_RDONLY | os.O_DIRECTORY)
     except FileNotFoundError:
         return None, "YOK"
-    yol = os.path.dirname(kok)
+    yol = ust
     try:
+        if kok == ust:
+            neden = _dizin_kusuru(os.fstat(fd), izinli, olculur)
+            if neden:
+                return None, f"RED: {kok}: {neden}"
         for p in parcalar:
             yol = os.path.join(yol, p)
             try:
                 st = os.stat(p, dir_fd=fd, follow_symlinks=False)
             except FileNotFoundError:
                 return None, "YOK"
-            neden = _dizin_kusuru(st, uid, olculur)
+            neden = _dizin_kusuru(st, izinli, olculur)
             if neden:
                 return None, f"RED: {yol}: {neden}"
             try:
@@ -1062,10 +1078,10 @@ def _dizin_ac(kok: str, dizin: str, uid: int, olculur: bool) -> tuple[int | None
             os.close(fd)
             fd = yeni
             # Denetim ile açılış arasında bileşen değiştiyse (yarış) açılan tanıtıcı yeniden ölçülür — hüküm TANITICININDIR.
-            neden = _dizin_kusuru(os.fstat(fd), uid, olculur)
+            neden = _dizin_kusuru(os.fstat(fd), izinli, olculur)
             if neden:
                 return None, f"RED: {yol}: {neden}"
-        beklenen = os.path.join(os.path.realpath(os.path.dirname(kok)), *parcalar)
+        beklenen = os.path.join(os.path.realpath(ust), *parcalar)
         if os.path.realpath(dizin) != beklenen:
             return None, f"RED: {dizin}: realpath beklenen yoldan ayrışıyor ({os.path.realpath(dizin)})"
         acik, fd = fd, -1
@@ -1075,16 +1091,25 @@ def _dizin_ac(kok: str, dizin: str, uid: int, olculur: bool) -> tuple[int | None
             os.close(fd)
 
 
-def _yeni_dosya_yaz(dfd: int, ad: str, icerik: str, mod: int, uid: int, gid: int, olculur: bool) -> str:
-    """Dizin tanıtıcısı içinde YALNIZ YOK olan `ad`ı kurar; mod/sahip tanıtıcıya verilir; sonra `lstat` ile ölçer.
-    Döner: doğrulama hükmü (çıktıya basılır — değer DEĞİL)."""
+def _gecici_sil(dfd: int, gecici: str) -> None:
+    try:
+        os.unlink(gecici, dir_fd=dfd)
+    except FileNotFoundError:
+        # Yasa 4 — sessiz-yutma: geçici ad YOKSA (yerine kondu / bağlandıktan sonra silindi ya da açılış düştü) silinecek bir
+        # şey yoktur; hüküm yazım/bağ adımlarınındır, temizlik onu değiştirmez.
+        pass
+
+
+def _gecici_yaz(dfd: int, icerik: str, mod: int, uid: int, gid: int, olculur: bool) -> tuple[str, os.stat_result]:
+    """Dizin tanıtıcısı içinde YENİ bir geçici dosya kurar (`O_EXCL|O_NOFOLLOW` — var olan bir ada/bağa AÇILMAZ), içeriği yazar,
+    sahip ve modu DOSYA TANITICISINA verir: önce `fchown` (uid -1 → sahiplik değişmez), sonra `fchmod` — mod son verilir, çünkü
+    Linux root'un chown'unda S_ISUID/S_ISGID'i silebilir; istenen mod TAM olarak kalsın. Döner: `(geçici ad, yazılan fstat)`."""
     gecici = f".sir-rot-{os.urandom(8).hex()}"
     fd = os.open(gecici, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=dfd)
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
             fh.write(icerik)
             fh.flush()
-            os.fchmod(fh.fileno(), mod)
             if uid != -1:
                 try:
                     os.fchown(fh.fileno(), uid, gid)
@@ -1092,21 +1117,35 @@ def _yeni_dosya_yaz(dfd: int, ad: str, icerik: str, mod: int, uid: int, gid: int
                     if olculur:
                         raise
                     # Yasa 4 — sessiz-yutma: root DEĞİLKEN (yalnız çivi makinesi) başka kullanıcıya chown yapılamaz; sahip
-                    # zaten ÖLÇÜLMEYECEK ve dönen hüküm bunu ADIYLA söyler. Root iken hata YUKARI çıkar (yazım yok).
+                    # zaten ÖLÇÜLMEYECEK ve hüküm bunu ADIYLA söyler. Root iken hata YUKARI çıkar (yazım yok).
                     pass
-            yazilan = os.fstat(fh.fileno())
-        try:
-            os.link(gecici, ad, src_dir_fd=dfd, dst_dir_fd=dfd, follow_symlinks=False)
-        except FileExistsError:
-            sys.exit(f"hedef ZATEN VAR: {ad} — var olan dosyaya DOKUNULMAZ (yarış: denetimden sonra doğdu), yazım YAPILMADI")
-    finally:
-        try:
-            os.unlink(gecici, dir_fd=dfd)
-        except FileNotFoundError:
-            # Yasa 4 — sessiz-yutma: geçici ad YOKSA silinecek bir şey de yoktur (açılış düşmüş olabilir); hüküm yukarıdaki
-            # yazım/bağ adımlarınındır, temizlik onu değiştirmez.
-            pass
-    son = os.stat(ad, dir_fd=dfd, follow_symlinks=False)
+            os.fchmod(fh.fileno(), mod)
+            return gecici, os.fstat(fh.fileno())
+    except BaseException:
+        _gecici_sil(dfd, gecici)
+        raise
+
+
+def _gecici_dogrula(dfd: int, gecici: str, yazilan: os.stat_result, yol: str) -> None:
+    """Yerine koyma/bağlama ÖNCESİ: geçici ad hâlâ YAZILAN inode'u mu gösteriyor (normal dosya)? Değilse ad yarışta bir bağa ya
+    da başka bir dosyaya çevrilmiştir — yerine koymak o bağı/dosyayı hedefe taşırdı. Hedefe DOKUNULMAZ."""
+    try:
+        st = os.stat(gecici, dir_fd=dfd, follow_symlinks=False)
+    except FileNotFoundError:
+        st = None
+    if st is None or not stat.S_ISREG(st.st_mode) or (st.st_dev, st.st_ino) != (yazilan.st_dev, yazilan.st_ino):
+        sys.exit(f"geçici ad yazım sırasında DEĞİŞTİ (yarış — bağa ya da başka bir dosyaya çevrildi): {yol} — hedefe "
+                 "DOKUNULMADI, yazım YAPILMADI")
+
+
+def _yazim_kusurlari(dfd: int, ad: str, yazilan: os.stat_result, mod: int, uid: int, gid: int | None,
+                     olculur: bool) -> list[str]:
+    """Yazım SONRASI ölçüm (`lstat`, dizin tanıtıcısı içinde): AYNI inode · normal dosya · beklenen mod · beklenen sahip (root
+    iken; `gid` None → yalnız uid). Döner: kusur listesi (boş = doğrulandı)."""
+    try:
+        son = os.stat(ad, dir_fd=dfd, follow_symlinks=False)
+    except FileNotFoundError:
+        return ["hedef YOK (yazımdan sonra kayboldu)"]
     kusur = []
     if (son.st_dev, son.st_ino) != (yazilan.st_dev, yazilan.st_ino):
         kusur.append("inode yazılan dosya DEĞİL")
@@ -1114,13 +1153,129 @@ def _yeni_dosya_yaz(dfd: int, ad: str, icerik: str, mod: int, uid: int, gid: int
         kusur.append("normal dosya değil")
     if son.st_mode & 0o7777 != mod:
         kusur.append(f"mod {son.st_mode & 0o7777:04o} (beklenen {mod:04o})")
-    if olculur and (son.st_uid, son.st_gid) != (uid, gid):
-        kusur.append(f"sahip {son.st_uid}:{son.st_gid} (beklenen {uid}:{gid})")
+    if olculur and uid != -1 and (son.st_uid != uid or (gid is not None and son.st_gid != gid)):
+        kusur.append(f"sahip {son.st_uid}:{son.st_gid} (beklenen {uid}:{'*' if gid is None else gid})")
+    return kusur
+
+
+def _yeni_dosya_yaz(dfd: int, ad: str, icerik: str, mod: int, uid: int, gid: int, olculur: bool) -> str:
+    """TOHUMLAMA: dizin tanıtıcısı içinde YALNIZ YOK olan `ad`ı kurar (bağlama — hedef VARSA `FileExistsError`); sonra ölçer.
+    Döner: doğrulama hükmü (çıktıya basılır — değer DEĞİL)."""
+    gecici, yazilan = _gecici_yaz(dfd, icerik, mod, uid, gid, olculur)
+    try:
+        _gecici_dogrula(dfd, gecici, yazilan, ad)
+        try:
+            os.link(gecici, ad, src_dir_fd=dfd, dst_dir_fd=dfd, follow_symlinks=False)
+        except FileExistsError:
+            sys.exit(f"hedef ZATEN VAR: {ad} — var olan dosyaya DOKUNULMAZ (yarış: denetimden sonra doğdu), yazım YAPILMADI")
+    finally:
+        _gecici_sil(dfd, gecici)
+    kusur = _yazim_kusurlari(dfd, ad, yazilan, mod, uid, gid, olculur)
     if kusur:
         sys.exit(f"yazım DOĞRULANAMADI: {ad} — {'; '.join(kusur)}. Dosya YERİNDE bırakıldı (bizim olmayabilir): elle incele")
     if olculur:
         return f"DOĞRULANDI: normal dosya, {mod:04o}, sahip {uid}:{gid}"
     return f"DOĞRULANDI: normal dosya, {mod:04o}; sahip ÖLÇÜLMEDİ (root değil — yalnız çivi makinesi)"
+
+
+#: Hedefin KENDİSİ bağ — yazım bağın hedefine GİTMEZ ve bağ düz dosyayla EZİLMEZ (ESKİ yol ikisini birden yapıyordu).
+_BAG_REDDI = "SEMBOLİK BAĞ (izlenmez — yazım bağın hedefine GİTMEZ, bağ ezilmez)"
+
+
+def _hedef_ac(hedef: str, mod: str, sahip: str) -> SimpleNamespace | str:
+    """ROTASYON HEDEFİNİN TEK DENETİM GÖVDESİ — yazım (`_atomik_yaz`) ve yazım ÖNCESİ ön-denetim (`hedef-denetle` ←
+    `_hedef_on_denetim`) buradan geçer; ikisi ayrışamaz. Zinciri `_capa`dan aşağı `_dizin_ac` ile açar (izinli sahipler
+    `{root, hedefin sahibi}`), hedefi dizin tanıtıcısı içinde `lstat` eder: bağ ya da normal dosya değil → RED. `koru` mod/sahip
+    bu `lstat`tan (bağ izlenmez); `koru` için yol ile alınan ilk `lstat` (izinli kümenin kaynağı) ile tanıtıcıdaki `lstat` AYNI
+    inode olmalıdır — değilse zincir yarışta değişmiştir. Döner: açık hedef (`dfd` çağıranın kapatmasıdır) ya da RED dizgesi
+    (tanıtıcı kapalı). `koru` ama hedef YOK → eski ileti ile durur ("mod=koru ama dosya YOK")."""
+    yol = os.path.normpath(os.path.abspath(hedef))
+    dizin, ad = os.path.split(yol)
+    olculur = os.geteuid() == 0
+    st0 = None
+    if "koru" in (mod, sahip):
+        try:
+            st0 = os.lstat(yol)
+        except FileNotFoundError:
+            sys.exit(f"{'mod' if mod == 'koru' else 'sahip'}=koru ama dosya YOK: {hedef}")
+        if stat.S_ISLNK(st0.st_mode):
+            return f"RED: {yol}: hedef {_BAG_REDDI}"
+    if sahip == "koru":
+        uid, gid = st0.st_uid, st0.st_gid
+    elif sahip == "-":
+        uid = gid = -1
+    else:
+        k, _, g = sahip.partition(":")
+        uid, gid, _ = _kimlik(k, g)
+    izinli = frozenset({0, os.geteuid() if uid == -1 else uid})
+    dfd, hukum = _dizin_ac(_capa(dizin), dizin, izinli, olculur)
+    if dfd is None:
+        return hukum if hukum.startswith("RED") else f"RED: {dizin}: dizin YOK"
+    try:
+        st = os.stat(ad, dir_fd=dfd, follow_symlinks=False)
+    except FileNotFoundError:
+        st = None
+    neden = None
+    if st is not None and stat.S_ISLNK(st.st_mode):
+        neden = f"RED: {yol}: hedef {_BAG_REDDI}"
+    elif st is not None and not stat.S_ISREG(st.st_mode):
+        neden = f"RED: {yol}: hedef normal dosya değil"
+    elif st0 is not None and (st is None or (st.st_dev, st.st_ino) != (st0.st_dev, st0.st_ino)):
+        neden = f"RED: {yol}: hedef denetim sırasında DEĞİŞTİ (yol ile dizin tanıtıcısı ayrı dosyayı gösteriyor — yarış)"
+    if neden:
+        os.close(dfd)
+        return neden
+    if sahip == "koru":
+        uid, gid = st.st_uid, st.st_gid
+    bek_uid, bek_gid = (os.geteuid(), None) if sahip == "-" else (uid, gid)
+    return SimpleNamespace(dfd=dfd, yol=yol, ad=ad, st=st, olculur=olculur, uid=uid, gid=gid, bek_uid=bek_uid,
+                           bek_gid=bek_gid, mod=(st.st_mode & 0o7777) if mod == "koru" else int(mod, 8))
+
+
+def _tanitictan_oku(h: SimpleNamespace) -> str:
+    """Oku-değiştir-yaz'ın ESKİ içeriği: denetlenen hedef, AYNI dizin tanıtıcısından `O_NOFOLLOW` ile açılır ve inode'u
+    denetlenenle aynı olmalıdır. Metin kipi `open()` ile AYNIDIR (UTF-8, evrensel satır sonu — eski `_oku` davranışı)."""
+    if h.st is None:
+        sys.exit(f"hedef YOK: {h.yol} — eski içerik okunamaz, yazım YAPILMADI")
+    try:
+        fd = os.open(h.ad, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=h.dfd)
+    except OSError as hata:
+        sys.exit(f"hedef açılamadı ({hata.strerror}): {h.yol} — denetimden sonra bağa çevrilmiş olabilir, yazım YAPILMADI")
+    with os.fdopen(fd, encoding="utf-8") as fh:
+        st = os.fstat(fh.fileno())
+        if (st.st_dev, st.st_ino) != (h.st.st_dev, h.st.st_ino):
+            sys.exit(f"hedef denetimden sonra DEĞİŞTİ (yarış): {h.yol} — yazım YAPILMADI")
+        return fh.read()
+
+
+def _atomik_yaz(hedef: str, icerik: str | Callable[[str], str], mod: str, sahip: str) -> None:
+    """ROTASYONUN TEK YAZIM GÖVDESİ — bağ İZLEMEYEN, tanıtıcı tabanlı, atomik (TSK-260). `yaz-dosya` · `yaz-env` · `yaz-url` ·
+    `bosalt` ve bütün çalışma dizini çıktıları buradan geçer. ATOMİKTİR: yarım yazılmış bir credential dosyası birimi açılmaz
+    hâle getirir.
+
+    `icerik` dizge ya da `eski içerik → yeni içerik` fonksiyonudur (oku-değiştir-yaz: `yaz-env`/`yaz-url`; eski içerik
+    `_tanitictan_oku` ile DENETLENEN dosyadan okunur). Mod/sahip: `koru` ise hedefin MEVCUDU (`lstat`), değilse argümandan; sahip
+    `-` → sahiplik değişmez (yazan süreç). Sıra: `_hedef_ac` → `_gecici_yaz` → `_gecici_dogrula` → dizin tanıtıcısı içinde
+    yerine koyma → `_yazim_kusurlari`. Başarıda HİÇBİR ŞEY basılmaz (`--db`nin altın izi stdout'u pinler — v538 C7); ret ADLI
+    iletiyle ve "yazım YAPILMADI" ile `sys.exit`tir."""
+    h = _hedef_ac(hedef, mod, sahip)
+    if isinstance(h, str):
+        sys.exit(f"{h} — yazım YAPILMADI ({hedef})")
+    try:
+        if callable(icerik):
+            icerik = icerik(_tanitictan_oku(h))
+        gecici, yazilan = _gecici_yaz(h.dfd, icerik, h.mod, h.uid, h.gid, h.olculur)
+        try:
+            _gecici_dogrula(h.dfd, gecici, yazilan, h.yol)
+            os.replace(gecici, h.ad, src_dir_fd=h.dfd, dst_dir_fd=h.dfd)
+        finally:
+            _gecici_sil(h.dfd, gecici)
+        kusur = _yazim_kusurlari(h.dfd, h.ad, yazilan, h.mod, h.bek_uid, h.bek_gid, h.olculur)
+        if kusur:
+            sys.exit(f"yazım DOĞRULANAMADI: {h.yol} — {'; '.join(kusur)}. Dosya YERİNDE bırakıldı (bizim olmayabilir): "
+                     "elle incele")
+    finally:
+        os.close(h.dfd)
 
 
 class AlanArizasi(Exception):
@@ -1189,23 +1344,29 @@ def main(argv: list[str]) -> None:
         _atomik_yaz(hedef, _onek(onek) + _deger_dosyadan(dgr) + "\n", mod, sahip)
     elif op == "yaz-env":            # <hedef> <alan> <deger> <mod> <sahip> <onek>
         hedef, alan, dgr, mod, sahip, onek = argv[2:8]
-        ham = _oku(hedef)
-        satirlar = ham.splitlines(keepends=True)
-        idx = _env_satiri_yazim(ham, alan)
-        tirnak, son = _tirnak_ve_son(satirlar[idx].split("=", 1)[1])
-        satirlar[idx] = f"{alan}={tirnak}{_onek(onek)}{_deger_dosyadan(dgr)}{tirnak}{son}"
-        _atomik_yaz(hedef, "".join(satirlar), mod, sahip)
+
+        # Oku-değiştir-yaz: eski içerik DENETLENEN dosyadan okunur (`_atomik_yaz` → `_tanitictan_oku`, TSK-260) — eskiden
+        # `_oku(hedef)` yolu izliyordu: hedef bir bağsa içerik bağın HEDEFİNDEN okunup ubuntu dizinine yazılırdı.
+        def _env_yeni(ham: str) -> str:
+            satirlar = ham.splitlines(keepends=True)
+            idx = _env_satiri_yazim(ham, alan)
+            tirnak, son = _tirnak_ve_son(satirlar[idx].split("=", 1)[1])
+            satirlar[idx] = f"{alan}={tirnak}{_onek(onek)}{_deger_dosyadan(dgr)}{tirnak}{son}"
+            return "".join(satirlar)
+        _atomik_yaz(hedef, _env_yeni, mod, sahip)
     elif op == "yaz-url":            # <hedef> <deger> <mod> <sahip>
         hedef, dgr, mod, sahip = argv[2:6]
-        p = urlsplit(_oku(hedef).strip("\r\n"))
-        if not p.username:
-            sys.exit(f"DSN'de kullanıcı yok: {hedef} — parola değiştirilemez")
-        yer = p.hostname or ""
-        if p.port:
-            yer += f":{p.port}"
-        netloc = f"{quote(p.username, safe='')}:{quote(_deger_dosyadan(dgr), safe='')}@{yer}"
-        _atomik_yaz(hedef, urlunsplit((p.scheme, netloc, p.path, p.query, p.fragment)) + "\n",
-                    mod, sahip)
+
+        def _url_yeni(ham: str) -> str:          # oku-değiştir-yaz — `yaz-env` ile aynı gerekçe
+            p = urlsplit(ham.strip("\r\n"))
+            if not p.username:
+                sys.exit(f"DSN'de kullanıcı yok: {hedef} — parola değiştirilemez")
+            yer = p.hostname or ""
+            if p.port:
+                yer += f":{p.port}"
+            netloc = f"{quote(p.username, safe='')}:{quote(_deger_dosyadan(dgr), safe='')}@{yer}"
+            return urlunsplit((p.scheme, netloc, p.path, p.query, p.fragment)) + "\n"
+        _atomik_yaz(hedef, _url_yeni, mod, sahip)
     elif op == "cikar":              # <tur> <hedef> <alan> <onek> <cikti>
         tur, hedef, alan, onek, cikti = argv[2:7]
         _atomik_yaz(cikti, _cikar(tur, hedef, alan, onek) + "\n", "0600", "-")
@@ -1365,7 +1526,7 @@ def main(argv: list[str]) -> None:
         # HİÇBİR yazımdan ÖNCE ve bütün hedefler için — bir dizin reddedilirse hiçbir dosya yazılmaz. Yalnız hüküm basılır.
         kok, dizin, sahip, grup = argv[2:6]
         uid, _, olculur = _kimlik(sahip, grup)
-        fd, hukum = _dizin_ac(kok, dizin, uid, olculur)
+        fd, hukum = _dizin_ac(kok, dizin, frozenset({uid}), olculur)
         if fd is None:
             print(hukum)
             return
@@ -1394,13 +1555,23 @@ def main(argv: list[str]) -> None:
                 sys.exit(f"tohumla-env: {alan} değeri TEK satır değil — yazım YAPILMADI")
             satirlar.append(f"{alan}={d}\n")
         uid, gid, olculur = _kimlik(sahip, grup)
-        dfd, hukum = _dizin_ac(kok, os.path.dirname(hedef), uid, olculur)
+        dfd, hukum = _dizin_ac(kok, os.path.dirname(hedef), frozenset({uid}), olculur)
         if dfd is None:
             sys.exit(f"hedef dizini {hukum} — yazım YAPILMADI ({hedef})")
         try:
             print(_yeni_dosya_yaz(dfd, os.path.basename(hedef), "".join(satirlar), int(mod, 8), uid, gid, olculur))
         finally:
             os.close(dfd)
+    elif op == "hedef-denetle":      # <hedef> <mod> <sahip> → TAMAM | RED: <neden> — YAZIM YOK
+        # Rotasyonun yazım ÖNCESİ ön-denetimi (`_hedef_on_denetim`, TSK-260): yazımın koşacağı AYNI gövde (`_hedef_ac` —
+        # zincir bağ izlenmeden · bileşen izin/sahip · hedef bağ/normal dosya). Bağlı ya da gevşek bir hedef rotasyonu
+        # YARIDA bırakmaz, hiç başlatmaz. Yalnız hüküm basılır (yol ve neden — değer DEĞİL).
+        h = _hedef_ac(*argv[2:5])
+        if isinstance(h, str):
+            print(h)
+            return
+        os.close(h.dfd)
+        print("TAMAM")
     else:
         sys.exit(f"bilinmeyen işlem: {op}")
 
@@ -1631,8 +1802,9 @@ _yaz_satir() {
                        || die "mod/sahip=koru ama hedef YOK: $yol — mevcut izin okunamaz, yazım YAPILMADI" ;;
            esac
            # `mod`/`sahip` AÇIK olan satırlarda ön-yaratmaya GEREK de yok: `_atomik_yaz` dosyayı
-           # hedef dizinde `mkstemp` + `chmod <mod>` + `os.replace` ile kendisi kurar, yani dosya
-           # daha ilk anından itibaren doğru izinle var olur (0644'lük bir ara hâl hiç doğmaz).
+           # hedef dizinin TANITICISI içinde geçici dosya + `fchown`/`fchmod` + yerine koyma ile
+           # kendisi kurar (TSK-260 — bağ izlenmez), yani dosya daha ilk anından itibaren doğru
+           # izinle var olur (0644'lük bir ara hâl hiç doğmaz).
            py yaz-dosya "$hedef" "$dgr" "$mod" "$sahip" "$onek"
            oldu "yazıldı: $yol (mod=$mod sahip=$sahip)" ;;
     env)   sudo test -f "$hedef" || die "hedef dosya YOK: $yol — yazım yapılamaz"
@@ -1688,9 +1860,17 @@ _yaz() {
 # (çıkış 1 — bilinen arıza bilinmeyeni ezer) ve ölçülemeyenler aynı iletide sayılır.
 # TOHUMLAMA ÖNERİSİ YOLA GÖREDİR (G3b Task 4): `--tohumla-sohbet` YALNIZ `$_SOHBET_KOKU/` altını ve YALNIZ YOK olan dosyayı
 # kurar; başka bir eksik yol için o komutu önermek yanlış yola sokardı — satır bunu ADIYLA söyler.
-# Çiviler: v604 A5 · A6 · A8 (alt komutlar × iki kip) · A9 · A10 · A11 · A16 (alan) · A16c (ölçülemedi) · C7 (`--kapi-bot`).
+# BAĞ / İZİN DE SORULUR (TSK-260, 2026-10-01; CWE-59): `env` hedefi için `py hedef-denetle` yazımın koşacağı AYNI gövdeyi
+# (`_hedef_ac`) koşar — zincir bağ izlenmeden açılır, her bileşen bağ değil · grup/diğer yazamaz · sahibi root ya da hedefin
+# sahibi (root iken); hedefin kendisi bağ ya da normal dosya değilse RED. Yazım anı ret TEK BAŞINA tablodaki ÖNCEKİ satırları
+# yazıp o hedefte dururdu (yarım rotasyon, ALAN sınıfının bağ biçimi). Yol başına BİR kez; RED/ölçülemeyen yolun alanı sorulmaz.
+# KAPSAM YİNE `env`dir: ubuntu'nun yazabildiği dizinler (hermes · `.hermes-botlar` · `/opt/hindsight`) yalnız `env` satırlarında
+# yaşar; `url`/`dosya` hedefleri root dizinlerindedir (`/etc/…`) ve yazım anı denetimi onları da kapsar — `url` için burada
+# yardımcı çağrılmaz (eski `--db` yolunun sudo izi altın izle çivili, v538 C7).
+# Çiviler: v604 A5 · A6 · A8 (alt komutlar × iki kip) · A9 · A10 · A11 · A16 (alan) · A16c (ölçülemedi) · C7 (`--kapi-bot`) ·
+# v609 F (bağ/izin — rotasyon hiç başlamaz).
 _hedef_on_denetim() {
-  local alt="$1" _alt _sir tur yol alan _mod _sahip _onek eksik="" n=0 m=0 o=0 hal neden=""
+  local alt="$1" _alt _sir tur yol alan _mod _sahip _onek eksik="" n=0 m=0 o=0 r=0 hal neden="" denetlenen="" atlanan=""
   while read -r _alt _sir tur yol alan _mod _sahip _onek; do
     [ "$_alt" = "$alt" ] || continue
     case "$tur" in env|url) ;; *) continue ;; esac
@@ -1701,6 +1881,20 @@ _hedef_on_denetim() {
       continue
     fi
     [ "$tur" = env ] || continue
+    case " $atlanan " in *" $yol "*) continue ;; esac
+    case " $denetlenen " in
+      *" $yol "*) ;;
+      *) denetlenen="${denetlenen:+$denetlenen }$yol"
+         # `||` ADLANDIRMADIR (aşağıdaki gibi): yardımcının düşüşü ÖLÇÜLEMEDİ satırına ve `olcum_yok`a gider.
+         hal="$(py hedef-denetle "$KOK$yol" "$_mod" "$_sahip")" || hal="ÖLÇÜLEMEDİ (denetim yardımcısı düştü)"
+         case "$hal" in
+           TAMAM) ;;
+           RED:*) echo "!! hedef REDDEDİLDİ: $yol — ${hal#RED: }" >&2
+                  atlanan="${atlanan:+$atlanan }$yol"; r=$((r+1)); continue ;;
+           *)     echo "!! hedef ÖLÇÜLEMEDİ: $yol — $hal" >&2
+                  atlanan="${atlanan:+$atlanan }$yol"; o=$((o+1)); continue ;;
+         esac ;;
+    esac
     # `||` dalı bir YUTMA değil ADLANDIRMADIR: yardımcının düşüşü aşağıda ÖLÇÜLEMEDİ satırına ve `olcum_yok`a gider.
     hal="$(py alan-var "$KOK$yol" "$alan" tek)" || hal="ÖLÇÜLEMEDİ (yardımcı düştü)"
     case "$hal" in
@@ -1712,7 +1906,7 @@ _hedef_on_denetim() {
     echo "!! alan $hal: $yol [$alan]" >&2
     m=$((m+1))
   done < <(_kopyalar)
-  [ -n "$eksik" ] || [ "$m" -gt 0 ] || [ "$o" -gt 0 ] || return 0
+  [ -n "$eksik" ] || [ "$m" -gt 0 ] || [ "$o" -gt 0 ] || [ "$r" -gt 0 ] || return 0
   for yol in $eksik; do
     case "$yol" in
       "$_SOHBET_KOKU"/*) echo "!! hedef dosya YOK: $yol — kurar: sudo ./sir_rotasyon.sh --tohumla-sohbet" >&2 ;;
@@ -1725,8 +1919,13 @@ _hedef_on_denetim() {
      }$m hedefte alan TAM BİR satır değil (yukarıda) — --tohumla-sohbet dosyayı YALNIZ YOKSA yazar, var olan
      dosyanın eksik/çift alanını DÜZELTMEZ: elle düzelt (eksikse değersiz '<ALAN>=' satırı ekle — değeri rotasyon
      yazar; çiftse TEK satıra indir) ya da operatöre bırak"
-  if [ -z "$eksik" ] && [ "$m" = 0 ]; then
-    olcum_yok "$(_bayrak "$alt"): $o hedefin alanı ÖLÇÜLEMEDİ (yukarıda — dosya okunamadı: izin ya da UTF-8 dışı bayt).
+  [ "$r" = 0 ] || neden="${neden:+$neden;
+     }$r hedef REDDEDİLDİ (yukarıda — hedef sembolik bağ / normal dosya değil, ya da zincirde bağ · grup/diğer yazabilen
+     dizin · sahibi ne root ne hedefin sahibi olan dizin): yazım bağı İZLEMEZ ve bu hedefi YAZAMAZDI. Değeri BASMADAN incele:
+     sudo stat -c '%U:%G %a %F %n' <yol> ve üst dizinleri — dizin izinlerini A0 site.yml kurar"
+  if [ -z "$eksik" ] && [ "$m" = 0 ] && [ "$r" = 0 ]; then
+    olcum_yok "$(_bayrak "$alt"): $o hedefin alanı ÖLÇÜLEMEDİ (yukarıda — dosya okunamadı: izin ya da UTF-8 dışı bayt;
+     ya da hedef denetim yardımcısı düştü).
      Alan sayılamadan yazım başlamaz (yazım alanı bulamayıp yarıda ölebilirdi). HİÇBİR ŞEY yazılmadı: yedek, değer üretimi, kasa ve kopya
      satırı yok. Dosyayı (değerini BASMADAN) incele: sudo stat <yol> · sudo file <yol>"
   fi
@@ -4279,7 +4478,7 @@ esitle() {
 # ağacın DIŞINA yazmaz; (2) her REFERANS VAR — yoksa ya da BOŞsa DUR (değer uydurulmaz; ilk değer RUNBOOK borusuyla kasaya,
 # Agent render eder); (3) her referans TEK satırlık dolu bir değer (yalnız boşluk/çok satır `.env`e yazılamaz — v604 D4).
 # YAZIM: YOK olan hedef `py tohumla-env` ile — 0600 ubuntu:ubuntu, `KEY=değer` satırları; zincir yazım anında YENİDEN bağ
-# izlenmeden açılır, geçici dosya dizin tanıtıcısına göre `O_EXCL|O_NOFOLLOW`, mod/sahip tanıtıcıya (`fchmod`/`fchown`),
+# izlenmeden açılır, geçici dosya dizin tanıtıcısına göre `O_EXCL|O_NOFOLLOW`, sahip/mod tanıtıcıya (`fchown`/`fchmod`),
 # `os.link(follow_symlinks=False)` (hedef VARSA reddeder: yarışı İKİNCİ katman kapatır), sonra `lstat` ile AYNI inode · normal
 # dosya · 0600 · sahip (root iken) ÖLÇÜLÜR ve hüküm satıra yazılır. VAR olan hedefe DOKUNULMAZ (içerik, mtime, mod, sahip);
 # eksik / değersiz (BOŞ — dal sonu M2) / çift alanı ADIYLA söylenir ve YAZILMAZ — var olan dosyayı düzeltmek operatörün elidir
