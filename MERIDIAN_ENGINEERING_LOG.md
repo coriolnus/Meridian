@@ -4191,3 +4191,24 @@ canlıyla aynı (ilk "FARKLI" ölçümüm süreç ikamesindeki stdin hatasıydı
   `failed` (exit-code) → `reset-failed`. Kök neden araştırması (Hermes v0.19 kaynağı yerel kopyada; Opus ajan): çok profilli kipte MCP
   sunucularının hangi config'ten/ne zaman başlatıldığı. Botlar KAPALI kalır; G3c 4b(ii) (hafıza okuma zaman aşımı) ve etkinleştirme bu
   kök neden çözülene dek ERTELENDİ.
+- **G3d KÖK NEDEN + DÜZELTME (22:3x–23:5xZ, Rol-1 + Opus uygulayıcı/inceleme):** Hermes v0.19 çok profilli kipte MCP sunucuları YALNIZ
+  kök HERMES_HOME config'inden, ağ geçidi açılışında BİR KEZ keşfedilir (`gateway/run.py::start_gateway` → `discover_mcp_tools`;
+  `tools/mcp_tool.py::_load_mcp_config`); profil `mcp_servers` girdisi okunmaz, yalnız `platform_toolsets` ad listesine yarar → üç
+  botun da kayıtlı aracı yoktu, model aracı METİN olarak uydurdu. A1'de doğrulandı: kök mcp_servers 0, profiller birer; kaynak sha 4/4
+  eşit; mcp 1.26.0 kurulu. Düzeltme (main 80e56fc1): kökte bot başına `meridian-<ad>` sunucusu (`--bot <ad>`, credential birim yolu,
+  `${…}` YASAK — kapsamsız keşifte UnscopedSecretError MCP'yi sessizce kapatır), profil izin listesi yalnız kendi sunucusu, profilde
+  `mcp_servers` YOK, kök kendi istekleri için `[no_mcp]` + sunucu adları `disabled_toolsets`te. Hermes'in kendi çözücüsüyle ölçüldü
+  (v0.19.0 + v0.18.2): kök [], her profil [meridian-<ad>]. v612 16 çivi, 14/14 mutasyon; inceleme (Opus) ONAY 0C/0I/6M (M5 → G3c
+  kontrol listesi; plan adım 4 `/v1/toolsets` beklentisi düzeltildi — uç MCP göstermez, dac8f77d). Bekleyen: dağıtım + G3c yeniden
+  test-ateşleme.
+- **EXE-2026-012 ADIM-0c (23:0x–23:1xZ, Rol-1, A1 salt-okur):** 10-01 seansı tanık EŞİT (Prometheus 4155 = defter 4155), satır 275,6 KB,
+  alet eki ~2,0 µs, R_0 = 1,0 DEJENERE — planlı giriş 0 çünkü 09-26..09-30 EOD turları plan üretmedi (trade_plans: 09-25 1, 10-01 2).
+  Karta yazıldı + girdi/çıktı donduruldu (e42ec964). ADIM-0b ön bakışı: planlı yazım ~1/hafta → 20 seansta ≈ 4,5–8,5 < n_yazim_min 10
+  → kart ÖLÇÜLEMEDİ yönünde; eşik değişmedi, ADIM-0b (≥ 10-13) resmî ölçer, tutarsa yeni kart operatör sorusu (memory
+  kill-esigi-adim0da-olculur'un ikinci örneği: kill eşiğine ulaşılabilirlik ön-kayıtta ölçülmemişti).
+- **EDG-2026-103 sayım aleti main'de (03a769d6),** hüküm 10-02 ≥10:33Z (oturum hatırlatıcısı 10:37Z).
+- **TSK-261 güvenlik incelemesi (Opus):** amaç ✅ (kabukta root cp/mv 0), C0/I2/M6 — I1 kasa reçetesi nöbetleri kör kaldı (`sudo cp -p`
+  not-in artık bir şey ölçmüyor), I2 `--geri-al` önce yedek almıyor (çok anahtarlı dosyada başka sırlar geri dönüşsüz eskiye döner);
+  düzeltme turu 1 (I1+I2+M5; 1036375c — `--geri-al` önce yedek alır, `--kuru` değişmiş alan ADLARINI basar, 0 dosyada çıkış 1;
+  1473 passed, 7/7 mutasyon) → main 2d99ec3b; kapsamlı yeniden inceleme sürüyor. `/root` A1'de root:root 700 ölçüldü. TSK-262 açıldı
+  (okuma yolu FIFO askısı, M2). `deploy/oracle-a1/RUNBOOK.md` `--geri-al` belgelendi; `--openrouter` yasağı dağıtım #91 doğrulanınca kalkar.

@@ -1890,6 +1890,16 @@ dosyayı 0600 ubuntu:ubuntu yazar; VAR olana DOKUNMAZ (eksik alanı ADIYLA söyl
 `--kuru` ile. SIRA: A0 site.yml (dizinler) → kasaya ilk değer + Agent render
 (RUNBOOK) → BU → ilk rotasyon. Önce rotasyon koşarsa ön-denetim "hedef dosya
 YOK" der ve buraya yollar.
+sudo ./sir_rotasyon.sh --geri-al <yedek-dizini> → YEDEKTEN GERİ ALMA (TSK-261, 2026-10-01). ROTASYON DEĞİLDİR: bir
+koşumun yedeğindeki (`/root/sir-yedek-<UTC ts>-<alt>/`) kopyaları üretim
+yollarına geri koyar — YALNIZ o alt komutun tablo yolları (alt komut dizin
+adından), bağ İZLEMEDEN (yardımcının fd-tabanlı yazım çekirdeği), mod/sahip
+yedekten. Kasa yedeği (`vault/`) GİRMEZ (kasa reçetesinin işi). DOSYA BÜTÜN
+DÖNER: yedekten sonra değişmiş BAŞKA alanların ADLARI basılır (değer asla).
+Yazmadan ÖNCE mevcut hâli yeni bir yedeğe alır (yolu basılır — geri almanın
+geri alınması o yedekten). Restart YAPMAZ, birim listesini basar. Yazımda
+reddedilen hedef ADIYLA söylenir, ötekiler geri konur (çıkış 1); geri konacak
+dosya YOKSA çıkış 1. Bütün geri alma reçeteleri bunu gösterir. `--kuru` ile.
 ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 başlayacağını listeler, HİÇBİR ŞEY yazmaz
 (koşullu birim) `_KOSULLU_BIRIMLER` YALNIZ ETKİNSE yeniden başlar; değilse "ATLANDI (etkin değil: <durum>)"
@@ -2047,9 +2057,10 @@ kanıt ölçülür, depo kopyası ANCAK ONDAN SONRA eşitlenir — yoksa pozitif
 okunduğunu söylemezdi.
 
 YEDEK. Her koşum ÖNCE `/root/sir-yedek-<UTC ts>-<alt komut>/` (0700 root) altına dokunacağı her
-dosyayı `cp -p` ile alır. Ad SANİYE taşır: aynı sırrı gün içinde iki kez döndürmek ilk yedeği
+dosyayı bağ İZLEMEDEN kopyalar (yardımcının `kopyala` işlemi — mod/sahip korunur, kaynak bağsa yedek
+ALINMAZ ve rotasyon başlamaz; TSK-261). Ad SANİYE taşır: aynı sırrı gün içinde iki kez döndürmek ilk yedeği
 EZMEZ. Geri alma reçetesi RUNBOOK'ta değil burada, çünkü okunacağı an bu betiğin çıktısıdır:
-kasasız yol → `sudo cp -p <yedek>/<yol> <yol>` + ilgili birimleri yeniden başlat. `--vault` yolu
+kasasız yol → `sudo ./sir_rotasyon.sh --geri-al <yedek>` + ilgili birimleri yeniden başlat. `--vault` yolu
 (TSK-064, 2026-09-26) → ÖNCE kasa: `vault kv rollback -version=<N> <yol>` (N = `kv put` ÖNCESİ
 `current_version`, her kasa yolu için ayrı kaydedilir), SONRA dosya — ters sırada Agent render'ı
 geri konan dosyayı kasadaki yeni değerle tekrar ezer. `kv rollback`un kendisi düşerse (politika · ağ ·

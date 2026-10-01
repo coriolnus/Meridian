@@ -910,6 +910,12 @@ sonraki render'da kanonik kopyayı eski kasa değeriyle ezer ve Telegram credent
 sonra `sudo mv … /home/ubuntu/backups/g3b-<UTC>/`); drop-in'ler
 etkin olmayan birimde zararsızdır; kasadaki `api_server_key` kullanılmadan kalabilir (Agent hedefi yalnız Telegram
 birimi okur). Rotasyon geri alımı aracın kendi yedeği ve bastığı reçeteyledir (yalnız etkin birimleri yeniden başlatır).
+TSK-261'den beri reçete elle `cp` DEĞİL, aracın alt komutudur: önce `sudo ./deploy/oracle-a1/sir_rotasyon.sh --geri-al
+/root/sir-yedek-<UTC ts>-<alt komut> --kuru` — çok anahtarlı dosyalar (`.env`, `state/secrets.json`) BÜTÜN olarak döner; kuru koşum
+yedekten SONRA değişmiş başka alanların ADLARINI basar (değer asla) → o alanlar da eskiye dönecekse sonra `--esitle`/ilgili
+rotasyonla yeniden yaz. Gerçek koşum yazmadan ÖNCE mevcut hâli yeni bir `/root/sir-yedek-…` dizinine alır ve yolunu basar (geri
+almanın geri alınması o yoldur); geri konacak dosya yoksa çıkış 1. Yedek dizini doğrudan `/root` altında, tablodaki alt komutun adını
+taşıyan bir dizin olmalı; bağ ya da tablo dışı yol reddedilir.
 
 
 ## TSK-064 iki-kanal kapanışı — kiracı anahtarı ve hindsight-cp yalnız Vault kanalından (2026-09-29)
