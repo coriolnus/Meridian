@@ -2279,6 +2279,47 @@ def test_D13_HEDEF_sembolik_bag_okunmaz_SEBEP_adiyla_cikis_2(tmp_path, hal):
     _iddia("yazıldı 3 · dokunulmadı 1 · eksik alanlı 0" in r.stdout, _ozet(r))
 
 
+SOHBET_MANIFEST_KOKU = KOK_DEPO / "deploy/hermes/sohbet"
+
+
+def _manifest_sir_adlari(yol: pathlib.Path) -> tuple[set[str], set[str]]:
+    """`(default'suz adlar, default'lu adlar)` — `env_requires`ın SIR sınıfı varsayılansız girdilerdir (değer profil `.env`inden
+    gelmek ZORUNDA); varsayılanlı girdiler (`HERMES_WRITE_SAFE_ROOT` gibi) sır değil ayardır ve tohumlanmaz."""
+    m = yaml.safe_load(yol.read_text(encoding="utf-8"))
+    girdiler = m.get("env_requires") or []
+    adlar = [g["name"] for g in girdiler]
+    _iddia(len(adlar) == len(set(adlar)), f"{yol}: env_requires'ta çift ad: {adlar}")
+    return {g["name"] for g in girdiler if "default" not in g}, {g["name"] for g in girdiler if "default" in g}
+
+
+def test_D14_TOHUM_alan_kumesi_ile_PROFIL_MANIFESTI_env_requires_IKI_YONLU_ESIT():
+    """Dal sonu M6 — iki liste, tek gerçek: tohumlamanın bir sohbet `.env`ine yazdığı alan kümesi KOPYA TABLOSUNDAN türer
+    (`--kopyalar` → `_tohum_plani`), Hermes'in o profilde zorunlu tuttuğu sırlar ise üretilmiş `distribution.yaml`ın
+    `env_requires`ındadır (`ops/sohbet_profili_uret.py`). İkisi ayrışırsa ya tohumlama Hermes'in istediği bir sırrı YAZMAZ (bot
+    açılışta düşer / 401) ya da Hermes'in bilmediği bir sırrı profile koyar (okuyucusuz kopya). İki yön: (1) manifestli profil
+    kümesi == tablonun sohbet profili hedefleri; (2) her profilde tablo alanları == `env_requires`ın VARSAYILANSIZ adları;
+    (3) varsayılanlı adlar (ayar) tabloda YOK. Kök `.env` (`_SOHBET_KOKU/.env`) için manifest varsa aynı kural; bugün YOK
+    (yalnız profillerin manifesti üretilir) ve bu satır o durumu da ölçer."""
+    plan, _ = _tohum_plani()
+    koku = _sohbet_koku()
+    profil_hedefleri = {pathlib.PurePosixPath(y).parent.name: set(a) for y, a in plan.items() if y != _kok_env()}
+    manifestler = {p.parent.name: p for p in sorted((SOHBET_MANIFEST_KOKU / "profiles").glob("*/distribution.yaml"))}
+    _iddia(len(manifestler) >= 1 and set(manifestler) == set(profil_hedefleri),
+           f"manifestli profiller {sorted(manifestler)} ≠ tablonun sohbet profilleri {sorted(profil_hedefleri)}")
+    for ad, yol in manifestler.items():
+        sirlar, ayarlar = _manifest_sir_adlari(yol)
+        tablo = profil_hedefleri[ad]
+        _iddia(tablo == sirlar, f"{ad}: tablo {sorted(tablo)} ≠ env_requires varsayılansız {sorted(sirlar)} "
+                                f"(yalnız tabloda: {sorted(tablo - sirlar)} · yalnız manifestte: {sorted(sirlar - tablo)})")
+        _iddia(not (tablo & ayarlar), f"{ad}: varsayılanlı (ayar) ad tabloda: {sorted(tablo & ayarlar)}")
+    kok_manifest = SOHBET_MANIFEST_KOKU / "distribution.yaml"
+    kok_tablo = set(plan.get(_kok_env(), {}))
+    _iddia(kok_tablo == {API_SIR}, f"kök .env alanları {sorted(kok_tablo)} ({koku})")
+    if kok_manifest.exists():
+        sirlar, _ = _manifest_sir_adlari(kok_manifest)
+        _iddia(kok_tablo == sirlar, f"kök: tablo {sorted(kok_tablo)} ≠ manifest {sorted(sirlar)}")
+
+
 @pytest.mark.parametrize("ek", [("--vault",), ("--esitle",), ("--uret",), ("--vault", "--uret")],
                          ids=["vault", "esitle", "uret", "vault_uret"])
 def test_D11_tohumlama_ROTASYON_bayraklariyla_reddedilir(tmp_path, ek):
