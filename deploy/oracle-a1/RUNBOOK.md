@@ -878,9 +878,10 @@ adıyla söyler; alan kümesi rotasyon tablosundan türer; referans ya da dizin 
 
 ```bash
 ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo /opt/meridian/deploy/oracle-a1/sir_rotasyon.sh --tohumla-sohbet --kuru'
-# beklenen: dört hedef "YOK — yazılacak alanlar: …", bütün referanslar VAR; sıfır yazım
+# beklenen: dört hedef "YOK — yazılacak alanlar: …", bütün referanslar VAR; sıfır yazım. "GERÇEK KOŞUM DURUR" satırı = eksik dizin/referans (önce adım 1–2)
 ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'sudo /opt/meridian/deploy/oracle-a1/sir_rotasyon.sh --tohumla-sohbet'
-# beklenen özet: yazıldı 4 · dokunulmadı 0 · eksik alanlı 0 (çıkış 3 = var olan dosyada eksik alan — elle incele)
+# beklenen özet: yazıldı 4 · dokunulmadı 0 · eksik alanlı 0. Çıkış 3 = var olan dosyada eksik ya da ÇİFT alan (elle düzelt);
+# çıkış 2 = var olan dosyanın alanı okunamadı (ör. UTF-8 dışı) — ikisinde de hiçbir dosya değişmez
 ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'for f in /home/ubuntu/.hermes-botlar/.env /home/ubuntu/.hermes-botlar/profiles/*/.env; do echo "$f [$(stat -c "%U:%G %a" "$f")]: $(grep -o "^[A-Z_]*=" "$f" | tr -d = | tr "\n" " ")"; done'
 # beklenen: hepsi ubuntu:ubuntu 600; kök: API_SERVER_KEY · profiller: API_SERVER_KEY BOT_KEY_<AD> HINDSIGHT_API_KEY
 ```
@@ -890,7 +891,9 @@ ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'for f in /home/ubuntu/.hermes-bot
 **4. Ancak bundan sonra rotasyon.** `--tenant`, `--api-sunucu`, `--kapi-bot <ad>` ve `--esitle` sohbet `.env`leri yokken
 yazım ÖNCESİ ön-denetimde durur (eksik yol ve alanı adıyla basar; kasaya hiçbir şey yazılmaz). Botlar/Telegram etkin
 değilken rotasyon onları BAŞLATMAZ: `ATLANDI (etkin değil: <durum>)` satırı basılır, kanıt "ölçülemedi" der (beklenen).
-`--kapi-bot <ad>` APISIX'i yeniden başlatır (`$env://` yalnız açılışta çözülür — birkaç saniye kapı kesintisi).
+`--kapi-bot <ad>` APISIX'i yeniden başlatır (`$env://` yalnız açılışta çözülür — birkaç saniye kapı kesintisi). Kasa kipinde (`--vault`) araç APISIX'i ancak `.env-apisix.vault` yan dosyası YENİ değere render olunca
+yeniden başlatır ve kapıyı yeni anahtar 200 / eski anahtar 401 ile ölçer; render gelmezse ya da kanıt ölçülemezse
+`ÖLÇÜLEMEDİ` basıp çıkış 2 verir (sessiz başarı yok) — aynı kanıt `--kapi --vault` ve `--api-sunucu --vault` için de geçerli.
 
 **5. G3c test-ateşlemesi** — G3 planının "Rol-1 canlı kontrol listesi" (özellikle 4b: `/p/<bot>/v1/models` Bearer ile
 200, yanlış anahtarla 401; hafıza okuma zaman aşımı yüzeyi).
