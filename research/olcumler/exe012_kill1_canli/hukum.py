@@ -16,7 +16,7 @@ GİRDİLER
 
 SÖZLEŞME KOMUT SATIRIDIR (A1, Rol-1, salt-okur; çalışma dizini /opt/meridian):
   python research/olcumler/exe012_kill1_canli/hukum.py hukum --defter state/exe012_tur_atif.jsonl \\
-      --baslangic YYYY-AA-GG --yeniden-baslatma-esigi {acilis|pencere} [--tanik T.jsonl] [--bakis 1|2] \\
+      --baslangic YYYY-AA-GG (--tanik T.jsonl | --taniksiz) [--yeniden-baslatma-esigi acilis] [--bakis 1|2] \\
       [--kusurlu-kok-neden-kartta GUN ...] [--kart K.yaml] [--cikti sonuc.json]
   … adim0a --tanik T.jsonl [--gun GUN ...] [--cikti …]
   … adim0b --planli-defter P --karar-defteri K --adim0a A0.json --baslangic GUN [--bitis GUN] [--cikti …]
@@ -28,10 +28,11 @@ HÜKÜM (kart `olcum_plani`)
   EVREN      pencerenin TEMİZ seanslarının `processed` olayları (`HUKUM_EVRENI`); `error` sayılır, havuza girmez.
   TEMİZ      seans içinde yeniden başlatma yok ∧ tanık 'kusurlu' değil; ayrıca okuyucunun gördüğü veri kayıpları
              (bozuk/yarım satır → `eksik`, seans ortası `kapanis` → `kismi`, defteri olmayan seans günü → `defter_yok`).
-  YENİDEN BAŞLATMA  satırlar (seans, surec_baslangic, pid) ile birleşir; bir sürecin başlangıcı seansın EŞİK anı ile
-             kapanışı arasındaysa seans içi yeniden başlatmadır. EŞİK SAATİ KARTTA YOK ("seans içi" — 09:30 açılış mı,
-             09:45 giriş penceresi mi?): Rol-1 `--yeniden-baslatma-esigi` ile seçer (varsayılan YOK); her seans iki
-             adayla da sınıflanır, ayrışanlar `esik_duyarliligi`nda adıyla.
+  YENİDEN BAŞLATMA  satırlar (seans, surec_baslangic, pid) ile birleşir; bir sürecin başlangıcı seansın AÇILIŞI (09:30
+             ET, takvimden) ile kapanışı arasındaysa seans içi yeniden başlatmadır — kart netleştirmesi 2026-10-01 (1),
+             `YENIDEN_BASLATMA_ESIGI` SABİT. 09:45 giriş penceresi yorumu ("pencere") daha gevşektir (09:30–09:45 arası
+             yeniden başlatılan seansı temiz sayar → pencere geçme yönünde dolar) ve hüküm yolunda REDDEDİLİR (rc 2); iki
+             adayın karşılaştırması yalnız TANIDIR (`esik_duyarliligi`, ADIM-0c `yeniden_baslatma`).
   PENCERE    `--baslangic`tan itibaren ilk N temiz seans; N = kart `pencere_seans` × `--bakis` (ikinci bakış "+20").
   R          Y = X − Z; R = p95(X_havuz) / p95(Y_havuz); p95 `meridian.olcum_araclari.p95` (v217 `_p95` ile özdeş).
   CI         SEANS-kümeli bootstrap — `meridian.olcum_araclari.kume_bootstrap` (faz5 ile ORTAK gövde); B, seviye karttan,
@@ -40,7 +41,10 @@ HÜKÜM (kart `olcum_plani`)
   GEÇERLİLİK üçlünün ÜSTÜNDE: şema ihlali / Y ≤ 0 / zaman tutarsızlığı → GEÇERSİZ; pencere dolmadı / kusurlu tanığın
              kök nedeni karta yazılmadı / yazım < n_yazim_min / takvim yok → ÖLÇÜLEMEDİ. Nihai karar ile üçlü AYRI
              alanlarda; R tavanı aşarken geçerlilik ÖLÇÜLEMEDİ diyorsa `tavan_asildi` bunu adıyla gösterir.
-  TANIK      defter X'leri tanığın kova sınırlarıyla MOTORUN KENDİ `gecikme.Histogram`ında (bisect_left — le kuralı)
+  TANIK      hüküm yolunda ZORUNLU (`--tanik`); bilinçli kaçış `--taniksiz` hükmü değiştirmez ama çıktının BAŞINDA
+             `taniksiz: true` + `tanik_ozeti` (eşit/tanıksız/kusurlu seans sayıları) ve özet satırının başında TANIKSIZ
+             ile görünür — kart kill_list'in "kusurlu → hüküm durur" bekçisi yalnız tanıkla çalışır (dal sonu inceleme I-2).
+             Defter X'leri tanığın kova sınırlarıyla MOTORUN KENDİ `gecikme.Histogram`ında (bisect_left — le kuralı)
              binlenir; Prometheus processed sayaçlarının iki seans-dışı sınır anı (09:45 ET öncesi son ortak örnek ·
              kapanış sonrası ilk ortak örnek, aynı ET günü) farkıyla kıyaslanır. Sınırda örnek yok ya da arada sayaç
              azalmış → 'tanıksız' (dışlanmaz); sayım farklı → 'kusurlu' (alet kusuru, seans düşer ve kök neden karta
@@ -82,7 +86,9 @@ BOSALTMA_SOZLUGU = ("seans_kapandi", "seans_degisti", "kapanis")
 BOSALTMA_KAPANIS = "kapanis"
 HUKUM_EVRENI = ("processed",)
 IZINLI_MERIDIAN_MODULLERI = ("barclock", "gecikme", "olcum_araclari")
-YENIDEN_BASLATMA_ESIKLERI = ("acilis", "pencere")
+# Yeniden başlatma eşiği — kart netlestirme_2026_10_01 (1): süreç başlangıcı seans AÇILIŞINDAN (09:30 ET) sonra → temiz DEĞİL.
+YENIDEN_BASLATMA_ESIGI = "acilis"
+YENIDEN_BASLATMA_ESIKLERI = ("acilis", "pencere")    # yalnız TANI (`esik_duyarliligi`); hükümde `pencere` REDDEDİLİR
 KILL, YESIL, OLCULEMEDI, GECERSIZ = "KILL", "YEŞİL", "ÖLÇÜLEMEDİ", "GEÇERSİZ"
 TANIK_ESIT, TANIK_YOK, TANIK_KUSURLU = "eşit", "tanıksız", "kusurlu"
 METRIK = "meridian_intraday_cycle_seconds_bucket"
@@ -228,6 +234,13 @@ def _sema_denetimi(v) -> str | None:
         for a in ("planli_giris", "planli_yazim"):
             if isinstance(o[ix[a]], bool) or not isinstance(o[ix[a]], int) or o[ix[a]] < 0:
                 return f"{a} {o[ix[a]]!r}"
+        # Aletin DEĞİŞMEZLERİ (dal sonu inceleme M-3): Z monoton saatle ölçülür → Z ≥ 0 (Z < 0 → Y > X → R aşağı, YEŞİL
+        # yönü); yazım sayacı girişin alt kümesidir (yazım yalnız dala GİRİLMİŞ bir sembolde sayılır).
+        if o[ix["z_s"]] < 0:
+            return f"z_s {o[ix['z_s']]!r} < 0 (Z monoton saatle ölçülür)"
+        if o[ix["planli_yazim"]] > o[ix["planli_giris"]]:
+            return (f"planli_yazim {o[ix['planli_yazim']]!r} > planli_giris {o[ix['planli_giris']]!r} (yazım girişin "
+                    "alt kümesi)")
     return None
 
 
@@ -375,13 +388,25 @@ def _tanik_seans(tanik, sinir: dict, xs: list, n_error: int) -> dict:
 # seans sınıflaması
 # =================================================================================================================
 
-def _seans_degerlendir(gun: str, kayitlar: list, eksik: bool, tanik, esik_adi: str) -> dict:
+def _yeniden_baslatma(kayitlar: list, sinir: dict) -> dict:
+    """{aday: bool} — bir sürecin başlangıcı adayın eşik anı ile seans kapanışı arasında mı. Hüküm `YENIDEN_BASLATMA_ESIGI`
+    adayını kullanır; öteki aday yalnız TANIDIR. Seans aralığı yoksa değerler None."""
+    if sinir["durum"] != "ok":
+        return {e: None for e in YENIDEN_BASLATMA_ESIKLERI}
+    out = {}
+    for e in YENIDEN_BASLATMA_ESIKLERI:
+        esik = sinir["acilis"] if e == "acilis" else sinir["pencere"]
+        out[e] = any(esik <= _iso(k["surec_baslangic"]) < sinir["kapanis"] for k in kayitlar)
+    return out
+
+
+def _seans_degerlendir(gun: str, kayitlar: list, eksik: bool, tanik) -> dict:
     sinir = seans_sinirlari(gun)
     olaylar = [o for k in kayitlar for o in k["olaylar"]]
     islenen = _islenen(olaylar)
     n_error = sum(1 for o in olaylar if o["outcome"] == "error")
     nedenler, gecersiz = [], []
-    yb = {e: None for e in YENIDEN_BASLATMA_ESIKLERI}
+    yb = _yeniden_baslatma(kayitlar, sinir)
     if sinir["durum"] == "takvim_yok":
         nedenler.append("takvim_yok")
     elif sinir["durum"] != "ok":
@@ -389,9 +414,6 @@ def _seans_degerlendir(gun: str, kayitlar: list, eksik: bool, tanik, esik_adi: s
         if islenen:
             gecersiz.append(f"{gun} seans günü değil ama {len(islenen)} işlenen olay taşıyor")
     else:
-        for e in YENIDEN_BASLATMA_ESIKLERI:
-            esik = sinir["acilis"] if e == "acilis" else sinir["pencere"]
-            yb[e] = any(esik <= _iso(k["surec_baslangic"]) < sinir["kapanis"] for k in kayitlar)
         for k in kayitlar:
             if _islenen(k["olaylar"]) and _iso(k["surec_baslangic"]) >= sinir["kapanis"]:
                 gecersiz.append(f"{gun} kapanıştan sonra başlamış süreç (pid {k['pid']}) işlenen olay taşıyor")
@@ -399,7 +421,7 @@ def _seans_degerlendir(gun: str, kayitlar: list, eksik: bool, tanik, esik_adi: s
         nedenler.append("eksik")
     if not kayitlar:
         nedenler.append("defter_yok")
-    if yb.get(esik_adi):
+    if yb.get(YENIDEN_BASLATMA_ESIGI):
         nedenler.append("yeniden_baslatma")
     if sinir["durum"] == "ok" and any(b == BOSALTMA_KAPANIS and _iso(y) < sinir["kapanis"]
                                       for k in kayitlar for b, y in zip(k["bosaltmalar"], k["yazimlar"])):
@@ -516,12 +538,17 @@ def _neden(kod: str, metin: str) -> dict:
     return {"kod": kod, "metin": metin}
 
 
-def hukum(defter_yolu, *, baslangic: str, esik_adi: str, tanik_yolu=None, bakis: int = 1, kusurlu_kabul=(),
-          kart_yolu=None) -> dict:
-    """KILL#1 canlı çapası hükmü (kart `olcum_plani` HÜKÜM EVRENİ · ÜÇLÜ HÜKÜM · SEANS TANIĞI · TANILAR)."""
-    if esik_adi not in YENIDEN_BASLATMA_ESIKLERI:
-        raise ValueError(f"yeniden başlatma eşiği {esik_adi!r} ∉ {YENIDEN_BASLATMA_ESIKLERI} (kart saat vermiyor; "
-                         "Rol-1 seçer — varsayılan yok)")
+def hukum(defter_yolu, *, baslangic: str, tanik_yolu=None, taniksiz: bool = False, bakis: int = 1,
+          kusurlu_kabul=(), kart_yolu=None) -> dict:
+    """KILL#1 canlı çapası hükmü (kart `olcum_plani` HÜKÜM EVRENİ · ÜÇLÜ HÜKÜM · SEANS TANIĞI · TANILAR).
+
+    Tanık ZORUNLU (`tanik_yolu`); bilinçli kaçış `taniksiz=True` — ikisi birlikte de hata. Yeniden başlatma eşiği kartın
+    (`YENIDEN_BASLATMA_ESIGI`) — parametre DEĞİLDİR."""
+    if tanik_yolu is None and not taniksiz:
+        raise ValueError("tanık dosyası ZORUNLU (--tanik): kusurlu tanık bekçisi yalnız tanıkla çalışır; bilinçli kaçış "
+                         "--taniksiz (çıktının başında taniksiz: true + tanik_ozeti)")
+    if tanik_yolu is not None and taniksiz:
+        raise ValueError("--tanik ile --taniksiz birlikte verilemez")
     if bakis not in (1, 2):
         raise ValueError(f"bakış 1 ya da 2 (kart veri_penceresi: ÖLÇÜLEMEDİ → bir kez +pencere): {bakis!r}")
     _gun(baslangic)
@@ -538,7 +565,7 @@ def hukum(defter_yolu, *, baslangic: str, esik_adi: str, tanik_yolu=None, bakis:
     defter_gunleri = set(seans_kayitlari) | bozuk_seanslar
     son = max(defter_gunleri | {baslangic})
     evren = defter_gunleri | set(_seans_gunleri(baslangic, son))
-    seanslar = {g: _seans_degerlendir(g, seans_kayitlari.get(g, []), g in bozuk_seanslar, tanik, esik_adi)
+    seanslar = {g: _seans_degerlendir(g, seans_kayitlari.get(g, []), g in bozuk_seanslar, tanik)
                 for g in sorted(evren)}
 
     hedef = esikler["pencere_seans"] * bakis
@@ -616,8 +643,20 @@ def hukum(defter_yolu, *, baslangic: str, esik_adi: str, tanik_yolu=None, bakis:
         karar, nedenler = uclu, uclu_nedeni
     for s in seanslar.values():
         s.pop("_gecersiz")
+
+    def _tanik_say(gunler):
+        sayim = {TANIK_ESIT: 0, TANIK_YOK: 0, TANIK_KUSURLU: 0}
+        for g in gunler:
+            sayim[seanslar[g]["tanik"]["durum"]] += 1
+        return sayim
+
+    tanik_ozeti = {"tanik_dosyasi": tanik is not None,
+                   "kapsam": "başlangıçtan pencerenin son seansına (pencere dolmadıysa son seansa) seans günleri",
+                   **_tanik_say([g for g in araliktaki if seanslar[g]["sinif"] != "seans_disi"]),
+                   "pencerede": _tanik_say(pencere)}
     return {
-        "kart": KART_KIMLIGI, "betik": "research/olcumler/exe012_kill1_canli/hukum.py",
+        "kart": KART_KIMLIGI, "taniksiz": bool(taniksiz), "tanik_ozeti": tanik_ozeti,
+        "betik": "research/olcumler/exe012_kill1_canli/hukum.py",
         "uretim_ts": dt.datetime.now(dt.timezone.utc).isoformat(),
         "kod": {"betik_sha256": _sha256(__file__), "meridian_yolu": str(pathlib.Path(barclock.__file__).resolve().parent)},
         "girdi": {"defter": {"yol": str(defter_yolu), "sha256": _sha256(defter_yolu), "satir_n": len(oku["satirlar"]),
@@ -627,12 +666,16 @@ def hukum(defter_yolu, *, baslangic: str, esik_adi: str, tanik_yolu=None, bakis:
                              "yok_sayilan_seri": tanik["yok_sayilan_seri"]} if tanik else None),
                   "kart": {"yol": esikler["kart_yolu"], "sha256": esikler["kart_sha256"]}},
         "parametreler": {"baslangic": baslangic, "bakis": bakis, "pencere_temiz_seans": hedef,
-                         "yeniden_baslatma_esigi": esik_adi, "kusurlu_kok_neden_kartta": kabul},
+                         "yeniden_baslatma_esigi": YENIDEN_BASLATMA_ESIGI, "taniksiz": bool(taniksiz),
+                         "kusurlu_kok_neden_kartta": kabul},
         "esikler": {k: esikler[k] for k in ("tavan_R", "ci_seviye", "bootstrap_B", "pencere_seans", "n_yazim_min",
                                             "tohum", "p95_tanimi")},
-        "esik_duyarliligi": [g for g, s in seanslar.items()
-                             if None not in s["yeniden_baslatma"].values()
-                             and s["yeniden_baslatma"]["acilis"] != s["yeniden_baslatma"]["pencere"]],
+        "esik_duyarliligi": {"hukum_esigi": YENIDEN_BASLATMA_ESIGI,
+                             "ayrisan_seanslar": [g for g, s in seanslar.items()
+                                                  if None not in s["yeniden_baslatma"].values()
+                                                  and s["yeniden_baslatma"]["acilis"] != s["yeniden_baslatma"]["pencere"]],
+                             "not": "TANI — hükme girmez: 'acilis' ile 'pencere' (09:45) adaylarının sınıfı ayrışan "
+                                    "seanslar; hüküm eşiği kart netleştirmesi (1)"},
         "seanslar": list(seanslar.values()),
         "pencere": {"seanslar": pencere, "n_temiz": len(pencere), "hedef": hedef, "dolu": dolu,
                     "dusenler": [{"seans": g, "sinif": seanslar[g]["sinif"], "nedenler": seanslar[g]["nedenler"]}
@@ -797,7 +840,8 @@ def adim0c(defter_yolu, seans: str, *, tanik_yolu=None) -> dict:
                                   sum(1 for o in olaylar if o["outcome"] == "error")),
             "satir_kb": [kb for k in kayitlar for kb in k["satir_kb"]],
             "bozuk_satir": [b for b in oku["bozuk"] if b["seans"] == seans],
-            "surec_n": len(kayitlar), "n_processed": len(isl), "r_0": r0,
+            "surec_n": len(kayitlar), "yeniden_baslatma": _yeniden_baslatma(kayitlar, sinir),
+            "n_processed": len(isl), "r_0": r0,
             "z": {"n": len(zs), "n_pozitif": sum(1 for z in zs if z > 0),
                   "medyan": statistics.median(zs) if zs else None, "p95": p95(zs) if zs else None,
                   "maks": max(zs) if zs else None},
@@ -835,9 +879,11 @@ def _ozet_satiri(sonuc: dict) -> str:
     h = sonuc.get("hukum")
     if not h:
         return f"{sonuc.get('adim', 'EXE-2026-012')} tamam"
-    return (f"EXE-2026-012 hüküm: {h['karar']} (üçlü {h['uclu']}) · R={h['r_nokta']} · CI üst={h['ci']['hi']} · "
-            f"temiz seans {sonuc['pencere']['n_temiz']}/{sonuc['pencere']['hedef']} · "
-            f"nedenler {[n['kod'] for n in h['nedenler']]}")
+    oz = sonuc["tanik_ozeti"]
+    on = "TANIKSIZ HÜKÜM (--taniksiz: alet kusuru tanıkla SINANMADI) · " if sonuc.get("taniksiz") else ""
+    return (f"{on}EXE-2026-012 hüküm: {h['karar']} (üçlü {h['uclu']}) · R={h['r_nokta']} · CI üst={h['ci']['hi']} · "
+            f"temiz seans {sonuc['pencere']['n_temiz']}/{sonuc['pencere']['hedef']} · tanık eşit/tanıksız/kusurlu "
+            f"{oz[TANIK_ESIT]}/{oz[TANIK_YOK]}/{oz[TANIK_KUSURLU]} · nedenler {[n['kod'] for n in h['nedenler']]}")
 
 
 def main(argv=None) -> int:
@@ -846,8 +892,9 @@ def main(argv=None) -> int:
     h = alt.add_parser("hukum")
     h.add_argument("--defter", required=True)
     h.add_argument("--baslangic", required=True)
-    h.add_argument("--yeniden-baslatma-esigi", required=True, choices=YENIDEN_BASLATMA_ESIKLERI)
+    h.add_argument("--yeniden-baslatma-esigi", default=YENIDEN_BASLATMA_ESIGI)
     h.add_argument("--tanik")
+    h.add_argument("--taniksiz", action="store_true")
     h.add_argument("--bakis", type=int, default=1, choices=(1, 2))
     h.add_argument("--kusurlu-kok-neden-kartta", nargs="*", default=[])
     h.add_argument("--kart")
@@ -872,11 +919,16 @@ def main(argv=None) -> int:
     t = alt.add_parser("tanik-plani")
     t.add_argument("--gun", nargs="+", required=True)
     arg = p.parse_args(argv)
+    if arg.komut == "hukum" and arg.yeniden_baslatma_esigi != YENIDEN_BASLATMA_ESIGI:
+        print(f"HATA: hüküm yolunda yeniden başlatma eşiği yalnız '{YENIDEN_BASLATMA_ESIGI}' (09:30 ET açılış) — kart "
+              f"netleştirmesi 2026-10-01 (1); '{arg.yeniden_baslatma_esigi}' REDDEDİLDİ ('pencere' 09:45 yorumu daha "
+              "gevşek: ölçüm aleti eşikten geçme yönünde sapmasın). İki eşiğin karşılaştırması çıktının "
+              "`esik_duyarliligi` tanısında.", file=sys.stderr)
+        return 2
     try:
         if arg.komut == "hukum":
-            sonuc = hukum(arg.defter, baslangic=arg.baslangic, esik_adi=arg.yeniden_baslatma_esigi,
-                          tanik_yolu=arg.tanik, bakis=arg.bakis, kusurlu_kabul=arg.kusurlu_kok_neden_kartta,
-                          kart_yolu=arg.kart)
+            sonuc = hukum(arg.defter, baslangic=arg.baslangic, tanik_yolu=arg.tanik, taniksiz=arg.taniksiz,
+                          bakis=arg.bakis, kusurlu_kabul=arg.kusurlu_kok_neden_kartta, kart_yolu=arg.kart)
         elif arg.komut == "adim0a":
             sonuc = adim0a(arg.tanik, arg.gun or None)
         elif arg.komut == "adim0b":

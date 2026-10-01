@@ -22,13 +22,23 @@ BÖLÜMLER:
   I  kart ve alet bağı: eşikler karttan; alan / boşaltma sözlüğü / şema aletle ayrışmaz; Yasa 6 beyanı okuyucuyu adlandırır.
   J  ADIM-0 a/b/c hesapları + tanık planı (DST).
 
-SAHTE SAAT (G): `gecikme._saat` her okumada `ADIM_S` ilerleyen SANAL saattir; süreler yalnız enjekte edilen gecikmelerden
+SAHTE SAAT (G) — kart netleştirmesi 2026-10-01b (`netlestirme_2026_10_01b`, Rol-1; dal sonu inceleme I-3(a)): kartın
+"meşgul-bekleme" deseni yerine `gecikme._saat` her okumada `ADIM_S` ilerleyen SANAL saattir; süreler yalnız enjekte edilen gecikmelerden
 ve okuma adımlarından oluşur → PK hükümleri makine yükünden BAĞIMSIZ ve deterministiktir (gerçek uyku YOK). Canlıda var
 olan Redis okuması testte yoktur; sembol başına tohumlu bir sanal okuma süresi eklenir (Y'ye gerçekçi bir dağılım verir).
 Aletin GERÇEK saat maliyeti v606 G1'dedir.
 
-BAĞIMLILIK BEYANI: v217 sahne yardımcıları (`_kapilar_olculebilir`, `_plan`, `_bar`) bilerek içe aktarılır (v606
-deseni) — kopya ikinci kaynak olurdu.
+BAĞIMLILIK BEYANI: v217 sahne yardımcıları (`_kapilar_olculebilir`, `_plan`, `_bar`) ve v606'nın kilit yoklaması
+(`kilit_yeniden_girisli_yoklamasi`) bilerek içe aktarılır — kopya ikinci kaynak olurdu.
+
+TUR 2 (dal sonu inceleme 0C/3I/3M, 2026-10-01; kart netleştirmeleri 2026-10-01 + 2026-10-01b):
+  I-1  hüküm yolunda yeniden başlatma eşiği SABİT `acilis` (09:30 ET, kart netleştirme (1)); `pencere` REDDEDİLİR (rc 2,
+       açık ileti), yalnız `esik_duyarliligi` TANISINDA kalır (C1, C2, I4).
+  I-2  hüküm yolunda tanık ZORUNLU; bilinçli kaçış `--taniksiz` çıktının BAŞINDA `taniksiz` + `tanik_ozeti` ile (E4, E2).
+  I-3  PK-1 gecikmesi olay başına planli giriş sayısına BÖLÜNÜR (olay başı toplam %20 → R ≈ 1,20, "tavanın iki katı");
+       PK-2 aynı TOPLAMI dal dışına (silahlı dal, olay başına bir kez) (G1, G2).
+  M-1  RLock → Lock gerilemesinde PK'ler ASILMAZ: v606'nın yoklaması bu dosyada da autouse.
+  M-3  şema denetimi negatif `z_s`'yi ve `planli_yazim > planli_giris`'i reddeder (B3).
 
 Bu dosya `state/`e yalnız `sandbox_state` üzerinden dokunur, ağa çıkmaz. Numara v607: ana checkout + beş worktree'de boş
 (ölçüldü 2026-10-01; v606 alet).
@@ -51,6 +61,7 @@ import yaml
 from meridian import barclock as bc, codelaw, faz5_cikis as f5, gecikme, intraday_cycle as ic, \
     intraday_shadow as ish, olcum_araclari as oa, store
 from tests.conftest import betikten_modul_yukle
+from tests.test_exe012_alet_v606 import kilit_yeniden_girisli_yoklamasi
 from tests.test_golge_planli_kol_v217 import _bar, _kapilar_olculebilir, _plan
 import tests.test_golge_planli_kol_v217 as v217
 
@@ -73,6 +84,15 @@ def _temiz():
     ic._CONSUMER = None
     ic.reset_plans_cache()
     ish.reset_dedup()
+
+
+@pytest.fixture(autouse=True)
+def _kilit_yeniden_girisli():
+    """Dal sonu inceleme M-1: PK'ler her seans sonunda `_atif_kaydet` → `_atif_bosalt` (aynı kilit) yolunu koşar; RLock → Lock
+    gerilemesinde ana iş parçacığı ölü kilide girerdi (pytest-timeout yok). v606'nın bloklamayan yoklaması burada da
+    her testten ÖNCE koşar — gerileme varsa test asılmadan düşer."""
+    kilit_yeniden_girisli_yoklamasi()
+    yield
 
 
 @pytest.fixture(scope="module")
@@ -132,9 +152,12 @@ def _duz_seans(seans: str, *, n: int = 20, x: float = 1.0, y: float = 1.0, yazim
     return _satir(seans, olaylar, **kw)
 
 
-def _hukum(m, tmp_path, satirlar, *, ham=(), baslangic=None, esik="acilis", **kw) -> dict:
+def _hukum(m, tmp_path, satirlar, *, ham=(), baslangic=None, **kw) -> dict:
+    """Tanık verilmeyen birim çivilerinde bilinçli kaçış `taniksiz=True` (I-2: hüküm yolunda tanık zorunlu)."""
+    if kw.get("tanik_yolu") is None:
+        kw["taniksiz"] = True
     yol = _defter_yaz(tmp_path / "defter.jsonl", satirlar, ham)
-    return m.hukum(yol, baslangic=baslangic or GUNLER[0], esik_adi=esik, **kw)
+    return m.hukum(yol, baslangic=baslangic or GUNLER[0], **kw)
 
 
 def _seans(sonuc: dict, gun: str) -> dict:
@@ -276,36 +299,48 @@ def test_B3_sema_disi_satir_HUKMU_GECERSIZ_kilar(m, tmp_path):
         satirlar[3] = {**satirlar[3], **bozma}
         sonuc = _hukum(m, tmp_path, satirlar)
         assert sonuc["hukum"]["karar"] == m.GECERSIZ and "defter_semasi" in _kodlar(sonuc), bozma
+    # Dal sonu inceleme M-3: aletin DEĞİŞMEZLERİ (monoton saat → Z ≥ 0; yazım sayacı girişin alt kümesi) de şemadır.
+    # Z < 0 → Y > X → R aşağı (YEŞİL yönü) — "Tek kaynak" GEÇERSİZ maddesine Y ≤ 0 sınaması yakalamaz.
+    for olay, parca in ((_olay(x=1.0, z=-0.001, giris=1), "z_s"), (_olay(x=1.0, z=0.1, giris=1, yazim=2), "planli_yazim")):
+        satirlar = [_duz_seans(g) for g in GUNLER[:20]]
+        satirlar[5]["olaylar"][7] = olay
+        sonuc = _hukum(m, tmp_path, satirlar)
+        assert sonuc["hukum"]["karar"] == m.GECERSIZ and "defter_semasi" in _kodlar(sonuc), parca
+        assert sonuc["girdi"]["defter"]["sema_ihlali"][0]["neden"].startswith(parca), sonuc["girdi"]["defter"]
 
 
 # =================================================================================================================
 # C — temiz seans süzgeci
 # =================================================================================================================
 
-def test_C1_seans_ici_YENIDEN_BASLATMA_esik_parametresi_ve_DUYARLILIK(m, tmp_path):
-    """Kart 'seans içinde yeniden başlatma yok' der ama EŞİK SAATİNİ söylemez (09:30 açılış mı, 09:45 giriş penceresi
-    mi). Betik uydurmaz: eşik Rol-1 parametresidir ve her seans iki adayla da sınıflanıp raporlanır."""
+def test_C1_seans_ici_YENIDEN_BASLATMA_esigi_ACILIS_pencere_yalniz_TANI(m, tmp_path):
+    """Kart netleştirme (1): süreç başlangıcı seans AÇILIŞINDAN (09:30 ET) sonra ise seans temiz DEĞİL. 09:45 giriş
+    penceresi yorumu daha gevşek (09:30–09:45 arası yeniden başlatılan seansı temiz sayar → pencere geçme yönünde dolar)
+    ve SEÇİLMEDİ; hükümde eşik sabittir. İki adayın karşılaştırması yalnız TANIDIR (`esik_duyarliligi`)."""
     g0, g1, g2 = GUNLER[:3]
     satirlar = [_duz_seans(g0, surec=_et(g0, 9, 40).isoformat()),             # 09:30–09:45 arası: adaylar ayrışır
-                _duz_seans(g1, surec=_et(g1, 11, 0).isoformat()),             # pencere içi: ikisinde de yeniden başlatma
+                _duz_seans(g1, surec=_et(g1, 11, 0).isoformat()),             # pencere içi: iki adayda da yeniden başlatma
                 _duz_seans(g2, surec=(_et(g2, 9, 30) - dt.timedelta(hours=14)).isoformat())]   # önceki akşam: temiz
-    acilis = _hukum(m, tmp_path, satirlar, esik="acilis")
-    pencere = _hukum(m, tmp_path, satirlar, esik="pencere")
-    assert _seans(acilis, g0)["sinif"] == "yeniden_baslatma" and _seans(pencere, g0)["temiz"]
-    assert _seans(acilis, g1)["sinif"] == "yeniden_baslatma" == _seans(pencere, g1)["sinif"]
-    assert _seans(acilis, g2)["temiz"] and _seans(pencere, g2)["temiz"]
-    assert _seans(acilis, g0)["yeniden_baslatma"] == {"acilis": True, "pencere": False}
-    assert acilis["parametreler"]["yeniden_baslatma_esigi"] == "acilis"
-    assert acilis["esik_duyarliligi"] == [g0] == pencere["esik_duyarliligi"]
+    sonuc = _hukum(m, tmp_path, satirlar)
+    assert _seans(sonuc, g0)["sinif"] == "yeniden_baslatma" and not _seans(sonuc, g0)["temiz"], \
+        "09:40'ta başlamış süreç: kartın açılış eşiğiyle seans temiz DEĞİL"
+    assert _seans(sonuc, g1)["sinif"] == "yeniden_baslatma" and _seans(sonuc, g2)["temiz"]
+    assert _seans(sonuc, g0)["yeniden_baslatma"] == {"acilis": True, "pencere": False}
+    assert sonuc["parametreler"]["yeniden_baslatma_esigi"] == "acilis" == m.YENIDEN_BASLATMA_ESIGI
+    tani = sonuc["esik_duyarliligi"]
+    assert tani["hukum_esigi"] == "acilis" and tani["ayrisan_seanslar"] == [g0] and "TANI" in tani["not"]
 
 
-def test_C2_esik_ZORUNLU_varsayilan_YOK(m, tmp_path):
+def test_C2_hukumde_PENCERE_esigi_REDDEDILIR_acik_ileti(m, tmp_path, capsys):
     yol = _defter_yaz(tmp_path / "d.jsonl", [_duz_seans(GUNLER[0])])
-    with pytest.raises(ValueError):
-        m.hukum(yol, baslangic=GUNLER[0], esik_adi="tahmin")
-    with pytest.raises(SystemExit) as e:
-        m.main(["hukum", "--defter", str(yol), "--baslangic", GUNLER[0]])
-    assert e.value.code == 2
+    temel = ["hukum", "--defter", str(yol), "--baslangic", GUNLER[0], "--taniksiz"]
+    assert m.main(temel + ["--yeniden-baslatma-esigi", "pencere"]) == 2
+    hata = capsys.readouterr().err
+    assert "acilis" in hata and "netleştirme" in hata and "pencere" in hata, hata
+    assert m.main(temel + ["--yeniden-baslatma-esigi", "acilis", "--cikti", str(tmp_path / "a.json")]) == 0
+    assert m.main(temel + ["--cikti", str(tmp_path / "b.json")]) == 0, "eşik verilmezse kartın eşiği (acilis)"
+    with pytest.raises(TypeError):
+        m.hukum(yol, baslangic=GUNLER[0], taniksiz=True, esik_adi="pencere")     # API'de eşik parametresi YOK
 
 
 def test_C3_seans_ortasi_KAPANIS_kismi_seanstir_kapanis_sonrasi_degil(m, tmp_path):
@@ -511,6 +546,10 @@ def test_E2_TANIKSIZ_ile_KUSURLU_ayrimi_ve_kusurlunun_HUKMU_durdurmasi(m, tmp_pa
     assert _seans(sonuc, g0)["temiz"] and _seans(sonuc, g1)["temiz"] and _seans(sonuc, g3)["temiz"]
     assert sonuc["hukum"]["karar"] == m.OLCULEMEDI and "kusurlu_kok_neden" in _kodlar(sonuc)
     assert g2 not in sonuc["pencere"]["seanslar"] and GUNLER[20] in sonuc["pencere"]["seanslar"], "pencere uzar"
+    oz = sonuc["tanik_ozeti"]
+    assert sonuc["taniksiz"] is False and oz["tanik_dosyasi"] is True
+    assert (oz["eşit"], oz["tanıksız"], oz["kusurlu"]) == (17, 3, 1), oz           # aralık G0…G20
+    assert oz["pencerede"] == {"eşit": 17, "tanıksız": 3, "kusurlu": 0}
     kabul = _hukum(m, tmp_path, satirlar + [_satir(GUNLER[20], [_olay(x=0.002, giris=1, yazim=1)])],
                    tanik_yolu=yol, kusurlu_kabul=(g2,))
     assert "kusurlu_kok_neden" not in _kodlar(kabul) and g2 not in kabul["pencere"]["seanslar"]
@@ -525,6 +564,30 @@ def test_E3_error_FARKI_raporlanir_karsilastirilmaz(m, tmp_path):
     yol = _tanik_yaz(tmp_path / "t.jsonl", [_tanik_yaniti(_gun_ornekleri(g, SINIR_X), ek_seriler=err)])
     t = _seans(_hukum(m, tmp_path, satirlar, tanik_yolu=yol), g)["tanik"]
     assert t["durum"] == "eşit" and t["error_farki"] == 2 and t["defter_error"] == 1
+
+
+def test_E4_TANIK_zorunlu_TANIKSIZ_bilincli_kacis_cikti_BASINDA(m, tmp_path, capsys):
+    """Dal sonu inceleme I-2: tanık verilmeden tam hüküm çıkıyordu ve "kusurlu → hüküm durur" bekçisi sessizce devre
+    dışıydı (her seans 'tanıksız', üst düzeyde görünmüyordu). Hüküm yolunda `--tanik` ZORUNLU; bilinçli kaçış
+    `--taniksiz` hükmü ÖLÇÜLEMEDİ'ye ÇEVİRMEZ ama çıktının BAŞINDA `taniksiz: true` + `tanik_ozeti` sayılarıyla görünür."""
+    yol = _defter_yaz(tmp_path / "d.jsonl", [_duz_seans(g) for g in GUNLER[:20]])
+    with pytest.raises(ValueError, match="tanık"):
+        m.hukum(yol, baslangic=GUNLER[0])
+    t = _tanik_yaz(tmp_path / "t.jsonl", [_tanik_yaniti(_gun_ornekleri(GUNLER[0], [1.0] * 20))])
+    with pytest.raises(ValueError, match="birlikte"):
+        m.hukum(yol, baslangic=GUNLER[0], tanik_yolu=t, taniksiz=True)
+    assert m.main(["hukum", "--defter", str(yol), "--baslangic", GUNLER[0]]) == 2
+    assert "--taniksiz" in capsys.readouterr().err
+    cikti = tmp_path / "s.json"
+    assert m.main(["hukum", "--defter", str(yol), "--baslangic", GUNLER[0], "--taniksiz", "--cikti", str(cikti)]) == 0
+    satir = capsys.readouterr().out
+    assert satir.startswith("TANIKSIZ"), satir
+    s = json.loads(cikti.read_text(encoding="utf-8"))
+    assert list(s)[:3] == ["kart", "taniksiz", "tanik_ozeti"], list(s)[:5]
+    assert s["taniksiz"] is True and s["parametreler"]["taniksiz"] is True
+    assert (s["tanik_ozeti"]["eşit"], s["tanik_ozeti"]["tanıksız"], s["tanik_ozeti"]["kusurlu"]) == (0, 20, 0)
+    assert s["tanik_ozeti"]["tanik_dosyasi"] is False
+    assert s["hukum"]["karar"] == m.YESIL, "kaçış hükmü ÖLÇÜLEMEDİ'ye çevirmez — yalnız adıyla görünür kılar"
 
 
 # =================================================================================================================
@@ -630,12 +693,14 @@ def _pk_kos(sandbox_state, monkeypatch, tmp_path, ad, *, enjeksiyon=None, d=0.0,
             return ozgun_ps(*a, **k)
 
         monkeypatch.setattr(ish, "planli_satir", planli)
-    elif enjeksiyon in ("karar_defteri", "yazim"):     # PK-2: karar defteri yazımı (dal DIŞI) · PK-3: planli yazım
-        hedef = ic.DECISIONS_FILE if enjeksiyon == "karar_defteri" else ish.PLANLI_ORDERS_FILE
+    elif enjeksiyon in ("karar_defteri", "yazim"):
+        # PK-2: planli sembolün KARAR DEFTERİ yazımı — dal sınırının hemen DIŞI (aynı sembol, aynı giriş başına d; Z'yi
+        # dal dışına genişleten bir alet onu soğurur → KILL). PK-3: YALNIZ planli satırın diske yazımı (seyrek olay).
         ozgun_aj = store.append_jsonl
 
         def yaz(name, row):
-            if name == hedef:
+            if ((enjeksiyon == "karar_defteri" and name == ic.DECISIONS_FILE and row.get("plan_source") == "planned")
+                    or (enjeksiyon == "yazim" and name == ish.PLANLI_ORDERS_FILE)):
                 saat.ilerle(d)
             return ozgun_aj(name, row)
 
@@ -666,9 +731,20 @@ def _betik_kos(m, tmp_path, ad, defter, tanik) -> dict:
     return json.loads(cikti.read_text(encoding="utf-8"))
 
 
+def _olay_basi_planli_giris(defter: pathlib.Path) -> int:
+    """Tabanın defterinden ÖLÇÜLÜR: işlenen her olayda planli dala kaç giriş var (bileşimde T0–T2 → 3; tek değer şart)."""
+    degerler = set()
+    for satir in (json.loads(x) for x in defter.read_text(encoding="utf-8").splitlines() if x.strip()):
+        ix = satir["alanlar"]
+        degerler |= {o[ix.index("planli_giris")] for o in satir["olaylar"] if o[ix.index("outcome")] == "processed"}
+    assert len(degerler) == 1 and min(degerler) > 0, degerler
+    return degerler.pop()
+
+
 def _taban(m, sandbox_state, monkeypatch, tmp_path) -> dict:
     defter, tanik = _pk_kos(sandbox_state, monkeypatch, tmp_path, "taban")
     s = _betik_kos(m, tmp_path, "taban", defter, tanik)
+    s["_olay_basi_giris"] = _olay_basi_planli_giris(defter)
     h = s["hukum"]
     # Taban sağlıklı mı (PK'ların ön koşulu): 20 temiz seans, tanık EŞİT (tanık eşi), her seansta 3 planli yazım.
     assert {x["tanik"]["durum"] for x in s["seanslar"]} == {"eşit"}, "TANIK EŞİ: defter kova sayımı ≠ DONGU_SURESI"
@@ -677,23 +753,33 @@ def _taban(m, sandbox_state, monkeypatch, tmp_path) -> dict:
     return s
 
 
-def test_G1_PK1_DUYARLILIK_planli_dala_yuzde20_KILL(m, sandbox_state, monkeypatch, tmp_path):
-    taban = _taban(m, sandbox_state, monkeypatch, tmp_path)["hukum"]
-    d = 0.2 * taban["p95_y"]
+def test_G1_PK1_DUYARLILIK_planli_dala_olay_basi_yuzde20_KILL(m, sandbox_state, monkeypatch, tmp_path):
+    """Kart PK-1 + netleştirme 2026-10-01b: "+%20" olay başına planli dalın TOPLAM ekidir — giriş sayısına BÖLÜNÜR; hedef
+    R ≈ 1,20 (tavanın iki katı aşım). Olayların tamamında planli giriş var."""
+    taban_s = _taban(m, sandbox_state, monkeypatch, tmp_path)
+    taban, k = taban_s["hukum"], taban_s["_olay_basi_giris"]
+    d = 0.2 * taban["p95_y"] / k
     defter, tanik = _pk_kos(sandbox_state, monkeypatch, tmp_path, "pk1", enjeksiyon="planli", d=d)
     s = _betik_kos(m, tmp_path, "pk1", defter, tanik)
     h = s["hukum"]
     assert s["tanilar"]["t6"]["f_giris"] == 1.0, "olayların TAMAMINDA planli giriş olmalı (kart PK-1)"
+    assert h["r_nokta"] == pytest.approx(1.20, abs=0.005), f"PK-1 büyüklüğü kartın niyeti değil: R={h['r_nokta']}"
     assert h["karar"] == m.KILL == h["uclu"] and h["r_nokta"] > h["tavan"], h
     assert h["p95_y"] == pytest.approx(taban["p95_y"], rel=1e-6), "gecikme Y'ye sızdı — Z onu soğurmadı"
 
 
-def test_G2_PK2_OZGULLUK_ayni_gecikme_dal_DISINDA_YESIL(m, sandbox_state, monkeypatch, tmp_path):
-    taban = _taban(m, sandbox_state, monkeypatch, tmp_path)["hukum"]
-    d = 0.2 * taban["p95_y"]
-    defter, tanik = _pk_kos(sandbox_state, monkeypatch, tmp_path, "pk2", enjeksiyon="karar_defteri", d=d)
+def test_G2_PK2_OZGULLUK_ayni_TOPLAM_gecikme_dal_DISINDA_YESIL(m, sandbox_state, monkeypatch, tmp_path):
+    """Kart PK-2: AYNI gecikme planli dalın DIŞINA (kartın seçeneklerinden "karar defteri yazımı"): PK-1 ile aynı giriş başı
+    d ve aynı olay başı toplam (p95(Y)'nin %20'si), YALNIZ yer farklı — planli sembolün karar satırı, dalın hemen önünde.
+    p95(X) o toplam kadar artar, Z soğurmaz → YEŞİL. Z'yi dal dışına genişleten alet bu gecikmeyi soğurur → KILL (kart
+    MUTASYON "Z'yi dal dışına genişletmek (PK-2)")."""
+    taban_s = _taban(m, sandbox_state, monkeypatch, tmp_path)
+    taban, k = taban_s["hukum"], taban_s["_olay_basi_giris"]
+    toplam = 0.2 * taban["p95_y"]
+    defter, tanik = _pk_kos(sandbox_state, monkeypatch, tmp_path, "pk2", enjeksiyon="karar_defteri", d=toplam / k)
     h = _betik_kos(m, tmp_path, "pk2", defter, tanik)["hukum"]
-    assert h["p95_x"] >= 1.2 * taban["p95_x"], "enjeksiyon p95(X)'i en az %20 artırmadı — PK boş"
+    assert h["p95_x"] - taban["p95_x"] == pytest.approx(toplam, rel=1e-6), \
+        "enjeksiyon p95(X)'i olay başına p95(Y)'nin %20'si kadar artırmadı"
     assert h["karar"] == m.YESIL == h["uclu"] and h["r_nokta"] <= h["tavan"] and h["ci"]["hi"] <= h["tavan"], h
 
 
@@ -759,7 +845,7 @@ def test_H2_OPERATOR_BICIMINDE_alt_surec_obs_YUKLENMEZ(tmp_path):
     ortam["MERIDIAN_ROOT"] = str(tmp_path)              # savunma derinliği: yine de obs'a ulaşsa yazım tmp'ye düşer
     ortam.pop("PYTHONPATH", None)                       # betik kendi ağacını sys.path'e koyar (worktree tuzağı yok)
     p = subprocess.run([sys.executable, "-X", "importtime", str(BETIK), "hukum", "--defter", str(defter),
-                        "--baslangic", GUNLER[0], "--yeniden-baslatma-esigi", "acilis", "--cikti", str(cikti)],
+                        "--baslangic", GUNLER[0], "--taniksiz", "--cikti", str(cikti)],
                        cwd=tmp_path, env=ortam, capture_output=True, text=True, timeout=300)
     assert p.returncode == 0, p.stderr[-2000:]
     yuklenen = {s.rsplit("|", 1)[-1].strip() for s in p.stderr.splitlines() if s.startswith("import time:")}
@@ -814,6 +900,15 @@ def test_I3_Yasa6_beyani_OKUYUCUYU_adlandirir_motor_ici_okuyucu_iddiasi_KORUNUR(
         "OTOMATİK KAPI YASAĞI'nın mekanik katmanı (motor içi okuyucu yok iddiası) düştü"
 
 
+def test_I4_kart_NETLESTIRMELERI_betik_ve_PK_ile_UYUMLU():
+    """Kartın netleştirmeleri (Rol-1, ADIM-0 öncesi) betiğin sabitine ve PK düzeneğine bağlı: (1) yeniden başlatma eşiği
+    açılış; 2026-10-01b sanal saat + PK-1'in olay başı toplamı."""
+    kart = yaml.safe_load(KART.read_text(encoding="utf-8"))
+    n1, n1b = kart["netlestirme_2026_10_01"], kart["netlestirme_2026_10_01b"]
+    assert "--yeniden-baslatma-esigi acilis" in n1 and "09:30 ET" in n1
+    assert "SANAL SAAT" in n1b and "giriş sayısına bölünür" in n1b
+
+
 # =================================================================================================================
 # J — ADIM-0 a/b/c + tanık planı
 # =================================================================================================================
@@ -865,6 +960,7 @@ def test_J3_ADIM0c_ilk_seans_BETIMLEMESI_hukum_degil(m, tmp_path):
     c = m.adim0c(_defter_yaz(tmp_path / "d.jsonl", satirlar), g)
     assert c["seans"] == g and c["r_0"] == 1.0 and c["z"]["maks"] == 0.25 and c["z"]["n_pozitif"] == 1
     assert c["satir_kb"][0] > 0 and c["tanik"]["durum"] == "tanıksız" and "GİRMEZ" in c["not"]
+    assert c["yeniden_baslatma"] == {"acilis": False, "pencere": False}, "betimlemede iki eşik de raporlanır (tanı)"
 
 
 def test_J4_tanik_PLANI_sinirlari_ET_den_turetir_DST(m):

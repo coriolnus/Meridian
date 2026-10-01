@@ -188,3 +188,10 @@ netlestirme_2026_10_01: >
   günlerinde takvim kapanışı (13:00 ET). (7) Betik A1'de piyasa SAATLERİ DIŞINDA koşulur (B=10.000 ~20 s CPU — ölçtüğü p95'i
   şişirmesin). (8) ADIM-0 donmasında içerik-adresli çapalar YENİ bloblarla yazılır: meridian/intraday_cycle.py, meridian/gecikme.py,
   meridian/olcum_araclari.py, meridian/faz5_cikis.py, tests/test_golge_planli_kol_v217.py (_p95 gövdesi taşındı), hukum.py.
+
+netlestirme_2026_10_01b: >
+  (Rol-1, 2026-10-01 09:0xZ — ADIM-0 ÖNCESİ, dal sonu inceleme I-3; eşik/K/kill DEĞİŞMEDİ) Pozitif kontrollerde gecikme
+  meşgul-bekleme yerine SANAL SAAT ile enjekte edilir (gerçek tüketici → gerçek planlı dal → gerçek alet → gerçek seans sonu
+  defter yazımı → hüküm betiğinin kendisi yolu AYNEN korunur; makine yükünden bağımsız, deterministik). Bedel: yazım G/Ç'sinin
+  gerçek maliyeti PK'lerde sınanmaz — o maliyet v606 G1'de (alet olay-başı maliyeti) ölçülür ve ADIM-0c'de canlıda kayda geçer.
+  PK-1 "+%20" = olay başına planlı dalın TOPLAM eki (giriş sayısına bölünür; hedef R ≈ 1,20 — tavanın iki katı aşım).

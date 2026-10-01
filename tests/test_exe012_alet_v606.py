@@ -94,22 +94,28 @@ def _temiz():
 _YOKLAMA_MUAF = frozenset({"test_K9_yeniden_girisli_kilit_OLU_KILIT_uretmez_zaman_asimli"})
 
 
-@pytest.fixture(autouse=True)
-def _kilit_yeniden_girisli(request):
+def kilit_yeniden_girisli_yoklamasi() -> None:
     """İnceleme M-8(ii): `_atif_kilit` yeniden girişli OLMALI (`_atif_kaydet` kilidi tutarken `_atif_bosalt`ı çağırır).
     RLock → Lock gerilemesinde seans boşaltmalı her test SÜRESİZ asılırdı (pytest-timeout yok). Yoklama BLOKLAMAZ: ikinci
-    alım `blocking=False` — gerileme varsa test asılmadan düşer."""
-    if request.node.name not in _YOKLAMA_MUAF:
-        kilit = ic.IntradayConsumer()._atif_kilit
-        assert kilit.acquire(blocking=False), "yoklama: taze tüketicinin kilidi alınamadı"
-        try:
-            ikinci = kilit.acquire(blocking=False)
-            if ikinci:
-                kilit.release()
-        finally:
+    alım `blocking=False` — gerileme varsa test asılmadan düşer. ORTAK YARDIMCI: v607 (PK'ler her seans sonunda aynı
+    yolu koşar — dal sonu inceleme M-1) aynı yoklamayı buradan içe aktarır (tek kaynak)."""
+    kilit = ic.IntradayConsumer()._atif_kilit
+    assert kilit.acquire(blocking=False), "yoklama: taze tüketicinin kilidi alınamadı"
+    try:
+        ikinci = kilit.acquire(blocking=False)
+        if ikinci:
             kilit.release()
-        if not ikinci:
-            pytest.fail("`_atif_kilit` yeniden girişli DEĞİL — seans boşaltması kendi kilidinde ölü kilide girer (M-8)")
+    finally:
+        kilit.release()
+    if not ikinci:
+        pytest.fail("`_atif_kilit` yeniden girişli DEĞİL — seans boşaltması kendi kilidinde ölü kilide girer (M-8)")
+
+
+@pytest.fixture(autouse=True)
+def _kilit_yeniden_girisli(request):
+    """Her testten ÖNCE `kilit_yeniden_girisli_yoklamasi` (K9 muaf — kendi zaman aşımlı `join`iyle düştüğü görülsün)."""
+    if request.node.name not in _YOKLAMA_MUAF:
+        kilit_yeniden_girisli_yoklamasi()
     yield
 
 
