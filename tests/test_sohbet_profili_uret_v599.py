@@ -6,12 +6,15 @@ bir SOHBET profili türetir ve `deploy/hermes/sohbet/profiles/<ad>/` altına yaz
     fazla (kadroda `aktif` olmayan bot) dosya adıyla raporlanır; üretim deterministik.
   * DURUŞ MİRASI — guard kancası, onay, kapalı takımlar, model ve kapı sağlayıcısı rapor profilinden AYNEN
     gelir; v329'un yasak takım listesi buraya KOPYALANMAZ, İTHAL edilir.
-  * SOHBET FARKLARI — Meridian MCP girdisi kök yapılandırmadan (`--bot <ad>` ekiyle), platform izin listesi
-    yalnız `meridian`, Hindsight bankası `bot-<ad>` ve sırsız, zaman aşımı Hermes'in okuduğu yerde, SOUL
+  * SOHBET FARKLARI — Hindsight bankası `bot-<ad>` ve sırsız, zaman aşımı Hermes'in okuduğu yerde, SOUL
     rapor SOUL'u + tek sohbet bölümü ve bölüm yalnız kadrodaki aracı vaat eder.
   * BOT AĞ GEÇİDİ (G3) — ikincil profilde `api_server` kapalı, MCP `env:`inde birim adından türeyen credential
     yolu, ortak bot kum havuzu, `.env`e yönlendiren Hindsight açıklaması; kök (varsayılan) profil çoklu kipte,
-    araçsız, hafızasız, duruşu sef rapor profilinden ve SOUL'u yalnız yönlendirme cümlesi.
+    kendi istekleri için araçsız (`no_mcp` + kapalı takımlarda sunucu adları), hafızasız, duruşu sef rapor
+    profilinden ve SOUL'u yalnız yönlendirme cümlesi.
+  * MCP (G3d, Ruling G3d-R1) — Hermes MCP keşfi yalnız KÖKTEN koşar: bot başına sunucu `meridian-<ad>` kökte,
+    profil izin listesi yalnız kendi sunucusu. Eşleme ve güvenlik çivileri `tests/test_bot_mcp_kok_v612.py`de;
+    burada yalnız credential yolunun birim adından türediği ve kökün duruş mirası.
 
 YÜKLEYİCİ: üreteç paket değildir; `tests.conftest.betikten_modul_yukle` ile KAYNAKTAN yüklenir (ham
 `loader.exec_module` bayat `__pycache__` koşturabilir ve v334 §B onu yasaklar).
@@ -99,22 +102,10 @@ def test_durus_rapor_profilinden_miras(bot):
     assert c["providers"]["kapi"] == r["providers"]["kapi"]
 
 
-@pytest.mark.parametrize("bot", _aktifler(), ids=lambda b: b.ad)
-def test_platform_izin_listesi_yalniz_meridian(bot):
-    assert _cfg(bot.ad)["platform_toolsets"] == {"api_server": ["meridian"]}
-
-
-@pytest.mark.parametrize("bot", _aktifler(), ids=lambda b: b.ad)
-def test_mcp_girdisi_tek_kaynaktan_ve_bot_argumani(bot):
-    kok = yaml.safe_load((KOK / "deploy/hermes/config.yaml").read_text(encoding="utf-8"))["mcp_servers"]["meridian"]
-    m = _cfg(bot.ad)["mcp_servers"]["meridian"]
-    assert m["enabled"] is True and m["args"] == kok["args"] + ["--bot", bot.ad]
-    for a in ("command", "tools"):
-        assert m[a] == kok[a]
-    # G3: `env`e tek ek credential yoludur (aşağıdaki çivi); geri kalanı kökle AYNI kalır. Değişken ADI okuyucunun
-    # sabitinden (`secrets.CREDENTIAL_DIZIN_ENV`) — literal değil (tek kaynak; Tur 2 Minor 1).
-    from meridian import secrets
-    assert {k: v for k, v in m["env"].items() if k != secrets.CREDENTIAL_DIZIN_ENV} == kok["env"]
+# G3d (Ruling G3d-R1, 2026-10-02): platform izin listesi (`[meridian-<ad>]`) ve MCP girdisinin tek kaynaktan türeyişi
+# (`--bot <ad>`, `env` = kaynak + credential yolu) KÖKTEKİ bot başına sunucuya taşındı — çiviler
+# `tests/test_bot_mcp_kok_v612.py` (`test_profil_izin_listesi_tam_olarak_kendi_sunucusu`,
+# `test_kok_her_aktif_bot_icin_tam_bir_sunucu`). Profil config'i artık `mcp_servers` TAŞIMAZ.
 
 
 @pytest.mark.parametrize("bot", _aktifler(), ids=lambda b: b.ad)
@@ -282,10 +273,10 @@ def test_mcp_env_credential_yolu_birim_adindan_turer(bot):
     # MCP alt süreç ortamı SÜZÜLÜR → credential dizini değişkeni geçmez; `bot_hafizasi_ara` Hindsight anahtarını
     # credential dizininden okur. Yol birim ADINDAN türer: birim yeniden adlandırılıp yol unutulursa araç sessizce
     # "credential yok" döner (Review Focus 3). Değişkenin ADI okuyucunun (`secrets.credential_oku`) sabitidir:
-    # ad ayrışırsa aynı sessiz arıza (Tur 2 Minor 1).
+    # ad ayrışırsa aynı sessiz arıza (Tur 2 Minor 1). G3d: girdi KÖKTEKİ bot başına sunucudadır (keşif yalnız kökten).
     from meridian import secrets
     u = _ur()
-    env = _cfg(bot.ad)["mcp_servers"]["meridian"]["env"]
+    env = _kok_cfg()["mcp_servers"][u.mcp_sunucu_adi(bot.ad)]["env"]
     assert env[secrets.CREDENTIAL_DIZIN_ENV] == f"/run/credentials/{u.BOT_BIRIMI}"
 
 
@@ -303,11 +294,14 @@ def test_uret_kok_profil_dosyalarini_icerir():
 
 def test_kok_profil_coklu_kip_aracsiz_hafizasiz():
     # Review Focus 1: `/p/` öneksiz istek kök profile düşer; araçlı ya da hafızalı bir kök veri UYDURUR (Parça 0).
+    # G3d (Ruling G3d-R1): kök MCP sunucularını TAŞIR (Hermes keşfi yalnız kökten koşar) ama kendi istekleri için
+    # hiçbirini görmez — `[]` MCP'yi KAPATMAZ (config'te etkin her sunucu eklenir), `no_mcp` şart; sunucu adları
+    # ayrıca kapalı takımlarda (ikinci kat). Hermes çözümleyicisiyle ölçümü v612'de.
     k = _kok_cfg()
     assert k["gateway"]["multiplex_profiles"] is True
-    assert k["platform_toolsets"] == {"api_server": []}
+    assert k["platform_toolsets"] == {"api_server": ["no_mcp"]}
     assert set(YASAK_TAKIMLAR) <= set(k["agent"]["disabled_toolsets"])
-    assert "mcp_servers" not in k or (k["mcp_servers"].get("meridian") or {}).get("enabled") is False
+    assert k["mcp_servers"] and set(k["mcp_servers"]) <= set(k["agent"]["disabled_toolsets"])
     assert "memory" not in k
 
 
@@ -316,7 +310,8 @@ def test_kok_profil_durusu_sef_rapor_profilinden():
     k, r = _kok_cfg(), _rap("sef")
     for anahtar in ("hooks", "hooks_auto_accept", "approvals", "model"):
         assert k.get(anahtar) == r.get(anahtar), anahtar
-    assert k["agent"]["disabled_toolsets"] == r["agent"]["disabled_toolsets"]
+    # G3d: kapalı takımlar AYNEN + kökün kendi isteklerinde kapalı tuttuğu bot başına MCP sunucu adları (beyanlı ek).
+    assert k["agent"]["disabled_toolsets"] == r["agent"]["disabled_toolsets"] + _kok_mcp_adlari()
     assert k["providers"]["kapi"] == r["providers"]["kapi"]
     # Eşitlik boş-boşa geçmesin: kaynakta kanca, onay ve ret listesi GERÇEKTEN var.
     assert any("meridian-guard.sh" in h.get("command", "") for h in k["hooks"]["pre_tool_call"])
@@ -332,13 +327,20 @@ def _yapraklar(d, onek=()):
             yield onek + (k,), v
 
 
+def _kok_mcp_adlari():
+    """Kökün bot başına MCP sunucu adları, üretecin sırasıyla (bot adına göre) — kapalı takımlara BEYANLI ek (G3d)."""
+    u = _ur()
+    return [u.mcp_sunucu_adi(b.ad) for b in sorted(_aktifler(), key=lambda b: b.ad)]
+
+
 def _kok_durus_ayrisimi(kok):
     """Duruş kaynağı rapor profili (`KOK_DURUS_PROFILI`) ile kök config arasındaki ayrışmalar; boş = tutarlı.
 
     İKİ YÖN (Tur 2 Minor 2 — yön körlüğü): (a) kaynağın HER üst anahtarı ya miras listesinde
     (`KOK_MIRAS_ANAHTARLARI`) ya da beyanlı istisnada (`KOK_MIRAS_DISI`) olmalı — yeni bir duruş anahtarı köke
     SESSİZCE geçmez, bir karar ister; (b) miras alınan her YAPRAK kökte AYNI değerle durur — yalnız sohbet çağrı
-    bütçesinin beyanlı olarak ezdiği yollar (`SOHBET_BUTCESI`) hariç (değerleri ayrı çivide)."""
+    bütçesinin beyanlı olarak ezdiği yollar (`SOHBET_BUTCESI`) hariç (değerleri ayrı çivide). Kapalı takımlar
+    listesi kaynağın listesi + bot başına MCP sunucu adlarıdır (G3d beyanlı eki; ek dışında AYNEN)."""
     u = _ur()
     kaynak = yaml.safe_load((kok / u.RAPOR_KOK / u.KOK_DURUS_PROFILI / "config.yaml").read_text(encoding="utf-8"))
     kc = yaml.safe_load((kok / KOK_CONFIG).read_text(encoding="utf-8"))
@@ -348,6 +350,8 @@ def _kok_durus_ayrisimi(kok):
     for yol, deger in _yapraklar({a: v for a, v in kaynak.items() if a in u.KOK_MIRAS_ANAHTARLARI}):
         if yol in u.SOHBET_BUTCESI:
             continue
+        if yol == ("agent", "disabled_toolsets"):
+            deger = list(deger) + _kok_mcp_adlari()
         if yol not in kok_yapraklari:
             bulgular.append(f"kökte yok: {'.'.join(yol)}")
         elif kok_yapraklari[yol] != deger:
@@ -362,9 +366,11 @@ def test_kok_durusu_kaynagin_her_anahtarini_ayni_degerle_tasir():
 def test_kok_miras_listesi_ile_istisna_ayrik_ve_istisna_kokte_kaynaktan_gelmez():
     u = _ur()
     assert not set(u.KOK_MIRAS_ANAHTARLARI) & set(u.KOK_MIRAS_DISI)
-    # Beyanlı istisna "kök bunu kendisi kurar ya da hiç taşımaz" demektir: hafıza ve MCP girdisi kökte YOK.
+    # Beyanlı istisna "kök bunu kendisi kurar ya da hiç taşımaz" demektir: hafıza kökte YOK; MCP girdilerini kök
+    # KENDİSİ kurar (bot başına `meridian-<ad>`, G3d) — kaynak profilden miras ALMAZ.
     k = _kok_cfg()
     assert "memory" in u.KOK_MIRAS_DISI and "mcp_servers" in u.KOK_MIRAS_DISI and "memory" not in k
+    assert sorted(k["mcp_servers"]) == sorted(_kok_mcp_adlari())
 
 
 def test_kok_durus_ayrisimi_yeni_kaynak_anahtarini_yakalar(tmp_path):

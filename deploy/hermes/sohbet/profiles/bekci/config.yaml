@@ -1,8 +1,9 @@
 # ÜRETİLMİŞ — elle düzenlenmez; üreteç `ops/sohbet_profili_uret.py`.
 # Kaynak: deploy/hermes/profiles/bekci/config.yaml (duruş: kanca, onay, kapalı takımlar, model, sağlayıcılar —
-# gerekçeleri orada) + deploy/hermes/config.yaml içindeki mcp_servers → meridian girdisi (--bot bekci ekiyle)
-# + üretecin sohbet sabitleri (zaman aşımı, yeniden deneme, hafıza sağlayıcısı, platform izin listesi,
-# ikincil profilde api_server kapalı, MCP credential yolu /run/credentials/meridian-botlar.service).
+# gerekçeleri orada) + üretecin sohbet sabitleri (zaman aşımı, yeniden deneme, hafıza sağlayıcısı,
+# ikincil profilde api_server kapalı, platform izin listesi).
+# Platform izin listesi YALNIZ meridian-bekci: botun MCP sunucusu (--bot bekci) bu profilde DEĞİL,
+# ağ geçidi KÖKÜNÜN config.yaml'ında tanımlıdır — Hermes MCP keşfi yalnız açılışta ve yalnız kökten koşar.
 # Değiştirmek için kaynağı düzenle ve üreteci --yaz ile koş; tazelik kapısı --kontrol.
 hooks:
   pre_tool_call:
@@ -47,25 +48,9 @@ providers:
     key_env: BOT_KEY_BEKCI
   custom:
     request_timeout_seconds: 60
-mcp_servers:
-  meridian:
-    enabled: true
-    command: /opt/meridian/.venv/bin/python
-    args:
-    - -m
-    - meridian.mcp_server
-    - --bot
-    - bekci
-    env:
-      PYTHONPATH: /opt/meridian
-      MERIDIAN_ROOT: /opt/meridian
-      CREDENTIALS_DIRECTORY: /run/credentials/meridian-botlar.service
-    tools:
-      resources: false
-      prompts: false
 platform_toolsets:
   api_server:
-  - meridian
+  - meridian-bekci
 platforms:
   api_server:
     enabled: false
