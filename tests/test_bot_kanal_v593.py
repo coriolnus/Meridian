@@ -1641,8 +1641,9 @@ def test_alinti_cit_adi_ve_kaynak_etiketi_tek_kaynak():
     import ast
     import inspect
     assert td.ALINTI_CIT_ADI is bk.ALINTI_CIT_ADI and td.kaynak_etiketi is bk.kaynak_etiketi
-    # G4 Görev 2: gövdesiz `unut:` sorgusu da AYNI ilk-satır kuralından geçer (scrub SONRA tavan).
-    assert td.alinti_ilk_satiri is bk.alinti_ilk_satiri
+    # G4 Görev 2: gövdesiz `unut:` sorgusu da AYNI satır kuralından geçer (scrub SONRA tavan). G4 kalıntıları M-2
+    # (2026-10-01): kural ilk İÇERİK satırıdır (imza/uyarı atlanır) ve adı `alinti_icerik_satiri` — v608.
+    assert td.alinti_icerik_satiri is bk.alinti_icerik_satiri
     atananlar = {h.id for n in ast.parse(inspect.getsource(td)).body if isinstance(n, ast.Assign)
                  for h in n.targets if isinstance(h, ast.Name)}
     assert not atananlar & {"ALINTI_CIT_ADI", "KAYNAK_ETIKETI_TAVANI"}

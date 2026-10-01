@@ -345,7 +345,7 @@ def test_ikinci_parcaya_govdesiz_unut_yaniti_imza_satirini_atlar(sandbox_state):
     td.isle({"update_id": 3, "message": yanit}, yetkili_sohbet=YETKILI,
             bota_sor=lambda bot, m, k, o: cagrilar.append((bot, m)) or "tamam", gonder=lambda t, r: True,
             bugun="20260929")
-    # Sorgu `bot_kanal.alinti_ilk_satiri` tavanıyla kesilir (tek kaynak; v592 gövdesiz `unut:` çivileri).
+    # Sorgu `bot_kanal.alinti_icerik_satiri` tavanıyla kesilir (tek kaynak; v592 gövdesiz `unut:` çivileri).
     assert cagrilar == [("bekci", f"unut: {ikinci_icerik[:bot_kanal.KAYNAK_ETIKETI_TAVANI]}")]
     assert not ikinci_icerik.startswith("💬")
 
