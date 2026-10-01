@@ -6,10 +6,10 @@ HİZMETE çeviren beş parçayı çiviler:
   * BİRİM — `deploy/oracle-a1/meridian-telegram.service`: `Type=simple`, `User=ubuntu`, `WorkingDirectory=/opt/meridian`,
     ExecStart modülün KENDİ adından türer (`python -m <td.__name__>`), `Restart=on-failure`, filo ortak sertleştirme seti
     (v174 `SERTLESTIRILEN`), `ReadWritePaths` TAM OLARAK `/opt/meridian`, `After=` bot ağ geçidini (`ops/sohbet_profili_uret.py
-    ::BOT_BIRIMI`) SIRALAR ama ona bağımlılık KURMAZ, `[Install]` VAR ama `etkin_birimler`de YOK. CREDENTIAL YOK — BEYANLI
-    ERTELEME (Rol-1 kararı 2026-09-30, G4): `API_SERVER_KEY` (bota_sor → `HermesTasiyici`) ve Hindsight kiracı anahtarı (dönüş
-    kaydı) drop-in'i G3b sır diliminde rotasyon tablosuyla gelir; G3b onu eklediği gün
-    `test_credential_G3b_dilimine_ertelendi_bugun_hicbir_credential_yok` kırmızıya döner ve bilinçli güncellenir. Birim bir
+    ::BOT_BIRIMI`) SIRALAR ama ona bağımlılık KURMAZ, `[Install]` VAR ama `etkin_birimler`de YOK. CREDENTIAL — G3b Task 2
+    (2026-10-01) ile GELDİ (G4'ün beyanlı ertelemesi KAPANDI): `API_SERVER_KEY` (bota_sor → `HermesTasiyici`, 55 drop-in) ve
+    Hindsight kiracı anahtarı (dönüş kaydı, 54 drop-in) rotasyon tablosuyla AYNI dilimde; `test_credential_G3b_drop_in_ciftleri`
+    TAM listeyi çiviler. Birim bir
     rapor profili DEĞİLDİR: `ops/filo.py` onu bot saymaz (v348 — `HERMES_HOME` taşımaz).
   * `main()` — `python -m meridian.telegram_dinleyici` → `dongu(bota_sor=bot_kanal.bota_sor)`; sır yoksa `dongu`nun
     `SystemExit`i aynen; bilinmeyen argüman argparse çıkışı (2).
@@ -148,13 +148,24 @@ def test_birim_filo_sertlestirme_ve_uzun_omur_listelerinde():
 # CREDENTIAL — G3b sır dilimine BEYANLI olarak ertelendi (Rol-1 kararı 2026-09-30, G4)
 # =================================================================================================
 
-def test_credential_G3b_dilimine_ertelendi_bugun_hicbir_credential_yok():
-    # `bota_sor` üretimde `HermesTasiyici` (anahtar `API_SERVER_KEY`) ve `HindsightHafiza` (kiracı anahtarı) kurar; ikisi de
-    # anahtarı YALNIZ credential kanalından okur (`secrets.credential_oku`). Drop-in G3b sır diliminde `sir_rotasyon.sh`
-    # tablosuyla TEK dilimde gelir — rotasyon tablosu olmadan eklenen bir `LoadCredential=` rotasyondan sonra ESKİ değerde
-    # kalırdı (v447 P6 sınıfı). O güne dek bir soru "cevap veremiyor (RuntimeError)" alır ve birim zaten etkin değil.
-    # `TELEGRAM_*` sırları bugünkü zincirle (`secrets.get`: credential → ortam → `state/secrets.json`) okunur.
-    assert _credential_yonergeleri(_birim()) == []
+def test_credential_G3b_drop_in_ciftleri():
+    # G3b Task 2 (2026-10-01) — G4'teki BEYANLI ERTELEME ÇEVRİLDİ. `bota_sor` üretimde `HermesTasiyici` (anahtar
+    # `API_SERVER_KEY`) ve `HindsightHafiza` (kiracı anahtarı) kurar; ikisi de anahtarı YALNIZ credential kanalından okur.
+    # İddia TAM LİSTE eşitliğidir: hafıza (54) + API sunucu (55) — iki ayrı dosya, iki ayrı rotasyon alt komutu
+    # (`--tenant` · `--api-sunucu`, v447 P6). Kimlikler KODDAN (`secrets.HAFIZA_KRED_ADI` · `HermesTasiyici`nın okuduğu
+    # literal), kaynaklar envanterin `vault_kv` `hedef`inden TÜRER. `TELEGRAM_*` sırları bugünkü zincirle okunur.
+    import inspect
+    import re
+    import yaml
+    from meridian import secrets
+    kv = {g["ad"]: g for g in yaml.safe_load(
+        (pathlib.Path(__file__).resolve().parents[1] / "deploy/sir_envanteri.yaml").read_text(encoding="utf-8"))["vault_kv"]}
+    api = re.findall(r'credential_oku\("([A-Z_]+)"\)', inspect.getsource(bot_kanal.HermesTasiyici))
+    assert len(set(api)) == 1, api
+    ad = secrets.HAFIZA_KRED_ADI
+    assert _credential_yonergeleri(_birim()) == [
+        ("54-hafiza-credential.conf", "LoadCredential", f"{ad}:{kv[ad]['hedef']}"),
+        ("55-api-sunucu-credential.conf", "LoadCredential", f"{api[0]}:{kv['api_server_key']['hedef']}")]
 
 
 def test_credential_denetcisi_bu_birimin_metnine_eklenen_yonergeyi_gorur(tmp_path):

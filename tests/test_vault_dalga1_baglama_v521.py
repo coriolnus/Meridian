@@ -57,6 +57,7 @@ from tests.test_sir_rotasyon_v447 import (
     BETIK,
     ENVANTER,
     ESKI,
+    _a0_sohbet_botlari,
     _betik_kopyalari,
     _env_alan,
     _kos,
@@ -81,9 +82,16 @@ BAGLAR = {
 #: (TSK-064 `--db --vault`, v538) o da bağlandı — küme artık tablonun BÜTÜN sırlarıdır.
 #: 2026-09-26 (TSK-226b, v556): `HINDSIGHT_CP_ACCESS_KEY` tabloya `--cp` ile girdi ve kasaya BAĞLI
 #: (dalga-2 girdisi `hindsight_cp_access_key`in `rotasyon_siri`si) — küme yine tablonun BÜTÜN sırları.
+#: 2026-10-01 (G3b Task 2): `API_SERVER_KEY` (bot ağ geçidinin dinleyici anahtarı) tabloya `--api-sunucu` ile girdi ve
+#: kasaya BAĞLI (yeni `vault_kv.api_server_key`in `rotasyon_siri`si; referans render hedefi) — küme yine BÜTÜN sırlar.
+#: 2026-10-01 (G3b Task 3): bot başına `BOT_KEY_<AD>` (+3) tabloya `--kapi-bot <ad>` ile girdi ve kasaya BAĞLI (dalga-2
+#: girdileri `bot_key_<ad>`in `rotasyon_siri`si; referans render hedefi — Rol-1 G3b-R3). Ad kümesi A0 listesinden TÜRER
+#: (operatör 2026-09-30 "bot sayısından bağımsız"; v447 `_a0_sohbet_botlari`) — envanterden değil, yani bir bağ
+#: envanterden düşerse küme KÜÇÜLMEZ ve çivi öter.
 BAGLI_TAM_KUME = {"KAPI_APIKEY", "HINDSIGHT_API_TENANT_API_KEY", "OPENROUTER_API_KEY",
                   "MERIDIAN_DASH_TOKEN", "APISIX_ADMIN_KEY", "NOUS_API_KEY", "HINDSIGHT_DB_PAROLA",
-                  "HINDSIGHT_CP_ACCESS_KEY"}
+                  "HINDSIGHT_CP_ACCESS_KEY", "API_SERVER_KEY",
+                  *(f"BOT_KEY_{b.upper()}" for b in _a0_sohbet_botlari())}
 DB_SIR = "HINDSIGHT_DB_PAROLA"
 DB_KV = "HINDSIGHT_API_DATABASE_URL"
 DB_HEDEF = "/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL"

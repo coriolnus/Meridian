@@ -66,9 +66,15 @@ WorkingDirectory=/
 #   paylaşır (dosya/terminal takımları zaten kapalı — ikinci katman) ve rapor kum havuzlarından ayrıdır. AYNI
 #   dizin ağ geçidinin BAĞLAM dizinidir (kök config `terminal.cwd`) — içinde bağlam dosyası olmamalı, BOŞ kalmalı.
 # SIRLAR BURADA YOK: çoklu kipte sırlar PROFİL `.env`inden okunur, süreç ortamına düşmez (Hermes
-#   `agent/secret_scope.py`, `get_secret`) — dinleyici anahtarı kökün, kapı ve Hindsight anahtarları her sohbet
-#   profilinin `.env`inde; beslemesi rotasyon aracıyla (rapor profilleri emsali). Birim dosyası 0644'tür.
-# Hindsight kiracı anahtarı credential'ı (MCP `bot_hafizasi_ara`) G3b sır diliminde drop-in + rotasyon tablosuyla gelir; o güne dek `bot_hafizasi_ara` 'credential yok' döner — birim zaten etkin değil.
+#   `agent/secret_scope.py`, `get_secret`) — dinleyici anahtarı (`API_SERVER_KEY`) kök + HER sohbet profilinin
+#   `.env`inde (aynı değer: `/p/<ad>/` isteği anahtarı PROFİL kapsamından okur — Rol-1 ölçümü 2026-09-30, G3b-R1),
+#   kapı (`BOT_KEY_<AD>`) ve Hindsight (`HINDSIGHT_API_KEY`) anahtarları her sohbet profilinin `.env`inde; beslemesi
+#   rotasyon aracıyla (rapor profilleri emsali). Birim dosyası 0644'tür.
+# CREDENTIAL KANALI (G3b Task 2, 2026-10-01): MCP `bot_hafizasi_ara`nın Hindsight kiracı anahtarı drop-in
+#   `meridian-botlar.service.d/54-hafiza-credential.conf` ile gelir (rotasyon `sir_rotasyon.sh --tenant`, birim KOŞULLU —
+#   yalnız etkinse yeniden başlar). `API_SERVER_KEY` credential DEĞİL, BİLEREK: Hermes onu kök + profil `.env`lerinden
+#   okur (PROFİL kapsamı, `agent/secret_scope.py` `get_secret` — Rol-1 A1 ölçümü 2026-09-30); bu birime eklenen bir
+#   credential okunmayan bir kopya olurdu (v604 B8). `.env` kopyalarını `sir_rotasyon.sh --api-sunucu` döndürür.
 Environment=HERMES_HOME=/home/ubuntu/.hermes-botlar
 Environment=HERMES_WRITE_SAFE_ROOT=/opt/meridian/var/bots/sohbet
 # `~/.local/bin/hermes` ubuntu sahipli sarmalayıcıdır (A1'de ölçüldü 2026-09-30). `--accept-hooks` `gateway` alt

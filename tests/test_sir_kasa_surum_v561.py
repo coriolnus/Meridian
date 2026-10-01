@@ -52,7 +52,8 @@ from tests import test_cp_rotasyon_v556 as v556
 from tests import test_sir_uret_v557 as v557
 from tests import test_vault_db_kasa_v538 as v538
 from tests import test_vault_dalga1_baglama_v521 as v521
-from tests.test_sir_rotasyon_v447 import BETIK, ENVANTER, ESKI, _dosya_imzalari, _kos, _sahte_ortam
+from tests.test_sir_rotasyon_v447 import (BETIK, ENVANTER, ESKI, KAPI_BOT_ALTLARI, _dosya_imzalari, _kos, _sahte_ortam,
+                                          alt_argv)
 
 KOK_DEPO = pathlib.Path(__file__).resolve().parents[1]
 
@@ -72,7 +73,11 @@ TOHUM = {TENANT_YOLU: [ONCEKI_TENANT, ESKI["tenant"]],          # current_versio
          LLM_YOLU: [LLM_V1, LLM_V2, ESKI["or"]]}                # 3
 YENI_NOUS = "SAHTE-YENI-NOUS-0561"
 YENI_OR = "SAHTE-YENI-OR-0561"
-TENANT_BIRIMLER = "hindsight-api.service hindsight-cp.service meridian.service"
+#: Geri alma reçetesinin birim listesi (`_recete_birimleri`). 2026-10-01 (G3b Task 2): kiracı anahtarının tüketicilerine
+#: iki KOŞULLU birim girdi; reçete onları ÇIPLAK "yeniden başlat" diye vermez (etkin olmayanı BAŞLATIRDI — Task 1
+#: incelemesi M1), `try-restart` ile verir (systemd: yalnız koşan birimi yeniden başlatır).
+TENANT_BIRIMLER = ("hindsight-api.service hindsight-cp.service meridian.service "
+                   "(YALNIZ ETKİNSE: sudo systemctl try-restart meridian-botlar.service meridian-telegram.service)")
 
 KURU_SATIRI = "  kasa sürümü      : ÖNCE current_version kaydedilir — geri alma: vault kv rollback -version=<o sürüm> {yol}"
 SURUM_OLDU = "  ✓ kasa sürümü (yazım ÖNCESİ): {n} — geri alma: vault kv rollback -version={n}"
@@ -233,7 +238,10 @@ def test_A1_TEK_KAYNAK_surum_okumasi_YALNIZ_kasa_surumu_nde_uc_dal_ORADAN():
 # =================================================================================================
 
 KURU_ALTLAR = {"kapi": ["secret/meridian/kapi_apikey"], "tenant": [TENANT_YOLU], "dash": ["secret/meridian/dash_token"],
-               "apisix-admin": ["secret/meridian/apisix_admin_key"], "openrouter": [NOUS_YOLU, LLM_YOLU]}
+               "apisix-admin": ["secret/meridian/apisix_admin_key"], "openrouter": [NOUS_YOLU, LLM_YOLU],
+               "api-sunucu": ["secret/meridian/api_server_key"],   # 2026-10-01 G3b Task 2
+               # 2026-10-01 G3b Task 3: bot başı kapı anahtarı — kasa yolu `vault_kv.bot_key_<ad>` (A0 listesinden)
+               **{a: [f"secret/meridian/bot_key_{a[len('kapi-bot-'):]}"] for a in KAPI_BOT_ALTLARI}}
 
 
 def _kuru_ihlalleri(r: subprocess.CompletedProcess, log: pathlib.Path, yollar: list[str]) -> list[str]:
@@ -259,7 +267,7 @@ def _kuru_ihlalleri(r: subprocess.CompletedProcess, log: pathlib.Path, yollar: l
 def test_B1_KURU_her_kasa_yolu_icin_ONCE_current_version_satiri_KASAYA_cagri_YOK(tmp_path, alt):
     kok, ortam, log, durum = _dunya(tmp_path)
     once = _dosya_imzalari(kok)
-    r = _kos(BETIK, ortam, f"--{alt}", "--vault", "--kuru")
+    r = _kos(BETIK, ortam, *alt_argv(alt), "--vault", "--kuru")
     ih = _kuru_ihlalleri(r, log, KURU_ALTLAR[alt])
     if _dosya_imzalari(kok) != once:
         ih.append("kuru koşum dosya yazdı")

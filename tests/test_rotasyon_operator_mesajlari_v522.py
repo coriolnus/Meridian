@@ -39,7 +39,8 @@ import pytest
 import yaml
 
 from tests import test_vault_dalga1_baglama_v521 as v521
-from tests.test_sir_rotasyon_v447 import BETIK, ENVANTER, ESKI, _kos, _mutant
+from tests.test_sir_rotasyon_v447 import (BETIK, ENVANTER, ESKI, KAPI_BOT_ALTLARI, _kos, _mutant, alt_argv, alt_bayragi,
+                                          alt_fonksiyonu)
 
 KOK_DEPO = pathlib.Path(__file__).resolve().parents[1]
 URETICI = KOK_DEPO / "ops" / "vault_politika_uret.py"
@@ -58,10 +59,18 @@ BAGLI_HEDEFLER = {
     #: bağsız sınıftan (A4'ün eski pini, `DB_BLOK`) bağlı sınıfa geçti ve `--db --vault`u gösterir.
     #: Render hedefi `url` kopyasıdır (DSN'in TAMAMI render edilir, sır onun parola alanı).
     "db": {("HINDSIGHT_DB_PAROLA", "/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL")},
+    #: 2026-10-01 (G3b Task 2): bot ağ geçidinin dinleyici anahtarı — referans Agent render hedefi, kasaya BAĞLI.
+    "api-sunucu": {("API_SERVER_KEY", "/etc/meridian/api_server_key")},
+    #: 2026-10-01 (G3b Task 3): bir botun kapı tüketici anahtarı — iç alt ad `kapi-bot-<ad>`, referans Agent render hedefi
+    #: (Rol-1 G3b-R3), kasaya BAĞLI. Bot kümesi A0 listesinden (v447 `KAPI_BOT_ALTLARI`; bot sayısından bağımsız).
+    **{a: {(f"BOT_KEY_{a[len('kapi-bot-'):].upper()}", f"/etc/meridian/bot_key_{a[len('kapi-bot-'):]}")}
+       for a in KAPI_BOT_ALTLARI},
 }
 #: Eski yolun değeri betik İÇİNDE ürettiği alt komutlar (`_uret`) — ELLE. B3 bu kümeyi betiğin
 #: fonksiyon gövdelerinden ve `_deger_kaynagi_beyani`nin ölçülen davranışından AYRICA türetir.
-DEGER_URETEN = {"kapi", "tenant", "db", "dash", "apisix-admin"}
+#: 2026-10-01 (G3b Task 2): `api-sunucu` eski yolu değeri `_uret hex` ile üretir (tenant emsali).
+#: 2026-10-01 (G3b Task 3): `kapi-bot-<ad>` eski yolu (`kapi_bot`) değeri `_uret b64` ile üretir (`kapi` emsali).
+DEGER_URETEN = {"kapi", "tenant", "db", "dash", "apisix-admin", "api-sunucu", *KAPI_BOT_ALTLARI}
 
 BAGLI_SINIF = "sır kasaya BAĞLI (bu ESKİ yol)"
 BAGSIZ_SINIF = "kasaya BAĞLI DEĞİL"
@@ -187,14 +196,14 @@ def test_A1_ESKI_YOL_KURU_bagli_sirrin_AGENT_HEDEFI_uyarisi_adiyla_ve_VAULT_oner
     önerisi; YALNIZ render hedefi olan kopyalar (hermes `.env`, `.env-apisix`, `/opt/hindsight/.key`
     İÇİN UYARI YOK — küme eşitliği); plandan ÖNCE."""
     _, ortam, _ = _ortam(tmp_path)
-    r = _kos(BETIK, ortam, f"--{alt}", "--kuru")
+    r = _kos(BETIK, ortam, *alt_argv(alt), "--kuru")
     assert r.returncode == 0, f"{r.stdout}\n{r.stderr}"
     uy = _uyarilar(r.stdout)
     assert {(u["sir"], u["yol"]) for u in uy} == BAGLI_HEDEFLER[alt], r.stdout
     assert all(u["sinif"] == BAGLI_SINIF for u in uy), r.stdout
     aralik = _render_araligi()
     for u in uy:
-        assert f"sudo {BETIK} --{alt} --vault" in u["blok"], u["blok"]
+        assert f"sudo {BETIK} {alt_bayragi(alt)} --vault" in u["blok"], u["blok"]
         assert f"render eder — aralık: {aralik} (" in u["blok"], u["blok"]
         assert "ÖLÇÜLMEDİ" in u["blok"] and "EZİLEBİLİR" in u["blok"], u["blok"]
         assert re.search(r"kasa yolu: secret/meridian/\S+ \(vault_kv\.\S+\)", u["blok"]), u["blok"]
@@ -220,7 +229,7 @@ def test_A1b_BAGLI_HEDEFLER_tablosu_envanterle_BAYAT_DEGIL():
 def test_A2_KASA_YOLU_KURU_bagli_sir_uyarisi_TASIMAZ(tmp_path, alt):
     """Brief 1: `--<alt> --vault --kuru` doğru yoldur; orada eski yol uyarısı gereksiz."""
     _, ortam, _ = _ortam(tmp_path)
-    r = _kos(BETIK, ortam, "--vault", f"--{alt}", "--kuru")
+    r = _kos(BETIK, ortam, "--vault", *alt_argv(alt), "--kuru")
     assert r.returncode == 0, f"{r.stdout}\n{r.stderr}"
     assert not _uyarilar(r.stdout), r.stdout
     assert "kasa yolunu kullanın" not in r.stdout, r.stdout
@@ -286,9 +295,18 @@ def test_A6_TARAMA_YAPILAMAZSA_bagli_alt_komutta_da_OLCULEMEDI_eski_yol_KESILMEZ
     assert "yeniden başlatılacak: meridian.service" in r.stdout, r.stdout
 
 
+def _tablo_cekirdegi(betik: pathlib.Path) -> str:
+    """`_kopyalar` TEK BAŞINA kesilemez (G3b Task 2, 2026-10-01): bot başı satırlar `_SOHBET_BOTLARI` döngüsünden
+    (`_sohbet_satirlari`) türer. Kesilen tablo iki sabiti + yardımcıyı taşımazsa satırlar SESSİZCE eksik kalırdı."""
+    ham = betik.read_text(encoding="utf-8")
+    sabitler = "".join(re.search(rf'^{ad}="[^"]*"$', ham, re.M).group(0) + "\n"
+                       for ad in ("_SOHBET_KOKU", "_SOHBET_BOTLARI"))
+    return sabitler + _fonksiyon("_sohbet_satirlari", betik) + _fonksiyon("_kopyalar", betik)
+
+
 def _bagsiz_kes(betik: pathlib.Path, alt: str,
                 envanter: pathlib.Path = ENVANTER) -> subprocess.CompletedProcess:
-    kod = (_fonksiyon("_kopyalar", betik) + _fonksiyon("_agent_hedefleri", betik)
+    kod = (_tablo_cekirdegi(betik) + _fonksiyon("_agent_hedefleri", betik)
            + _fonksiyon("_bagsiz_agent_hedefleri", betik)
            + 'set -euo pipefail\n_bagsiz_agent_hedefleri "$1"\n')
     return subprocess.run(["bash", "-c", kod, "_", alt], capture_output=True, text=True,
@@ -319,12 +337,12 @@ def test_A7_KAPSAM_BEYANI_suzgeci_YALNIZ_BAGSIZ_satiri_verir(tmp_path):
 @pytest.mark.parametrize("alt", sorted(BAGLI_HEDEFLER))
 def test_B1_KASA_KURU_plani_deger_kaynagini_SOYLER_uretmeyen_eski_yolda_SOYLEMEZ(tmp_path, alt):
     _, ortam, _ = _ortam(tmp_path)
-    r = _kos(BETIK, ortam, "--vault", f"--{alt}", "--kuru")
+    r = _kos(BETIK, ortam, "--vault", *alt_argv(alt), "--kuru")
     assert r.returncode == 0, f"{r.stdout}\n{r.stderr}"
     satirlar = [s for s in r.stdout.splitlines() if "DEĞER KAYNAĞI" in s]
     assert len(satirlar) == (1 if alt in DEGER_URETEN else 0), r.stdout
     if satirlar:
-        assert DEGER_KAYNAGI in r.stdout and f"eski yol (sudo {BETIK} --{alt})" in r.stdout, r.stdout
+        assert DEGER_KAYNAGI in r.stdout and f"eski yol (sudo {BETIK} {alt_bayragi(alt)})" in r.stdout, r.stdout
         i = r.stdout.splitlines().index(satirlar[0])
         _temiz_satirlar(r.stdout.splitlines()[i:i + 2], BETIK)
 
@@ -348,8 +366,9 @@ def test_B2_KASA_GERCEK_istem_noktasinda_beyan_ve_DEGER_BASILMAZ(tmp_path, alt, 
 def _uret_cagiran_altlar(betik: pathlib.Path = BETIK) -> set[str]:
     """Eski yol fonksiyon GÖVDELERİNDEN türetilir: `_uret` çağıran alt komutlar."""
     out = set()
-    for alt in ("kapi", "tenant", "db", "dash", "openrouter", "apisix-admin"):
-        if re.search(r"^\s*_uret\s+\w+", _fonksiyon(alt.replace("-", "_"), betik), re.M):
+    for alt in ("kapi", "tenant", "db", "dash", "openrouter", "apisix-admin", "api-sunucu", *KAPI_BOT_ALTLARI):
+        # Bot başı aile TEK gövdeyi paylaşır (`kapi_bot <ad>` — G3b Task 3; `alt_fonksiyonu`).
+        if re.search(r"^\s*_uret\s+\w+", _fonksiyon(alt_fonksiyonu(alt), betik), re.M):
             out.add(alt)
     return out
 
@@ -358,7 +377,7 @@ def _beyan_basan_altlar(betik: pathlib.Path = BETIK) -> set[str]:
     """`_deger_kaynagi_beyani`nin ÖLÇÜLEN davranışı: hangi alt komutta satır basıyor."""
     kod = _fonksiyon("_deger_kaynagi_beyani", betik) + 'for a in "$@"; do [ -z "$(_deger_kaynagi_beyani "$a")" ] || echo "$a"; done\n'
     r = subprocess.run(["bash", "-c", kod, "sir_rotasyon.sh", "kapi", "tenant", "db", "dash",
-                        "openrouter", "apisix-admin"], capture_output=True, text=True)
+                        "openrouter", "apisix-admin", "api-sunucu", *KAPI_BOT_ALTLARI], capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
     return set(r.stdout.split())
 
@@ -412,11 +431,15 @@ MESAJ_CAGRILARI = (
     ("  _agent_hedefi_uyarisi tenant            #", "  :            #"),
     ("  _agent_hedefi_uyarisi dash              #", "  :              #"),
     ("  _agent_hedefi_uyarisi openrouter\n", "  :\n"),
-    ('  _deger_kaynagi_beyani "$alt"\n  echo "  render bekleme', '  :\n  echo "  render bekleme'),
-    ('    _deger_kaynagi_beyani "$alt"          #', "    :          #"),
+    # 2026-10-01 (G3b Task 3): beyan çağrısı operatör bayrağını da geçirir (`_bayrak` — `kapi-bot-<ad>` → `--kapi-bot <ad>`).
+    ('  _deger_kaynagi_beyani "$alt" "$(_bayrak "$alt")"\n  echo "  render bekleme', '  :\n  echo "  render bekleme'),
+    ('    _deger_kaynagi_beyani "$alt" "$(_bayrak "$alt")"   #', "    :   #"),
     ("    YAZIM_AKISI=kasa\n", "    :\n"),
 )
-LOGLAR = ("kok/.sahte/argv.log", "kok/.sahte/url.log", "kok/.sahte/systemctl.log", "kasa_argv.log")
+#: `is_active.log` (G3b Task 1/2): şimin `systemctl is-active` soru günlüğü — kuru rapor koşullu birimin durumunu SORAR
+#: (yazmaz); günlük ölçüm aracıdır, argv/systemctl günlükleriyle aynı sınıf.
+LOGLAR = ("kok/.sahte/argv.log", "kok/.sahte/url.log", "kok/.sahte/systemctl.log", "kasa_argv.log",
+          "kok/.sahte/is_active.log")
 
 
 def _norm(metin: str, dizin: pathlib.Path, betik: pathlib.Path) -> str:
@@ -555,8 +578,8 @@ def test_M5_MUT_render_araligi_SABIT_yazilirsa_A5_KIRMIZI(tmp_path):
 
 
 @pytest.mark.parametrize("kip,capa,args,girdi", [
-    ("kuru", '  _deger_kaynagi_beyani "$alt"\n  echo "  render bekleme', ("--vault", "--dash", "--kuru"), ""),
-    ("gercek", '    _deger_kaynagi_beyani "$alt"          #', ("--vault", "--dash"), f"{v521.YENI_DASH}\n"),
+    ("kuru", '  _deger_kaynagi_beyani "$alt" "$(_bayrak "$alt")"\n  echo "  render bekleme', ("--vault", "--dash", "--kuru"), ""),
+    ("gercek", '    _deger_kaynagi_beyani "$alt" "$(_bayrak "$alt")"   #', ("--vault", "--dash"), f"{v521.YENI_DASH}\n"),
 ])
 def test_M6_MUT_deger_kaynagi_CAGRISI_kalkarsa_B1_B2_KIRMIZI(tmp_path, kip, capa, args, girdi):
     yeni = dict(MESAJ_CAGRILARI)[capa]
@@ -575,7 +598,10 @@ def test_M7_MUT_kasa_BAGLAMI_atanmazsa_C1_KIRMIZI(tmp_path):
 
 
 def test_M8_MUT_beyan_kumesinden_bir_alt_DUSERSE_B3_KIRMIZI(tmp_path):
-    m = _mutant(tmp_path, ("    kapi|tenant|db|dash|apisix-admin)\n", "    kapi|tenant|db|apisix-admin)\n"),
+    # 2026-10-01 (G3b Task 2): çapa `api-sunucu`yu taşır (beyan kümesi + eski yol `_uret hex`).
+    # 2026-10-01 (G3b Task 3): çapa `kapi-bot-*` ailesini de taşır.
+    m = _mutant(tmp_path, ("    kapi|tenant|db|dash|apisix-admin|api-sunucu|kapi-bot-*)\n",
+                           "    kapi|tenant|db|apisix-admin|api-sunucu|kapi-bot-*)\n"),
                 ad="m8.sh")
     assert _beyan_basan_altlar(m) != _uret_cagiran_altlar(m), "MUTASYON ISIRMADI"
 

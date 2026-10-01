@@ -75,3 +75,8 @@ path "secret/data/meridian/hindsight_cp_access_key" {
 path "secret/data/meridian/grafana_admin_parola" {
   capabilities = ["read"]
 }
+
+# api_server_key → /etc/meridian/api_server_key
+path "secret/data/meridian/api_server_key" {
+  capabilities = ["read"]
+}
