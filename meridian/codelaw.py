@@ -721,6 +721,25 @@ DECLARED_SINKS: dict[str, str] = {
     "sef_brifingi_damga.json": "yazar ve okuyucu `ops/sef_brifingi.py` (store.update_json ile "
         "damgalar; store.read_json ile son brifing, kural denetimi ve sessizlik sayacını okur); "
         "aynı modül → `unread` doğar (TSK-178, v463; yazar TSK-206'dan beri grafta)",
+    # --- EXE-2026-012 (2026-09-30, TSK-020 UYGULA-9 Faz C): KILL#1 canlı çapası aletinin defteri --------------
+    # Okuyucusu motor DIŞINDA (research/) ve motor İÇİNDE okuyucusu OLMAMALI (kartın otomatik kapı yasağı) — yani
+    # bu beyan bir kaçış değil, kartın kendi kuralının Yasa 6 karşılığıdır. Taban kaydı: v214 `SINK_TABANI`.
+    "exe012_tur_atif.jsonl": "EXE-2026-012 KILL#1 CANLI ÇAPASI — TUR İÇİ ATIF DEFTERİ. YAZAN: "
+        "`intraday_cycle.IntradayConsumer._atif_bosalt` (ad `intraday_cycle.ATIF_DEFTERI`), seans başına TEK toplu "
+        "satır: işlenen/hatalı olayların tur süresi X (DONGU_SURESI'ne işlenen değerin kendisi), planli dal süresi Z, "
+        "olay ofseti, planli giriş/yazım sayısı + süreç başlangıç damgası; `bosaltma` sözlüğü "
+        "`intraday_cycle.ATIF_BOSALTMA` (seans_kapandi · seans_degisti · kapanis — sonuncusu işçinin düzgün "
+        "kapanışında `api._kapanis_atif_bosalt` üzerinden, yalnız tüketiciyi kaydeden yaşam döngüsünde). BOYUT: "
+        "~109 KB/seans (sentetik; gerçek ADIM-0c) × ~252 seans ≈ 27 MB/yıl, alet ömrü 20–40 seans ≈ 2–4 MB; rotasyon "
+        "yok — alet emekli edilince yazım sökülür, defter silinmez (hüküm kesiti research/ altına dondurulur). Süreç-içi "
+        "_atif_kilit altında; dosya düzeyinde kilitsiz ekleme (SIGKILL'de yarım satır — okuyucu ayıklar, seansı eksik "
+        "sayar). MOTOR İÇİ okuyucusu YOK ve OLMAMALI: "
+        "kartın kill_list'i OTOMATİK KAPI YASAĞI koyar — hiçbir motor kodu bu defteri okuyup planli kolu "
+        "kapatamaz/açamaz (böyle bir okuma ölçümü GEÇERSİZ kılar; tests/test_exe012_alet_v606.py F1 okuyucusuzluğu "
+        "ölçer). OKUYAN: Rol-1'in hüküm betiği research/olcumler/exe012_kill1_canli/hukum.py (B dilimi, kart-önce; "
+        "çivisi v607) — artifact_graph research/ kökünü taramaz, o okuma bu grafta hiçbir zaman görünmez. DEVİR "
+        "ŞARTI: kart hükmü inip alet emekli edildiğinde (yazım sökülür) BU SATIR KALDIRILMALI; motor içinde bir "
+        "okuyucu doğarsa stale_sinks beyanı düşürür ve o okuma kartın kill_list'ine göre ölçümü GEÇERSİZ kılar.",
 }
 
 

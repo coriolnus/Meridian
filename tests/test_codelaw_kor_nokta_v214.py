@@ -340,9 +340,13 @@ def test_iddia_eden_her_beyan_kayit_altinda():
     assert len(hepsi) == (len(codelaw.DECLARED_SINKS) + len(codelaw.DECLARED_SINK_PATTERNS)
                           + len(codelaw.HUMAN_INVOKED_SINKS))
     iddialilar = [c["artifact"] for c in hepsi if c["claims_no_prod_reader"]]
-    assert iddialilar == ["insider_signals.json"], iddialilar
-    # ve iddiası doğru: bu dosyayı gerçekten HİÇBİR yer okumuyor (yazar bile)
-    assert codelaw.artifact_graph()["artifacts"]["insider_signals.json"]["readers"] == []
+    # v606'DA BEYANLA GENİŞLEDİ (2026-09-30, EXE-2026-012): İKİNCİ iddialı beyan `exe012_tur_atif.jsonl`. Kartın
+    # OTOMATİK KAPI YASAĞI "motorda okuyucusu OLMAMALI" der; iddianın bu kayıtta SINANMASI
+    # (`okuyucu_yok_iddiasi_curutuldu`) o yasanın codelaw katmanıdır — iddia bilerek regex'in göreceği sözcükle yazıldı.
+    assert iddialilar == ["insider_signals.json", "exe012_tur_atif.jsonl"], iddialilar
+    # ve iddiaları doğru: bu dosyaları gerçekten HİÇBİR yer okumuyor (yazar bile)
+    for ad in iddialilar:
+        assert codelaw.artifact_graph()["artifacts"][ad]["readers"] == [], ad
 
 
 # ---------------------------------------------------------------------------
@@ -627,6 +631,13 @@ SINK_TABANI = frozenset({
     # ekleme, `onayla: unut <kod>` ve `geri al: <kod>` geçişleri) — aynı modül, statik graf dış tüketiciyi
     # göremiyor (pool_exhausted_seen.json sınıfı). Modülün KENDİ işletim durumudur; gerekçe codelaw.DECLARED_SINKS'te.
     "bot_unut_bekleyen.json",
+    # v606'DA BEYANLI GÜNCELLENDİ (2026-09-30, EXE-2026-012 A dilimi) — TEK yeni muafiyet: `exe012_tur_atif.jsonl`.
+    # KILL#1 canlı çapası aletinin seans-başı toplu defteri; yazan `intraday_cycle` (tur süresi X + planli dal
+    # süresi Z, yuvarlamasız). Bu muafiyet ötekilerden FARKLI sınıftır: okuyucu aynı modülde değil, motorun HİÇ
+    # olmamalıdır — kartın kill_list'i OTOMATİK KAPI YASAĞI koyar (motor defteri okuyup kolu kapatamaz); okuyan
+    # Rol-1'in research/olcumler/exe012_kill1_canli/ betiğidir (B dilimi, graf research/'ü taramaz). Okuyucusuzluk
+    # tests/test_exe012_alet_v606.py F1'de ölçülür; devir şartı codelaw.DECLARED_SINKS gerekçesinde.
+    "exe012_tur_atif.jsonl",
     # v503'TE BEYANLI DÜŞÜRÜLDÜ (2026-09-15, TSK-070 Task 1) — İKİ muafiyet KAPANDI:
     # `watchdog_alarmed.json` ve `integrity_alarmed.json`. Bu tabanın iki yönü vardır ve bu
     # DÜŞÜŞ yönüdür: muafiyet, artefakt öldüğü için değil, GERÇEK BİR DIŞ OKUYUCU DOĞDUĞU için
