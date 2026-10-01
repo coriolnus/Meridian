@@ -170,6 +170,17 @@ SOHBET_YAZMA_KOKU_ACIKLAMASI = (
 SOHBET_HAFIZA_ANAHTARI_ACIKLAMASI = (
     "Hindsight kiracı anahtarı; değer profilin kendi .env dosyasında durur (çoklu ağ geçidinde sırlar profilin "
     ".env dosyasından okunur), depoya yazılmaz.")
+#: API sunucusu anahtarının ADI (G3b Task 2 incelemesi M4, 2026-10-01): çoklu ağ geçidi `/p/<bot>/` isteğini profilin
+#: `.env`indeki bu anahtarla doğrular (G3b-R1, profil kapsamı). Kanal katmanı (`bot_kanal.HermesTasiyici`) isteği aynı
+#: adla okuduğu credential ile imzalar. Ad burada SABİT: üreteç `bot_kanal`ı ithal edemez (ithal zinciri `meridian.obs`a
+#: ulaşır — v599); ayrışma çivisi v608 iki adı kıyaslar. `env_requires` çalışma anında kapı DEĞİLDİR (kurulu profile
+#: `.env.EXAMPLE` şablonu bırakır); eksik anahtar zaten 401 ile düşer — girdi operatörün şablonda görmesi içindir.
+SOHBET_API_SUNUCU_ANAHTARI = "API_SERVER_KEY"
+SOHBET_API_SUNUCU_ANAHTARI_ACIKLAMASI = (
+    "API sunucusu anahtarı — kanal katmanı (bugün Telegram dinleyicisi) bu bota /p/<ad>/ önekiyle sorar ve isteği "
+    "bu anahtarla imzalar; çoklu ağ geçidi isteği profilin kendi .env dosyasındaki değerle doğrular. Değer depoya "
+    "yazılmaz. Anahtar yoksa ya da kanal katmanının anahtarıyla aynı değilse istek 401 ile düşer ve bot sohbet "
+    "cevabı veremez.")
 
 SOHBET_BOLUMU_BASLIGI = "## Sohbet kipi"
 #: Açılış bir ÖNCELİK kuralıdır, sıra değil: bölüm rapor metninin SONUNA eklenir, çelişkide bölüm geçerlidir
@@ -370,6 +381,8 @@ def _dagitim(rapor_evi: pathlib.Path, bot: kadro_mod.Bot) -> bytes:
              "default": BOT_KUM_HAVUZU},
             {"name": anahtar_adi, "description": SOHBET_KAPI_ANAHTARI_ACIKLAMASI, "required": kapi["required"]},
             {"name": "HINDSIGHT_API_KEY", "required": True, "description": SOHBET_HAFIZA_ANAHTARI_ACIKLAMASI},
+            {"name": SOHBET_API_SUNUCU_ANAHTARI, "required": True,
+             "description": SOHBET_API_SUNUCU_ANAHTARI_ACIKLAMASI},
         ],
         "distribution_owned": ["SOUL.md", "config.yaml", "hindsight/config.json"],
     }

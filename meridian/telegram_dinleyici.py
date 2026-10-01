@@ -18,9 +18,9 @@ cevabın imza satırındaki oturum SÜRER (Telegram `reply_to_message`ı yalnız
 zincir yürünemez — durum cevabın kendisinde taşınır); rapora yanıt `tg-<bot>-r<rapor mesajı>`,
 yanıtsız mesaj `tg-<bot>-<YYYYAAGG>`. (c) KOMUT İSTİSNASI (Tur 2, Görev 1 incelemesi I-1): operatörün
 sözleri `bot_kanal.komut_oneki` ile bir komutsa (`hatırla:` · `unut:` · `onayla:` · `geri al:`) çit KURULMAZ — çit
-öne konsaydı `bota_sor` öneki göremez ve not MODELE giderdi; `hatırla` yanıtı nota yanıtlanan ilk satırı kaynak
-etiketi olarak ekler, gövdesiz `unut:` yanıtı yanıtlanan mesajın ilk İÇERİK satırını sorgu yapar
-(`_komut_giden`).
+öne konsaydı `bota_sor` öneki göremez ve not MODELE giderdi; `hatırla` yanıtı nota yanıtlanan mesajın ilk İÇERİK
+satırını kaynak etiketi olarak ekler, gövdesiz `unut:` yanıtı aynı satırı sorgu yapar (`_komut_giden`; tek kural
+`bot_kanal.alinti_icerik_satiri` — sohbet imzası ve araçsız-veri uyarısı içerik sayılmaz).
 
 HİZMET (Parça 1b G4 Görev 3). `python -m meridian.telegram_dinleyici` → `main()` → `dongu(bota_sor=bot_kanal.bota_sor)`
 — üretim `bota_sor`u (gerçek taşıyıcı + hafıza). Birim `deploy/oracle-a1/meridian-telegram.service` (A0 rolü kopyalar,
@@ -57,8 +57,9 @@ DEĞİŞMEZLER.
     SONRA yapılır — sınırı ortadan kesen bir anahtar iki yarım hâlinde desenden kaçmasın, scrub'ın UZATTIĞI metin
     (`://u:p@` → `://***:***@`) tavanı sonradan aşmasın (`yanitla`nın parça başına scrub'ı scrub'lı metinde
     büyümez). İMZA HER PARÇADA (Tur 2, Rol-1 kararı — yönlendirme doğruluğu > sadelik): her parçanın ilk satırı sohbet
-    imzasıdır, çok parçalıda sonunda `PARCA_EKI` (` (i/n)`); `_SOHBET_IMZA` eki tanır ve oturumu eksiz yakalar, yani
-    operatör HANGİ parçaya yanıt verirse versin aynı bot + aynı oturum. Tek parça bugünkü biçimde (eksiz). Tavan imza
+    imzasıdır, çok parçalıda sonunda `PARCA_EKI` (` (i/n)`); `_SOHBET_IMZA` (imza sabitleriyle birlikte `bot_kanal`dan
+    ithal) eki tanır ve oturumu eksiz yakalar, yani operatör HANGİ parçaya yanıt verirse versin aynı bot + aynı
+    oturum. Tek parça bugünkü biçimde (eksiz). Tavan imza
     satırını ve eki SAYAR. `reply_to` YALNIZ ilk parçada. Ayrıntı `imzali_parcalar`, `parcala`.
     Teslim edilemeyen parça SESSİZ değildir (`telegram_parca_teslim_hatasi`: bot, parça no/toplam, sınıf) ve kalan
     parçalar YİNE denenir.
@@ -85,25 +86,19 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from . import bot_kanal, kadro as _kadro, notify, obs, secrets, store
-# KOMUT TESPİTİ, YANIT ÇİTİNİN ADI, KAYNAK ETİKETİ ve ALINTI İLK SATIRI İTHAL EDİLİR, KOPYALANMAZ — sahibi `bot_kanal`
-# (bota_sor'un dağıtımı ve dönüş kaydı da onları kullanır; G4 Görev 1 Tur 3: dönüş kaydı yanıt çitini hafızaya
-# yazmadan çözer; G4 Görev 2: gövdesiz `unut:` sorgusu aynı ilk-satır kuralından geçer).
-from .bot_kanal import ALINTI_CIT_ADI, alinti_ilk_satiri, kaynak_etiketi, komut_oneki
+# KOMUT TESPİTİ, YANIT ÇİTİNİN ADI, KAYNAK ETİKETİ, ALINTININ İÇERİK SATIRI ve SOHBET İMZASI (üretici sabitleri +
+# tanıyıcı) İTHAL EDİLİR, KOPYALANMAZ — sahibi `bot_kanal` (bota_sor'un dağıtımı ve dönüş kaydı da onları kullanır;
+# G4 Görev 1 Tur 3: dönüş kaydı yanıt çitini hafızaya yazmadan çözer; G4 kalıntıları M-2/M-3, 2026-10-01: hatırla
+# etiketi, dönüş kaydı ve gövdesiz `unut:` sorgusu TEK içerik-satırı kuralından geçer — imza ve araçsız-veri uyarısı
+# içerik sayılmaz; imza deseni bu yüzden `bot_kanal`a taşındı).
+from .bot_kanal import (ALINTI_CIT_ADI, OTURUM_AYRACI, PARCA_EKI, SOHBET_IMZA, _SOHBET_IMZA, alinti_icerik_satiri,
+                        kaynak_etiketi, komut_oneki)
 # ÇİT GRAMERİ İTHAL EDİLİR, KOPYALANMAZ — sahibi `skill_gorus_llm` (`sohbet` de oradan alır).
 from .skill_gorus_llm import _veri_bloku
 
-SOHBET_IMZA = "💬 @{ad}"
-#: Cevap imza satırı `💬 @<bot> · <oturum>` — yanıt zincirinin oturumu cevabın KENDİSİNDE taşınır.
-OTURUM_AYRACI = " · "
 VARSAYILAN_BOT = "sef"
 OFSET_DOSYASI = "telegram_ofset.json"
 _ONEK = re.compile(r"^@([A-Za-zÇĞİÖŞÜçğıöşü_]+)[:,]?\s*(.*)$", re.S)
-#: Bot adı [a-z_] — kadro bunu ZORLAR (`kadro.AD_DESENI`). Oturum `tg-<ad>-r<N>` ya da `tg-<ad>-<YYYYAAGG>`. Çok parçalı
-#: cevabın imza satırı sonunda `PARCA_EKI` (` (i/n)`) taşır (G4 Görev 3 Tur 2): desen eki TANIR ama oturum grubuna
-#: KATMAZ — hangi parçaya yanıt verilirse verilsin aynı bot + aynı oturum.
-_SOHBET_IMZA = re.compile(r"^💬 @([a-z_]+)(?: · (tg-[a-z_]+-r?\d+))?(?: \([1-9]\d*/[1-9]\d*\))?\s*$")
-#: Çok parçalı cevapta her parçanın imza satırının sonuna eklenen sıra eki; tek parçada YOK (bugünkü biçim aynen).
-PARCA_EKI = " ({no}/{toplam})"
 _POZITIF_TAMSAYI = re.compile(r"[1-9]\d*")
 #: Telegram `sendMessage` metin tavanı (Bot API: "1-4096 characters"). Sayım UTF-16 KOD BİRİMİYLE yapılır: Telegram'ın
 #: karakteri kod noktası mı UTF-16 birimi mi saydığı ÖLÇÜLMEDİ (2026-09-30) — BMP dışı karakteri (emoji) iki saymak
@@ -176,33 +171,26 @@ def _bota_giden(mesaj: dict, metin: str) -> str:
     return f"{_veri_bloku(ALINTI_CIT_ADI, alinti)}\n{metin}"
 
 
-def _alinti_icerik_satiri(alinti: str) -> str:
-    """Yanıtlanan mesajın ilk İÇERİK satırı: bot cevabının imza satırı (`💬 @ad · <oturum>`) içerik değildir, atlanır;
-    boş satırlar atlanır. Satır `bot_kanal.alinti_ilk_satiri`ndan geçer (scrub SONRA tavan). İçerik yoksa `""`."""
-    satirlar = [s.strip() for s in alinti.split("\n")]
-    if satirlar and _SOHBET_IMZA.match(satirlar[0]):
-        satirlar = satirlar[1:]
-    ilk = next((s for s in satirlar if s), "")
-    return alinti_ilk_satiri(ilk) if ilk else ""
-
-
 def _komut_giden(mesaj: dict, metin: str, komut: tuple[str, str]) -> str:
     """Komut bota ÇİTSİZ çıplak söz olarak gider (çit öne konsaydı `bota_sor` öneki göremez, not MODELE
-    giderdi — Tur 2, inceleme I-1). Yanıt kipinde iki deterministik ek:
-      * `hatırla` + DOLU gövde (Rol-1 kararı) → nota kaynak etiketi ` (yanıt: <yanıtlanan mesajın ilk satırı>)` —
-        biçim, scrub ve tavan `bot_kanal.kaynak_etiketi`nde (tek kaynak; dönüş kaydı da onu kullanır).
-      * `unut` + BOŞ gövde (G4 Görev 2, Rol-1 kararı 5) → yanıtlanan mesajın ilk İÇERİK satırı (`_alinti_icerik_satiri`:
-        bot imzası atlanır, scrub SONRA ≤`KAYNAK_ETIKETI_TAVANI`) SORGU olur: `unut: <satır>`. "Bunu unut" demenin yolu.
+    giderdi — Tur 2, inceleme I-1). Yanıt kipinde iki deterministik ek, İKİSİ DE yanıtlanan mesajın ilk İÇERİK
+    satırından (`bot_kanal.alinti_icerik_satiri` — TEK KURAL, G4 kalıntıları M-2/M-3: boş satır, sohbet imzası ve
+    araçsız-veri uyarısı atlanır; scrub SONRA ≤`KAYNAK_ETIKETI_TAVANI`):
+      * `hatırla` + DOLU gövde (Rol-1 kararı) → nota kaynak etiketi ` (yanıt: <içerik satırı>)` — biçim
+        `bot_kanal.kaynak_etiketi`nde (tek kaynak; dönüş kaydı da onu kullanır).
+      * `unut` + BOŞ gövde (G4 Görev 2, Rol-1 kararı 5) → içerik satırı SORGU olur: `unut: <satır>`. "Bunu unut"
+        demenin yolu.
     Dolu gövdeli `unut`, gövdesiz `hatırla` (bota_sor "neyi?" diye sorsun), `onayla`/`geri al` ve içeriksiz alıntı
-    OLDUĞU GİBİ gider — sorgu uydurulmaz."""
+    (yalnız imza/uyarı) OLDUĞU GİBİ gider — sorgu da etiket de uydurulmaz."""
     ad, govde = komut
     alinti = ((mesaj.get("reply_to_message") or {}).get("text") or "").strip()
     if not alinti:
         return metin
     if ad == "hatirla" and govde:
-        return f"{metin} {kaynak_etiketi(alinti)}"
+        etiket = kaynak_etiketi(alinti)
+        return f"{metin} {etiket}" if etiket else metin
     if ad == "unut" and not govde:
-        sorgu = _alinti_icerik_satiri(alinti)
+        sorgu = alinti_icerik_satiri(alinti)
         return f"{metin.rstrip()} {sorgu}" if sorgu else metin
     return metin
 
@@ -308,8 +296,13 @@ class _AraBildirim:
     ÜÇ KATMAN, üçü de gerekli: (1) `kapat()` cevap gönderiminden ÖNCE kilit altında `_kapandi` bayrağını kurar — iplik
     beklemeyi bitirmiş ama iptal ona yetişmemişse (`Timer.cancel` koşmakta olan işlevi durdurmaz) işlev kilidi alınca
     bayrağı görür ve SUSAR; (2) işlev koşarken `kapat()` kilidi bekler — ara bildirim o anda gidiyorsa cevaptan ÖNCE
-    tamamlanır (bedel: en kötü hâlde cevap bir bildirim gönderimi kadar — `notify._post` zaman aşımı — gecikir; ters
-    sıra "cevap geldi, sonra düşünüyor…" demekti); (3) `cancel()` bekleyen ipliği bırakır — cevap geldikten sonra
+    tamamlanır (ters sıra "cevap geldi, sonra düşünüyor…" demekti). BEDEL: en kötü hâlde cevap, uçuştaki bildirim
+    gönderimi bitene dek gecikir — ve bu süre `notify._post`un zaman aşımıyla SINIRLI DEĞİLDİR (G4 dal sonu M-6; karar
+    T3 M-5 durur, yalnız sayı düzeltildi): zaman aşımı soket İŞLEMİ başınadır (bağlanma, el sıkışma, her okuma; duvar
+    saati değil) ve DNS çözümlemesini (`getaddrinfo`) HİÇ kapsamaz — ölçüldü 2026-10-01, yerel CPython 3.12.7: takılan
+    çözümleyicide 0,3 s zaman aşımlı istek 1,52 s bekledi. Çözümleme payının tavanı çözümleyicinin kendi zaman
+    aşımlarıdır (glibc resolv.conf varsayılanı ad sunucusu başına 5 s × 2 deneme); A1'in çözümleyici yapılandırması
+    depodan ölçülemez (G3c); (3) `cancel()` bekleyen ipliği bırakır — cevap geldikten sonra
     eşik dolana dek boşuna yaşamaz. `_gitti` ikinci ateşlemeyi susturur (BİR kez). İplik `daemon`: süreç çıkışını
     tutmaz. Zamanlayıcı enjekte edilir (`threading.Timer` imzası: `(sure, islev)` + `daemon` · `start` · `cancel`)."""
 

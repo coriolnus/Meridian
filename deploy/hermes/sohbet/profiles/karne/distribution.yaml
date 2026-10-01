@@ -21,6 +21,13 @@ env_requires:
   required: true
   description: Hindsight kiracı anahtarı; değer profilin kendi .env dosyasında durur
     (çoklu ağ geçidinde sırlar profilin .env dosyasından okunur), depoya yazılmaz.
+- name: API_SERVER_KEY
+  required: true
+  description: API sunucusu anahtarı — kanal katmanı (bugün Telegram dinleyicisi)
+    bu bota /p/<ad>/ önekiyle sorar ve isteği bu anahtarla imzalar; çoklu ağ geçidi
+    isteği profilin kendi .env dosyasındaki değerle doğrular. Değer depoya yazılmaz.
+    Anahtar yoksa ya da kanal katmanının anahtarıyla aynı değilse istek 401 ile düşer
+    ve bot sohbet cevabı veremez.
 distribution_owned:
 - SOUL.md
 - config.yaml

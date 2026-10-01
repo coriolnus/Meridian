@@ -406,7 +406,8 @@ DECLARED_SINKS: dict[str, str] = {
         "ölçüm kartı; Parça 1 dağıtımında okuyucu kodu gelir — o gün dış okuyucu grafta görünür "
         "olur ve bu beyan `stale_sinks` kuralıyla KALKAR",
     "bot_unut_bekleyen.json": "Konuşan filo `unut:` iki adımının bekleyen aday kaydı (Parça 1b G4 Görev 2, "
-        "v593): kısa kod → bot, bellek kimlikleri, kesitler, ifade, ts, son, durum. Yazan da okuyan da "
+        "v593): kısa kod → kayıt; alanların TEK tam listesi `bot_kanal.UNUT_BEKLEYEN` şema yorumundadır (burada "
+        "kopyalanmaz — kopya iki alanı eksik sayıyordu, G4 dal sonu M-7; ayrışma çivisi v608). Yazan da okuyan da "
         "`bot_kanal` (`_bekleyen_ekle`, `_gecis_talebi`, `_bekleyen_guncelle` — hepsi `store.update_json` kilitli "
         "oku-değiştir-yaz) — AYNI modül, statik graf dış tüketiciyi göremiyor (pool_exhausted_seen.json sınıfı). "
         "Modülün KENDİ işletim durumudur, dışarıdan okunması anlamsız: kalıcı olmak ZORUNDA çünkü ilk adım "

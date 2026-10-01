@@ -22,8 +22,10 @@ NE YAPAR. `bota_sor`un DETERMİNİSTİK `hatırla:` / `unut:` dalları ve sohbet
 
 ÇAĞIRANLAR. `bota_sor` `hafiza` verilmezse bu sınıfı ÜRETİM varsayılanı olarak kurar (Parça 1b G4 Görev 1);
 iki adımlı `unut:` / `onayla: unut <kod>` / `geri al: <kod>` akışı ve kısa kodun bekleyen kaydı `bot_kanal`dadır;
-`mcp_server`in `--bot` kipindeki `bot_hafizasi_ara` aracı `ara`yı çağırır. `bota_sor`u üretimde çağıran bir süreç
-henüz YOK (Telegram `main()` G4 Görev 3'te gelir; canlı açılış G3b sırlarından sonradır).
+`mcp_server`in `--bot` kipindeki `bot_hafizasi_ara` aracı `ara`yı çağırır. `bota_sor`u üretimde Telegram
+dinleyicisi çağırır (G4 Görev 3'ten beri: `telegram_dinleyici.main` → `dongu(bota_sor=bot_kanal.bota_sor)`); süreç VAR
+ama birimi (`meridian-telegram.service`) A0 rolünce kurulur, ETKİN EDİLMEZ — canlı açılış G3b sırlarından ve G3c'den
+sonradır (G4 dal sonu M-5, 2026-10-01).
 
 DEĞİŞMEZLER.
   * `ara` SALT-OKURDUR: recall dışında hiçbir istek atmaz (çivi v596 — tek çağrı, PATCH/DELETE yok). Tarih
