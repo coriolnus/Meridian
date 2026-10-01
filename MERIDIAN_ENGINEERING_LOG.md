@@ -4182,3 +4182,12 @@ canlıyla aynı (ilk "FARKLI" ölçümüm süreç ikamesindeki stdin hatasıydı
   referans VAR, dizinler kurala uygun) → gerçek: yazıldı 4 · dokunulmadı 0 · eksik 0; dört dosya ubuntu:ubuntu 600, alan ADLARI doğru.
   `--envanter`: API_SERVER_KEY ×4 + BOT_KEY_{SEF,BEKCI,KARNE} ×3 (apisix + rapor + sohbet) + tenant sohbet kopyaları EŞİT. Beyan dışı
   tarama: `/home/ubuntu/.hermes/.env [GEMINI_API_KEY]` (rotasyon tablosu dışı sır — G3b'den bağımsız, önceden var; ayrı not).
+- **G3c TEST-ATEŞLEME (22:15–22:18Z, Rol-1; `systemctl start`, enable DEĞİL, sonra durduruldu):** ✓ `/health` 200; ✓ `/p/{sef,bekci,karne}/v1/models`
+  doğru anahtarla 200, yanlış anahtarla 401 (G3b-R1 profil kapsamı canlıda doğrulandı — G3c 4b(i)); ✓ öneksiz `/v1/chat/completions` model
+  çağrılmadan 401 (kökte model anahtarı yok). **✗ KRİTİK: botlarda ARAÇ YOK** — `/p/sef` araç gerektiren soruda oturum yalnız
+  `['user','assistant']`, gerçek `role: tool` 0; model araç çağrısını METİN olarak UYDURDU ("tool": "bash" …) — Parça 0 v2'nin en ağır
+  bulgusunun (araçsız uydurma) aynısı. Gateway günlüğünde MCP bağlantı satırı YOK; `tools_config` uyarısı "platform 'api_server' has no
+  valid toolsets configured (unknown name(s): meridian)". `/v1/toolsets` hiçbir profilde etkin set göstermiyor. Durdurma 166 ms ama birim
+  `failed` (exit-code) → `reset-failed`. Kök neden araştırması (Hermes v0.19 kaynağı yerel kopyada; Opus ajan): çok profilli kipte MCP
+  sunucularının hangi config'ten/ne zaman başlatıldığı. Botlar KAPALI kalır; G3c 4b(ii) (hafıza okuma zaman aşımı) ve etkinleştirme bu
+  kök neden çözülene dek ERTELENDİ.
