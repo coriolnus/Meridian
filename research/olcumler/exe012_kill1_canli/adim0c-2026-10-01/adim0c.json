@@ -1,0 +1,42 @@
+{
+ "kart": "EXE-2026-012",
+ "adim": "ADIM-0c",
+ "seans": "2026-10-01",
+ "girdi": {
+  "defter": "/tmp/exe012-0c.YlhY/defter.jsonl",
+  "sha256": "b78c918c00c18091e069e6d408a618a497216c3d4f52f6954534dc6323e34db6"
+ },
+ "tanik": {
+  "durum": "eşit",
+  "neden": null,
+  "t0": "2026-10-01T13:44:30+00:00",
+  "t1": "2026-10-01T20:00:30+00:00",
+  "prometheus_processed": 4155,
+  "defter_processed": 4155,
+  "reddedilen_x": 0,
+  "error_farki": 0,
+  "defter_error": 0
+ },
+ "satir_kb": [
+  275.5712890625
+ ],
+ "bozuk_satir": [],
+ "surec_n": 1,
+ "yeniden_baslatma": {
+  "acilis": false,
+  "pencere": false
+ },
+ "n_processed": 4155,
+ "r_0": 1.0,
+ "z": {
+  "n": 4155,
+  "n_pozitif": 0,
+  "medyan": 0.0,
+  "p95": 0.0,
+  "maks": 0.0
+ },
+ "f_giris": 0.0,
+ "f_yazim": 0.0,
+ "n_yazim_satir": 0,
+ "not": "ADIM-0c seansı pencereye GİRMEZ (kart adim0 + kill_list) — betimlemedir, hüküm değil"
+}

@@ -59,10 +59,10 @@ esikler:
   f_giris: null                        # ADIM-0b — planli dala girilen processed olay payı
   f_yazim: null                        # ADIM-0b — planli satırın diske indiği processed olay payı
   beklenen_yazim_20_seans: null        # ADIM-0b — n_yazim_min'e ulaşılabilirlik
-  alet_olay_basi_maliyeti_us: null     # ADIM-0c (PK testinden) — sıcak yolda ölçülmeyen alet eki
-  defter_satir_boyutu_kb: null         # ADIM-0c
-  tanik_ilk_seans: null                # ADIM-0c — eşit / tanıksız / kusurlu
-  R_adim0_seansi: null                 # ADIM-0c — kayda geçer, HÜKÜM DEĞİL, pencereye girmez
+  alet_olay_basi_maliyeti_us: 2.0      # ADIM-0c (PK testinden) — sıcak yolda ölçülmeyen alet eki · ölçüldü 2026-10-01 v606 G1: X DIŞI kayıt eki medyan 2042 ns/olay (M3, paylaşımlı yük; X İÇİ planlı dal kronometresi ~59 ns/giriş ayrı)
+  defter_satir_boyutu_kb: 275.6        # ADIM-0c · ölçüldü 2026-10-01 seansı (A1): tek satır = tek süreç × seans, 4155 processed olay (~68 B/olay); PK tahmini 109 KB daha az olay içindi
+  tanik_ilk_seans: eşit                # ADIM-0c — eşit / tanıksız / kusurlu · 2026-10-01: Prometheus processed 4155 = defter 4155, reddedilen X 0, error farkı 0
+  R_adim0_seansi: 1.0                  # ADIM-0c — kayda geçer, HÜKÜM DEĞİL, pencereye girmez · 2026-10-01: DEJENERE — planlı giriş 0 (Z ≡ 0; 09-30 EOD plan üretmedi), bkz. adim0c_2026_10_01
 
 k_registry: {registered_at: null, trial_ids: [EXE-012-kill1-canli-atif]}
 # K=1: tek istatistik (R) × tek tavan × tek pencere; iki bakış beyanlı (20 seans + ÖLÇÜLEMEDİ'de bir kez +20). Tanılar hüküm üretmez → K'ye
@@ -195,3 +195,17 @@ netlestirme_2026_10_01b: >
   defter yazımı → hüküm betiğinin kendisi yolu AYNEN korunur; makine yükünden bağımsız, deterministik). Bedel: yazım G/Ç'sinin
   gerçek maliyeti PK'lerde sınanmaz — o maliyet v606 G1'de (alet olay-başı maliyeti) ölçülür ve ADIM-0c'de canlıda kayda geçer.
   PK-1 "+%20" = olay başına planlı dalın TOPLAM eki (giriş sayısına bölünür; hedef R ≈ 1,20 — tavanın iki katı aşım).
+
+adim0c_2026_10_01: >
+  (Rol-1, 2026-10-01 23:1xZ — ADIM-0c BETİMLEMESİ; eşik/K/kill/pencere DEĞİŞMEDİ, seans pencereye GİRMEZ) Alet dağıtımı #89
+  (09:56Z, ae11e5f0) sonrası İLK seans 2026-10-01; A1'de `hukum.py adim0c --defter <kopya> --seans 2026-10-01 --tanik <prometheus
+  query_range>` rc 0. Dondurulan girdi/çıktı research/olcumler/exe012_kill1_canli/adim0c-2026-10-01/ (adim0c.json · defter.jsonl ·
+  tanik.jsonl; blob kimlikleri commit'te). Bulgular: tanık EŞİT (t0 13:44:30Z · t1 20:00:30Z); süreç 1, yeniden başlatma yok (açılış
+  ve pencere eşiklerinin ikisinde de); bozuk satır 0; n_processed 4155; Z: n_pozitif 0 → R_0 = 1,0 DEJENERE. Neden ölçüldü: o seansın
+  plan nüfusu `portfolio.last_date` = 2026-09-30 EOD turudur ve trade_plans'ta 2026-09-26..09-30 satırı YOK (09-25: 1 · 10-01: 2,
+  GO 1 + REVIEW 1); karar defterinde son planned satırı 2026-09-23, son armed satırı 2026-09-28 — plan kuraklığı, alet kusuru değil.
+  ADIM-0b ÖN BAKIŞI (betimleme; ADIM-0b'nin yerine GEÇMEZ, payda ADIM-0a'dan): intraday_shadow_planli_orders.jsonl satırları
+  2026-08-16..10-01 ≈ 33 seansta 14 (08-20 3 · 08-21 2 · 08-24 3 · 08-25 1 · 09-09/11/16/17/23 birer), 2026-09-01'den beri 22
+  seansta 5 → 20 seansta beklenen ≈ 4,5–8,5 < n_yazim_min 10. Bu hız sürerse ilk bakış ve ikinci bakış ÖLÇÜLEMEDİ yönündedir
+  (kill_list "yazım < 10 → ÖLÇÜLEMEDİ"; ÖLÇÜLEMEDİ ≠ KILL). Eşik DEĞİŞMEZ; ADIM-0b bu sayıyı resmî olarak ölçer ve
+  `beklenen_yazim_20_seans`a yazar — kart o ölçümle DONAR (memory kill-esigi-adim0da-olculur).
