@@ -4155,3 +4155,16 @@ canlıyla aynı (ilk "FARKLI" ölçümüm süreç ikamesindeki stdin hatasıydı
   yeniden inceleme (0C/0I) → B dilimi → Opus dal sonu (3I: gevşek eşik, tanıksız hüküm, PK-1 büyüklüğü) → düzeltme; faz5 altın değerleri
   eski gövdeden bağımsız doğrulandı (refaktör bayt-eşit).
 - **TSK-259 KAPANDI (08:5xZ):** ilk ileri doldurma koşumunda tepe 141,9 G, DISK_ESIK çalmadı, atlama sayacı 5; koşum sonrası ≈123 G.
+- **G4 kalıntıları main'de (3d29d64f):** alıntı içerik kuralı tek (`bot_kanal.alinti_icerik_satiri` — imza/parça eki/araçsız-veri ve
+  ölçülemedi uyarıları/ara bildirim atlanır; içerik yoksa etiket uydurulmaz), gövdesiz `unut:` uyarıyı sorgu yapmaz, sohbet manifesti
+  `env_requires` `API_SERVER_KEY`. Suite 16788/0 + KILL#1 — **sıra hatası:** push, ilk KILL#1 koşumu (eşzamanlı ajan pytest'iyle
+  ÖLÇÜLEMEDİ) okunmadan aynı zincirde atıldı; ikinci tek başına koşum geçti. Sonraki push'larda KILL#1 ayrı adımda, push'tan ÖNCE okundu.
+- **G3b main'de (024e06b0 + RUNBOOK a748cb0d):** koşullu birim (yalnız etkinse restart), yazım öncesi hedef + ALAN varlığı ön-denetimi
+  (Task 2 incelemesinin yarım-rotasyon bulgusu Important'a yükseltildi), `API_SERVER_KEY` kasa + 4 kopya, tenant sohbet kopyaları, botlar/
+  telegram credential drop-in'leri, `--api-sunucu`, `--kapi-bot <ad>` (tek gövde — bot sayısından bağımsız; envanter aynası üreteçle),
+  `--tohumla-sohbet` (tablodan türer; CWE-59 dizin sembolik bağına karşı kapalı; boş değer eksik sayılır), kasa yolu yan dosya render +
+  kapı kanıtı. İnceleme: T1–T3 görev + Opus dal sonu 0C/0I; suite 16978/0 (HEAD eşit) + KILL#1. Canlı reçete `deploy/oracle-a1/RUNBOOK.md`
+  "Bot ağ geçidi sırları — G3b". Sınıf bulgusu → **TSK-260** (rotasyonun kendi `_atomik_yaz` yolu yol-tabanlı chown — açık).
+- **§0-5 eksiği (kendi hatam):** bugünkü vardiya başında (07:2xZ) `sayfa_oku.sh meridian-hedef-sapma` okunmadı; 17:0xZ'de okundu
+  (tazeleme 13:06Z, karar girmedi → kaynak yazılmadı). EDG-2026-103 kill-list'i "§0-5 uygulanmazsa K1 KALDI" der — pencere hükmünde
+  (≥10-02) bu gün adıyla değerlendirilir; kural kaldırılmadı, bir vardiyada geç uygulandı.
