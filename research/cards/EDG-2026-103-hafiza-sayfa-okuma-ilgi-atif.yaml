@@ -195,3 +195,12 @@ netlestirme_2026_10_01: >
   olarak tarihli not, ve düzeltilmiş τ + açılışta KAYITLI kalibrasyonla YENİ kart açılır (memory `kill-esigi-adim0da-olculur`
   dersi: τ kalibrasyon kaydı ADIM-0'da yoktu). (9) Sayım kodu research/olcumler/edg103_okuma_ilgi_atif/ 10-01 akşamı Opus
   uygulayıcıya; hüküm 10-02 ≥10:33Z, gecikirse en geç 10-16 (kart üst sınırı).
+
+netlestirme_2026_10_01b: >
+  (Rol-1, 2026-10-01 20:4xZ — HÜKÜM ÖNCESİ, SAYILAR GÖRÜLMEDEN; sayım aleti uygulayıcısının açık soruları; eşik/τ/W/K/kill
+  DEĞİŞMEDİ) (1a) "pencere içindeki UTC günleri" = pencereyle KESİŞEN UTC günleri (09-25…10-02 = 8 gün; kısmi uç günler dahil —
+  payda büyür, geçme yönüne sapmaz). (4a) W yarı-açık: 0 ≤ Δ < 48 sa (pencere kuralıyla aynı). (5a) K4 "taze" koşulu okuma
+  kaydı şeması v1'de YOK ve geriye dönük ölçülemez → K4 değeri None (uydurma yasağı); yalnız "her okuma taze" varsayımıyla üst
+  sınır raporlanır, kıyas ancak üst sınır eşiğin geçme yönünde kesin karar veriyorsa yapılır, aksi ÖLÇÜLEMEDİ. (6a) Ek NK
+  ("bankada yok" ifadesi) kill #6 kapsamında harfiyen. (10) Dondurulan girdi (`research/olcumler/edg103_okuma_ilgi_atif/girdi/`,
+  sayfa görüntüleri dahil) EDG-083/084 `sayfalar/` emsaliyle depoya girer (sır taşımaz; kart blob'a bağlanır).
