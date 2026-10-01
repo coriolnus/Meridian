@@ -888,7 +888,9 @@ ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'for f in /home/ubuntu/.hermes-bot
 # beklenen: hepsi ubuntu:ubuntu 600; kök: API_SERVER_KEY · profiller: API_SERVER_KEY BOT_KEY_<AD> HINDSIGHT_API_KEY
 ```
 
-İkinci `--tohumla-sohbet` koşumu hiçbir şey yazmaz (idempotent).
+İkinci `--tohumla-sohbet` koşumu hiçbir şey yazmaz (idempotent). Çıkış sınıfları: 0 tamam · 3 var olan dosyada eksik/çift/BOŞ alan (elle düzelt ya da
+`--esitle`) · 2 var olan dosya okunamadı ya da HEDEF sembolik bağ (sarkık/hedefli — adıyla basılır) · 1 hedef DİZİN reddedildi
+(zincirde sembolik bağ, sahip ubuntu değil, grup/diğer yazabiliyor ya da realpath beklenen yol değil — hiçbir dosya yazılmaz).
 
 **4. Ancak bundan sonra rotasyon.** `--tenant`, `--api-sunucu`, `--kapi-bot <ad>` ve `--esitle` sohbet `.env`leri yokken
 yazım ÖNCESİ ön-denetimde durur (eksik yol ve alanı adıyla basar; kasaya hiçbir şey yazılmaz). Botlar/Telegram etkin
