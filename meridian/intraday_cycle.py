@@ -94,12 +94,12 @@ DONGU_SURESI = gecikme.Histogram(
 #       kaybolan ya da kapanışta kısmen yazılan tampon, o seansın satırında seans açılışından SONRAKİ bir damgayla
 #       görünür; aynı seansın satırları (seans, surec_baslangic, pid) ile birleştirilir). DİSK: ~109 KB/seans (sentetik;
 #       gerçek değer ADIM-0c) × ~252 seans ≈ 27 MB/yıl; aletin ömrü 20–40 seans ≈ 2–4 MB; rotasyon YOK — alet emekli
-#       edilince yazım sökülür, defter silinmez (hüküm kesiti research/ altına dondurulur). Yazım kilitsiz dosya
-#       eklemesidir (emsal defterlerle aynı, tek yazar): SIGKILL/OOM yazımın ortasında keserse son satır yarım kalabilir —
-#       okuyucu onu bozuk satır olarak ayıklar, seans eksik sayılır.
+#       edilince yazım sökülür, defter silinmez (hüküm kesiti research/ altına dondurulur). Süreç-içi `_atif_kilit`
+#       altında; dosya düzeyinde kilitsiz ekleme (emsal defterlerle aynı, tek yazar; SIGKILL'de yarım satır — okuyucu
+#       ayıklar, seans eksik sayılır: research/olcumler/exe012_kill1_canli/hukum.py).
 #   (5) Kapatma: `MERIDIAN_TUR_ATIF=0` (intraday_shadow ENABLED deseni; import anında okunur, varsayılan AÇIK).
 # SINIR (kart kill_list, tasarım §2): OTOMATİK KAPI YOK — hiçbir motor kodu bu defteri okuyup planli kolu
-# kapatamaz/açamaz; okuyucu motor DIŞINDADIR (research/olcumler/exe012_kill1_canli/, Rol-1). BEDEL (kart
+# kapatamaz/açamaz; okuyucu motor DIŞINDADIR (research/olcumler/exe012_kill1_canli/hukum.py, Rol-1). BEDEL (kart
 # beyanli_sinirlar 4): kayıt + toplu yazım sıcak yolda ÖLÇÜLMEYEN bir ektir; planli dal kronometresi (iki saat okuması)
 # X'in İÇİNDEDİR. İkisinin ölçüsü tests/test_exe012_alet_v606.py G bölümünde.
 ATIF_ENABLED = os.environ.get("MERIDIAN_TUR_ATIF", "1") != "0"

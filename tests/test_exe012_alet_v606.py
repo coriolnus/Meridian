@@ -28,6 +28,14 @@ TUR 2 (düzeltme turu 1, 2026-09-30 — inceleme I-1, M-2/M-3/M-4 + Rol-1 karar�
         kapanış çağrısının arızası kapanışı bozmaz; `bosaltma: kapanis`.
   E1'e M-3 (bayrak kapalıyken `_handle_symbol`da saat okuması/sayaç YOK) ve C6'ya M-4 (alan sırası tek kaynak)
   eklendi.
+TUR 3 (B dilimiyle, 2026-10-01 — yeniden-inceleme M-7/M-8/M-9):
+  K7    M-7: tampon TAKASI (`_atif_olaylar`ın okunup boşla değiştirilmesi) kilit ALTINDA — K5 eklemeyi ve yazımı
+        sınıyordu, takas kilit dışına taşınınca 31/31 yeşildi.
+  K8    M-8(i): `api._lifespan` kapanış kolu `finally` içinde — yaşam döngüsü gövdesi istisna/iptalle bitse de tampon iner.
+  K9    M-8(ii): yeniden girişli kilit gerilemesi (RLock → Lock) ÖLÜ KİLİT üretir; senaryo zaman aşımlı `join` ile koşar,
+        "hâlâ canlı" → KIRMIZI. Ayrıca her testten ÖNCE bloklamadan yoklanır (`_kilit_yeniden_girisli`): gerileme varsa
+        bu dosyanın seans boşaltmalı testleri ASILMAZ, düşer (pytest-timeout kurulu değil — otoriter suite kilitlenmesin).
+        K5/K6'nın `join`leri de zaman aşımlı. F2'ye M-9 (süreç-içi kilit ↔ dosya düzeyinde kilitsiz ekleme) eklendi.
 
 BAĞIMLILIK BEYANI (inceleme M-6, ertelendi): v217'nin sahne yardımcıları (`_kapilar_olculebilir`, `_plan`, `_bar`,
 `RTH`, `SEANS`, `PLAN_GUNU`) bilerek içe aktarılır — kopya ikinci kaynak olurdu; v217 bu adları değiştirirse bu dosya
@@ -39,6 +47,7 @@ boş (ölçüldü 2026-09-30; v604 G3b, v605 TSK-259).
 from __future__ import annotations
 
 import ast
+import asyncio
 import bisect
 import datetime as dt
 import json
@@ -79,6 +88,29 @@ def _temiz():
     ic._CONSUMER = None
     ic.reset_plans_cache()
     ish.reset_dedup()
+
+
+# Ölü kilit senaryosunu KENDİSİ zaman aşımlı koşan çivi yoklamadan muaftır (gerilemede asılmadan KIRMIZI düştüğü görülsün).
+_YOKLAMA_MUAF = frozenset({"test_K9_yeniden_girisli_kilit_OLU_KILIT_uretmez_zaman_asimli"})
+
+
+@pytest.fixture(autouse=True)
+def _kilit_yeniden_girisli(request):
+    """İnceleme M-8(ii): `_atif_kilit` yeniden girişli OLMALI (`_atif_kaydet` kilidi tutarken `_atif_bosalt`ı çağırır).
+    RLock → Lock gerilemesinde seans boşaltmalı her test SÜRESİZ asılırdı (pytest-timeout yok). Yoklama BLOKLAMAZ: ikinci
+    alım `blocking=False` — gerileme varsa test asılmadan düşer."""
+    if request.node.name not in _YOKLAMA_MUAF:
+        kilit = ic.IntradayConsumer()._atif_kilit
+        assert kilit.acquire(blocking=False), "yoklama: taze tüketicinin kilidi alınamadı"
+        try:
+            ikinci = kilit.acquire(blocking=False)
+            if ikinci:
+                kilit.release()
+        finally:
+            kilit.release()
+        if not ikinci:
+            pytest.fail("`_atif_kilit` yeniden girişli DEĞİL — seans boşaltması kendi kilidinde ölü kilide girer (M-8)")
+    yield
 
 
 # ---- yardımcılar -------------------------------------------------------------------------------------------------
@@ -600,6 +632,13 @@ def test_F2_beyan_OKUYUCUYU_ve_DEVIR_SARTINI_adlandirir():
     for parca in ("EXE-2026-012", "research/olcumler/exe012_kill1_canli", "OTOMATİK KAPI", "DEVİR ŞARTI",
                   "kapanis", "27 MB", "yarım satır"):
         assert parca in gerekce, f"beyan '{parca}' parçasını taşımıyor"
+    # İnceleme M-9: "takas + yazım kilit altında" ile "yazım kilitsiz" aynı paragrafta ÇELİŞİYORDU. Kilitsizlik DOSYA
+    # düzeyindedir (flock/fsync yok); süreç-içi `_atif_kilit` VARDIR. İki metin de bunu böyle söyler.
+    serh = (KOK / "meridian" / "intraday_cycle.py").read_text(encoding="utf-8")
+    for metin, ad in ((gerekce, "codelaw beyanı"), (serh, "intraday_cycle ATIF şerhi")):
+        tek = re.sub(r"\s*#\s*", " ", metin)
+        assert "Süreç-içi" in tek and "dosya düzeyinde kilitsiz" in tek, f"{ad} M-9 ayrımını taşımıyor"
+        assert "Yazım kilitsiz" not in tek and "kilitsiz dosya eklemesidir" not in tek, f"{ad} eski çelişkili cümle"
 
 
 def test_F3_kod_KARTA_bagli_kart_ALET_maddesini_tasiyor():
@@ -759,9 +798,10 @@ def _baska_is_parcacigi_alabilir(kilit) -> bool:
             kilit.release()
         sonuc.append(ok)
 
-    th = threading.Thread(target=dene)
+    th = threading.Thread(target=dene, daemon=True)
     th.start()
-    th.join()
+    th.join(timeout=10.0)                                  # bloklamayan sonda; yine de SÜRESİZ beklenmez (M-8)
+    assert not th.is_alive(), "kilit sondası 10 s içinde dönmedi"
     return sonuc[0]
 
 
@@ -811,16 +851,104 @@ def test_K6_eszamanli_kapanis_bosaltmasi_OLAY_KAYBETMEZ_CIFT_YAZMAZ(sandbox_stat
         for _ in range(n):
             t.on_barfeed_event({"syms": ""})
 
-    th = threading.Thread(target=akis)
+    th = threading.Thread(target=akis, daemon=True)
     th.start()
     for _ in range(3000):                                  # sabit sayıda eşzamanlı boşaltma denemesi (iş yükü)
         t._atif_bosalt("kapanis")
-    th.join()
+    th.join(timeout=60.0)                                  # SÜRESİZ bekleme yok (M-8): asılan akış KIRMIZI düşer
+    assert not th.is_alive(), "olay akışı 60 s içinde bitmedi — kilitlenme"
     t._atif_bosalt("kapanis")
     satirlar = _defter()
     assert all(s["n"] == len(s["olaylar"]) and s["n"] > 0 for s in satirlar)
     ofsetler = [o[satirlar[0]["alanlar"].index("ofset_s")] for s in satirlar for o in s["olaylar"]]
     assert len(ofsetler) == n and len(set(ofsetler)) == n, "olay kayboldu ya da çift yazıldı"
+
+
+def test_K7_tampon_TAKASI_kilit_ALTINDA_okunur_ve_atanir(sandbox_state, monkeypatch):
+    """İnceleme M-7: K5 tampona EKLEMEYİ ve defter YAZIMINI sınıyordu; TAKAS (`_atif_olaylar`ın okunup boş listeyle
+    değiştirilmesi) pinli değildi — takas kilidin dışına taşınınca 31/31 yeşildi ve iki iş parçacığı aynı listeyi
+    yakalayıp ÇİFT satır yazabilirdi. Burada `_atif_olaylar` ÖZNİTELİĞİNİN her OKUNUŞU ve ATANIŞI (kurulum hariç) kilidin
+    bu iş parçacığına ait olduğunu sınar (`RLock._is_owned` — aynı iş parçacığından sahiplik sorusu). Üç yol: kapanış
+    boşaltması (kilitsiz çağrılır), seans kapısı ve seans değişimi (kayıt kilidi altında, yeniden girişli)."""
+    store.write_json("portfolio.json", {"positions": {}, "armed": []})
+    ihlal, erisim = [], []
+
+    class Denetimli(ic.IntradayConsumer):
+        def __getattribute__(self, ad):
+            if ad == "_atif_olaylar" and object.__getattribute__(self, "__dict__").get("_denetim"):
+                erisim.append("oku")
+                if not object.__getattribute__(self, "_atif_kilit")._is_owned():
+                    ihlal.append("okuma kilitsiz")
+            return object.__getattribute__(self, ad)
+
+        def __setattr__(self, ad, deger):
+            if ad == "_atif_olaylar" and self.__dict__.get("_denetim"):
+                erisim.append("ata")
+                if not self._atif_kilit._is_owned():
+                    ihlal.append("atama kilitsiz")
+            object.__setattr__(self, ad, deger)
+
+    t = Denetimli()
+    object.__setattr__(t, "_denetim", True)
+    bc.set_clock(lambda: RTH)
+    t.on_barfeed_event({"syms": ""})
+    t.kapanista_bosalt()                                   # kapanış yolu: takas kilitsiz ÇAĞRILAN fonksiyonda
+    t.on_barfeed_event({"syms": ""})
+    bc.set_clock(lambda: KAPANIS_SONRASI)
+    t.on_barfeed_event({"syms": ""})                       # seans kapısı yolu
+    bc.set_clock(lambda: RTH)
+    t.on_barfeed_event({"syms": ""})
+    bc.set_clock(lambda: ERTESI_RTH)
+    t.on_barfeed_event({"syms": ""})                       # seans değişimi yolu
+    object.__setattr__(t, "_denetim", False)
+    assert ihlal == [], ihlal
+    assert erisim.count("ata") == 3 and erisim.count("oku") >= 6, f"sonda boş ölçtü: {erisim}"
+    assert [s["bosaltma"] for s in _defter()] == ["kapanis", "seans_kapandi", "seans_degisti"]
+
+
+def test_K8_yasam_dongusu_GOVDESI_patlasa_da_KAPANISTA_bosaltir(sandbox_state, monkeypatch):
+    """İnceleme M-8(i): `_lifespan`daki `try/finally` pinli değildi — `yield`in ardından düz çağrı (finally'siz) 31/31
+    yeşildi. Gövde istisnayla ya da iptalle biterse `yield` noktasına istisna FIRLATILIR; finally'siz kapanış kolu hiç
+    koşmaz ve seansın tamponu kaybolur. İstisna AYNEN yükselir (kapanış kolu onu maskelemez)."""
+    _yasam_dongusu(monkeypatch, kaydeder=True)
+
+    async def kos(hata):
+        async with api._lifespan(api.app):
+            _olaylar(ic.consumer(), 2)
+            raise hata
+
+    with pytest.raises(ValueError, match="v606 gövde"):
+        asyncio.run(kos(ValueError("v606 gövde")))
+    assert [(s["n"], s["bosaltma"]) for s in _defter()] == [(2, "kapanis")]
+    with pytest.raises(asyncio.CancelledError):
+        asyncio.run(kos(asyncio.CancelledError()))
+    assert [(s["n"], s["bosaltma"]) for s in _defter()] == [(2, "kapanis"), (2, "kapanis")], "iptal yolunda kayıp"
+
+
+def test_K9_yeniden_girisli_kilit_OLU_KILIT_uretmez_zaman_asimli(sandbox_state, monkeypatch):
+    """İnceleme M-8(ii): RLock → Lock gerilemesi testi HATA vermiyor, SÜRESİZ asıyordu (`_atif_kaydet` kilidi tutarken
+    `_atif_bosalt` aynı kilidi ister). Senaryo ayrı (daemon) iş parçacığında koşar, `join` ZAMAN AŞIMLIDIR: iş parçacığı
+    hâlâ canlıysa ölü kilit vardır → KIRMIZI (asılmaz). Yollar: seans kapısı boşaltması ve seans değişimi boşaltması —
+    ikisi de kayıt kilidinin İÇİNDEN."""
+    store.write_json("portfolio.json", {"positions": {}, "armed": []})
+    t = ic.consumer()
+    hata = []
+
+    def is_():
+        try:
+            for an in (RTH, KAPANIS_SONRASI, RTH, ERTESI_RTH):
+                bc.set_clock(lambda an=an: an)
+                t.on_barfeed_event({"syms": ""})
+        except BaseException as e:  # noqa: BLE001 — iş parçacığının istisnası ana iş parçacığında ADIYLA sınanır
+            hata.append(e)
+
+    th = threading.Thread(target=is_, daemon=True)
+    th.start()
+    th.join(timeout=10.0)
+    assert not th.is_alive(), "ÖLÜ KİLİT: seans boşaltması kayıt kilidinin içinden 10 s'de dönmedi (`_atif_kilit` " \
+                              "yeniden girişli değil)"
+    assert hata == [], hata
+    assert [s["bosaltma"] for s in _defter()] == ["seans_kapandi", "seans_degisti"]
 
 
 # =================================================================================================================

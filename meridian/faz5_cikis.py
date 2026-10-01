@@ -30,7 +30,7 @@ yazmaz, hiçbir bayrağı çevirmez, hiçbir emir yolu açmaz.
 """
 from __future__ import annotations
 
-from . import config, store
+from . import config, olcum_araclari, store
 
 # ---- KART SABİTLERİ (EXE-2026-002; ölçümden ÖNCE donduruldu, kod bunları değiştiremez) ---------
 KART = "EXE-2026-002"
@@ -47,7 +47,7 @@ KAPSAM_DISI_SINIFLARI = ("eod_yok",)  # MEŞRU DOLMAMA — kill#4 DIŞI (R1). G�
                             # hükmü GEÇERSİZ KILMAZ; yalnız eşleşen çift sayısını düşürür → n_min'e
                             # havale. BURADA OLMAYAN her eşleşmeme (golge_bozuk, bps_yok ve gelecekte
                             # doğacak her yeni kırılma) BOZULMA sayılır — fail-closed.
-MIN_KUME = 2                # tek tarih kümesinde kümeler-arası dağılım KURULAMAZ (aşağıda gerekçe)
+MIN_KUME = olcum_araclari.KUME_MIN  # =2: tek kümede kümeler-arası dağılım KURULAMAZ (gerekçe aşağıda; tek kaynak)
 AD_TAVANI = 50              # ad/çift listelerinin BEYANLI tavanı — sayaçlar hep TAM, kırpma sayısı
                             # `*_kirpildi` ile yazılır (defter süresiz büyür ve bu sözlük
                             # /api/diagnostics yükünün içine girer)
@@ -143,15 +143,14 @@ def tarih_kumeli_bootstrap(degerler, tarihler, n_ornek: int = BOOTSTRAP_N,
                           "kurulamaz; tek kümede bootstrap genişliği SIFIR bir aralık üretir ve "
                           "o aralık ölçülmemiş bir kesinliktir")}
 
-    B = max(1, int(n_ornek))
     adlar = sorted(kume)
     toplam = np.array([sum(kume[a]) for a in adlar], dtype=float)
     boy = np.array([len(kume[a]) for a in adlar], dtype=float)
-    rng = np.random.default_rng(tohum)
-    sec = rng.integers(0, g, size=(B, g))            # G KÜME, yerine koyarak
-    ortalamalar = toplam[sec].sum(axis=1) / boy[sec].sum(axis=1)
-    alt = (1.0 - seviye) / 2.0 * 100.0
-    lo, hi = (float(q) for q in np.percentile(ortalamalar, [alt, 100.0 - alt]))
+    # YENİDEN ÖRNEKLEME GÖVDESİ ORTAK ÇEKİRDEKTE (`olcum_araclari.kume_bootstrap`, 2026-10-01): G KÜME yerine koyarak,
+    # aynı tohum/üreteç/yüzdelik — EXE-2026-012 KILL#1 hüküm betiği aynı çekirdeği p95 ORANI için çağırır (kart: "gövde
+    # paylaşımı, kopya yasağı"). Buradaki istatistik ORTALAMA; çıktı paylaşımdan önceyle BAYT-EŞİT (v607 A2 altın).
+    lo, hi, B = olcum_araclari.kume_bootstrap(
+        g, lambda sec: toplam[sec].sum(axis=1) / boy[sec].sum(axis=1), n_ornek=n_ornek, seviye=seviye, tohum=tohum)
     return {**ortak, "ort": float(np.mean(vals)), "lo": lo, "hi": hi, "B": B,
             "sifiri_disliyor": bool(lo > 0 or hi < 0), "neden": None}
 

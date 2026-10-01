@@ -731,13 +731,13 @@ DECLARED_SINKS: dict[str, str] = {
         "`intraday_cycle.ATIF_BOSALTMA` (seans_kapandi · seans_degisti · kapanis — sonuncusu işçinin düzgün "
         "kapanışında `api._kapanis_atif_bosalt` üzerinden, yalnız tüketiciyi kaydeden yaşam döngüsünde). BOYUT: "
         "~109 KB/seans (sentetik; gerçek ADIM-0c) × ~252 seans ≈ 27 MB/yıl, alet ömrü 20–40 seans ≈ 2–4 MB; rotasyon "
-        "yok — alet emekli edilince yazım sökülür, defter silinmez (hüküm kesiti research/ altına dondurulur). Yazım "
-        "kilitsiz dosya eklemesidir: SIGKILL/OOM yazım ortasında keserse yarım satır kalabilir, okuyucu onu bozuk satır "
-        "olarak ayıklar. MOTOR İÇİ okuyucusu YOK ve OLMAMALI: "
+        "yok — alet emekli edilince yazım sökülür, defter silinmez (hüküm kesiti research/ altına dondurulur). Süreç-içi "
+        "_atif_kilit altında; dosya düzeyinde kilitsiz ekleme (SIGKILL'de yarım satır — okuyucu ayıklar, seansı eksik "
+        "sayar). MOTOR İÇİ okuyucusu YOK ve OLMAMALI: "
         "kartın kill_list'i OTOMATİK KAPI YASAĞI koyar — hiçbir motor kodu bu defteri okuyup planli kolu "
         "kapatamaz/açamaz (böyle bir okuma ölçümü GEÇERSİZ kılar; tests/test_exe012_alet_v606.py F1 okuyucusuzluğu "
-        "ölçer). OKUYAN: Rol-1'in hüküm betiği research/olcumler/exe012_kill1_canli/ (B dilimi; kart-önce, HENÜZ "
-        "YAZILMADI) — artifact_graph research/ kökünü taramaz, o okuma bu grafta hiçbir zaman görünmez. DEVİR "
+        "ölçer). OKUYAN: Rol-1'in hüküm betiği research/olcumler/exe012_kill1_canli/hukum.py (B dilimi, kart-önce; "
+        "çivisi v607) — artifact_graph research/ kökünü taramaz, o okuma bu grafta hiçbir zaman görünmez. DEVİR "
         "ŞARTI: kart hükmü inip alet emekli edildiğinde (yazım sökülür) BU SATIR KALDIRILMALI; motor içinde bir "
         "okuyucu doğarsa stale_sinks beyanı düşürür ve o okuma kartın kill_list'ine göre ölçümü GEÇERSİZ kılar.",
 }

@@ -5,6 +5,8 @@ ARAÇLAR (hepsi İLERİYE dönük standart, hiçbiri hüküm vermez):
   * `olay_disi_kiyas`    — GÜN BAZINDA temiz evren tabanı + taban-fazlası
   * `blok_bootstrap_ci`  — örtüşen-blok (moving block) güven aralığı (BOOTSTRAP_TOHUM/BOOTSTRAP_N)
   * `eb_kucult`          — empirik-Bayes/James-Stein küçültme (SE tabanlı; EB_MIN_HUCRE altı yok)
+  * `sirali_kantil`/`p95` — kova ara-değerlemesiz SIRALI kantil (v217 KILL#1 `_p95` tanımı; tek gövde)
+  * `kume_bootstrap`     — KÜME (cluster) bootstrap çekirdeği (faz5 ortalaması + EXE-2026-012 p95 oranı)
   * `kod_surumu_damgasi` — rapor hangi kod hâliyle üretildi (git HEAD + SURUM/ARAC_SURUMLERI)
 
 NEDEN VAR — KIYAS KİRLENMESİ. Olay-çalışması ölçümlerinde "olayın getirisi" tek başına bulgu
@@ -34,12 +36,15 @@ import datetime as _dt
 # bir aracın davranışı değiştiğinde eski raporlar sessizce YENİ aracın davranışıyla okunuyordu.
 # Sürüm ARTAR: bir aracın çıktısı/matematiği değişirse buradaki sürümü de değişir (aynı sürüm
 # adıyla iki farklı davranış, damgayı damga olmaktan çıkarır).
-SURUM = "2026-08-02"
+SURUM = "2026-10-01"          # 2026-10-01: `sirali_kantil`/`p95` + `kume_bootstrap` EKLENDİ (eski araçlar değişmedi)
 ARAC_SURUMLERI = {
     "temiz_taban": "1.0",
     "olay_disi_kiyas": "1.0",
     "blok_bootstrap_ci": "1.0",
     "eb_kucult": "1.0",
+    "sirali_kantil": "1.0",
+    "p95": "1.0",
+    "kume_bootstrap": "1.0",
 }
 
 # Gün birimi ADIYLA raporlanır — çıkarım yapılır ama gizlenmez. "±5 gün" bir takvim penceresi mi
@@ -580,6 +585,69 @@ def blok_bootstrap_ci(seri, blok: int | None = None, n_ornek: int = BOOTSTRAP_N,
                   "yeniden türetilmelidir."),
         "uyari": (" · ".join(uyarilar) if uyarilar else None),
     }
+
+
+# ==================================================================================================
+# 2B' — SIRALI KANTİL + KÜME (CLUSTER) BOOTSTRAP ÇEKİRDEĞİ (EXE-2026-012 B dilimi, 2026-10-01)
+# ==================================================================================================
+# NEDEN BURADA. İki tanım ikişer yerde yaşayacaktı ve ikisi de bir KART HÜKMÜNÜN parçası:
+#   (a) KILL#1'in p95'i. Kart EXE-2026-012 `esikler.p95_tanimi` "v217 `_p95` ile ÖZDEŞ" der: sıralı dizide
+#       round(0,95·(n−1)) indeksli eleman, kova ara-değerlemesi YOK. Tanım bir test dosyasında yaşıyordu
+#       (`tests/test_golge_planli_kol_v217.py`); canlı çapanın hüküm betiği onu test modülünden içe aktaramaz (o modül
+#       motoru, dolayısıyla `obs`u yükler) ve kopyalayamaz (tek-kaynak yasası). Tanım buraya TAŞINDI; v217 ve betik
+#       AYNI nesneyi kullanır (v607 A1 bayt-eşitliği çiviler).
+#   (b) Küme bootstrap'ın yeniden örnekleme gövdesi. `faz5_cikis.tarih_kumeli_bootstrap` ORTALAMA için kuruldu; kart
+#       EXE-2026-012 aynı kuralı (seans yerine koyarak çekilir, seçilen seansın TÜM gözlemleri havuza girer) p95 ORANI
+#       için ister ve "gövde paylaşımı, kopya yasağı" der. Ortak parça istatistikten BAĞIMSIZ olandır: tohumlu üreteç,
+#       (B, G) indeks matrisi, yüzdelik aralığı. İstatistik çağırandan gelir. faz5'in çıktısı paylaşımdan sonra
+#       BAYT-EŞİT (v607 A2 altın değerler); `blok_bootstrap_ci` bu çekirdeği KULLANMAZ — o MOVING BLOK'tur, küme değil
+#       (fark `faz5_cikis` şerhinde).
+def kantil_indeksi(n: int, q: float) -> int:
+    """`n` elemanlı SIRALI dizide q-kantilinin indeksi: round(q·(n−1)), üstten n−1 ile kırpılır (v217 `_p95` kuralı).
+
+    `round` Python'un yuvarlamasıdır (yarımda çifte) — tanımın parçasıdır, değiştirilmez."""
+    return min(n - 1, int(round(q * (n - 1))))
+
+
+def sirali_kantil(vals, q: float):
+    """Kova ara-değerlemesiz kantil: `sorted(vals)[kantil_indeksi(len, q)]` — DÖNEN, girdinin kendi elemanıdır.
+
+    Boş girdi `IndexError` yükseltir (v217 `_p95` ile aynı davranış): ölçülemeyen kantil UYDURULMAZ, çağıran boşluğu
+    kendisi adlandırır."""
+    s = sorted(vals)
+    return s[kantil_indeksi(len(s), q)]
+
+
+def p95(vals):
+    """KILL#1 p95'i (kart EXE-2026-003 KILL#1 / EXE-2026-012 `p95_tanimi`): `sirali_kantil(vals, 0,95)`."""
+    return sirali_kantil(vals, 0.95)
+
+
+KUME_MIN = 2                # altında kümeler-ARASI dağılım kurulamaz (tek kümede her replikasyon aynı havuz)
+
+
+def kume_bootstrap(g: int, istatistik, *, n_ornek: int, seviye: float, tohum: int) -> tuple:
+    """KÜME (cluster) BOOTSTRAP ÇEKİRDEĞİ — `(lo, hi, B)`.
+
+    G kümeyi B kez YERİNE KOYARAK çeker: `sec` = `rng.integers(0, G, (B, G))` (tohumlu `default_rng`). İstatistik
+    çağırandan gelir: `istatistik(sec)` (B, G) indeks matrisini alır, B uzunluklu değer dizisi döner (seçilen her
+    kümenin TÜM gözlemleri o replikasyonun havuzundadır — kümeyi parçalamak çağıranın işi DEĞİLDİR). Aralık
+    yüzdeliktir: [(1−seviye)/2, 1−(1−seviye)/2].
+
+    ÖLÇÜLEMEDİĞİNDE UYDURMAZ: G < `KUME_MIN` → `ValueError` (genişliği sıfır bir aralık ölçülmemiş bir kesinliktir;
+    çağıran o durumu kendi `neden`iyle adlandırır). Çağıranlar: `faz5_cikis.tarih_kumeli_bootstrap` (ortalama),
+    research/olcumler/exe012_kill1_canli/hukum.py (p95 oranı)."""
+    import numpy as np
+
+    if int(g) < KUME_MIN:
+        raise ValueError(f"küme sayısı {g} < {KUME_MIN} — kümeler arası dağılım kurulamaz")
+    B = max(1, int(n_ornek))
+    rng = np.random.default_rng(tohum)
+    sec = rng.integers(0, g, size=(B, g))
+    degerler = istatistik(sec)
+    alt = (1.0 - seviye) / 2.0 * 100.0
+    lo, hi = (float(q) for q in np.percentile(degerler, [alt, 100.0 - alt]))
+    return lo, hi, B
 
 
 # ==================================================================================================
