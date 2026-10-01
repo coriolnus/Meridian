@@ -6,12 +6,11 @@ depo aynası `deploy/hermes/sohbet/`) ve A0 rolü onları köke kopyalar. Bu dos
 
   * BİRİM — `Type=simple`, `User=ubuntu`, Rol-1'in A1'de ölçtüğü ExecStart, durdurma (`KillMode=mixed` +
     `TimeoutStopSec=30`), `Restart=on-failure`, `[Install]` VAR; `ReadWritePaths` TAM OLARAK iki yol (MCP
-    çocuğunun yazdığı `/opt/meridian` + `-` önekli Hermes kökü). CREDENTIAL YOK — BEYANLI ERTELEME (Rol-1 kararı
-    2026-09-30, Tur 2): MCP `bot_hafizasi_ara`nın Hindsight kiracı anahtarı drop-in'i G3b sır diliminde rotasyon
-    tablosuyla (`deploy/oracle-a1/sir_rotasyon.sh` — uzun ömürlü tablo + restart haritası, "yalnız aktifse yeniden
-    başlat") TEK dilimde gelir; bugün birimde de drop-in'de de `*Credential*` yönergesi YOKTUR. G3b drop-in'i eklediği
-    gün `test_credential_G3b_dilimine_ertelendi_bugun_hicbir_credential_yok` ve v447 P6 birlikte kırmızıya döner ve
-    bilinçli güncellenir.
+    çocuğunun yazdığı `/opt/meridian` + `-` önekli Hermes kökü). CREDENTIAL — G3b Task 2 (2026-10-01) ile GELDİ (Tur 2'nin
+    beyanlı ertelemesi KAPANDI): MCP `bot_hafizasi_ara`nın Hindsight kiracı anahtarı drop-in'i
+    (`meridian-botlar.service.d/54-hafiza-credential.conf`) rotasyon tablosuyla (`deploy/oracle-a1/sir_rotasyon.sh` —
+    uzun ömürlü tablo + restart haritası, "yalnız etkinse yeniden başlat") AYNI dilimde; `test_credential_G3b_drop_in_ciftleri`
+    TAM listeyi çiviler (yalnız hafıza çifti — `API_SERVER_KEY` profil kapsamında, credential DEĞİL; v604 B8).
   * TEK KAYNAK — üretecin üç sabiti (`BOT_BIRIMI`, `KOK_DIZIN`, `BOT_KUM_HAVUZU`) birim dosyasının ADIYLA, birimin
     `HERMES_HOME`/`HERMES_WRITE_SAFE_ROOT` değerleriyle ve A0 rolünün dizin/kopya hedefleriyle eşittir. Birim
     yeniden adlandırılıp credential yolu unutulursa `bot_hafizasi_ara` SESSİZCE "credential yok" döner (G3 planı
@@ -259,18 +258,22 @@ def _credential_yonergeleri(birim: pathlib.Path) -> list[tuple[str, str, str]]:
             if b == "Service" and "Credential" in a]
 
 
-def test_credential_G3b_dilimine_ertelendi_bugun_hicbir_credential_yok():
-    # MCP `bot_hafizasi_ara`nın Hindsight kiracı anahtarı drop-in'i G3b sır diliminde `sir_rotasyon.sh` tablosuyla
-    # (uzun ömürlü tablo + restart haritası, "yalnız aktifse yeniden başlat") TEK dilimde gelir: rotasyon tablosu
-    # olmadan eklenen bir `LoadCredential=` rotasyondan sonra ESKİ değerde kalırdı (v447 P6'nın yakaladığı sınıf). O
-    # güne dek araç "credential yok" döner ve birim zaten etkin değil. Bu çivi G3b drop-in'i eklediği gün KIRMIZIYA
-    # döner ve v447 P6 ile birlikte BİLİNÇLİ güncellenir — erteleme sessizce "yapıldı"ya dönüşmesin.
-    assert _credential_yonergeleri(_birim_yolu()) == []
+def test_credential_G3b_drop_in_ciftleri():
+    # G3b Task 2 (2026-10-01) — Tur 2'deki BEYANLI ERTELEME ÇEVRİLDİ: drop-in rotasyon tablosuyla AYNI dilimde geldi
+    # (`_kredensiyeller` `tenant meridian-botlar.service …`, v447 P6 iki yönlü eşitlik). İddia TAM LİSTE eşitliğidir: bot
+    # ağ geçidi YALNIZ hafıza çiftini taşır — `API_SERVER_KEY` Hermes'in PROFİL `.env`inden okunur (secret_scope),
+    # credential kopyası okunmaz olurdu (v604 B8). Kimlik `secrets.HAFIZA_KRED_ADI`ndan, kaynak envanterin `vault_kv`
+    # `hedef`inden TÜRER (ikinci liste yok). Kimliğin OKUNDUĞU yer üretecin `BOT_CREDENTIAL_DIZINI`dir (yukarıdaki çivi).
+    from meridian import secrets
+    kv = {g["ad"]: g for g in yaml.safe_load((KOK / "deploy/sir_envanteri.yaml").read_text(encoding="utf-8"))["vault_kv"]}
+    ad = secrets.HAFIZA_KRED_ADI
+    assert _credential_yonergeleri(_birim_yolu()) == [("54-hafiza-credential.conf", "LoadCredential",
+                                                      f"{ad}:{kv[ad]['hedef']}")]
 
 
 def test_credential_denetcisi_birimi_ve_dropini_gorur(tmp_path):
-    # POZİTİF KONTROL: yukarıdaki boş liste kör bir denetçinin boşluğu olmasın. Depoda bu birimin drop-in dizini
-    # bugün YOK — drop-in dalı yalnız burada, sentetik birimle ısırtılır (yorum satırı yönerge sayılmaz).
+    # POZİTİF KONTROL: denetçinin birim + drop-in dallarını ve yorum satırını (yönerge SAYILMAZ) sentetik birimle ölçer —
+    # yukarıdaki tam liste kör bir denetçinin tesadüfi eşleşmesi olmasın.
     birim = tmp_path / "ornek.service"
     birim.write_text("[Service]\nType=simple\nLoadCredential=A:/etc/a\n", encoding="utf-8")
     (tmp_path / "ornek.service.d").mkdir()

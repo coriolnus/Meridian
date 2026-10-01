@@ -50,7 +50,8 @@ import pytest
 from tests import test_cp_rotasyon_v556 as v556
 from tests import test_rotasyon_operator_mesajlari_v522 as v522
 from tests import test_vault_dalga1_baglama_v521 as v521
-from tests.test_sir_rotasyon_v447 import BETIK, ENVANTER, ESKI, _dosya_imzalari, _env_alan, _kos, _sahte_ortam
+from tests.test_sir_rotasyon_v447 import (BETIK, ENVANTER, ESKI, SOHBET_BOTLARI, _dosya_imzalari, _env_alan, _kos,
+                                          _sahte_ortam)
 
 KOK_DEPO = pathlib.Path(__file__).resolve().parents[1]
 
@@ -68,8 +69,9 @@ TENANT_BIRIMLER = {"hindsight-api.service", "hindsight-cp.service", "meridian.se
 #: DEGER_URETEN gerekçesi). `db` DIŞARIDA: eski yol üretir ama kasa yolu kendi dalıdır ve `--uret`
 #: bu turun kapsamı dışıdır (brief). `cp` DIŞARIDA: kendi dalı değeri ZATEN üretir. A1 bu kümeyi
 #: betiğin `_uret_sinifi`nden ve eski yol gövdelerinden AYRICA türetir.
-URETILEBILIR = {"kapi", "tenant", "dash", "apisix-admin"}
-TUM_ALTLAR = ("kapi", "tenant", "db", "dash", "openrouter", "apisix-admin", "cp")
+#: 2026-10-01 (G3b Task 2): `api-sunucu` genel kasa döngüsünden geçer ve eski yolu `_uret hex` (Rol-1 G3b-R5).
+URETILEBILIR = {"kapi", "tenant", "dash", "apisix-admin", "api-sunucu"}
+TUM_ALTLAR = ("kapi", "tenant", "db", "dash", "openrouter", "apisix-admin", "cp", "api-sunucu")
 
 ISTEM = "(boş = bu bacağı atla)"                 # `_oku_gizli`nin istem metni (stderr)
 ISTEM_DEGERI = "SAHTE-ISTEM-0557"                # istem çağrılırsa kasaya giden değer budur
@@ -452,7 +454,11 @@ def test_C2_GERCEK_URET_kanit_ve_envanter_esitligi_AYNEN_kosar(tmp_path):
     r = _kos(BETIK, ortam, "--tenant", "--vault", "--uret")
     _iddia(r.returncode == 0, _ozet(r))
     esit = [s for s in r.stdout.splitlines() if s.startswith(f"  {SIR} · ")]
-    _iddia(len(esit) == 1 and esit[0].endswith("→ VAR (referans kopya)"), _ozet(r))
+    # 2026-10-01 (G3b Task 2): referans YİNE tek render hedefidir; kiracı anahtarının sohbet profili `.env` kopyaları
+    # (bot listesinden türer — `SOHBET_BOTLARI`) EŞİT satırı olarak gelir. Kanal notu yine "TEK KANAL": hermes `.env`
+    # kopyaları KALICI rotasyon kanalıdır, kapatılacak eski kanal değil (`_kanal_beyani`, v604 B13).
+    _iddia(len(esit) == 1 + len(SOHBET_BOTLARI) and esit[0].endswith("→ VAR (referans kopya)")
+           and all(s.endswith("→ EŞİT") for s in esit[1:]), _ozet(r))
     _iddia(f"render ÖLÇÜLDÜ: {HEDEF}" in r.stdout and ">> TEK KANAL: --tenant" in r.stdout
            and "İKİ KANAL AÇIK" not in r.stdout, _ozet(r))
 

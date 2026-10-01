@@ -16,6 +16,8 @@ adımı operatörde — bu belge o adımı GEREKTİRMEZ, ondan önceki basamakt�
 | `/etc/hindsight/creds/<AD>` | 0400 / root | HINDSIGHT_API_DATABASE_URL · HINDSIGHT_API_LLM_API_KEY · HINDSIGHT_API_TENANT_API_KEY | SIR ×3 (dosyanın ADI değişkenin adıdır) | hindsight-api.service (LoadCredential + ExecStart sarmalayıcı) · meridian.service (pano vekili, yalnız TENANT) | LoadCredential |
 | `/opt/apisix/.env-apisix` | **640** / root | APISIX_ADMIN_KEY · OPENROUTER_API_KEY · OPENROUTER_AUTH · PANO_GIRIS_PAROLA · BOT_KEY_{BEKCI,KARNE,SEF,MERIDIAN} | SIR ×8 | apisix.service (docker, `$env://` çözümü) · `ops/apisix_uygula.py` (admin anahtarı) | EnvironmentFile → docker run env |
 | `~/.hermes/profiles/<bekci,karne,sef>/.env` | (ölçülmedi) | BOT_KEY_<AD> · OPENROUTER_API_KEY | SIR | hermes bot birimleri (timer'lı oneshot) | HERMES_HOME/.env (hermes env_loader) |
+| `~/.hermes-botlar/.env` | 600 / ubuntu (HEDEF — dosya A1'de henüz YOK, ölçüldü 2026-09-30) | API_SERVER_KEY | SIR (bot ağ geçidinin dinleyici anahtarı; sohbet profili kopyalarıyla AYNI değer) | meridian-botlar.service (Hermes kök dinleyicisi) | HERMES_HOME/.env (hermes env_loader) |
+| `~/.hermes-botlar/profiles/<bekci,karne,sef>/.env` | 600 / ubuntu (HEDEF — dosya A1'de henüz YOK, ölçüldü 2026-09-30) | API_SERVER_KEY · HINDSIGHT_API_KEY · BOT_KEY_<AD> | SIR (PROFİL kapsamı — Hermes `secret_scope`) | meridian-botlar.service (sohbet profilleri `/p/<ad>/`) | HERMES_HOME/profiles/<ad>/.env (hermes secret_scope) |
 
 **ÖLÇÜM GÜNCELLEMESİ — 2026-09-08 (A1, yalnız AD varlığı okundu; değer basılmadı).** Tablo
 2026-09-03 ölçümüdür ve üç yerde EKSİLDİ/ARTTI. Satırlar tarihiyle birlikte düzeltildi, çünkü bu
@@ -75,6 +77,19 @@ kaynak, ayrışma çivisini "her şey uyuşuyor" diye yeşil tutar:
    (v439 E0 elle taşır). İki ad (HINDSIGHT_CP_ACCESS_KEY · HINDSIGHT_CP_DATAPLANE_API_KEY) ortam değişkeni ADI olarak
    bugün YALNIZ kasa yan dosyasında geçer (`vault_dosyalar`; değerlerin kanonik kopyaları rotasyon tablosunda); tarihçe envanterin `emekli_kopyalar` kayıtlarında `kaldirildi` +
    `yedek_dizini` alanlarıyla durur. Madde 6 ve 7 tarihçedir. Çivi: v590 C9/D3, v447 S2/S3.
+9. **`~/.hermes-botlar/` İKİ SATIR GİRDİ (2026-10-01, konuşan filo Parça 1b G3b Task 2 — çivi künyesi D11).** Bot ağ
+   geçidinin (`meridian-botlar.service`, tek Hermes süreci, çoklu profil kipi) sırları. KAYNAK ÖLÇÜM — PROFİL KAPSAMI
+   (Rol-1, A1 Hermes v0.19 kaynağı, 2026-09-30 18:0x–18:2xZ): `gateway/platforms/api_server.py` `_expected_api_key`
+   `/p/<profil>/…` isteğinin anahtarını O PROFİLİN kapsamından `agent/secret_scope.py` `get_secret("API_SERVER_KEY")` ile
+   alır; çoklu kipte kapsam yetkilidir ve `os.environ`a düşmez; anahtar yoksa ya da <16 karakterse istek 401 (fail-closed).
+   Sonuç: `API_SERVER_KEY` TEK sırdır ama DÖRT `.env` kopyası vardır — kök (dinleyici açılışı; `connect()` anahtarsız
+   açmaz) ve her sohbet profili; Telegram dinleyicisi aynı değeri credential'dan okur (55 drop-in, A sınıfı). Profil
+   `.env`i ayrıca `HINDSIGHT_API_KEY` (kiracı anahtarının kopyası — Hermes hafıza sağlayıcısı) ve `BOT_KEY_<AD>` (rapor
+   profiliyle AYNI APISIX tüketicisi) taşır. Sınıf C (hermes `.env`, env_loader/secret_scope sözleşmesi; rotasyon kanalı
+   `deploy/oracle-a1/sir_rotasyon.sh` — `--api-sunucu`, `--tenant`). İki dosya da A1'de BUGÜN YOK (2026-09-30 ölçümü);
+   `mod / sahip` bir ÖLÇÜM değil HEDEF beyanıdır (tohumlama 0600 ubuntu:ubuntu yazar) ve dosyalar ilk ölçüldüğünde
+   tarihle düzeltilir. `<…>` profil kümesi A0 `sohbet_profil_adlari`ndan türeyen kabuk listesiyle eşittir (v604 B9).
+   Tablo 7 dosya / 26 ad (v439 E0 elle taşır); `deploy/sir_envanteri.yaml` `dosyalar:` aynı turda.
 
 **ÖLÇÜLMEYEN, DOLAYISIYLA DEĞİŞTİRİLMEYEN TEK SATIR (uydurma yasağı):** `diğer 29` ayar
 sayısı 2026-09-03 ölçümüdür ve 2026-09-08'de YENİDEN SAYILMADI — yalnız sır ADLARININ varlığı

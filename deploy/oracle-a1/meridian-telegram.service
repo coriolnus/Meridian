@@ -12,10 +12,13 @@
 # ("kurulu" != "çalışır") → AYRI değişiklikle `etkin_birimler`. dagit [1c] kurulmamış birimde DURUR: site.yml
 # dağıtımdan ÖNCE koşar.
 #
-# CREDENTIAL BUGÜN YOK — BEYANLI ERTELEME (Rol-1 kararı 2026-09-30, G4). `bota_sor` iki anahtarı YALNIZ credential
-# kanalından okur (`meridian/secrets.py::credential_oku`): bot ağ geçidinin dinleyici anahtarı (`HermesTasiyici`) ve
-# Hindsight kiracı anahtarı (dönüş kaydı). Drop-in'leri G3b sır diliminde rotasyon tablosuyla TEK dilimde gelir (v447 P6
-# sınıfı); o güne dek her soru "şu an cevap veremiyor" alır ve olay yazılır. Telegram jetonu ve sohbet kimliği bugünkü
+# CREDENTIAL KANALI (G3b Task 2, 2026-10-01 — G4'teki beyanlı erteleme KAPANDI). `bota_sor` iki anahtarı YALNIZ credential
+# kanalından okur (`meridian/secrets.py::credential_oku`): bot ağ geçidinin dinleyici anahtarı (`HermesTasiyici`,
+# `meridian-telegram.service.d/55-api-sunucu-credential.conf`) ve Hindsight kiracı anahtarı (dönüş kaydı,
+# `54-hafiza-credential.conf`). İkisi de rotasyon tablosundadır (`sir_rotasyon.sh --api-sunucu` · `--tenant`; birim
+# KOŞULLU — yalnız etkinse yeniden başlar, v447 P6 drop-in ↔ tablo). `API_SERVER_KEY` kaynağı (`/etc/meridian/
+# api_server_key`) bugün YOK: kaynak yokken systemd birimi BAŞLATMAZ — etkinleştirmenin ön koşulu ilk değerin kasaya
+# konup render edilmesidir (G3b canlı reçetesi). Telegram jetonu ve sohbet kimliği bugünkü
 # zincirle okunur (`meridian/secrets.py::get`: credential, sonra ortam, sonra `state/secrets.json`) — değişiklik yok.
 # Jeton ya da sohbet kimliği YOKSA süreç `SystemExit` ile çıkar; `Restart=on-failure` onu 10 sn arayla yeniden dener AMA
 # sonsuza dek değil: bu kalıcı bir arızadır ve 300 sn içinde beş başarısız başlatmada başlatma sınırı (aşağıda,

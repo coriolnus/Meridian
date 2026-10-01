@@ -51,6 +51,13 @@
 #                                           kendi giriş ucudur (POST /api/auth/login, gövde `key`):
 #                                           yeni → 200, eski → 401. Kasaya BAĞLIDIR: doğru yol
 #                                           `--cp --vault` (aşağıda); eski yol uyarıyla koşar.
+#   sudo ./sir_rotasyon.sh --api-sunucu   → API_SERVER_KEY (bot ağ geçidinin dinleyici anahtarı; G3b, 2026-10-01). TEK
+#                                           sır, DÖRT `.env` kopyası — kök + her sohbet profili (Hermes PROFİL
+#                                           kapsamı: `/p/<ad>/` isteğinin anahtarı o profilin `.env`inden okunur) — +
+#                                           Telegram dinleyicisinin credential'ı; referans Agent render hedefi. Kanıt:
+#                                           botlar ETKİNSE `/health/detailed` yeni → 200 · eski → 401; değilse
+#                                           "KANIT: ölçülemedi — … etkin değil (<durum>)" satırı, çıkış 0. Kasaya
+#                                           BAĞLIDIR: doğru yol `--api-sunucu --vault`; İLK değer RUNBOOK borusuyla.
 #   ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 #                                           başlayacağını listeler, HİÇBİR ŞEY yazmaz
 #   (koşullu birim) `_KOSULLU_BIRIMLER` YALNIZ ETKİNSE yeniden başlar; değilse "ATLANDI (etkin değil: <durum>)"
@@ -75,7 +82,7 @@
 #                                           hedefindeki ESKİ değerle AYNI olamaz, hiçbir yere BASILMAZ. Takma
 #                                           ad, render kanıtı, eski kanal, restart, kanıt ve geri alma AYNEN —
 #                                           yalnız değerin KAYNAĞI değişir. Yalnız --kapi | --tenant | --dash |
-#                                           --apisix-admin; --openrouter (anahtarı sağlayıcı üretir) ve --db
+#                                           --apisix-admin | --api-sunucu; --openrouter (anahtarı sağlayıcı üretir) ve --db
 #                                           (kendi dalı, bu turun kapsamı dışı) AÇIK hatayla reddedilir,
 #                                           --vault'suz verilemez; --cp --vault değeri ZATEN üretir (bayrak
 #                                           etkisiz, söylenir). `--kuru` ile birleşir. Hedef kullanım:
@@ -137,7 +144,8 @@
 # yazıyor olması, dosyayı root'a DEVRETMEK değildir.
 #
 # DEĞER ÜRETİMİ. `--kapi`/`--db`/`--dash`: `openssl rand -base64 36 | tr '+/' '-_'` → 48 karakter
-# URL-güvenli. `--tenant` ve `--cp`: `openssl rand -hex 32` → 64 hex (CP anahtarının biçim beklentisi
+# URL-güvenli. `--tenant`, `--cp` ve `--api-sunucu`: `openssl rand -hex 32` → 64 hex (Hermes dinleyicisi ≥16
+# karakter ve yer tutucu olmayan değer ister — Rol-1 G3b-R5; CP anahtarının biçim beklentisi
 # YOK — hindsight-control-plane 0.9.2 `api/auth/login` yalnız sabit-zamanlı eşitlik kıyaslar; birim
 # şerhinin 2026-09-01 üretim reçetesi de `openssl rand -hex 32`dir). Üretimden SONRA uzunluk denetlenir;
 # boş ya da yalnız boşluk olan değer bir ARIZADIR (bir kez ölçüldü: boş credential dosyası birimi
@@ -422,11 +430,47 @@ _gecen_s() { _saat_oku; GECEN_S=$(( (SAAT_MS - $1) / 1000 )); }
 #   render hedefidir. Satırlar envanterde SİLİNMEDİ — `rotasyon_kopyalari.emekli_kopyalar`da tarihli durur;
 #   dosyaların diskte kalıp kalmadığını `--envanter` `_emekli_kopyalar` listesiyle ölçer (bedel yasası: satır
 #   çıkınca `.key`i EŞİT/AYRI diye gören tek mekanizma da çıkıyordu). Çivi: tests/test_iki_kanal_kapanisi_v590.py C.
+#: SOHBET BOT LİSTESİ — KABUKTAKİ TEK LİSTE (G3b Task 2, 2026-10-01; operatör 2026-09-30 "bot sayısından bağımsız
+#: tasarım": kadroda 21 bot — 3 canlı + dalga 1/2/3). Bot başına her tablo satırı (`_sohbet_satirlari`) ve taranan
+#: dosya (`_taranan_dosyalar`) bu iki sabitten DÖNGÜYLE türer: elle yazılan satır sayısı bot sayısıyla BÜYÜMEZ ve yeni
+#: bot = bu listeye bir ad (+ A0 listesi + kadro + kapı tüketicisi + kasa girdisi). KOPYA KAÇINILMAZ: betik A1'de
+#: PyYAML'sız `--kopyalar` basar ve A0 değişkenlerini okumaz → iki yönlü eşitlik çivisi v604 B9 (bu liste =
+#: `deploy/ansible/roles/meridian_a1/defaults/main.yml` `sohbet_profil_adlari` [sıra dahil] = `deploy/hermes/kadro.yaml`
+#: `durum: aktif`; kök = `sohbet_kok_dizini`). Envanter aynası (`rotasyon_kopyalari` · takma ad `kopya_kaynaklari`)
+#: bu tablonun ÇIKTISINDAN `ops/sir_envanteri_bot_uret.py` ile üretilir (`--kontrol` çivisi v604 B12).
+_SOHBET_KOKU="/home/ubuntu/.hermes-botlar"
+_SOHBET_BOTLARI="sef bekci karne"
+
+#: TABLO BORUSU — OKUYAN TAMAMINI OKUR (G3b 2026-10-01). `_kopyalar` artık iki heredoc + döngü
+#: `echo`larıdır; `_kopyalar | awk '…{print; exit}'` gibi ERKEN çıkan bir okuyucu boruyu kapatır, sonraki `echo` SIGPIPE
+#: alır ve `set -o pipefail` altında atama 141 ile `set -e`yi tetikler — koşum ilk satırı bulduğu an SESSİZCE ölür
+#: (ölçüldü: `--api-sunucu` çıkış 141 "echo: write error: Broken pipe"; tek-`cat` tabloda yarışa bağlı gizliydi). İlk
+#: eşleşme `!y {…; y=1}` ile alınır, `exit` yalnız `END` içinde. Çivi: v604 B14 (statik).
+#: `_sohbet_satirlari <alt> <sır> <alan>` — her sohbet profilinin `.env`i için TEK `env` satırı (mod/sahip `koru`:
+#: dosyayı tohumlama 0600 ubuntu yazar, rotasyon izni KORUR — hermes rapor profilleri emsali).
+_sohbet_satirlari() {
+  local b
+  for b in $_SOHBET_BOTLARI; do
+    echo "$1 $2 env $_SOHBET_KOKU/profiles/$b/.env $3 koru koru -"
+  done
+}
+
+#: TABLO ÜÇ PARÇADIR (G3b, 2026-10-01): sabit satırlar iki heredoc'ta, bot başı satırlar `_sohbet_satirlari` döngüsünde.
+#: Bir sırrın satırları yine BİTİŞİKTİR (referans kuralı — v604 B2): kiracı anahtarının sohbet kopyaları referans
+#: satırının HEMEN ardından, `api-sunucu` bloğu tablonun sonunda.
+#: `api-sunucu` (API_SERVER_KEY — G3b): REFERANS Agent render hedefi (`vault_kv.api_server_key.hedef`), ardından kök
+#: `.env` (dinleyici açılışı) ve her sohbet profilinin `.env`i (Hermes PROFİL kapsamı — `/p/<ad>/` isteğinin anahtarı o
+#: profilin `.env`inden okunur, ölçüm Rol-1 2026-09-30). Telegram dinleyicisi aynı değeri credential'dan okur (55
+#: drop-in) ve onun kaynağı referans satırıdır. Kiracı anahtarının sohbet kopyası `HINDSIGHT_API_KEY` alanıdır
+#: (Hermes hafıza sağlayıcısı, profil `.env`i).
 _kopyalar() {
   cat <<'KOPYA_SON'
 kapi KAPI_APIKEY dosya /etc/meridian/kapi_apikey - 0400 root:root -
 kapi KAPI_APIKEY env /opt/apisix/.env-apisix BOT_KEY_MERIDIAN koru koru -
 tenant HINDSIGHT_API_TENANT_API_KEY dosya /etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY - 0400 root:root -
+KOPYA_SON
+  _sohbet_satirlari tenant HINDSIGHT_API_TENANT_API_KEY HINDSIGHT_API_KEY
+  cat <<'KOPYA_SON'
 db HINDSIGHT_DB_PAROLA sql hindsight - - - -
 db HINDSIGHT_DB_PAROLA url /etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL - koru koru -
 dash MERIDIAN_DASH_TOKEN dosya /etc/meridian/dash_token - 0400 root:root -
@@ -448,7 +492,10 @@ openrouter OPENROUTER_API_KEY env /home/ubuntu/.hermes/.env OPENROUTER_API_KEY k
 apisix-admin APISIX_ADMIN_KEY dosya /etc/meridian/apisix_admin_key - 0400 root:root -
 apisix-admin APISIX_ADMIN_KEY env /opt/apisix/.env-apisix APISIX_ADMIN_KEY koru koru -
 cp HINDSIGHT_CP_ACCESS_KEY dosya /etc/meridian/hindsight_cp_access_key - 0400 root:root -
+api-sunucu API_SERVER_KEY dosya /etc/meridian/api_server_key - 0400 root:root -
 KOPYA_SON
+  echo "api-sunucu API_SERVER_KEY env $_SOHBET_KOKU/.env API_SERVER_KEY koru koru -"
+  _sohbet_satirlari api-sunucu API_SERVER_KEY API_SERVER_KEY
 }
 
 #: `--cp` SATIRLARI (TSK-226b, 2026-09-26). REFERANS Vault Agent'ın kanonik tek-değer kopyasıdır
@@ -520,7 +567,10 @@ EMEKLI_SON
 _sir_birimleri() {
   case "$1" in
     KAPI_APIKEY)                  echo "apisix.service meridian.service" ;;
-    HINDSIGHT_API_TENANT_API_KEY) echo "hindsight-api.service hindsight-cp.service meridian.service" ;;
+    #: G3b (2026-10-01): bot ağ geçidi (MCP `bot_hafizasi_ara` credential'ı + profil `.env`lerindeki `HINDSIGHT_API_KEY` —
+    #: Hermes hafıza sağlayıcısı açılışta okur) ve Telegram dinleyicisi (dönüş kaydı, credential) da tüketir. İkisi
+    #: KOŞULLU birimdir (`_KOSULLU_BIRIMLER`): yalnız etkinse yeniden başlar.
+    HINDSIGHT_API_TENANT_API_KEY) echo "hindsight-api.service hindsight-cp.service meridian.service meridian-botlar.service meridian-telegram.service" ;;
     HINDSIGHT_DB_PAROLA)          echo "hindsight-api.service" ;;
     MERIDIAN_DASH_TOKEN)          echo "meridian.service" ;;
     NOUS_API_KEY)                 echo "meridian.service" ;;
@@ -533,6 +583,9 @@ _sir_birimleri() {
     #: (değersiz `-e AD`, TSK-226) — yan dosyanın render'ı RESTART ister (2026-09-29'dan beri tek kanal;
     #: `.env-cp` emekli). Kiracı anahtarının CP tüketicisi de AYNI yan dosyadır (DATAPLANE, takma ad).
     HINDSIGHT_CP_ACCESS_KEY)      echo "hindsight-cp.service" ;;
+    #: Bot ağ geçidinin dinleyici anahtarı (G3b, 2026-10-01): Hermes onu kök ve profil `.env`lerinden AÇILIŞTA okur
+    #: (restart gerekir); Telegram dinleyicisi credential'dan (`LoadCredential`, 55 drop-in). İkisi de KOŞULLU birim.
+    API_SERVER_KEY)               echo "meridian-botlar.service meridian-telegram.service" ;;
     *) return 1 ;;
   esac
 }
@@ -562,6 +615,23 @@ _KOSULLU_BIRIMLER="meridian-botlar.service meridian-telegram.service"
 _kosullu_birim_mi() {
   case " $_KOSULLU_BIRIMLER " in *" $1 "*) return 0 ;; esac
   return 1
+}
+
+#: REÇETE BİRİM LİSTESİ — koşullu birim operatöre ÇIPLAK "yeniden başlat" diye verilmez (G3b Task 2, Task 1 incelemesi M1).
+#: Geri alma reçeteleri (`_geri_alma_recetesi` · `_genel_kasa_recetesi` · alt komut sonu `>> geri alma` satırları)
+#: `_birimler`in TAM kümesini basıyordu; koşullu birim tüketici kümesine girdiği an operatörün yapıştıracağı satır etkin
+#: OLMAYAN birimi BAŞLATIRDI — `_yeniden_baslat`ın kapattığı tehlike insan katmanında açık kalırdı. Bu yardımcı
+#: koşulsuz birimleri aynen, koşullu birimleri `sudo systemctl try-restart` ile (systemd: YALNIZ koşan birimi yeniden
+#: başlatır, duranı BAŞLATMAZ) yazar. Reçete basıldığı an birimin durumunu sormaz: geri alma ANI farklıdır ve
+#: `try-restart` o anın durumuna uyar. `_recete_birimleri <birim…>` — ölçülemeyen liste metni ("(birim listesi
+#: ölçülemedi)") koşulsuz kelime gibi AYNEN geçer. Çiviler: v604 B11 (dinamik) · B11c (her reçete satırı buradan).
+_recete_birimleri() {
+  local b kosulsuz="" kosullu=""
+  for b in "$@"; do
+    if _kosullu_birim_mi "$b"; then kosullu="${kosullu:+$kosullu }$b"; else kosulsuz="${kosulsuz:+$kosulsuz }$b"; fi
+  done
+  if [ -z "$kosullu" ]; then printf '%s\n' "$kosulsuz"; return 0; fi
+  printf '%s(YALNIZ ETKİNSE: sudo systemctl try-restart %s)\n' "${kosulsuz:+$kosulsuz }" "$kosullu"
 }
 
 #: Verilen birimleri bağımlılık sırasına dizer ve TEKİLLEŞTİRİR: iki sır aynı birimi tüketebilir
@@ -603,6 +673,9 @@ _birimler() {
 #: BİREBİR aynıdır; ayrışırsa betik bir dosyaya yazar, systemd başka bir kimliği arar ve arıza
 #: ancak ilk gerçek çağrıda görünür. 2026-09-07: BOŞ bir credential dosyası tam bu yoldan
 #: birimi sessizce yetkisiz bıraktı — o yüzden ölçüm "var mı" değil "boyutu > 1 mi".
+#: G3b (2026-10-01): bot ağ geçidi ve Telegram dinleyicisi satırları — ikisi de KOŞULLU birimdir; denetim yalnız
+#: yeniden BAŞLATILAN birim için koşar (`_yeniden_baslat` süzgeci), etkin olmayanın `/run/credentials`ı sorulmaz.
+#: Botlar `API_SERVER_KEY`i credential'dan OKUMAZ (Hermes profil `.env`i — PROFİL kapsamı): satırı YOK (v604 B8).
 _kredensiyeller() {
   cat <<'KRED_SON'
 kapi meridian.service KAPI_APIKEY
@@ -612,6 +685,9 @@ db hindsight-api.service HINDSIGHT_API_DATABASE_URL
 dash meridian.service dash_token
 openrouter meridian.service NOUS_API_KEY
 openrouter hindsight-api.service HINDSIGHT_API_LLM_API_KEY
+tenant meridian-botlar.service HINDSIGHT_API_TENANT_API_KEY
+tenant meridian-telegram.service HINDSIGHT_API_TENANT_API_KEY
+api-sunucu meridian-telegram.service API_SERVER_KEY
 KRED_SON
 }
 
@@ -678,6 +754,12 @@ _taranan_dosyalar() {
 /home/ubuntu/.hermes/profiles/sef/.env
 /home/ubuntu/.hermes/.env
 TARA_SON
+  # Bot ağ geçidinin kök ve sohbet profili `.env`leri (G3b, 2026-10-01) — bot listesinden DÖNGÜYLE (`_SOHBET_BOTLARI`).
+  # A1'de BUGÜN YOK (2026-09-30): yok olan dosyayı `test -f` atlar (bedel sıfır); tohumlandıktan sonra sözlük bedeli
+  # İLK `--envanter`de ölçülür (alan kümesi tablodan: API_SERVER_KEY · HINDSIGHT_API_KEY · BOT_KEY_<AD>).
+  local b
+  echo "$_SOHBET_KOKU/.env"
+  for b in $_SOHBET_BOTLARI; do echo "$_SOHBET_KOKU/profiles/$b/.env"; done
 }
 
 #: MOTORUN KENDİ SIR DEPOSU. `.env` DEĞİL, JSON — `^AD=` deseni buraya KÖRDÜR ve o körlük tam
@@ -1092,9 +1174,10 @@ _geri_alma_recetesi() {
   # pahalıya mal olurdu. Yutulan tek şey stderr metnidir; ÖLÇÜLEMEDİ hâli sessiz DEĞİL, görünür
   # bir dizgeyle beyan edilir (aşağıdaki `(birim listesi ölçülemedi)`).
   birimler="$(_birimler "$ALT" 2>/dev/null || echo '(birim listesi ölçülemedi)')"
+  # shellcheck disable=SC2086
   echo ">> GERİ ALMA (bu koşum YEDEK aldı — başarıda da arızada da geçerli):
      sudo cp -p $YEDEK/<yol> /<yol>   (yedek ağacı üretim yollarını AYNEN taşır)
-     sonra yeniden başlat: $birimler" >&2
+     sonra yeniden başlat: $(_recete_birimleri $birimler)" >&2
   return 0
 }
 
@@ -1207,6 +1290,9 @@ _uret_sinifi() {
   case "$1" in
     kapi|dash|apisix-admin) echo b64 ;;
     tenant) echo hex ;;
+    #: `api-sunucu` (G3b, Rol-1 G3b-R5): Hermes ≥16 karakter ve yer tutucu olmayan değer ister (`has_usable_secret`) —
+    #: kiracı emsali, 64 hex. AYRI kol: v557 mutasyon çapası `tenant)` satırını tek başına değiştirir.
+    api-sunucu) echo hex ;;
     *) return 1 ;;
   esac
 }
@@ -1798,7 +1884,7 @@ kapi() {
      — motor kapıya konuşamıyor ya da yüzeye ULAŞILAMADI; ikisi aynı şey DEĞİLDİR ve hüküm ikisinde de
      'geçti' olamaz."
   oldu "motor içi kanıt: /api/secrets/test/nous ok:true"
-  echo ">> geri alma: sudo cp -p $YEDEK/etc/meridian/kapi_apikey /etc/meridian/kapi_apikey (+ .env-apisix) ve $(_birimler kapi) yeniden başlat"
+  echo ">> geri alma: sudo cp -p $YEDEK/etc/meridian/kapi_apikey /etc/meridian/kapi_apikey (+ .env-apisix) ve $(_recete_birimleri $(_birimler kapi)) yeniden başlat"
 }
 
 # KAPININ YÖNETİM ANAHTARI — `--kapi` İLE KARIŞTIRILMAZ. `KAPI_APIKEY` kapının TÜKETİCİ anahtarıdır
@@ -1825,7 +1911,7 @@ apisix_admin() {
   _farksal "kapı admin /routes" "$ISLIK/yeni" "$ISLIK/eski" \
            "$ADMIN_KOK/routes" "X-API-KEY" "-" "200" "401 403"
   _birimsiz_tuketici_beyani apisix-admin
-  echo ">> geri alma: $YEDEK altındaki iki kopyayı geri koy ve $(_birimler apisix-admin) yeniden başlat"
+  echo ">> geri alma: $YEDEK altındaki iki kopyayı geri koy ve $(_recete_birimleri $(_birimler apisix-admin)) yeniden başlat"
 }
 
 #: BİRİM OLMAYAN TÜKETİCİ BEYANI — restart kümesine GİRMEYEN okuyucu ADIYLA (bedel yasası: "neden
@@ -1853,7 +1939,7 @@ tenant() {
            "$HINDSIGHT/v1/default/banks" "Authorization" "Bearer" "200" "401 403"
   _envanter_esitlik tenant
   # Kopya SAYISI yazılmaz, tablodan okunur: 2026-09-29'a kadar "üç kopya"ydı (`.key` + `.env-cp` emekli).
-  echo ">> geri alma: $YEDEK altındaki $(_kopyalar | awk '$1=="tenant"' | wc -l | tr -d ' ') kopyayı geri koy ve $(_birimler tenant) yeniden başlat"
+  echo ">> geri alma: $YEDEK altındaki $(_kopyalar | awk '$1=="tenant"' | wc -l | tr -d ' ') kopyayı geri koy ve $(_recete_birimleri $(_birimler tenant)) yeniden başlat"
 }
 
 # CP ERİŞİM ANAHTARI — ESKİ YOL (TSK-226b, 2026-09-26). `tenant()` emsali, adım adım: yedek → ESKİ değer
@@ -1874,7 +1960,7 @@ cp_erisim() {
   _agent_hedefi_uyarisi cp                # TSK-064 takip (2) — gerekçe `kapi()` şerhinde
   [ "$KURU" = 0 ] || { _kuru_rapor cp; _cp_kanit_plani; return 0; }
   _yedek_al cp
-  ref_yol="$(_kopyalar | awk '$1=="cp" {print $4; exit}')"
+  ref_yol="$(_kopyalar | awk '$1=="cp" && !y {print $4; y=1}')"   # erken `exit` YOK: TABLO BORUSU şerhi (`_sohbet_satirlari` üstü)
   sudo test -s "$YEDEK$ref_yol" \
     || die "--cp ESKİ değer okunamadı: referans kopya ($ref_yol) YOK/boş — kasa kurulu değilse CP zaten AÇILMAZ
      (tek kanal: .env-cp.vault). Hiçbir kopya YAZILMADI. Doğru yol: sudo $0 --cp --vault"
@@ -1884,7 +1970,7 @@ cp_erisim() {
   _yeniden_baslat cp
   _cp_kanit "$ISLIK/yeni" "$ISLIK/eski"
   _envanter_esitlik cp
-  echo ">> geri alma: $YEDEK altındaki $(_kopyalar | awk '$1=="cp"' | wc -l | tr -d ' ') kopyayı geri koy ve $(_birimler cp) yeniden başlat"
+  echo ">> geri alma: $YEDEK altındaki $(_kopyalar | awk '$1=="cp"' | wc -l | tr -d ' ') kopyayı geri koy ve $(_recete_birimleri $(_birimler cp)) yeniden başlat"
 }
 
 #: Kanıt ucunun planı — eski yolun kuru raporu ve kasa yolunun kuru planı AYNI uçtan söz eder.
@@ -1901,6 +1987,62 @@ _cp_kanit_plani() {
 # hiçbir yere yazılmaz (yalnız HTTP kodu ve gövde dosyası okunur).
 _cp_kanit() {
   _farksal "CP /api/auth/login" "$1" "$2" "$CP_KOK/api/auth/login" "-" "-" "200" "401 403" "key"
+}
+
+# BOT AĞ GEÇİDİNİN DİNLEYİCİ ANAHTARI — ESKİ YOL `--api-sunucu` (G3b Task 2, 2026-10-01). `tenant()` emsali, adım adım:
+# referans kapısı → yedek → ESKİ değer → üret (`hex`) → tablodaki kopyalar → restart (yalnız etkin koşullu birim) →
+# kanıt → envanter eşitliği.
+# DÖRT KOPYA, TEK SIR (Rol-1 G3b-R1). Ölçüm (Rol-1, A1 Hermes v0.19 kaynağı 2026-09-30):
+# `gateway/platforms/api_server.py` `_expected_api_key` `/p/<profil>/…` isteğinin anahtarını O PROFİLİN kapsamından
+# (`agent/secret_scope.py` `get_secret`) alır — çoklu kipte kapsam yetkilidir, `os.environ`a düşmez; anahtar yoksa ya da
+# <16 karakterse 401 (fail-closed). Kök `.env` dinleyicinin açılışıdır (`connect()` anahtarsız açmaz); her sohbet
+# profilinin `.env`i o profilin istekleridir; Telegram dinleyicisi (`meridian/bot_kanal.py::HermesTasiyici`) AYNI değeri
+# credential'dan okur (55 drop-in, kaynağı referans satırı). Hepsi AYNI pencerede yazılır — biri unutulursa o bot 401.
+# ESKİ DEĞER referans kopyanın (Agent render hedefi) YEDEĞİNDEN okunur. Referans YOKSA (ilk değer henüz kasada değil —
+# Rol-1 G3b-R6: ilk değer RUNBOOK borusuyla konur, araçta "ilk kurulum" istisnası YOK) ESKİ değer uydurulmaz: kapı
+# yedekten ÖNCE durur, HİÇBİR ŞEY yazılmaz. Sır kasaya BAĞLIDIR; uyarı yazımdan ÖNCE `--api-sunucu --vault`u gösterir.
+api_sunucu() {
+  local ref_yol
+  echo "=== ROTASYON: API_SERVER_KEY (bot ağ geçidi dinleyici anahtarı — kök + sohbet profilleri + Telegram credential'ı) ==="
+  _agent_hedefi_uyarisi api-sunucu        # TSK-064 takip (2) — gerekçe `kapi()` şerhinde
+  [ "$KURU" = 0 ] || { _kuru_rapor api-sunucu; _api_sunucu_kanit_plani; return 0; }
+  ref_yol="$(_kopyalar | awk '$1=="api-sunucu" && !y {print $4; y=1}')"   # erken `exit` YOK: TABLO BORUSU şerhi (`_sohbet_satirlari` üstü)
+  sudo test -s "$KOK$ref_yol" \
+    || die "--api-sunucu ESKİ değer okunamaz: referans kopya ($ref_yol) YOK/boş — İLK değer kasaya RUNBOOK borusuyla
+     konur ve Vault Agent render eder (Rol-1 G3b-R6). HİÇBİR ŞEY yazılmadı (yedek dahil)."
+  _yedek_al api-sunucu
+  py cikar dosya "$YEDEK$ref_yol" - - "$ISLIK/eski"
+  _uret hex
+  _yaz api-sunucu
+  _yeniden_baslat api-sunucu
+  _api_sunucu_kanit "$ISLIK/yeni" "$ISLIK/eski"
+  _envanter_esitlik api-sunucu
+  echo ">> geri alma: $YEDEK altındaki $(_kopyalar | awk '$1=="api-sunucu"' | wc -l | tr -d ' ') kopyayı geri koy ve $(_recete_birimleri $(_birimler api-sunucu)) yeniden başlat"
+}
+
+#: Kanıt ucunun planı — kuru rapor gerçek koşumun ölçeceği yüzeyi söyler (bedel yasası: "ölçülemedi" de önceden görünür).
+_api_sunucu_kanit_plani() {
+  echo "  kanıt: botlar ETKİNSE GET $BOTLAR_KOK/health/detailed (Bearer) — yeni → 200 · eski → 401/403; etkin DEĞİLSE"
+  echo "         ölçülemez ve ADIYLA basılır (çıkış 0 — yeni değer birimin ilk açılışında okunur)"
+}
+
+# API SUNUCU KANITI — Hermes ağ geçidinin `GET /health/detailed` ucu Bearer İSTER (`GET /health` kimliksizdir ve yalnız
+# hazırlıktır — Rol-1 kaynak ölçümü 2026-09-30). Anahtar İSTEKTE geldiği için "eski değerle 401" DOĞRUDAN ölçülür
+# (`apisix_admin` emsali, negatif kontrol gerekmez); değer `curl -K` 0600 yapılandırmasından gider, argv'ye GİRMEZ (`_kod`).
+# Botlar ETKİN DEĞİLSE ölçülecek yüzey yoktur: satır DURUM ADIYLA "ölçülemedi" der ve çıkış 0'dır — birim G3c'ye dek etkin
+# değil ve yeni değeri İLK açılışında okur (kopyalar yazıldı, `_envanter_esitlik` eşitliği ayrıca ölçer). Telegram'ın kanıt
+# ucu YOK: credential doluluğu (etkinse) `_yeniden_baslat` içinde ölçülür.
+_api_sunucu_kanit() {
+  local durum
+  if sudo systemctl is-active --quiet meridian-botlar.service; then
+    _farksal "botlar /health/detailed" "$1" "$2" "$BOTLAR_KOK/health/detailed" "Authorization" "Bearer" "200" "401 403"
+    return 0
+  fi
+  # sessiz-yutma: `is-active` etkin OLMAYAN birimde 3 döner (beklenen); okunan şey DURUM ADIDIR ve okunamazsa satır
+  # "ÖLÇÜLEMEDİ" der — kanıt satırı bir durum UYDURMAZ.
+  durum="$(sudo systemctl is-active meridian-botlar.service || true)"
+  echo "  KANIT: ölçülemedi — meridian-botlar.service etkin değil (${durum:-ÖLÇÜLEMEDİ}); kopyalar YAZILDI, yeni değer"
+  echo "         birimin ilk açılışında okunur (değer-doğruluğu None)"
 }
 
 db() {
@@ -2286,7 +2428,7 @@ openrouter() {
     # /run/credentials · state/secrets.json) ancak bu adımdan sonra aynı değeri taşır.
     _yaz openrouter NOUS_API_KEY "$ISLIK/nous" "api"
   fi
-  echo ">> geri alma: $YEDEK altındaki kopyaları geri koy ve $(_birimler openrouter) yeniden başlat"
+  echo ">> geri alma: $YEDEK altındaki kopyaları geri koy ve $(_recete_birimleri $(_birimler openrouter)) yeniden başlat"
 }
 
 # =================================================================================================
@@ -2531,7 +2673,7 @@ _vault_kapsam_beyani() {
 #: yani `URET=1` iken buraya hiç ulaşmaz. `${URET:-0}`: fonksiyon çivilerde betikten KESİLİP koşar (v522 B3).
 _deger_kaynagi_beyani() {
   case "$1" in
-    kapi|tenant|db|dash|apisix-admin)
+    kapi|tenant|db|dash|apisix-admin|api-sunucu)
       if [ "${URET:-0}" = 1 ]; then
         echo "  · DEĞER KAYNAĞI: betik İÇİNDE üretilir (--uret) — eski yol (sudo $0 --$1) ile AYNI yöntem; SORULMAZ, hiçbir yere BASILMAZ."
       else
@@ -2676,18 +2818,29 @@ _render_bekle() {
 #: deposu) varsa iki kanal AÇIKTIR ve eski metin basılır; yoksa "TEK KANAL" — `--tenant` 2026-09-29'dan beri
 #: (`.key` + `.env-cp` emekli), `--dash` 2026-09-17'den beri (d-1) böyledir ve sabit "İKİ KANAL AÇIK" satırı orada
 #: YALAN olurdu. Tablodan türer (v590 C10).
+#: HERMES `.env` KOPYALARI KAPATILACAK ESKİ KANAL DEĞİLDİR (G3b, 2026-10-01): hermes-agent `.env.vault` OKUMAZ (ölçüldü
+#: 2026-09-15) ve kasadan beslenmesinin TEK yolu bu döngünün `.env`e yazmasıdır — C sınıfında iki-kanal KALICIDIR
+#: (envanter `vault_dosyalar` HERMES şerhi). Kiracı anahtarının sohbet kopyaları ve `api-sunucu`nun dört `.env` kopyası bu
+#: sınıftadır; onları "kapatılacak asıl dosya satırı" saymak `--tenant`e YALAN bir "İKİ KANAL AÇIK — kapatma adımı"
+#: bastırırdı. Sayılmazlar ama SUSULMAZ: TEK KANAL satırının altında sayıyla, KALICI diye söylenirler (bedel yasası).
+#: Sınıf yolla tanınır: rapor kökü `/home/ubuntu/.hermes/` ve sohbet kökü `$_SOHBET_KOKU/` (v604 B13).
 _kanal_beyani() {
-  local alt="$1" hedefler="$2" n
-  n="$(_kopyalar | awk -v a="$alt" -v h="$hedefler" '
+  local alt="$1" hedefler="$2" n m sayim
+  sayim="$(_kopyalar | awk -v a="$alt" -v h="$hedefler" -v s="$_SOHBET_KOKU/" '
     BEGIN { k = split(h, x, " "); for (i = 1; i <= k; i++) H[x[i]] = 1 }
-    $1 == a && !($4 in H) { c++ }
-    END { print c + 0 }')"
+    $1 == a && !($4 in H) {
+      if (index($4, "/home/ubuntu/.hermes/") == 1 || (s != "/" && index($4, s) == 1)) m++
+      else c++
+    }
+    END { print c + 0, m + 0 }')"
+  n="${sayim%% *}"; m="${sayim##* }"
   if [ "$n" -gt 0 ]; then
     echo ">> İKİ KANAL AÇIK: asıl dosyalardaki sır satırları DOKUNULMADAN duruyor. Kapatma AYRI bir"
     echo "   adımdır (≥2 gece sonra, yedekli) — geri alım: systemctl stop vault-agent + drop-in kaldır."
   else
     echo ">> TEK KANAL: --$alt kopyalarının HEPSİ Agent render hedefi; kapatılacak eski kanal YOK."
     echo "   Emekli kopyaların diskte kalıp kalmadığını --envanter ölçer."
+    [ "$m" = 0 ] || echo "   hermes .env kopyası ($m) KALICI rotasyon kanalıdır (C sınıfı — hermes .env.vault OKUMAZ); kapatılmaz."
   fi
 }
 
@@ -2898,7 +3051,8 @@ _genel_kasa_recetesi() {
         done <<< "$GENEL_KASA_SATIRLARI"
         echo "     2) render: kasadaki ESKİ değere BİREBİR olana kadar bekle:$hedefler"
         echo "     3) eski kanal: sudo cp -p $YEDEK/<yol> /<yol>   (yedek ağacı üretim yollarını AYNEN taşır; render hedefi 1–2 ile kasadan döner)"
-        echo "     4) sonra yeniden başlat: $birimler"
+        # shellcheck disable=SC2086
+        echo "     4) sonra yeniden başlat: $(_recete_birimleri $birimler)"
       } >&2 ;;
   esac
   return 0
@@ -3188,7 +3342,7 @@ CP_ESKI_KANAL_YOK_METNI="YOK — kopya tablosunda cp env satırı yok (TSK-064 i
 _cp_kasa_recetesi() {
   local birim eski_kanal
   birim="$(_sir_birimleri HINDSIGHT_CP_ACCESS_KEY || echo '(birim listesi ölçülemedi)')"
-  eski_kanal="$(_kopyalar | awk -v y="$YEDEK" '$1=="cp" && $3=="env" {printf "sudo cp -p %s%s %s", y, $4, $4; exit}')"
+  eski_kanal="$(_kopyalar | awk -v y="$YEDEK" '$1=="cp" && $3=="env" && !g {printf "sudo cp -p %s%s %s", y, $4, $4; g=1}')"
   [ -n "$eski_kanal" ] || eski_kanal="$CP_ESKI_KANAL_YOK_METNI — geri konacak dosya yok"
   case "$CP_KASA_EVRE" in
     yedek)
@@ -3250,7 +3404,7 @@ vault_cp_rotasyon() {
   # HİZA KAPISI (fail-closed; `--db --vault` emsali): bağ TEK satır ve takma adsız; kopya tablosunun
   # REFERANSI (ilk `cp` satırı) render hedefinin KENDİSİ. Ayrışma, kasaya yazılmış bir değerin YANLIŞ
   # dosyada beklenmesi demektir. v556 A1/A2 aynı hizayı statik ölçer.
-  read -r ref_tur ref_yol <<< "$(_kopyalar | awk '$1=="cp" {print $3, $4; exit}')"
+  read -r ref_tur ref_yol <<< "$(_kopyalar | awk '$1=="cp" && !y {print $3, $4; y=1}')"
   { [ "$(printf '%s\n' "$bagli" | awk 'NF' | wc -l | tr -d ' ')" = 1 ] && [ "$birincil" = "-" ] \
       && [ "$ref_tur" = dosya ] && [ "$ref_yol" = "$hedef" ]; } \
     || die "--cp --vault: envanter ↔ kopya tablosu AYRIŞTI (bağ TEK satır ve takma adsız olmalı; referans
@@ -3573,7 +3727,8 @@ esitle() {
   fi
   oldu "envanter: --$alt kopyaları EŞİT"
   echo "  yeniden başlatma YAPILMADI (eşitleme sözleşmesi). Yazılan sırların tüketici birimleri:"
-  for sir in $sirlar; do echo "    · $sir → $(_sir_birimleri "$sir")"; done
+  # shellcheck disable=SC2046
+  for sir in $sirlar; do echo "    · $sir → $(_recete_birimleri $(_sir_birimleri "$sir"))"; done
   echo "    (yazılan kopya bir birimin okuduğu dosyaysa o birim yeniden başlatılmalı; timer'lı oneshot ve"
   echo "     hermes CLI sonraki çağrıda okur — TSK-181 vakası: /home/ubuntu/.hermes/.env → hermes CLI, restart yok)"
   case "$alt" in
@@ -3599,13 +3754,13 @@ for _a in "$@"; do
     --esitle) ESITLE=1 ;;
     --vault) VAULT_KIP=1 ;;
     --uret) URET=1 ;;
-    --kapi|--tenant|--db|--dash|--openrouter|--apisix-admin|--cp|--envanter|--kopyalar)
+    --kapi|--tenant|--db|--dash|--openrouter|--apisix-admin|--cp|--api-sunucu|--envanter|--kopyalar)
       [ -z "$ALT" ] || die "iki alt komut verildi: --$ALT ve $_a — her koşum TEK sır döndürür"
       ALT="${_a#--}" ;;
-    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --envanter | --kopyalar [| --kuru | --esitle | --vault | --uret])" ;;
+    *) die "bilinmeyen argüman: $_a (--kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --envanter | --kopyalar [| --kuru | --esitle | --vault | --uret])" ;;
   esac
 done
-[ -n "$ALT" ] || die "alt komut ZORUNLU: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --envanter | --kopyalar (+ --kuru)"
+[ -n "$ALT" ] || die "alt komut ZORUNLU: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu | --envanter | --kopyalar (+ --kuru)"
 
 # `--kuru` YALNIZ ROTASYON alt komutlarında anlamlıdır. `--envanter`/`--kopyalar` bayrağı hiç
 # okumaz ve `--envanter --kuru` SESSİZCE tam envanteri koşardı: kuru koşum isteyen operatör
@@ -3613,19 +3768,19 @@ done
 # ama etkisizlik SÖYLENİR — sessiz kabul, olmayan bir sözleşmeyi var gibi gösterir.
 KURU_ONERILIR=0
 case "$ALT" in
-  kapi|tenant|db|dash|openrouter|apisix-admin|cp) KURU_ONERILIR=1 ;;
+  kapi|tenant|db|dash|openrouter|apisix-admin|cp|api-sunucu) KURU_ONERILIR=1 ;;
   *) [ "$KURU" = 0 ] || echo "!! --kuru bu alt komutta ETKİSİZDİR: --$ALT zaten hiçbir şey yazmaz." >&2 ;;
 esac
 # `--esitle` YALNIZ rotasyon alt komutlarıyla anlamlıdır: neyi eşitleyeceği kopya tablosunun
 # alt komut sütunundan gelir; `--envanter --esitle` ne ölçer ne yazar — sessiz kabul yerine dur.
 [ "$ESITLE" = 0 ] || [ "$KURU_ONERILIR" = 1 ] \
-  || die "--esitle yalnız rotasyon alt komutlarıyla: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp (+ --esitle [--kuru]); --$ALT ile anlamsız"
+  || die "--esitle yalnız rotasyon alt komutlarıyla: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu (+ --esitle [--kuru]); --$ALT ile anlamsız"
 # `--vault` de YALNIZ rotasyon alt komutlarıyla anlamlıdır ve `--esitle` ile BİRLİKTE VERİLEMEZ:
 # ikisi zıt yönlerdir. `--esitle` mevcut REFERANS kopyayı ötekilere taşır (değer üretilmez),
 # `--vault` YENİ bir değeri kasaya koyup oradan yayar. Sessizce biri ötekini yutarsa operatör
 # "eşitledim" sanarken taze bir anahtar yazılmış olurdu.
 [ "$VAULT_KIP" = 0 ] || [ "$KURU_ONERILIR" = 1 ] \
-  || die "--vault yalnız rotasyon alt komutlarıyla: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp (+ --vault [--kuru]); --$ALT ile anlamsız"
+  || die "--vault yalnız rotasyon alt komutlarıyla: --kapi | --tenant | --db | --dash | --openrouter | --apisix-admin | --cp | --api-sunucu (+ --vault [--kuru]); --$ALT ile anlamsız"
 [ "$VAULT_KIP" = 0 ] || [ "$ESITLE" = 0 ] \
   || die "--vault ile --esitle birlikte verilemez: biri KASADAN yeni değer yayar, öteki mevcut referansı kopyalara taşır"
 # `--uret` (TSK-226c, 2026-09-26) YALNIZ `--vault` ile ve YALNIZ genel kasa döngüsünün üreticileriyle anlamlıdır
@@ -3691,5 +3846,6 @@ case "$ALT" in
   openrouter) openrouter ;;
   apisix-admin) apisix_admin ;;
   cp)         cp_erisim ;;
+  api-sunucu) api_sunucu ;;
   envanter)   envanter ;;
 esac

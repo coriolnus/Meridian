@@ -135,6 +135,14 @@ template {
   error_on_missing_key = true
 }
 
+# api_server_key — tüketici: meridian-telegram.service (LoadCredential=API_SERVER_KEY, 55 drop-in) · bot ağ geçidi meridian-botlar.service DÖRT .env kopyasından (kök + sohbet profilleri; ROTASYON KANALIYLA — sir_rotasyon.sh --api-sunucu --vault kasadan gelen değeri yazar) · sir_rotasyon.sh --vault render kanıtı
+template {
+  contents    = "{{ with secret \"secret/data/meridian/api_server_key\" }}{{ .Data.data.value }}{{ end }}"
+  destination = "/etc/meridian/api_server_key"
+  perms       = 0400
+  error_on_missing_key = true
+}
+
 # /opt/apisix/.env-apisix.vault — tüketici: apisix.service (docker --env-file, ikinci dosya — drop-in 50-vault-yan-dosya.conf; root okur)
 template {
   contents    = <<EOT

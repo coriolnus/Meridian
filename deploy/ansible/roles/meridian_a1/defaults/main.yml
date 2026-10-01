@@ -72,6 +72,12 @@ dropin_dizinleri:
   # TSK-020 UYGULA-9 Faz A (2026-09-28): Grafana yönetici parolasının credential kanalı (drop-in birimin
   # yanında, `deploy/telemetri/`). Birim etkin değildir; kaynak yokken kurulması çalışan hiçbir şeyi durdurmaz.
   - meridian-grafana.service.d
+  # Konuşan filo Parça 1b G3b Task 2 (2026-10-01): bot ağ geçidi + Telegram dinleyicisinin credential drop-in'leri
+  # (kiracı anahtarı · Telegram'da ayrıca API_SERVER_KEY). İki birim de ETKİN DEĞİL (G3c); `API_SERVER_KEY` kaynağı
+  # bugün YOK ve kaynak yokken systemd yalnız O birimi başlatmaz — kurulum çalışan hiçbir şeyi durdurmaz.
+  # `izin_denetimli_sir_dosyalari`/`zorunlu_sir_dosyalari` DEĞİŞMEZ (Rol-1 G3b-R4: render kanıtı RUNBOOK `stat` adımı).
+  - meridian-botlar.service.d
+  - meridian-telegram.service.d
 
 # --- zorunlu sır dosyaları (Task 2 denetim.yml: yalnız stat+assert, DEĞER üretmez/okumaz) ---
 zorunlu_sir_dosyalari:
@@ -319,6 +325,8 @@ dropin_kaynaklari:
   - "{{ playbook_dir }}/../apisix/apisix.service.d/*.conf"
   - "{{ playbook_dir }}/../hindsight/hindsight-cp.service.d/*.conf"
   - "{{ playbook_dir }}/../telemetri/meridian-grafana.service.d/*.conf"
+  - "{{ playbook_dir }}/../oracle-a1/meridian-botlar.service.d/*.conf"
+  - "{{ playbook_dir }}/../oracle-a1/meridian-telegram.service.d/*.conf"
 
 # --- polkit kuralları (deploy.sh 6g + A1 ölçümü: /etc/polkit-1/rules.d'de 50 ve 51) ---
 polkit_kaynaklari:

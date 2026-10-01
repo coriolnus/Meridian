@@ -348,8 +348,13 @@ def test_E0_spec_ayristirici_POZITIF_KONTROL():
     # `/opt/hindsight/.env-cp` A1'den kaldırıldı (root-only yedek dizinine TAŞINDI, kalıcı silme yok) ve
     # `--envanter` "emekli kopya → YOK" dedi; spec §1 satırı (iki ad: HINDSIGHT_CP_ACCESS_KEY ·
     # HINDSIGHT_CP_DATAPLANE_API_KEY) ve envanter girdisi AYNI turda çıktı — D9 emsali ("dosya yok").
-    assert len(spec) == 5, spec
-    assert sum(len(v) for v in spec.values()) == 22
+    # D11 (G3b Task 2, 2026-10-01; spec §1 madde 9): 5 → 7 dosya, 22 → 26 ad — SAYILDI. Bot ağ geçidinin kök `.env`i
+    # (`API_SERVER_KEY`, +1) ve sohbet profili `.env` şablon satırı (`API_SERVER_KEY` · `HINDSIGHT_API_KEY` ·
+    # `BOT_KEY_<AD>`, +3). Kaynak: Hermes PROFİL kapsamı ölçümü (Rol-1 A1, 2026-09-30) — `API_SERVER_KEY` dört kopya. İki
+    # dosya A1'de BUGÜN YOK: satırların `mod / sahip` hücresi HEDEF beyanıdır, ölçüm değil (dosya yok ≠ satır yok:
+    # burada satır tasarımın beyanıdır ve dosya ilk tohumlandığında ölçümle düzeltilir).
+    assert len(spec) == 7, spec
+    assert sum(len(v) for v in spec.values()) == 26
     assert "/opt/hindsight/.env-cp" not in spec, "kaldırılmış dosya spec §1 tablosunda duruyor"
     assert ayar == 29 and siniflar == {"A", "B", "C", "D"}
     # SIR süzgecinin kendisi de pozitif kontrol ister: `sir` her yerde False dönseydi (regex

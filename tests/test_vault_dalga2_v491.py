@@ -94,6 +94,26 @@ HERMES_ENV_KOPYALARI = (
     "/home/ubuntu/.hermes/.env",
 )
 
+
+#: SOHBET `.env` KOPYALARI — G3b Task 2 (2026-10-01), `HERMES_ENV_KOPYALARI`nın emsali. Bot ağ geçidinin profilleri de
+#: hermes-agent'tır ve `.env.vault` OKUMAZ: kasadan beslenmelerinin TEK yolu `sir_rotasyon.sh --vault`ın kasadan gelen
+#: değeri `.env` satırlarına yazmasıdır — satır rotasyon tablosundan düşerse o kopya kasadan HİÇ beslenmez (TSK-181 sınıfı).
+#: `(yol, alan)` çiftleri ENVANTERDEN TÜREMEZ (envanterden bir satır düşünce çivi de küçülürdü) ama ELLE de yazılmaz:
+#: operatör kararı (2026-09-30, kadroda 21 bot) bot başı her listeyi TEK bot listesinden türetmeyi ister — kaynak A0 rolünün
+#: `sohbet_profil_adlari` + `sohbet_kok_dizini` değişkenleridir (envanterden BAĞIMSIZ bir dış çapa). Kök `.env`
+#: `API_SERVER_KEY`, her profil `API_SERVER_KEY` + `HINDSIGHT_API_KEY` (Hermes PROFİL kapsamı ölçümü, Rol-1 2026-09-30).
+#: Task 3 `BOT_KEY_<AD>` sohbet kopyalarını buraya ekler.
+def _sohbet_env_kopyalari() -> tuple[tuple[str, str], ...]:
+    d = yaml.safe_load((REPO / "deploy/ansible/roles/meridian_a1/defaults/main.yml").read_text(encoding="utf-8"))
+    kok = d["sohbet_kok_dizini"].replace("{{ meridian_kullanici }}", d["meridian_kullanici"])
+    profiller = [f"{kok}/profiles/{ad}/.env" for ad in d["sohbet_profil_adlari"]]
+    return (((f"{kok}/.env", "API_SERVER_KEY"),)
+            + tuple((y, "API_SERVER_KEY") for y in profiller)
+            + tuple((y, "HINDSIGHT_API_KEY") for y in profiller))
+
+
+SOHBET_ENV_KOPYALARI = _sohbet_env_kopyalari()
+
 #: AGENT ŞABLON SAYISI — DONUK. `template { … }` blokları: `vault_kv`nin kendi yolu olan 13
 #: girdisi (2026-09-28'e kadar 12) + üç yan dosya. Sayı ELLE durur çünkü B2/B3 hedefleri envanterden TÜRETİR ve envanter
 #: küçüldüğünde onlarla birlikte sessizce küçülürdü — "kaç şablon" sorusu bir kez, burada,
@@ -103,7 +123,10 @@ HERMES_ENV_KOPYALARI = (
 #: farkı `template_config`tir ve aşağıda ADIYLA ölçülür (B8).
 #: KARAR 2026-09-28 (TSK-020 UYGULA-9 Faz A): 15 → 16 — `vault_kv`ye `grafana_admin_parola` girdi (kendi yolu olan
 #: 13. tek-değer girdi; yan dosya sayısı 3 aynı). Tüketicisi `meridian-grafana.service` (LoadCredential).
-AGENT_SABLON_SAYISI = 16
+#: KARAR 2026-10-01 (G3b Task 2): 16 → 17 — `vault_kv`ye `api_server_key` girdi (bot ağ geçidinin dinleyici anahtarı;
+#: kendi yolu olan 14. tek-değer girdi, yan dosya 3 aynı). SAYILDI: üretilmiş `agent.hcl`de `^template {` = 17 (aynı gün).
+#: Tüketicisi `meridian-telegram.service` (LoadCredential, 55 drop-in) + bot ağ geçidinin `.env` kopyaları (rotasyon kanalı).
+AGENT_SABLON_SAYISI = 17
 
 #: AGENT BİRİMİNİN YETENEK KÜMESİ — DONUK, SIRALI ve TEK kalemli. Liste burada ELLE durur (yan
 #: dosya listesiyle aynı gerekçe): birimden türetilseydi çivi birimin söylediğini tekrarlar,
@@ -495,6 +518,39 @@ def test_A14_MUTASYON_hermes_kopya_satiri_silinirse_A13_KIRMIZI(tmp_path):
     assert "/home/ubuntu/.hermes/.env" not in yollar, (
         "MUTASYON ISIRMADI: kopya satırı silinmesine rağmen yol hâlâ kopya kümesinde — A13 "
         "başka bir dalı ölçüyor olabilir")
+
+
+def _sohbet_kanal_eksikleri(veri: dict) -> list[tuple[str, str]]:
+    """Kasaya BAĞLI bir sırrın rotasyon tablosunda `env` satırı OLMAYAN sohbet `.env` kopyaları."""
+    bagli = {g["rotasyon_siri"] for g in veri["vault_kv"] if g.get("rotasyon_siri")}
+    tablo = {(k["yol"], k.get("alan")) for k in veri["rotasyon_kopyalari"]["kopyalar"]
+             if k["tur"] == "env" and k["sir"] in bagli}
+    return [c for c in SOHBET_ENV_KOPYALARI if c not in tablo]
+
+
+def test_A15_SOHBET_env_KOPYALARI_kasaya_bagli_ROTASYON_kanalinda():
+    """A13'ün sohbet ikizi (G3b Task 2): yan dosya YOK (hermes `.env.vault` okumaz) ve her sohbet `.env` kopyası kasaya
+    BAĞLI bir sırrın rotasyon satırında — `--vault` kasadan gelen değeri oraya yazar. Kiracı kopyaları ayrıca takma adın
+    `kopya_kaynaklari`nda (A5 küme eşitliği)."""
+    assert len(SOHBET_ENV_KOPYALARI) >= 3, "sohbet kopya listesi boş/küçük — A0 değişkenleri okunamadı (pozitif kontrol)"
+    yan = [d["yol"] for d in _vault_dosyalar()]
+    assert not [y for y in yan if ".hermes-botlar" in y], f"sohbet yan dosyası envanterde: {yan}"
+    eksik = _sohbet_kanal_eksikleri(_envanter())
+    assert not eksik, f"sohbet KANALI kopmuş (kasaya bağlı rotasyon satırı yok): {eksik}"
+    kopya = _kopya_dosyalari()
+    tenant = [y for y, a in SOHBET_ENV_KOPYALARI if a == "HINDSIGHT_API_KEY"]
+    assert tenant and not [y for y in tenant if y not in kopya], "kiracı sohbet kopyası takma adın kopya_kaynaklari'nda yok"
+
+
+def test_A16_MUTASYON_sohbet_kopya_satiri_silinirse_A15_KIRMIZI(tmp_path):
+    """A15 ısırır: bir sohbet `HINDSIGHT_API_KEY` satırı rotasyon aynasından düşerse kanal eksiği ADIYLA görünür."""
+    ham = ENVANTER.read_text(encoding="utf-8")
+    yol = [y for y, a in SOHBET_ENV_KOPYALARI if a == "HINDSIGHT_API_KEY"][-1]
+    capa = f'      yol: "{yol}"\n      alan: HINDSIGHT_API_KEY\n'
+    assert ham.count(capa) == 1, f"mutasyon çapası envanterde tek değil (çivi bayatlamış): {capa!r}"
+    bozuk = ham.replace(capa, f'      yol: "{yol}"\n      alan: BASKA_ALAN\n', 1)
+    assert _sohbet_kanal_eksikleri(yaml.safe_load(bozuk)) == [(yol, "HINDSIGHT_API_KEY")], (
+        "MUTASYON ISIRMADI: sohbet satırı bozulduğu hâlde kanal eksiği görünmüyor")
 
 
 # =================================================================================================
@@ -1484,6 +1540,19 @@ def test_E8_KURU_kosum_HERMES_env_KOPYALARINI_PLANDA_gosterir(tmp_path):
         f"hermes `.env` kopyaları rotasyon planında GÖRÜNMÜYOR: {eksik}\n{r.stdout}")
     assert ".hermes/.env.vault" not in r.stdout, (
         f"emekli hermes YAN DOSYASI hâlâ planda:\n{r.stdout}")
+
+
+def test_E8b_KURU_kosum_SOHBET_env_KOPYALARINI_PLANDA_gosterir(tmp_path):
+    """E8'in sohbet ikizi (G3b Task 2): `--api-sunucu --vault --kuru` planı kasa yolunu ve dört `.env` kopyasını (kök +
+    sohbet profilleri) ADIYLA gösterir; kasaya çağrı yok."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    ortam, log = _vault_ortam(tmp_path, ortam, kok)
+    r = _kos(ROTASYON_SH, ortam, "--vault", "--api-sunucu", "--kuru")
+    assert r.returncode == 0, f"kuru koşum düştü:\n{r.stdout}\n{r.stderr}"
+    assert not log.exists(), "kuru koşum kasaya çağrı yaptı"
+    assert "kasaya yazılacak : secret/meridian/api_server_key" in r.stdout, r.stdout
+    eksik = [y for y, a in SOHBET_ENV_KOPYALARI if a == "API_SERVER_KEY" and y not in r.stdout]
+    assert not eksik, f"sohbet `.env` kopyaları rotasyon planında GÖRÜNMÜYOR: {eksik}\n{r.stdout}"
 
 
 # =================================================================================================

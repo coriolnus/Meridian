@@ -188,6 +188,39 @@ dosyalar:
       - ad: OPENROUTER_API_KEY
         sir: true
 
+  # ---- BOT AĞ GEÇİDİ — SOHBET KÖKÜ VE PROFİLLERİ (C sınıfı; G3b Task 2, 2026-10-01 — spec §1 madde 9 / D11) -------
+  # `meridian-botlar.service` tek Hermes sürecidir ve AYRI bir kökte (`~/.hermes-botlar`) çoklu profil kipinde koşar.
+  # PROFİL KAPSAMI ÖLÇÜLDÜ (Rol-1, A1 Hermes v0.19 kaynağı 2026-09-30): `/p/<ad>/` isteğinin anahtarı o profilin
+  # `.env`inden okunur (`agent/secret_scope.py` `get_secret`), süreç ortamına düşmez — `API_SERVER_KEY` bu yüzden DÖRT
+  # kopyadır (kök + profil başına bir), değer AYNI. Rotasyon kanalı `sir_rotasyon.sh --api-sunucu` / `--tenant`.
+  # `mod`/`sahip` ÖLÇÜM DEĞİL HEDEF beyanıdır: iki dosya da A1'de BUGÜN YOK (2026-09-30) — tohumlama 0600 ubuntu:ubuntu
+  # yazar; dosyalar ilk ölçüldüğü gün tarihle düzeltilir (uydurma yasağı: hedef, ölçülmüş gibi yazılmaz).
+  # `<…>` profil kümesi kabuğun `_SOHBET_BOTLARI` listesiyle eşittir (v604 B9).
+  - yol: "~/.hermes-botlar/.env"
+    mod: "600"                # HEDEF (dosya A1'de YOK, 2026-09-30)
+    sahip: "ubuntu"           # HEDEF
+    tuketici: "meridian-botlar.service (Hermes kök dinleyicisi — anahtarı AÇILIŞTA okur)"
+    sinif: "C"
+    kanal_bugun: "HERMES_HOME/.env (hermes env_loader)"
+    kanal_hedef: "DEĞİŞMEZ — rotasyon aracı yazar (hermes .env.vault OKUMAZ — ölçüldü 2026-09-15)"
+    degiskenler:
+      - ad: API_SERVER_KEY
+        sir: true
+  - yol: "~/.hermes-botlar/profiles/<bekci,karne,sef>/.env"
+    mod: "600"                # HEDEF (dosya A1'de YOK, 2026-09-30)
+    sahip: "ubuntu"           # HEDEF
+    tuketici: "meridian-botlar.service (sohbet profilleri /p/<ad>/ — PROFİL kapsamı, secret_scope)"
+    sinif: "C"
+    kanal_bugun: "HERMES_HOME/profiles/<ad>/.env (hermes secret_scope)"
+    kanal_hedef: "DEĞİŞMEZ — rotasyon aracı yazar (hermes .env.vault OKUMAZ — ölçüldü 2026-09-15)"
+    degiskenler:
+      - ad: API_SERVER_KEY
+        sir: true
+      - ad: HINDSIGHT_API_KEY
+        sir: true
+      - ad: BOT_KEY_<AD>
+        sir: true
+
 # =================================================================================================
 # ROTASYON KOPYALARI — ölçüm 2026-09-07 22:0xZ (A1, elle rotasyon penceresi; yalnız AD ve YOL)
 # =================================================================================================
@@ -216,7 +249,7 @@ dosyalar:
 # böylece HİÇ sorulmadan düştü: dosyanın okuyucusu kalmadı, sözlük esnetilmedi.
 
 rotasyon_kopyalari:
-  olcum: "2026-09-07 22:0xZ — A1, elle rotasyon penceresi (yalnız AD ve YOL okundu; değer basılmadı) · EK 2026-09-08 08:0xZ — /opt/hindsight/.env failover ÜYE anahtarları (altı satır) ölçüldü ve eklendi · EK 2026-09-26 (TSK-226b) — CP erişim anahtarının iki satırı DEPODAN türetildi (birim EnvironmentFile + vault_kv.hedef); A1'de yol/ad ÖLÇÜLMEDİ — ilk `--envanter` ölçer · EK 2026-09-29 (TSK-064 iki-kanal kapanışı) — `/opt/hindsight/.key` ve iki `/opt/hindsight/.env-cp` satırı `emekli_kopyalar`a taşındı (Rol-1 A1 ölçümü 2026-09-29: `.env-cp.vault` 0400 root, `.env-cp` ile AYNI iki ad) · EK 2026-09-29 11:32Z — `.key` ve `.env-cp` A1'den KALDIRILDI (yedek dizininin `orijinal/` alt dizinine TAŞINDI; `--envanter` iki emekli kopya için YOK dedi)"
+  olcum: "2026-09-07 22:0xZ — A1, elle rotasyon penceresi (yalnız AD ve YOL okundu; değer basılmadı) · EK 2026-09-08 08:0xZ — /opt/hindsight/.env failover ÜYE anahtarları (altı satır) ölçüldü ve eklendi · EK 2026-09-26 (TSK-226b) — CP erişim anahtarının iki satırı DEPODAN türetildi (birim EnvironmentFile + vault_kv.hedef); A1'de yol/ad ÖLÇÜLMEDİ — ilk `--envanter` ölçer · EK 2026-09-29 (TSK-064 iki-kanal kapanışı) — `/opt/hindsight/.key` ve iki `/opt/hindsight/.env-cp` satırı `emekli_kopyalar`a taşındı (Rol-1 A1 ölçümü 2026-09-29: `.env-cp.vault` 0400 root, `.env-cp` ile AYNI iki ad) · EK 2026-09-29 11:32Z — `.key` ve `.env-cp` A1'den KALDIRILDI (yedek dizininin `orijinal/` alt dizinine TAŞINDI; `--envanter` iki emekli kopya için YOK dedi) · EK 2026-10-01 (G3b Task 2) — bot ağ geçidi: `api-sunucu` (API_SERVER_KEY: render hedefi + kök + sohbet profili `.env`leri) ve kiracı anahtarının sohbet profili kopyaları DEPODAN türetildi (Hermes PROFİL kapsamı ölçümü, Rol-1 2026-09-30); A1'de dosyalar BUGÜN YOK — ilk `--envanter` ölçer; bot başı satırlar `ops/sir_envanteri_bot_uret.py` ile üretilir"
   kaynak_betik: "deploy/oracle-a1/sir_rotasyon.sh"
 
   kopyalar:
@@ -253,8 +286,41 @@ rotasyon_kopyalari:
         meridian-defter-ozeti-retain (timer'lı oneshot, 54 drop-in — restart YOK) · ~/bin/hafiza_sor.sh +
         ~/bin/sayfa_oku.sh (sudo -n cat borusu, 2026-09-29) — AYNI dosya · hindsight-cp.service (DATAPLANE
         değeri AYNI kasa yolunun yan dosyasından: .env-cp.vault → docker -e AD, değer ortamdan — argv'de yok;
-        Agent render eder, restart GEREKİR — 2026-09-29'a kadar ayrı `.env-cp` satırındaydı)"
-      not: "TEK KOPYA (2026-09-29, TSK-064 iki-kanal kapanışı): `/opt/hindsight/.key` dosya satırı ve `/opt/hindsight/.env-cp` [HINDSIGHT_CP_DATAPLANE_API_KEY] satırı ÇIKTI → `emekli_kopyalar`. CP bu değeri yan dosyadan (`.env-cp.vault`, takma ad `hindsight_cp_dataplane_api_key`) alır; rotasyon yan dosyaya YAZMAZ (Agent render eder, restart listesi hindsight-cp'yi taşır)"
+        Agent render eder, restart GEREKİR — 2026-09-29'a kadar ayrı `.env-cp` satırındaydı) · meridian-botlar.service +
+        meridian-telegram.service (54 drop-in, LoadCredential=HINDSIGHT_API_TENANT_API_KEY — G3b 2026-10-01; birim
+        YALNIZ ETKİNSE yeniden başlar, etkin değilse ATLANDI)"
+      not: "REFERANS (2026-10-01, G3b: kiracı anahtarının sohbet profili `.env` kopyaları hemen aşağıda, üreteçle). TEK KOPYA idi (2026-09-29, TSK-064 iki-kanal kapanışı): `/opt/hindsight/.key` dosya satırı ve `/opt/hindsight/.env-cp` [HINDSIGHT_CP_DATAPLANE_API_KEY] satırı ÇIKTI → `emekli_kopyalar`. CP bu değeri yan dosyadan (`.env-cp.vault`, takma ad `hindsight_cp_dataplane_api_key`) alır; rotasyon yan dosyaya YAZMAZ (Agent render eder, restart listesi hindsight-cp'yi taşır)"
+    # KİRACI ANAHTARININ SOHBET PROFİLİ KOPYALARI (G3b Task 2, 2026-10-01) — bot başı satırlar ÜRETİLİR: tek bot listesi
+    # kabuktaki `_SOHBET_BOTLARI`dır, satırları `sir_rotasyon.sh --kopyalar` basar ve `ops/sir_envanteri_bot_uret.py`
+    # bu bölgeye AYNEN aynalar (`--kontrol` çivisi v604 B12). Elle yazılan satır sayısı bot sayısıyla BÜYÜMEZ (operatör
+    # 2026-09-30). Hermes'in hafıza sağlayıcısı `HINDSIGHT_API_KEY`i profil `.env`inden AÇILIŞTA okur (çoklu kipte
+    # sırlar profil `.env`inde — PROFİL kapsamı); değer kiracı anahtarının kendisidir. Şablon satırı işaretçidedir.
+    # >>> ÜRETİLDİ kopyalar tenant HINDSIGHT_API_TENANT_API_KEY | tuketici: meridian-botlar.service (Hermes {ad} sohbet profili — hafıza sağlayıcısı HINDSIGHT_API_KEY'i profil .env'inden AÇILIŞTA okur; birim YALNIZ ETKİNSE yeniden başlar)
+    - alt_komut: tenant
+      sir: HINDSIGHT_API_TENANT_API_KEY
+      tur: env
+      yol: "/home/ubuntu/.hermes-botlar/profiles/sef/.env"
+      alan: HINDSIGHT_API_KEY
+      mod: null
+      sahip: null
+      tuketici: "meridian-botlar.service (Hermes sef sohbet profili — hafıza sağlayıcısı HINDSIGHT_API_KEY'i profil .env'inden AÇILIŞTA okur; birim YALNIZ ETKİNSE yeniden başlar)"
+    - alt_komut: tenant
+      sir: HINDSIGHT_API_TENANT_API_KEY
+      tur: env
+      yol: "/home/ubuntu/.hermes-botlar/profiles/bekci/.env"
+      alan: HINDSIGHT_API_KEY
+      mod: null
+      sahip: null
+      tuketici: "meridian-botlar.service (Hermes bekci sohbet profili — hafıza sağlayıcısı HINDSIGHT_API_KEY'i profil .env'inden AÇILIŞTA okur; birim YALNIZ ETKİNSE yeniden başlar)"
+    - alt_komut: tenant
+      sir: HINDSIGHT_API_TENANT_API_KEY
+      tur: env
+      yol: "/home/ubuntu/.hermes-botlar/profiles/karne/.env"
+      alan: HINDSIGHT_API_KEY
+      mod: null
+      sahip: null
+      tuketici: "meridian-botlar.service (Hermes karne sohbet profili — hafıza sağlayıcısı HINDSIGHT_API_KEY'i profil .env'inden AÇILIŞTA okur; birim YALNIZ ETKİNSE yeniden başlar)"
+    # <<< ÜRETİLDİ
 
     - alt_komut: db
       sir: HINDSIGHT_DB_PAROLA
@@ -500,6 +566,60 @@ rotasyon_kopyalari:
       sahip: "root"
       tuketici: "Vault Agent kanonik tek-değer kopyası — sir_rotasyon.sh --cp --vault render kanıtı ve --envanter/--esitle REFERANSI (CP bu dosyayı OKUMAZ) · hindsight-cp.service değeri AYNI kasa yolunun yan dosyasından alır: .env-cp.vault → docker -e AD, değer ortamdan — argv'de yok (Agent render eder, restart GEREKİR — 2026-09-29'a kadar ayrı `.env-cp` satırındaydı)"
       not: "REFERANS ve TEK kopya (2026-09-29, TSK-064 iki-kanal kapanışı: `.env-cp` satırı ÇIKTI → `emekli_kopyalar`): vault_kv.hindsight_cp_access_key.hedef (Agent render hedefi). Konteyner değeri YALNIZ .env-cp.vault yan dosyasından (drop-in 51, zorunlu) ortamla alır"
+
+    # ---- BOT AĞ GEÇİDİNİN DİNLEYİCİ ANAHTARI — `API_SERVER_KEY` (G3b Task 2, 2026-10-01) ------------------------------
+    # TEK SIR, DÖRT `.env` KOPYASI (Rol-1 G3b-R1). Ölçüm (Rol-1, A1 Hermes v0.19 kaynağı 2026-09-30):
+    # `gateway/platforms/api_server.py` `_expected_api_key` `/p/<profil>/…` isteğinin anahtarını O PROFİLİN kapsamından
+    # (`agent/secret_scope.py` `get_secret`) alır; çoklu kipte kapsam yetkilidir, `os.environ`a düşmez; anahtar yoksa ya
+    # da <16 karakterse 401. Kök `.env` dinleyicinin açılışıdır (`connect()` anahtarsız açmaz); profil `.env`leri
+    # `/p/<ad>/` istekleridir; Telegram dinleyicisi (`meridian/bot_kanal.py::HermesTasiyici`) AYNI değeri credential'dan
+    # okur (`meridian-telegram.service.d/55-api-sunucu-credential.conf`). REFERANS Vault Agent'ın render hedefidir
+    # (`vault_kv.api_server_key.hedef`; d-1 emsali) — ilk değer kasaya RUNBOOK borusuyla konur (Rol-1 G3b-R6).
+    # Botlar birimi bu anahtarı credential'dan OKUMAZ (profil kapsamı — v604 B8); restart birimleri yalnız ETKİNSE.
+    - alt_komut: api-sunucu
+      sir: API_SERVER_KEY
+      tur: dosya
+      yol: "/etc/meridian/api_server_key"
+      alan: null
+      mod: "400"
+      sahip: "root"
+      tuketici: "meridian-telegram.service (LoadCredential=API_SERVER_KEY, 55 drop-in — birim YALNIZ ETKİNSE yeniden başlar) · Vault Agent render hedefi — sir_rotasyon.sh --api-sunucu --vault render kanıtı ve --envanter/--esitle REFERANSI"
+      not: "REFERANS (2026-10-01): vault_kv.api_server_key.hedef (Agent render hedefi); A1'de dosya BUGÜN YOK (2026-09-30) — ilk değer RUNBOOK borusuyla kasaya, Agent render eder"
+    - alt_komut: api-sunucu
+      sir: API_SERVER_KEY
+      tur: env
+      yol: "/home/ubuntu/.hermes-botlar/.env"
+      alan: API_SERVER_KEY
+      mod: null                # korunur (mevcut izin okunur) — hedef 600 ubuntu, `dosyalar:` bloğu
+      sahip: null
+      tuketici: "meridian-botlar.service (Hermes kök dinleyicisi — anahtarı AÇILIŞTA okur; birim YALNIZ ETKİNSE yeniden başlar)"
+    # Sohbet profili kopyaları — bot başı satırlar ÜRETİLİR (yukarıdaki kiracı bölgesinin şerhi; `_SOHBET_BOTLARI`).
+    # >>> ÜRETİLDİ kopyalar api-sunucu API_SERVER_KEY | tuketici: meridian-botlar.service (Hermes {ad} sohbet profili — /p/{ad}/ isteğinin anahtarı PROFİL kapsamından, AÇILIŞTA okunur; birim YALNIZ ETKİNSE yeniden başlar)
+    - alt_komut: api-sunucu
+      sir: API_SERVER_KEY
+      tur: env
+      yol: "/home/ubuntu/.hermes-botlar/profiles/sef/.env"
+      alan: API_SERVER_KEY
+      mod: null
+      sahip: null
+      tuketici: "meridian-botlar.service (Hermes sef sohbet profili — /p/sef/ isteğinin anahtarı PROFİL kapsamından, AÇILIŞTA okunur; birim YALNIZ ETKİNSE yeniden başlar)"
+    - alt_komut: api-sunucu
+      sir: API_SERVER_KEY
+      tur: env
+      yol: "/home/ubuntu/.hermes-botlar/profiles/bekci/.env"
+      alan: API_SERVER_KEY
+      mod: null
+      sahip: null
+      tuketici: "meridian-botlar.service (Hermes bekci sohbet profili — /p/bekci/ isteğinin anahtarı PROFİL kapsamından, AÇILIŞTA okunur; birim YALNIZ ETKİNSE yeniden başlar)"
+    - alt_komut: api-sunucu
+      sir: API_SERVER_KEY
+      tur: env
+      yol: "/home/ubuntu/.hermes-botlar/profiles/karne/.env"
+      alan: API_SERVER_KEY
+      mod: null
+      sahip: null
+      tuketici: "meridian-botlar.service (Hermes karne sohbet profili — /p/karne/ isteğinin anahtarı PROFİL kapsamından, AÇILIŞTA okunur; birim YALNIZ ETKİNSE yeniden başlar)"
+    # <<< ÜRETİLDİ
 
   # =================================================================================================
   # EMEKLİ KOPYALAR — TSK-064 iki-kanal kapanışı (2026-09-29; Rol-1 kararı, dash-token (d-1) üslubu)
@@ -861,6 +981,18 @@ vault_kv:
     tuketici: "vault_dosyalar şablonu (/opt/hindsight/.env-cp.vault) — TAKMA AD: kasa yolu ve render kanıtı BİRİNCİLİNDİR (HINDSIGHT_API_TENANT_API_KEY)"
     rotasyon_siri: HINDSIGHT_API_TENANT_API_KEY
     kaynak: {tur: dosya, dosya: "/etc/hindsight/creds/HINDSIGHT_API_TENANT_API_KEY", alan: null, onek: null}
+    # 2026-10-01 (G3b Task 2): `kopya_kaynaklari` GERİ GELDİ — kiracı anahtarının sohbet profili `.env` kopyaları
+    # (`HINDSIGHT_API_KEY`) rotasyon tablosuna girdi ve v491 A5 bu takma adın kaynak+kopya kümesini tabloyla BİREBİR
+    # eşitler. Satırlar bot başına ÜRETİLİR (`ops/sir_envanteri_bot_uret.py`, kaynağı `sir_rotasyon.sh --kopyalar`).
+    # BEDEL (bedel yasası): `vault_sir_koy.sh` bu takma adın eşitlik kapısında bu dosyaları da okur — dosyalar
+    # yokken (A1 bugün, tohumlama öncesi) "kopya OKUNAMADI" ile DURUR. Yalnız sıfırdan kasa tohumlamasında koşar;
+    # A1'de kasa 2026-09-14'ten beri dolu, betik yeniden koşulmaz.
+    kopya_kaynaklari:
+      # >>> ÜRETİLDİ kopya_kaynaklari HINDSIGHT_API_TENANT_API_KEY
+      - {tur: env_satiri, dosya: "/home/ubuntu/.hermes-botlar/profiles/sef/.env", alan: HINDSIGHT_API_KEY, onek: null}
+      - {tur: env_satiri, dosya: "/home/ubuntu/.hermes-botlar/profiles/bekci/.env", alan: HINDSIGHT_API_KEY, onek: null}
+      - {tur: env_satiri, dosya: "/home/ubuntu/.hermes-botlar/profiles/karne/.env", alan: HINDSIGHT_API_KEY, onek: null}
+      # <<< ÜRETİLDİ
 
   # ---- TELEMETRİ (TSK-020 UYGULA-9 Faz A, 2026-09-28) --------------------------------------------
   # Grafana yönetici parolası — YENİ bir sır: taşınacak eski dosya YOK, `kaynak:` taşımaz (dalga-1 biçimi;
@@ -876,6 +1008,23 @@ vault_kv:
     mod: "0400"
     sahip: "root"
     tuketici: "meridian-grafana.service (LoadCredential=grafana_admin_parola → tmpfs kopya → GF_SECURITY_ADMIN_PASSWORD__FILE; Grafana YALNIZ ilk açılışta okur)"
+
+  # ---- BOT AĞ GEÇİDİ — DİNLEYİCİ ANAHTARI (konuşan filo Parça 1b G3b Task 2, 2026-10-01) -------------------------------
+  # YENİ bir sır: taşınacak eski dosya YOK → `kaynak:` taşımaz (dalga-1 biçimi, grafana emsali; bağın tablo tutarlılığı
+  # REFERANS ile ölçülür — v491 A5 dalga-1 dalı: tablodaki İLK satır bu girdinin `hedef`i). Grafana'dan FARKI: değer
+  # DÖNER (`rotasyon_siri: API_SERVER_KEY`, `sir_rotasyon.sh --api-sunucu [--vault]`) — Hermes dinleyicisi anahtarı
+  # açılışta okur, yeni değer restart'la yürürlüğe girer. İLK değeri Rol-1/operatör doğrudan kasaya koyar (RUNBOOK
+  # borusu; değer hiçbir çıktıya basılmaz — Rol-1 G3b-R6); araca "ilk kurulum" istisnası YOK. A0 izin denetimi
+  # listesine GİRMEZ (Rol-1 G3b-R4: birimler etkin değil; render kanıtı RUNBOOK `stat` adımı).
+  # TÜKETİCİLER: Telegram dinleyicisi credential'dan (55 drop-in); bot ağ geçidi DÖRT `.env` kopyasından (kök + sohbet
+  # profilleri — Hermes PROFİL kapsamı, rotasyon kanalıyla; hermes `.env.vault` OKUMAZ — ölçüldü 2026-09-15).
+  - ad: api_server_key
+    vault_yolu: "secret/meridian/api_server_key"
+    hedef: "/etc/meridian/api_server_key"
+    mod: "0400"
+    sahip: "root"
+    tuketici: "meridian-telegram.service (LoadCredential=API_SERVER_KEY, 55 drop-in) · bot ağ geçidi meridian-botlar.service DÖRT .env kopyasından (kök + sohbet profilleri; ROTASYON KANALIYLA — sir_rotasyon.sh --api-sunucu --vault kasadan gelen değeri yazar) · sir_rotasyon.sh --vault render kanıtı"
+    rotasyon_siri: API_SERVER_KEY
 
 # =================================================================================================
 # VAULT YAN DOSYALARI — sır-yalnız `<dosya>.vault` (TSK-064 Faz-2 DALGA-2, 2026-09-14)

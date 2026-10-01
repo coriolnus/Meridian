@@ -58,10 +58,13 @@ BAGLI_HEDEFLER = {
     #: bağsız sınıftan (A4'ün eski pini, `DB_BLOK`) bağlı sınıfa geçti ve `--db --vault`u gösterir.
     #: Render hedefi `url` kopyasıdır (DSN'in TAMAMI render edilir, sır onun parola alanı).
     "db": {("HINDSIGHT_DB_PAROLA", "/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL")},
+    #: 2026-10-01 (G3b Task 2): bot ağ geçidinin dinleyici anahtarı — referans Agent render hedefi, kasaya BAĞLI.
+    "api-sunucu": {("API_SERVER_KEY", "/etc/meridian/api_server_key")},
 }
 #: Eski yolun değeri betik İÇİNDE ürettiği alt komutlar (`_uret`) — ELLE. B3 bu kümeyi betiğin
 #: fonksiyon gövdelerinden ve `_deger_kaynagi_beyani`nin ölçülen davranışından AYRICA türetir.
-DEGER_URETEN = {"kapi", "tenant", "db", "dash", "apisix-admin"}
+#: 2026-10-01 (G3b Task 2): `api-sunucu` eski yolu değeri `_uret hex` ile üretir (tenant emsali).
+DEGER_URETEN = {"kapi", "tenant", "db", "dash", "apisix-admin", "api-sunucu"}
 
 BAGLI_SINIF = "sır kasaya BAĞLI (bu ESKİ yol)"
 BAGSIZ_SINIF = "kasaya BAĞLI DEĞİL"
@@ -286,9 +289,18 @@ def test_A6_TARAMA_YAPILAMAZSA_bagli_alt_komutta_da_OLCULEMEDI_eski_yol_KESILMEZ
     assert "yeniden başlatılacak: meridian.service" in r.stdout, r.stdout
 
 
+def _tablo_cekirdegi(betik: pathlib.Path) -> str:
+    """`_kopyalar` TEK BAŞINA kesilemez (G3b Task 2, 2026-10-01): bot başı satırlar `_SOHBET_BOTLARI` döngüsünden
+    (`_sohbet_satirlari`) türer. Kesilen tablo iki sabiti + yardımcıyı taşımazsa satırlar SESSİZCE eksik kalırdı."""
+    ham = betik.read_text(encoding="utf-8")
+    sabitler = "".join(re.search(rf'^{ad}="[^"]*"$', ham, re.M).group(0) + "\n"
+                       for ad in ("_SOHBET_KOKU", "_SOHBET_BOTLARI"))
+    return sabitler + _fonksiyon("_sohbet_satirlari", betik) + _fonksiyon("_kopyalar", betik)
+
+
 def _bagsiz_kes(betik: pathlib.Path, alt: str,
                 envanter: pathlib.Path = ENVANTER) -> subprocess.CompletedProcess:
-    kod = (_fonksiyon("_kopyalar", betik) + _fonksiyon("_agent_hedefleri", betik)
+    kod = (_tablo_cekirdegi(betik) + _fonksiyon("_agent_hedefleri", betik)
            + _fonksiyon("_bagsiz_agent_hedefleri", betik)
            + 'set -euo pipefail\n_bagsiz_agent_hedefleri "$1"\n')
     return subprocess.run(["bash", "-c", kod, "_", alt], capture_output=True, text=True,
@@ -348,7 +360,7 @@ def test_B2_KASA_GERCEK_istem_noktasinda_beyan_ve_DEGER_BASILMAZ(tmp_path, alt, 
 def _uret_cagiran_altlar(betik: pathlib.Path = BETIK) -> set[str]:
     """Eski yol fonksiyon GÖVDELERİNDEN türetilir: `_uret` çağıran alt komutlar."""
     out = set()
-    for alt in ("kapi", "tenant", "db", "dash", "openrouter", "apisix-admin"):
+    for alt in ("kapi", "tenant", "db", "dash", "openrouter", "apisix-admin", "api-sunucu"):
         if re.search(r"^\s*_uret\s+\w+", _fonksiyon(alt.replace("-", "_"), betik), re.M):
             out.add(alt)
     return out
@@ -358,7 +370,7 @@ def _beyan_basan_altlar(betik: pathlib.Path = BETIK) -> set[str]:
     """`_deger_kaynagi_beyani`nin ÖLÇÜLEN davranışı: hangi alt komutta satır basıyor."""
     kod = _fonksiyon("_deger_kaynagi_beyani", betik) + 'for a in "$@"; do [ -z "$(_deger_kaynagi_beyani "$a")" ] || echo "$a"; done\n'
     r = subprocess.run(["bash", "-c", kod, "sir_rotasyon.sh", "kapi", "tenant", "db", "dash",
-                        "openrouter", "apisix-admin"], capture_output=True, text=True)
+                        "openrouter", "apisix-admin", "api-sunucu"], capture_output=True, text=True)
     assert r.returncode == 0, r.stderr
     return set(r.stdout.split())
 
@@ -416,7 +428,10 @@ MESAJ_CAGRILARI = (
     ('    _deger_kaynagi_beyani "$alt"          #', "    :          #"),
     ("    YAZIM_AKISI=kasa\n", "    :\n"),
 )
-LOGLAR = ("kok/.sahte/argv.log", "kok/.sahte/url.log", "kok/.sahte/systemctl.log", "kasa_argv.log")
+#: `is_active.log` (G3b Task 1/2): şimin `systemctl is-active` soru günlüğü — kuru rapor koşullu birimin durumunu SORAR
+#: (yazmaz); günlük ölçüm aracıdır, argv/systemctl günlükleriyle aynı sınıf.
+LOGLAR = ("kok/.sahte/argv.log", "kok/.sahte/url.log", "kok/.sahte/systemctl.log", "kasa_argv.log",
+          "kok/.sahte/is_active.log")
 
 
 def _norm(metin: str, dizin: pathlib.Path, betik: pathlib.Path) -> str:
@@ -575,7 +590,9 @@ def test_M7_MUT_kasa_BAGLAMI_atanmazsa_C1_KIRMIZI(tmp_path):
 
 
 def test_M8_MUT_beyan_kumesinden_bir_alt_DUSERSE_B3_KIRMIZI(tmp_path):
-    m = _mutant(tmp_path, ("    kapi|tenant|db|dash|apisix-admin)\n", "    kapi|tenant|db|apisix-admin)\n"),
+    # 2026-10-01 (G3b Task 2): çapa `api-sunucu`yu taşır (beyan kümesi + eski yol `_uret hex`).
+    m = _mutant(tmp_path, ("    kapi|tenant|db|dash|apisix-admin|api-sunucu)\n",
+                           "    kapi|tenant|db|apisix-admin|api-sunucu)\n"),
                 ad="m8.sh")
     assert _beyan_basan_altlar(m) != _uret_cagiran_altlar(m), "MUTASYON ISIRMADI"
 

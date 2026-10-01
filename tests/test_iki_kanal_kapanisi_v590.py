@@ -349,7 +349,12 @@ def test_B5_STATIK_eski_yol_YOK_sudo_cagrisi_SABIT_ve_iki_betikte_AYNI():
 def test_C1_KOPYA_TABLOSUNDA_emekli_yol_YOK_tenant_ve_cp_TEK_referans():
     k = v447._betik_kopyalari()
     assert not [x["yol"] for x in k if x["yol"] in EMEKLI_YOLLAR], "emekli yol kopya tablosunda"
-    assert [(x["tur"], x["yol"]) for x in k if x["alt"] == "tenant"] == [("dosya", KAYNAK)]
+    # 2026-10-01 (G3b Task 2): `--tenant`in REFERANSI yine TEK render hedefidir; ardından yalnız kiracı anahtarının sohbet
+    # profili `.env` kopyaları gelir (bot listesinden türer — emekli yol DEĞİL, Hermes PROFİL kapsamı).
+    tenant = [(x["tur"], x["yol"]) for x in k if x["alt"] == "tenant"]
+    assert tenant[0] == ("dosya", KAYNAK), tenant
+    assert len(tenant) == 1 + len(v447.SOHBET_BOTLARI) and len(v447.SOHBET_BOTLARI) >= 1, tenant
+    assert all(tur == "env" and yol.startswith(f"{v447.SOHBET_KOKU}/profiles/") for tur, yol in tenant[1:]), tenant
     assert [(x["tur"], x["yol"]) for x in k if x["alt"] == "cp"] == [("dosya", KANON_CP)]
 
 
@@ -473,12 +478,17 @@ def test_C9_DOSYALAR_blogu_ve_SPEC_env_cp_CIKTI_emekli_kayit_KALDIRMAYI_tasir():
 def test_C10_VAULT_DONGUSU_tenant_TEK_KANAL_der(tmp_path):
     """Kapanan sırda "İKİ KANAL AÇIK" satırı YALAN olurdu — satır kopya tablosundan türer: render hedefi
     DIŞINDA kopyası kalmayan alt komut "TEK KANAL" der (kuru plan değil, gerçek döngünün son satırı)."""
-    kod = subprocess.run(["bash", "-c", _fonksiyon("_kanal_beyani") + "\n" + _fonksiyon("_kopyalar")
+    # 2026-10-01 (G3b Task 2): `_kopyalar` artık bot listesi döngüsünü (`_sohbet_satirlari` · `_SOHBET_BOTLARI`) çağırır;
+    # tek fonksiyon kesmek tabloyu SESSİZCE eksik bırakırdı ("command not found" stderr'de, çıkış 0). Tablo betiğin KENDİ
+    # `--kopyalar` çıktısından gelir (v447 `_betik_kopyalari` gerekçesi); kök sabiti `_kanal_beyani`nin hermes süzgeci için.
+    on = (f'_kopyalar() {{ bash "{BETIK}" --kopyalar; }}\n'
+          + re.search(r'^_SOHBET_KOKU="[^"]*"$', BETIK.read_text(encoding="utf-8"), re.M).group(0) + "\n")
+    kod = subprocess.run(["bash", "-c", on + _fonksiyon("_kanal_beyani")
                           + '\n_kanal_beyani "$1" "$2"\n', "_", "tenant", KAYNAK],
                          capture_output=True, text=True)
-    assert kod.returncode == 0, kod.stderr
+    assert kod.returncode == 0 and kod.stderr == "", kod.stderr
     assert kod.stdout.startswith(">> TEK KANAL"), kod.stdout
-    kod2 = subprocess.run(["bash", "-c", _fonksiyon("_kanal_beyani") + "\n" + _fonksiyon("_kopyalar")
+    kod2 = subprocess.run(["bash", "-c", on + _fonksiyon("_kanal_beyani")
                            + '\n_kanal_beyani "$1" "$2"\n', "_", "kapi", "/etc/meridian/kapi_apikey"],
                           capture_output=True, text=True)
     assert kod2.stdout.startswith(">> İKİ KANAL AÇIK"), kod2.stdout
