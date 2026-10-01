@@ -174,3 +174,17 @@ karar_notlari:
     - "S3 KARAR (operatör 2026-09-30 19:1xZ): KILL çıkarsa Rol-1 piyasa kapalıyken kolu kapatır (işçi yeniden başlatması) ve anında push bildirimi atar — operatör onayı ÖNCEDEN verildi"
 
 cost_model: yok   # icra ölçümü değil; bedel: alet olay-başı eki + seans başına tek toplu defter yazımı (boyut ADIM-0c) — beyanli_sinirlar(4)
+
+netlestirme_2026_10_01: >
+  (Rol-1, 2026-10-01 08:0xZ — ADIM-0 ÖNCESİ TANIM NETLEŞTİRMESİ; eşik, K, kill-list DEĞİŞMEDİ; hüküm betiği
+  research/olcumler/exe012_kill1_canli/hukum.py B dilimi raporu "Rol-1 kararı" maddeleri) (1) "seans içinde yeniden başlatma
+  yok" → süreç başlangıcı seans AÇILIŞINDAN (09:30 ET) sonra ise seans temiz DEĞİL (betik `--yeniden-baslatma-esigi acilis`;
+  09:45 giriş penceresi yorumu daha gevşek olduğu için seçilmedi — ölçüm aleti eşikten geçme yönünde sapmasın). (2) Geçerlilik
+  üçlü hükümden ÖNCE uygulanır: kill-list'in "yazım < n_yazim_min → ÖLÇÜLEMEDİ" maddesi PK bölümündeki "R > tavan → her durumda
+  KILL" cümlesinden önce gelir; nihai hüküm ÖLÇÜLEMEDİ olur, üçlü sonuç (`tavan_asildi`) yine raporlanır; PK beklentileri üçlü
+  sonuca karşı okunur (NK kol kapalı → yazım 0 → nihai ÖLÇÜLEMEDİ, üçlü YEŞİL — beklenen). (3) Yazım sayısı birimi kartın
+  harfiyle "defter satırı"; olay sayısı yanında raporlanır. (4) İkinci bakış = toplam 40 temiz seans (ilk 20 + 20). (5) Kusurlu
+  tanığın kök nedeni karta yazılmadan o seans hükme GİRMEZ (betik `--kusurlu-kok-neden-kartta`). (6) Tanık sınırları erken kapanış
+  günlerinde takvim kapanışı (13:00 ET). (7) Betik A1'de piyasa SAATLERİ DIŞINDA koşulur (B=10.000 ~20 s CPU — ölçtüğü p95'i
+  şişirmesin). (8) ADIM-0 donmasında içerik-adresli çapalar YENİ bloblarla yazılır: meridian/intraday_cycle.py, meridian/gecikme.py,
+  meridian/olcum_araclari.py, meridian/faz5_cikis.py, tests/test_golge_planli_kol_v217.py (_p95 gövdesi taşındı), hukum.py.
