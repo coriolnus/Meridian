@@ -80,10 +80,12 @@
 #                                           koşumun yedeğindeki (`/root/sir-yedek-<UTC ts>-<alt>/`) kopyaları üretim
 #                                           yollarına geri koyar — YALNIZ o alt komutun tablo yolları (alt komut dizin
 #                                           adından), bağ İZLEMEDEN (yardımcının fd-tabanlı yazım çekirdeği), mod/sahip
-#                                           yedekten. Kasa yedeği (`vault/`) GİRMEZ (kasa reçetesinin işi). Restart
-#                                           YAPMAZ, birim listesini basar. Bağlı/reddedilen hedef ADIYLA söylenir, öteki
-#                                           dosyalar yine geri konur (çıkış 1). Bütün geri alma reçeteleri bunu gösterir.
-#                                           `--kuru` ile (geri konacak yollar, yazım yok).
+#                                           yedekten. Kasa yedeği (`vault/`) GİRMEZ (kasa reçetesinin işi). DOSYA BÜTÜN
+#                                           DÖNER: yedekten sonra değişmiş BAŞKA alanların ADLARI basılır (değer asla).
+#                                           Yazmadan ÖNCE mevcut hâli yeni bir yedeğe alır (yolu basılır — geri almanın
+#                                           geri alınması o yedekten). Restart YAPMAZ, birim listesini basar. Yazımda
+#                                           reddedilen hedef ADIYLA söylenir, ötekiler geri konur (çıkış 1); geri konacak
+#                                           dosya YOKSA çıkış 1. Bütün geri alma reçeteleri bunu gösterir. `--kuru` ile.
 #   ... --kuru                            → KURU KOŞUM: ne yazılacağını + hangi birimin yeniden
 #                                           başlayacağını listeler, HİÇBİR ŞEY yazmaz
 #   (koşullu birim) `_KOSULLU_BIRIMLER` YALNIZ ETKİNSE yeniden başlar; değilse "ATLANDI (etkin değil: <durum>)"
@@ -1345,6 +1347,34 @@ def _kopyala(kaynak: str, hedef: str) -> None:
     _atomik_yaz(hedef, icerik, k.st.st_mode & 0o7777, (k.st.st_uid, k.st.st_gid))
 
 
+def _guvenli_metin(yol: str) -> str:
+    """Bağ İZLEMEDEN ve FIFO'da askıda kalmadan okunan metin — yazımın denetim gövdesi (`_hedef_ac` koru + `_tanitictan_oku`).
+    Yalnız `alan-farki` okur (TSK-261 inceleme I2: `--geri-al`ın "dosyanın tamamı döner" uyarısı); ret adlı iletiyle çıkıştır."""
+    h = _hedef_ac(yol, "koru", "koru")
+    if isinstance(h, str):
+        sys.exit(f"{h} — okunmadı, alan farkı ÖLÇÜLEMEDİ")
+    try:
+        return _tanitictan_oku(h)
+    finally:
+        os.close(h.dfd)
+
+
+def _alan_haritasi(tur: str, ham: str) -> dict[str, str]:
+    """Çok anahtarlı bir kopyanın `ad → ham değer` haritası (YALNIZ kıyas için — hiçbir çıktıya girmez). `env`: `^AD=` satırları
+    (aynı ad birden çok kez geçerse hepsi birleşir: çift satır da fark sayılır); `api`: motor deposunun (JSON) üst düzey anahtarları."""
+    if tur == "api":
+        veri = json.loads(ham)
+        if not isinstance(veri, dict):
+            sys.exit("motor deposu JSON sözlüğü değil — alan farkı ÖLÇÜLEMEDİ")
+        return {k: json.dumps(v, sort_keys=True) for k, v in veri.items()}
+    harita: dict[str, str] = {}
+    for satir in ham.splitlines():
+        m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$", satir)
+        if m:
+            harita[m.group(1)] = harita.get(m.group(1), "") + "\0" + m.group(2)
+    return harita
+
+
 class AlanArizasi(Exception):
     """`^<alan>=` satırı 0 ya da >1 kez var. AYRI BİR SINIFTIR, `OSError` DEĞİL: envanter iki
     dünyayı ayırt edebilsin diye. İlk tur `var`/`esit` işlemleri `SystemExit`i de yutuyordu ve
@@ -1633,6 +1663,19 @@ def main(argv: list[str]) -> None:
         # Kabuğun BÜTÜN kopya yolları (yedek · negatif kontrol yedeği ve geri alması · `--db` eski DSN · `--geri-al`) buradan
         # geçer; kabukta root `cp` KALMADI (v611 F1s). Başarıda hiçbir şey basılmaz; ret adlı iletiyle (`_kopyala`).
         _kopyala(*argv[2:4])
+    elif op == "alan-farki":         # <env|api> <yedek> <güncel> [hariç alan…] → AYNI | FARKLI: <ad…> — DEĞER BASILMAZ
+        # `--geri-al` (TSK-261 inceleme I2): çok anahtarlı bir dosya BÜTÜN döner; yedekten sonra değişmiş BAŞKA alanların (geri
+        # alınan alt komutun kendi alanları HARİÇ) ADLARI önceden söylenir. Yalnız adlar basılır; değerler yalnız kıyaslanır.
+        tur, yedek, guncel = argv[2:5]
+        haric = set(argv[5:])
+        try:
+            a = _alan_haritasi(tur, _guvenli_metin(yedek))
+            b = _alan_haritasi(tur, _guvenli_metin(guncel))
+        except ValueError as hata:
+            # Yasa 4 — sessiz değil: UTF-8 dışı bayt ya da bozuk JSON ADIYLA çıkıştır; çağıran "ÖLÇÜLEMEDİ" der.
+            sys.exit(f"alan farkı ÖLÇÜLEMEDİ ({type(hata).__name__}) — değer basılmadı")
+        fark = sorted(ad for ad in set(a) | set(b) if ad not in haric and a.get(ad) != b.get(ad))
+        print(f"FARKLI: {' '.join(fark)}" if fark else "AYNI")
     elif op == "hedef-denetle":      # <hedef> <mod> <sahip> → TAMAM | RED: <neden> — YAZIM YOK
         # Rotasyonun yazım ÖNCESİ ön-denetimi (`_hedef_on_denetim`, TSK-260): yazımın koşacağı AYNI gövde (`_hedef_ac` —
         # zincir bağ izlenmeden · bileşen izin/sahip · hedef bağ/normal dosya). Bağlı ya da gevşek bir hedef rotasyonu
@@ -1764,7 +1807,7 @@ _yedek_al() {
       sudo install -d -m 0700 -o root -g root "$aday$(dirname "$yol")"
       py kopyala "$hedef" "$aday$yol" \
         || die "yedek ALINAMADI: $yol — kaynak bağ İZLENMEDEN okunamadı (yardımcının adlı reddi yukarıda).
-     Rotasyon BAŞLAMADI: hiçbir kopya yazılmadı, hiçbir birim yeniden başlatılmadı (yarım yedek: $aday).
+     İşlem (rotasyon / geri alma) BAŞLAMADI: hiçbir kopya yazılmadı, hiçbir birim yeniden başlatılmadı (yarım yedek: $aday).
      Kaynağı değerini BASMADAN incele: sudo stat -c '%U:%G %a %F %n' $yol ve üst dizinleri"
       oldu "yedek: $yol"
     else
@@ -4769,11 +4812,26 @@ ${olcemedi%$'\n'}"
 # bir dosya olsa da yazılmaz. Kasa yedeği (`vault/`) tabloda olmadığından girmez (kasa reçetesi: `kv rollback` / STDIN `kv put`).
 # Dizin yedek kökünün (`$KOK/root`) DOĞRUDAN çocuğu olmalı ve bağ olmamalı. Dosyanın kendisi `kopyala`da ölçülür.
 # DAVRANIŞ: restart YOK (eski reçetenin ikinci satırı gibi birim listesi basılır — geri almanın zamanını operatör seçer).
-# Bir hedef reddedilirse (bağ · gevşek dizin · yedekte okunamayan dosya) o dosya ADIYLA söylenir ve ÖTEKİLER yine geri konur
-# (`_negatif_geri_al` emsali: ilk retten durmak öteki kopyaları yeni değerde bırakırdı); sonda çıkış 1. Değer BASILMAZ.
-# Çiviler: v611 F2 (bayt/mod eşit · kuru · restart yok) · F3 (ret biçimleri) · F4 (bağlı hedef adıyla, ötekiler geri konur).
+# ÖNCE YEDEK (inceleme I2, 2026-10-02): kuru OLMAYAN koşum yazmaya başlamadan önce mevcut hâli `_yedek_al <alt>` ile alır — aracın
+# "her koşum ÖNCE dokunacağı her dosyayı yedekler" değişmezi. Gerekçe ölçüldü (inceleme sondası S2): yedek BÜTÜN dosyadır ve
+# çok anahtarlı kopyalar (`.env-apisix` · `/opt/hindsight/.env` · hermes `.env`leri · motor deposu `state/secrets.json`) geri
+# alındığında, yedekten SONRA başka bir rotasyonun yazdığı alanlar da eskiye döner (`--kapi` yedeği `--openrouter`ın yeni
+# anahtarını siler; iptal edilmiş bir anahtar sessizce geri gelir). Ön yedek bunu geri alınabilir yapar: yolu stdout'a basılır
+# (`_yedek_al`ın "yedek dizini:" satırı) ve çıkış reçetesi (`_geri_alma_recetesi`, `YEDEK` dolu) "geri almanın geri alınmasını"
+# gösterir. Ön yedeğin kaynağı reddedilirse (hedef bağ — `kopyala` bağ izlemez) HİÇBİR dosya geri konmaz (`_yedek_al` durur).
+# BÜTÜN DOSYA UYARISI: geri konacak her çok anahtarlı dosya için (`env` · `api`) yedek ile mevcut hâl yardımcının `alan-farki`
+# işlemiyle kıyaslanır ve yedekten sonra değişmiş BAŞKA alanların (geri alınan alt komutun kendi alanları hariç) ADLARI basılır —
+# `--kuru`da ÖNCEDEN, gerçek koşumda yazımla birlikte. Değer basılmaz.
+# SIFIR DOSYA BAŞARI DEĞİLDİR (inceleme M5): yedekte alt komutun hiçbir tablo yolu yoksa (yanlış dizin) çıkış 1 + "geri konacak
+# dosya YOK" — ön yedek alınmadan, kuru koşumda da. "geri alma tamam: 0 dosya" + çıkış 0, birimleri boşuna yeniden başlatan bir
+# operatöre/otomasyona "geri alındı" demekti (uydurma yasağı).
+# Bir hedef YAZIM anında reddedilirse (ön yedekten sonra bağa çevrilmiş · gevşek dizin · yedekte okunamayan dosya) o dosya ADIYLA
+# söylenir ve ÖTEKİLER yine geri konur (`_negatif_geri_al` emsali: ilk retten durmak öteki kopyaları yeni değerde bırakırdı);
+# sonda çıkış 1. Değer BASILMAZ.
+# Çiviler: v611 F2 (bayt/mod eşit · kuru · restart yok · ön yedek) · F3 (ret biçimleri) · F4a/F4b (bağlı hedef: yedek alınamaz /
+# yarışta adıyla, ötekiler geri konur) · F6 (bütün dosya uyarısı + geri almanın geri alınması) · F7 (motor deposu) · F8 (sıfır dosya).
 geri_al() {
-  local dizin="${1%/}" ad alt _alt _sir tur yol _alan _mod _sahip _onek n=0 basarisiz="" gorulen=""
+  local dizin="${1%/}" ad alt _alt _sir tur yol _alan _mod _sahip _onek n=0 basarisiz="" gorulen="" plan="" not_satiri
   [ "$(dirname "$dizin")" = "$KOK/root" ] \
     || die "--geri-al: '$dizin' bir yedek dizini DEĞİL — $KOK/root/sir-yedek-<UTC ts>-<alt> biçiminde, yedek kökünün
      DOĞRUDAN çocuğu olmalı (koşumun bastığı 'yedek dizini:' satırındaki yol). HİÇBİR ŞEY yazılmadı."
@@ -4785,7 +4843,8 @@ geri_al() {
   if sudo test -L "$dizin"; then die "--geri-al: yedek dizini SEMBOLİK BAĞ ($dizin) — izlenmez. HİÇBİR ŞEY yazılmadı."; fi
   sudo test -d "$dizin" || die "--geri-al: yedek dizini YOK: $dizin. HİÇBİR ŞEY yazılmadı."
   echo "=== GERİ ALMA: $dizin → $(_bayrak "$alt") kopyaları (bağ İZLENMEZ; mod/sahip yedekten; DEĞER BASILMAZ) ==="
-  [ "$KURU" = 0 ] || echo "  KURU KOŞUM — HİÇBİR ŞEY YAZILMAZ"
+  [ "$KURU" = 0 ] || echo "  KURU KOŞUM — HİÇBİR ŞEY YAZILMAZ (ön yedek dahil)"
+  # PLAN — yedekte bulunan tablo yolları; yazım ve ön yedek bundan SONRA.
   while read -r _alt _sir tur yol _alan _mod _sahip _onek; do
     [ "$_alt" = "$alt" ] || continue
     yol="$(_disk_yolu "$tur" "$yol")" || continue
@@ -4795,21 +4854,68 @@ geri_al() {
       echo "  · yedekte YOK (o koşumda dosya yoktu — yedek ATLANMIŞTI): $yol"
       continue
     fi
-    if [ "$KURU" != 0 ]; then echo "  geri konacak: $yol"; continue; fi
+    plan="${plan:+$plan }$yol"
+  done < <(_kopyalar)
+  [ -n "$plan" ] || die "--geri-al: yedekte $(_bayrak "$alt") alt komutunun HİÇBİR tablo yolu yok — geri konacak dosya YOK
+     (yanlış yedek dizini?). '0 dosya geri kondu' bir başarı DEĞİLDİR. HİÇBİR ŞEY yazılmadı (ön yedek dahil)."
+  # Çıkış reçetesi (`_geri_alma_recetesi`, `$ALT`ı okur) geri alınan alt komutun BİRİMLERİNİ bassın: ön yedekle geri almanın geri
+  # alınması "sudo $0 --geri-al <ön yedek>" + o birimlerin yeniden başlatılmasıdır.
+  ALT="$alt"
+  if [ "$KURU" = 0 ]; then
+    adim "ÖNCE mevcut hâl yedeklenir (geri almanın geri alınması bu yedekten)"
+    _yedek_al "$alt"
+  else
+    echo "  (gerçek koşum ÖNCE mevcut hâli yedekler: $KOK/root/sir-yedek-<UTC ts>-$alt — geri almanın geri alınması o yedekten)"
+  fi
+  for yol in $plan; do
+    not_satiri="$(_butun_dosya_notu "$alt" "$yol" "$dizin")"
+    if [ "$KURU" != 0 ]; then
+      echo "  geri konacak: $yol"
+      [ -z "$not_satiri" ] || echo "$not_satiri"
+      continue
+    fi
     # `||` ADLANDIRMADIR (yutma değil): yardımcının adlı reddi stderr'de durur, yol biriktirilir ve sonda bağırılır.
     if py kopyala "$dizin$yol" "$KOK$yol"; then
       oldu "geri kondu: $yol"
+      [ -z "$not_satiri" ] || echo "$not_satiri"
       n=$((n+1))
     else
       echo "!! geri KONAMADI: $yol (yardımcının adlı reddi yukarıda)" >&2
       basarisiz="${basarisiz:+$basarisiz }$yol"
     fi
-  done < <(_kopyalar)
+  done
   echo "  sonra yeniden başlat: $(_recete_birimleri $(_birimler "$alt"))"
   [ "$KURU" = 0 ] || return 0
   [ -z "$basarisiz" ] || die "--geri-al: $n dosya geri kondu, şunlar KONAMADI: $basarisiz — hedef bağ ya da zincir/izin
      kuralına aykırı olabilir (yardımcının adlı reddi yukarıda). Değeri BASMADAN incele: sudo stat -c '%U:%G %a %F %n' <yol>"
   oldu "geri alma tamam: $n dosya (birimleri yukarıdaki satırla yeniden başlat)"
+}
+
+#: BÜTÜN DOSYA NOTU — `_butun_dosya_notu <alt> <yol> <yedek dizini>` → tek satır (ya da tek değerli türde hiçbir şey). Çok
+#: anahtarlı kopya (`env` · `api`) BÜTÜN döner: yedekten sonra değişmiş BAŞKA alanların ADLARI söylenir — alt komutun kendi
+#: alanları (tablodaki `env` alanları · `api` satırının sır kimliği = depo anahtarı) hariç. Değer basılmaz (`alan-farki`).
+#: `dosya`/`url` kopyası tek değerdir ("başka alan" yok). Kıyas ölçülemezse bunu ADIYLA söyler — uyarı susmaz.
+_butun_dosya_notu() {
+  local alt="$1" yol="$2" dizin="$3" _alt sir tur y d _alan _m _s _o ilk="" haric="" hal
+  while read -r _alt sir tur y _alan _m _s _o; do
+    [ "$_alt" = "$alt" ] || continue
+    d="$(_disk_yolu "$tur" "$y")" || continue
+    [ "$d" = "$yol" ] || continue
+    [ -n "$ilk" ] || ilk="$tur"
+    case "$tur" in env) haric="$haric $_alan" ;; api) haric="$haric $sir" ;; esac
+  done < <(_kopyalar)
+  case "$ilk" in env|api) ;; *) return 0 ;; esac
+  if ! sudo test -e "$KOK$yol" && ! sudo test -L "$KOK$yol"; then
+    echo "    · hedef şu an YOK — yedekteki dosya bütün olarak kurulur"; return 0
+  fi
+  # `||` ADLANDIRMADIR: yardımcının düşüşü (bağ · UTF-8/JSON değil) aşağıda "ÖLÇÜLEMEDİ" satırına gider, uyarı susmaz.
+  # shellcheck disable=SC2086
+  hal="$(py alan-farki "$ilk" "$dizin$yol" "$KOK$yol" $haric)" || hal="ÖLÇÜLEMEDİ"
+  case "$hal" in
+    AYNI) echo "    · DOSYANIN TAMAMI yedekteki hâline döner; yedekten sonra değişmiş başka alan YOK" ;;
+    FARKLI:*) echo "    !! DOSYANIN TAMAMI döner — yedekten sonra değişmiş BAŞKA alanlar da ESKİYE döner:${hal#FARKLI:} (değer basılmaz; o sırlar için sonra kendi rotasyonu ya da --esitle gerekebilir)" ;;
+    *) echo "    !! DOSYANIN TAMAMI döner — BAŞKA alanların farkı ÖLÇÜLEMEDİ (yukarıda): öteki alanlar da yedekteki hâline döner" ;;
+  esac
 }
 
 # =================================================================================================

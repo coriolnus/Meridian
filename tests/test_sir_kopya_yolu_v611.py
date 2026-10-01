@@ -509,22 +509,51 @@ def _kapi_sahnesi(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict, dict[str,
     r = _kos(BETIK, ortam, "--kapi")
     _iddia(r.returncode == 0, _ozet(r))
     _iddia(all(_imza(kok / y)[0] != once[y][0] for y in yollar), "rotasyon kopyaları YAZMADI (sahne)")
-    return kok, ortam, once, _yedekler(kok)[0]
+    return kok, ortam, once, _eskit(_yedekler(kok)[0], "20240101T000000Z")
+
+
+def _eskit(yedek: pathlib.Path, damga: str) -> pathlib.Path:
+    """Yedeği GEÇERLİ adla eski bir damgaya taşır. `--geri-al` (inceleme I2) yazmadan önce `sir-yedek-<ŞİMDİ>-<alt>` yedeği
+    alır; girdi yedeği aynı saniyede doğmuşsa ad çakışır ve araç (doğru biçimde) "ZATEN VAR" ile durur — çivi saniye sınırına
+    bağlı kalmasın (operatör koşumları saniyeler arayla gelir)."""
+    alt = re.sub(r"^sir-yedek-\d{8}T\d{6}Z-", "", yedek.name)
+    hedef = yedek.with_name(f"sir-yedek-{damga}-{alt}")
+    yedek.rename(hedef)
+    return hedef
+
+
+def _satir_sonrasi(metin: str, parca: str) -> str:
+    """`parca`yı taşıyan satırın HEMEN ardındaki satır (yoksa boş)."""
+    s = metin.splitlines()
+    i = next((k for k, x in enumerate(s) if parca in x), None)
+    return s[i + 1] if i is not None and i + 1 < len(s) else ""
 
 
 def test_F2_GERI_AL_yedekten_BAYT_MOD_ESIT_geri_koyar_KURU_yazmaz_RESTART_yok(tmp_path):
-    """`--geri-al <yedek> --kuru` geri konacak yolları ADIYLA basar, HİÇBİR ŞEY yazmaz. `--geri-al <yedek>` kapi_apikey ve
-    `.env-apisix`i rotasyon ÖNCESİ baytına ve moduna döndürür (`cp -p` eşdeğeri), restart YAPMAZ (reçete basar), `cp` çağırmaz,
-    değer basmaz."""
+    """`--geri-al <yedek> --kuru` geri konacak yolları ADIYLA basar, gerçek koşumun ÖNCE yedek alacağını söyler, HİÇBİR ŞEY
+    yazmaz (yedek dahil). `--geri-al <yedek>` ÖNCE mevcut hâli yeni bir `sir-yedek-<ts>-kapi`ye alır (inceleme I2 — aracın "her
+    koşum önce yedekler" değişmezi; yolu stdout'ta; içeriği geri alma ÖNCESİ hâldir), sonra kapi_apikey ve `.env-apisix`i
+    rotasyon ÖNCESİ baytına ve moduna döndürür (`cp -p` eşdeğeri), restart YAPMAZ (reçete basar), `cp` çağırmaz, değer basmaz;
+    çıkış reçetesi o yeni yedekle GERİ ALMANIN GERİ ALINMASINI gösterir."""
     kok, ortam, once, yedek = _kapi_sahnesi(tmp_path)
     ara = _imzalar(kok)
     restart_once = (kok / ".sahte/systemctl.log").read_text(encoding="utf-8")
     rk = _kos(BETIK, ortam, "--geri-al", str(yedek), "--kuru")
     _iddia(rk.returncode == 0 and "geri konacak: /etc/meridian/kapi_apikey" in rk.stdout
-           and "geri konacak: /opt/apisix/.env-apisix" in rk.stdout, _ozet(rk))
-    _iddia(_imzalar(kok) == ara, "kuru koşum YAZDI")
+           and "geri konacak: /opt/apisix/.env-apisix" in rk.stdout and "ÖNCE mevcut hâli yedekler" in rk.stdout, _ozet(rk))
+    _iddia(_imzalar(kok) == ara and _yedekler(kok) == [yedek], "kuru koşum YAZDI ya da yedek aldı")
     argv_once = len(_argv(kok))
     r = _kos(BETIK, ortam, "--geri-al", str(yedek))
+    yeni = [y for y in _yedekler(kok) if y != yedek]
+    _iddia(len(yeni) == 1 and yeni[0].name.endswith("-kapi") and f"yedek dizini: {yeni[0]}" in r.stdout,
+           f"geri almadan ÖNCE yeni yedek alınmadı ya da yolu basılmadı: {yeni}\n{_ozet(r)}")
+    for y in ("etc/meridian/kapi_apikey", "opt/apisix/.env-apisix"):
+        _iddia(hashlib.sha256((yeni[0] / y).read_bytes()).hexdigest() == ara[y][1],
+               f"yeni yedekteki {y} geri alma ÖNCESİ hâl değil")
+    _iddia(">> GERİ ALMA (bu koşum YEDEK aldı" in r.stderr and f"--geri-al {yeni[0]}" in r.stderr
+           and "sonra yeniden başlat: apisix.service meridian.service" in r.stderr
+           and "(birim listesi ölçülemedi)" not in r.stderr,
+           "çıkış reçetesi geri almanın geri alınmasını (ve geri alınan alt komutun birimlerini) göstermiyor")
     _iddia(r.returncode == 0 and "geri kondu: /etc/meridian/kapi_apikey" in r.stdout
            and "geri kondu: /opt/apisix/.env-apisix" in r.stdout and "sonra yeniden başlat:" in r.stdout, _ozet(r))
     for y, imza in once.items():
@@ -535,7 +564,6 @@ def test_F2_GERI_AL_yedekten_BAYT_MOD_ESIT_geri_koyar_KURU_yazmaz_RESTART_yok(tm
     yeni_argv = _argv(kok)[argv_once:]
     _iddia(not [s for s in yeni_argv if s.split()[:2] == ["sudo", "cp"]] and any(" kopyala " in s for s in yeni_argv),
            "--geri-al `kopyala`dan geçmiyor ya da cp çağırıyor")
-    _iddia(">> GERİ ALMA" not in r.stderr, "--geri-al kendi çıkışında geri alma reçetesi bastı (yedek ALMADI)")
     _sizinti_yok(rk)
     _sizinti_yok(r)
 
@@ -580,19 +608,112 @@ def test_F3_GERI_AL_yalniz_YEDEK_DIZINI_kabul_eder_HICBIR_SEY_yazmadan_reddeder(
     _sizinti_yok(r)
 
 
-def test_F4_GERI_AL_hedef_bagsa_o_dosya_YAZILMAZ_adli_ret_otekiler_geri_konur(tmp_path):
-    """Rotasyondan sonra `.env-apisix` bir kurbana bağ olur. `--geri-al`: o hedef için yazım YOK ("geri KONAMADI" + yol +
-    "SEMBOLİK BAĞ"), kurban bayt-eşit, öteki hedef (kapi_apikey) geri konur, çıkış 1 (bilinen arıza)."""
+def test_F4a_GERI_AL_hedef_ONCEDEN_bagsa_yedek_ALINAMAZ_HICBIR_SEY_yazilmaz(tmp_path):
+    """Rotasyondan sonra `.env-apisix` bir kurbana bağ olur. `--geri-al` yazmadan ÖNCE mevcut hâli yedekler (inceleme I2) ve
+    yedeğin kaynağı bağ izlenmeden okunur: bağlı hedef "yedek ALINAMADI" + yol + "SEMBOLİK BAĞ" ile durdurur (çıkış 1) — HİÇBİR
+    dosya geri konmaz (kapi_apikey de YENİ değerde kalır; yarım geri alma yok), kurban bayt-eşit, bağ yerinde, reçete basılmaz."""
     kok, ortam, once, yedek = _kapi_sahnesi(tmp_path)
     apisix = kok / "opt/apisix/.env-apisix"
     kurban = _kurban(tmp_path)
     apisix.unlink()
     apisix.symlink_to(kurban)
-    once_k = _imza(kurban)
+    once_k, ara = _imza(kurban), _imza(kok / "etc/meridian/kapi_apikey")
     r = _kos(BETIK, ortam, "--geri-al", str(yedek))
+    _iddia(r.returncode == 1 and "yedek ALINAMADI: /opt/apisix/.env-apisix" in r.stderr and "SEMBOLİK BAĞ" in r.stderr, _ozet(r))
+    _iddia(_imza(kurban) == once_k and apisix.is_symlink(), "kurban yazıldı ya da bağ ezildi")
+    _iddia(_imza(kok / "etc/meridian/kapi_apikey") == ara, "yedek alınamadan bir hedef geri KONDU")
+    _iddia(">> GERİ ALMA" not in r.stderr, "yedek ALINMADAN geri alma reçetesi basıldı")
+    _sizinti_yok(r)
+
+
+def test_F4b_GERI_AL_yazim_aninda_baga_cevrilen_hedef_ADLA_reddedilir_otekiler_geri_konur(tmp_path):
+    """Yarış: ön yedekten SONRA, ilk geri koyma anında `.env-apisix` bir kurbana bağ olur. O hedef için yazım YOK ("geri
+    KONAMADI" + yol + "SEMBOLİK BAĞ"), kurban bayt-eşit, öteki hedef (kapi_apikey) geri konur, çıkış 1 (bilinen arıza); ön yedek
+    ALINMIŞTIR ve çıkış reçetesi onu gösterir."""
+    kok, ortam, once, yedek = _kapi_sahnesi(tmp_path)
+    apisix = kok / "opt/apisix/.env-apisix"
+    kurban = _kurban(tmp_path)
+    once_k = _imza(kurban)
+    isaret = _sudo_kancasi(
+        tmp_path, ortam,
+        f'len(a) >= 5 and a[2] == "kopyala" and a[3] == {str(yedek / "etc/meridian/kapi_apikey")!r}',
+        f"os.unlink({str(apisix)!r})\nos.symlink({str(kurban)!r}, {str(apisix)!r})")
+    r = _kos(BETIK, ortam, "--geri-al", str(yedek))
+    _iddia(isaret.exists(), "yarış kancası ATEŞLENMEDİ — çivi kör (pozitif kontrol)")
     _iddia(r.returncode == 1 and "geri KONAMADI: /opt/apisix/.env-apisix" in r.stderr and "SEMBOLİK BAĞ" in r.stderr, _ozet(r))
     _iddia(_imza(kurban) == once_k and apisix.is_symlink(), "kurban yazıldı ya da bağ ezildi")
     _iddia(_imza(kok / "etc/meridian/kapi_apikey")[0] == once["etc/meridian/kapi_apikey"][0], "öteki hedef geri KONMADI")
+    yeni = [y for y in _yedekler(kok) if y != yedek]
+    _iddia(len(yeni) == 1 and f"--geri-al {yeni[0]}" in r.stderr, "ön yedek alınmadı ya da reçete onu göstermiyor")
+    _sizinti_yok(r)
+
+
+def test_F6_GERI_AL_cok_anahtarli_dosya_BUTUN_doner_KURU_baska_alanlari_ADLANDIRIR_GERI_ALMA_GERI_ALINABILIR(tmp_path):
+    """İnceleme I2 senaryosu (sonda S2): `--kapi` → `--openrouter` (`.env-apisix`e YENİ OpenRouter değeri) → `--geri-al <kapi
+    yedeği>`. Dosya BÜTÜN döner, yani OpenRouter alanları da eskiye döner. (a) `--kuru` bunu ÖNCEDEN söyler: `.env-apisix` için
+    "BAŞKA alanlar" satırı OPENROUTER_API_KEY ve OPENROUTER_AUTH ADLARINI taşır, kapı'nın kendi alanını (BOT_KEY_MERIDIAN)
+    taşımaz; değer basılmaz. (b) Gerçek koşum ÖNCE mevcut hâli yedekler: yeni yedekteki `.env-apisix` geri alma ÖNCESİ baytlardır
+    (YENİ OpenRouter değeri dahil). (c) O yedekle `--geri-al` geri almayı GERİ ALIR: `.env-apisix` geri alma öncesi baytlarına
+    döner (iptal edilmiş/bayat anahtar kalıcı olmaz)."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    apisix = kok / "opt/apisix/.env-apisix"
+    r1 = _kos(BETIK, ortam, "--kapi")
+    _iddia(r1.returncode == 0, _ozet(r1))
+    kapi_yedek = _eskit(_yedekler(kok)[0], "20240101T000000Z")
+    r2 = _kos(BETIK, ortam, "--openrouter", girdi=GIRDI_OR)
+    _iddia(r2.returncode == 0 and YENI_OR in apisix.read_text(encoding="utf-8"), _ozet(r2))
+    once_geri = apisix.read_bytes()
+    rk = _kos(BETIK, ortam, "--geri-al", str(kapi_yedek), "--kuru")
+    uyari = _satir_sonrasi(rk.stdout, "geri konacak: /opt/apisix/.env-apisix")
+    _iddia(rk.returncode == 0 and "BAŞKA alanlar" in uyari and "OPENROUTER_API_KEY" in uyari and "OPENROUTER_AUTH" in uyari
+           and "BOT_KEY_MERIDIAN" not in uyari and "APISIX_ADMIN_KEY" not in uyari, f"kuru uyarısı: {uyari!r}\n{_ozet(rk)}")
+    oncekiler = set(_yedekler(kok))
+    r = _kos(BETIK, ortam, "--geri-al", str(kapi_yedek))
+    yeni = sorted(set(_yedekler(kok)) - oncekiler)
+    _iddia(r.returncode == 0 and len(yeni) == 1 and f"yedek dizini: {yeni[0]}" in r.stdout, _ozet(r))
+    _iddia((yeni[0] / "opt/apisix/.env-apisix").read_bytes() == once_geri, "yeni yedek geri alma ÖNCESİ hâli taşımıyor")
+    _iddia(YENI_OR not in apisix.read_text(encoding="utf-8"), "geri alma dosyayı BÜTÜN döndürmedi (sahne varsayımı)")
+    geri_geri = _eskit(yeni[0], "20240102T000000Z")
+    rr = _kos(BETIK, ortam, "--geri-al", str(geri_geri))
+    _iddia(rr.returncode == 0 and apisix.read_bytes() == once_geri, f"geri alma GERİ ALINAMADI\n{_ozet(rr)}")
+    for x in (rk, r, rr):
+        _sizinti_yok(x)
+
+
+def test_F7_GERI_AL_KURU_motor_deposunda_degismis_BASKA_anahtarlari_ADLANDIRIR(tmp_path):
+    """Motor deposu (`state/secrets.json`) çok anahtarlıdır (Telegram/Alpaca/FMP kimlikleri de orada yaşar). `--openrouter`
+    yedeğinden sonra motor depoya YENİ bir anahtar yazarsa `--geri-al --kuru` onun ADINI "BAŞKA alanlar" satırında söyler (geri
+    almada silinir); rotasyonun kendi anahtarını (NOUS_API_KEY) saymaz; değer basılmaz, hiçbir şey yazılmaz."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    r1 = _kos(BETIK, ortam, "--openrouter", girdi=GIRDI_OR)
+    _iddia(r1.returncode == 0, _ozet(r1))
+    yedek = _eskit(_yedekler(kok)[0], "20240101T000000Z")
+    depo = kok / "opt/meridian/state/secrets.json"
+    veri = json.loads(depo.read_text(encoding="utf-8"))
+    veri["TELEGRAM_BOT_TOKEN"] = GIZLI
+    depo.write_text(json.dumps(veri) + "\n", encoding="utf-8")
+    once = _imzalar(kok)
+    rk = _kos(BETIK, ortam, "--geri-al", str(yedek), "--kuru")
+    uyari = _satir_sonrasi(rk.stdout, "geri konacak: /opt/meridian/state/secrets.json")
+    _iddia(rk.returncode == 0 and "BAŞKA alanlar" in uyari and "TELEGRAM_BOT_TOKEN" in uyari and "NOUS_API_KEY" not in uyari,
+           f"kuru uyarısı: {uyari!r}\n{_ozet(rk)}")
+    _iddia(_imzalar(kok) == once and _yedekler(kok) == [yedek], "kuru koşum YAZDI ya da yedek aldı")
+    _sizinti_yok(rk)
+
+
+@pytest.mark.parametrize("kip", ["gercek", "kuru"])
+def test_F8_GERI_AL_SIFIR_dosyada_BASARI_DEMEZ_cikis_1_yedek_YOK(tmp_path, kip):
+    """İnceleme M5. GEÇERLİ adlı ama alt komutun tablo yollarının HİÇBİRİNİ taşımayan bir yedek (yanlış dizin): eskiden "geri
+    alma tamam: 0 dosya", çıkış 0. Şimdi çıkış 1 + "geri konacak dosya YOK" — bir otomasyon ya da operatör "geri alındı" sanıp
+    birimleri yeniden başlatmasın (uydurma yasağı: olmayan bir geri almayı başarı saymak). Ön yedek ALINMAZ (yapılacak iş yok),
+    hiçbir şey yazılmaz; kuru koşum da aynı hükmü verir (gerçek koşumun ön-bakışı)."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    bos = kok / "root/sir-yedek-20240101T000000Z-dash"
+    bos.mkdir(mode=0o700)
+    once = _imzalar(kok)
+    r = _kos(BETIK, ortam, "--geri-al", str(bos), *(("--kuru",) if kip == "kuru" else ()))
+    _iddia(r.returncode == 1 and "geri konacak dosya YOK" in r.stderr, _ozet(r))
+    _iddia(_imzalar(kok) == once and _yedekler(kok) == [bos], "sıfır dosyalı geri alma yazdı ya da yedek aldı")
     _sizinti_yok(r)
 
 

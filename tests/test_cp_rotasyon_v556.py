@@ -837,7 +837,12 @@ def test_E1_RENDER_GELMEZSE_evre_KASA_eski_kanal_YOK_restart_YOK_recete_SURUMLE(
     assert ">> GERİ ALMA (--cp --vault): kasaya YENİ değer" in r.stderr, r.stderr
     assert f"vault kv rollback -version={ESKI_SURUM} {KASA_YOLU}" in r.stderr, r.stderr
     assert "YENİDEN BAŞLATILMAMALI" in r.stderr
-    assert "sudo cp -p" not in r.stderr, "kasa evresinde dosya kopyası reçetesi (Agent ezer)"
+    # TSK-261 (2026-10-01; inceleme I1): dosya geri alma reçetesinin jetonu `sudo cp -p` → `--geri-al` oldu ve eski jetonla
+    # yazılı nöbet KÖR kaldı (mutant: kasa dalı genel reçeteye düşer → yeni betikte ötmüyordu). Nöbet artık jetona değil GENEL
+    # dosya reçetesinin BAŞLIĞINA bağlı (kasa dalının `return 0`ı kalkarsa öter — mutasyonla ölçüldü) + yeni jeton da YOK
+    # (bu evrede eski kanal adımı yok, dosya geri alımı hiçbir biçimde önerilmez).
+    assert ">> GERİ ALMA (bu koşum YEDEK aldı" not in r.stderr and "--geri-al" not in r.stderr, \
+        "kasa evresinde dosya geri alma reçetesi (Agent ezer)"
 
 
 def test_E2_KASA_YAZIMI_DUSERSE_die_evre_KASA_belirsizlik_ADIYLA(tmp_path):
@@ -854,8 +859,11 @@ def test_E3_KANIT_DUSERSE_evre_YAYIM_dort_adim_recete(tmp_path):
     assert r.returncode == 2
     recete = r.stderr[r.stderr.index(">> GERİ ALMA (--cp --vault"):]
     # 2026-09-29 (iki-kanal kapanışı): reçetenin 3. satırı kopya tablosundan türer — env satırı yok → "YOK",
-    # geri konacak dosya yok (numaralı sıra değişmez; tabloya satır geri girerse `sudo cp -p` geri gelir — M1).
-    assert "sudo cp -p" not in recete, recete
+    # geri konacak dosya yok (numaralı sıra değişmez; tabloya satır geri girerse 3. adım `--geri-al` gösterir — M1; TSK-261'e
+    # dek jeton `sudo cp -p`ydi). GENEL dosya reçetesi kasa reçetesinin yerine/ardına HİÇ basılmaz (inceleme I1: eski jetonla
+    # nöbet kör kalmıştı; başlık jetondan bağımsızdır — kasa dalının `return 0`ı kalkarsa öter).
+    assert ">> GERİ ALMA (bu koşum YEDEK aldı" not in r.stderr, r.stderr
+    assert "--geri-al" not in recete, recete
     for parca in (f"1) kasa: vault kv rollback -version={ESKI_SURUM} {KASA_YOLU}",
                   f"2) render: {KANON}",
                   "3) eski kanal: YOK",

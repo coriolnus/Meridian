@@ -749,7 +749,10 @@ def test_C8b_KANIT_duserse_KASA_YOLUNUN_geri_alma_RECETESI_basilir(tmp_path):
     assert "ALTER ROLE UYGULANDI" in r.stderr, r.stderr
     assert f"vault kv rollback -version={ESKI_SURUM} {DB_KASA}" in r.stderr, r.stderr
     assert f"restart {BIRIM}" in r.stderr, r.stderr
-    assert "sudo cp -p" not in r.stderr, "kasa yolunda DOSYA kopyası reçetesi basıldı (Agent ezer)"
+    # TSK-261 (2026-10-01; inceleme I1): jeton `sudo cp -p` → `--geri-al`; eski jetonla nöbet KÖR kalmıştı. Nöbet GENEL dosya
+    # reçetesinin BAŞLIĞINA bağlı (kasa dalının `return 0`ı kalkarsa öter — mutasyonla ölçüldü) + yeni jeton da yok.
+    assert ">> GERİ ALMA (bu koşum YEDEK aldı" not in r.stderr and "--geri-al" not in r.stderr, \
+        "kasa yolunda DOSYA geri alma reçetesi basıldı (Agent ezer)"
     _sir_yok(r, kok, log)
 
 
