@@ -4212,3 +4212,20 @@ canlıyla aynı (ilk "FARKLI" ölçümüm süreç ikamesindeki stdin hatasıydı
   düzeltme turu 1 (I1+I2+M5; 1036375c — `--geri-al` önce yedek alır, `--kuru` değişmiş alan ADLARINI basar, 0 dosyada çıkış 1;
   1473 passed, 7/7 mutasyon) → main 2d99ec3b; kapsamlı yeniden inceleme sürüyor. `/root` A1'de root:root 700 ölçüldü. TSK-262 açıldı
   (okuma yolu FIFO askısı, M2). `deploy/oracle-a1/RUNBOOK.md` `--geri-al` belgelendi; `--openrouter` yasağı dağıtım #91 doğrulanınca kalkar.
+- **Suite 10-02a (23:51–00:12Z, HEAD 7ece4b62): 17102 passed / 2 failed** — iki yeni sınıf: v574 (G3d üreteç şerhinde depo dışı Hermes
+  çapaları beyansız) ve v447 Q5 (TSK-261 reçetesi aracın mutlak yolunu basar; ana checkout yolu entropi süzgecine takılır, worktree
+  yolundaki `.claude` noktası maskeliyordu — memory worktree-yolu-maskeler). Düzeltme 12a0221b, etkilenen küme 416 passed, KILL#1 seri
+  1 passed. **Push SINIFLANDIRICIDA ENGELLENDİ** (Out-of-Place Publication, 00:3xZ) — yeniden denenmedi, operatöre push bildirimi;
+  dağıtım #91 kuru koşumları temiz (site.yml 4 sohbet config'i; dagit silinecek 0).
+- **TSK-262 (okuma yolu) + TSK-265 (ROOT YÜRÜTÜR, UBUNTU YAZAR) — 01:0x–06:0xZ, Rol-1 + Opus uygulayıcı/inceleme, iki tur her biri:**
+  TSK-262 incelemesi K1'i (root, ubuntu yazılabilir ağaçtan kod yürütür) buldu; A1 ölçümleri (02:47–05:0xZ): `sir_rotasyon.sh` +
+  dizinleri ubuntu 755; beş ubuntu birimi `ReadWritePaths=/opt/meridian`; `meridian-tick-watchdog` ROOT ve ExecStart ubuntu ağacında
+  (timer, otomatik); polkit 51 `manage-unit-files` koşulsuz YES (→ ANINDA root, TSK-266); `hindsight-cp` root + ortam dosyası ubuntu
+  dizininde (TSK-267); ve en ağırı **ubuntu `docker` grubunda, canlı `meridian` (pid 115631) ile `hindsight-api` süreçleri gid 110
+  taşıyor, `/run/docker.sock` gizlenmemiş → kum havuzunda kod yürütme = anında root**. TSK-265 dilim 1 (main 7c2e036b): watchdog
+  User=ubuntu + 52 polkit (dört şart, systemd v255 kaynağıyla doğrulandı), 22 ubuntu birim dosyasında `InaccessiblePaths=-/run/docker.sock`
+  (üyelik operatör kararı TSK-195 — dokunulmadı; dockerd yalnız fd://, containerd.sock root), NNP birim dosyasında, A0 polkit
+  birimlerden önce + pkcheck sağlık kapısı, v614 sınıf tarayıcısı. TSK-262 (main 3cb97f01): tek `_oku` fd çekirdeği, ad kuralı biçim
+  ve çokluktan bağımsız, `.yarim` + KOKEN, `esitle` ÖLÇÜLEMEDİ'yi EŞİT saymaz, `cd /` + `python3 -I`. Açılan: TSK-263..268.
+  Bekleyen: push → CI → dağıtım #91 (site.yml ÖNCE; `InaccessiblePaths` süreç başlarken uygulanır — botlar/telegram/litestream/
+  barsarchive/learn/hindsight-api elle yeniden başlatma; watchdog tetik-testi + fail-notify test-ateşlemesi; N1 nsenter doğrulaması).

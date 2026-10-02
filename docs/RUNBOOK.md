@@ -1469,6 +1469,10 @@ okunur özetidir ve kapsaması çivilidir
 ölçülür):
 * deploy/oracle-a1/meridian-sprint@.service   → /etc/systemd/system/  (v241 sprint cgroup birimi)
 * deploy/oracle-a1/50-meridian-sprint.rules   → /etc/polkit-1/rules.d/  (v241 tetik izni)
+* deploy/oracle-a1/51-meridian-birim-anahtari.rules → /etc/polkit-1/rules.d/  (TSK-098 pano birim
+anahtarı; KURULUMU BU BETİKTE DEĞİL — A0 rolü `site.yml` kurar)
+* deploy/oracle-a1/52-meridian-tick-watchdog.rules → /etc/polkit-1/rules.d/  (TSK-265: bekçi
+`User=ubuntu` koşar, meridian.service'i YALNIZ restart edebilsin; A0 rolü ve bu betik kurar)
 * deploy/hermes/SOUL.md                       → ~ubuntu/.hermes/SOUL.md  (v242 hermes brifingi)
 * deploy/hermes/config.yaml                   → ~ubuntu/.hermes/config.yaml  (v326 ajan duruşu)
 * deploy/oracle-a1/meridian-tick-watchdog.service → /etc/systemd/system/  (asılı-tick bekçisi)
@@ -1600,6 +1604,8 @@ yalnız repo↔canlı farkını raporlar).
 KAPSAM — filoda sertleştirmesiz kalan İKİ birim (ölçüm 2026-08-23: altı çekirdek birim kümeyi
 birim dosyasının İÇİNDE taşıyor, bu ikisi taşımıyor):
 * meridian-tick-watchdog.service — `User=` yok → ROOT koşar; en yetkili, en az kısıtlı birim.
+(2026-10-02 TSK-265 dilim 1: artık `User=ubuntu`; restart yetkisi polkit
+52-meridian-tick-watchdog.rules'ta, faz-2 yetenek kümesi BOŞ. Adım 5 o kuralı da ölçer.)
 * meridian-fail-notify.service   — birim dosyasında "BİLİNÇLİ sertleştirilmedi" bloğu var;
 drop-in ancak oradaki ön-şart dolunca kurulur ve bu betik ön-şartı journal'dan ÖLÇER
 ("gonderim sonucu: True" satırı) — sözle geçilmez.
