@@ -389,8 +389,9 @@ def test_S8_SAAT_OKUNAMAZSA_db_kasa_yolu_KASAYA_DOKUNMADAN_durur(tmp_path):
 # =================================================================================================
 # M — MUTASYONLAR
 # =================================================================================================
-#: Çapa: `_saat_oku`nun saat okuması (betiğin KENDİ metni; `_mutant` varlığını doğrular).
-SAAT_CAPA = "\"$PYTHON_BIN\" -c 'import time; print(int(time.monotonic() * 1000))'"
+#: Çapa: `_saat_oku`nun saat okuması (betiğin KENDİ metni; `_mutant` varlığını doğrular). TSK-262 düzeltme turu 1 (2026-10-02,
+#: inceleme K1): bütün yorumlayıcı çağrıları `-I` (yalıtılmış kip) — çapa BİLİNÇLİ güncellendi; mutantların anlamı aynı.
+SAAT_CAPA = "\"$PYTHON_BIN\" -I -c 'import time; print(int(time.monotonic() * 1000))'"
 
 
 def test_M0_SAAT_CAPASI_betikte_TEKER_kez():

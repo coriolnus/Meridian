@@ -265,6 +265,17 @@
 # =================================================================================================
 set -euo pipefail
 
+# ÇALIŞMA DİZİNİ `/` + BETİĞİN MUTLAK DİZİNİ (TSK-262 düzeltme turu 1; inceleme K1 — DOSYA İÇİ kısmi önlem). `python3 -c`
+# sys.path'in başına ÇALIŞMA DİZİNİNİ koyar: RUNBOOK biçimi `cd /opt/meridian && sudo ./deploy/oracle-a1/sir_rotasyon.sh …` ile
+# ubuntu'nun yazabildiği dizindeki bir `yaml.py`/`ast.py` root olarak koşardı (inceleme sondası `cwd_sonda/`). Betik dizini ÖNCE
+# mutlak (fiziksel) yola çözülür — göreli çağrıda da depo girdileri ($VAULT_ENVANTER · $VAULT_POLITIKA_URETICI) bulunur — SONRA
+# `cd /`. İkinci katman: bütün yorumlayıcı çağrıları `-I` (yalıtılmış kip: ne çalışma dizini ne betik dizini ne `PYTHON*` ortamı
+# sys.path'e girer; A1'de `sudo python3 -I -c "import yaml"` sistem PyYAML'ını bulur — Rol-1 ölçümü 2026-10-02). KALAN (ayrı kalem
+# TSK-265): betiğin ve girdilerinin KENDİSİ ubuntu'nun yazabildiği ağaçta — A0 root sahipli kurulum yeri. Reçetelerdeki `$0`
+# operatörün KENDİ kabuğunda (çağrı dizininde) koşar; değişmez. Çiviler: v613 K1a · K1b · K1c · K1d.
+BETIK_DIZINI="$(cd "$(dirname "$0")" && pwd -P)" || { echo "!! betiğin dizini çözülemedi ($0) — HİÇBİR ŞEY yapılmadı" >&2; exit 1; }
+cd /
+
 # TEST KANCASI — YALNIZ ÇİVİ İÇİN. Boşken (üretimdeki tek hâl) yollar MUTLAKTIR; v447 çivisi burayı
 # tmp'ye çevirip alt komutları GERÇEKTEN koşturur (PATH şimleriyle: sudo/systemctl/curl/psql/install).
 # Ops aracını teslim etmeden önce operatörün koşacağı BİÇİMDE koşmanın yolu budur — 18 çivi
@@ -320,12 +331,12 @@ VAULT_JETON_DOSYASI="${VAULT_TOKEN_FILE:-/etc/vault/admin.token}"
 export VAULT_ADDR="${VAULT_ADDR:-http://127.0.0.1:8200}"
 #: Envanter — `vault_kv` ve `vault_dosyalar` bloklarının TEK kaynağı. Betik `deploy/oracle-a1/`
 #: altında yaşar, envanter bir üst dizinde (`deploy/`).
-VAULT_ENVANTER="${VAULT_ENVANTER:-$(cd "$(dirname "$0")" && pwd)/../sir_envanteri.yaml}"
+VAULT_ENVANTER="${VAULT_ENVANTER:-$BETIK_DIZINI/../sir_envanteri.yaml}"
 #: Agent'ın render ARALIĞI (`RENDER_ARALIGI`) bu üreticide TEK yerde yaşar ve üretilen `agent.hcl`in
 #: `static_secret_render_interval`ı oradan yazılır. Eski yolun Agent hedefi uyarısı sayıyı BURADAN
 #: okur (`_render_araligi_metni`) — uyarıya elle yazılmış bir "1 dk", kadans değişince sessizce yalan
 #: olurdu (TSK-064 takip (2), 2026-09-17). Ortamdan geçilebilir olması VAULT_ENVANTER ile aynı gerekçe.
-VAULT_POLITIKA_URETICI="${VAULT_POLITIKA_URETICI:-$(cd "$(dirname "$0")" && pwd)/../../ops/vault_politika_uret.py}"
+VAULT_POLITIKA_URETICI="${VAULT_POLITIKA_URETICI:-$BETIK_DIZINI/../../ops/vault_politika_uret.py}"
 #: YAML okuyan python — `py()` yardımcısı stdlib'le yetinir (sudo python3), bu ise PyYAML ister.
 #: A1'de sistem python3'ü yeterlidir; ayrı bir kanca olması çivinin kendi yorumlayıcısını
 #: verebilmesi içindir (sanal ortam dışındaki python3'te PyYAML olmayabilir). MONOTONİK saat de
@@ -409,7 +420,7 @@ adim()     { echo "-- $*"; }
 # Okunamayan saat ÖLÇÜLEMEDİ'dir — duvar saatine DÜŞÜLMEZ (düşmek arızayı geri getirmek olurdu).
 # `_saat_oku [ek]` — ek, ÖLÇÜLEMEDİ satırına çağıranın bağlamını ekler (ör. ön kapıda "hiçbir şey yazılmadı").
 _saat_oku() {
-  SAAT_MS="$("$PYTHON_BIN" -c 'import time; print(int(time.monotonic() * 1000))')" \
+  SAAT_MS="$("$PYTHON_BIN" -I -c 'import time; print(int(time.monotonic() * 1000))')" \
     || olcum_yok "monotonik saat okunamadı ($PYTHON_BIN) — bekleme tavanı ve süre ölçülemez${1:+ — $1}"
 }
 # `_gecen_s <başlangıç SAAT_MS>` → `GECEN_S`. Çağıran `$( )` DEĞİL doğrudan çağırır: alt kabukta
@@ -1462,22 +1473,22 @@ def _env_atamalari(ham: str) -> tuple[list[tuple[str, str]], list[str]]:
     return atamalar, diger
 
 
-def _alan_haritasi(tur: str, ham: str) -> tuple[dict[str, str], Counter]:
-    """Çok anahtarlı bir kopyanın `(ad → ham değer, adsız birimler)` haritası (YALNIZ kıyas için — hiçbir DEĞER çıktıya girmez).
-    `env`: atamalar (`_env_atamalari` — çok satırlı değerin devamı DEĞERDİR; aynı ad birden çok kez geçerse hepsi birleşir: çift
-    satır da fark sayılır); `api`: motor deposunun (JSON) üst düzey anahtarları. AD yalnız ARACIN AD SÖZLEŞMESİNE uyuyorsa
-    (`_AD_SOZLESMESI`) haritaya girer ve basılabilir; uymayan atama/anahtar ve atama OLMAYAN satır (yorum · `export X=…` · tırnaksız
-    devam satırı) bir ADSIZ BİRİMDİR — yalnız SAYILIR, hiçbir parçası basılmaz (TSK-262 N1: eski gevşek desen `AbC123…==` gibi bir
-    devam satırını ad diye basıyordu; kalıba uymayan farklar ise hiç sayılmıyor, not "AYNI" diyordu)."""
+def _alan_haritasi(tur: str, ham: str) -> tuple[dict[str, list[str]], Counter]:
+    """Çok anahtarlı bir kopyanın `(ad → ham değer(ler), adsız birimler)` haritası (YALNIZ kıyas için — hiçbir DEĞER çıktıya
+    girmez). `env`: atamalar (`_env_atamalari` — çok satırlı değerin devamı DEĞERDİR; aynı ad birden çok kez geçerse her geçiş ayrı
+    değerdir: çift satır da fark sayılır); `api`: motor deposunun (JSON) üst düzey anahtarları. Ad yalnız ARACIN AD SÖZLEŞMESİNE
+    uyuyorsa (`_AD_SOZLESMESI`) haritaya girer; uymayan atama/anahtar ve atama OLMAYAN satır (yorum · `export X=…` · tırnaksız
+    devam satırı) bir ADSIZ BİRİMDİR — yalnız SAYILIR (TSK-262 N1). Haritadaki bir adın BASILIP basılmayacağı ayrıca `alan-farki`da
+    karara bağlanır (düzeltme turu 1, inceleme I1 — biçimden bağımsız kural)."""
     adsiz: Counter = Counter()
-    harita: dict[str, str] = {}
+    harita: dict[str, list[str]] = {}
     if tur == "api":
         veri = json.loads(ham)
         if not isinstance(veri, dict):
             sys.exit("motor deposu JSON sözlüğü değil — alan farkı ÖLÇÜLEMEDİ")
         for k, v in veri.items():
             if _AD_SOZLESMESI.fullmatch(k):
-                harita[k] = json.dumps(v, sort_keys=True)
+                harita[k] = [json.dumps(v, sort_keys=True)]
             else:
                 adsiz[json.dumps([k, v], sort_keys=True)] += 1
         return harita, adsiz
@@ -1485,7 +1496,7 @@ def _alan_haritasi(tur: str, ham: str) -> tuple[dict[str, str], Counter]:
     adsiz.update(diger)
     for ad, deger in atamalar:
         if _AD_SOZLESMESI.fullmatch(ad):
-            harita[ad] = harita.get(ad, "") + "\0" + deger
+            harita.setdefault(ad, []).append(deger)
         else:
             adsiz[f"{ad}={deger}"] += 1
     return harita, adsiz
@@ -1801,15 +1812,29 @@ def main(argv: list[str]) -> None:
         # Kabuğun BÜTÜN kopya yolları (yedek · negatif kontrol yedeği ve geri alması · `--db` eski DSN · `--geri-al`) buradan
         # geçer; kabukta root `cp` KALMADI (v611 F1s). Başarıda hiçbir şey basılmaz; ret adlı iletiyle (`_kopyala`).
         _kopyala(*argv[2:4])
-    elif op == "alan-farki":         # <env|api> <yedek> <güncel> [hariç alan…] → AYNI | FARKLI: <ad…> — DEĞER BASILMAZ
+    elif op == "alan-farki":         # <env|api> <yedek> <güncel> [hariç…] [--basilir <ad…>] [--sonek <sonek…>] → AYNI | FARKLI: …
         # `--geri-al` (TSK-261 inceleme I2): çok anahtarlı bir dosya BÜTÜN döner; yedekten sonra değişmiş BAŞKA alanların (geri
         # alınan alt komutun kendi alanları HARİÇ) ADLARI önceden söylenir. Yalnız adlar basılır; değerler yalnız kıyaslanır.
-        # ADLAR yalnız ARACIN AD SÖZLEŞMESİYLE basılır (TSK-262 N1, `_alan_haritasi`); sözleşmeye uymayan ya da ad taşımayan
-        # FARKLI birimler (yorum · `export X=` · tırnaksız devam satırı · sözleşme dışı JSON anahtarı) YALNIZ SAYIYLA: "+ adsız N
-        # satır" — sayı "AYNI" demeyi engeller (dosya BÜTÜN döner, o satırlar da döner). Sayım çoklu kümenin simetrik farkıdır:
-        # yedekte olup güncelde olmayan + güncelde olup yedekte olmayan birimler (değişen tek satır = 2).
+        # BASILAN AD — BİÇİMDEN BAĞIMSIZ KURAL (TSK-262 düzeltme turu 1, inceleme I1): tırnak takibi yalnız satır TAM `AD="` ile
+        # başlıyorsa çalışır; `export AD="…` · `AD = "…` · baştaki boşluk · ters bölü devamı · tırnaksız çok satırda base64 devam
+        # satırı (`QWER0123==`) yine `^AD=` desenine düşüyor ve "ad" diye basılıyordu (sondası `n1_sonda.log`). Bir ad YALNIZ
+        #   (a) sözleşmeye uyan bir atama olarak İKİ dosyada da var ve değeri farklıysa, ya da
+        #   (b) aracın ARANAN ADLARINDA (`--basilir` ← kabuk `_aranan_adlar`) ya da SIR-ADI SONEKLERİNDEN biriyle bitiyorsa
+        #       (`--sonek` ← kabuk `_SIR_ADI_SONEKLERI`; anlam `_sir_adi_mi`ninki: son-ek eşleşmesi — v613 D7 ayrışma çivisi)
+        # basılır. Gerekçe: rotasyonda değişen bir PEM parçası yalnız BİR tarafta bulunur ve base64'te `=` yalnız dolguda geçtiği için
+        # iki tarafta "adı" aynı, "değeri" farklı bir parça doğmaz; aranan adların ve soneklerin hepsi `_` taşır (standart base64
+        # alfabesinde yok). Kalan her fark — sözleşme dışı birim, tek taraftaki sırsız ad — YALNIZ SAYIYLA: "+ adsız N satır" (sayı
+        # "AYNI" demeyi engeller). BEDEL: yedekten sonra eklenen/silinen sırsız bir ad adıyla değil sayıyla söylenir (v613 D8).
+        # Sayım: adsız birimlerin çoklu küme simetrik farkı (değişen tek satır = 2) + basılmayan tek taraflı adların geçiş sayısı.
         tur, yedek, guncel = argv[2:5]
-        haric = set(argv[5:])
+        kovalar: dict[str, set[str]] = {"--haric": set(), "--basilir": set(), "--sonek": set()}
+        kova = kovalar["--haric"]
+        for jeton in argv[5:]:
+            if jeton in kovalar:
+                kova = kovalar[jeton]
+            else:
+                kova.add(jeton)
+        haric, basilir, sonekler = kovalar["--haric"], kovalar["--basilir"], tuple(kovalar["--sonek"])
         try:
             a, a_adsiz = _alan_haritasi(tur, _oku(yedek))
             b, b_adsiz = _alan_haritasi(tur, _oku(guncel))
@@ -1820,10 +1845,12 @@ def main(argv: list[str]) -> None:
             # Yasa 4 — sessiz değil: UTF-8 dışı bayt ya da bozuk JSON ADIYLA çıkıştır; çağıran "ÖLÇÜLEMEDİ" der.
             sys.exit(f"alan farkı ÖLÇÜLEMEDİ ({type(hata).__name__}) — değer basılmadı")
         fark = sorted(ad for ad in set(a) | set(b) if ad not in haric and a.get(ad) != b.get(ad))
-        adsiz = sum(((a_adsiz - b_adsiz) + (b_adsiz - a_adsiz)).values())
-        parca = [" ".join(fark)] if fark else []
+        basilan = [ad for ad in fark if (ad in a and ad in b) or ad in basilir or ad.endswith(sonekler)]
+        adsiz = (sum(((a_adsiz - b_adsiz) + (b_adsiz - a_adsiz)).values())
+                 + sum(len(a.get(ad, [])) + len(b.get(ad, [])) for ad in fark if ad not in basilan))
+        parca = [" ".join(basilan)] if basilan else []
         if adsiz:
-            parca.append(f"{'+ ' if fark else ''}adsız {adsiz} {'anahtar' if tur == 'api' else 'satır'}")
+            parca.append(f"{'+ ' if basilan else ''}adsız {adsiz} {'anahtar' if tur == 'api' else 'satır'}")
         print(f"FARKLI: {' '.join(parca)}" if parca else "AYNI")
     elif op == "hedef-denetle":      # <hedef> <mod> <sahip> → TAMAM | RED: <neden> — YAZIM YOK
         # Rotasyonun yazım ÖNCESİ ön-denetimi (`_hedef_on_denetim`, TSK-260): yazımın koşacağı AYNI gövde (`_hedef_ac` —
@@ -1904,7 +1931,7 @@ _cikis() {
 }
 
 # `sudo python3` — yardımcı root olarak koşar (0400 credential dosyalarını okur/yazar).
-py() { sudo python3 "$ISLIK/yardimci.py" "$@"; }
+py() { sudo python3 -I "$ISLIK/yardimci.py" "$@"; }
 
 # `_curl_kod <cfg>` → ÜÇ HANELİ HTTP kodu; ulaşılamama `000`.
 # İlk tur her çağrı yerinde `curl -K "$cfg" || echo 000` yazıyordu ve bu, operatörün canlıda
@@ -3412,7 +3439,7 @@ _alt_sirlari() {
 #: rotasyondan sonra ayrışırdı (hükmün engellediği hâl). Aynı yola çözülen iki satır TEK kez
 #: basılır: operatörden aynı değeri iki kez istemek, ikinci girişte yazım hatası riskidir.
 _vault_kv_satirlari() {
-  "$PYTHON_BIN" -c '
+  "$PYTHON_BIN" -I -c '
 import sys, yaml
 istenen = set(sys.argv[2:])
 kv = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))["vault_kv"]
@@ -3445,7 +3472,7 @@ for g in kv:
 #: satır (`_yan_render_bekle` restart'tan ÖNCE bunları kasadaki yeni değere kıyaslar; kuru plan basar). Aynı sorgu, aynı
 #: yol çözümü: alan kipi dosya kipinin süzgecinin İÇİNDEDİR (v491 T10 mutasyonu ikisini birden ısırır).
 _vault_yan_dosyalari() {
-  "$PYTHON_BIN" -c '
+  "$PYTHON_BIN" -I -c '
 import sys, yaml
 hedef_yol, kip = sys.argv[2], sys.argv[3]
 veri = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
@@ -3498,7 +3525,7 @@ _vault_tuketici_birimleri() {
 #: `--db`nin url kopyasıdır. BAGSIZ dalı ileride bağsız bir sır için DURUR (v522 A7 sahte envanterle ölçer).
 _agent_hedefleri() {
   _kopyalar | awk -v a="$1" '$1==a && ($3=="dosya" || $3=="url") {print $2 "\t" $4 "\t" $1}' \
-    | "$PYTHON_BIN" -c '
+    | "$PYTHON_BIN" -I -c '
 import sys, yaml
 kv = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))["vault_kv"]
 bagli = {g["rotasyon_siri"] for g in kv if g.get("rotasyon_siri")}
@@ -3529,7 +3556,7 @@ _render_araligi_metni() {
   local aralik
   # sessiz-yutma: python'un hata metni (dosya yok · atama biçimi değişti) hükme GİRMEZ — hüküm
   # aralığın okunup okunamadığıdır ve else dalında "ÖLÇÜLEMEDİ" diye ADIYLA basılır.
-  if aralik="$("$PYTHON_BIN" -c '
+  if aralik="$("$PYTHON_BIN" -I -c '
 import ast, sys
 for d in ast.parse(open(sys.argv[1], encoding="utf-8").read()).body:
     if (isinstance(d, ast.Assign) and len(d.targets) == 1
@@ -3747,7 +3774,7 @@ _vault_oturum() {
 _kasa_surumu() {
   local yol="$1" yazilmadi="$2"
   KASA_SURUM="$(_vault kv metadata get -format=json "$yol" \
-    | "$PYTHON_BIN" -c 'import json, sys; print(int(json.load(sys.stdin)["data"]["current_version"]))')" \
+    | "$PYTHON_BIN" -I -c 'import json, sys; print(int(json.load(sys.stdin)["data"]["current_version"]))')" \
     || die "kasa sürümü okunamadı ($yol) — geri alma hedefi bilinmeden kasaya YAZILMAZ ($yazilmadi)"
   case "$KASA_SURUM" in
     ''|*[!0-9]*|0) die "kasa sürümü geçersiz: '$KASA_SURUM' ($yol) — kasaya $yazilmadi" ;;
@@ -4819,6 +4846,20 @@ esitle() {
   if printf '%s\n' "$rapor" | grep -q "→ AYRI"; then
     olcum_yok "eşitleme sonrası hâlâ AYRI kopya var (yukarıda) — yedek: $YEDEK"
   fi
+  # "AYRI YOK" ≠ "EŞİT" (TSK-262 düzeltme turu 1, inceleme M3): kanıt yalnız `→ AYRI` arıyordu; okunamayan bir kopya (`OKUNAMADI
+  # (<tür>)` — ikinci geçişten önce FIFO/bağa çevrilmiş, hiç YAZILMAMIŞ) ya da referansı okunamayan kopyalar (`REFERANS OKUNAMADI`)
+  # "EŞİT" sayılıyor ve araç YANLIŞ BAŞARI beyan ediyordu (çıkış 0). Şimdi referans satırı `VAR`, öteki her kopya satırı `EŞİT`
+  # olmalıdır; değilse ÖLÇÜLEMEDİ (çıkış 2 — aracın ölçülemedi sınıfı). Beyanlı kanallar (`motor API` · `ALTER ROLE`) eşitlemenin
+  # kapsamı DIŞIDIR ve `_envanter_esitlik` onları "OKUNAMADI (… kanalı …)" diye BEYANLA basar — sayılmaz. Çivi: v613 F3.
+  local _s olcemeyen=0
+  while IFS= read -r _s; do
+    case "$_s" in
+      ""|*" · motor API "*|*" · ALTER ROLE "*|*" → VAR (referans kopya)"|*" → EŞİT") ;;
+      *) olcemeyen=$((olcemeyen+1)) ;;
+    esac
+  done <<< "$rapor"
+  [ "$olcemeyen" = 0 ] || olcum_yok "eşitleme sonrası $olcemeyen satır EŞİT DEĞİL ve AYRI da değil (yukarıda — okunamadı / yok /
+     referans okunamadı): kopyalar EŞİT DENEMEZ — yeniden ölç: sudo $0 --envanter; yedek: $YEDEK"
   oldu "envanter: $(_bayrak "$alt") kopyaları EŞİT"
   echo "  yeniden başlatma YAPILMADI (eşitleme sözleşmesi). Yazılan sırların tüketici birimleri:"
   # shellcheck disable=SC2046
@@ -5129,8 +5170,9 @@ geri_al() {
 }
 
 #: BÜTÜN DOSYA NOTU — `_butun_dosya_notu <alt> <yol> <yedek dizini>` → tek satır (ya da tek değerli türde hiçbir şey). Çok
-#: anahtarlı kopya (`env` · `api`) BÜTÜN döner: yedekten sonra değişmiş BAŞKA alanların ADLARI söylenir — alt komutun kendi
-#: alanları (tablodaki `env` alanları · `api` satırının sır kimliği = depo anahtarı) hariç. Değer basılmaz (`alan-farki`).
+#: anahtarlı kopya (`env` · `api`) BÜTÜN döner: yedekten sonra değişmiş BAŞKA alanlar söylenir — alt komutun kendi
+#: alanları (tablodaki `env` alanları · `api` satırının sır kimliği = depo anahtarı) hariç. Değer basılmaz (`alan-farki`); ad YALNIZ
+#: iki tarafta da varsa ya da aranan ad / sır-adı sonekiyse basılır, öteki farklar SAYIYLA (TSK-262 düzeltme turu 1, inceleme I1).
 #: `dosya`/`url` kopyası tek değerdir ("başka alan" yok). Kıyas ölçülemezse bunu ADIYLA söyler — uyarı susmaz.
 _butun_dosya_notu() {
   local alt="$1" yol="$2" dizin="$3" _alt sir tur y d _alan _m _s _o ilk="" haric="" hal
@@ -5146,8 +5188,11 @@ _butun_dosya_notu() {
     echo "    · hedef şu an YOK — yedekteki dosya bütün olarak kurulur"; return 0
   fi
   # `||` ADLANDIRMADIR: yardımcının düşüşü (bağ · UTF-8/JSON değil) aşağıda "ÖLÇÜLEMEDİ" satırına gider, uyarı susmaz.
-  # shellcheck disable=SC2086
-  hal="$(py alan-farki "$ilk" "$dizin$yol" "$KOK$yol" $haric)" || hal="ÖLÇÜLEMEDİ"
+  # BASILABİLİR ADLAR TEK KAYNAKTAN (TSK-262 düzeltme turu 1, inceleme I1): tablonun aranan adları (`_aranan_adlar`) ve sır-adı
+  # sonekleri (`_SIR_ADI_SONEKLERI` — `_sir_adi_mi`nin listesi) yardımcıya argüman olarak geçer; yardımcı kopya tutmaz.
+  # shellcheck disable=SC2086,SC2046
+  hal="$(py alan-farki "$ilk" "$dizin$yol" "$KOK$yol" $haric --basilir $(_aranan_adlar) --sonek $_SIR_ADI_SONEKLERI)" \
+    || hal="ÖLÇÜLEMEDİ"
   case "$hal" in
     AYNI) echo "    · DOSYANIN TAMAMI yedekteki hâline döner; yedekten sonra değişmiş başka alan YOK" ;;
     FARKLI:*) echo "    !! DOSYANIN TAMAMI döner — yedekten sonra değişmiş BAŞKA alanlar da ESKİYE döner:${hal#FARKLI:} (değer basılmaz; o sırlar için sonra kendi rotasyonu ya da --esitle gerekebilir)" ;;

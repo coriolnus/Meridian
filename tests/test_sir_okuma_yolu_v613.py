@@ -22,6 +22,11 @@ satırda kapanmayan değerin DEVAM satırı değerdir, ad DEĞİL; sözleşme d�
 N2 — yarıda kalan yedek `.yarim` adına taşınır (girdi kalıbı reddeder); `--geri-al`ın ön yedeği `KOKEN` taşır, envanterin yedek
 listesi onu "ÖN YEDEK" diye ayırır.
 
+DÜZELTME TURU 1 (güvenlik incelemesi `.superpowers/sdd/tsk262/review.md`, 2026-10-02): I1 — `alan-farki` adı BİÇİMDEN BAĞIMSIZ
+kuralla basar (iki tarafta da var ve farklı · ya da aranan ad / sır-adı soneki; D1 beş biçim · D7 · D8); M1 — inode eşitliği
+denetimi çivili (A3: açılışta normal dosya takası); M3 — `esitle` kanıtı okunamayan satırı EŞİT saymaz (F3); K1 (dosya içi kısmi) —
+betik `cd /` + mutlak betik dizini, her yorumlayıcı `-I` (K1a–K1d; root sahipli kurulum yeri ayrı kalem TSK-265).
+
 ÇIKTI DİSİPLİNİ: iddialar bool'a indirgenir (`_iddia`); değerler SAHTEdir ve hiçbir çıktıda görünmemelidir. Askı KIRMIZIDIR: alt
 süreç zaman aşımıyla koşar (`_yk_sure` → None), asla sonsuz beklemez.
 """
@@ -35,17 +40,19 @@ import re
 import signal
 import stat
 import subprocess
+import sys
 
 import pytest
 
 from tests.test_sir_kopya_yolu_v611 import (GIRDI_OR, _eskit, _fonksiyon, _imzalar, _kapi_sahnesi, _satir_sonrasi,
                                             _sudo_kancasi, _yardimci_metni, _yedekler, _yk_sure)
-from tests.test_sir_rotasyon_v447 import BETIK, ESKI, YENI_NOUS, YENI_OR, _sahte_ortam
+from tests.test_sir_rotasyon_v447 import (BAYAT_OR, BETIK, ESKI, GLOBAL_HERMES, KOK_DEPO, YENI_NOUS, YENI_OR, _global_ayir,
+                                          _sahte_ortam)
 from tests.test_sir_yazim_yolu_v609 import ALAN, ESKI_DOSYA, ESKI_ENV, YENI, _iddia, _imza, _Sahne
 
 IZ = "SAHTE-V613-IZ-0001"            # bağın HEDEFİNDEKİ işaret — hiçbir çıktıda/kıyasta görünmemeli
 ESKI_JSON = "SAHTE-V613-JSON-0002"
-_DEGERLER = (*ESKI.values(), YENI_NOUS, YENI_OR, YENI, ESKI_ENV, ESKI_DOSYA, IZ, ESKI_JSON)
+_DEGERLER = (*ESKI.values(), YENI_NOUS, YENI_OR, YENI, ESKI_ENV, ESKI_DOSYA, IZ, ESKI_JSON, BAYAT_OR)
 SURE = 20.0                          # askı tavanı (v611 C emsali — yük-bağımsız; başarı yolu < 1 s)
 
 
@@ -69,12 +76,14 @@ def _sizinti_yok(r: subprocess.CompletedProcess) -> None:
     _iddia(not any(d in r.stdout + r.stderr for d in _DEGERLER), "bir SAHTE değer çıktıya düştü")
 
 
-def _kos_sure(ortam: dict, *args: str, girdi: str = "", sure: float = 180.0) -> subprocess.CompletedProcess | None:
+def _kos_sure(ortam: dict, *args: str, girdi: str = "", sure: float = 180.0, cwd: pathlib.Path | None = None,
+              betik: str | None = None) -> subprocess.CompletedProcess | None:
     """Betiği operatörün biçimiyle koşar (v447 `_kos`) — ama ZAMAN AŞIMIYLA: okuma askısı KIRMIZI olmalı, asılı test değil.
     Askıda süreç GRUBU öldürülür: `subprocess.run(timeout=)` yalnız `bash`i öldürür, `$( )` alt kabuğu ve FIFO'da bekleyen
     yardımcı (sudo şimi → python) yetim kalırdı (ölçüldü 2026-10-02: taban betiğe karşı RED koşumu iki yetim bıraktı)."""
-    p = subprocess.Popen(["bash", str(BETIK), *args], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE, text=True, env=ortam, start_new_session=True)
+    p = subprocess.Popen(["bash", betik or str(BETIK), *args], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE, text=True, env=ortam, start_new_session=True,
+                         cwd=str(cwd) if cwd else None)
     try:
         out, err = p.communicate(girdi, timeout=sure)
     except subprocess.TimeoutExpired:
@@ -218,6 +227,31 @@ def test_A2_YARIS_acilis_aninda_FIFOya_cevrilen_dosya_ASKIDA_KALMAZ(tmp_path, ad
     r = _yk_sure(s.yardimci, *args, kok=s.kok, on=on, sure=SURE)
     _iddia(isaret.exists(), f"yarış kancası ATEŞLENMEDİ — çivi kör (pozitif kontrol)\n{_ozet(r)}")
     _adli_ret(s, r, yol, kip, "FIFO")
+
+
+@pytest.mark.parametrize("ad", OKUMA_ISLEMLERI)
+def test_A3_YARIS_acilis_aninda_BASKA_NORMAL_dosyayla_takas_DEGISTI_ile_reddedilir(tmp_path, ad):
+    """TSK-262 düzeltme turu 1 (inceleme M1, `scratchpad/tsk262-inceleme/inode_sonda.log`): denetimler (lstat · zincir · hedef
+    lstat) asıl dosyayı ölçer; AÇILIŞ ANINDA hedef, aynı dizine taşınan BAŞKA bir NORMAL dosyayla takas edilir (kanca). FIFO/bağ
+    değil — tür denetimi onu geçirir; tek savunma tanıtıcının inode'unun denetlenenle EŞİTLİĞİDİR (takas edilen sert bağa karşı da
+    tek savunma). Beklenen: `OKUNAMADI (DEĞİŞTİ (yarış))` / adlı çıkış; takas edilen dosyanın içeriği (`IZ`) ve adları
+    (`IZ_ALANI` · `iz_kullanici`) çıktıda YOK; değer dosyası işleminde hedef bayt-eşit. Kanca pozitif kontrol taşır."""
+    s = _OkumaSahnesi(tmp_path)
+    yol, tur, args, kip = s.islem(ad)
+    takas = s.kurban_kur(tur)
+    if ad.startswith("esit"):
+        s.dosya.chmod(0o600)
+        s.dosya.write_text(IZ + "\n", encoding="utf-8")     # takas edilen okunsaydı EŞİT derdi
+    once = _imza(s.dosya)
+    isaret = tmp_path / "kanca_atesledi"
+    on = _yaris_kancasi(yol, isaret, f"os.rename({str(takas)!r}, {str(yol)!r})")
+    r = _yk_sure(s.yardimci, *args, kok=s.kok, on=on, sure=SURE)
+    _iddia(isaret.exists(), f"yarış kancası ATEŞLENMEDİ — çivi kör (pozitif kontrol)\n{_ozet(r)}")
+    _adli_ret(s, r, yol, kip, "DEĞİŞTİ (yarış)")
+    _iddia("IZ_ALANI" not in r.stdout + r.stderr and "iz_kullanici" not in r.stdout + r.stderr,
+           "takas edilen dosyadan okunan bir ad çıktıya düştü")
+    if ad == "deger-dosyasi":
+        _iddia(_imza(s.dosya) == once, "takas edilen değer dosyası OKUNDU — hedef yazıldı")
 
 
 # =================================================================================================
@@ -368,20 +402,37 @@ def _alan_farki(s: _OkumaSahnesi, yedek: str, guncel: str, *haric: str, tur: str
     return r
 
 
-#: PEM benzeri, TIRNAKLI çok satırlı değer. Son base64 satırı YALNIZ büyük harf + rakamdır: satır tabanlı `^AD=` deseni onu
-#: KATI sözleşmeyle de ad sanır (`AQAB0123` = `=`). Yalnız tırnak takibi onu DEĞER olarak tanır.
-_PEM = 'TLS_ANAHTAR="-----BEGIN PRIVATE KEY-----\nMIIBVwIBADANBgkqhkiG9w0BAQEFAASCAUEwggE9AgEAAkEA\n{son}\n-----END PRIVATE KEY-----"\n'
+#: PEM benzeri çok satırlı değerin GÖVDESİ. Son base64 satırı (`{son}`) YALNIZ büyük harf + rakamdır: satır tabanlı `^AD=` deseni
+#: onu KATI sözleşmeyle de ad sanır (`AQAB0123` = `=`).
+_PEM_GOVDE = "-----BEGIN PRIVATE KEY-----\nMIIBVwIBADANBgkqhkiG9w0BAQEFAASCAUEwggE9AgEAAkEA\n{son}\n-----END PRIVATE KEY-----"
+
+#: TSK-262 düzeltme turu 1 (inceleme I1, `scratchpad/tsk262-inceleme/n1_sonda.log`): tırnak takibi YALNIZ satır tam `AD="` ile
+#: başlıyorsa çalışır; öteki yaygın biçimlerde devam satırı yine `^AD=` desenine düşüyordu. Biçim → (yedek/güncel şablonu, beklenen
+#: hüküm). `tirnakli` dışındaki beş biçim İNCELEYİCİNİN biçimleridir (python-dotenv'in geçerli tırnaklı çok satırı ×3 · systemd ters
+#: bölü devamı · tırnaksız çok satır); hepsinde base64 satırı TEK tarafta "ad" olur ve YALNIZ sayılır.
+_N1_BICIMLER = {
+    "tirnakli": ('TLS_ANAHTAR="' + _PEM_GOVDE + '"\n', "FARKLI: TLS_ANAHTAR"),
+    "export": ('export TLS_ANAHTAR="' + _PEM_GOVDE + '"\n', "FARKLI: adsız 2 satır"),
+    "bosluklu_atama": ('TLS_ANAHTAR = "' + _PEM_GOVDE + '"\n', "FARKLI: adsız 2 satır"),
+    "bastaki_bosluk": ('  TLS_ANAHTAR="' + _PEM_GOVDE + '"\n', "FARKLI: adsız 2 satır"),
+    "ters_bolu": ("TLS_ANAHTAR=MIIBVwIBADANBgkqhkiG9w0BAQEFAASCAUEw\\\n{son}\n", "FARKLI: adsız 2 satır"),
+    "tirnaksiz": ("TLS_ANAHTAR=" + _PEM_GOVDE + "\n", "FARKLI: adsız 2 satır"),
+}
 
 
-def test_D1_TIRNAKLI_cok_satirli_degerin_DEVAM_satiri_AD_OLARAK_BASILMAZ(tmp_path):
-    """Yedek ile güncel arasında PEM gövdesinin son satırı farklı (`AQAB0123==` → `ZXCV9876==`). İnceleme N1: satır tabanlı
-    eşleşme bu satırı AD sayıp BASARDI — sır malzemesinin bir parçası. YENİ: devam satırı tırnaklı değerin parçasıdır; basılan
-    tek ad değerin SAHİBİDİR (`TLS_ANAHTAR`), devam satırının hiçbir parçası çıktıda yok, hariç tutulan ad sayılmaz."""
+@pytest.mark.parametrize("bicim", sorted(_N1_BICIMLER))
+def test_D1_COK_SATIRLI_degerin_DEVAM_satiri_HICBIR_BICIMDE_AD_OLARAK_BASILMAZ(tmp_path, bicim):
+    """Yedek ile güncel arasında PEM gövdesinin son satırı farklı (`AQAB0123==` → `ZXCV9876==`). İnceleme N1 + düzeltme turu 1 I1:
+    satır tabanlı eşleşme bu satırı AD sayıp BASARDI — sır malzemesinin bir parçası. KURAL BİÇİMDEN BAĞIMSIZ: bir ad YALNIZ (a)
+    sözleşmeye uyan bir atama olarak İKİ dosyada da var ve değeri farklıysa ya da (b) aranan adlar ∪ sır-adı sonekleri kümesindeyse
+    basılır; base64 satırı yalnız TEK tarafta "ad" olur (base64'te `=` yalnız dolgudur) → SAYILIR. `tirnakli` biçimde basılan tek ad
+    değerin SAHİBİDİR (`TLS_ANAHTAR`); hiçbir biçimde devam satırının hiçbir parçası çıktıda yok, sonuç "AYNI" değil."""
     s = _OkumaSahnesi(tmp_path)
+    sablon, beklenen = _N1_BICIMLER[bicim]
     ortak = f"{ALAN}=x\nHERMES_HOME=/h\n"
-    r = _alan_farki(s, ortak + _PEM.format(son="AQAB0123=="), ortak + _PEM.format(son="ZXCV9876=="), ALAN)
-    _iddia(r.stdout.strip() == "FARKLI: TLS_ANAHTAR", f"beklenen 'FARKLI: TLS_ANAHTAR'\n{_ozet(r)}")
-    _iddia(not any(p in r.stdout + r.stderr for p in ("AQAB", "ZXCV", "MIIB", "BEGIN")), "devam satırı çıktıya düştü")
+    r = _alan_farki(s, ortak + sablon.replace("{son}", "AQAB0123=="), ortak + sablon.replace("{son}", "ZXCV9876=="), ALAN)
+    _iddia(r.stdout.strip() == beklenen, f"{bicim}: beklenen {beklenen!r}\n{_ozet(r)}")
+    _iddia(not any(p in r.stdout + r.stderr for p in ("AQAB", "ZXCV", "MIIB", "BEGIN")), f"{bicim}: devam satırı çıktıya düştü")
 
 
 def test_D2_SOZLESME_DISI_ad_BASILMAZ_ADSIZ_sayilir_AYNI_denmez(tmp_path):
@@ -440,6 +491,53 @@ def test_D6_UCTAN_UCA_GERI_AL_KURU_adsiz_farki_SOYLER(tmp_path):
     _iddia(r is not None and r.returncode == 0, _ozet(r))
     uyari = _satir_sonrasi(r.stdout, "geri konacak: /opt/apisix/.env-apisix")
     _iddia("BAŞKA alanlar" in uyari and "adsız 1 satır" in uyari, f"uyarı: {_maskeli(uyari)!r}\n{_ozet(r)}")
+    _iddia(_imzalar(kok) == once, "kuru koşum YAZDI")
+    _sizinti_yok(r)
+
+
+def _kabuk_sir_adi_mi(adlar: list[str]) -> tuple[list[str], set[str]]:
+    """Kabuğun KENDİ `_SIR_ADI_SONEKLERI` + `_sir_adi_mi` tanımını (betikten kesilir — kopya yok) verilen adlarda koşar.
+    Döner: (sonek listesi, `_sir_adi_mi` doğru olan adlar)."""
+    metin = BETIK.read_text(encoding="utf-8")
+    deger = re.search(r'^_SIR_ADI_SONEKLERI="([^"]+)"$', metin, flags=re.M)
+    _iddia(deger is not None, "`_SIR_ADI_SONEKLERI` tanımı bulunamadı")
+    fonk = metin[metin.index("_sir_adi_mi() {"):]
+    fonk = fonk[:fonk.index("\n}\n") + 3]
+    kod = f'_SIR_ADI_SONEKLERI="{deger.group(1)}"\n{fonk}\nfor a in "$@"; do if _sir_adi_mi "$a"; then echo "$a"; fi; done\n'
+    r = subprocess.run(["bash", "-c", kod, "_", *adlar], capture_output=True, text=True)
+    _iddia(r.returncode == 0, r.stderr[-1000:])
+    return deger.group(1).split(), set(r.stdout.split())
+
+
+def test_D7_TEK_TARAFLI_ad_YALNIZ_sir_adi_sonekiyle_BASILIR_kabukla_AYNI_kural(tmp_path):
+    """I1 kuralının (b) kolu, sonek yarısı — tek kaynaktan: yardımcı sonek listesini kabuktan alır (`--sonek $_SIR_ADI_SONEKLERI`)
+    ve `_sir_adi_mi` ile AYNI anlamı uygular (son-ek eşleşmesi). Ayrışma çivisi: yalnız güncelde bulunan sekiz addan yardımcının
+    BASTIKLARI = kabuğun `_sir_adi_mi`sinin DOĞRU dedikleri; kalanlar yalnız SAYILIR. Pozitif kontrol: kabuk dört adı seçer."""
+    s = _OkumaSahnesi(tmp_path)
+    adlar = ["YENI_TOKEN", "YENI_API_KEY", "YENI_SECRET", "YENI_PASSWORD", "YENI_TOKENS", "TOKEN_YENI", "YENI_KEY", "APIKEY_X"]
+    sonekler, kabuk = _kabuk_sir_adi_mi(adlar)
+    _iddia(kabuk == {"YENI_TOKEN", "YENI_API_KEY", "YENI_SECRET", "YENI_PASSWORD"}, f"pozitif kontrol: kabuk {sorted(kabuk)}")
+    r = _alan_farki(s, f"{ALAN}=x\n", f"{ALAN}=x\n" + "".join(f"{a}=1\n" for a in adlar), ALAN, "--sonek", *sonekler)
+    _iddia(r.stdout.startswith("FARKLI: "), _ozet(r))
+    govde = r.stdout.strip()[len("FARKLI: "):]
+    basilan = set(govde.split(" + ")[0].split()) if not govde.startswith("adsız") else set()
+    _iddia(basilan == kabuk and govde.endswith("+ adsız 4 satır"), f"yardımcı {sorted(basilan)} ≠ kabuk {sorted(kabuk)}\n{_ozet(r)}")
+
+
+def test_D8_UCTAN_UCA_GERI_AL_KURU_aranan_ad_BASILIR_sirsiz_tek_tarafli_ad_SAYILIR(tmp_path):
+    """I1 kuralının (b) kolu, aranan adlar yarısı — operatörün biçimi (`--geri-al <yedek> --kuru`): `--kapi` yedeğinden sonra
+    `.env-apisix`e iki satır eklenir: `HINDSIGHT_CP_ACCESS_KEY` (`_aranan_adlar`da — tablonun sır kimliği; sır-adı sözlüğüne UYMAZ)
+    ve `KENDI_AYARI` (ne aranan ne sır-adı). Not satırı ilkini ADIYLA basar (kabuk `--basilir $(_aranan_adlar)` geçer), ikincisini
+    yalnız SAYAR (bedel: yedekten sonra eklenen sırsız ad adıyla söylenmez). Hiçbir şey yazılmaz, değer basılmaz."""
+    kok, ortam, _once, yedek = _kapi_sahnesi(tmp_path)
+    apisix = kok / "opt/apisix/.env-apisix"
+    apisix.write_text(apisix.read_text(encoding="utf-8") + "HINDSIGHT_CP_ACCESS_KEY=x\nKENDI_AYARI=1\n", encoding="utf-8")
+    once = _imzalar(kok)
+    r = _kos_sure(ortam, "--geri-al", str(yedek), "--kuru")
+    _iddia(r is not None and r.returncode == 0, _ozet(r))
+    uyari = _satir_sonrasi(r.stdout, "geri konacak: /opt/apisix/.env-apisix")
+    _iddia("ESKİYE döner: HINDSIGHT_CP_ACCESS_KEY + adsız 1 satır" in uyari and "KENDI_AYARI" not in uyari,
+           f"uyarı: {_maskeli(uyari)!r}\n{_ozet(r)}")
     _iddia(_imzalar(kok) == once, "kuru koşum YAZDI")
     _sizinti_yok(r)
 
@@ -602,6 +700,136 @@ def test_F2_ENVANTER_beyan_disi_taramasi_okunamayani_TARANAMADI_der_YOK_uydurmaz
     _sizinti_yok(r)
 
 
+@pytest.mark.parametrize("hal", ["kopya_fifo", "referans_fifo"])
+def test_F3_ESITLE_kaniti_OKUNAMAYAN_satiri_ESIT_saymaz_OLCULEMEDI_cikis_2(tmp_path, hal):
+    """TSK-262 düzeltme turu 1 (inceleme M3): `--openrouter --esitle`, global hermes `.env` AYRI (TSK-181 sahnesi). (kopya_fifo)
+    ikinci geçişte referans çıkarılırken AYRI kopya FIFO'ya çevrilir → ikinci geçiş onu `OKUNAMADI (FIFO)` görür ve YAZMAZ;
+    (referans_fifo) yazım anında REFERANS FIFO'ya çevrilir → kanıtta kopyalar `REFERANS OKUNAMADI (FIFO)`. ESKİ kanıt yalnız
+    `→ AYRI` arıyordu: "kopyaları EŞİT" + çıkış 0 — YANLIŞ BAŞARI. YENİ: referans olmayan her satır `→ EŞİT` olmalı (motor API /
+    ALTER ROLE satırları beyanlı kanaldır, hariç); değilse ÖLÇÜLEMEDİ, çıkış 2 (aracın ölçülemedi sınıfı). Değer basılmaz."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    _global_ayir(kok)
+    if hal == "kopya_fifo":
+        hedef, kosul = kok / GLOBAL_HERMES, '"cikar" in a and a[-1].endswith("/ref_OPENROUTER_API_KEY")'
+        satir = "/home/ubuntu/.hermes/.env [OPENROUTER_API_KEY] → OKUNAMADI (FIFO)"
+    else:
+        hedef, kosul = kok / "etc/hindsight/creds/HINDSIGHT_API_LLM_API_KEY", '"yaz-env" in a'
+        satir = "→ REFERANS OKUNAMADI (FIFO)"
+    isaret = _sudo_kancasi(tmp_path, ortam, kosul, f"os.unlink({str(hedef)!r})\nos.mkfifo({str(hedef)!r}, 0o600)")
+    r = _kos_sure(ortam, "--openrouter", "--esitle")
+    _iddia(isaret.exists(), "yarış kancası ATEŞLENMEDİ — çivi kör (pozitif kontrol)")
+    _iddia(r is not None and satir in r.stdout, f"kanıt satırı yok: {satir!r}\n{_ozet(r)}")
+    _iddia(r.returncode == 2 and "ÖLÇÜLEMEDİ" in r.stderr and "kopyaları EŞİT" not in r.stdout,
+           f"okunamayan kopya EŞİT sayıldı (yanlış başarı)\n{_ozet(r)}")
+    _sizinti_yok(r)
+
+
+# =================================================================================================
+# K) K1 — DOSYA İÇİ kısmi önlem: çalışma dizini `/` + her python `-I` (A0 root sahipli kurulum yeri ayrı kalem: TSK-265)
+# =================================================================================================
+# İnceleme K1(b) (`scratchpad/tsk262-inceleme/cwd_sonda/`): `python3 -c` sys.path'in başına ÇALIŞMA DİZİNİNİ koyar; RUNBOOK biçimi
+# `cd /opt/meridian && sudo ./deploy/oracle-a1/sir_rotasyon.sh …` ile ubuntu'nun yazabildiği dizindeki bir `yaml.py`/`ast.py` root
+# olarak koşar. İki katman: betik başta kendi dizinini MUTLAK yola çözüp `cd /` yapar; her python çağrısı `-I` (yalıtılmış kip —
+# ne çalışma dizini ne betik dizini ne `PYTHON*` ortamı sys.path'e girer). Katmanlar ayrı ayrı ısırılır: K1a `PYTHONPATH` yoluyla
+# `-I`yı (çalışma dizini yolunu `cd /` zaten kapatır), K1b çocuk süreçlerin çalışma dizinini (`cd /`).
+
+_SAHTE_MODUL = "import sys\nwith open({isaret!r}, 'a') as _f:\n    _f.write(repr(sys.argv) + '\\n')\n"
+
+
+def _sahte_moduller(dizin: pathlib.Path, isaret: pathlib.Path) -> None:
+    """İÇE AKTARILIRSA işaret dosyasına sürecin argv'sini yazan sahte modüller: `yaml` + `ast` (kabuk parçacıkları — envanter /
+    üretici okuması) ve `urllib` paketi (gömülü yardımcı `urllib.parse` ister). Çivi şimleri (`json` · `os` · `re` · `shutil` ·
+    `sys`) bunların hiçbirini içe aktarmaz — işaret YALNIZ betiğin kendi yorumlayıcılarından gelebilir."""
+    dizin.mkdir(parents=True, exist_ok=True)
+    govde = _SAHTE_MODUL.format(isaret=str(isaret))
+    (dizin / "yaml.py").write_text(govde, encoding="utf-8")
+    (dizin / "ast.py").write_text(govde, encoding="utf-8")
+    (dizin / "urllib").mkdir(exist_ok=True)
+    (dizin / "urllib/__init__.py").write_text(govde, encoding="utf-8")
+
+
+def _kasa_ortami(tmp_path: pathlib.Path) -> tuple[pathlib.Path, dict]:
+    """`_sahte_ortam` + PyYAML'lı yorumlayıcı (`PYTHON_BIN` — çivinin kendi `.venv`i): kasaya bağlı alt komutun Agent hedefi
+    uyarısı depo girdilerinden (`sir_envanteri.yaml` · `vault_politika_uret.py`) GERÇEKTEN okunsun."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    ortam["PYTHON_BIN"] = sys.executable
+    return kok, ortam
+
+
+#: `--kapi --kuru` çıktısında depo girdilerinin OKUNDUĞUNUN kanıtı: kasa yolu `sir_envanteri.yaml`den (yaml parçacığı), aralık
+#: `vault_politika_uret.py`den (ast parçacığı) gelir — girdi bulunamazsa satır yerine "UYARI ÖLÇÜLEMEDİ" basılır.
+_DEPO_GIRDISI_KANITI = ("kasa yolu: secret/meridian/kapi_apikey (vault_kv.kapi_apikey)", "aralık: 1m (ops/vault_politika_uret.py")
+
+
+def test_K1a_CALISMA_DIZINI_ve_PYTHONPATH_teki_sahte_yaml_ast_urllib_ICE_AKTARILMAZ(tmp_path):
+    """Operatörün biçimi — GERÇEK `--kapi` (Agent hedefi uyarısı yaml/ast parçacıklarını; ön-denetim, yedek, yazım ve kanıt gömülü
+    yardımcıyı `sudo python3` ile koşar; `--kuru` hiç `sudo` çağırmaz, ölçüldü) — ÇALIŞMA DİZİNİ sahte modüllerle dolu bir dizin ve
+    `PYTHONPATH` o dizin. ESKİ: `python3 -c` çalışma dizinini sys.path'e koyar → sahte `yaml`/`ast` root olarak koşar (işaret
+    yazılır). YENİ: işaret YOK, depo girdileri yine okunur (kanıt satırları), çıkış 0. `PYTHONPATH` ayağı `-I`yı tek başına ısırır —
+    parçacıklarda (`yaml`/`ast`) ve gömülü yardımcıda (`urllib`) ayrı ayrı (`cd /` onu kapatmaz; üretimde `sudo` ortamı sıfırlar —
+    çivide yalıtımın ölçü aletidir)."""
+    kok, ortam = _kasa_ortami(tmp_path)
+    sahte, isaret = tmp_path / "sahte_moduller", tmp_path / "sahte_ice_aktarildi"
+    _sahte_moduller(sahte, isaret)
+    ortam["PYTHONPATH"] = str(sahte)
+    r = _kos_sure(ortam, "--kapi", cwd=sahte)
+    _iddia(not isaret.exists(), "sahte modül İÇE AKTARILDI: " + (isaret.read_text(encoding="utf-8")[-800:] if isaret.exists() else ""))
+    _iddia(any(" kopyala " in x for x in (kok / ".sahte/argv.log").read_text(encoding="utf-8").splitlines()),
+           "gömülü yardımcı `sudo` ile HİÇ koşmadı — `py` ayağı kör (pozitif kontrol)")
+    _iddia(r is not None and r.returncode == 0 and all(k in r.stdout for k in _DEPO_GIRDISI_KANITI), _ozet(r))
+    _sizinti_yok(r)
+
+
+def test_K1b_BETIK_cocuk_surecleri_KOK_DIZINDE_kosturur(tmp_path):
+    """`cd /` katmanı: betik nereden çağrılırsa çağrılsın çocuk süreçlerinin (sudo → yardımcı · yaml/ast parçacıkları) çalışma dizini
+    `/`dir — ubuntu'nun yazabildiği çağrı dizini (RUNBOOK: `cd /opt/meridian && sudo ./deploy/…`) hiçbir göreli aramaya girmez.
+    Ölçüm: GERÇEK `--kapi`nin ilk `sudo` çağrısında şim kancası çalışma dizinini kaydeder."""
+    kok, ortam = _kasa_ortami(tmp_path)
+    cagri = tmp_path / "cagri_dizini"
+    cagri.mkdir()
+    kayit = tmp_path / "cocuk_cwd"
+    isaret = _sudo_kancasi(tmp_path, ortam, "True", f"open({str(kayit)!r}, 'w').write(os.getcwd())")
+    r = _kos_sure(ortam, "--kapi", cwd=cagri)
+    _iddia(isaret.exists() and kayit.exists(), f"kanca ATEŞLENMEDİ (pozitif kontrol)\n{_ozet(r)}")
+    _iddia(os.path.realpath(kayit.read_text(encoding="utf-8")) == "/", f"çocuk sürecin çalışma dizini: {kayit.read_text()!r}")
+    _iddia(r is not None and r.returncode == 0, _ozet(r))
+
+
+def test_K1c_GORELI_cagrida_depo_girdileri_BULUNUR_cikti_MUTLAK_cagriyla_AYNI(tmp_path):
+    """Betik dizini `cd /`dan ÖNCE MUTLAK yola çözülür: göreli çağrı (`bash deploy/oracle-a1/sir_rotasyon.sh`, çalışma dizini depo
+    kökü — RUNBOOK'un `./deploy/…` biçimi) depo girdilerini yine bulur; çıktı mutlak çağrınınkiyle AYNIDIR (betik yolu metni
+    soyulur). Çözüm `cd /`dan SONRA ya da göreli kalsaydı girdiler `/` altında aranır, kanıt satırları "UYARI ÖLÇÜLEMEDİ"ye döner."""
+    kok, ortam = _kasa_ortami(tmp_path)
+    goreli = str(BETIK.relative_to(KOK_DEPO))
+    rg = _kos_sure(ortam, "--kapi", "--kuru", cwd=KOK_DEPO, betik=goreli)
+    rm = _kos_sure(ortam, "--kapi", "--kuru")
+    _iddia(rg is not None and rg.returncode == 0 and all(k in rg.stdout for k in _DEPO_GIRDISI_KANITI), _ozet(rg))
+    _iddia(rm is not None and rm.returncode == 0, _ozet(rm))
+    _iddia(rg.stdout.replace(goreli, "<BETIK>") == rm.stdout.replace(str(BETIK), "<BETIK>"),
+           "göreli çağrının çıktısı mutlak çağrınınkinden AYRIŞTI")
+
+
+def test_K1d_STATIK_betikte_YALITILMAMIS_python_cagrisi_KALMADI():
+    """Kabuk tarafının (gömülü yardımcı metni ve yorumlar hariç) BÜTÜN yorumlayıcı çağrıları — `"$PYTHON_BIN" …` ve `python3 …` —
+    `-I` ile başlar; `py()` (gömülü yardımcı) dahil. Sayı PINLENİR (ölçüldü 2026-10-02: 7 — saat okuması · dört depo girdisi
+    parçacığı · kasa sürümü · `py`): tarama kör kalırsa ya da yeni bir çağrı eklenirse öter. Betiğin başında `cd /` ve mutlak betik
+    dizini, depo girdileri o dizinden türer."""
+    metin = BETIK.read_text(encoding="utf-8")
+    bas = metin.index("<<'PY_SON'\n")
+    kabuk = metin[:bas] + metin[metin.index("\nPY_SON\n", bas):]
+    satirlar = [x for x in kabuk.splitlines() if x.strip() and not x.lstrip().startswith("#")]
+    cagrilar = [(x.strip(), m.group(1)) for x in satirlar
+                for m in re.finditer(r'(?:"\$PYTHON_BIN"|\bpython3)[ \t]+(\S+)', x)]
+    _iddia(len(cagrilar) == 7, f"yorumlayıcı çağrısı sayısı {len(cagrilar)} (ölçülen 7): " + "\n".join(c for c, _ in cagrilar))
+    yalitilmamis = [c for c, ilk in cagrilar if ilk != "-I"]
+    _iddia(not yalitilmamis, "-I'sız yorumlayıcı çağrısı:\n" + "\n".join(yalitilmamis))
+    on = metin[metin.index("set -euo pipefail"):metin.index('KOK="${SIR_ROT_KOK:-}"')]
+    _iddia(re.search(r'^BETIK_DIZINI="\$\(cd "\$\(dirname "\$0"\)" && pwd -P\)"', on, flags=re.M) is not None
+           and re.search(r"^cd /$", on, flags=re.M) is not None, "betik başında mutlak dizin çözümü + `cd /` yok")
+    for ad in ("VAULT_ENVANTER", "VAULT_POLITIKA_URETICI"):
+        _iddia(re.search(rf'^{ad}="\$\{{{ad}:-\$BETIK_DIZINI/', metin, flags=re.M) is not None, f"{ad} betik dizininden türemiyor")
+
+
 # =================================================================================================
 # G) STATİK — çıplak `open()` yok; ölçülen istisnalar DEPO İÇİ sabit girdiler; okuma gövdesi TEK
 # =================================================================================================
@@ -641,5 +869,5 @@ def test_G2_STATIK_yardimci_DISI_open_YALNIZ_depo_ici_SABIT_girdiler():
         _iddia(kapanis.startswith(("' \"$VAULT_ENVANTER\"", "' \"$VAULT_POLITIKA_URETICI\"")),
                f"parçacığın girdisi depo içi sabit değil: {kapanis.strip()}")
     for ad in ("VAULT_ENVANTER", "VAULT_POLITIKA_URETICI"):
-        tanim = re.search(rf'^{ad}="\$\{{{ad}:-\$\(cd "\$\(dirname "\$0"\)" && pwd\)/[^}}]+\}}"$', metin, flags=re.M)
+        tanim = re.search(rf'^{ad}="\$\{{{ad}:-\$BETIK_DIZINI/[^}}]+\}}"$', metin, flags=re.M)   # K1: mutlak betik dizini
         _iddia(tanim is not None, f"{ad} varsayılanı betiğin deposuna bağlı değil")

@@ -635,34 +635,36 @@ ALTIN_DB_KURU: dict = {
 #:   (2)(3) iki `sudo cp -p` → `kopyala` (yedek alma + eski DSN kopyası; bağ izlemeyen tek gövde — root `cp` bağ izliyordu);
 #:   (4) iki reçete satırı `sudo cp -p <yedek>/<yol> /<yol>` / "<yedek> altındaki DSN'i geri yaz" → `sudo <BETIK> --geri-al
 #:       <yedek>` (aracın kendi bağ izlemeyen geri alma yolu). Fark koşumdan ÖLÇÜLDÜ, elle yazılmadı (scratchpad tsk261).
+#: TSK-262 düzeltme turu 1 (2026-10-02; inceleme K1) — BİLİNÇLİ GÜNCELLEME, tek kalem: gömülü yardımcının dokuz çağrısı
+#:   `sudo python3 -I <yardımcı> …` (yalıtılmış kip — çalışma/betik dizini ve `PYTHON*` ortamı sys.path'e girmez); gerisi BİREBİR.
 ALTIN_DB_GERCEK: dict = {
     "rc": 0,
     "argv": [
-        "sudo python3 <T>/sir-rot.X/yardimci.py hedef-denetle <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL koru koru",
+        "sudo python3 -I <T>/sir-rot.X/yardimci.py hedef-denetle <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL koru koru",
         "sudo install -d -m 0700 -o root -g root <T>/kok/root/sir-yedek-TS-db",
         "install -d -m 0700 -o root -g root <T>/kok/root/sir-yedek-TS-db",
         "sudo test -e <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL",
         "sudo install -d -m 0700 -o root -g root <T>/kok/root/sir-yedek-TS-db/etc/hindsight/creds",
         "install -d -m 0700 -o root -g root <T>/kok/root/sir-yedek-TS-db/etc/hindsight/creds",
-        "sudo python3 <T>/sir-rot.X/yardimci.py kopyala <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL <T>/kok/root/sir-yedek-TS-db/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL",
-        "sudo python3 <T>/sir-rot.X/yardimci.py kopyala <T>/kok/root/sir-yedek-TS-db/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL <T>/sir-rot.X/eski_url",
-        "sudo python3 <T>/sir-rot.X/yardimci.py sql-uret <T>/sir-rot.X/rol.sql hindsight <T>/sir-rot.X/yeni",
+        "sudo python3 -I <T>/sir-rot.X/yardimci.py kopyala <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL <T>/kok/root/sir-yedek-TS-db/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL",
+        "sudo python3 -I <T>/sir-rot.X/yardimci.py kopyala <T>/kok/root/sir-yedek-TS-db/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL <T>/sir-rot.X/eski_url",
+        "sudo python3 -I <T>/sir-rot.X/yardimci.py sql-uret <T>/sir-rot.X/rol.sql hindsight <T>/sir-rot.X/yeni",
         "sudo -u postgres psql -v ON_ERROR_STOP=1 -q -f -",
         "psql -v ON_ERROR_STOP=1 -q -f -",
         "sudo rm -f <T>/sir-rot.X/rol.sql",
         "sudo test ! -e <T>/sir-rot.X/rol.sql",
         "sudo test -f <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL",
-        "sudo python3 <T>/sir-rot.X/yardimci.py yaz-url <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL <T>/sir-rot.X/yeni koru koru",
+        "sudo python3 -I <T>/sir-rot.X/yardimci.py yaz-url <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL <T>/sir-rot.X/yeni koru koru",
         "sudo systemctl restart hindsight-api.service",
         "sudo test -e <T>/kok/run/credentials/hindsight-api.service/HINDSIGHT_API_DATABASE_URL",
         "sudo stat -c %s <T>/kok/run/credentials/hindsight-api.service/HINDSIGHT_API_DATABASE_URL",
         "sudo stat -f %z <T>/kok/run/credentials/hindsight-api.service/HINDSIGHT_API_DATABASE_URL",
-        "sudo python3 <T>/sir-rot.X/yardimci.py kanit-cfg <T>/sir-rot.X/kanit.cfg http://hafiza/health - - - <T>/sir-rot.X/kanit.out -",
+        "sudo python3 -I <T>/sir-rot.X/yardimci.py kanit-cfg <T>/sir-rot.X/kanit.cfg http://hafiza/health - - - <T>/sir-rot.X/kanit.out -",
         "curl -K <T>/sir-rot.X/kanit.cfg",
-        "sudo python3 <T>/sir-rot.X/yardimci.py dsn-uc <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL",
-        "sudo python3 <T>/sir-rot.X/yardimci.py pgpass <T>/sir-rot.X/pgpass_yeni <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL",
+        "sudo python3 -I <T>/sir-rot.X/yardimci.py dsn-uc <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL",
+        "sudo python3 -I <T>/sir-rot.X/yardimci.py pgpass <T>/sir-rot.X/pgpass_yeni <T>/kok/etc/hindsight/creds/HINDSIGHT_API_DATABASE_URL",
         "psql -w -tAX -h 127.0.0.1 -p 5432 -U hindsight -d hindsight -c select 1",
-        "sudo python3 <T>/sir-rot.X/yardimci.py pgpass <T>/sir-rot.X/pgpass_eski <T>/sir-rot.X/eski_url",
+        "sudo python3 -I <T>/sir-rot.X/yardimci.py pgpass <T>/sir-rot.X/pgpass_eski <T>/sir-rot.X/eski_url",
         "psql -w -tAX -h 127.0.0.1 -p 5432 -U hindsight -d hindsight -c select 1"
     ],
     "systemctl": [
