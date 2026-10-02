@@ -915,7 +915,9 @@ TSK-261'den beri reçete elle `cp` DEĞİL, aracın alt komutudur: önce `sudo .
 yedekten SONRA değişmiş başka alanların ADLARINI basar (değer asla) → o alanlar da eskiye dönecekse sonra `--esitle`/ilgili
 rotasyonla yeniden yaz. Gerçek koşum yazmadan ÖNCE mevcut hâli yeni bir `/root/sir-yedek-…` dizinine alır ve yolunu basar (geri
 almanın geri alınması o yoldur); geri konacak dosya yoksa çıkış 1. Yedek dizini doğrudan `/root` altında, tablodaki alt komutun adını
-taşıyan bir dizin olmalı; bağ ya da tablo dışı yol reddedilir.
+taşıyan bir dizin olmalı; bağ ya da tablo dışı yol reddedilir. TSK-262'den beri yarıda kalan bir yedek (ör. kaynağı bağ çıktı)
+`….yarim` adına taşınır ve `--geri-al` onu girdi olarak REDDEDER; ön yedek ise içinde bir `KOKEN` dosyası taşır (girdi yedeğinin
+yolu, alt komut, UTC damga — sır yok) ve `--envanter`in yedek listesinde rotasyon yedeğinden ayrı olarak "ÖN YEDEK" diye görünür.
 
 
 ## TSK-064 iki-kanal kapanışı — kiracı anahtarı ve hindsight-cp yalnız Vault kanalından (2026-09-29)

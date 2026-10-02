@@ -636,7 +636,8 @@ def test_F4b_GERI_AL_yazim_aninda_baga_cevrilen_hedef_ADLA_reddedilir_otekiler_g
     once_k = _imza(kurban)
     isaret = _sudo_kancasi(
         tmp_path, ortam,
-        f'len(a) >= 5 and a[2] == "kopyala" and a[3] == {str(yedek / "etc/meridian/kapi_apikey")!r}',
+        # İşlem jetonu KONUMDAN bağımsız (TSK-262 düzeltme turu 1: `py` artık `sudo python3 -I <yardımcı> <işlem> …`).
+        f'"kopyala" in a and a[a.index("kopyala") + 1] == {str(yedek / "etc/meridian/kapi_apikey")!r}',
         f"os.unlink({str(apisix)!r})\nos.symlink({str(kurban)!r}, {str(apisix)!r})")
     r = _kos(BETIK, ortam, "--geri-al", str(yedek))
     _iddia(isaret.exists(), "yarış kancası ATEŞLENMEDİ — çivi kör (pozitif kontrol)")

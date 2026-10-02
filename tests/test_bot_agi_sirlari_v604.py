@@ -1858,7 +1858,12 @@ def _sahiplik_kaydi(tmp_path: pathlib.Path) -> tuple[pathlib.Path, pathlib.Path]
     `sitecustomize` ile `pwd/grp` `ubuntu` → 1000/1001 ve kayıt tutan `os.chown`/`os.fchown` verilir. Kayıttaki (uid, gid)
     YALNIZ yardımcı `ubuntu:ubuntu` istediyse 1000/1001 olur — istenen sahip böyle ölçülür, çivi makinesinde hiçbir şey chown
     edilmez. G3b dal sonu M1: yazım artık DOSYA TANITICISINA `fchown` yapar (yol tabanlı chown bir bağı izlerdi) — tanıtıcının
-    yolu `F_GETPATH` (macOS) ya da `/proc/self/fd` (Linux) ile okunur."""
+    yolu `F_GETPATH` (macOS) ya da `/proc/self/fd` (Linux) ile okunur.
+    ENJEKSİYON KANALI (TSK-262 düzeltme turu 1, 2026-10-02): yardımcı artık `sudo python3 -I …` ile koşar — yalıtılmış kip
+    `PYTHONPATH`i (dolayısıyla `sitecustomize`ı) YOK SAYAR; eski kanal (ortamdaki `PYTHONPATH`) ölçü aletini KÖR ederdi. Kayıt artık
+    çivinin KENDİ `python3` sarmalayıcısıyla yüklenir (döner: sarmalayıcının dizini — PATH'in başına konur): argv'de `…/yardimci.py`
+    varsa aynı yorumlayıcı bayraklarıyla (`-I` dahil) önce bu yamayı sonra yardımcıyı koşar, öteki her çağrıyı (şimler,
+    parçacıklar) AYNEN gerçek `python3`e geçirir. Üretimin yalıtımı gevşemez; yama yalnız çivinin aleti."""
     site = tmp_path / "site_v604"
     site.mkdir()
     log = tmp_path / "chown.log"
@@ -1885,7 +1890,23 @@ def _sahiplik_kaydi(tmp_path: pathlib.Path) -> tuple[pathlib.Path, pathlib.Path]
         "        with open(_LOG, 'a', encoding='utf-8') as fh:\n"
         "            fh.write('%s\\t%s\\t%s\\n' % (os.path.dirname(_fd_yolu(fd)), uid, gid))\n"
         "    os.fchown = _fchown\n", encoding="utf-8")
-    return site, log
+    gercek = shutil.which("python3")
+    assert gercek, "python3 PATH'te yok — sahiplik sarmalayıcısı kurulamaz"
+    sarmal = tmp_path / "py_sarmal"
+    sarmal.mkdir()
+    (sarmal / "python3").write_text(
+        f"#!{gercek}\n"
+        "import os, sys\n"
+        f"GERCEK, YAMA = {gercek!r}, {str(site / 'sitecustomize.py')!r}\n"
+        "a = sys.argv[1:]\n"
+        "i = next((k for k, x in enumerate(a) if x.endswith('/yardimci.py')), None)\n"
+        "if i is not None:\n"
+        "    kod = ('exec(compile(open(%r, encoding=\"utf-8\").read(), %r, \"exec\"))\\nimport runpy, sys\\n'\n"
+        "           'sys.argv = %r\\nrunpy.run_path(%r, run_name=\"__main__\")\\n' % (YAMA, YAMA, a[i:], a[i]))\n"
+        "    os.execv(GERCEK, [GERCEK, *a[:i], '-c', kod])\n"
+        "os.execv(GERCEK, [GERCEK, *a])\n", encoding="utf-8")
+    (sarmal / "python3").chmod(0o755)
+    return sarmal, log
 
 
 def _tohum_degerleri(kok: pathlib.Path) -> set[str]:
@@ -1900,9 +1921,8 @@ def test_D1_yok_olan_dosyalar_0600_ubuntu_ile_yazilir(tmp_path):
     kok, ortam = _sahte_ortam(tmp_path)
     plan, ref = _tohum_plani()
     _tohum_sil(kok, *plan)
-    site, chown_log = _sahiplik_kaydi(tmp_path)
-    ortam.update(PYTHONPATH=os.pathsep.join(x for x in (str(site), ortam.get("PYTHONPATH", "")) if x),
-                 SAHTE_CHOWN_LOG=str(chown_log))
+    sarmal, chown_log = _sahiplik_kaydi(tmp_path)
+    ortam.update(PATH=f"{sarmal}:{ortam['PATH']}", SAHTE_CHOWN_LOG=str(chown_log))
     r = _kos(BETIK, ortam, TOHUMLA)
     _iddia(r.returncode == 0, _ozet(r))
     for yol, alanlar in plan.items():

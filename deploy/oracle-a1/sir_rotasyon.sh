@@ -265,6 +265,17 @@
 # =================================================================================================
 set -euo pipefail
 
+# ÇALIŞMA DİZİNİ `/` + BETİĞİN MUTLAK DİZİNİ (TSK-262 düzeltme turu 1; inceleme K1 — DOSYA İÇİ kısmi önlem). `python3 -c`
+# sys.path'in başına ÇALIŞMA DİZİNİNİ koyar: RUNBOOK biçimi `cd /opt/meridian && sudo ./deploy/oracle-a1/sir_rotasyon.sh …` ile
+# ubuntu'nun yazabildiği dizindeki bir `yaml.py`/`ast.py` root olarak koşardı (inceleme sondası `cwd_sonda/`). Betik dizini ÖNCE
+# mutlak (fiziksel) yola çözülür — göreli çağrıda da depo girdileri ($VAULT_ENVANTER · $VAULT_POLITIKA_URETICI) bulunur — SONRA
+# `cd /`. İkinci katman: bütün yorumlayıcı çağrıları `-I` (yalıtılmış kip: ne çalışma dizini ne betik dizini ne `PYTHON*` ortamı
+# sys.path'e girer; A1'de `sudo python3 -I -c "import yaml"` sistem PyYAML'ını bulur — Rol-1 ölçümü 2026-10-02). KALAN (ayrı kalem
+# TSK-265): betiğin ve girdilerinin KENDİSİ ubuntu'nun yazabildiği ağaçta — A0 root sahipli kurulum yeri. Reçetelerdeki `$0`
+# operatörün KENDİ kabuğunda (çağrı dizininde) koşar; değişmez. Çiviler: v613 K1a · K1b · K1c · K1d.
+BETIK_DIZINI="$(cd "$(dirname "$0")" && pwd -P)" || { echo "!! betiğin dizini çözülemedi ($0) — HİÇBİR ŞEY yapılmadı" >&2; exit 1; }
+cd /
+
 # TEST KANCASI — YALNIZ ÇİVİ İÇİN. Boşken (üretimdeki tek hâl) yollar MUTLAKTIR; v447 çivisi burayı
 # tmp'ye çevirip alt komutları GERÇEKTEN koşturur (PATH şimleriyle: sudo/systemctl/curl/psql/install).
 # Ops aracını teslim etmeden önce operatörün koşacağı BİÇİMDE koşmanın yolu budur — 18 çivi
@@ -320,12 +331,12 @@ VAULT_JETON_DOSYASI="${VAULT_TOKEN_FILE:-/etc/vault/admin.token}"
 export VAULT_ADDR="${VAULT_ADDR:-http://127.0.0.1:8200}"
 #: Envanter — `vault_kv` ve `vault_dosyalar` bloklarının TEK kaynağı. Betik `deploy/oracle-a1/`
 #: altında yaşar, envanter bir üst dizinde (`deploy/`).
-VAULT_ENVANTER="${VAULT_ENVANTER:-$(cd "$(dirname "$0")" && pwd)/../sir_envanteri.yaml}"
+VAULT_ENVANTER="${VAULT_ENVANTER:-$BETIK_DIZINI/../sir_envanteri.yaml}"
 #: Agent'ın render ARALIĞI (`RENDER_ARALIGI`) bu üreticide TEK yerde yaşar ve üretilen `agent.hcl`in
 #: `static_secret_render_interval`ı oradan yazılır. Eski yolun Agent hedefi uyarısı sayıyı BURADAN
 #: okur (`_render_araligi_metni`) — uyarıya elle yazılmış bir "1 dk", kadans değişince sessizce yalan
 #: olurdu (TSK-064 takip (2), 2026-09-17). Ortamdan geçilebilir olması VAULT_ENVANTER ile aynı gerekçe.
-VAULT_POLITIKA_URETICI="${VAULT_POLITIKA_URETICI:-$(cd "$(dirname "$0")" && pwd)/../../ops/vault_politika_uret.py}"
+VAULT_POLITIKA_URETICI="${VAULT_POLITIKA_URETICI:-$BETIK_DIZINI/../../ops/vault_politika_uret.py}"
 #: YAML okuyan python — `py()` yardımcısı stdlib'le yetinir (sudo python3), bu ise PyYAML ister.
 #: A1'de sistem python3'ü yeterlidir; ayrı bir kanca olması çivinin kendi yorumlayıcısını
 #: verebilmesi içindir (sanal ortam dışındaki python3'te PyYAML olmayabilir). MONOTONİK saat de
@@ -409,7 +420,7 @@ adim()     { echo "-- $*"; }
 # Okunamayan saat ÖLÇÜLEMEDİ'dir — duvar saatine DÜŞÜLMEZ (düşmek arızayı geri getirmek olurdu).
 # `_saat_oku [ek]` — ek, ÖLÇÜLEMEDİ satırına çağıranın bağlamını ekler (ör. ön kapıda "hiçbir şey yazılmadı").
 _saat_oku() {
-  SAAT_MS="$("$PYTHON_BIN" -c 'import time; print(int(time.monotonic() * 1000))')" \
+  SAAT_MS="$("$PYTHON_BIN" -I -c 'import time; print(int(time.monotonic() * 1000))')" \
     || olcum_yok "monotonik saat okunamadı ($PYTHON_BIN) — bekleme tavanı ve süre ölçülemez${1:+ — $1}"
 }
 # `_gecen_s <başlangıç SAAT_MS>` → `GECEN_S`. Çağıran `$( )` DEĞİL doğrudan çağırır: alt kabukta
@@ -895,15 +906,18 @@ _islik_kur() {
 Hiçbir işlem sır değerini stdout'a, stderr'e ya da bir argümana koymaz; basılan tek şey
 KARAR'dır (EŞİT/AYRI/VAR/YOK). Bütün yazımlar aynı dizinde geçici dosya + yerine koyma ile
 ATOMİKTİR: yarım yazılmış bir credential dosyası birimi açılmaz hâle getirir. Yazımlar BAĞ
-İZLEMEZ ve tanıtıcı tabanlıdır (`_atomik_yaz` — TSK-260; tohumlamayla ortak çekirdek).
+İZLEMEZ ve tanıtıcı tabanlıdır (`_atomik_yaz` — TSK-260; tohumlamayla ortak çekirdek). OKUMALAR da
+aynı çekirdekten geçer (`_oku` — TSK-262): bağ, FIFO, soket, aygıt OKUNMAZ, adıyla reddedilir.
 """
 from __future__ import annotations
 
+import errno
 import json
 import os
 import re
 import stat
 import sys
+from collections import Counter
 from types import SimpleNamespace
 from urllib.parse import quote, unquote, urlsplit, urlunsplit
 
@@ -914,11 +928,6 @@ def _onek(ad: str) -> str:
     if ad not in ONEKLER:
         sys.exit(f"tanınmayan önek: {ad} (tanınanlar: {sorted(ONEKLER)})")
     return ONEKLER[ad]
-
-
-def _oku(yol: str) -> str:
-    with open(yol, encoding="utf-8") as fh:
-        return fh.read()
 
 
 def _coz(deger: str | None) -> str:
@@ -1097,7 +1106,11 @@ def _dizin_ac(kok: str, dizin: str, izinli: frozenset[int], olculur: bool) -> tu
                 return None, f"RED: {yol}: {neden}"
         beklenen = os.path.join(os.path.realpath(ust), *parcalar)
         if os.path.realpath(dizin) != beklenen:
-            return None, f"RED: {dizin}: realpath beklenen yoldan ayrışıyor ({os.path.realpath(dizin)})"
+            # Yol `repr` ile (TSK-262 düzeltme turu 2, yeniden inceleme Y2a): çözülen yol bir BAĞIN hedefidir ve ADINI dizin sahibi
+            # seçer — ham basıldığında yeni satır hükmü iki satıra böler (satır tabanlı denetimler — `esitle` kanıtı — bölünmüş
+            # parçaları ayrı okur), ESC dizileri root operatörün terminalini boyar. `repr` tek satır + denetim karakterleri kaçışlı;
+            # yol iletide KALIR (bağın nereye gittiği adli izdir — operatör `stat` ile aynı yere bakar). Çivi: v613 B4 · F4.
+            return None, f"RED: {dizin}: realpath beklenen yoldan ayrışıyor ({os.path.realpath(dizin)!r})"
         acik, fd = fd, -1
         return acik, None
     finally:
@@ -1266,26 +1279,63 @@ def _hedef_ac(hedef: str, mod: str | int, sahip: str | tuple[int, int]) -> Simpl
                            bek_gid=bek_gid, mod=mod_n)
 
 
-def _tanitictan_oku(h: SimpleNamespace, ikili: bool = False) -> str | bytes:
+#: Okunmayan dosya türlerinin ADLARI (TSK-262) — okuma reddi bu adla basılır (`OKUNAMADI (FIFO)`); normal dosya → None.
+_TUR_ADLARI = ((stat.S_ISLNK, "SEMBOLİK BAĞ"), (stat.S_ISFIFO, "FIFO"), (stat.S_ISSOCK, "SOKET"),
+               (stat.S_ISCHR, "KARAKTER AYGITI"), (stat.S_ISBLK, "BLOK AYGITI"), (stat.S_ISDIR, "DİZİN"))
+#: Yarış: denetlenen dosya açılışta BAŞKA bir dosya (inode) ya da denetim sırasında değişti.
+_YARIS = "DEĞİŞTİ (yarış)"
+
+
+def _tur_adi(mod: int) -> str | None:
+    if stat.S_ISREG(mod):
+        return None
+    return next((ad for test, ad in _TUR_ADLARI if test(mod)), "BİLİNMEYEN TÜR")
+
+
+class OkumaReddi(OSError):
+    """OKUMA hedefi okunmadı (TSK-262): normal dosya DEĞİL (bağ · FIFO · soket · aygıt · dizin), zinciri reddedildi ya da
+    denetimden sonra değişti. ADLIDIR — `yol` + `tur` taşır, DEĞER asla. `OSError` alt sınıfıdır: eski `except OSError` kovası
+    ("OKUNAMADI") onu yine görür — ama okuma işlemleri onu ÖNCE kendi adıyla yakalar (`OKUNAMADI (<tür>)`); yakalamayan işlem
+    (`cikar` · `pgpass` · `dsn-uc` · değer dosyası) `__main__`deki tek kapıda adlı iletiyle durur."""
+
+    def __init__(self, yol: str, tur: str) -> None:
+        super().__init__(f"okuma REDDİ: {yol}: {tur}")
+        self.yol, self.tur = yol, tur
+
+
+def _tanitictan_oku(h: SimpleNamespace, ikili: bool = False, okuma: bool = False) -> str | bytes:
     """Oku-değiştir-yaz'ın ESKİ içeriği (ve `kopyala`nın KAYNAĞI): denetlenen hedef, AYNI dizin tanıtıcısından `O_NOFOLLOW` ile
     açılır ve inode'u denetlenenle aynı olmalıdır. Metin kipi `open()` ile AYNIDIR (UTF-8, evrensel satır sonu — eski `_oku`
     davranışı); `ikili` → bayt AYNEN (`kopyala`: yedek/geri alma eski root kopyası gibi bayt-eşit olmalı).
     FIFO ASKISI YOK (TSK-261; TSK-260 incelemesi M1): denetim `lstat`ından SONRA ad bir FIFO'ya çevrilirse `O_RDONLY` açılışı
     bir yazarı SÜRESİZ bekler — root rotasyonu ortada asılır, önceki satırlar yazılmış kalır (sonda P1). Açılış `O_NONBLOCK`tur
     (normal dosyada etkisiz; FIFO'da yazarsız hemen döner), tanıtıcı `fstat` ile NORMAL DOSYA ve aynı inode diye ölçülür, ancak
-    ondan sonra engelleyici kipe dönülüp okunur."""
+    ondan sonra engelleyici kipe dönülüp okunur.
+    `okuma` (TSK-262 — salt OKUMA yolu, `_oku`): ret `sys.exit` DEĞİL istisnadır — okuma işlemlerinin hüküm sözleşmesi
+    (`OKUNAMADI (<tür>)` · `YOK`) korunsun: bağ/tür/yarış → `OkumaReddi`, kayboldu → `FileNotFoundError`, öteki açılış hatası
+    (izin) AYNEN yukarı (eski `open()` gibi "OKUNAMADI"). Gövde TEKTİR: açılış bayrakları ve denetimler iki kipte AYNIDIR."""
     if h.st is None:
         sys.exit(f"hedef YOK: {h.yol} — eski içerik okunamaz, yazım YAPILMADI")
     try:
         fd = os.open(h.ad, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=h.dfd)
     except OSError as hata:
+        if okuma and hata.errno == errno.ELOOP:
+            raise OkumaReddi(h.yol, "SEMBOLİK BAĞ") from hata
+        if okuma and hata.errno == errno.ENOENT:
+            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), h.yol) from hata
+        if okuma:
+            raise
         sys.exit(f"hedef açılamadı ({hata.strerror}): {h.yol} — denetimden sonra bağa çevrilmiş olabilir, yazım YAPILMADI")
     try:
         st = os.fstat(fd)
         if not stat.S_ISREG(st.st_mode):
+            if okuma:
+                raise OkumaReddi(h.yol, _tur_adi(st.st_mode))
             sys.exit(f"hedef açılışta normal dosya DEĞİL (yarış — FIFO/aygıt/dizine çevrilmiş olabilir): {h.yol} — okunmadı, "
                      "yazım YAPILMADI")
         if (st.st_dev, st.st_ino) != (h.st.st_dev, h.st.st_ino):
+            if okuma:
+                raise OkumaReddi(h.yol, _YARIS)
             sys.exit(f"hedef denetimden sonra DEĞİŞTİ (yarış): {h.yol} — yazım YAPILMADI")
         os.set_blocking(fd, True)
     except BaseException:
@@ -1293,6 +1343,39 @@ def _tanitictan_oku(h: SimpleNamespace, ikili: bool = False) -> str | bytes:
         raise
     with os.fdopen(fd, "rb") if ikili else os.fdopen(fd, encoding="utf-8") as fh:
         return fh.read()
+
+
+def _oku(yol: str) -> str:
+    """OKUMA YOLUNUN TEK GÖVDESİ (TSK-262; TSK-261 incelemesi M2) — yardımcının BÜTÜN dosya okumaları (`alan-var` · `alanlar` ·
+    `var`/`esit`/`cikar` · `json-ad-var` · `dsn-uc` · `pgpass` · `alan-farki` · değer dosyası) buradan geçer; çıplak `open()`
+    YOK. ESKİ biçim `open(yol)` idi: bağı İZLER (root bağın HEDEFİNİ okur — içerik kıyasa/işliğe girer) ve FIFO'da bir yazarı
+    SÜRESİZ bekler (ubuntu sahipli hedef dizinlerinde — hermes `.env`leri, `~/.hermes-botlar`, `/opt/meridian/state` — dosyayı
+    FIFO'ya çeviren biri `--envanter`i, ön-denetimi ve rotasyonu hiç başlatmaz). YENİ: yazımın KURALI ve GÖVDESİ —
+      (1) `lstat` (bağ izlenmez): YOK → `FileNotFoundError` (dosya adıyla — `esit`in REFERANS ayrımı ona bakar); normal dosya
+          DEĞİL → `OkumaReddi` (tür ADIYLA: SEMBOLİK BAĞ · FIFO · SOKET · KARAKTER/BLOK AYGITI · DİZİN) — hiç AÇILMAZ;
+      (2) `_hedef_ac(koru, koru)`: zincir güven çapasından aşağı bağ izlenmeden, bileşen izin/sahip kuralı (izinli
+          `{root, dosyanın sahibi}`) — kural yazımınkiyle AYNIDIR, okuma için GEVŞETİLMEDİ; ret → `OkumaReddi` ("ZİNCİR: …");
+      (3) `_tanitictan_oku(okuma=True)`: aynı dizin tanıtıcısından `O_NOFOLLOW|O_NONBLOCK`, `fstat` normal dosya + aynı inode.
+    (1)'den geçip (2)/(3)'te düşen her hâl bir YARIŞTIR (denetimden sonra değişti) ve öyle adlanır. Değer basılmaz."""
+    st0 = os.lstat(yol)
+    tur = _tur_adi(st0.st_mode)
+    if tur:
+        raise OkumaReddi(yol, tur)
+    h = _hedef_ac(yol, "koru", "koru")
+    if isinstance(h, str):
+        hedef_on = f"RED: {os.path.normpath(os.path.abspath(yol))}: hedef "
+        zincir = h[len("RED: "):] if h.startswith("RED: ") else h
+        raise OkumaReddi(yol, _YARIS if h.startswith(hedef_on) else f"ZİNCİR: {zincir}")
+    try:
+        return _tanitictan_oku(h, okuma=True)
+    finally:
+        os.close(h.dfd)
+
+
+def _ayni_yol(a: str | None, b: str) -> bool:
+    """İki yol AYNI dosya ADI mı (normalleştirilmiş, bağ İZLENMEDEN) — `esit`in okuma reddinde REFERANS/kopya ayrımı:
+    `OkumaReddi.yol` `_oku`dan çağıranın verdiği biçimde, `_tanitictan_oku`dan (yarış) normalleştirilmiş biçimde gelir."""
+    return a is not None and os.path.normpath(os.path.abspath(a)) == os.path.normpath(os.path.abspath(b))
 
 
 def _atomik_yaz(hedef: str, icerik: str | bytes | Callable[[str], str], mod: str | int,
@@ -1347,32 +1430,80 @@ def _kopyala(kaynak: str, hedef: str) -> None:
     _atomik_yaz(hedef, icerik, k.st.st_mode & 0o7777, (k.st.st_uid, k.st.st_gid))
 
 
-def _guvenli_metin(yol: str) -> str:
-    """Bağ İZLEMEDEN ve FIFO'da askıda kalmadan okunan metin — yazımın denetim gövdesi (`_hedef_ac` koru + `_tanitictan_oku`).
-    Yalnız `alan-farki` okur (TSK-261 inceleme I2: `--geri-al`ın "dosyanın tamamı döner" uyarısı); ret adlı iletiyle çıkıştır."""
-    h = _hedef_ac(yol, "koru", "koru")
-    if isinstance(h, str):
-        sys.exit(f"{h} — okunmadı, alan farkı ÖLÇÜLEMEDİ")
-    try:
-        return _tanitictan_oku(h)
-    finally:
-        os.close(h.dfd)
+#: ARACIN AD SÖZLEŞMESİ — bir alanın ADI olarak BASILABİLEN tek biçim (TSK-262 N1). Kabuktaki `_aranan_adlar`ın dosya adı
+#: süzgeciyle AYNI desendir (iki dil, tek kural — v613 ayrışma çivisi ikisinin AYNI dizge olduğunu ölçer).
+_AD_SOZLESMESI = re.compile(r"^[A-Z][A-Z0-9_]*$")
 
 
-def _alan_haritasi(tur: str, ham: str) -> dict[str, str]:
-    """Çok anahtarlı bir kopyanın `ad → ham değer` haritası (YALNIZ kıyas için — hiçbir çıktıya girmez). `env`: `^AD=` satırları
-    (aynı ad birden çok kez geçerse hepsi birleşir: çift satır da fark sayılır); `api`: motor deposunun (JSON) üst düzey anahtarları."""
+def _tirnak_kapanir(metin: str, tirnak: str) -> bool:
+    """`metin`de (açılış tırnağından SONRASI) kapanış tırnağı var mı? Çift tırnakta ters bölü bir sonraki karakteri kaçırır;
+    tek tırnakta kaçış yoktur (dotenv/kabuk kuralı)."""
+    if tirnak == "'":
+        return "'" in metin
+    kacis = False
+    for c in metin:
+        if kacis:
+            kacis = False
+        elif c == "\\":
+            kacis = True
+        elif c == tirnak:
+            return True
+    return False
+
+
+def _env_atamalari(ham: str) -> tuple[list[tuple[str, str]], list[str]]:
+    """Bir `.env` metninin `(ad, ham değer)` ATAMALARI ve atama OLMAYAN satırları. Tırnağı AYNI satırda kapanmayan bir değerin
+    (çok satırlı PEM vb.) DEVAM SATIRLARI o atamanın DEĞERİNE eklenir — hiçbiri ad olarak görünmez (TSK-262 N1: PEM gövdesinin
+    son base64 satırı `AQAB0123==` biçimindedir ve satır tabanlı `^AD=` desenine UYAR). Tırnak hiç kapanmazsa dosyanın kalanı o
+    değerdir: ad kaçırmak, değer parçasını ad diye basmaktan güvenlidir (kaybedilen: kalan satırların ADLARI — o atama yine FARKLI
+    görünür, "AYNI" denmez). Yalnız `alan-farki` okur."""
+    atamalar: list[tuple[str, str]] = []
+    diger: list[str] = []
+    acik = ""
+    for satir in ham.splitlines():
+        if acik:
+            ad, deger = atamalar[-1]
+            atamalar[-1] = (ad, deger + "\n" + satir)
+            if _tirnak_kapanir(satir, acik):
+                acik = ""
+            continue
+        m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$", satir)
+        if not m:
+            diger.append(satir)
+            continue
+        atamalar.append((m.group(1), m.group(2)))
+        if m.group(2)[:1] in ("\"", "'") and not _tirnak_kapanir(m.group(2)[1:], m.group(2)[0]):
+            acik = m.group(2)[0]
+    return atamalar, diger
+
+
+def _alan_haritasi(tur: str, ham: str) -> tuple[dict[str, list[str]], Counter]:
+    """Çok anahtarlı bir kopyanın `(ad → ham değer(ler), adsız birimler)` haritası (YALNIZ kıyas için — hiçbir DEĞER çıktıya
+    girmez). `env`: atamalar (`_env_atamalari` — çok satırlı değerin devamı DEĞERDİR; aynı ad birden çok kez geçerse her geçiş ayrı
+    değerdir: çift satır da fark sayılır); `api`: motor deposunun (JSON) üst düzey anahtarları. Ad yalnız ARACIN AD SÖZLEŞMESİNE
+    uyuyorsa (`_AD_SOZLESMESI`) haritaya girer; uymayan atama/anahtar ve atama OLMAYAN satır (yorum · `export X=…` · tırnaksız
+    devam satırı) bir ADSIZ BİRİMDİR — yalnız SAYILIR (TSK-262 N1). Haritadaki bir adın BASILIP basılmayacağı ayrıca `alan-farki`da
+    karara bağlanır (düzeltme turu 1, inceleme I1 — biçimden bağımsız kural)."""
+    adsiz: Counter = Counter()
+    harita: dict[str, list[str]] = {}
     if tur == "api":
         veri = json.loads(ham)
         if not isinstance(veri, dict):
             sys.exit("motor deposu JSON sözlüğü değil — alan farkı ÖLÇÜLEMEDİ")
-        return {k: json.dumps(v, sort_keys=True) for k, v in veri.items()}
-    harita: dict[str, str] = {}
-    for satir in ham.splitlines():
-        m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)=(.*)$", satir)
-        if m:
-            harita[m.group(1)] = harita.get(m.group(1), "") + "\0" + m.group(2)
-    return harita
+        for k, v in veri.items():
+            if _AD_SOZLESMESI.fullmatch(k):
+                harita[k] = [json.dumps(v, sort_keys=True)]
+            else:
+                adsiz[json.dumps([k, v], sort_keys=True)] += 1
+        return harita, adsiz
+    atamalar, diger = _env_atamalari(ham)
+    adsiz.update(diger)
+    for ad, deger in atamalar:
+        if _AD_SOZLESMESI.fullmatch(ad):
+            harita.setdefault(ad, []).append(deger)
+        else:
+            adsiz[f"{ad}={deger}"] += 1
+    return harita, adsiz
 
 
 class AlanArizasi(Exception):
@@ -1420,8 +1551,11 @@ def _cikar(tur: str, hedef: str, alan: str, onek: str) -> str:
     if tur == "dosya":
         ham = _oku(hedef).strip("\r\n")
     elif tur == "env":
-        satirlar = _oku(hedef).splitlines()
-        idx = _env_satiri(_oku(hedef), alan)
+        # TEK okuma (TSK-262): satır listesi ve satır indeksi AYNI içerikten — iki ayrı okuma arasında dosya değişirse indeks
+        # başka bir içeriğin satırını gösterirdi.
+        ham_env = _oku(hedef)
+        satirlar = ham_env.splitlines()
+        idx = _env_satiri(ham_env, alan)
         govde = satirlar[idx].split("=", 1)[1]
         tirnak, _ = _tirnak_ve_son(govde)
         ham = govde.strip("\r\n")
@@ -1473,11 +1607,16 @@ def main(argv: list[str]) -> None:
         # bozuk?" diye yanlış soruyu sordu. Dosya YOKLUĞU (`FileNotFoundError`) ayrı bir kovadır,
         # izin/dizin arızası "OKUNAMADI" kalır. Yokluk REFERANS tarafındaysa kopya satırına "YOK"
         # basmak VAR olan kopyayı yok diye raporlamak olurdu — sebep ADIYLA söylenir.
+        # OKUMA REDDİ (TSK-262 — bağ · FIFO · soket · aygıt · zincir · yarış) "OKUNAMADI (<tür>)"dır ve TARAFIYLA söylenir:
+        # reddedilen REFERANSSA kopya satırına "OKUNAMADI" basmak, okunabilen kopyayı arızalı gösterirdi (YOK ile aynı gerekçe).
         try:
             a = _cikar(*argv[2:6])
             b = _cikar(*argv[6:10])
         except FileNotFoundError as yok:
             print("REFERANS YOK" if yok.filename == argv[3] else "YOK")
+            return
+        except OkumaReddi as ret:
+            print(f"{'REFERANS ' if _ayni_yol(ret.yol, argv[3]) else ''}OKUNAMADI ({ret.tur})")
             return
         except AlanArizasi as ariza:
             # ÇİFT SATIR "OKUNAMADI" DEĞİLDİR: biri dosyanın yokluğu, öteki envanterin tam da
@@ -1534,6 +1673,8 @@ def main(argv: list[str]) -> None:
             print("VAR" if _cikar(tur, hedef, alan, "-") else "BOŞ")
         except FileNotFoundError:
             print("YOK")
+        except OkumaReddi as ret:
+            print(f"OKUNAMADI ({ret.tur})")      # TSK-262: bağ/FIFO/aygıt/zincir — tür ADIYLA, değer okunmadı
         except AlanArizasi as ariza:
             print(f"ÇİFT SATIR ({ariza.adet})" if ariza.adet > 1 else "ALAN YOK")
         except OSError:
@@ -1560,6 +1701,9 @@ def main(argv: list[str]) -> None:
         hedef, ad = argv[2:4]
         try:
             veri = json.loads(_oku(hedef))
+        except OkumaReddi as ret:
+            print(f"OKUNAMADI ({ret.tur})")      # TSK-262: tür ADIYLA (çağıran `_secrets_json_tara` taramayı EKSİK der)
+            return
         except (OSError, ValueError):
             print("OKUNAMADI")
             return
@@ -1571,9 +1715,13 @@ def main(argv: list[str]) -> None:
         # `=` işaretinin YALNIZ SOLU basılır; sağ taraf hiçbir çıktıya girmez.
         try:
             ham = _oku(argv[2])
+        except OkumaReddi as ret:
+            # TSK-262: okuma REDDİ bir yokluk DEĞİLDİR — bağ/FIFO/aygıt/zincir ADIYLA durur (stderr; stdout'a hiçbir ad
+            # çıkmaz). Çağıran (`_beyan_disi_tara`) dosyayı ayrıca "TARANAMADI" diye sayar: tarama EKSİK kalır, susmaz.
+            sys.exit(f"alanlar: {ret} — alan adları OKUNMADI")
         except OSError:
             # sessiz-yutma: dosya YOKLUĞU burada bir bulgu DEĞİLDİR — çağıran (`_beyan_disi_tara`)
-            # varlığı ZATEN `test -f` ile ölçtü ve yokluğu ORADA beyan eder. Boş liste dönmek
+            # varlığı ZATEN `test -e`/`-L` ile ölçtü ve yokluğu ORADA beyan eder. Boş liste dönmek
             # "taranacak alan yok" demektir, bir hatayı gizlemek değil.
             return
         gorulen = set()
@@ -1597,6 +1745,11 @@ def main(argv: list[str]) -> None:
             ham = _oku(hedef)
         except FileNotFoundError:
             print("DOSYA YOK" if tek else "YOK")
+            return
+        except OkumaReddi as ret:
+            # TSK-262: İKİ biçimde de tür ADIYLA — `tek` (ön-denetim: `OKUNAMADI*` → ölçülemedi, rotasyon BAŞLAMAZ) ve `tek`siz
+            # (beyan dışı tarama: "YOK" demek reddedilen dosyayı taranmış gibi gösterirdi; çağıran "TARANAMADI" der).
+            print(f"OKUNAMADI ({ret.tur})")
             return
         except OSError:
             print("OKUNAMADI" if tek else "YOK")
@@ -1663,19 +1816,53 @@ def main(argv: list[str]) -> None:
         # Kabuğun BÜTÜN kopya yolları (yedek · negatif kontrol yedeği ve geri alması · `--db` eski DSN · `--geri-al`) buradan
         # geçer; kabukta root `cp` KALMADI (v611 F1s). Başarıda hiçbir şey basılmaz; ret adlı iletiyle (`_kopyala`).
         _kopyala(*argv[2:4])
-    elif op == "alan-farki":         # <env|api> <yedek> <güncel> [hariç alan…] → AYNI | FARKLI: <ad…> — DEĞER BASILMAZ
+    elif op == "alan-farki":         # <env|api> <yedek> <güncel> [hariç…] [--basilir <ad…>] [--sonek <sonek…>] → AYNI | FARKLI: …
         # `--geri-al` (TSK-261 inceleme I2): çok anahtarlı bir dosya BÜTÜN döner; yedekten sonra değişmiş BAŞKA alanların (geri
         # alınan alt komutun kendi alanları HARİÇ) ADLARI önceden söylenir. Yalnız adlar basılır; değerler yalnız kıyaslanır.
+        # BASILAN AD — BİÇİMDEN BAĞIMSIZ KURAL (TSK-262 düzeltme turu 1, inceleme I1): tırnak takibi yalnız satır TAM `AD="` ile
+        # başlıyorsa çalışır; `export AD="…` · `AD = "…` · baştaki boşluk · ters bölü devamı · tırnaksız çok satırda base64 devam
+        # satırı (`QWER0123==`) yine `^AD=` desenine düşüyor ve "ad" diye basılıyordu (sondası `n1_sonda.log`). Bir ad YALNIZ
+        #   (a) sözleşmeye uyan bir atama olarak İKİ dosyada da AYNI SAYIDA var ve değeri farklıysa (çokluk şartı: düzeltme
+        #       turu 2, yeniden inceleme Y1 — aşağıdaki `basilan` şerhi), ya da
+        #   (b) aracın ARANAN ADLARINDA (`--basilir` ← kabuk `_aranan_adlar`) ya da SIR-ADI SONEKLERİNDEN biriyle bitiyorsa
+        #       (`--sonek` ← kabuk `_SIR_ADI_SONEKLERI`; anlam `_sir_adi_mi`ninki: son-ek eşleşmesi — v613 D7 ayrışma çivisi)
+        # basılır. Gerekçe: rotasyonda değişen bir PEM parçası yalnız BİR tarafta bulunur ve base64'te `=` yalnız dolguda geçtiği için
+        # iki tarafta "adı" aynı, "değeri" farklı bir parça doğmaz; aranan adların ve soneklerin hepsi `_` taşır (standart base64
+        # alfabesinde yok). Kalan her fark — sözleşme dışı birim, tek taraftaki sırsız ad — YALNIZ SAYIYLA: "+ adsız N satır" (sayı
+        # "AYNI" demeyi engeller). BEDEL: yedekten sonra eklenen/silinen sırsız bir ad adıyla değil sayıyla söylenir (v613 D8).
+        # Sayım: adsız birimlerin çoklu küme simetrik farkı (değişen tek satır = 2) + basılmayan tek taraflı adların geçiş sayısı.
         tur, yedek, guncel = argv[2:5]
-        haric = set(argv[5:])
+        kovalar: dict[str, set[str]] = {"--haric": set(), "--basilir": set(), "--sonek": set()}
+        kova = kovalar["--haric"]
+        for jeton in argv[5:]:
+            if jeton in kovalar:
+                kova = kovalar[jeton]
+            else:
+                kova.add(jeton)
+        haric, basilir, sonekler = kovalar["--haric"], kovalar["--basilir"], tuple(kovalar["--sonek"])
         try:
-            a = _alan_haritasi(tur, _guvenli_metin(yedek))
-            b = _alan_haritasi(tur, _guvenli_metin(guncel))
+            a, a_adsiz = _alan_haritasi(tur, _oku(yedek))
+            b, b_adsiz = _alan_haritasi(tur, _oku(guncel))
+        except OSError as hata:
+            # Bağ · FIFO · aygıt · zincir (`OkumaReddi` — ADLI, yol + tür) ya da dosya YOK/izin: okunmadı; çağıran "ÖLÇÜLEMEDİ" der.
+            sys.exit(f"{hata} — okunmadı, alan farkı ÖLÇÜLEMEDİ")
         except ValueError as hata:
             # Yasa 4 — sessiz değil: UTF-8 dışı bayt ya da bozuk JSON ADIYLA çıkıştır; çağıran "ÖLÇÜLEMEDİ" der.
             sys.exit(f"alan farkı ÖLÇÜLEMEDİ ({type(hata).__name__}) — değer basılmadı")
         fark = sorted(ad for ad in set(a) | set(b) if ad not in haric and a.get(ad) != b.get(ad))
-        print(f"FARKLI: {' '.join(fark)}" if fark else "AYNI")
+        # Kural (a) EŞİT ÇOKLUĞA bağlıdır (düzeltme turu 2, yeniden inceleme Y1): aynı PEM son satırı yedekte bir, güncelde iki kez
+        # geçince (anahtar ikinci bir değişkene kopyalandı / bir kopya silindi) parça iki tarafta da "var" ve değer LİSTESİ farklı
+        # görünüyordu → AD diye basılıyordu. Eşit çoklukta base64 parçasının değerleri (yalnız dolgu `=`/`==`, satır uzunluğuyla
+        # belirli) iki tarafta AYNIDIR — farklı görünemez. BEDEL: gerçek bir adın ÇİFT SATIR'a dönüşmesi (ya da tekleşmesi) adla değil
+        # SAYIYLA söylenir (ön-denetim ve envanter ÇİFT SATIR'ı zaten ADIYLA raporlar — v613 D9).
+        basilan = [ad for ad in fark if (ad in a and ad in b and len(a[ad]) == len(b[ad])) or ad in basilir
+                   or ad.endswith(sonekler)]
+        adsiz = (sum(((a_adsiz - b_adsiz) + (b_adsiz - a_adsiz)).values())
+                 + sum(len(a.get(ad, [])) + len(b.get(ad, [])) for ad in fark if ad not in basilan))
+        parca = [" ".join(basilan)] if basilan else []
+        if adsiz:
+            parca.append(f"{'+ ' if basilan else ''}adsız {adsiz} {'anahtar' if tur == 'api' else 'satır'}")
+        print(f"FARKLI: {' '.join(parca)}" if parca else "AYNI")
     elif op == "hedef-denetle":      # <hedef> <mod> <sahip> → TAMAM | RED: <neden> — YAZIM YOK
         # Rotasyonun yazım ÖNCESİ ön-denetimi (`_hedef_on_denetim`, TSK-260): yazımın koşacağı AYNI gövde (`_hedef_ac` —
         # zincir bağ izlenmeden · bileşen izin/sahip · hedef bağ/normal dosya). Bağlı ya da gevşek bir hedef rotasyonu
@@ -1691,7 +1878,12 @@ def main(argv: list[str]) -> None:
 
 
 if __name__ == "__main__":
-    main(sys.argv)
+    # OKUMA REDDİNİN TEK KAPISI (TSK-262): reddi kendi hüküm sözleşmesiyle yakalamayan işlem (`cikar` · `pgpass` · `dsn-uc` ·
+    # değer dosyası okuyan yazımlar) burada ADLI iletiyle durur — yol + tür, değer YOK; traceback değil, çıkış 1.
+    try:
+        main(sys.argv)
+    except OkumaReddi as ret:
+        sys.exit(f"{ret} — okunmadı, işlem YAPILMADI")
 PY_SON
   chmod 600 "$ISLIK/yardimci.py"
 }
@@ -1744,12 +1936,13 @@ _geri_alma_recetesi() {
 # `ikinci` HİÇ KOŞMAZ (bash EXIT-trap semantiği, ölçüldü 2026-09-08) — iki iş yan yana yazıldığı
 # an, ikincisi birincinin arıza yoluna REHİN olur.
 _cikis() {
+  _yarim_yedek_isaretle
   _geri_alma_recetesi
   _temizle
 }
 
 # `sudo python3` — yardımcı root olarak koşar (0400 credential dosyalarını okur/yazar).
-py() { sudo python3 "$ISLIK/yardimci.py" "$@"; }
+py() { sudo python3 -I "$ISLIK/yardimci.py" "$@"; }
 
 # `_curl_kod <cfg>` → ÜÇ HANELİ HTTP kodu; ulaşılamama `000`.
 # İlk tur her çağrı yerinde `curl -K "$cfg" || echo 000` yazıyordu ve bu, operatörün canlıda
@@ -1782,7 +1975,7 @@ _curl_kod() {
 # artık ADIYLA reddedilir ve rotasyon BAŞLAMAZ (hiçbir kopya yazılmadan önce). Varlık `-L` ile de sorulur:
 # `test -e` bağı izler, sarkık bir bağ "dosya yok" diye sessizce ATLANIRDI. Çivi: v611 B1.
 _yedek_al() {
-  local alt="$1" yol hedef aday
+  local alt="$1" koken="${2:-}" yol hedef aday damga
   # SIRA: aday → YARAT → KOPYALA → ata. `YEDEK` globaldir ve `_geri_alma_recetesi`nin TEK kapısıdır
   # (`[ -n "$YEDEK" ]`), yani atama "yedek ALINDI" beyanıdır. Atamayı `install -d`den ÖNCE
   # yapmak o beyanı yalana çevirirdi: dizin doğmadan (disk dolu · yetki · aynı saniyede ikinci
@@ -1791,11 +1984,26 @@ _yedek_al() {
   # Ölçüldü (inceleme D7/Y2, 2026-09-08): `install` şimi düşürüldü → dizin HİÇ doğmadı, reçete
   # YİNE basıldı, çıkış 1. Çivi: `test_P14`. Aynı gerekçeyle atama artık KOPYALARDAN da sonradır
   # (TSK-261): bir kaynak reddedilirse yedek YARIMDIR ve hiçbir kopya yazılmamıştır — reçete basılmaz.
-  aday="$KOK/root/sir-yedek-$(date -u +%Y%m%dT%H%M%SZ)-$alt"
-  [ ! -e "$aday" ] || die "yedek dizini ZATEN VAR: $aday (aynı saniyede ikinci koşum?)"
+  damga="$(date -u +%Y%m%dT%H%M%SZ)"
+  aday="$KOK/root/sir-yedek-$damga-$alt"
+  # `.yarim` eşi de sorulur (TSK-262 N2): aynı saniyede yarıda kalmış bir koşumun işaretli dizini varken yeni yarım yedek
+  # onun İÇİNE taşınırdı (`mv` var olan dizine taşır).
+  if [ -e "$aday" ] || [ -e "$aday.yarim" ]; then die "yedek dizini ZATEN VAR: $aday (aynı saniyede ikinci koşum?)"; fi
   # `install -o <kullanıcı> -g <grup>` — İKİ AYRI BAYRAK. Tek `-o root:root` HATA verir
   # (ölçüldü 2026-09-07: `install: invalid user`), ve o hata `set -e` altında pencereyi yakar.
   sudo install -d -m 0700 -o root -g root "$aday"
+  # YARIM YEDEK İŞARETİ (TSK-262 N2): dizin doğdu ama kopyalar bitmedi — bu andan atamaya kadar HER çıkış (adlı ret · `set -e` ·
+  # sinyal) EXIT trap'inde dizini `.yarim` adına taşır (`_yarim_yedek_isaretle`): geçerli adlı yarım bir dizin `--geri-al`
+  # girdisi olur, eksik dosyaları "o koşumda yoktu" diye yanlış adlandırıp SESSİZ bir yarım geri alma yapardı.
+  _YEDEK_YARIM="$aday"
+  # KÖKEN (TSK-262 N2) — YALNIZ `--geri-al`ın ön yedeğinde: girdi yedeğinin yolu + alt komut + UTC damga (sır YOK). Okuyanlar:
+  # `_yedekleri_listele` (envanterde "ÖN YEDEK" diye ayırır) ve `geri_al` (girdi bir ön yedekse söyler). Kopyalardan ÖNCE yazılır:
+  # yarıda kalan bir ön yedek de kökenini taşır. Yazım `py kopyala` (işlik → yedek; bağ izlemez) — kabukta yeni bir root yazım yolu YOK.
+  if [ -n "$koken" ]; then
+    printf 'tur: on-yedek\nkaynak: --geri-al %s\nalt: %s\ndamga: %s\n' "$koken" "$alt" "$damga" > "$ISLIK/koken"
+    chmod 600 "$ISLIK/koken"
+    py kopyala "$ISLIK/koken" "$aday/KOKEN"
+  fi
   while read -r _alt _sir tur yol alan _mod _sahip _onek; do
     [ "$_alt" = "$alt" ] || continue
     # `api` satırının disk karşılığı da YEDEKLENİR (bkz. `_disk_yolu`): negatif kontrol o kopyayı
@@ -1807,22 +2015,57 @@ _yedek_al() {
       sudo install -d -m 0700 -o root -g root "$aday$(dirname "$yol")"
       py kopyala "$hedef" "$aday$yol" \
         || die "yedek ALINAMADI: $yol — kaynak bağ İZLENMEDEN okunamadı (yardımcının adlı reddi yukarıda).
-     İşlem (rotasyon / geri alma) BAŞLAMADI: hiçbir kopya yazılmadı, hiçbir birim yeniden başlatılmadı (yarım yedek: $aday).
+     İşlem (rotasyon / geri alma) BAŞLAMADI: hiçbir kopya yazılmadı, hiçbir birim yeniden başlatılmadı (yarım yedek: $aday —
+     çıkışta '$aday.yarim' adına taşınır; --geri-al onu girdi olarak KABUL ETMEZ).
      Kaynağı değerini BASMADAN incele: sudo stat -c '%U:%G %a %F %n' $yol ve üst dizinleri"
       oldu "yedek: $yol"
     else
       echo "  · yedek ATLANDI (dosya yok): $yol"
     fi
   done < <(_kopyalar)
+  _YEDEK_YARIM=""
   YEDEK="$aday"
   echo "  yedek dizini: $YEDEK"
+}
+
+#: YARIM YEDEK — `_yedek_al`ın dizini doğurduğu ama kopyaları BİTİREMEDİĞİ yol (boş = yok). Okuyan: `_yarim_yedek_isaretle`.
+_YEDEK_YARIM=""
+
+# YARIM YEDEK İŞARETİ (TSK-262 N2; TSK-261 yeniden incelemesi N2) — EXIT trap'inin İLK adımı (`_cikis`). Yarıda kalan yedek
+# dizini `<ad>.yarim` adına taşınır: `--geri-al`ın girdi kalıbı (`sir-yedek-<UTC ts>-<alt>`, alt `[a-z][a-z0-9-]*`) onu
+# REDDEDER ve `geri_al` ayrıca adıyla söyler. Eskiden yarım dizin GEÇERLİ adla kalıyordu: sonradan onunla `--geri-al` eksik
+# dosyaları "o koşumda dosya yoktu — yedek ATLANMIŞTI" diye yanlış adlandırıp yarım geri alma yapardı. Taşıma `/root`un
+# (root 0700) İÇİNDEDİR — bağ yarışı yok. Taşıma düşerse SUSMAZ: dizin adıyla "girdi olarak KULLANMA" der. Çıkış kodu değişmez.
+# Çiviler: v613 E1 (`--geri-al` ön yedeği · `.yarim` girdisi reddedilir) · E2 (rotasyon yedeği).
+_yarim_yedek_isaretle() {
+  [ -n "${_YEDEK_YARIM:-}" ] || return 0
+  if sudo mv "$_YEDEK_YARIM" "$_YEDEK_YARIM.yarim"; then
+    echo "!! YARIM YEDEK: $_YEDEK_YARIM.yarim — yedek alma yarıda kaldı (dosyaları EKSİK); --geri-al bu dizini girdi olarak KABUL ETMEZ" >&2
+  else
+    echo "!! YARIM YEDEK İŞARETLENEMEDİ: $_YEDEK_YARIM — yedek alma yarıda kaldı (dosyaları EKSİK); bu dizini --geri-al girdisi olarak KULLANMA" >&2
+  fi
+  _YEDEK_YARIM=""
+  return 0
 }
 
 # `/root` altını ubuntu kabuğunda `ls $YEDEK_KOK/sir-yedek-*` ile listelemek ÇALIŞMAZ: glob
 # ubuntu'nun kabuğunda, yani /root'u OKUYAMAYAN süreçte açılır ve boş döner (ölçüldü). Glob
 # root'un kabuğunda açılmalı — `sudo sh -c '...'`.
+# ÜÇ SINIF ayrı adlanır (TSK-262 N2): rotasyon yedeği (yalnız yol — eski satır AYNEN) · `--geri-al`ın ÖN YEDEĞİ (`KOKEN` dosyası
+# taşır: girdi yedeği + alt komut + damga; bir geri almadan sonra en yeni `-<alt>` yedeği odur ve geri alınmak istenen YENİ hâli
+# taşır — listeden "son yedeği" seçen operatör yanılmasın) · YARIM yedek (`.yarim` — girdi DEĞİL). Ayrım KÖKEN DOSYASIYLA, ad
+# deseniyle DEĞİL: ön yedek geçerli bir `--geri-al` girdisidir (geri almanın geri alınması) ve adı değişseydi girdi kalıbı iki
+# biçim tanımak zorunda kalırdı; köken dizinin İÇİNDE yaşar, ad değişse de kaybolmaz. Varlık `test -f` ile — içerik OKUNMAZ.
 _yedekleri_listele() {
-  sudo sh -c "ls -1d '$KOK/root'/sir-yedek-* 2>/dev/null" || true   # sessiz-yutma: hiç yedek
+  local d
+  while read -r d; do
+    [ -n "$d" ] || continue
+    case "$d" in
+      *.yarim) echo "$d  (YARIM — yedek alma yarıda kaldı, dosyaları EKSİK; --geri-al girdisi DEĞİL)" ;;
+      *) if sudo test -f "$d/KOKEN"; then echo "$d  (ÖN YEDEK — bir --geri-al'dan ÖNCE alındı; köken: $d/KOKEN)"
+         else echo "$d"; fi ;;
+    esac
+  done < <(sudo sh -c "ls -1d '$KOK/root'/sir-yedek-* 2>/dev/null" || true)   # sessiz-yutma: hiç yedek
   # yoksa `ls` 2 döner; "yedek yok" bir ARIZA DEĞİLDİR (ilk koşum) ve raporu kesmemeli.
 }
 
@@ -3207,7 +3450,7 @@ _alt_sirlari() {
 #: rotasyondan sonra ayrışırdı (hükmün engellediği hâl). Aynı yola çözülen iki satır TEK kez
 #: basılır: operatörden aynı değeri iki kez istemek, ikinci girişte yazım hatası riskidir.
 _vault_kv_satirlari() {
-  "$PYTHON_BIN" -c '
+  "$PYTHON_BIN" -I -c '
 import sys, yaml
 istenen = set(sys.argv[2:])
 kv = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))["vault_kv"]
@@ -3240,7 +3483,7 @@ for g in kv:
 #: satır (`_yan_render_bekle` restart'tan ÖNCE bunları kasadaki yeni değere kıyaslar; kuru plan basar). Aynı sorgu, aynı
 #: yol çözümü: alan kipi dosya kipinin süzgecinin İÇİNDEDİR (v491 T10 mutasyonu ikisini birden ısırır).
 _vault_yan_dosyalari() {
-  "$PYTHON_BIN" -c '
+  "$PYTHON_BIN" -I -c '
 import sys, yaml
 hedef_yol, kip = sys.argv[2], sys.argv[3]
 veri = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
@@ -3293,7 +3536,7 @@ _vault_tuketici_birimleri() {
 #: `--db`nin url kopyasıdır. BAGSIZ dalı ileride bağsız bir sır için DURUR (v522 A7 sahte envanterle ölçer).
 _agent_hedefleri() {
   _kopyalar | awk -v a="$1" '$1==a && ($3=="dosya" || $3=="url") {print $2 "\t" $4 "\t" $1}' \
-    | "$PYTHON_BIN" -c '
+    | "$PYTHON_BIN" -I -c '
 import sys, yaml
 kv = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))["vault_kv"]
 bagli = {g["rotasyon_siri"] for g in kv if g.get("rotasyon_siri")}
@@ -3324,7 +3567,7 @@ _render_araligi_metni() {
   local aralik
   # sessiz-yutma: python'un hata metni (dosya yok · atama biçimi değişti) hükme GİRMEZ — hüküm
   # aralığın okunup okunamadığıdır ve else dalında "ÖLÇÜLEMEDİ" diye ADIYLA basılır.
-  if aralik="$("$PYTHON_BIN" -c '
+  if aralik="$("$PYTHON_BIN" -I -c '
 import ast, sys
 for d in ast.parse(open(sys.argv[1], encoding="utf-8").read()).body:
     if (isinstance(d, ast.Assign) and len(d.targets) == 1
@@ -3542,7 +3785,7 @@ _vault_oturum() {
 _kasa_surumu() {
   local yol="$1" yazilmadi="$2"
   KASA_SURUM="$(_vault kv metadata get -format=json "$yol" \
-    | "$PYTHON_BIN" -c 'import json, sys; print(int(json.load(sys.stdin)["data"]["current_version"]))')" \
+    | "$PYTHON_BIN" -I -c 'import json, sys; print(int(json.load(sys.stdin)["data"]["current_version"]))')" \
     || die "kasa sürümü okunamadı ($yol) — geri alma hedefi bilinmeden kasaya YAZILMAZ ($yazilmadi)"
   case "$KASA_SURUM" in
     ''|*[!0-9]*|0) die "kasa sürümü geçersiz: '$KASA_SURUM' ($yol) — kasaya $yazilmadi" ;;
@@ -4366,14 +4609,38 @@ vault_cp_rotasyon() {
 # =================================================================================================
 # ENVANTER — DEĞER BASMADAN VARLIK + EŞİTLİK
 # =================================================================================================
+#: BEYANLI KANAL SATIRI — `_kanal_satiri <tur> <sır> <yol>`: `api` (motor API) ve `sql` (ALTER ROLE) kopyaları dosyadan
+#: OKUNAMAZ; envanter onları bu TAM satırla beyan eder. TEK KAYNAK (TSK-262 düzeltme turu 2, yeniden inceleme Y2b):
+#: `_envanter_esitlik` satırı BUNUNLA basar, `esitle` kanıtı muafiyeti YALNIZ tablonun api/sql satırlarından BUNUNLA kurulan
+#: tam satırla tanır — alt dizge ile değil (saldırganın seçtiği bir yol metni ` · motor API ` taşıyınca okunamayan bir kopya
+#: satırı muaf sayılıyordu). Başka tür → 1 (çağıran yalnız api/sql için çağırır).
+_kanal_satiri() {
+  case "$1" in
+    api) printf '  %s · motor API %s → OKUNAMADI (yazma kanalı; motor içinden ölçülür)\n' "$2" "$3" ;;
+    sql) printf '  %s · ALTER ROLE %s → OKUNAMADI (SQL kanalı; kanıt psql ile ölçülür)\n' "$2" "$3" ;;
+    *) return 1 ;;
+  esac
+}
+
+#: `_beyanli_kanal_satirlari <alt>` — bu alt komutun tablodaki api/sql satırlarının BEKLENEN envanter satırları (`_kanal_satiri`
+#: ile, tablodan). Okuyan: `esitle` kanıtının tam satır muafiyeti.
+_beyanli_kanal_satirlari() {
+  local _a _sr _t _y _r
+  while read -r _a _sr _t _y _r; do
+    [ "$_a" = "$1" ] || continue
+    case "$_t" in
+      api|sql) _kanal_satiri "$_t" "$_sr" "$_y" ;;
+    esac
+  done < <(_kopyalar)
+}
+
 _envanter_esitlik() {
   local sadece="${1:-}" _alt sir tur yol alan _m _s onek
   local birinci_tur birinci_yol birinci_alan birinci_onek onceki_sir="" sonuc etiket
   while read -r _alt sir tur yol alan _m _s onek; do
     [ -z "$sadece" ] || [ "$_alt" = "$sadece" ] || continue
     case "$tur" in
-      api) echo "  $sir · motor API $yol → OKUNAMADI (yazma kanalı; motor içinden ölçülür)"; continue ;;
-      sql) echo "  $sir · ALTER ROLE $yol → OKUNAMADI (SQL kanalı; kanıt psql ile ölçülür)"; continue ;;
+      api|sql) _kanal_satiri "$tur" "$sir" "$yol"; continue ;;
     esac
     # `${alan:+…}` ALAN YOKLUĞUNU görmez: tabloda yokluk boş dizge değil `-` ile yazılır, yani
     # `dosya`/`url` satırları operatöre `[-]` diye basılıyordu (inceleme B5). Yokluğun işareti
@@ -4447,31 +4714,53 @@ _dosya_adaylari() {
 }
 
 # Tabloda OLMAYAN bir kopya, ilk rotasyondan sonra sessizce ESKİ değeri taşıyan bir kopyadır.
+# OKUNAMAYAN DOSYA SUSMAZ (TSK-262): yardımcı bağ · FIFO · aygıt · zincir reddinde `OKUNAMADI (<tür>)` der (okuma yolu bağ
+# İZLEMEZ, FIFO'da ASKIDA KALMAZ). Dosya "TARANAMADI" diye BİR kez adlanır ve son satır "YOK" DEMEZ — taranmamış bir dosyayı
+# taranmış gibi göstermek "beyan dışı kopya yok" güvencesini uydururdu. Varlık `-e`/`-L` ile sorulur: `test -f` FIFO'yu ve
+# sarkık bağı "yok" sayıp SESSİZCE atlıyordu.
 _beyan_disi_tara() {
-  local dosya alan bulundu=0
+  local dosya alan hal bulundu=0 taranamadi=0
   echo "  --- beyan dışı kopya taraması ---"
   while read -r dosya; do
-    sudo test -f "$KOK$dosya" || continue
+    sudo test -e "$KOK$dosya" || sudo test -L "$KOK$dosya" || continue
     while read -r alan; do
-      [ "$(py alan-var "$KOK$dosya" "$alan")" = "VAR" ] || continue
+      # `||` `set -e`e karşı: eski biçim (`[ "$(py …)" = VAR ]`) yardımcının düşüşünde (UTF-8 dışı bayt — `tek`siz biçim
+      # traceback'i GÖRÜNÜR bırakır) taramayı sürdürüyordu; atama biçimi koşumu keserdi. Düşüş eskisi gibi bu adı atlar.
+      hal="$(py alan-var "$KOK$dosya" "$alan")" || hal="ÖLÇÜLEMEDİ (yardımcı düştü)"
+      case "$hal" in
+        VAR) ;;
+        "OKUNAMADI ("*)
+          echo "  !! TARANAMADI: $dosya — $hal (okunmadı: bağ İZLENMEZ, FIFO/aygıt AÇILMAZ; beyan dışı kopya bu dosyada ÖLÇÜLMEDİ)"
+          taranamadi=$((taranamadi+1)); break ;;
+        *) continue ;;
+      esac
       _kopyalar | awk -v d="$dosya" -v a="$alan" '$3=="env" && $4==d && $5==a {b=1} END{exit !b}' && continue
       echo "  !! BEYAN DIŞI KOPYA: $dosya [$alan] — rotasyon bu kopyayı YAZMIYOR"
       bulundu=1
     done < <(_dosya_adaylari "$KOK$dosya")
   done < <(_taranan_dosyalar)
-  [ "$bulundu" = 0 ] && echo "  beyan dışı kopya YOK" || true   # sessiz-yutma: `[ ]` yanlışsa
-  # `set -e` koşumu keserdi; bulgu ZATEN yukarıda basıldı ve envanter raporu bitmelidir.
+  if [ "$taranamadi" != 0 ]; then
+    echo "  !! beyan dışı kopya taraması EKSİK: $taranamadi dosya TARANAMADI (yukarıda) — 'YOK' denemez"
+  elif [ "$bulundu" = 0 ]; then
+    echo "  beyan dışı kopya YOK"
+  fi
 }
 
 _secrets_json_tara() {
-  local ad
+  local ad hal
   echo "  --- motor sır deposu ($SECRETS_JSON) — yalnız AD, DEĞER OKUNMAZ ---"
-  if ! sudo test -f "$KOK$SECRETS_JSON"; then
+  if ! sudo test -e "$KOK$SECRETS_JSON" && ! sudo test -L "$KOK$SECRETS_JSON"; then
     echo "  · dosya YOK: $SECRETS_JSON — bu bir arıza değil, bir BOŞLUK beyanıdır (depo taranmadı)"
     return 0
   fi
   while read -r ad; do
-    [ "$(py json-ad-var "$KOK$SECRETS_JSON" "$ad")" = "VAR" ] || continue
+    hal="$(py json-ad-var "$KOK$SECRETS_JSON" "$ad")" || hal="ÖLÇÜLEMEDİ (yardımcı düştü)"   # `set -e` — `_beyan_disi_tara` gibi
+    case "$hal" in
+      VAR) ;;
+      # TSK-262 — okuma REDDİ (bağ · FIFO · aygıt · zincir) susmaz: depo BİR kez "TARANAMADI" diye adlanır (bkz. `_beyan_disi_tara`).
+      "OKUNAMADI ("*) echo "  !! TARANAMADI: $SECRETS_JSON — $hal (okunmadı; depodaki adlar ÖLÇÜLMEDİ)"; return 0 ;;
+      *) continue ;;
+    esac
     if _kopyalar | awk -v a="$ad" '$3=="api" && $2==a {b=1} END{exit !b}'; then
       echo "  $SECRETS_JSON [$ad] → VAR (beyanlı: api kopyası bu depoya yazar)"
     else
@@ -4592,6 +4881,26 @@ esitle() {
   if printf '%s\n' "$rapor" | grep -q "→ AYRI"; then
     olcum_yok "eşitleme sonrası hâlâ AYRI kopya var (yukarıda) — yedek: $YEDEK"
   fi
+  # "AYRI YOK" ≠ "EŞİT" (TSK-262 düzeltme turu 1, inceleme M3): kanıt yalnız `→ AYRI` arıyordu; okunamayan bir kopya (`OKUNAMADI
+  # (<tür>)` — ikinci geçişten önce FIFO/bağa çevrilmiş, hiç YAZILMAMIŞ) ya da referansı okunamayan kopyalar (`REFERANS OKUNAMADI`)
+  # "EŞİT" sayılıyor ve araç YANLIŞ BAŞARI beyan ediyordu (çıkış 0). Şimdi referans satırı `VAR`, öteki her kopya satırı `EŞİT`
+  # olmalıdır; değilse ÖLÇÜLEMEDİ (çıkış 2 — aracın ölçülemedi sınıfı). Beyanlı kanallar (`motor API` · `ALTER ROLE`) eşitlemenin
+  # kapsamı DIŞIDIR ve `_envanter_esitlik` onları "OKUNAMADI (… kanalı …)" diye BEYANLA basar — sayılmaz. Çivi: v613 F3.
+  # MUAFİYET TAM SATIRDIR (düzeltme turu 2, yeniden inceleme Y2b): eskiden ` · motor API ` / ` · ALTER ROLE ` satırın HERHANGİ
+  # bir yerinde aranıyordu; okunamayan bir kopyanın hükmüne giren saldırgan yol metni (ZİNCİR realpath iletisi) bu dizgeyi taşıyınca
+  # satır muaf, kanıt "EŞİT" oluyordu (v613 F4). Beklenen beyanlı satırlar TABLODAN (`_kopyalar` — bu alt komutun api/sql satırları)
+  # ve envanterin KENDİ biçimleyicisiyle (`_kanal_satiri`) kurulur; satır ancak BİREBİR eşitse muaftır (`grep -xF`).
+  local _s olcemeyen=0 kanallar
+  kanallar="$(_beyanli_kanal_satirlari "$alt")"
+  while IFS= read -r _s; do
+    case "$_s" in
+      ""|*" → VAR (referans kopya)"|*" → EŞİT") continue ;;
+    esac
+    if [ -n "$kanallar" ] && printf '%s\n' "$kanallar" | grep -qxF -- "$_s"; then continue; fi
+    olcemeyen=$((olcemeyen+1))
+  done <<< "$rapor"
+  [ "$olcemeyen" = 0 ] || olcum_yok "eşitleme sonrası $olcemeyen satır EŞİT DEĞİL ve AYRI da değil (yukarıda — okunamadı / yok /
+     referans okunamadı): kopyalar EŞİT DENEMEZ — yeniden ölç: sudo $0 --envanter; yedek: $YEDEK"
   oldu "envanter: $(_bayrak "$alt") kopyaları EŞİT"
   echo "  yeniden başlatma YAPILMADI (eşitleme sözleşmesi). Yazılan sırların tüketici birimleri:"
   # shellcheck disable=SC2046
@@ -4836,7 +5145,13 @@ geri_al() {
     || die "--geri-al: '$dizin' bir yedek dizini DEĞİL — $KOK/root/sir-yedek-<UTC ts>-<alt> biçiminde, yedek kökünün
      DOĞRUDAN çocuğu olmalı (koşumun bastığı 'yedek dizini:' satırındaki yol). HİÇBİR ŞEY yazılmadı."
   ad="${dizin##*/}"
-  alt="$(printf '%s\n' "$ad" | sed -n 's/^sir-yedek-[0-9]\{8\}T[0-9]\{6\}Z-\(.*\)$/\1/p')"
+  # YARIM yedek (TSK-262 N2 — `_yarim_yedek_isaretle`): yedek alma yarıda kalmıştı, dosyaları EKSİK; geri alma onu "o koşumda
+  # yoktu" diye yanlış okurdu. Ad kalıbı da reddeder (alt `[a-z][a-z0-9-]*` — nokta yok); bu satır sebebi ADIYLA söyler.
+  case "$ad" in
+    *.yarim) die "--geri-al: '$ad' YARIM bir yedek (yedek alma yarıda kaldı — dosyaları EKSİK) — girdi olarak KABUL EDİLMEZ.
+     Tam bir yedek dizini ver (envanterin yedek listesi). HİÇBİR ŞEY yazılmadı." ;;
+  esac
+  alt="$(printf '%s\n' "$ad" | sed -n 's/^sir-yedek-[0-9]\{8\}T[0-9]\{6\}Z-\([a-z][a-z0-9-]*\)$/\1/p')"
   [ -n "$alt" ] || die "--geri-al: '$ad' bir yedek dizini adı DEĞİL (sir-yedek-<UTC ts>-<alt>). HİÇBİR ŞEY yazılmadı."
   _kopyalar | awk -v a="$alt" '$1==a {b=1} END{exit !b}' \
     || die "--geri-al: yedeğin alt komutu ($alt) kopya tablosunda YOK — hangi yolların geri konacağı bilinmez. HİÇBİR ŞEY yazılmadı."
@@ -4844,6 +5159,10 @@ geri_al() {
   sudo test -d "$dizin" || die "--geri-al: yedek dizini YOK: $dizin. HİÇBİR ŞEY yazılmadı."
   echo "=== GERİ ALMA: $dizin → $(_bayrak "$alt") kopyaları (bağ İZLENMEZ; mod/sahip yedekten; DEĞER BASILMAZ) ==="
   [ "$KURU" = 0 ] || echo "  KURU KOŞUM — HİÇBİR ŞEY YAZILMAZ (ön yedek dahil)"
+  # KÖKEN (TSK-262 N2): girdi bir ÖN YEDEKSE (önceki bir --geri-al'ın aldığı) bu koşum o geri almayı GERİ ALIR — operatör bilsin.
+  if sudo test -f "$dizin/KOKEN"; then
+    echo "  köken: girdi bir ÖN YEDEK ($dizin/KOKEN) — bu koşum önceki bir --geri-al'ı GERİ ALIR (o geri almadan önceki hâle döner)"
+  fi
   # PLAN — yedekte bulunan tablo yolları; yazım ve ön yedek bundan SONRA.
   while read -r _alt _sir tur yol _alan _mod _sahip _onek; do
     [ "$_alt" = "$alt" ] || continue
@@ -4863,7 +5182,7 @@ geri_al() {
   ALT="$alt"
   if [ "$KURU" = 0 ]; then
     adim "ÖNCE mevcut hâl yedeklenir (geri almanın geri alınması bu yedekten)"
-    _yedek_al "$alt"
+    _yedek_al "$alt" "$dizin"
   else
     echo "  (gerçek koşum ÖNCE mevcut hâli yedekler: $KOK/root/sir-yedek-<UTC ts>-$alt — geri almanın geri alınması o yedekten)"
   fi
@@ -4892,8 +5211,10 @@ geri_al() {
 }
 
 #: BÜTÜN DOSYA NOTU — `_butun_dosya_notu <alt> <yol> <yedek dizini>` → tek satır (ya da tek değerli türde hiçbir şey). Çok
-#: anahtarlı kopya (`env` · `api`) BÜTÜN döner: yedekten sonra değişmiş BAŞKA alanların ADLARI söylenir — alt komutun kendi
-#: alanları (tablodaki `env` alanları · `api` satırının sır kimliği = depo anahtarı) hariç. Değer basılmaz (`alan-farki`).
+#: anahtarlı kopya (`env` · `api`) BÜTÜN döner: yedekten sonra değişmiş BAŞKA alanlar söylenir — alt komutun kendi
+#: alanları (tablodaki `env` alanları · `api` satırının sır kimliği = depo anahtarı) hariç. Değer basılmaz (`alan-farki`); ad YALNIZ
+#: iki tarafta da AYNI SAYIDA varsa ya da aranan ad / sır-adı sonekiyse basılır, öteki farklar SAYIYLA (TSK-262 düzeltme turları
+#: 1–2, inceleme I1 · Y1).
 #: `dosya`/`url` kopyası tek değerdir ("başka alan" yok). Kıyas ölçülemezse bunu ADIYLA söyler — uyarı susmaz.
 _butun_dosya_notu() {
   local alt="$1" yol="$2" dizin="$3" _alt sir tur y d _alan _m _s _o ilk="" haric="" hal
@@ -4909,8 +5230,11 @@ _butun_dosya_notu() {
     echo "    · hedef şu an YOK — yedekteki dosya bütün olarak kurulur"; return 0
   fi
   # `||` ADLANDIRMADIR: yardımcının düşüşü (bağ · UTF-8/JSON değil) aşağıda "ÖLÇÜLEMEDİ" satırına gider, uyarı susmaz.
-  # shellcheck disable=SC2086
-  hal="$(py alan-farki "$ilk" "$dizin$yol" "$KOK$yol" $haric)" || hal="ÖLÇÜLEMEDİ"
+  # BASILABİLİR ADLAR TEK KAYNAKTAN (TSK-262 düzeltme turu 1, inceleme I1): tablonun aranan adları (`_aranan_adlar`) ve sır-adı
+  # sonekleri (`_SIR_ADI_SONEKLERI` — `_sir_adi_mi`nin listesi) yardımcıya argüman olarak geçer; yardımcı kopya tutmaz.
+  # shellcheck disable=SC2086,SC2046
+  hal="$(py alan-farki "$ilk" "$dizin$yol" "$KOK$yol" $haric --basilir $(_aranan_adlar) --sonek $_SIR_ADI_SONEKLERI)" \
+    || hal="ÖLÇÜLEMEDİ"
   case "$hal" in
     AYNI) echo "    · DOSYANIN TAMAMI yedekteki hâline döner; yedekten sonra değişmiş başka alan YOK" ;;
     FARKLI:*) echo "    !! DOSYANIN TAMAMI döner — yedekten sonra değişmiş BAŞKA alanlar da ESKİYE döner:${hal#FARKLI:} (değer basılmaz; o sırlar için sonra kendi rotasyonu ya da --esitle gerekebilir)" ;;

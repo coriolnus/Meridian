@@ -162,7 +162,8 @@ os.execvp("/usr/bin/id", ["/usr/bin/id"] + sys.argv[1:])
 SIM_SUDO = '''#!/usr/bin/env python3
 """Gerçek sudo gibi: çocuğu BAŞKA bir kimlikle koşar. `-u <ad>` o adın uid'ini verir.
 
-`SAHTE_GERI_KOY_KIRIK=1` iken YALNIZ negatif kontrolün GERİ ALMA yazımı düşer (`python3 <yardımcı> kopyala <İŞLİK>/nk-… <hedef>`).
+`SAHTE_GERI_KOY_KIRIK=1` iken YALNIZ negatif kontrolün GERİ ALMA yazımı düşer (`python3 -I <yardımcı> kopyala <İŞLİK>/nk-… <hedef>`;
+TSK-262 düzeltme turu 1'den beri `-I` — işlem jetonu KONUMDAN bağımsız aranır: yorumlayıcı bayrakları modeli kör etmesin).
 TSK-261'e (2026-10-01) kadar bu model `SIM_CP`deydi (`SAHTE_CP_KIRIK`, kaynak `nk-`): geri alma `sudo cp -p … "$hedef.yeni"` idi.
 Geri alma artık yardımcının bağ izlemeyen `kopyala` işlemidir — model aynı DAR dalı (yalnız `nk-` KAYNAKLI kopya; yedek alma ve
 negatif kontrolün kendi yedeği `nk-`yi HEDEF olarak taşır, düşmez) yeni çağrı biçiminde taşır: P4/P5'in ölçtüğü dal değişmedi."""
@@ -171,8 +172,8 @@ UIDLER = {"root": "0", "postgres": "999", "ubuntu": "1000"}
 a = sys.argv[1:]
 with open(os.path.join(os.environ["SIR_ROT_KOK"], ".sahte", "argv.log"), "a") as fh:
     fh.write("sudo " + " ".join(a) + "\\n")
-if (os.environ.get("SAHTE_GERI_KOY_KIRIK") == "1" and len(a) >= 4 and a[0] == "python3" and a[2] == "kopyala"
-        and "/nk-" in a[3]):
+if (os.environ.get("SAHTE_GERI_KOY_KIRIK") == "1" and a[:1] == ["python3"] and "kopyala" in a
+        and "/nk-" in a[a.index("kopyala") + 1]):
     sys.stderr.write("kopyala: Permission denied\\n"); sys.exit(1)
 hedef = "0"
 if a and a[0] == "-u":
