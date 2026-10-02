@@ -1,0 +1,1133 @@
+{
+  "sema": 1,
+  "kart": "EDG-2026-103",
+  "arac": "research/olcumler/edg103_okuma_ilgi_atif/sayim.py",
+  "hukum": "GEÇERSİZ — alet doğrulanmadı",
+  "gecerlilik": {
+    "alet_dogrulandi": false,
+    "nedenler": [
+      "GEÇERSİZ — alet doğrulanmadı"
+    ],
+    "pencere_kapanis_kaniti": true
+  },
+  "parametreler": {
+    "tau": "3/20",
+    "tau_ondalik": 0.15,
+    "tau_yerleri": [
+      {
+        "yer": "esikler",
+        "deger": "0.15"
+      },
+      {
+        "yer": "olcum_plani",
+        "deger": "0.15"
+      },
+      {
+        "yer": "netlestirme",
+        "deger": "0.15"
+      }
+    ],
+    "W_saat": 48,
+    "W_yerleri": [
+      {
+        "yer": "esikler",
+        "deger": "48"
+      },
+      {
+        "yer": "olcum_plani",
+        "deger": "48"
+      },
+      {
+        "yer": "netlestirme",
+        "deger": "48"
+      }
+    ],
+    "pencere": {
+      "baslangic": "2026-09-25T10:33:10+00:00",
+      "bitis": "2026-10-02T10:33:10+00:00",
+      "kural": "[baslangic, bitis)"
+    },
+    "n_min_karar": 5,
+    "esikler": {
+      "K1": {
+        "ad": "k1_okuma_kadansi_alt",
+        "deger": 0.9
+      },
+      "K2": {
+        "ad": "k2_konu_ilgisi_alt",
+        "deger": 0.5
+      },
+      "K3": {
+        "ad": "k3_atif_orani_alt",
+        "deger": 0.5
+      },
+      "K4": {
+        "ad": "k4_fazlalik_ust",
+        "deger": 0.5
+      }
+    },
+    "k4_atif_turleri": [
+      "recall",
+      "memory",
+      "kart_benzer"
+    ],
+    "kaynak": "girdi/kart.yaml (esikler bağlayıcı; olcum_plani + netleştirme kıyaslandı)"
+  },
+  "netlestirme_uygulamasi": [
+    {
+      "madde": "(1) S = pencere içindeki UTC takvim günleri",
+      "uygulama": "`pencere_gunleri`: pencereyle KESİŞEN UTC günleri; açılış ve kapanış yarım günleri DAHİL"
+    },
+    {
+      "madde": "(2) pencere ve D commit/olay damgasıyla [bas, son)",
+      "uygulama": "`pencerede` (okuma `ts`, karar `zaman` = kaynağının giriş commit'i — dondur.py); kapanış kanıtı yoksa ARA RAPOR"
+    },
+    {
+      "madde": "(3) K2 tanımı `esikler` cümlesi",
+      "uygulama": "`kolonlari_hesapla`: K2 = eşleşen okuma / okuma; çift oranı betimleyici"
+    },
+    {
+      "madde": "(4) W=48 sa commit saatiyle kesin",
+      "uygulama": "`ilgili_mi`: 0 ≤ Δ < W (saniye çözünürlüğü)"
+    },
+    {
+      "madde": "(5) K4 paydası D — GEÇERSİZ, netleştirme c ile DEĞİŞTİRİLDİ (aşağıda)",
+      "uygulama": "uygulanmaz; 'taze = okuma anında is_stale=false' kısmı (5a) ile birlikte geçerli"
+    },
+    {
+      "madde": "(6) τ ve sayfa token kümesi tam içerik, değiştirilmeden",
+      "uygulama": "`esik_alanlari` (τ karttan) + `sayfa_goruntusu` (normalize_tokens(tam içerik))"
+    },
+    {
+      "madde": "(7) kill #4: kaldırılma; geç/eksik/kısmi okuma K1'de",
+      "uygulama": "`kural_kaldirildi_mi` + `dogrulanmis` (kısmi okuma = tam GET kaydı, sayılır)"
+    },
+    {
+      "madde": "(8) kill #6 HARFİYEN",
+      "uygulama": "`say`: PK/NK tutmazsa kolon/D üst düzeyde YOK; K1 ve D yalnız 'hüküm DEĞİL' etiketli betimleyici"
+    },
+    {
+      "madde": "(9) sayım kodu bu dizinde",
+      "uygulama": "sayim.py + dondur.py; çivi tests/test_edg103_sayim_v610.py"
+    },
+    {
+      "madde": "b (1a) S = pencereyle kesişen 8 UTC günü",
+      "uygulama": "`pencere_gunleri` (yarım uç günler dahil)"
+    },
+    {
+      "madde": "b (4a) W yarı-açık 0 ≤ Δ < 48 sa",
+      "uygulama": "`ilgili_mi`"
+    },
+    {
+      "madde": "b (5a) taze ölçülemez → K4 None + üst sınır; kıyas yalnız kesinse",
+      "uygulama": "`_k4` + `okuma_tazeligi` (şema is_stale taşırsa betik durur)"
+    },
+    {
+      "madde": "b (6a) EK NK kill #6 kapsamında harfiyen",
+      "uygulama": "`pk_nk_denetle`: ifade sayfanın BAŞLIK satırında (kartın 'hükmünü taşımalı'sı)"
+    },
+    {
+      "madde": "b (10) girdi/ depoya girer, sır taşımaz",
+      "uygulama": "dondur.py yazmadan önce her dosyayı notify desenleriyle tarar, eşleşmede YAZMAZ; sayım kill #5 aynı taramayı `notify_taramasi` ile dondurulmuş her metne uygular"
+    },
+    {
+      "madde": "c (5) DÜZELTME: K4 paydası `esikler`deki 'atıflı kararlar'; D paydası betimleyici",
+      "uygulama": "`_k4`: payda = D'de sayfa/recall/memory/kart_benzer atfı taşıyan kararlar (`atifli_karar`); `betimleyici_D_paydasi`; D_ilgili boşsa ÖLÇÜLEMEDİ"
+    }
+  ],
+  "girdi": {
+    "dosyalar": {
+      "karar_envanteri.json": "9726f16b87526184ae86eec98e1c859e965009b519b318ae71732f50ef4da848",
+      "karar_zamanlari.json": "20343887337d5c4e605efb49137a41b8b9593bb6f9fb98f21be2de7f25be7f79",
+      "kart.yaml": "e1c685f55b900a6c2bff589c52c1975f54ba213ac33805be1c763fc82093525a",
+      "kart_acilis.yaml": "26caddc18b8608f27479c08130eab1c2c3987b35d0ff250453125237d6b9963e",
+      "kunye.json": "7fd9940c8c1f54bd4e14b3c42094d969a82f2c3d6f93b1fe485fcbdf9eab9c33",
+      "okuma.jsonl": "6448157858d0e51c01cf4a543ba46ae408f6546ecca0be786945938eb7a897c5",
+      "sayfalar/meridian-hedef-sapma.md": "3bbaa1b011dded3f61602ff3ed72fa1a83383b21e7d656e9794923e54c1b77fb",
+      "sayfalar/nk-kripto-madencilik.md": "6c97dab88fa6e5adb1e0cdfed27d35e70a5aee2c3f8a7104bb47ca674e109749"
+    },
+    "kunye": {
+      "sema": 1,
+      "arac": "research/olcumler/edg103_okuma_ilgi_atif/dondur.py",
+      "dondurma_ani": "2026-10-02T11:24:09+00:00",
+      "repo_head": "414b11ab4d544e9707b0a6b939fcaf1e9653ec88",
+      "kart": {
+        "yol": "research/cards/EDG-2026-103-hafiza-sayfa-okuma-ilgi-atif.yaml",
+        "ilk_commit": {
+          "commit": "997f23bf68624e41193add3f0e5b9df1b4befb3c",
+          "zaman": "2026-09-25T08:05:07+00:00"
+        },
+        "acilis_alani": "pencere_acilis_2026_09_25",
+        "acilis_commit": {
+          "commit": "34cd6c12d79c5a0f8d3a484307dd2bfb50bf839c",
+          "zaman": "2026-09-25T10:44:38+00:00"
+        }
+      },
+      "enstrumantasyon": {
+        "yol": "deploy/hindsight/hafiza_okuma_kaydi.py",
+        "ilk_commit": {
+          "commit": "de58eb8fa222e8d1b14ab0648db39454a53ca61c",
+          "zaman": "2026-09-25T09:03:25+00:00"
+        }
+      },
+      "kural_0_5": {
+        "anahtar": "sayfa_oku.sh meridian-hedef-sapma",
+        "iz": [
+          {
+            "commit": "20e247638d15f90bcbf6233f55c89a0338ad605d",
+            "zaman": "2026-09-25T09:17:03+00:00",
+            "adet": 1
+          },
+          {
+            "commit": "b1038cf6cbb537ecd7d0f31bd94b8622a071ecf7",
+            "zaman": "2026-09-28T06:50:54+00:00",
+            "adet": 1
+          }
+        ]
+      },
+      "pk_nk_zamani": "2026-09-25T10:44:38+00:00",
+      "envanter": {
+        "baslangic": "2026-09-18",
+        "bitis": "2026-10-02",
+        "kenar_gun": 7
+      }
+    },
+    "okuma_kaydi": {
+      "satir": 47,
+      "gecerli": 47,
+      "bozuk_json": [],
+      "sema_disi": [],
+      "ilk_ts": "2026-09-25T10:32:05Z",
+      "son_ts": "2026-10-02T11:07:46Z"
+    },
+    "sayfalar": {
+      "meridian-hedef-sapma": {
+        "sha256": "85cfb8139c4110cfef9ecfbdd97846155fd78a8b2c6fb161e48fda4857763d85",
+        "tazeleme": "2026-10-01T13:06:54.606575+00:00",
+        "token": 1427,
+        "kayitta_ayni_ozetli_okuma": [
+          "2026-10-01T17:02:32Z",
+          "2026-10-02T11:07:44Z"
+        ]
+      },
+      "nk-kripto-madencilik": {
+        "sha256": "a7554b570269b089dfeb1adcb73d5d9622d756ef1bb7efb64072e3c24221f630",
+        "tazeleme": "2026-10-01T14:43:08.061464+00:00",
+        "token": 155,
+        "kayitta_ayni_ozetli_okuma": [
+          "2026-10-02T11:07:46Z"
+        ]
+      }
+    }
+  },
+  "kill_list": [
+    {
+      "no": 1,
+      "madde": "okuma-olayı enstrümantasyonu kart açılmadan önce yazılırsa/mevcutsa (kart-önce ihlali) → geçersiz (EDG-089 kill-list #1 emsali)",
+      "durum": "TETİKLENMEDİ",
+      "kanit": {
+        "kart_ilk_commit": "2026-09-25T08:05:07+00:00",
+        "enstrumantasyon_ilk_commit": "2026-09-25T09:03:25+00:00",
+        "okuma_kaydi_ilk_satir": "2026-09-25T10:32:05+00:00"
+      }
+    },
+    {
+      "no": 2,
+      "madde": "D < n_min_karar (5), pencere üst sınırında (21 gün) hâlâ → 'ölçülemedi/örnek yetersiz', pencere UZATILMAZ, yeni pencere/karar operatöre (kill-list, dolmayan gün pencereyi uzatmaz emsali)",
+      "durum": "TETİKLENMEDİ",
+      "kanit": {
+        "D": 80,
+        "n_min_karar": 5,
+        "pencere_ust_siniri": "2026-10-16T10:33:10+00:00"
+      }
+    },
+    {
+      "no": 3,
+      "madde": "okuma-olayı logu yer tutucu/hata gövdesini (ör. 'Generating content…') OKUNDU sayarsa → o olay sayılmaz, ayrı işaretlenir (EDG-083 16:24Z paralel-set vakası emsali)",
+      "durum": "UYGULANDI",
+      "kanit": {
+        "sayilmayan_etiketsiz_sayfa_satiri": 0,
+        "satirlar": []
+      }
+    },
+    {
+      "no": 4,
+      "madde": "CLAUDE.md §0-5 (oturum-başı okuma zorunluluğu) pencere içinde kaldırılır/uygulanmazsa → K1 'ölçülemedi' değil KALDI (bu kartın ön şartı)",
+      "durum": "TETİKLENMEDİ",
+      "kanit": {
+        "kural": "sayfa_oku.sh meridian-hedef-sapma",
+        "pencere_durumlari": [
+          {
+            "commit": "20e247638d15f90bcbf6233f55c89a0338ad605d",
+            "zaman": "2026-09-25T09:17:03+00:00",
+            "adet": 1
+          },
+          {
+            "commit": "b1038cf6cbb537ecd7d0f31bd94b8622a071ecf7",
+            "zaman": "2026-09-28T06:50:54+00:00",
+            "adet": 1
+          }
+        ],
+        "not": "netleştirme (7): yalnız KALDIRILMA ölçülür; geç/eksik/kısmi okuma K1'in kendisinde sayılır"
+      }
+    },
+    {
+      "no": 5,
+      "madde": "okuma-olayı logu ya da karar-envanteri çıktısı sır/kimlik değeri taşırsa (notify.scrub süzgeci atlanırsa) → akış KAPATILIR, tek istisna yok",
+      "durum": "TETİKLENMEDİ",
+      "kanit": {
+        "bulgu_sayisi": 0,
+        "bulgular": [],
+        "denetciler": [
+          "notify:openrouter",
+          "notify:bearer",
+          "notify:url_sorgu",
+          "notify:url_kimlik",
+          "notify:env_satiri",
+          "karar_envanteri._sir_benzeri"
+        ],
+        "envanterin_kendi_attigi": 7
+      }
+    },
+    {
+      "no": 6,
+      "madde": "PK/NK tutmazsa hiçbir sayı yayılmaz (apparatus doğrulanmamış demektir)",
+      "durum": "TETİKLENDİ",
+      "kanit": {
+        "tutmayan": [
+          "PK(b)"
+        ]
+      }
+    },
+    {
+      "no": 7,
+      "madde": "elle/sentetik PK denemesi gerçek K1–K4 sayımına KARIŞMAZ, ayrı işaretlenir",
+      "durum": "UYGULANDI",
+      "kanit": {
+        "etiketli_okuma": {
+          "ikikanal-dogrulama": 4,
+          "olcum-anlik": 2,
+          "pk": 1,
+          "test-atesleme": 3,
+          "test-tsk064": 1,
+          "test-tsk226c": 1
+        },
+        "sentetik_karar": 0
+      }
+    },
+    {
+      "no": 8,
+      "madde": "τ/W kalibrasyonu pencere AÇILDIKTAN sonra değiştirilirse → geçersiz (eşik sonradan değişmez, §5)",
+      "durum": "TETİKLENMEDİ",
+      "kanit": {
+        "acilis": {
+          "tau": "3/20",
+          "W_saat": 48
+        },
+        "simdi": {
+          "tau": "3/20",
+          "W_saat": 48
+        }
+      }
+    }
+  ],
+  "pk_nk": {
+    "pk": {
+      "metin": "[PK-EDG-103] \"EDG-103 penceresi bugün açılır\" kararı, kaynak: zihin modeli meridian-hedef-sapma tazeleme 2026-09-24T18:56:24Z",
+      "okuma_etiketi": "pk",
+      "sayfa": "meridian-hedef-sapma",
+      "karar_zamani": "2026-09-25T10:44:38+00:00",
+      "a_okuma": {
+        "tuttu": true,
+        "pk_satiri": 1,
+        "dogrulanmis": [
+          "2026-09-25T10:33:10Z"
+        ]
+      },
+      "b_ilgi": {
+        "tuttu": false,
+        "ayrinti": [
+          {
+            "okuma_ts": "2026-09-25T10:33:10Z",
+            "zaman_farki_sn": 688.0,
+            "W_icinde": true,
+            "jaccard": "3/478",
+            "ilgili": false
+          }
+        ]
+      },
+      "c_atif": {
+        "tuttu": true,
+        "atif_turleri": [
+          "sayfa"
+        ]
+      }
+    },
+    "nk": {
+      "metin": "[NK-EDG-103] \"EDG-102 kuru adımı çıktısı /opt/veri/olcum/edg102/ altına yazılır\" kararı",
+      "karar_zamani": "2026-09-25T10:44:38+00:00",
+      "atifsiz": {
+        "tuttu": true,
+        "atif_turleri": []
+      },
+      "ilgisiz": {
+        "tuttu": true,
+        "ayrinti": [
+          {
+            "okuma_ts": "2026-09-25T10:33:10Z",
+            "kimlik": "meridian-hedef-sapma",
+            "jaccard": "1/287",
+            "ilgili": false
+          },
+          {
+            "okuma_ts": "2026-09-25T10:33:10Z",
+            "kimlik": "meridian-hedef-sapma",
+            "jaccard": "1/287",
+            "ilgili": false
+          }
+        ]
+      }
+    },
+    "ek_nk": {
+      "sayfa": "nk-kripto-madencilik",
+      "ifade": "bankada yok",
+      "baslik": "## NK — Kripto Madenciliği (Bankada Yok)",
+      "tuttu": true
+    },
+    "tuttu": false
+  },
+  "betimleyici_ara_rapor": {
+    "etiket": "hüküm DEĞİL — betimleyici ara rapor (netleştirme 8: yalnız K1 ve D)",
+    "not": "K2–K4 τ'ya bağlıdır ve alet/pencere doğrulanmadan betimleyici olarak da YAYILMAZ",
+    "K1": {
+      "pay": 5,
+      "payda": 8,
+      "kesir": "5/8",
+      "deger": 0.625,
+      "S_gunleri": [
+        "2026-09-25",
+        "2026-09-26",
+        "2026-09-27",
+        "2026-09-28",
+        "2026-09-29",
+        "2026-09-30",
+        "2026-10-01",
+        "2026-10-02"
+      ],
+      "dolu_gunler": [
+        "2026-09-25",
+        "2026-09-27",
+        "2026-09-28",
+        "2026-09-29",
+        "2026-10-01"
+      ],
+      "okuma_sayisi": 5
+    },
+    "D": {
+      "deger": 80,
+      "atif_dagilimi": {
+        "atifli": 19,
+        "yok": 61,
+        "sayfa": 0,
+        "recall": 9,
+        "memory": 7,
+        "kart_benzer": 8,
+        "bos_beyan": 1,
+        "diger": 5
+      },
+      "pencere_disi": 38,
+      "kararlar": [
+        {
+          "sira": 32,
+          "tarih": "2026-09-25",
+          "kimlik": "EDG-2026-104",
+          "zaman": "2026-09-25T15:42:00+00:00",
+          "baslik": "EDG-2026-104 ölçüm öncesi EMEKLİ (hüküm yok, K harcanmadı) → halef EDG-2026-105 ÖN-KAYIT: selefin öykünücüsü emir tipini 09:45 fiyatından seçiyordu, canlı kod p…",
+          "atif_turleri": [
+            "kart_benzer",
+            "recall"
+          ]
+        },
+        {
+          "sira": 33,
+          "tarih": "2026-09-25",
+          "kimlik": "EDG-2026-105",
+          "zaman": "2026-09-25T16:31:54+00:00",
+          "baslik": "EDG-2026-105 KOŞULDU → kill-3 ATEŞLEDİ (ölçek dışlanan %7,177 > %5) → YAYIMLANMAZ, hüküm yok, EMEKLİ; halef EDG-2026-106 ÖN-KAYIT: aynı soru ve eşikler + bölünm…",
+          "atif_turleri": [
+            "kart_benzer",
+            "recall"
+          ]
+        },
+        {
+          "sira": 34,
+          "tarih": "2026-09-25",
+          "kimlik": "EDG-2026-106",
+          "zaman": "2026-09-25T17:21:09+00:00",
+          "baslik": "EDG-2026-106 HÜKÜM: hipotez KALDI — H1 canlı giriş kuralının doldurmayacağı replay girişi %0,601 [0,122, 1,175] → DOLUM EŞDEĞER; H2 canlı − replay dolum medyanı…",
+          "atif_turleri": [
+            "diger",
+            "kart_benzer",
+            "memory",
+            "recall"
+          ]
+        },
+        {
+          "sira": 40,
+          "tarih": "2026-09-25",
+          "kimlik": "TSK-218",
+          "zaman": "2026-09-25T21:23:07+00:00",
+          "baslik": "**[TSK-218] Canlı kapanışların `trades` satırına GİRİŞ dolum ailesi (`giris_dolum_ts`/`giris_dolum_fiyat`) yazılmıyor — TSK-182 geri dolumu tek seferlikti; EDG-…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 42,
+          "tarih": "2026-09-25",
+          "kimlik": "TSK-220",
+          "zaman": "2026-09-25T15:26:48+00:00",
+          "baslik": "ROADMAP: TSK-220 KAPANDI (071be21c, BAYAT KAPI canlı) → §8 arşiv; TSK-209/212/214/215 kanıt zamanı ölçüldü (sprint kadansı gun≥7 → en erken 09-28/29 gecesi; bil…",
+          "atif_turleri": [
+            "memory"
+          ]
+        },
+        {
+          "sira": 43,
+          "tarih": "2026-09-25",
+          "kimlik": "TSK-221",
+          "zaman": "2026-09-25T10:44:38+00:00",
+          "baslik": "**[TSK-221] EDG-2026-102 ölçüm kodu + A1 koşumu — replay stop çıkışlarında tick'le gerçek stop kayması** — status: DONE(2026-09-25 · EDG-102 hükmü: MODEL YETERL…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 44,
+          "tarih": "2026-09-25",
+          "kimlik": "TSK-222",
+          "zaman": "2026-09-25T10:44:38+00:00",
+          "baslik": "**[TSK-222] EDG-2026-103 enstrümantasyonu — sayfa/recall okuma kaydı + karar envanteri betiği; `sayfa_oku.sh`/`hafiza_sor.sh` depoya** — status: DONE(2026-09-25…",
+          "atif_turleri": [
+            "kart_benzer"
+          ]
+        },
+        {
+          "sira": 45,
+          "tarih": "2026-09-25",
+          "kimlik": "TSK-223",
+          "zaman": "2026-09-25T11:08:21+00:00",
+          "baslik": "[TSK-223] (2026-09-25 10:51Z SEVK + KARAR DEĞİŞİKLİĞİ [Rol-1]: kaynak `/v2/clock` DEĞİL, **XNYS takvimi** (`pandas_market_calendars`) — tek-kaynak yasası: depo…",
+          "atif_turleri": [
+            "memory",
+            "recall"
+          ]
+        },
+        {
+          "sira": 46,
+          "tarih": "2026-09-25",
+          "kimlik": "TSK-224",
+          "zaman": "2026-09-25T18:35:49+00:00",
+          "baslik": "**[TSK-224] EDG-2026-106 ölçüm kodu + A1 koşumu — replay girişlerini koda sadık canlı giriş kuralıyla (plan-anı emir tipi + 9:45 ET + limit tavanı, bölünme yeni…",
+          "atif_turleri": [
+            "kart_benzer",
+            "recall"
+          ]
+        },
+        {
+          "sira": 47,
+          "tarih": "2026-09-25",
+          "kimlik": "TSK-225",
+          "zaman": "2026-09-25T18:53:10+00:00",
+          "baslik": "[TSK-225] (2026-09-25 18:53Z ANA DALDA [Rol-1] — birleştirme 83ca765d (worktree 1a41bbf3): `55-edg085-quote.conf` `‹gizlendi›` + NEDEN şerhleri; `dizinler.yml`…",
+          "atif_turleri": [
+            "memory"
+          ]
+        },
+        {
+          "sira": 48,
+          "tarih": "2026-09-25",
+          "kimlik": null,
+          "zaman": "2026-09-25T10:44:38+00:00",
+          "baslik": "### 29. PARALEL PROGRAM BAŞLATMA + İLK TICK KART HÜKMÜ + DAĞITIM #65 (2026-09-25 07:0x→10:40Z, model Opus 5.5)",
+          "atif_turleri": []
+        },
+        {
+          "sira": 49,
+          "tarih": "2026-09-26",
+          "kimlik": "TSK-225",
+          "zaman": "2026-09-26T22:48:29+00:00",
+          "baslik": "[TSK-225] (2026-09-26 22:5xZ AÇIK BULGULAR KAPANDI [Rol-1]: TSK-228 dilimiyle `dizinler.yml` /opt/veri + /opt/veri/olcum açık dizin görevleri, v553 beyanındaki…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 50,
+          "tarih": "2026-09-26",
+          "kimlik": "TSK-226",
+          "zaman": "2026-09-26T16:55:18+00:00",
+          "baslik": "TSK-226 KAPANDI: iki sır argv'den çıktı (canlı) ve ikisi de döndürüldü — CP --cp --vault (yeni 200/eski 401), kiracı --tenant --vault --uret (dağıtım #69; yeni…",
+          "atif_turleri": [
+            "memory"
+          ]
+        },
+        {
+          "sira": 51,
+          "tarih": "2026-09-26",
+          "kimlik": "TSK-228",
+          "zaman": "2026-09-26T22:20:51+00:00",
+          "baslik": "[TSK-228] (2026-09-26 22:3xZ ANA DALDA [Rol-1] — birleştirme f95d7d90 (worktree 5359294e + 0013b8ed): uygulayıcı ölçtü, kapsam 2 değil DÖRT birim — `meridian-ba…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 52,
+          "tarih": "2026-09-26",
+          "kimlik": "TSK-233",
+          "zaman": "2026-09-26T23:55:11+00:00",
+          "baslik": "[TSK-233] (2026-09-26 23:5xZ AÇILDI [Rol-1; TSK-229 uygulayıcısı kod okumasıyla buldu, inceleme DOĞRULADI, Rol-1 kodu okudu]: `api_hermes_reflect` → `hermes_run…",
+          "atif_turleri": [
+            "recall"
+          ]
+        },
+        {
+          "sira": 53,
+          "tarih": "2026-09-26",
+          "kimlik": null,
+          "zaman": "2026-09-26T22:48:29+00:00",
+          "baslik": "### 32. DÖRT DİLİM: ÖĞRENME TABANI · UV HİJYENİ · PANO JETONU BETİĞİ EMEKLİLİĞİ · KASA SÜRÜMÜ (2026-09-26 gece, model Opus 5.5)",
+          "atif_turleri": []
+        },
+        {
+          "sira": 54,
+          "tarih": "2026-09-26",
+          "kimlik": null,
+          "zaman": "2026-09-27T02:00:02+00:00",
+          "baslik": "### 33. GECE VARDİYASI: DAĞITIM #70 + ÖĞRENME DURUMUNUN TEK YAZANI (2026-09-26/27 gece, model Opus 5.5)",
+          "atif_turleri": []
+        },
+        {
+          "sira": 55,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-064",
+          "zaman": "2026-09-27T02:00:02+00:00",
+          "baslik": "[TSK-064] (2026-09-27 03:4xZ (b) KAPANDI [Rol-1]: genel kasa döngüsü put öncesi ESKİ değeri yedekler, rollback düşerse yedekten STDIN ile `kv put` (birleştirme…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 56,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-227",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "baslik": "ROADMAP: TSK-227/228/229/231/232 KAPANDI -> §8.H.2 arsivi (dagitim #71 08b06680 canli kaniti: VENV DEGISTI 0, last_reflect_at 871 korundu, suite 14802/0, CI yes…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 57,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-228",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "baslik": "**[TSK-228] `meridian`/`meridian-barsarchive` birimleri `uv run` ile başlıyor (dev grubu dahil) — her dağıtımda A0/dagit `uv sync --no-dev` dev paketlerini kald…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 58,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-229",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "baslik": "**[TSK-229] Arka plan yansımasının rejim tabanı (`bg_reflect_by_regime`) restart'ta kayboluyor — `_persist` alanı `hermes_status.json`a yazıyor ama açılışta hiç…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 59,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-230",
+          "zaman": "2026-09-27T04:10:08+00:00",
+          "baslik": "Dagitim #72 kaydi (gunluk §34 eki) + TSK-230 KAPANDI -> §8.H.2 (CI uv 0.12.0 [0/4] taze + dagit [0b] ilk gercek kosum taze, agac temiz); RUNBOOK degismedi",
+          "atif_turleri": []
+        },
+        {
+          "sira": 60,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-231",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "baslik": "**[TSK-231] Satır-çapası taraması birim dosyalarına bakmıyor — `deploy/**/*.service` ve `*.conf` şerhlerindeki `dosya:NNN` çapaları sessizce çürüyor (iki tanesi…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 61,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-232",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "baslik": "**[TSK-232] Tahta tablosu satır ARASINA yazılan tek bir satırla sessizce bölünüyor — alttaki satırlar ayrıştırmadan düşer; v337 bunu yalnız \"en az 10 satır\" boş…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 62,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-233",
+          "zaman": "2026-09-27T20:49:24+00:00",
+          "baslik": "[TSK-233] (2026-09-27 20:4xZ UI METNİ KAPANDI [Rol-1]: pano Sohbet panelindeki görünür metin \"yansıma İSTEĞİ bırakır (öğrenme birimi alıp koşar)\" oldu (SohbetHa…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 63,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-234",
+          "zaman": "2026-09-27T02:26:20+00:00",
+          "baslik": "TSK-234 KAPANDI: meridian.service ReadWritePaths envanteri serhi duzeltildi — research/edgar_facts YAZILMAZ (A1: 08-01'den beri degismedi; yalniz okunur), izin…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 64,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-235",
+          "zaman": "2026-09-27T13:49:35+00:00",
+          "baslik": "Gunluk §35 (dagitim #74) + TSK-235/238 KAPANDI -> §8.H.2 (A1 ssh komutu UV_NO_DEV/UV_FROZEN goruyor; ayristirici sessiz kayipsiz); RUNBOOK degismedi",
+          "atif_turleri": []
+        },
+        {
+          "sira": 65,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-236",
+          "zaman": "2026-09-27T15:19:32+00:00",
+          "baslik": "Dagitim #75 kaydi (gunluk §35 eki) + TSK-236 KAPANDI -> §8.H.2; RUNBOOK degismedi",
+          "atif_turleri": []
+        },
+        {
+          "sira": 66,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-237",
+          "zaman": "2026-09-27T05:48:26+00:00",
+          "baslik": "Dagitim #73 kaydi (gunluk §34 eki) + TSK-237 KAPANDI -> §8.H.2; RUNBOOK degismedi",
+          "atif_turleri": []
+        },
+        {
+          "sira": 67,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-238",
+          "zaman": "2026-09-27T13:49:35+00:00",
+          "baslik": "**[TSK-238] uv hijyeni artıkları — `ops/*.py`/`deploy/*/*.py` ileti ve docstring yüzeyinde 31 satır bayraksız `uv` öğüdü, `ops/kapilar.sh` ilk iş bayraksız `uv…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 68,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-239",
+          "zaman": "2026-09-27T16:26:42+00:00",
+          "baslik": "Gunluk §35 eki (TSK-239/241/242/240) + ROADMAP: TSK-241/242 KAPANDI -> §8.H.2, TSK-243 acildi (codelaw.report ops yorumlari); RUNBOOK degismedi",
+          "atif_turleri": []
+        },
+        {
+          "sira": 69,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-241",
+          "zaman": "2026-09-27T17:42:30+00:00",
+          "baslik": "**[TSK-241] Motor yorumlarındaki devam biçimi satır çapaları (`:NNN`, `/NNN`) hiçbir taramada değil — ~27 gerçek çapa, 15'i `meridian/*.py` motor yorumunda (sat…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 70,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-242",
+          "zaman": "2026-09-27T17:42:30+00:00",
+          "baslik": "**[TSK-242] `ops/`, `deploy/` ve kök `.py` dosyalarının yorumları codelaw üçüncü beslemesinde yok (50 dosya, 3 ifade-çürüğü) + v571'in sembol-çapa testi v572'ni…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 71,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-243",
+          "zaman": "2026-09-27T18:52:39+00:00",
+          "baslik": "Gunluk §35 eki (TSK-243) + ROADMAP: TSK-243 KAPANDI -> §8.H.2, TSK-244 acildi (olu geridolum sembol capasi); RUNBOOK degismedi",
+          "atif_turleri": []
+        },
+        {
+          "sira": 72,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-244",
+          "zaman": "2026-09-27T19:14:11+00:00",
+          "baslik": "Gunluk §35 eki (TSK-244 + TSK-233 UI) + ROADMAP: TSK-244 KAPANDI -> §8.H.2, TSK-245 acildi (metin capa dunyasinda deploy); tarih etiketleri UTC; RUNBOOK degisme…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 73,
+          "tarih": "2026-09-27",
+          "kimlik": "TSK-245",
+          "zaman": "2026-09-27T22:20:27+00:00",
+          "baslik": "ROADMAP: TSK-245 KAPANDI -> §8.H.2 (metin capa dunyasi deploy dahil; ikircikli bedeli bugun 0, bilincli kabul)",
+          "atif_turleri": []
+        },
+        {
+          "sira": 74,
+          "tarih": "2026-09-27",
+          "kimlik": null,
+          "zaman": "2026-09-27T03:45:43+00:00",
+          "baslik": "### 34. SABAH DİLİMLERİ: KASA YEDEĞİ + UV KAPISI + DAĞITIM #71 (2026-09-27, model Opus 5.5)",
+          "atif_turleri": []
+        },
+        {
+          "sira": 75,
+          "tarih": "2026-09-27",
+          "kimlik": null,
+          "zaman": "2026-09-27T15:19:32+00:00",
+          "baslik": "### 35. PAZAR ÖĞLEDEN SONRA: AYRIŞTIRICI + UV ARTIKLARI + DAĞITIM #74 (2026-09-27, model Opus 5.5)",
+          "atif_turleri": []
+        },
+        {
+          "sira": 76,
+          "tarih": "2026-09-28",
+          "kimlik": "TSK-020",
+          "zaman": "2026-09-28T06:50:54+00:00",
+          "baslik": "[TSK-020] (2026-09-28 06:5xZ OPERATÖR KARARI [AskUserQuestion]: \"SQLite taşımasını sıraya al\" (UYGULA-1 Kademe C: öğrenme defterleri hypotheses/validation_ledge…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 77,
+          "tarih": "2026-09-28",
+          "kimlik": "TSK-142",
+          "zaman": "2026-09-28T06:50:54+00:00",
+          "baslik": "[TSK-142] (2026-09-28 06:5xZ OPERATÖR KARARI [AskUserQuestion]: \"Yeni ölçüm bitene kadar beklesin\" — EDG-103 penceresi (2026-10-02…10-16) sonucu gelince açma/dü…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 78,
+          "tarih": "2026-09-28",
+          "kimlik": "TSK-168",
+          "zaman": "2026-09-28T06:57:12+00:00",
+          "baslik": "[TSK-168] (2026-09-28 06:5xZ [Rol-1, A1 salt-okur]: akış SÜRÜYOR — `meridian-defter-ozeti-retain` son koşum 2026-09-27 21:30:33Z Result=success, 09-24/25/26/27…",
+          "atif_turleri": [
+            "recall"
+          ]
+        },
+        {
+          "sira": 79,
+          "tarih": "2026-09-28",
+          "kimlik": "TSK-207",
+          "zaman": "2026-09-28T06:50:54+00:00",
+          "baslik": "**[TSK-207] `SEMBOL_OLU_ADAY` sensörü 'delist adayı' diyor ama dört sembol CANLI: 2026-09-09 S&P 500 çıkışı → bar akışı kesildi; açık pozisyonlu sembol endekste…",
+          "atif_turleri": [
+            "memory"
+          ]
+        },
+        {
+          "sira": 80,
+          "tarih": "2026-09-28",
+          "kimlik": "TSK-240",
+          "zaman": "2026-09-28T06:50:54+00:00",
+          "baslik": "[TSK-240] (2026-09-28 06:5xZ OPERATÖR KARARI [AskUserQuestion]: \"Komutu ben çalıştırırım\" — eşitleme komutu operatörde; koşulunca Rol-1 sha + izin doğrular, F9…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 81,
+          "tarih": "2026-09-28",
+          "kimlik": "TSK-247",
+          "zaman": "2026-09-28T15:11:59+00:00",
+          "baslik": "[TSK-247] (2026-09-28 15:1xZ (b) CPU ANA DALDA [Rol-1]: hindsight-cp `--cpus=1` (= CPUQuota 100%; A1 ölçümü: konteyner CPU %0, ana süreç 46 sa'te ~0 sn CPU → ta…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 82,
+          "tarih": "2026-09-28",
+          "kimlik": "TSK-248",
+          "zaman": "2026-09-28T15:01:12+00:00",
+          "baslik": "[TSK-248] (2026-09-28 14:5xZ OPERATÖR KARARI [AskUserQuestion]: kesilen yansıma turu 'Hiç sayılmasın' — `‹gizlendi›.md` ONAYLI: (A) durdurma yüklemi `reflect_on…",
+          "atif_turleri": [
+            "recall"
+          ]
+        },
+        {
+          "sira": 83,
+          "tarih": "2026-09-28",
+          "kimlik": null,
+          "zaman": "2026-09-28T17:12:28+00:00",
+          "baslik": "- **§36 eki — öğleden sonra (2026-09-28 10:1x→17:1xZ, model Opus 5.5):**",
+          "atif_turleri": []
+        },
+        {
+          "sira": 84,
+          "tarih": "2026-09-29",
+          "kimlik": "TSK-020",
+          "zaman": "2026-09-29T07:45:22+00:00",
+          "baslik": "[TSK-020] (2026-09-29 07:4xZ KADEME C CANLI GÖÇ TAMAM + DAĞITIM #82 [Rol-1]: gece penceresi KAÇTI (09-28 21:0xZ'de operatöre sorulan soru ~10 sa yanıt bekledi,…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 85,
+          "tarih": "2026-09-29",
+          "kimlik": "TSK-064",
+          "zaman": "2026-09-29T11:34:38+00:00",
+          "baslik": "ROADMAP TSK-064: iki-kanal KAPANDI (adim 4-6: yedek + tasima, kalici silme yok; hindsight-cp yalniz Vault, CP 200/401, araclar calisiyor); envanter temizligi si…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 86,
+          "tarih": "2026-09-29",
+          "kimlik": "TSK-096",
+          "zaman": "2026-09-29T20:18:57+00:00",
+          "baslik": "**[TSK-096] Metrik trendi ihtiyacı doğarsa hafif toplayıcı (Prometheus yaygınlaştırma DEĞİL)** — status: DROPPED(2026-09-29·aşıldı: operatör 2026-09-28 UYGULA-9…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 87,
+          "tarih": "2026-09-29",
+          "kimlik": "TSK-176",
+          "zaman": "2026-09-29T07:47:04+00:00",
+          "baslik": "[TSK-176] (2026-09-29 07:4xZ [Rol-1]: operatör A1'de 2026-09-28 17:29Z elle `apt upgrade` koştu (Terraform 1.16.2→1.16.4, çekirdek 7.0, netplan/krb5) → site.yml…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 88,
+          "tarih": "2026-09-29",
+          "kimlik": "TSK-204",
+          "zaman": "2026-09-29T20:18:57+00:00",
+          "baslik": "**[TSK-204] 'OGRENME DURDU' alarmi 2026-08-09'dan beri HER AKSAM otuyor — ama ogrenme birimi BILINCLI kapali; alarm beklenen durumu ariza gibi raporluyor** — st…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 89,
+          "tarih": "2026-09-29",
+          "kimlik": "TSK-212",
+          "zaman": "2026-09-29T07:48:29+00:00",
+          "baslik": "**[TSK-212] Sprint birimi şerhi \"sprint LLM çağırmaz\" diyor, kum havuzu her gün-çevriminde `agent_call kind=review` deniyor ve hermes salt-okunur HOME'da (EROFS…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 90,
+          "tarih": "2026-09-29",
+          "kimlik": "TSK-225",
+          "zaman": "2026-09-29T20:18:57+00:00",
+          "baslik": "**[TSK-225] EDG-085 quote kayıt yolu `meridian.service` sertleştirmesinde YAZILAMIYOR — ilk pilot seansı (2026-09-25) kayıtsız geçti; sınıf (sertleştirilmiş bir…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 91,
+          "tarih": "2026-09-29",
+          "kimlik": "TSK-247",
+          "zaman": "2026-09-29T07:47:04+00:00",
+          "baslik": "**[TSK-247] Docker konteynerleri (apisix-kapi · apisix-etcd · hindsight-cp) bellek tavanSIZ — birimdeki `MemoryMax=512M` yalnız docker İSTEMCİSİNİ sınırlıyor, k…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 92,
+          "tarih": "2026-09-29",
+          "kimlik": "TSK-250",
+          "zaman": "2026-09-29T23:04:50+00:00",
+          "baslik": "deploy.sh baslik: .env-cp kaldirildi, CP sirlari Vault yan dosyasindan (RUNBOOK ayni commit'te yeniden uretildi); ROADMAP TSK-250 + TSK-255 KAPANDI → §8.H.2; ce…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 93,
+          "tarih": "2026-09-29",
+          "kimlik": "TSK-251",
+          "zaman": "2026-09-29T20:18:57+00:00",
+          "baslik": "[TSK-251] (2026-09-29 22:1xZ v2 KOŞULDU [Rol-1, operatör gece yetkisi] — HÜKÜM DUR→OPERATÖR, rapor `‹gizlendi›.md`: (a) GEÇTİ (26/26 yerleşik takım kapalı, geçe…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 94,
+          "tarih": "2026-09-29",
+          "kimlik": "TSK-255",
+          "zaman": "2026-09-29T23:04:50+00:00",
+          "baslik": "**[TSK-255] Test altyapısı ortam-sızıntı bekçisinin kalan açıkları — modül-import-zamanı / modül-oturum kapsamlı fikstür yazımları + alt oturumun `MERIDIAN_PROV…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 95,
+          "tarih": "2026-09-29",
+          "kimlik": null,
+          "zaman": "2026-09-30T01:28:56+00:00",
+          "baslik": "- **Operatör isteği (09-29):** \"botları aktif kullanamıyoruz; daha detaylı kullanım ve daha çok bot planlamıştık\". Ölçüm: 3 bot yalnız tek yönlü",
+          "atif_turleri": []
+        },
+        {
+          "sira": 96,
+          "tarih": "2026-09-30",
+          "kimlik": "EDG-2026-107",
+          "zaman": "2026-09-30T17:03:32+00:00",
+          "baslik": "EDG-2026-107 on_kayit: 2026-09-30",
+          "atif_turleri": [
+            "diger",
+            "kart_benzer",
+            "recall"
+          ]
+        },
+        {
+          "sira": 97,
+          "tarih": "2026-09-30",
+          "kimlik": "EXE-2026-012",
+          "zaman": "2026-09-30T19:07:54+00:00",
+          "baslik": "EXE-2026-012 on_kayit: 2026-09-30",
+          "atif_turleri": [
+            "bos_beyan",
+            "kart_benzer"
+          ]
+        },
+        {
+          "sira": 98,
+          "tarih": "2026-09-30",
+          "kimlik": "TSK-020",
+          "zaman": "2026-09-30T18:45:09+00:00",
+          "baslik": "ROADMAP 09-30 aksam (operator 'aktiflere devam, siradakileri aktife al'): TSK-020 + TSK-200 ACTIVE (UYGULA-3 ve Faz A adim 5 canlida bitmis; kalan Faz C karti),…",
+          "atif_turleri": [
+            "diger",
+            "kart_benzer"
+          ]
+        },
+        {
+          "sira": 99,
+          "tarih": "2026-09-30",
+          "kimlik": "TSK-138",
+          "zaman": "2026-09-30T18:45:09+00:00",
+          "baslik": "**[TSK-138] Brifing SOUL denetçisi alan adlarını 'uydurma' sayıyor (bekçi · stop_gap'i · iyileştirme önerisi) → 2/2 ihlal, HAM teslim** — status: DONE(2026-09-3…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 100,
+          "tarih": "2026-09-30",
+          "kimlik": "TSK-205",
+          "zaman": "2026-09-30T18:45:09+00:00",
+          "baslik": "[TSK-205] (2026-09-30 18:4xZ HENÜZ YOK [kaynak: A1 salt-okur ölçüm 18:1x–18:4xZ (scratchpad kanit-olcum-plani bloklar 1–3)]: #65'ten beri 3 çıkış, üçü de koruma…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 101,
+          "tarih": "2026-09-30",
+          "kimlik": "TSK-246",
+          "zaman": "2026-09-30T18:45:09+00:00",
+          "baslik": "**[TSK-246] `meridian-learn` durdurması yansıma turu ortasında 120 sn'yi aşıp SIGKILL'le bitiyor — `KillMode=control-group` SIGTERM'i işlem havuzu işçilerine de…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 102,
+          "tarih": "2026-09-30",
+          "kimlik": "TSK-251",
+          "zaman": "2026-09-30T06:40:28+00:00",
+          "baslik": "ROADMAP: TSK-251 (Parca 0, kapi GECTI v3) + TSK-256 (mcp K-1 ile kuruldu, varsayilan profil kapali) KAPANDI → §8.H.2; TSK-252 ACTIVE; cephe ozeti",
+          "atif_turleri": []
+        },
+        {
+          "sira": 103,
+          "tarih": "2026-09-30",
+          "kimlik": "TSK-252",
+          "zaman": "2026-09-30T14:05:59+00:00",
+          "baslik": "[TSK-252] (OPERATÖR KARARI 2026-09-30 18:5xZ [AskUserQuestion]: kadro 21 botun konuşan filoya bağlanması AŞAMALI — 'Önce 3, sonra dalgalar': şef/bekçi/karne can…",
+          "atif_turleri": [
+            "diger"
+          ]
+        },
+        {
+          "sira": 104,
+          "tarih": "2026-09-30",
+          "kimlik": "TSK-256",
+          "zaman": "2026-09-30T06:40:28+00:00",
+          "baslik": "**[TSK-256] Hermes venv'inde `mcp` paketi yok — `meridian/mcp_server.py` araçları canlıda hiçbir Hermes koşumuna BAĞLANMADI (sessiz, yalnız DEBUG günlüğü)** — s…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 105,
+          "tarih": "2026-09-30",
+          "kimlik": "TSK-257",
+          "zaman": "2026-09-30T10:30:42+00:00",
+          "baslik": "TSK-257 KAPANDI (dagitim #87 e6aabf46 canli, K-1 korunuyor) → §8 arsiv; gunluk §38 #87 + kabuk PYTHONDONTWRITEBYTECODE bulgusu; cephe ozeti",
+          "atif_turleri": [
+            "memory"
+          ]
+        },
+        {
+          "sira": 106,
+          "tarih": "2026-09-30",
+          "kimlik": "TSK-259",
+          "zaman": "2026-09-30T18:45:09+00:00",
+          "baslik": "[TSK-259] (OPERATÖR KARARI 2026-09-30 18:5xZ [AskUserQuestion]: '(a) İş koşarken ölçme' — alarm, ileri doldurma işi (meridian-geridolum) koşarken ölçüm yapmaz,…",
+          "atif_turleri": [
+            "diger"
+          ]
+        },
+        {
+          "sira": 107,
+          "tarih": "2026-09-30",
+          "kimlik": null,
+          "zaman": "2026-09-30T18:24:21+00:00",
+          "baslik": "G3b plani tam: 5 gorev (kosullu birim + on-denetim, API_SERVER_KEY 4 kopya — Hermes profil kapsami A1 olcumu: /p/<bot> istegi anahtari profil .env'inden alir, y…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 108,
+          "tarih": "2026-10-01",
+          "kimlik": "TSK-258",
+          "zaman": "2026-10-01T07:33:59+00:00",
+          "baslik": "Dagitim #88 (7fe14465): gunluk §39 + ROADMAP — G4 canli (botlar/telegram birimleri kurulu, disabled), TSK-258 KAPANDI (K-1 korundu), TSK-259 canli (kanit bu sab…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 109,
+          "tarih": "2026-10-01",
+          "kimlik": "TSK-259",
+          "zaman": "2026-10-01T08:53:00+00:00",
+          "baslik": "TSK-259 KAPANDI: ilk ileri doldurma kosumunda (07:30-07:59Z) tepe 141,9 G > 140 G esigi, DISK_ESIK calmadi, atlama sayaci 5; kosum sonrasi kalici ~123 G, alarm…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 110,
+          "tarih": "2026-10-01",
+          "kimlik": "TSK-260",
+          "zaman": "2026-10-01T20:17:26+00:00",
+          "baslik": "ROADMAP: TSK-260 KAPANDI (yardimcinin yazim yolunda; dar kapanis metni), TSK-261 ACTIVE + siddet yukseldi (her --openrouter kosumunun olagan yolu; NoNewPrivileg…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 111,
+          "tarih": "2026-10-01",
+          "kimlik": "TSK-262",
+          "zaman": "2026-10-02T05:56:54+00:00",
+          "baslik": "- **TSK-262 (okuma yolu) + TSK-265 (ROOT YÜRÜTÜR, UBUNTU YAZAR) — 01:0x–06:0xZ, Rol-1 + Opus uygulayıcı/inceleme, iki tur her biri:**",
+          "atif_turleri": []
+        },
+        {
+          "sira": 112,
+          "tarih": "2026-10-01",
+          "kimlik": null,
+          "zaman": "2026-10-02T07:04:46+00:00",
+          "baslik": "- **Dağıtım #91 (06:50–07:01Z, main HEAD 34230aec = deployed_sha; push 06:47Z operatörün sorusu üzerine — engel sonrası İLK yeniden",
+          "atif_turleri": []
+        },
+        {
+          "sira": 113,
+          "tarih": "2026-10-01",
+          "kimlik": null,
+          "zaman": "2026-10-01T07:33:59+00:00",
+          "baslik": "- **Giden:** G4 (Telegram kanal kablolaması — `bota_sor` üretim hafıza kaydı, unut iki adım, dinleyici + birim, 4096 bölme her parça",
+          "atif_turleri": []
+        },
+        {
+          "sira": 114,
+          "tarih": "2026-10-02",
+          "kimlik": "TSK-261",
+          "zaman": "2026-10-02T07:04:46+00:00",
+          "baslik": "**[TSK-261] Sır rotasyon aracının kopya-tabanlı yolları — `_negatif_geri_al` öngörülebilir `$hedef.yeni` adına `sudo cp -p` (+ `mv -f`), `_yedek_al` `sudo cp -p…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 115,
+          "tarih": "2026-10-02",
+          "kimlik": "TSK-262",
+          "zaman": "2026-10-02T07:04:46+00:00",
+          "baslik": "**[TSK-262] Sır rotasyon aracının OKUMA yolu FIFO askısı — `_oku` / alan-var denetimi hedefi `open()` ile açıyor; dizin sahibi hedefi adlandırılmış boruya (FIFO…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 116,
+          "tarih": "2026-10-02",
+          "kimlik": "TSK-263",
+          "zaman": "2026-10-02T03:15:18+00:00",
+          "baslik": "[TSK-263] (2026-10-02 03:1xZ AÇILDI [Rol-1; G3b `--envanter` beyan dışı taraması 2026-10-01 22:2xZ]: tablonun bilmediği bir sır canlı bir `.env`te duruyor (G3b'…",
+          "atif_turleri": []
+        },
+        {
+          "sira": 117,
+          "tarih": "2026-10-02",
+          "kimlik": "TSK-265",
+          "zaman": "2026-10-02T04:38:16+00:00",
+          "baslik": "Dagitim #91 (34230aec): TSK-265 dilim 1 canlida (docker.sock maskesi canli sureclerde dogrulandi, watchdog ubuntu + polkit tetik-testi, fail-notify NNP altinda…",
+          "atif_turleri": []
+        }
+      ],
+      "sentetik_ayrilan": []
+    }
+  }
+}

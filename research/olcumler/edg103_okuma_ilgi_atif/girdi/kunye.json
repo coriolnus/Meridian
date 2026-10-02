@@ -1,0 +1,46 @@
+{
+  "sema": 1,
+  "arac": "research/olcumler/edg103_okuma_ilgi_atif/dondur.py",
+  "dondurma_ani": "2026-10-02T11:24:09+00:00",
+  "repo_head": "414b11ab4d544e9707b0a6b939fcaf1e9653ec88",
+  "kart": {
+    "yol": "research/cards/EDG-2026-103-hafiza-sayfa-okuma-ilgi-atif.yaml",
+    "ilk_commit": {
+      "commit": "997f23bf68624e41193add3f0e5b9df1b4befb3c",
+      "zaman": "2026-09-25T08:05:07+00:00"
+    },
+    "acilis_alani": "pencere_acilis_2026_09_25",
+    "acilis_commit": {
+      "commit": "34cd6c12d79c5a0f8d3a484307dd2bfb50bf839c",
+      "zaman": "2026-09-25T10:44:38+00:00"
+    }
+  },
+  "enstrumantasyon": {
+    "yol": "deploy/hindsight/hafiza_okuma_kaydi.py",
+    "ilk_commit": {
+      "commit": "de58eb8fa222e8d1b14ab0648db39454a53ca61c",
+      "zaman": "2026-09-25T09:03:25+00:00"
+    }
+  },
+  "kural_0_5": {
+    "anahtar": "sayfa_oku.sh meridian-hedef-sapma",
+    "iz": [
+      {
+        "commit": "20e247638d15f90bcbf6233f55c89a0338ad605d",
+        "zaman": "2026-09-25T09:17:03+00:00",
+        "adet": 1
+      },
+      {
+        "commit": "b1038cf6cbb537ecd7d0f31bd94b8622a071ecf7",
+        "zaman": "2026-09-28T06:50:54+00:00",
+        "adet": 1
+      }
+    ]
+  },
+  "pk_nk_zamani": "2026-09-25T10:44:38+00:00",
+  "envanter": {
+    "baslangic": "2026-09-18",
+    "bitis": "2026-10-02",
+    "kenar_gun": 7
+  }
+}

@@ -1,0 +1,4250 @@
+{
+  "sema": 1,
+  "kararlar": [
+    {
+      "sira": 0,
+      "tarih": "2026-09-21",
+      "kimlik": "EDG-2026-085",
+      "baslik": "EDG-085 PİLOT BAYRAĞI AÇILDI (kart-önce): status registered→measuring + pilot_kaydi_2026_09_22 (tavan 51,90 ms / CPU +5pp); 55-edg085-quote.conf 0→1; ROADMAP TS…",
+      "zaman": "2026-09-21T23:23:26+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "5cf40560"
+          },
+          "commit": "5cf40560cb75194f47eb81050b871a49a41db997",
+          "zaman": "2026-09-21T23:23:26+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 1,
+      "tarih": "2026-09-21",
+      "kimlik": "EDG-2026-089",
+      "baslik": "EDG-2026-089 HÜKÜM: KALDI — K1 retain 6/7, K2 otomatik tazeleme GEÇTİ (080-K2 tersine döndü), K3 kullanım 0",
+      "zaman": "2026-09-21T06:47:52+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "a70af70f"
+          },
+          "commit": "a70af70f820590762ddff72831b0e697e2d71125",
+          "zaman": "2026-09-21T06:47:52+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "kart",
+            "dosya": "research/cards/EDG-2026-089-hindsight-retain-akisi-yeni-pencere.yaml",
+            "alan": "hukum_2026_09_21",
+            "satir": 96
+          },
+          "anahtar_kaynagi": "anahtar_satiri",
+          "onek_uzunlugu": 19,
+          "onek_basi": "hukum_2026_09_21: >",
+          "commit": "a70af70f820590762ddff72831b0e697e2d71125",
+          "zaman": "2026-09-21T06:47:52+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3414
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 47,
+          "onek_basi": "### 3. EDG-2026-089 HÜKMÜ — KALDI (bir gün geç)",
+          "commit": "2da1b4bfc67400c3ad888e0a8dbda997c52ea202",
+          "zaman": "2026-09-21T07:58:39+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 2,
+      "tarih": "2026-09-21",
+      "kimlik": "TSK-013",
+      "baslik": "[TSK-013] (2026-09-21 23:19Z EDG-085 PİLOT BAYRAĞI AÇILDI (repo) [Rol-1]: ön şart TSK-208 gece kanıtı doldu (22:00:44Z); kart `status: registered → measuring` +…",
+      "zaman": "2026-09-21T23:23:26+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2531,
+            "not": 4
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-21 23:19Z EDG-085 PİLOT BAYRAĞI AÇILDI (repo) [Rol-",
+          "commit": "5cf40560cb75194f47eb81050b871a49a41db997",
+          "zaman": "2026-09-21T23:23:26+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 3,
+      "tarih": "2026-09-21",
+      "kimlik": "TSK-060",
+      "baslik": "[TSK-060] (2026-09-21 07:0xZ **EDG-2026-089 HÜKMÜ: KALDI** — hüküm kart günü 09-20 yerine 09-21'de verildi (oturum durdu; itiraf), pencere UZATILMADI, eşik DEĞİ…",
+      "zaman": "2026-09-21T06:47:52+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 318,
+            "not": 6
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-21 07:0xZ **EDG-2026-089 HÜKMÜ: KALDI** — hüküm kar",
+          "commit": "a70af70f820590762ddff72831b0e697e2d71125",
+          "zaman": "2026-09-21T06:47:52+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 4,
+      "tarih": "2026-09-21",
+      "kimlik": "TSK-207",
+      "baslik": "ROADMAP TSK-207 (a) birleşti + TSK-209 birleşme notu; CLAUDE.md §6 üçlü hüküm: 'N failed' de aranır (suite #71 vakası)",
+      "zaman": "2026-09-21T09:28:18+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "6ff6c88a"
+          },
+          "commit": "6ff6c88a5fc297e8114ffa463aea4d2b4c1876c2",
+          "zaman": "2026-09-21T09:28:18+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6508,
+            "not": 5
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-21 19:3xZ İNCELEME NOTU KAPANDI — birleştirme a0bf6",
+          "commit": "c40fa60de39caa62c0507ff5938e705ca6d90027",
+          "zaman": "2026-09-21T19:00:19+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6508,
+            "not": 6
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-21 09:5xZ (a) ANA DALA GİRDİ — birleştirme 5c44aa4 ",
+          "commit": "6ff6c88a5fc297e8114ffa463aea4d2b4c1876c2",
+          "zaman": "2026-09-21T09:28:18+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3559
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "risk sınıfı — YALNIZ ölçüm, davranış değişmedi, karar operat",
+          "commit": "c799088f8fce46017df397c262892a3ba49a8b38",
+          "zaman": "2026-09-21T10:00:35+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 5,
+      "tarih": "2026-09-21",
+      "kimlik": "TSK-208",
+      "baslik": "TSK-208 KAPANDI (canlı kanıt 22:00Z sprint: atlama olayı birebir, failed 0, kum havuzunda sır yok) → §8.H.2; TSK-212 yeni (kum havuzu review çağrısı EROFS, 08-2…",
+      "zaman": "2026-09-21T22:29:53+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "5d5292e9"
+          },
+          "commit": "5d5292e96ec36d465a8a19b2cc30a55f416bd908",
+          "zaman": "2026-09-21T22:29:53+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6361
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 158,
+          "onek_basi": "**[TSK-208] Sprint kum havuzu kopyası sır YEDEKLERİNİ atlamı",
+          "commit": "5d5292e96ec36d465a8a19b2cc30a55f416bd908",
+          "zaman": "2026-09-21T22:29:53+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6362,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-21 22:22Z CANLI KANIT TAM — KAPANDI [Rol-1, A1 jour",
+          "commit": "5d5292e96ec36d465a8a19b2cc30a55f416bd908",
+          "zaman": "2026-09-21T22:29:53+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3690
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 70,
+          "onek_basi": "### 21. TSK-208 CANLI KANIT TAM — KAPANDI (22:22Z) + yan bul",
+          "commit": "5d5292e96ec36d465a8a19b2cc30a55f416bd908",
+          "zaman": "2026-09-21T22:29:53+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 6,
+      "tarih": "2026-09-21",
+      "kimlik": "TSK-209",
+      "baslik": "TSK-209 YÜKSELTİLDİ: debug export panonun OTURUM İMZA ANAHTARINI bugün zip'e koyuyor (auth.json)",
+      "zaman": "2026-09-21T08:17:35+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "b9c48077"
+          },
+          "commit": "b9c48077e57541cf4da3250b5795269eb9bef7cc",
+          "zaman": "2026-09-21T08:17:35+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 7,
+      "tarih": "2026-09-21",
+      "kimlik": "TSK-210",
+      "baslik": "**[TSK-210] Takvimle çürüyen test sabitleri — literal tarih + \"son N gün\" penceresi birleşimi için MEKANİK dedektör (v477 vakası: 8. günde kendiliğinden kırmızı…",
+      "zaman": "2026-09-21T17:58:37+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6356
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 189,
+          "onek_basi": "**[TSK-210] Takvimle çürüyen test sabitleri — literal tarih ",
+          "commit": "3311b400effdee0978bcb507fbd393bb085a0809",
+          "zaman": "2026-09-21T18:25:08+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6357,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-21 18:1xZ ANA DALA GİRDİ — birleştirme 0a23f4ac. De",
+          "commit": "c1ac629ecf6c320e60500196b3c39efc5ee76942",
+          "zaman": "2026-09-21T17:58:37+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 8,
+      "tarih": "2026-09-21",
+      "kimlik": "TSK-211",
+      "baslik": "**[TSK-211] Çapa dedektörü `state/` dosya adlarını sembol çapası sanıyor: `_CAPA_UZANTILARI` muafiyeti yalnız TEK parçalı kuyrukta çalışıyor (`auth.json.tmp`, `…",
+      "zaman": "2026-09-21T18:25:08+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6350
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 243,
+          "onek_basi": "**[TSK-211] Çapa dedektörü `state/` dosya adlarını sembol ça",
+          "commit": "3311b400effdee0978bcb507fbd393bb085a0809",
+          "zaman": "2026-09-21T18:25:08+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6351,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-21 19:3xZ AÇIK KALEM KAPANDI — birleştirme a0bf67d:",
+          "commit": "c40fa60de39caa62c0507ff5938e705ca6d90027",
+          "zaman": "2026-09-21T19:00:19+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3646
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "near-miss `temp≠tmp`. Tur 2 (Rol-1 kararı): `secrets._write_",
+          "commit": "41b99faff12560cba4c3e8ee152dfe29758d3f02",
+          "zaman": "2026-09-21T19:32:25+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 9,
+      "tarih": "2026-09-21",
+      "kimlik": "TSK-212",
+      "baslik": "### 22. TSK-212 — KUM HAVUZUNDA ADAY İNCELEMESİ KAPIDAN DÖNER (22:3xZ→23:xxZ, gece dilimi)",
+      "zaman": "2026-09-21T23:11:37+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3715
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "yok; ROADMAP'te benzer madde yok; memory `yorum-tarihce-kod-",
+          "commit": "ff486cb770ef38792870e9e25c511b1863709d05",
+          "zaman": "2026-09-21T23:11:37+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 10,
+      "tarih": "2026-09-21",
+      "kimlik": null,
+      "baslik": "### 15. OPERATÖR KARARI — İZİN KİPİ KALIYOR (09:3xZ)",
+      "zaman": "2026-09-21T10:00:35+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3578
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 52,
+          "onek_basi": "### 15. OPERATÖR KARARI — İZİN KİPİ KALIYOR (09:3xZ)",
+          "commit": "c799088f8fce46017df397c262892a3ba49a8b38",
+          "zaman": "2026-09-21T10:00:35+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 11,
+      "tarih": "2026-09-21",
+      "kimlik": null,
+      "baslik": "### 16. SUITE #3 (6ff6c88, donmuş ağaç, -n 4 worksteal): 1 failed / 13701 passed / 20 skipped — BİLİNEN YÜK-FLAKE, REGRESYON DEĞİL",
+      "zaman": "2026-09-21T10:00:35+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3586
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "HÜKÜM: yük-flake (memory `tam-suite-esli-ajan-yuk-flake` sın",
+          "commit": "c799088f8fce46017df397c262892a3ba49a8b38",
+          "zaman": "2026-09-21T10:00:35+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 12,
+      "tarih": "2026-09-21",
+      "kimlik": null,
+      "baslik": "### 17. ÖĞLEDEN SONRA — \"ÇOK AZ İŞ YAPMIŞSIN\" (operatör 16:4xZ) → ÜÇ PARALEL DİLİM",
+      "zaman": "2026-09-21T18:12:53+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3604
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "dersinin aynısı: brief'e yazılan sayı ölçülmüş olmalı, \"kaba",
+          "commit": "a53f3f643550780942cfc5ec62a4ff7d8072d1b1",
+          "zaman": "2026-09-21T18:12:53+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 13,
+      "tarih": "2026-09-21",
+      "kimlik": null,
+      "baslik": "### 5. İNCELEME AJANININ İTİRAFI — Rol-1 hükmü: KABUL, temiz tekrar İSTENMEDİ",
+      "zaman": "2026-09-21T07:58:39+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3452
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 77,
+          "onek_basi": "### 5. İNCELEME AJANININ İTİRAFI — Rol-1 hükmü: KABUL, temiz",
+          "commit": "2da1b4bfc67400c3ad888e0a8dbda997c52ea202",
+          "zaman": "2026-09-21T07:58:39+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 14,
+      "tarih": "2026-09-21",
+      "kimlik": null,
+      "baslik": "- **K3 KALDI:** gerçek kullanım 0 sayfa (eşik ≥2). Uydurma oranı kolu konjonksiyon düştüğü için",
+      "zaman": "2026-09-21T07:58:39+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3424
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "alındı ve çelişki metne yazıldı. Diğer yedi kalemin tetiği \"",
+          "commit": "2da1b4bfc67400c3ad888e0a8dbda997c52ea202",
+          "zaman": "2026-09-21T07:58:39+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 15,
+      "tarih": "2026-09-21",
+      "kimlik": null,
+      "baslik": "CLAUDE.md §6: test adında FAILED/ERROR yeşil koşumda üçlü hükmün 1. ayağını kirletir (vaka 2026-09-21, v527)",
+      "zaman": "2026-09-21T17:36:34+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "815503f7"
+          },
+          "commit": "815503f7606106425b9bb3b4bfb8b93e5cdb2874",
+          "zaman": "2026-09-21T17:36:34+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 16,
+      "tarih": "2026-09-23",
+      "kimlik": "EDG-2026-085",
+      "baslik": "### 23. EDG-085 PİLOT BAYRAĞI AÇILDI (repo) + v465 TEK-KAYNAK ÇİVİSİ + A0 UYGULAMASI SINIFLANDIRICIDA (olaylar 2026-09-21 23:2xZ; YAZIM 2026-09-23 09:13Z — otur…",
+      "zaman": "2026-09-23T09:13:51+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3744
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "**Pilot açılışı 5cf40560 (tek commit, çivi her commit'te tut",
+          "commit": "2a0df6ba2b78021d238ebac226f9efdff180e23a",
+          "zaman": "2026-09-23T09:13:51+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 17,
+      "tarih": "2026-09-23",
+      "kimlik": "TSK-214",
+      "baslik": "### 25. TSK-214 ANA DALDA + TSK-215 İŞ KAYBI VE KURTARMA + KÖK NEDEN: MAC UYKUSU + SUITE #8 (2026-09-23 21:56Z)",
+      "zaman": "2026-09-23T22:02:09+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3792
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "— 20 s hazırlık beklemesi yük altında HTTP 000; seri 1 passe",
+          "commit": "b9600ef80f6d21c371357c52bacfdb25752ada25",
+          "zaman": "2026-09-23T22:02:09+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 18,
+      "tarih": "2026-09-24",
+      "kimlik": "TSK-064",
+      "baslik": "### 28. PARALEL TUR: TSK-064 + TSK-218 + TSK-213 ANA DALDA, EDG-042 TELAFİSİ, SUITE KIRMIZISININ KÖKÜ (2026-09-24 20:55→22:15Z, model Opus 5.5)",
+      "zaman": "2026-09-24T22:15:32+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3861
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "**TSK-213 v217 (d7bf8ac7):** negatif kontrol üç bileşen (224",
+          "commit": "93f670282d573aac36c278698b3671e72fbc9aa4",
+          "zaman": "2026-09-24T22:15:32+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 19,
+      "tarih": "2026-09-24",
+      "kimlik": "TSK-070",
+      "baslik": "ROADMAP tahta hijyeni: TSK-070 KAPANDI (dağıtım #51, 09-15) → §8.T.2; TSK-074 GATED (süzgeç canlıda hiç koşmadı — öğrenme birimi kapalı, 2 haftalık okuma ölçüle…",
+      "zaman": "2026-09-24T18:55:00+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "1fa480ab"
+          },
+          "commit": "1fa480ab13dfe5d03f1138b9085aac48d9ff2267",
+          "zaman": "2026-09-24T18:55:00+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 20,
+      "tarih": "2026-09-24",
+      "kimlik": "TSK-138",
+      "baslik": "[TSK-138] (2026-09-24 19:0xZ AÇIK KALEM ÖLÇÜLDÜ [Rol-1, A1 events.jsonl `brifing_kural_denetimi` 26 olay, 09-03→09-24]: hüküm dağılımı denetlenemedi 12 · ham 10…",
+      "zaman": "2026-09-24T18:45:30+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6575,
+            "not": 5
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-24 19:0xZ AÇIK KALEM ÖLÇÜLDÜ [Rol-1, A1 events.json",
+          "commit": "85ea860288bed95f3cac91a10842d15d9cf1e008",
+          "zaman": "2026-09-24T18:45:30+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3837
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "karar öncesi 9 çağrı/4 katkılı → DROPPED; ayrıca kendi eksiğ",
+          "commit": "59aeff900e021889ccea6ccc8e21ad419ff088dd",
+          "zaman": "2026-09-24T19:20:30+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 21,
+      "tarih": "2026-09-24",
+      "kimlik": "TSK-162",
+      "baslik": "ROADMAP: TSK-162 DROPPED (ölçüm: triyajda recall 0/17 gün, karar öncesi 9 çağrı/4 katkılı) → §8.H.2; TSK-216 geç hafıza atfı",
+      "zaman": "2026-09-24T18:44:21+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "e301ccb5"
+          },
+          "commit": "e301ccb5b864b2b31e0e6f71fd3095d9d5e50848",
+          "zaman": "2026-09-24T18:44:21+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6366
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 176,
+          "onek_basi": "**[TSK-162] Oturum başı arıza triyajında Hindsight recall — ",
+          "commit": "e301ccb5b864b2b31e0e6f71fd3095d9d5e50848",
+          "zaman": "2026-09-24T18:44:21+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6367,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-24 18:5xZ KAPANIŞ ÖLÇÜMÜ [Rol-1; pencere 09-07→09-2",
+          "commit": "e301ccb5b864b2b31e0e6f71fd3095d9d5e50848",
+          "zaman": "2026-09-24T18:44:21+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 22,
+      "tarih": "2026-09-24",
+      "kimlik": "TSK-176",
+      "baslik": "ROADMAP TSK-176 ACTIVE → GATED (operatör T2/K4 onayı, 09-15 'beklesin'); tetik raporunun ilk 'bayat aktif' bulgusu",
+      "zaman": "2026-09-24T19:45:56+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "101fa435"
+          },
+          "commit": "101fa4354b1e8d046ee61b3286cb6ef31819e624",
+          "zaman": "2026-09-24T19:45:56+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2654,
+            "not": 2
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-24 19:4xZ DURUM DÜZELTMESİ [Rol-1, TSK-217 tetik ra",
+          "commit": "101fa4354b1e8d046ee61b3286cb6ef31819e624",
+          "zaman": "2026-09-24T19:45:56+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 23,
+      "tarih": "2026-09-24",
+      "kimlik": "TSK-196",
+      "baslik": "[TSK-196] (2026-09-24 19:2xZ (i) YEDEKLEME POLİTİKASI TASARIMI [Rol-1; ölçümlerle]: ZİNCİR (`deploy/apisix/routes.yaml` `llm-hizli`): birincil `hizli-gemma` (ge…",
+      "zaman": "2026-09-24T18:56:22+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2487,
+            "not": 5
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-24 19:2xZ (i) YEDEKLEME POLİTİKASI TASARIMI [Rol-1;",
+          "commit": "2ef0f88cec0a54cccb6557bd9bfe2abe80e60ed8",
+          "zaman": "2026-09-24T18:58:38+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2487,
+            "not": 6
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-24 18:5xZ TETİK ATEŞLEDİ → ACTIVE [Rol-1, A1 events",
+          "commit": "89bb9be7b9866bfac6535e25f4422695ae591c0d",
+          "zaman": "2026-09-24T18:56:22+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 24,
+      "tarih": "2026-09-24",
+      "kimlik": "TSK-200",
+      "baslik": "ROADMAP sayaç tazeleme: TSK-200 EDG-101 8/40 (≈10-22) · TSK-104 seyrelme 8/20 · TSK-179 EDG-088 işlenen 9; TSK-196 tetiği ateşledi (7 üst-akım olayı / 5 koşum,…",
+      "zaman": "2026-09-24T18:56:22+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "89bb9be7"
+          },
+          "commit": "89bb9be7b9866bfac6535e25f4422695ae591c0d",
+          "zaman": "2026-09-24T18:56:22+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 25,
+      "tarih": "2026-09-24",
+      "kimlik": "TSK-213",
+      "baslik": "ROADMAP: TSK-213 KAPANDI → §8 arşivi (v217 d7bf8ac7 + v447 d6af0dc0; M4'ün eski kırmızısı açıklanamadı, tekrar ederse yeni kalem)",
+      "zaman": "2026-09-24T21:48:57+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "a877c0e7"
+          },
+          "commit": "a877c0e7590f68d16003373c072be1c850aa774b",
+          "zaman": "2026-09-24T23:27:28+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "2af3d9f7"
+          },
+          "commit": "2af3d9f77da4946a3b5ea8c38b18f0dfb87708f1",
+          "zaman": "2026-09-24T22:13:34+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "df07066b"
+          },
+          "commit": "df07066b0e59e678d5704ca5aabc4e09d1905acb",
+          "zaman": "2026-09-24T21:48:57+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6381
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 264,
+          "onek_basi": "**[TSK-213] Otoriter suite'te v217 KILL#1 p95 çivisi `-n 4` ",
+          "commit": "a877c0e7590f68d16003373c072be1c850aa774b",
+          "zaman": "2026-09-24T23:27:28+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6382,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-24 23:4xZ KAPANDI [Rol-1] — v447 BACAĞI ANA DALDA d",
+          "commit": "a877c0e7590f68d16003373c072be1c850aa774b",
+          "zaman": "2026-09-24T23:27:28+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6382,
+            "not": 2
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-24 22:2xZ v217 BACAĞI ANA DALDA [Rol-1, d7bf8ac7] —",
+          "commit": "2af3d9f77da4946a3b5ea8c38b18f0dfb87708f1",
+          "zaman": "2026-09-24T22:13:34+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 26,
+      "tarih": "2026-09-24",
+      "kimlik": "TSK-215",
+      "baslik": "### 26. TSK-215 ANA DALDA — ÜÇ AJAN TURU, ROL-1 DOĞRULAMASI, SUITE #9 (2026-09-24 09:56Z)",
+      "zaman": "2026-09-24T09:56:50+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3817
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "**Suite #9 (614c052e):** 1 failed / 13826 passed / 21 skippe",
+          "commit": "ea3864c618602005f3ac9e61fcc9a9746618b153",
+          "zaman": "2026-09-24T09:56:50+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 27,
+      "tarih": "2026-09-24",
+      "kimlik": "TSK-216",
+      "baslik": "ROADMAP: TSK-216 KAPANDI (4ef8372b) → §8.H.2; cephe özeti yeniden üretildi (TSK-162 kapanışı sonrası)",
+      "zaman": "2026-09-24T18:23:37+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "fa70734c"
+          },
+          "commit": "fa70734c22e18c53961556c51dc861ed3487b25f",
+          "zaman": "2026-09-24T18:48:18+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "4ef8372b"
+          },
+          "commit": "4ef8372b9733a64d8d62ad827a30c22c978888e9",
+          "zaman": "2026-09-24T18:48:13+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "10bfe4dc"
+          },
+          "commit": "10bfe4dc7900b4aa6bf9ffe8bfc95b6e9d46e118",
+          "zaman": "2026-09-24T18:40:47+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "efd69233"
+          },
+          "commit": "efd692336672dd423f0643f2118c04e7391c56c9",
+          "zaman": "2026-09-24T18:23:37+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6370
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 276,
+          "onek_basi": "**[TSK-216] Açık 55 TSK'nın 43'ünde cephe (PRG) bağı yok — 2",
+          "commit": "fa70734c22e18c53961556c51dc861ed3487b25f",
+          "zaman": "2026-09-24T18:48:18+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6371,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-24 19:2xZ KAPANDI — birleştirme 4ef8372b (`--no-ff`",
+          "commit": "fa70734c22e18c53961556c51dc861ed3487b25f",
+          "zaman": "2026-09-24T18:48:18+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 28,
+      "tarih": "2026-09-24",
+      "kimlik": "TSK-217",
+      "baslik": "ROADMAP: TSK-217 KAPANDI (c1358620) → §8.H.2; cephe özeti yeniden üretildi",
+      "zaman": "2026-09-24T19:31:50+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "7c041206"
+          },
+          "commit": "7c0412065592abddc0885f2c07f1f6a8520df5f0",
+          "zaman": "2026-09-24T19:45:26+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "c1358620"
+          },
+          "commit": "c13586208932e2c54103b6e7d562e49b52b3cd72",
+          "zaman": "2026-09-24T19:45:23+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "f2298625"
+          },
+          "commit": "f2298625323d83b3a5886895c7cb9412af3cf851",
+          "zaman": "2026-09-24T19:31:50+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6375
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 285,
+          "onek_basi": "**[TSK-217] Kapı tetikleri ve tarihli okumalar düzyazı — hiç",
+          "commit": "7c0412065592abddc0885f2c07f1f6a8520df5f0",
+          "zaman": "2026-09-24T19:45:26+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6376,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-24 19:5xZ KAPANDI — birleştirme c1358620 (`--no-ff`",
+          "commit": "7c0412065592abddc0885f2c07f1f6a8520df5f0",
+          "zaman": "2026-09-24T19:45:26+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 29,
+      "tarih": "2026-09-24",
+      "kimlik": "TSK-219",
+      "baslik": "ROADMAP TSK-219 → ACTIVE: pano yanıtları sıkıştırılmadan gidiyor (roadmap 774 KB → gzip 191 KB, pano JS 2,1 MB → 606 KB); özet panoda kullanılmıyor; karar uygul…",
+      "zaman": "2026-09-24T22:45:17+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "5bbf1d51"
+          },
+          "commit": "5bbf1d51b69c3b0d8097e97432747e206780debc",
+          "zaman": "2026-09-24T22:45:17+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6388,
+            "not": 3
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-24 22:5xZ ÖLÇÜM + KARAR [Rol-1]: pano `/api/roadmap",
+          "commit": "5bbf1d51b69c3b0d8097e97432747e206780debc",
+          "zaman": "2026-09-24T22:45:17+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 30,
+      "tarih": "2026-09-25",
+      "kimlik": "EDG-2026-102",
+      "baslik": "EDG-2026-102 HÜKÜM: hipotez KALDI — replay stop çıkışlarında gerçek kayma medyanı 2,585 bps, %95 CI [1,95, 3,07] < 5 → MODEL YETERLİ (stop bacağı); n=335, 227 s…",
+      "zaman": "2026-09-25T08:00:21+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "34cd6c12"
+          },
+          "commit": "34cd6c12d79c5a0f8d3a484307dd2bfb50bf839c",
+          "zaman": "2026-09-25T10:44:38+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "1522fe6d"
+          },
+          "commit": "1522fe6d3c2633aee13cba4b3b3ddd4d48058065",
+          "zaman": "2026-09-25T08:00:21+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 3065
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 80,
+          "onek_basi": "- **[EDG-2026-102] replay-stop-kaymasi-tick** — status: DONE",
+          "commit": "34cd6c12d79c5a0f8d3a484307dd2bfb50bf839c",
+          "zaman": "2026-09-25T10:44:38+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 3066,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 10:39Z HÜKÜM [Rol-1]: hipotez KALDI → karar kura",
+          "commit": "34cd6c12d79c5a0f8d3a484307dd2bfb50bf839c",
+          "zaman": "2026-09-25T10:44:38+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 3066,
+            "not": 2
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 07:5xZ ÖN-KAYIT [Rol-1; operatör 09-25 \"bu veril",
+          "commit": "f779392738a18774f7edc9eb135c80e19c8224b2",
+          "zaman": "2026-09-25T08:07:21+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "kart",
+            "dosya": "research/cards/EDG-2026-102-replay-stop-kaymasi-tick.yaml",
+            "alan": "on_kayit",
+            "satir": 16
+          },
+          "anahtar_kaynagi": "anahtar_satiri",
+          "onek_uzunlugu": 20,
+          "onek_basi": "on_kayit: 2026-09-25",
+          "commit": "1522fe6d3c2633aee13cba4b3b3ddd4d48058065",
+          "zaman": "2026-09-25T08:00:21+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "kart",
+            "dosya": "research/cards/EDG-2026-102-replay-stop-kaymasi-tick.yaml",
+            "alan": "hukum_2026_09_25",
+            "satir": 101
+          },
+          "anahtar_kaynagi": "anahtar_satiri",
+          "onek_uzunlugu": 19,
+          "onek_basi": "hukum_2026_09_25: >",
+          "commit": "34cd6c12d79c5a0f8d3a484307dd2bfb50bf839c",
+          "zaman": "2026-09-25T10:44:38+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 31,
+      "tarih": "2026-09-25",
+      "kimlik": "EDG-2026-103",
+      "baslik": "CLAUDE.md §0 adım 5: sayfa atfı biçimi `v<n>` → `tazeleme <last_refreshed_at>` (Hindsight API sürüm alanı taşımıyor, 09-25 ölçüldü; okuma sayfa_oku.sh ile kayda…",
+      "zaman": "2026-09-25T08:05:07+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "20e24763"
+          },
+          "commit": "20e247638d15f90bcbf6233f55c89a0338ad605d",
+          "zaman": "2026-09-25T09:17:03+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "997f23bf"
+          },
+          "commit": "997f23bf68624e41193add3f0e5b9df1b4befb3c",
+          "zaman": "2026-09-25T08:05:07+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 3070,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 08:0xZ ÖN-KAYIT [Rol-1; operatör 09-25 \"Hepsi sü",
+          "commit": "f779392738a18774f7edc9eb135c80e19c8224b2",
+          "zaman": "2026-09-25T08:07:21+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "kart",
+            "dosya": "research/cards/EDG-2026-103-hafiza-sayfa-okuma-ilgi-atif.yaml",
+            "alan": "on_kayit",
+            "satir": 13
+          },
+          "anahtar_kaynagi": "anahtar_satiri",
+          "onek_uzunlugu": 20,
+          "onek_basi": "on_kayit: 2026-09-25",
+          "commit": "997f23bf68624e41193add3f0e5b9df1b4befb3c",
+          "zaman": "2026-09-25T08:05:07+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 32,
+      "tarih": "2026-09-25",
+      "kimlik": "EDG-2026-104",
+      "baslik": "EDG-2026-104 ölçüm öncesi EMEKLİ (hüküm yok, K harcanmadı) → halef EDG-2026-105 ÖN-KAYIT: selefin öykünücüsü emir tipini 09:45 fiyatından seçiyordu, canlı kod p…",
+      "zaman": "2026-09-25T15:42:00+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "f325ce9c"
+          },
+          "commit": "f325ce9ca1c6d02b128626da5ac2611babc3e9c6",
+          "zaman": "2026-09-25T16:31:54+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "0eaa9e34"
+          },
+          "commit": "0eaa9e34ba2816378bff73e1107900b3d51acdcc",
+          "zaman": "2026-09-25T15:42:00+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "kart",
+            "dosya": "research/cards/EDG-2026-104-replay-giris-canli-kural-tick.yaml",
+            "alan": "on_kayit",
+            "satir": 23
+          },
+          "anahtar_kaynagi": "anahtar_satiri",
+          "onek_uzunlugu": 20,
+          "onek_basi": "on_kayit: 2026-09-25",
+          "commit": "0eaa9e34ba2816378bff73e1107900b3d51acdcc",
+          "zaman": "2026-09-25T15:42:00+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 33,
+      "tarih": "2026-09-25",
+      "kimlik": "EDG-2026-105",
+      "baslik": "EDG-2026-105 KOŞULDU → kill-3 ATEŞLEDİ (ölçek dışlanan %7,177 > %5) → YAYIMLANMAZ, hüküm yok, EMEKLİ; halef EDG-2026-106 ÖN-KAYIT: aynı soru ve eşikler + bölünm…",
+      "zaman": "2026-09-25T16:31:54+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "16ccd86d"
+          },
+          "commit": "16ccd86d5eca54a43a1d9ff066b58a33627bc39a",
+          "zaman": "2026-09-25T17:21:09+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "kart",
+            "dosya": "research/cards/EDG-2026-105-replay-giris-canli-kural-tick-koda-sadik.yaml",
+            "alan": "on_kayit",
+            "satir": 22
+          },
+          "anahtar_kaynagi": "anahtar_satiri",
+          "onek_uzunlugu": 20,
+          "onek_basi": "on_kayit: 2026-09-25",
+          "commit": "f325ce9ca1c6d02b128626da5ac2611babc3e9c6",
+          "zaman": "2026-09-25T16:31:54+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 34,
+      "tarih": "2026-09-25",
+      "kimlik": "EDG-2026-106",
+      "baslik": "EDG-2026-106 HÜKÜM: hipotez KALDI — H1 canlı giriş kuralının doldurmayacağı replay girişi %0,601 [0,122, 1,175] → DOLUM EŞDEĞER; H2 canlı − replay dolum medyanı…",
+      "zaman": "2026-09-25T17:21:09+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "83f15446"
+          },
+          "commit": "83f154461d34e7ea39048a9881760c65f5688cd2",
+          "zaman": "2026-09-25T18:35:49+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 3073
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 84,
+          "onek_basi": "- **[EDG-2026-106] replay-giris-canli-kural-tick-olcekli** —",
+          "commit": "83f154461d34e7ea39048a9881760c65f5688cd2",
+          "zaman": "2026-09-25T18:35:49+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 3074,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 18:31Z HÜKÜM [Rol-1]: hipotez KALDI — H1 canlı k",
+          "commit": "83f154461d34e7ea39048a9881760c65f5688cd2",
+          "zaman": "2026-09-25T18:35:49+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 3074,
+            "not": 2
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 17:18Z ÖN-KAYIT [Rol-1]: EDG-105'in sorusu aynı ",
+          "commit": "16ccd86d5eca54a43a1d9ff066b58a33627bc39a",
+          "zaman": "2026-09-25T17:21:09+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "kart",
+            "dosya": "research/cards/EDG-2026-106-replay-giris-canli-kural-tick-olcekli.yaml",
+            "alan": "on_kayit",
+            "satir": 19
+          },
+          "anahtar_kaynagi": "anahtar_satiri",
+          "onek_uzunlugu": 20,
+          "onek_basi": "on_kayit: 2026-09-25",
+          "commit": "16ccd86d5eca54a43a1d9ff066b58a33627bc39a",
+          "zaman": "2026-09-25T17:21:09+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "kart",
+            "dosya": "research/cards/EDG-2026-106-replay-giris-canli-kural-tick-olcekli.yaml",
+            "alan": "hukum_2026_09_25",
+            "satir": 105
+          },
+          "anahtar_kaynagi": "anahtar_satiri",
+          "onek_uzunlugu": 19,
+          "onek_basi": "hukum_2026_09_25: >",
+          "commit": "83f154461d34e7ea39048a9881760c65f5688cd2",
+          "zaman": "2026-09-25T18:35:49+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 35,
+      "tarih": "2026-09-25",
+      "kimlik": "TSK-013",
+      "baslik": "[TSK-013] (2026-09-25 07:5xZ OPERATÖR KARARI [AskUserQuestion]: tick tavanı 120 GB KALIR (arşiv 2020-09-15'ten; 2020-01-01'e inmek ~41 GB boş ister, 26 GB var)…",
+      "zaman": "2026-09-25T08:07:21+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2531,
+            "not": 2
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 07:5xZ OPERATÖR KARARI [AskUserQuestion]: tick t",
+          "commit": "f779392738a18774f7edc9eb135c80e19c8224b2",
+          "zaman": "2026-09-25T08:07:21+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 36,
+      "tarih": "2026-09-25",
+      "kimlik": "TSK-060",
+      "baslik": "[TSK-060] (2026-09-25 07:5xZ OPERATÖR KARARI [AskUserQuestion]: 'Hepsi sürsün, yeni ölçüm' — Hindsight ve 7 kapılı kalem sürer; sayfaların karara neden GİRMEDİĞ…",
+      "zaman": "2026-09-25T08:07:21+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 318,
+            "not": 3
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 07:5xZ OPERATÖR KARARI [AskUserQuestion]: 'Hepsi",
+          "commit": "f779392738a18774f7edc9eb135c80e19c8224b2",
+          "zaman": "2026-09-25T08:07:21+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 37,
+      "tarih": "2026-09-25",
+      "kimlik": "TSK-072",
+      "baslik": "ROADMAP: cephe eşlemesi — TSK-072 ve TSK-104 PRG-01'e (icra kartları); PRG-05/09/10 açık kalemsiz → kapalı; TSK-204/062: öğrenme kapısı 2026-09-10'da ateşlemişt…",
+      "zaman": "2026-09-25T07:22:56+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "63c1d6e6"
+          },
+          "commit": "63c1d6e621e560b56ef6cde8cdf39ffb043c669d",
+          "zaman": "2026-09-25T07:22:56+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 38,
+      "tarih": "2026-09-25",
+      "kimlik": "TSK-204",
+      "baslik": "Operatör kararları 09-25 işlendi + BAYAT KAPI ilk turu: öğrenme birimi yeniden açıldı (07:36Z, gözetimli; TSK-204 ACTIVE; TSK-062/074 kapıları düştü, 074 okumas…",
+      "zaman": "2026-09-25T07:55:52+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "925f5490"
+          },
+          "commit": "925f54903826a9aa20addf9c616bb613a2abc015",
+          "zaman": "2026-09-25T07:55:52+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6530,
+            "not": 5
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 23:57Z UYGULAMA + İNCELEME [Rol-1]: worktree 2cf",
+          "commit": "d33cf6093395e0febda97e3b6e8d7f27b530cb65",
+          "zaman": "2026-09-25T23:57:14+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6530,
+            "not": 6
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 22:16Z KÖK NEDEN + KARAR [Rol-1, systematic-debu",
+          "commit": "19b8d7a33a2b65c53d3e8e90dacaf0ded7644325",
+          "zaman": "2026-09-25T22:17:43+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6530,
+            "not": 8
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 07:5xZ OPERATÖR KARARI [AskUserQuestion]: 'Aç — ",
+          "commit": "f779392738a18774f7edc9eb135c80e19c8224b2",
+          "zaman": "2026-09-25T08:07:21+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6530,
+            "not": 9
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 07:2xZ TETİK ATEŞLEMİŞTİ — 15 GÜN FARK EDİLMEDİ ",
+          "commit": "f779392738a18774f7edc9eb135c80e19c8224b2",
+          "zaman": "2026-09-25T08:07:21+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 39,
+      "tarih": "2026-09-25",
+      "kimlik": "TSK-205",
+      "baslik": "[TSK-205] (2026-09-25 07:5xZ OPERATÖR KARARI [AskUserQuestion]: seçenek (b) 'açılışa ertele' onaylandı — karar notu ‹gizlendi›.md (Sonnet salt-okur analiz, Rol-…",
+      "zaman": "2026-09-25T08:07:21+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2482,
+            "not": 6
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 07:5xZ OPERATÖR KARARI [AskUserQuestion]: seçene",
+          "commit": "f779392738a18774f7edc9eb135c80e19c8224b2",
+          "zaman": "2026-09-25T08:07:21+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 40,
+      "tarih": "2026-09-25",
+      "kimlik": "TSK-218",
+      "baslik": "**[TSK-218] Canlı kapanışların `trades` satırına GİRİŞ dolum ailesi (`giris_dolum_ts`/`giris_dolum_fiyat`) yazılmıyor — TSK-182 geri dolumu tek seferlikti; EDG-…",
+      "zaman": "2026-09-25T21:23:07+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6412
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 232,
+          "onek_basi": "**[TSK-218] Canlı kapanışların `trades` satırına GİRİŞ dolum",
+          "commit": "db9064388fc3105798a109d46362a3d8731577ea",
+          "zaman": "2026-09-25T21:23:07+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6413,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 21:21Z KAPANDI — CANLI KANIT [Rol-1, A1]: 09-25 ",
+          "commit": "db9064388fc3105798a109d46362a3d8731577ea",
+          "zaman": "2026-09-25T21:23:07+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 41,
+      "tarih": "2026-09-25",
+      "kimlik": "TSK-219",
+      "baslik": "Dağıtım #64 CANLI (5229a23b, 06:19:22Z) — Rol-1 doğrulaması: dagit failed=0, gzip canlı (pano JS 2,14 MB → 606 KB), journal temiz; TSK-219 KAPANDI → §8 arşivi;…",
+      "zaman": "2026-09-25T06:41:34+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "a210c5d6"
+          },
+          "commit": "a210c5d6c1d17ca33356af64f2c7c77e4d5313b2",
+          "zaman": "2026-09-25T06:41:34+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6387
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 168,
+          "onek_basi": "**[TSK-219] Pano yanıtları SIKIŞTIRILMADAN gidiyor — yol har",
+          "commit": "a210c5d6c1d17ca33356af64f2c7c77e4d5313b2",
+          "zaman": "2026-09-25T06:41:34+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6388,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 06:4xZ KAPANDI — DAĞITIM #64 CANLI [Rol-1 doğrul",
+          "commit": "a210c5d6c1d17ca33356af64f2c7c77e4d5313b2",
+          "zaman": "2026-09-25T06:41:34+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 42,
+      "tarih": "2026-09-25",
+      "kimlik": "TSK-220",
+      "baslik": "ROADMAP: TSK-220 KAPANDI (071be21c, BAYAT KAPI canlı) → §8 arşiv; TSK-209/212/214/215 kanıt zamanı ölçüldü (sprint kadansı gun≥7 → en erken 09-28/29 gecesi; bil…",
+      "zaman": "2026-09-25T15:26:48+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "d9bdfb24"
+          },
+          "commit": "d9bdfb2406bfecfbfc28aefbaf0b47eafbbcaabd",
+          "zaman": "2026-09-25T15:26:48+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6402
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 211,
+          "onek_basi": "**[TSK-220] Tetik raporu düzyazı tetikli kapıları göstermiyo",
+          "commit": "d9bdfb2406bfecfbfc28aefbaf0b47eafbbcaabd",
+          "zaman": "2026-09-25T15:26:48+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6403,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 15:26Z KAPANDI [Rol-1]: birleştirme 071be21c (09",
+          "commit": "d9bdfb2406bfecfbfc28aefbaf0b47eafbbcaabd",
+          "zaman": "2026-09-25T15:26:48+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 43,
+      "tarih": "2026-09-25",
+      "kimlik": "TSK-221",
+      "baslik": "**[TSK-221] EDG-2026-102 ölçüm kodu + A1 koşumu — replay stop çıkışlarında tick'le gerçek stop kayması** — status: DONE(2026-09-25 · EDG-102 hükmü: MODEL YETERL…",
+      "zaman": "2026-09-25T10:44:38+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6392
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 130,
+          "onek_basi": "**[TSK-221] EDG-2026-102 ölçüm kodu + A1 koşumu — replay sto",
+          "commit": "34cd6c12d79c5a0f8d3a484307dd2bfb50bf839c",
+          "zaman": "2026-09-25T10:44:38+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6393,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 10:39Z KAPANDI [Rol-1]: dağıtım #65 ile betik A1",
+          "commit": "34cd6c12d79c5a0f8d3a484307dd2bfb50bf839c",
+          "zaman": "2026-09-25T10:44:38+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 44,
+      "tarih": "2026-09-25",
+      "kimlik": "TSK-222",
+      "baslik": "**[TSK-222] EDG-2026-103 enstrümantasyonu — sayfa/recall okuma kaydı + karar envanteri betiği; `sayfa_oku.sh`/`hafiza_sor.sh` depoya** — status: DONE(2026-09-25…",
+      "zaman": "2026-09-25T10:44:38+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6397
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 160,
+          "onek_basi": "**[TSK-222] EDG-2026-103 enstrümantasyonu — sayfa/recall oku",
+          "commit": "34cd6c12d79c5a0f8d3a484307dd2bfb50bf839c",
+          "zaman": "2026-09-25T10:44:38+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6398,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 10:40Z KAPANDI [Rol-1]: dağıtım #65 (b38df359) i",
+          "commit": "34cd6c12d79c5a0f8d3a484307dd2bfb50bf839c",
+          "zaman": "2026-09-25T10:44:38+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 45,
+      "tarih": "2026-09-25",
+      "kimlik": "TSK-223",
+      "baslik": "[TSK-223] (2026-09-25 10:51Z SEVK + KARAR DEĞİŞİKLİĞİ [Rol-1]: kaynak `/v2/clock` DEĞİL, **XNYS takvimi** (`pandas_market_calendars`) — tek-kaynak yasası: depo…",
+      "zaman": "2026-09-25T11:08:21+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2420,
+            "not": 5
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 10:51Z SEVK + KARAR DEĞİŞİKLİĞİ [Rol-1]: kaynak ",
+          "commit": "81bd4b95a00dd628073cacfb82b311eb714287e8",
+          "zaman": "2026-09-25T11:08:21+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 46,
+      "tarih": "2026-09-25",
+      "kimlik": "TSK-224",
+      "baslik": "**[TSK-224] EDG-2026-106 ölçüm kodu + A1 koşumu — replay girişlerini koda sadık canlı giriş kuralıyla (plan-anı emir tipi + 9:45 ET + limit tavanı, bölünme yeni…",
+      "zaman": "2026-09-25T18:35:49+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6407
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 229,
+          "onek_basi": "**[TSK-224] EDG-2026-106 ölçüm kodu + A1 koşumu — replay gir",
+          "commit": "83f154461d34e7ea39048a9881760c65f5688cd2",
+          "zaman": "2026-09-25T18:35:49+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6408,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 18:31Z KAPANDI [Rol-1]: tur 3 birleşti (f7937d2f",
+          "commit": "83f154461d34e7ea39048a9881760c65f5688cd2",
+          "zaman": "2026-09-25T18:35:49+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 47,
+      "tarih": "2026-09-25",
+      "kimlik": "TSK-225",
+      "baslik": "[TSK-225] (2026-09-25 18:53Z ANA DALDA [Rol-1] — birleştirme 83ca765d (worktree 1a41bbf3): `55-edg085-quote.conf` `‹gizlendi›` + NEDEN şerhleri; `dizinler.yml`…",
+      "zaman": "2026-09-25T18:53:10+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6535,
+            "not": 6
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-25 18:53Z ANA DALDA [Rol-1] — birleştirme 83ca765d ",
+          "commit": "49ed596b6f85d930251597886f40c28dd7c773ae",
+          "zaman": "2026-09-25T18:53:10+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 48,
+      "tarih": "2026-09-25",
+      "kimlik": null,
+      "baslik": "### 29. PARALEL PROGRAM BAŞLATMA + İLK TICK KART HÜKMÜ + DAĞITIM #65 (2026-09-25 07:0x→10:40Z, model Opus 5.5)",
+      "zaman": "2026-09-25T10:44:38+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3892
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "### 29. PARALEL PROGRAM BAŞLATMA + İLK TICK KART HÜKMÜ + DAĞ",
+          "commit": "34cd6c12d79c5a0f8d3a484307dd2bfb50bf839c",
+          "zaman": "2026-09-25T10:44:38+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 49,
+      "tarih": "2026-09-26",
+      "kimlik": "TSK-225",
+      "baslik": "[TSK-225] (2026-09-26 22:5xZ AÇIK BULGULAR KAPANDI [Rol-1]: TSK-228 dilimiyle `dizinler.yml` /opt/veri + /opt/veri/olcum açık dizin görevleri, v553 beyanındaki…",
+      "zaman": "2026-09-26T22:48:29+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6535,
+            "not": 4
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-26 22:5xZ AÇIK BULGULAR KAPANDI [Rol-1]: TSK-228 di",
+          "commit": "6e227ed201ec02190a133d6f27d87db731810ef2",
+          "zaman": "2026-09-26T22:48:29+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 50,
+      "tarih": "2026-09-26",
+      "kimlik": "TSK-226",
+      "baslik": "TSK-226 KAPANDI: iki sır argv'den çıktı (canlı) ve ikisi de döndürüldü — CP --cp --vault (yeni 200/eski 401), kiracı --tenant --vault --uret (dağıtım #69; yeni…",
+      "zaman": "2026-09-26T16:55:18+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "186bc3a8"
+          },
+          "commit": "186bc3a8015e6896b0dc383c8a8f454c9a032aa2",
+          "zaman": "2026-09-26T16:55:18+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6417
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 195,
+          "onek_basi": "**[TSK-226] hindsight-cp iki sırrı docker komut satırında (a",
+          "commit": "186bc3a8015e6896b0dc383c8a8f454c9a032aa2",
+          "zaman": "2026-09-26T16:55:18+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6418,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-26 16:53Z KAPANDI [Rol-1, operatör 'komutları sen k",
+          "commit": "186bc3a8015e6896b0dc383c8a8f454c9a032aa2",
+          "zaman": "2026-09-26T16:55:18+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 51,
+      "tarih": "2026-09-26",
+      "kimlik": "TSK-228",
+      "baslik": "[TSK-228] (2026-09-26 22:3xZ ANA DALDA [Rol-1] — birleştirme f95d7d90 (worktree 5359294e + 0013b8ed): uygulayıcı ölçtü, kapsam 2 değil DÖRT birim — `meridian-ba…",
+      "zaman": "2026-09-26T22:20:51+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6428,
+            "not": 2
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-26 22:3xZ ANA DALDA [Rol-1] — birleştirme f95d7d90 ",
+          "commit": "3a49f2be918299deb628e9d3880fad58fff7c882",
+          "zaman": "2026-09-26T22:20:51+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 52,
+      "tarih": "2026-09-26",
+      "kimlik": "TSK-233",
+      "baslik": "[TSK-233] (2026-09-26 23:5xZ AÇILDI [Rol-1; TSK-229 uygulayıcısı kod okumasıyla buldu, inceleme DOĞRULADI, Rol-1 kodu okudu]: `api_hermes_reflect` → `hermes_run…",
+      "zaman": "2026-09-26T23:55:11+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2424,
+            "not": 5
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-26 23:5xZ AÇILDI [Rol-1; TSK-229 uygulayıcısı kod o",
+          "commit": "5c65b205ef5490372afebacc2e3b0a8799a73af8",
+          "zaman": "2026-09-26T23:55:11+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 53,
+      "tarih": "2026-09-26",
+      "kimlik": null,
+      "baslik": "### 32. DÖRT DİLİM: ÖĞRENME TABANI · UV HİJYENİ · PANO JETONU BETİĞİ EMEKLİLİĞİ · KASA SÜRÜMÜ (2026-09-26 gece, model Opus 5.5)",
+      "zaman": "2026-09-26T22:48:29+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3960
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "grubunu geri kuruyordu, `meridian-fail-notify` de bayraksızd",
+          "commit": "6e227ed201ec02190a133d6f27d87db731810ef2",
+          "zaman": "2026-09-26T22:48:29+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 54,
+      "tarih": "2026-09-26",
+      "kimlik": null,
+      "baslik": "### 33. GECE VARDİYASI: DAĞITIM #70 + ÖĞRENME DURUMUNUN TEK YAZANI (2026-09-26/27 gece, model Opus 5.5)",
+      "zaman": "2026-09-27T02:00:02+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3975
+          },
+          "anahtar_kaynagi": "ilk_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "### 33. GECE VARDİYASI: DAĞITIM #70 + ÖĞRENME DURUMUNUN TEK ",
+          "commit": "08b06680fcff6a6726e37b1996adb0aeace2cab2",
+          "zaman": "2026-09-27T02:00:02+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 55,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-064",
+      "baslik": "[TSK-064] (2026-09-27 03:4xZ (b) KAPANDI [Rol-1]: genel kasa döngüsü put öncesi ESKİ değeri yedekler, rollback düşerse yedekten STDIN ile `kv put` (birleştirme…",
+      "zaman": "2026-09-27T02:00:02+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6525,
+            "not": 7
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 03:4xZ (b) KAPANDI [Rol-1]: genel kasa döngüsü p",
+          "commit": "ddc2be851198e7e76e84acb96a276a855722e313",
+          "zaman": "2026-09-27T03:45:43+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6525,
+            "not": 8
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 01:5xZ (c) KAPANDI [Rol-1]: `sir_denetimi.yml` r",
+          "commit": "08b06680fcff6a6726e37b1996adb0aeace2cab2",
+          "zaman": "2026-09-27T02:00:02+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 56,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-227",
+      "baslik": "ROADMAP: TSK-227/228/229/231/232 KAPANDI -> §8.H.2 arsivi (dagitim #71 08b06680 canli kaniti: VENV DEGISTI 0, last_reflect_at 871 korundu, suite 14802/0, CI yes…",
+      "zaman": "2026-09-27T02:23:50+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "b37536b3"
+          },
+          "commit": "b37536b346159958811bb4227737f53e39340211",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6422
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 275,
+          "onek_basi": "**[TSK-227] Arka plan yansıması canlı rejimin yansıma geri s",
+          "commit": "b37536b346159958811bb4227737f53e39340211",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6423,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 02:3xZ KAPANDI [Rol-1]: c73bc33f canlıda (#70 3f",
+          "commit": "b37536b346159958811bb4227737f53e39340211",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 57,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-228",
+      "baslik": "**[TSK-228] `meridian`/`meridian-barsarchive` birimleri `uv run` ile başlıyor (dev grubu dahil) — her dağıtımda A0/dagit `uv sync --no-dev` dev paketlerini kald…",
+      "zaman": "2026-09-27T02:23:50+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6427
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 277,
+          "onek_basi": "**[TSK-228] `meridian`/`meridian-barsarchive` birimleri `uv ",
+          "commit": "b37536b346159958811bb4227737f53e39340211",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6428,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 02:3xZ KAPANDI — CANLI KANIT [Rol-1]: dağıtım #7",
+          "commit": "b37536b346159958811bb4227737f53e39340211",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 58,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-229",
+      "baslik": "**[TSK-229] Arka plan yansımasının rejim tabanı (`bg_reflect_by_regime`) restart'ta kayboluyor — `_persist` alanı `hermes_status.json`a yazıyor ama açılışta hiç…",
+      "zaman": "2026-09-27T02:23:50+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6432
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 287,
+          "onek_basi": "**[TSK-229] Arka plan yansımasının rejim tabanı (`bg_reflect",
+          "commit": "b37536b346159958811bb4227737f53e39340211",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6433,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 02:3xZ KAPANDI [Rol-1]: 0575bf34 canlıda (#71 08",
+          "commit": "b37536b346159958811bb4227737f53e39340211",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 59,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-230",
+      "baslik": "Dagitim #72 kaydi (gunluk §34 eki) + TSK-230 KAPANDI -> §8.H.2 (CI uv 0.12.0 [0/4] taze + dagit [0b] ilk gercek kosum taze, agac temiz); RUNBOOK degismedi",
+      "zaman": "2026-09-27T04:10:08+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "9cf96240"
+          },
+          "commit": "9cf9624010632e26a998c194c0d101fb9962abb6",
+          "zaman": "2026-09-27T04:10:08+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6452
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 302,
+          "onek_basi": "**[TSK-230] Birim dışı `uv` çağrıları dev grubunu hâlâ geri ",
+          "commit": "9cf9624010632e26a998c194c0d101fb9962abb6",
+          "zaman": "2026-09-27T04:10:08+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6453,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 04:0xZ KAPANDI — CANLI KANIT [Rol-1]: dağıtım #7",
+          "commit": "9cf9624010632e26a998c194c0d101fb9962abb6",
+          "zaman": "2026-09-27T04:10:08+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 60,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-231",
+      "baslik": "**[TSK-231] Satır-çapası taraması birim dosyalarına bakmıyor — `deploy/**/*.service` ve `*.conf` şerhlerindeki `dosya:NNN` çapaları sessizce çürüyor (iki tanesi…",
+      "zaman": "2026-09-27T02:23:50+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6437
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 221,
+          "onek_basi": "**[TSK-231] Satır-çapası taraması birim dosyalarına bakmıyor",
+          "commit": "b37536b346159958811bb4227737f53e39340211",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6438,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 02:3xZ KAPANDI [Rol-1]: 339de843; birim şerhleri",
+          "commit": "b37536b346159958811bb4227737f53e39340211",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 61,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-232",
+      "baslik": "**[TSK-232] Tahta tablosu satır ARASINA yazılan tek bir satırla sessizce bölünüyor — alttaki satırlar ayrıştırmadan düşer; v337 bunu yalnız \"en az 10 satır\" boş…",
+      "zaman": "2026-09-27T02:23:50+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6442
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 282,
+          "onek_basi": "**[TSK-232] Tahta tablosu satır ARASINA yazılan tek bir satı",
+          "commit": "b37536b346159958811bb4227737f53e39340211",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6443,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 02:3xZ KAPANDI [Rol-1]: 339de843; tam suite 08b0",
+          "commit": "b37536b346159958811bb4227737f53e39340211",
+          "zaman": "2026-09-27T02:23:50+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 62,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-233",
+      "baslik": "[TSK-233] (2026-09-27 20:4xZ UI METNİ KAPANDI [Rol-1]: pano Sohbet panelindeki görünür metin \"yansıma İSTEĞİ bırakır (öğrenme birimi alıp koşar)\" oldu (SohbetHa…",
+      "zaman": "2026-09-27T20:49:24+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2424,
+            "not": 3
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 20:4xZ UI METNİ KAPANDI [Rol-1]: pano Sohbet pan",
+          "commit": "7bdb69f3293c5a009a0990c738e59bbe795cfbc1",
+          "zaman": "2026-09-27T20:49:24+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 63,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-234",
+      "baslik": "TSK-234 KAPANDI: meridian.service ReadWritePaths envanteri serhi duzeltildi — research/edgar_facts YAZILMAZ (A1: 08-01'den beri degismedi; yalniz okunur), izin…",
+      "zaman": "2026-09-27T02:26:20+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "6f9c3095"
+          },
+          "commit": "6f9c3095079f7e9793edfe925a9940bdfc50114c",
+          "zaman": "2026-09-27T02:26:20+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6447
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 270,
+          "onek_basi": "**[TSK-234] `meridian.service` `ReadWritePaths` envanteri `r",
+          "commit": "6f9c3095079f7e9793edfe925a9940bdfc50114c",
+          "zaman": "2026-09-27T02:26:20+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6448,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 02:5xZ KAPANDI [Rol-1, A1 ölçümü]: `ReadWritePat",
+          "commit": "6f9c3095079f7e9793edfe925a9940bdfc50114c",
+          "zaman": "2026-09-27T02:26:20+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 64,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-235",
+      "baslik": "Gunluk §35 (dagitim #74) + TSK-235/238 KAPANDI -> §8.H.2 (A1 ssh komutu UV_NO_DEV/UV_FROZEN goruyor; ayristirici sessiz kayipsiz); RUNBOOK degismedi",
+      "zaman": "2026-09-27T13:49:35+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "67c2f06a"
+          },
+          "commit": "67c2f06a7d5441bac72b1137f0f68a740aad0133",
+          "zaman": "2026-09-27T13:49:35+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6462
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 299,
+          "onek_basi": "**[TSK-235] ROADMAP ayrıştırıcısı (`api._roadmap_ayristir`) ",
+          "commit": "67c2f06a7d5441bac72b1137f0f68a740aad0133",
+          "zaman": "2026-09-27T13:49:35+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6463,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 13:4xZ KAPANDI [Rol-1]: birleştirme 7cae0968; bu",
+          "commit": "67c2f06a7d5441bac72b1137f0f68a740aad0133",
+          "zaman": "2026-09-27T13:49:35+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 65,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-236",
+      "baslik": "Dagitim #75 kaydi (gunluk §35 eki) + TSK-236 KAPANDI -> §8.H.2; RUNBOOK degismedi",
+      "zaman": "2026-09-27T15:19:32+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "df52bc18"
+          },
+          "commit": "df52bc1829db84f897c887272e2ab1f4be6496df",
+          "zaman": "2026-09-27T15:19:32+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6472
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 229,
+          "onek_basi": "**[TSK-236] Satır-çapası taraması yalnız `.py` HEDEFLİ çapal",
+          "commit": "df52bc1829db84f897c887272e2ab1f4be6496df",
+          "zaman": "2026-09-27T15:19:32+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6473,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 15:1xZ KAPANDI [Rol-1]: tam suite e4655b87 15102",
+          "commit": "df52bc1829db84f897c887272e2ab1f4be6496df",
+          "zaman": "2026-09-27T15:19:32+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 66,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-237",
+      "baslik": "Dagitim #73 kaydi (gunluk §34 eki) + TSK-237 KAPANDI -> §8.H.2; RUNBOOK degismedi",
+      "zaman": "2026-09-27T05:48:26+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "8cec585a"
+          },
+          "commit": "8cec585a967cdc11ffc290e9937f99b64bfa3c7a",
+          "zaman": "2026-09-27T05:53:37+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6457
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 254,
+          "onek_basi": "**[TSK-237] Sır rotasyonu geri alma reçetesinin \"rollback dü",
+          "commit": "8cec585a967cdc11ffc290e9937f99b64bfa3c7a",
+          "zaman": "2026-09-27T05:53:37+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6458,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 05:5xZ KAPANDI [Rol-1]: dağıtım #73 5d3540f1 — C",
+          "commit": "8cec585a967cdc11ffc290e9937f99b64bfa3c7a",
+          "zaman": "2026-09-27T05:53:37+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6458,
+            "not": 2
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 05:4xZ ANA DALDA [Rol-1] — birleştirme 0d01c4da ",
+          "commit": "5d3540f1da3766a832808213eab5509d716b33fd",
+          "zaman": "2026-09-27T05:48:26+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 67,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-238",
+      "baslik": "**[TSK-238] uv hijyeni artıkları — `ops/*.py`/`deploy/*/*.py` ileti ve docstring yüzeyinde 31 satır bayraksız `uv` öğüdü, `ops/kapilar.sh` ilk iş bayraksız `uv…",
+      "zaman": "2026-09-27T13:49:35+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6467
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 271,
+          "onek_basi": "**[TSK-238] uv hijyeni artıkları — `ops/*.py`/`deploy/*/*.py",
+          "commit": "67c2f06a7d5441bac72b1137f0f68a740aad0133",
+          "zaman": "2026-09-27T13:49:35+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6468,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 13:4xZ KAPANDI — CANLI KANIT [Rol-1]: birleştirm",
+          "commit": "67c2f06a7d5441bac72b1137f0f68a740aad0133",
+          "zaman": "2026-09-27T13:49:35+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 68,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-239",
+      "baslik": "Gunluk §35 eki (TSK-239/241/242/240) + ROADMAP: TSK-241/242 KAPANDI -> §8.H.2, TSK-243 acildi (codelaw.report ops yorumlari); RUNBOOK degismedi",
+      "zaman": "2026-09-27T16:26:42+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "c92509f7"
+          },
+          "commit": "c92509f7a471c2ab2686752d35831e7a84418266",
+          "zaman": "2026-09-27T17:42:30+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "839f3e2e"
+          },
+          "commit": "839f3e2e25e8aeeb9363484bdfb38ff79b5cf961",
+          "zaman": "2026-09-27T16:26:42+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6477
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 256,
+          "onek_basi": "**[TSK-239] `.py` dışı dosyalardaki `dosya.py::ad` SEMBOL ça",
+          "commit": "839f3e2e25e8aeeb9363484bdfb38ff79b5cf961",
+          "zaman": "2026-09-27T16:26:42+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6478,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 16:2xZ KAPANDI [Rol-1]: birleştirme 2064da8e; v5",
+          "commit": "839f3e2e25e8aeeb9363484bdfb38ff79b5cf961",
+          "zaman": "2026-09-27T16:26:42+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 69,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-241",
+      "baslik": "**[TSK-241] Motor yorumlarındaki devam biçimi satır çapaları (`:NNN`, `/NNN`) hiçbir taramada değil — ~27 gerçek çapa, 15'i `meridian/*.py` motor yorumunda (sat…",
+      "zaman": "2026-09-27T17:42:30+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6482
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 230,
+          "onek_basi": "**[TSK-241] Motor yorumlarındaki devam biçimi satır çapaları",
+          "commit": "c92509f7a471c2ab2686752d35831e7a84418266",
+          "zaman": "2026-09-27T17:42:30+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6483,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 17:4xZ KAPANDI [Rol-1]: birleştirme d1025a36; v5",
+          "commit": "c92509f7a471c2ab2686752d35831e7a84418266",
+          "zaman": "2026-09-27T17:42:30+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 70,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-242",
+      "baslik": "**[TSK-242] `ops/`, `deploy/` ve kök `.py` dosyalarının yorumları codelaw üçüncü beslemesinde yok (50 dosya, 3 ifade-çürüğü) + v571'in sembol-çapa testi v572'ni…",
+      "zaman": "2026-09-27T17:42:30+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6487
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 213,
+          "onek_basi": "**[TSK-242] `ops/`, `deploy/` ve kök `.py` dosyalarının yoru",
+          "commit": "c92509f7a471c2ab2686752d35831e7a84418266",
+          "zaman": "2026-09-27T17:42:30+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6488,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 17:4xZ KAPANDI [Rol-1]: birleştirme d1025a36; op",
+          "commit": "c92509f7a471c2ab2686752d35831e7a84418266",
+          "zaman": "2026-09-27T17:42:30+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 71,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-243",
+      "baslik": "Gunluk §35 eki (TSK-243) + ROADMAP: TSK-243 KAPANDI -> §8.H.2, TSK-244 acildi (olu geridolum sembol capasi); RUNBOOK degismedi",
+      "zaman": "2026-09-27T18:52:39+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "6a6eea4d"
+          },
+          "commit": "6a6eea4dd41ccdd217daf8a60e59d0102b8b9e42",
+          "zaman": "2026-09-27T18:52:39+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6492
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 168,
+          "onek_basi": "**[TSK-243] `codelaw.report()[\"ok\"]` ve CI duman `ops/`+`dep",
+          "commit": "6a6eea4dd41ccdd217daf8a60e59d0102b8b9e42",
+          "zaman": "2026-09-27T18:52:39+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6493,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 18:5xZ KAPANDI [Rol-1]: birleştirme ana dalda; v",
+          "commit": "6a6eea4dd41ccdd217daf8a60e59d0102b8b9e42",
+          "zaman": "2026-09-27T18:52:39+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 72,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-244",
+      "baslik": "Gunluk §35 eki (TSK-244 + TSK-233 UI) + ROADMAP: TSK-244 KAPANDI -> §8.H.2, TSK-245 acildi (metin capa dunyasinda deploy); tarih etiketleri UTC; RUNBOOK degisme…",
+      "zaman": "2026-09-27T19:14:11+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "e67c64ec"
+          },
+          "commit": "e67c64ec9fef0fa0e543c25e9ffef2f4d898e412",
+          "zaman": "2026-09-27T21:26:54+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6497
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 189,
+          "onek_basi": "**[TSK-244] Ölü sembol çapası `geridolum.py::_bos_disk_bayt`",
+          "commit": "e67c64ec9fef0fa0e543c25e9ffef2f4d898e412",
+          "zaman": "2026-09-27T21:26:54+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6498,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 21:2xZ KAPANDI [Rol-1]: (b) ADIM-0 karar kuralı ",
+          "commit": "e67c64ec9fef0fa0e543c25e9ffef2f4d898e412",
+          "zaman": "2026-09-27T21:26:54+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6498,
+            "not": 2
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 19:1xZ (a) KAPANDI [Rol-1]: `deploy/oracle-a1/ge",
+          "commit": "9a758bab9b46124d120b87b9a51d1b83bb526dd6",
+          "zaman": "2026-09-27T19:14:11+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 73,
+      "tarih": "2026-09-27",
+      "kimlik": "TSK-245",
+      "baslik": "ROADMAP: TSK-245 KAPANDI -> §8.H.2 (metin capa dunyasi deploy dahil; ikircikli bedeli bugun 0, bilincli kabul)",
+      "zaman": "2026-09-27T22:20:27+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "de0b17b2"
+          },
+          "commit": "de0b17b292b65c28fc8f2dac32026a0329c99166",
+          "zaman": "2026-09-27T22:20:27+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6502
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 207,
+          "onek_basi": "**[TSK-245] Metin/çapraz çapa dünyası (`codelaw._TEXT_HEDEF_",
+          "commit": "de0b17b292b65c28fc8f2dac32026a0329c99166",
+          "zaman": "2026-09-27T22:20:27+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6503,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-27 22:2xZ KAPANDI [Rol-1]: `_TEXT_HEDEF_KOKLERI` `(",
+          "commit": "de0b17b292b65c28fc8f2dac32026a0329c99166",
+          "zaman": "2026-09-27T22:20:27+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 74,
+      "tarih": "2026-09-27",
+      "kimlik": null,
+      "baslik": "### 34. SABAH DİLİMLERİ: KASA YEDEĞİ + UV KAPISI + DAĞITIM #71 (2026-09-27, model Opus 5.5)",
+      "zaman": "2026-09-27T03:45:43+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 3990
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "kilit tazeliği kapısı CI `[0/4]` + dagit `[0b]` (rc1 durduru",
+          "commit": "ddc2be851198e7e76e84acb96a276a855722e313",
+          "zaman": "2026-09-27T03:45:43+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 75,
+      "tarih": "2026-09-27",
+      "kimlik": null,
+      "baslik": "### 35. PAZAR ÖĞLEDEN SONRA: AYRIŞTIRICI + UV ARTIKLARI + DAĞITIM #74 (2026-09-27, model Opus 5.5)",
+      "zaman": "2026-09-27T15:19:32+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 4007
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "dışı salt-okur `git ls-files` koştu (itiraf, zararsız) — kay",
+          "commit": "df52bc1829db84f897c887272e2ab1f4be6496df",
+          "zaman": "2026-09-27T15:19:32+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 76,
+      "tarih": "2026-09-28",
+      "kimlik": "TSK-020",
+      "baslik": "[TSK-020] (2026-09-28 06:5xZ OPERATÖR KARARI [AskUserQuestion]: \"SQLite taşımasını sıraya al\" (UYGULA-1 Kademe C: öğrenme defterleri hypotheses/validation_ledge…",
+      "zaman": "2026-09-28T06:50:54+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2547,
+            "not": 17
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-28 06:5xZ OPERATÖR KARARI [AskUserQuestion]: \"SQLit",
+          "commit": "b1038cf6cbb537ecd7d0f31bd94b8622a071ecf7",
+          "zaman": "2026-09-28T06:50:54+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 77,
+      "tarih": "2026-09-28",
+      "kimlik": "TSK-142",
+      "baslik": "[TSK-142] (2026-09-28 06:5xZ OPERATÖR KARARI [AskUserQuestion]: \"Yeni ölçüm bitene kadar beklesin\" — EDG-103 penceresi (2026-10-02…10-16) sonucu gelince açma/dü…",
+      "zaman": "2026-09-28T06:50:54+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2511,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-28 06:5xZ OPERATÖR KARARI [AskUserQuestion]: \"Yeni ",
+          "commit": "b1038cf6cbb537ecd7d0f31bd94b8622a071ecf7",
+          "zaman": "2026-09-28T06:50:54+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 78,
+      "tarih": "2026-09-28",
+      "kimlik": "TSK-168",
+      "baslik": "[TSK-168] (2026-09-28 06:5xZ [Rol-1, A1 salt-okur]: akış SÜRÜYOR — `meridian-defter-ozeti-retain` son koşum 2026-09-27 21:30:33Z Result=success, 09-24/25/26/27…",
+      "zaman": "2026-09-28T06:57:12+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2640,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-28 06:5xZ [Rol-1, A1 salt-okur]: akış SÜRÜYOR — `me",
+          "commit": "e342b11c02c29d963945bcc8a5460299cd40f9af",
+          "zaman": "2026-09-28T06:57:12+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 4040
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "- **TSK-168** ACTIVE → GATED(EDG-2026-103): retain akışı 4/4",
+          "commit": "75429b19270a875ad0745697bb6ca9122f42ec39",
+          "zaman": "2026-09-28T08:53:48+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 79,
+      "tarih": "2026-09-28",
+      "kimlik": "TSK-207",
+      "baslik": "**[TSK-207] `SEMBOL_OLU_ADAY` sensörü 'delist adayı' diyor ama dört sembol CANLI: 2026-09-09 S&P 500 çıkışı → bar akışı kesildi; açık pozisyonlu sembol endekste…",
+      "zaman": "2026-09-28T06:50:54+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6507
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 221,
+          "onek_basi": "**[TSK-207] `SEMBOL_OLU_ADAY` sensörü 'delist adayı' diyor a",
+          "commit": "75429b19270a875ad0745697bb6ca9122f42ec39",
+          "zaman": "2026-09-28T08:53:48+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6508,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-28 08:5xZ KAPANDI [Rol-1]: (b) DAĞITIM #79 CANLI — ",
+          "commit": "75429b19270a875ad0745697bb6ca9122f42ec39",
+          "zaman": "2026-09-28T08:53:48+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6508,
+            "not": 2
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-28 06:5xZ OPERATÖR KARARI (b) [AskUserQuestion]: \"S",
+          "commit": "b1038cf6cbb537ecd7d0f31bd94b8622a071ecf7",
+          "zaman": "2026-09-28T06:50:54+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 4030
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "### 36. PAZARTESİ SABAHI: OPERATÖR KARARLARI + TSK-207(b) AL",
+          "commit": "75429b19270a875ad0745697bb6ca9122f42ec39",
+          "zaman": "2026-09-28T08:53:48+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 4032
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "- **Operatör kararları (06:5xZ, AskUserQuestion — \"Benden be",
+          "commit": "75429b19270a875ad0745697bb6ca9122f42ec39",
+          "zaman": "2026-09-28T08:53:48+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 80,
+      "tarih": "2026-09-28",
+      "kimlik": "TSK-240",
+      "baslik": "[TSK-240] (2026-09-28 06:5xZ OPERATÖR KARARI [AskUserQuestion]: \"Komutu ben çalıştırırım\" — eşitleme komutu operatörde; koşulunca Rol-1 sha + izin doğrular, F9…",
+      "zaman": "2026-09-28T06:50:54+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2428,
+            "not": 2
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-28 06:5xZ OPERATÖR KARARI [AskUserQuestion]: \"Komut",
+          "commit": "b1038cf6cbb537ecd7d0f31bd94b8622a071ecf7",
+          "zaman": "2026-09-28T06:50:54+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 81,
+      "tarih": "2026-09-28",
+      "kimlik": "TSK-247",
+      "baslik": "[TSK-247] (2026-09-28 15:1xZ (b) CPU ANA DALDA [Rol-1]: hindsight-cp `--cpus=1` (= CPUQuota 100%; A1 ölçümü: konteyner CPU %0, ana süreç 46 sa'te ~0 sn CPU → ta…",
+      "zaman": "2026-09-28T15:11:59+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6514,
+            "not": 2
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-28 15:1xZ (b) CPU ANA DALDA [Rol-1]: hindsight-cp `",
+          "commit": "5b5d157962f00823e8ef81ff346dc57918811e88",
+          "zaman": "2026-09-28T15:11:59+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 82,
+      "tarih": "2026-09-28",
+      "kimlik": "TSK-248",
+      "baslik": "[TSK-248] (2026-09-28 14:5xZ OPERATÖR KARARI [AskUserQuestion]: kesilen yansıma turu 'Hiç sayılmasın' — `‹gizlendi›.md` ONAYLI: (A) durdurma yüklemi `reflect_on…",
+      "zaman": "2026-09-28T15:01:12+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2433,
+            "not": 4
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-28 14:5xZ OPERATÖR KARARI [AskUserQuestion]: kesile",
+          "commit": "b6a726de7cebed43fe5d74f0b188940c761149dc",
+          "zaman": "2026-09-28T15:01:12+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 83,
+      "tarih": "2026-09-28",
+      "kimlik": null,
+      "baslik": "- **§36 eki — öğleden sonra (2026-09-28 10:1x→17:1xZ, model Opus 5.5):**",
+      "zaman": "2026-09-28T17:12:28+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 4055
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "    bakmıyordu → **TSK-246** (işbirlikçi iptal, ölçülen ~5 s",
+          "commit": "ac725bd15245185b0b404b084099187f1685b47a",
+          "zaman": "2026-09-28T17:12:28+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 84,
+      "tarih": "2026-09-29",
+      "kimlik": "TSK-020",
+      "baslik": "[TSK-020] (2026-09-29 07:4xZ KADEME C CANLI GÖÇ TAMAM + DAĞITIM #82 [Rol-1]: gece penceresi KAÇTI (09-28 21:0xZ'de operatöre sorulan soru ~10 sa yanıt bekledi,…",
+      "zaman": "2026-09-29T07:45:22+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2547,
+            "not": 5
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-29 07:4xZ KADEME C CANLI GÖÇ TAMAM + DAĞITIM #82 [R",
+          "commit": "32f8afe42566fb6b71e7b805c38bf7944d852cad",
+          "zaman": "2026-09-29T07:45:22+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 85,
+      "tarih": "2026-09-29",
+      "kimlik": "TSK-064",
+      "baslik": "ROADMAP TSK-064: iki-kanal KAPANDI (adim 4-6: yedek + tasima, kalici silme yok; hindsight-cp yalniz Vault, CP 200/401, araclar calisiyor); envanter temizligi si…",
+      "zaman": "2026-09-29T11:34:38+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "946dc410"
+          },
+          "commit": "946dc41086ec916a242ed79f08c459ca8d832e3a",
+          "zaman": "2026-09-29T11:34:38+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6524
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 80,
+          "onek_basi": "**[TSK-064] Sır-yönetimi kademeli YOL-1** — status: DONE(202",
+          "commit": "127f315d377665e82a22fbcc30ea74105deac146",
+          "zaman": "2026-09-29T20:18:57+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6525,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-29 12:4xZ KAPANDI — ENVANTER TEMİZLİĞİ MAIN'DE 0fac",
+          "commit": "127f315d377665e82a22fbcc30ea74105deac146",
+          "zaman": "2026-09-29T20:18:57+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6525,
+            "not": 2
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-29 11:3xZ İKİ-KANAL KAPANDI — ADIM 4–6 [Rol-1, oper",
+          "commit": "946dc41086ec916a242ed79f08c459ca8d832e3a",
+          "zaman": "2026-09-29T11:34:38+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 86,
+      "tarih": "2026-09-29",
+      "kimlik": "TSK-096",
+      "baslik": "**[TSK-096] Metrik trendi ihtiyacı doğarsa hafif toplayıcı (Prometheus yaygınlaştırma DEĞİL)** — status: DROPPED(2026-09-29·aşıldı: operatör 2026-09-28 UYGULA-9…",
+      "zaman": "2026-09-29T20:18:57+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6539
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 123,
+          "onek_basi": "**[TSK-096] Metrik trendi ihtiyacı doğarsa hafif toplayıcı (",
+          "commit": "127f315d377665e82a22fbcc30ea74105deac146",
+          "zaman": "2026-09-29T20:18:57+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 87,
+      "tarih": "2026-09-29",
+      "kimlik": "TSK-176",
+      "baslik": "[TSK-176] (2026-09-29 07:4xZ [Rol-1]: operatör A1'de 2026-09-28 17:29Z elle `apt upgrade` koştu (Terraform 1.16.2→1.16.4, çekirdek 7.0, netplan/krb5) → site.yml…",
+      "zaman": "2026-09-29T07:47:04+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2654,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-29 07:4xZ [Rol-1]: operatör A1'de 2026-09-28 17:29Z",
+          "commit": "e3923f2cbadbefb8ea237d32bc9333eb2004ccd7",
+          "zaman": "2026-09-29T07:47:04+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 88,
+      "tarih": "2026-09-29",
+      "kimlik": "TSK-204",
+      "baslik": "**[TSK-204] 'OGRENME DURDU' alarmi 2026-08-09'dan beri HER AKSAM otuyor — ama ogrenme birimi BILINCLI kapali; alarm beklenen durumu ariza gibi raporluyor** — st…",
+      "zaman": "2026-09-29T20:18:57+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6529
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 181,
+          "onek_basi": "**[TSK-204] 'OGRENME DURDU' alarmi 2026-08-09'dan beri HER A",
+          "commit": "127f315d377665e82a22fbcc30ea74105deac146",
+          "zaman": "2026-09-29T20:18:57+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6530,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-29 13:0xZ KAPANDI [Rol-1]: 09-28 20:28Z kanıtı kale",
+          "commit": "127f315d377665e82a22fbcc30ea74105deac146",
+          "zaman": "2026-09-29T20:18:57+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 89,
+      "tarih": "2026-09-29",
+      "kimlik": "TSK-212",
+      "baslik": "**[TSK-212] Sprint birimi şerhi \"sprint LLM çağırmaz\" diyor, kum havuzu her gün-çevriminde `agent_call kind=review` deniyor ve hermes salt-okunur HOME'da (EROFS…",
+      "zaman": "2026-09-29T07:48:29+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6518
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 247,
+          "onek_basi": "**[TSK-212] Sprint birimi şerhi \"sprint LLM çağırmaz\" diyor,",
+          "commit": "beae0575a826d70f52da3f6421760891ab875af2",
+          "zaman": "2026-09-29T07:48:29+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6519,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-29 07:4xZ KAPANDI — CANLI KANIT [Rol-1, A1 salt-oku",
+          "commit": "beae0575a826d70f52da3f6421760891ab875af2",
+          "zaman": "2026-09-29T07:48:29+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 90,
+      "tarih": "2026-09-29",
+      "kimlik": "TSK-225",
+      "baslik": "**[TSK-225] EDG-085 quote kayıt yolu `meridian.service` sertleştirmesinde YAZILAMIYOR — ilk pilot seansı (2026-09-25) kayıtsız geçti; sınıf (sertleştirilmiş bir…",
+      "zaman": "2026-09-29T20:18:57+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6534
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 220,
+          "onek_basi": "**[TSK-225] EDG-085 quote kayıt yolu `meridian.service` sert",
+          "commit": "127f315d377665e82a22fbcc30ea74105deac146",
+          "zaman": "2026-09-29T20:18:57+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6535,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-29 13:0xZ KAPANDI [Rol-1]: 09-28 pilot kaydı kalemi",
+          "commit": "127f315d377665e82a22fbcc30ea74105deac146",
+          "zaman": "2026-09-29T20:18:57+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 91,
+      "tarih": "2026-09-29",
+      "kimlik": "TSK-247",
+      "baslik": "**[TSK-247] Docker konteynerleri (apisix-kapi · apisix-etcd · hindsight-cp) bellek tavanSIZ — birimdeki `MemoryMax=512M` yalnız docker İSTEMCİSİNİ sınırlıyor, k…",
+      "zaman": "2026-09-29T07:47:04+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6513
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 203,
+          "onek_basi": "**[TSK-247] Docker konteynerleri (apisix-kapi · apisix-etcd ",
+          "commit": "e3923f2cbadbefb8ea237d32bc9333eb2004ccd7",
+          "zaman": "2026-09-29T07:47:04+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6514,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-29 07:4xZ KAPANDI [Rol-1, A1]: operatör kararıyla (",
+          "commit": "e3923f2cbadbefb8ea237d32bc9333eb2004ccd7",
+          "zaman": "2026-09-29T07:47:04+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 92,
+      "tarih": "2026-09-29",
+      "kimlik": "TSK-250",
+      "baslik": "deploy.sh baslik: .env-cp kaldirildi, CP sirlari Vault yan dosyasindan (RUNBOOK ayni commit'te yeniden uretildi); ROADMAP TSK-250 + TSK-255 KAPANDI → §8.H.2; ce…",
+      "zaman": "2026-09-29T23:04:50+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "326e124c"
+          },
+          "commit": "326e124c42ee4073e3fd35001f5ed08ecca18058",
+          "zaman": "2026-09-29T23:04:50+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6544
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 152,
+          "onek_basi": "**[TSK-250] TSK-064 iki-kanal kapanışından kalan bayat şerhl",
+          "commit": "326e124c42ee4073e3fd35001f5ed08ecca18058",
+          "zaman": "2026-09-29T23:04:50+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6545,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-29 23:0xZ KAPANDI [Rol-1]: TSK-250 main'de f6cf35c4",
+          "commit": "326e124c42ee4073e3fd35001f5ed08ecca18058",
+          "zaman": "2026-09-29T23:04:50+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 93,
+      "tarih": "2026-09-29",
+      "kimlik": "TSK-251",
+      "baslik": "[TSK-251] (2026-09-29 22:1xZ v2 KOŞULDU [Rol-1, operatör gece yetkisi] — HÜKÜM DUR→OPERATÖR, rapor `‹gizlendi›.md`: (a) GEÇTİ (26/26 yerleşik takım kapalı, geçe…",
+      "zaman": "2026-09-29T20:18:57+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6555,
+            "not": 2
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-29 22:1xZ v2 KOŞULDU [Rol-1, operatör gece yetkisi]",
+          "commit": "e97f079f332808a319fa832b79989b26afc5fb1f",
+          "zaman": "2026-09-29T22:19:05+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6555,
+            "not": 4
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-29 16:2xZ SINIFLANDIRICI ENGELİ [Rol-1]: plan `docs",
+          "commit": "127f315d377665e82a22fbcc30ea74105deac146",
+          "zaman": "2026-09-29T20:18:57+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 94,
+      "tarih": "2026-09-29",
+      "kimlik": "TSK-255",
+      "baslik": "**[TSK-255] Test altyapısı ortam-sızıntı bekçisinin kalan açıkları — modül-import-zamanı / modül-oturum kapsamlı fikstür yazımları + alt oturumun `MERIDIAN_PROV…",
+      "zaman": "2026-09-29T23:04:50+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6549
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 207,
+          "onek_basi": "**[TSK-255] Test altyapısı ortam-sızıntı bekçisinin kalan aç",
+          "commit": "326e124c42ee4073e3fd35001f5ed08ecca18058",
+          "zaman": "2026-09-29T23:04:50+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6550,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-29 23:0xZ KAPANDI [Rol-1]: main'de f6cf35c4; çıkış ",
+          "commit": "326e124c42ee4073e3fd35001f5ed08ecca18058",
+          "zaman": "2026-09-29T23:04:50+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 95,
+      "tarih": "2026-09-29",
+      "kimlik": null,
+      "baslik": "- **Operatör isteği (09-29):** \"botları aktif kullanamıyoruz; daha detaylı kullanım ve daha çok bot planlamıştık\". Ölçüm: 3 bot yalnız tek yönlü",
+      "zaman": "2026-09-30T01:28:56+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 4073
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "  uzun hafıza (şef hepsini görür); hedef 21 bot, dalga 1–2 b",
+          "commit": "8b18788ea88006a71f988df662551c5eeb2905e9",
+          "zaman": "2026-09-30T01:28:56+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 96,
+      "tarih": "2026-09-30",
+      "kimlik": "EDG-2026-107",
+      "baslik": "EDG-2026-107 on_kayit: 2026-09-30",
+      "zaman": "2026-09-30T17:03:32+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "kart",
+            "dosya": "research/cards/EDG-2026-107-bot-sohbet-hafiza.yaml",
+            "alan": "on_kayit",
+            "satir": 15
+          },
+          "anahtar_kaynagi": "anahtar_satiri",
+          "onek_uzunlugu": 20,
+          "onek_basi": "on_kayit: 2026-09-30",
+          "commit": "38e71cec2c044f2d159365d9279585555f05add0",
+          "zaman": "2026-09-30T17:03:32+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 97,
+      "tarih": "2026-09-30",
+      "kimlik": "EXE-2026-012",
+      "baslik": "EXE-2026-012 on_kayit: 2026-09-30",
+      "zaman": "2026-09-30T19:07:54+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "kart",
+            "dosya": "research/cards/EXE-2026-012-kill1-canli-capa.yaml",
+            "alan": "on_kayit",
+            "satir": 20
+          },
+          "anahtar_kaynagi": "anahtar_satiri",
+          "onek_uzunlugu": 43,
+          "onek_basi": "on_kayit: 2026-09-30  # Rol-1 commit tarihi",
+          "commit": "2e00cf2dc1f2388dc353cf75b7ef01b7be53cce2",
+          "zaman": "2026-09-30T19:07:54+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "kart",
+            "dosya": "research/cards/EXE-2026-012-kill1-canli-capa.yaml",
+            "alan": "karar_notlari",
+            "satir": 154
+          },
+          "anahtar_kaynagi": "anahtar_satiri",
+          "onek_uzunlugu": 14,
+          "onek_basi": "karar_notlari:",
+          "commit": "2e00cf2dc1f2388dc353cf75b7ef01b7be53cce2",
+          "zaman": "2026-09-30T19:07:54+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 98,
+      "tarih": "2026-09-30",
+      "kimlik": "TSK-020",
+      "baslik": "ROADMAP 09-30 aksam (operator 'aktiflere devam, siradakileri aktife al'): TSK-020 + TSK-200 ACTIVE (UYGULA-3 ve Faz A adim 5 canlida bitmis; kalan Faz C karti),…",
+      "zaman": "2026-09-30T18:45:09+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "7ec0135c"
+          },
+          "commit": "7ec0135c3350c30a793e9e2fd3289a569d84802d",
+          "zaman": "2026-09-30T18:45:09+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2547,
+            "not": 3
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-30 19:2xZ FAZ C KARTI ÖN-KAYIT [Rol-1; operatör 'şi",
+          "commit": "2e00cf2dc1f2388dc353cf75b7ef01b7be53cce2",
+          "zaman": "2026-09-30T19:07:54+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 99,
+      "tarih": "2026-09-30",
+      "kimlik": "TSK-138",
+      "baslik": "**[TSK-138] Brifing SOUL denetçisi alan adlarını 'uydurma' sayıyor (bekçi · stop_gap'i · iyileştirme önerisi) → 2/2 ihlal, HAM teslim** — status: DONE(2026-09-3…",
+      "zaman": "2026-09-30T18:45:09+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6574
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 161,
+          "onek_basi": "**[TSK-138] Brifing SOUL denetçisi alan adlarını 'uydurma' s",
+          "commit": "7ec0135c3350c30a793e9e2fd3289a569d84802d",
+          "zaman": "2026-09-30T18:45:09+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6575,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 160,
+          "onek_basi": "(2026-09-30 18:4xZ KAPANDI [Rol-1; kaynak: A1 salt-okur ölçü",
+          "commit": "7ec0135c3350c30a793e9e2fd3289a569d84802d",
+          "zaman": "2026-09-30T18:45:09+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 100,
+      "tarih": "2026-09-30",
+      "kimlik": "TSK-205",
+      "baslik": "[TSK-205] (2026-09-30 18:4xZ HENÜZ YOK [kaynak: A1 salt-okur ölçüm 18:1x–18:4xZ (scratchpad kanit-olcum-plani bloklar 1–3)]: #65'ten beri 3 çıkış, üçü de koruma…",
+      "zaman": "2026-09-30T18:45:09+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2482,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 160,
+          "onek_basi": "(2026-09-30 18:4xZ HENÜZ YOK [kaynak: A1 salt-okur ölçüm 18:",
+          "commit": "7ec0135c3350c30a793e9e2fd3289a569d84802d",
+          "zaman": "2026-09-30T18:45:09+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 101,
+      "tarih": "2026-09-30",
+      "kimlik": "TSK-246",
+      "baslik": "**[TSK-246] `meridian-learn` durdurması yansıma turu ortasında 120 sn'yi aşıp SIGKILL'le bitiyor — `KillMode=control-group` SIGTERM'i işlem havuzu işçilerine de…",
+      "zaman": "2026-09-30T18:45:09+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6569
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 277,
+          "onek_basi": "**[TSK-246] `meridian-learn` durdurması yansıma turu ortasın",
+          "commit": "7ec0135c3350c30a793e9e2fd3289a569d84802d",
+          "zaman": "2026-09-30T18:45:09+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6570,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 160,
+          "onek_basi": "(2026-09-30 18:4xZ KAPANDI [Rol-1; kaynak: A1 salt-okur ölçü",
+          "commit": "7ec0135c3350c30a793e9e2fd3289a569d84802d",
+          "zaman": "2026-09-30T18:45:09+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 102,
+      "tarih": "2026-09-30",
+      "kimlik": "TSK-251",
+      "baslik": "ROADMAP: TSK-251 (Parca 0, kapi GECTI v3) + TSK-256 (mcp K-1 ile kuruldu, varsayilan profil kapali) KAPANDI → §8.H.2; TSK-252 ACTIVE; cephe ozeti",
+      "zaman": "2026-09-30T06:40:28+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "12fb9e5c"
+          },
+          "commit": "12fb9e5cf569f7c32e6598d8d730e6abdc169355",
+          "zaman": "2026-09-30T06:40:28+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6554
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 207,
+          "onek_basi": "**[TSK-251] Konuşan filo Parça 0 — @bekci ikiziyle A1 deneme",
+          "commit": "12fb9e5cf569f7c32e6598d8d730e6abdc169355",
+          "zaman": "2026-09-30T06:40:28+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6555,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-30 06:4xZ KAPANDI [Rol-1]: kapı geçti, Parça 1b açı",
+          "commit": "12fb9e5cf569f7c32e6598d8d730e6abdc169355",
+          "zaman": "2026-09-30T06:40:28+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 103,
+      "tarih": "2026-09-30",
+      "kimlik": "TSK-252",
+      "baslik": "[TSK-252] (OPERATÖR KARARI 2026-09-30 18:5xZ [AskUserQuestion]: kadro 21 botun konuşan filoya bağlanması AŞAMALI — 'Önce 3, sonra dalgalar': şef/bekçi/karne can…",
+      "zaman": "2026-09-30T14:05:59+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2442,
+            "not": 6
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(OPERATÖR KARARI 2026-09-30 18:5xZ [AskUserQuestion]: kadro ",
+          "commit": "37f5e7104dba8f5d91820bc562f4a5f95d91e2e1",
+          "zaman": "2026-09-30T18:56:11+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2442,
+            "not": 8
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-30 16:4xZ KART ÖN-KAYITLI [Rol-1]: EDG-2026-107 `re",
+          "commit": "38e71cec2c044f2d159365d9279585555f05add0",
+          "zaman": "2026-09-30T17:03:32+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2442,
+            "not": 9
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-30 14:0xZ ANA DALDA [Rol-1]: Parça 1b G3 (depo tara",
+          "commit": "66706ec973468e151b10371c45650929a5d8dadc",
+          "zaman": "2026-09-30T14:05:59+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 104,
+      "tarih": "2026-09-30",
+      "kimlik": "TSK-256",
+      "baslik": "**[TSK-256] Hermes venv'inde `mcp` paketi yok — `meridian/mcp_server.py` araçları canlıda hiçbir Hermes koşumuna BAĞLANMADI (sessiz, yalnız DEBUG günlüğü)** — s…",
+      "zaman": "2026-09-30T06:40:28+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6559
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 182,
+          "onek_basi": "**[TSK-256] Hermes venv'inde `mcp` paketi yok — `meridian/mc",
+          "commit": "12fb9e5cf569f7c32e6598d8d730e6abdc169355",
+          "zaman": "2026-09-30T06:40:28+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6560,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-30 06:4xZ KAPANDI [Rol-1]: sessiz ölü kanal canland",
+          "commit": "12fb9e5cf569f7c32e6598d8d730e6abdc169355",
+          "zaman": "2026-09-30T06:40:28+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 105,
+      "tarih": "2026-09-30",
+      "kimlik": "TSK-257",
+      "baslik": "TSK-257 KAPANDI (dagitim #87 e6aabf46 canli, K-1 korunuyor) → §8 arsiv; gunluk §38 #87 + kabuk PYTHONDONTWRITEBYTECODE bulgusu; cephe ozeti",
+      "zaman": "2026-09-30T10:30:42+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "0a6978d7"
+          },
+          "commit": "0a6978d7d717774b0281d728d0350f7a068b8aef",
+          "zaman": "2026-09-30T10:30:42+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6564
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 313,
+          "onek_basi": "**[TSK-257] `hermes.config_ensure_integrations` öz-onarımı K",
+          "commit": "0a6978d7d717774b0281d728d0350f7a068b8aef",
+          "zaman": "2026-09-30T10:30:42+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6565,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-30 10:2xZ KAPANDI [Rol-1]: DAĞITIM #87 (10:26–10:28",
+          "commit": "0a6978d7d717774b0281d728d0350f7a068b8aef",
+          "zaman": "2026-09-30T10:30:42+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 106,
+      "tarih": "2026-09-30",
+      "kimlik": "TSK-259",
+      "baslik": "[TSK-259] (OPERATÖR KARARI 2026-09-30 18:5xZ [AskUserQuestion]: '(a) İş koşarken ölçme' — alarm, ileri doldurma işi (meridian-geridolum) koşarken ölçüm yapmaz,…",
+      "zaman": "2026-09-30T18:45:09+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6586,
+            "not": 3
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(OPERATÖR KARARI 2026-09-30 18:5xZ [AskUserQuestion]: '(a) İ",
+          "commit": "37f5e7104dba8f5d91820bc562f4a5f95d91e2e1",
+          "zaman": "2026-09-30T18:56:11+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6586,
+            "not": 4
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-09-30 18:4xZ AÇILDI [Rol-1; kaynak: A1 salt-okur ölçüm",
+          "commit": "7ec0135c3350c30a793e9e2fd3289a569d84802d",
+          "zaman": "2026-09-30T18:45:09+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 107,
+      "tarih": "2026-09-30",
+      "kimlik": null,
+      "baslik": "G3b plani tam: 5 gorev (kosullu birim + on-denetim, API_SERVER_KEY 4 kopya — Hermes profil kapsami A1 olcumu: /p/<bot> istegi anahtari profil .env'inden alir, y…",
+      "zaman": "2026-09-30T18:24:21+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "5bb04b4b"
+          },
+          "commit": "5bb04b4b43a2d383f94231dc98df0905d245715e",
+          "zaman": "2026-09-30T18:24:21+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 108,
+      "tarih": "2026-10-01",
+      "kimlik": "TSK-258",
+      "baslik": "Dagitim #88 (7fe14465): gunluk §39 + ROADMAP — G4 canli (botlar/telegram birimleri kurulu, disabled), TSK-258 KAPANDI (K-1 korundu), TSK-259 canli (kanit bu sab…",
+      "zaman": "2026-10-01T07:33:59+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "43ec7902"
+          },
+          "commit": "43ec7902188437dbfb7cf3f28adfad678d4cb5f0",
+          "zaman": "2026-10-01T07:33:59+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6580
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 221,
+          "onek_basi": "**[TSK-258] `hermes.config_ensure_integrations` öteki alanla",
+          "commit": "43ec7902188437dbfb7cf3f28adfad678d4cb5f0",
+          "zaman": "2026-10-01T07:33:59+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6581,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-10-01 07:4xZ KAPANDI [Rol-1]: birleştirme 65feb7ae, su",
+          "commit": "43ec7902188437dbfb7cf3f28adfad678d4cb5f0",
+          "zaman": "2026-10-01T07:33:59+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 109,
+      "tarih": "2026-10-01",
+      "kimlik": "TSK-259",
+      "baslik": "TSK-259 KAPANDI: ilk ileri doldurma kosumunda (07:30-07:59Z) tepe 141,9 G > 140 G esigi, DISK_ESIK calmadi, atlama sayaci 5; kosum sonrasi kalici ~123 G, alarm…",
+      "zaman": "2026-10-01T08:53:00+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "df915312"
+          },
+          "commit": "df915312bfe437220119b130ab9bb7267168bac3",
+          "zaman": "2026-10-01T08:53:00+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6585
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 178,
+          "onek_basi": "**[TSK-259] DISK_ESIK alarmı ileri doldurmanın GÜNLÜK geçici",
+          "commit": "df915312bfe437220119b130ab9bb7267168bac3",
+          "zaman": "2026-10-01T08:53:00+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6586,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-10-01 08:5xZ KAPANDI [Rol-1, A1 salt-okur]: dağıtım #8",
+          "commit": "df915312bfe437220119b130ab9bb7267168bac3",
+          "zaman": "2026-10-01T08:53:00+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 4157
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "- **TSK-259 KAPANDI (08:5xZ):** ilk ileri doldurma koşumunda",
+          "commit": "26d9eb39052ae7399fd76f701ba819228a87832a",
+          "zaman": "2026-10-01T09:58:41+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 110,
+      "tarih": "2026-10-01",
+      "kimlik": "TSK-260",
+      "baslik": "ROADMAP: TSK-260 KAPANDI (yardimcinin yazim yolunda; dar kapanis metni), TSK-261 ACTIVE + siddet yukseldi (her --openrouter kosumunun olagan yolu; NoNewPrivileg…",
+      "zaman": "2026-10-01T20:17:26+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "8de98200"
+          },
+          "commit": "8de982002d4f92f57fd166df260184cb78730d9b",
+          "zaman": "2026-10-01T20:17:26+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6590
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 325,
+          "onek_basi": "**[TSK-260] Sır rotasyon aracının yazım yolu sembolik bağ / ",
+          "commit": "8de982002d4f92f57fd166df260184cb78730d9b",
+          "zaman": "2026-10-01T20:17:26+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6591,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-10-01 20:0xZ KAPANDI [Rol-1]: birleştirme main'e; v609",
+          "commit": "8de982002d4f92f57fd166df260184cb78730d9b",
+          "zaman": "2026-10-01T20:17:26+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 111,
+      "tarih": "2026-10-01",
+      "kimlik": "TSK-262",
+      "baslik": "- **TSK-262 (okuma yolu) + TSK-265 (ROOT YÜRÜTÜR, UBUNTU YAZAR) — 01:0x–06:0xZ, Rol-1 + Opus uygulayıcı/inceleme, iki tur her biri:**",
+      "zaman": "2026-10-02T05:56:54+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 4220
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "  (üyelik operatör kararı TSK-195 — dokunulmadı; dockerd yal",
+          "commit": "a911621c575a9e6b17d930c51415fd3a66a19b3c",
+          "zaman": "2026-10-02T05:56:54+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 112,
+      "tarih": "2026-10-01",
+      "kimlik": null,
+      "baslik": "- **Dağıtım #91 (06:50–07:01Z, main HEAD 34230aec = deployed_sha; push 06:47Z operatörün sorusu üzerine — engel sonrası İLK yeniden",
+      "zaman": "2026-10-02T07:04:46+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 4232
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "  açılışında da vardı (dağıtımdan bağımsız). TSK-261 + TSK-2",
+          "commit": "414b11ab4d544e9707b0a6b939fcaf1e9653ec88",
+          "zaman": "2026-10-02T07:04:46+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 113,
+      "tarih": "2026-10-01",
+      "kimlik": null,
+      "baslik": "- **Giden:** G4 (Telegram kanal kablolaması — `bota_sor` üretim hafıza kaydı, unut iki adım, dinleyici + birim, 4096 bölme her parça",
+      "zaman": "2026-10-01T07:33:59+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "gunluk",
+            "satir": 4139
+          },
+          "anahtar_kaynagi": "isaretli_satir",
+          "onek_uzunlugu": 80,
+          "onek_basi": "  + argv ölçüldü), RUNBOOK + tipografi korpusu, EXE-2026-012",
+          "commit": "43ec7902188437dbfb7cf3f28adfad678d4cb5f0",
+          "zaman": "2026-10-01T07:33:59+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 114,
+      "tarih": "2026-10-02",
+      "kimlik": "TSK-261",
+      "baslik": "**[TSK-261] Sır rotasyon aracının kopya-tabanlı yolları — `_negatif_geri_al` öngörülebilir `$hedef.yeni` adına `sudo cp -p` (+ `mv -f`), `_yedek_al` `sudo cp -p…",
+      "zaman": "2026-10-02T07:04:46+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6595
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 316,
+          "onek_basi": "**[TSK-261] Sır rotasyon aracının kopya-tabanlı yolları — `_",
+          "commit": "414b11ab4d544e9707b0a6b939fcaf1e9653ec88",
+          "zaman": "2026-10-02T07:04:46+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6596,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-10-02 07:0xZ KAPANDI [Rol-1]: dağıtım #91 (34230aec, s",
+          "commit": "414b11ab4d544e9707b0a6b939fcaf1e9653ec88",
+          "zaman": "2026-10-02T07:04:46+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 115,
+      "tarih": "2026-10-02",
+      "kimlik": "TSK-262",
+      "baslik": "**[TSK-262] Sır rotasyon aracının OKUMA yolu FIFO askısı — `_oku` / alan-var denetimi hedefi `open()` ile açıyor; dizin sahibi hedefi adlandırılmış boruya (FIFO…",
+      "zaman": "2026-10-02T07:04:46+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6600
+          },
+          "anahtar_kaynagi": "durum_basligi",
+          "onek_uzunlugu": 313,
+          "onek_basi": "**[TSK-262] Sır rotasyon aracının OKUMA yolu FIFO askısı — `",
+          "commit": "414b11ab4d544e9707b0a6b939fcaf1e9653ec88",
+          "zaman": "2026-10-02T07:04:46+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 6601,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-10-02 07:0xZ KAPANDI [Rol-1]: dağıtım #91 ile canlıda;",
+          "commit": "414b11ab4d544e9707b0a6b939fcaf1e9653ec88",
+          "zaman": "2026-10-02T07:04:46+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 116,
+      "tarih": "2026-10-02",
+      "kimlik": "TSK-263",
+      "baslik": "[TSK-263] (2026-10-02 03:1xZ AÇILDI [Rol-1; G3b `--envanter` beyan dışı taraması 2026-10-01 22:2xZ]: tablonun bilmediği bir sır canlı bir `.env`te duruyor (G3b'…",
+      "zaman": "2026-10-02T03:15:18+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2446,
+            "not": 1
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-10-02 03:1xZ AÇILDI [Rol-1; G3b `--envanter` beyan dış",
+          "commit": "e059254ae10e31317b5c64a130690c73a61ca34f",
+          "zaman": "2026-10-02T03:15:18+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    },
+    {
+      "sira": 117,
+      "tarih": "2026-10-02",
+      "kimlik": "TSK-265",
+      "baslik": "Dagitim #91 (34230aec): TSK-265 dilim 1 canlida (docker.sock maskesi canli sureclerde dogrulandi, watchdog ubuntu + polkit tetik-testi, fail-notify NNP altinda…",
+      "zaman": "2026-10-02T04:38:16+00:00",
+      "zaman_neden": null,
+      "kaynaklar": [
+        {
+          "ref": {
+            "tur": "git",
+            "commit": "414b11ab"
+          },
+          "commit": "414b11ab4d544e9707b0a6b939fcaf1e9653ec88",
+          "zaman": "2026-10-02T07:04:46+00:00",
+          "neden": null
+        },
+        {
+          "ref": {
+            "tur": "roadmap",
+            "satir": 2454,
+            "not": 3
+          },
+          "anahtar_kaynagi": "not",
+          "onek_uzunlugu": 80,
+          "onek_basi": "(2026-10-02 04:4xZ DİLİM 1 DALDA + İNCELEME DÜZELTME GEREKİR",
+          "commit": "e4e792c82a906268d7831599f5a09720d722fc96",
+          "zaman": "2026-10-02T04:38:16+00:00",
+          "neden": null
+        }
+      ],
+      "sentetik_isaretler": []
+    }
+  ]
+}

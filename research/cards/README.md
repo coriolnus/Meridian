@@ -57,7 +57,7 @@ Toplam **122** kart.
   · HÜKÜM: 2026-09-30 Rol-1 ön-kayıt (operatör 'şimdi ön-kaydet', 18:5xZ); ADIM-0 betimleme alanlarını doldurur ve kartı DONDURUR; pencere ADIM-0'dan SONRA açılır
   · kart: `EXE-2026-012-kill1-canli-capa.yaml`
 
-### Ölçümde (9)
+### Ölçümde (8)
 
 - **EDG-2026-042** (`measuring`) — Sistemin EN KARAR-KRİTİK bilinmeyen sayısı artık gerçek icra friksiyonunun SEVİYESİ.
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı, İLK (betimleyici) ara-koşum yapıldı.
@@ -80,14 +80,11 @@ Toplam **122** kart.
 - **EDG-2026-088** (`measuring`) — 
   · HÜKÜM: 2026-09-13 Rol-1: pencere B1 dağıtımıyla (#37 dce388c, 2026-09-12T22:08:34Z) AÇIK — `pencere_kaydi_2026_09_12`; önceki: registered (2026-09-08 ön-kayıt; gölge defteri…
   · kart: `EDG-2026-088-uyuyan-kurulum-golge-pilot.yaml`
-- **EDG-2026-103** (`measuring`) — 
-  · HÜKÜM: 2026-09-25 10:33Z Rol-1 — pencere AÇILDI (ADIM-0 (a)–(d) tamam, PK okuması kayıtta); kapanış en erken 2026-10-02, en geç 2026-10-16
-  · kart: `EDG-2026-103-hafiza-sayfa-okuma-ilgi-atif.yaml`
 - **EXE-2026-003** (`measuring`) — 4b gölge katmanı yalnız SİLAHLANMIŞ planların dakika-hassas dolumunu yazıyor (6 seansta 4 satır).
   · HÜKÜM: 2026-08-22 Rol-1 — ölçüm kodu yazıldı ve İLK koşum yapıldı; PENCERE DOLUYOR.
   · kart: `EXE-2026-003-golge-planli-kol.yaml`
 
-### Ölçüldü (70)
+### Ölçüldü (71)
 
 - **BASE-2026-001** (`measured`) — Defterin tabanı ESKİ motorun tohum-replay'i (95 işlem, 2026-07-2x kod/veri kapılarıyla; net −5.542 USD).
   · HÜKÜM: 2026-08-01 ~19:30 — KARNE HÜKMÜ (Rol-1): CEVAP: "EVET ama ekonomik olarak anlamsız ve TEK YILA BAĞIMLI." Tam pencere (2022→2026-07, 1146 seans, bugünkü motor+canlı v3…
@@ -266,6 +263,9 @@ Toplam **122** kart.
 - **EDG-2026-102** (`measured`) — 
   · HÜKÜM: KALDI (hipotez) · 2026-09-25 10:39Z Rol-1 hüküm: MODEL YETERLİ (stop bacağı) — hipotez desteklenmedi; hukum_2026_09_25
   · kart: `EDG-2026-102-replay-stop-kaymasi-tick.yaml`
+- **EDG-2026-103** (`measured`) — 
+  · HÜKÜM: 2026-10-02 11:4xZ Rol-1 — GEÇERSİZ (hukum_2026_10_02): alet doğrulanmadı — kill #6 HARFİYEN (PK(b) ilgi 3/478 < τ 0,15; PK(a)/(c) ve NK tuttu); K1–K4 YAYILMAZ;…
+  · kart: `EDG-2026-103-hafiza-sayfa-okuma-ilgi-atif.yaml`
 - **EDG-2026-106** (`measured`) — 
   · HÜKÜM: KALDI (hipotez) · 2026-09-25 18:30Z Rol-1 hüküm: H1 DOLUM EŞDEĞER · H2 BELİRSİZ — hukum_2026_09_25
   · kart: `EDG-2026-106-replay-giris-canli-kural-tick-olcekli.yaml`

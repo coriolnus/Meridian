@@ -8,7 +8,7 @@
 # sayfa kullanımını ölçer, ref'e yazıldı), EDG-2026-061 (0,11), hindsight_hafiza ailesi (074 KALDI · 083 · 089 ≤0,03) →
 # aynı yöntemin tekrarı YOK (yöntem bilerek değişti).
 card_id: EDG-2026-103
-status: measured   # 2026-10-02 11:4xZ Rol-1 — GEÇERSİZ (hukum_2026_10_02): alet doğrulanmadı — kill #6 HARFİYEN (PK(b) ilgi 3/478 < τ 0,15; PK(a)/(c) ve NK tuttu); K1–K4 YAYILMAZ; betimleyici K1 5/8, D 80; ardıl kart (kalibre ilgi ölçüsü, erişilebilirlik ADIM-0'da ölçülür) açık
+status: measuring   # 2026-09-25 10:33Z Rol-1 — pencere AÇILDI (ADIM-0 (a)–(d) tamam, PK okuması kayıtta); kapanış en erken 2026-10-02, en geç 2026-10-16
 family: hindsight_hafiza
 on_kayit: 2026-09-25
 selef: EDG-2026-089
@@ -214,26 +214,3 @@ netlestirme_2026_10_01c: >
   K4 ile ilgili ara sayıları (atıflı 19 / D 73) bu düzeltmeden ÖNCE gördü — düzeltme kartın donmuş metnine DÖNÜŞTÜR ve sıkı yöndedir;
   ayrıca kill #6 yolunda (PK(b) yapısal olarak τ'ya erişemiyor — prova: J=0,0099, 111 gerçek kararın en yükseği 0,079) K2–K4 hiç
   yayılmaz.
-
-hukum_2026_10_02: >
-  GEÇERSİZ — ALET DOĞRULANMADI (Rol-1, 2026-10-02 10:51–11:4xZ). PENCERE 2026-09-25T10:33:10Z → 2026-10-02T10:33:10Z KAPANDI;
-  hüküm kart gününde verildi. GİRDİ (Rol-1, A1 salt-okur): `/opt/veri/olcum/edg103/okuma.jsonl` 45 satır (pencere kapanışında) +
-  iki sayfa anlık görüntüsü (`meridian-hedef-sapma` 33.858 B, `nk-kripto-madencilik` 2.227 B; etiket olcum-anlik — iki görüntü
-  satırı kayda 10:5xZ'te, pencere DIŞINDA düştü) → `dondur.py` (HEAD 414b11ab, 118 karar, zamansız 0, sentetik 0, notify sır
-  taraması temiz) → research/olcumler/edg103_okuma_ilgi_atif/girdi/ (SHA256.txt blob 39ac1e05) → `sayim.py` (blob be8a6b27) →
-  sonuc.json (blob 23706ec9) + rapor.md (blob 8e299eb1). Eşikler/τ/W/K karttan; hiçbiri değişmedi.
-  .
-  PK/NK: PK (a) okuma TUTTU · PK (b) ilgi TUTMADI — sayfa token kümesi ile bilinen ilgili kararın Jaccard'ı 3/478 ≈ 0,006 < τ 0,15
-  (sayfa 245 satırlık bütün bir rapor, karar metni kısa → birleşim sayfa tarafından şişer; τ'ya YAPISAL olarak erişilemez —
-  netleştirme 2026-10-01 provasında J≈0,0099 ile öngörülmüştü, hüküm öngörüye göre değil bu sayıma göre) · PK (c) atıf TUTTU ·
-  NK atıfsız TUTTU · NK ilgisiz TUTTU · EK NK (nk-kripto-madencilik 'bankada yok') TUTTU. KILL #6 ("PK/NK tutmazsa hiçbir sayı
-  yayılmaz") HARFİYEN TETİKLENDİ → K1–K4 kolonları üst düzeyde YOK; netleştirme (8) gereği yalnız K1 ve D 'hüküm DEĞİL' etiketli
-  betimleyici: K1 5/8 dolu gün (09-25, 09-27, 09-28, 09-29, 10-01; boş 09-26, 09-30, 10-02 — 10-01 §0-5 okuması GEÇ yapıldı, itiraf
-  günlük §39), D = 80 karar. Kill #3 ve #7 UYGULANDI (yer tutucu/sentetik ayrı işaretli), #1/#2/#4/#5/#8 TETİKLENMEDİ.
-  .
-  ANLAMI: hipotez (sayfa okumak kararı etkiler mi) ne doğrulandı ne çürütüldü — ilgi ÖLÇÜSÜ (bütün-sayfa Jaccard) bu sayfa boyunda
-  pozitif kontrolü bile ayırt edemiyor. Bu, memory kill-esigi-adim0da-olculur'un aynı sınıfı: ölçünün erişilebilirliği ön-kayıtta
-  ölçülmemişti. ARDIL KART (Rol-1 sırası; bu kart KAPANDI, eşiği YERİNDE düzeltilmez): ilgi ölçüsü sayfa boyundan bağımsız olmalı
-  (ör. karar tokenlarının sayfada içerilme oranı ya da bölüm-düzeyi eşleşme) ve PK(b)'nin erişilebilirliği ADIM-0'da gerçek bilinen
-  çiftlerle ÖLÇÜLÜR; kart_benzer + hafıza kontrolüyle açılır. §0-5 kuralı (EDG-089 penceresinin ön şartı) KALIR — kural kart değil
-  operatör kararıdır (2026-09-13); okuma kaydı ve `sayfa_oku.sh` yüzeyi ardıl karta aynen hizmet eder.
