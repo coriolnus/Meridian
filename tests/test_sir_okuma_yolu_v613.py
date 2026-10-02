@@ -26,6 +26,9 @@ DÜZELTME TURU 1 (güvenlik incelemesi `.superpowers/sdd/tsk262/review.md`, 2026
 kuralla basar (iki tarafta da var ve farklı · ya da aranan ad / sır-adı soneki; D1 beş biçim · D7 · D8); M1 — inode eşitliği
 denetimi çivili (A3: açılışta normal dosya takası); M3 — `esitle` kanıtı okunamayan satırı EŞİT saymaz (F3); K1 (dosya içi kısmi) —
 betik `cd /` + mutlak betik dizini, her yorumlayıcı `-I` (K1a–K1d; root sahipli kurulum yeri ayrı kalem TSK-265).
+DÜZELTME TURU 2 (yeniden inceleme `.superpowers/sdd/tsk262/rereview1.md`): Y1 — kural (a) EŞİT ÇOKLUĞA bağlı (D1 üç çokluk
+vakası · bedel D9); Y2 — ZİNCİR realpath iletisi kaçışlı (B4) ve `esitle` beyanlı kanal muafiyeti TAM satır, tek kaynak
+`_kanal_satiri` (F4).
 
 ÇIKTI DİSİPLİNİ: iddialar bool'a indirgenir (`_iddia`); değerler SAHTEdir ve hiçbir çıktıda görünmemelidir. Askı KIRMIZIDIR: alt
 süreç zaman aşımıyla koşar (`_yk_sure` → None), asla sonsuz beklemez.
@@ -37,6 +40,7 @@ import json
 import os
 import pathlib
 import re
+import shutil
 import signal
 import stat
 import subprocess
@@ -327,6 +331,43 @@ def test_B3_YARIS_acilis_aninda_BAGA_cevrilen_dosya_bagin_hedefini_ACMAZ(tmp_pat
     _adli_ret(s, r, yol, kip, "SEMBOLİK BAĞ")
 
 
+def _realpath_kancasi(dizin: pathlib.Path, ad: str, isaret: pathlib.Path, kosul: str = "True") -> str:
+    """`_dizin_ac`ın SON katmanı (`os.path.realpath(dizin)` kıyası) için yarış: `realpath` hedef dizinle çağrıldığı AN (bileşenler
+    `O_NOFOLLOW` ile ZATEN açılmışken) dizin `<dizin>_gercek`e taşınır ve yerine kardeş `ad` dizinine bir BAĞ konur. Bağın hedef
+    adını SALDIRGAN seçer (yeni satır · ESC · ayraç metni) ve RED iletisine girer. `kosul`: ek python ifadesi (kanca sürecinde)."""
+    hedef = dizin.parent / ad
+    return ("import os, os.path\n_rp = os.path.realpath\n"
+            "def _realpath(p, *a, **k):\n"
+            f"    if os.fspath(p) == {str(dizin)!r} and not os.path.exists({str(isaret)!r}) and ({kosul}):\n"
+            f"        open({str(isaret)!r}, 'w').close()\n"
+            f"        os.rename({str(dizin)!r}, {str(dizin) + '_gercek'!r})\n"
+            f"        os.makedirs({str(hedef)!r}, exist_ok=True)\n"
+            f"        os.symlink({str(hedef)!r}, {str(dizin)!r})\n"
+            "    return _rp(p, *a, **k)\n"
+            "os.path.realpath = _realpath\n")
+
+
+@pytest.mark.parametrize("ad", ["var-env", "cikar-env"])
+def test_B4_ZINCIR_realpath_iletisi_SALDIRGAN_ADINI_KACISLI_basar_hukmu_BOLEMEZ(tmp_path, ad):
+    """TSK-262 düzeltme turu 2 (yeniden inceleme Y2a, `esitle_sonda.log`): `_dizin_ac`ın realpath iletisi, bağın hedefinin YOLUNU
+    basar — adını saldırgan seçer ve TSK-262'den beri her okuma hükmüne (`OKUNAMADI (ZİNCİR: …)`) girer. Ham basıldığında yeni
+    satır hükmü İKİ satıra böler (satır tabanlı denetimler bölünmüş satırı ayrı ayrı okur) ve ESC dizileri root operatörün
+    terminalini boyar. YENİ: yol `repr` (`!r`) ile — tek satır, denetim karakterleri kaçışlı; adlı ret sürer. Seçim: yol iletiden
+    ÇIKARILMADI — bağın nereye gittiği adli iz değeri taşır (operatör `stat` ile aynı yere bakar); kaçışla metin VERİ olarak kalır."""
+    s = _OkumaSahnesi(tmp_path)
+    yol, _tur, args, kip = s.islem(ad)
+    isaret = tmp_path / "kanca_atesledi"
+    on = _realpath_kancasi(s.profil, "x \x1b[31mKIRMIZI\x1b[0m\n  y · motor API z", isaret)
+    r = _yk_sure(s.yardimci, *args, kok=s.kok, on=on, sure=SURE)
+    _iddia(isaret.exists(), f"realpath kancası ATEŞLENMEDİ — çivi kör (pozitif kontrol)\n{_ozet(r)}")
+    _adli_ret(s, r, yol, kip, "ZİNCİR")
+    cikti = r.stdout + r.stderr
+    _iddia("realpath beklenen yoldan ayrışıyor" in cikti and "\x1b" not in cikti, f"ESC ham basıldı ya da ileti yok\n{_ozet(r)}")
+    hukum = r.stdout if kip == "hukum" else r.stderr
+    _iddia(hukum.count("\n") == 1 and "\\x1b" in hukum and "\\n  y · motor API z" in hukum,
+           f"hüküm TEK satır ve kaçışlı değil: {hukum!r}")
+
+
 # =================================================================================================
 # C) DÜZENLİ DOSYA — hüküm sözleşmesi AYNEN (YOK · DOSYA YOK · REFERANS YOK · ALAN YOK · ÇİFT SATIR · VAR · BOŞ · OKUNAMADI)
 # =================================================================================================
@@ -420,19 +461,53 @@ _N1_BICIMLER = {
 }
 
 
-@pytest.mark.parametrize("bicim", sorted(_N1_BICIMLER))
+_N1_ORTAK = f"{ALAN}=x\nHERMES_HOME=/h\n"
+_PEM_AQAB = _PEM_GOVDE.replace("{son}", "AQAB0123==")
+#: TSK-262 düzeltme turu 2 (yeniden inceleme Y1, `scratchpad/tsk262-inceleme/n1_sonda_fix1.log` vaka 8–10): kural (a) çokluk
+#: değişimini "değer farkı" sayıyordu — AYNI PEM son satırı yedekte bir, güncelde İKİ kez geçince parça (`AQAB0123`) iki tarafta da
+#: "var" ve listesi farklı görünüp AD diye basılıyordu. Çokluk vakası → (yedek, güncel, beklenen). Biri tırnaklı `export` biçimi.
+_N1_COKLUK = {
+    "cokluk_export_tirnakli": ('export TLS_ANAHTAR="' + _PEM_AQAB + '"\n',
+                               'export TLS_ANAHTAR="' + _PEM_AQAB + '"\nexport TLS_KOPYA="' + _PEM_AQAB + '"\n',
+                               "FARKLI: adsız 6 satır"),
+    "cokluk_tirnaksiz": ("TLS_ANAHTAR=" + _PEM_AQAB + "\n",
+                         "TLS_ANAHTAR=" + _PEM_AQAB + "\nTLS_KOPYA=" + _PEM_AQAB + "\n",
+                         "FARKLI: adsız 6 satır"),
+    "cokluk_tirnakli_ve_export": ('TLS_ANAHTAR="' + _PEM_AQAB + '"\nexport TLS_X="' + _PEM_AQAB + '"\n',
+                                  'TLS_ANAHTAR="' + _PEM_AQAB + '"\nexport TLS_X="' + _PEM_AQAB + '"\nexport TLS_Y="'
+                                  + _PEM_AQAB + '"\n',
+                                  "FARKLI: adsız 6 satır"),
+}
+_N1_VAKALAR = {**{ad: (sablon.replace("{son}", "AQAB0123=="), sablon.replace("{son}", "ZXCV9876=="), bek)
+                  for ad, (sablon, bek) in _N1_BICIMLER.items()}, **_N1_COKLUK}
+
+
+@pytest.mark.parametrize("bicim", sorted(_N1_VAKALAR))
 def test_D1_COK_SATIRLI_degerin_DEVAM_satiri_HICBIR_BICIMDE_AD_OLARAK_BASILMAZ(tmp_path, bicim):
-    """Yedek ile güncel arasında PEM gövdesinin son satırı farklı (`AQAB0123==` → `ZXCV9876==`). İnceleme N1 + düzeltme turu 1 I1:
-    satır tabanlı eşleşme bu satırı AD sayıp BASARDI — sır malzemesinin bir parçası. KURAL BİÇİMDEN BAĞIMSIZ: bir ad YALNIZ (a)
-    sözleşmeye uyan bir atama olarak İKİ dosyada da var ve değeri farklıysa ya da (b) aranan adlar ∪ sır-adı sonekleri kümesindeyse
-    basılır; base64 satırı yalnız TEK tarafta "ad" olur (base64'te `=` yalnız dolgudur) → SAYILIR. `tirnakli` biçimde basılan tek ad
-    değerin SAHİBİDİR (`TLS_ANAHTAR`); hiçbir biçimde devam satırının hiçbir parçası çıktıda yok, sonuç "AYNI" değil."""
+    """Yedek ile güncel arasında PEM gövdesinin son satırı farklı (`AQAB0123==` → `ZXCV9876==`) ya da ÇOKLUĞU değişti (aynı satır
+    güncelde iki kez). İnceleme N1 + düzeltme turu 1 I1 + turu 2 Y1: satır tabanlı eşleşme bu satırı AD sayıp BASARDI — sır
+    malzemesinin bir parçası. KURAL BİÇİMDEN VE ÇOKLUKTAN BAĞIMSIZ: bir ad YALNIZ (a) sözleşmeye uyan bir atama olarak İKİ dosyada
+    da AYNI SAYIDA var ve değeri farklıysa ya da (b) aranan adlar ∪ sır-adı sonekleri kümesindeyse basılır; base64 satırı tek
+    tarafta ya da farklı çoklukta "ad" olur (base64'te `=` yalnız dolgudur, eşit çoklukta değerleri hep aynıdır) → SAYILIR.
+    `tirnakli` biçimde basılan tek ad değerin SAHİBİDİR (`TLS_ANAHTAR`); hiçbir vakada devam satırının hiçbir parçası çıktıda yok,
+    sonuç "AYNI" değil."""
     s = _OkumaSahnesi(tmp_path)
-    sablon, beklenen = _N1_BICIMLER[bicim]
-    ortak = f"{ALAN}=x\nHERMES_HOME=/h\n"
-    r = _alan_farki(s, ortak + sablon.replace("{son}", "AQAB0123=="), ortak + sablon.replace("{son}", "ZXCV9876=="), ALAN)
+    yedek, guncel, beklenen = _N1_VAKALAR[bicim]
+    r = _alan_farki(s, _N1_ORTAK + yedek, _N1_ORTAK + guncel, ALAN)
     _iddia(r.stdout.strip() == beklenen, f"{bicim}: beklenen {beklenen!r}\n{_ozet(r)}")
     _iddia(not any(p in r.stdout + r.stderr for p in ("AQAB", "ZXCV", "MIIB", "BEGIN")), f"{bicim}: devam satırı çıktıya düştü")
+
+
+def test_D9_BEDEL_CIFT_SATIR_degisimi_ADLA_degil_SAYIYLA_izin_kumesindeki_ad_ADIYLA(tmp_path):
+    """Y1 düzeltmesinin BEDELİ sabitlenir (bedel yasası): kural (a) eşit çokluğa bağlandığı için gerçek bir adın ÇİFT SATIR'a
+    dönüşmesi (`B_ALANI=1` → iki satır) adla değil SAYIYLA söylenir: `FARKLI: adsız 3 satır` (yedekte 1 + güncelde 2 geçiş).
+    ÇİFT SATIR zaten ön-denetim ve envanterde ADIYLA raporlanır (`ÇİFT SATIR (2)`); burada kaybolan yalnız bu notun adıdır. İzin
+    kümesindeki (sır-adı soneki) bir adın çokluk değişimi ise kural (b) ile YİNE ADIYLA basılır (`X_TOKEN`)."""
+    s = _OkumaSahnesi(tmp_path)
+    r = _alan_farki(s, f"{ALAN}=x\nB_ALANI=1\n", f"{ALAN}=x\nB_ALANI=1\nB_ALANI=1\n", ALAN)
+    _iddia(r.stdout.strip() == "FARKLI: adsız 3 satır", f"beklenen 'FARKLI: adsız 3 satır'\n{_ozet(r)}")
+    r2 = _alan_farki(s, f"{ALAN}=x\nX_TOKEN=1\n", f"{ALAN}=x\nX_TOKEN=1\nX_TOKEN=1\n", ALAN, "--sonek", "_TOKEN")
+    _iddia(r2.stdout.strip() == "FARKLI: X_TOKEN", f"beklenen 'FARKLI: X_TOKEN'\n{_ozet(r2)}")
 
 
 def test_D2_SOZLESME_DISI_ad_BASILMAZ_ADSIZ_sayilir_AYNI_denmez(tmp_path):
@@ -721,6 +796,60 @@ def test_F3_ESITLE_kaniti_OKUNAMAYAN_satiri_ESIT_saymaz_OLCULEMEDI_cikis_2(tmp_p
     _iddia(r is not None and satir in r.stdout, f"kanıt satırı yok: {satir!r}\n{_ozet(r)}")
     _iddia(r.returncode == 2 and "ÖLÇÜLEMEDİ" in r.stderr and "kopyaları EŞİT" not in r.stdout,
            f"okunamayan kopya EŞİT sayıldı (yanlış başarı)\n{_ozet(r)}")
+    _sizinti_yok(r)
+
+
+def _yardimci_on_kodu(tmp_path: pathlib.Path, ortam: dict, kod: str) -> None:
+    """Gömülü yardımcının SÜRECİNE (yalnız argv'sinde `…/yardimci.py` olan `python3` çağrıları) yardımcıdan ÖNCE `kod`u yükleyen bir
+    `python3` sarmalayıcısını PATH'in başına koyar — v604 `_sahiplik_kaydi` emsali: yorumlayıcı bayrakları (`-I` dahil) AYNEN geçer,
+    öteki her çağrı (şimler · parçacıklar) dokunulmadan gerçek `python3`e gider. Uçtan uca koşumda yardımcının İÇİNDE yarış kurmanın
+    yolu (sudo şimi kancası yardımcı başlamadan koşar)."""
+    gercek = shutil.which("python3")
+    _iddia(gercek is not None, "python3 PATH'te yok")
+    on = tmp_path / "on_kod.py"
+    on.write_text(kod, encoding="utf-8")
+    d = tmp_path / "py_on_kod"
+    d.mkdir()
+    (d / "python3").write_text(
+        f"#!{gercek}\n"
+        "import os, sys\n"
+        f"GERCEK, ON = {gercek!r}, {str(on)!r}\n"
+        "a = sys.argv[1:]\n"
+        "i = next((k for k, x in enumerate(a) if x.endswith('/yardimci.py')), None)\n"
+        "if i is not None:\n"
+        "    kod = ('exec(compile(open(%r, encoding=\"utf-8\").read(), %r, \"exec\"))\\nimport runpy, sys\\n'\n"
+        "           'sys.argv = %r\\nrunpy.run_path(%r, run_name=\"__main__\")\\n' % (ON, ON, a[i:], a[i]))\n"
+        "    os.execv(GERCEK, [GERCEK, *a[:i], '-c', kod])\n"
+        "os.execv(GERCEK, [GERCEK, *a])\n", encoding="utf-8")
+    (d / "python3").chmod(0o755)
+    ortam["PATH"] = f"{d}:{ortam['PATH']}"
+
+
+#: Saldırganın seçtiği dizin adları (yeniden inceleme Y2, `esitle_sonda.log` vaka A/B/C).
+_Y2_ADLARI = {"duz": "saldirgan", "motor_api": "x · motor API y", "yeni_satir": "x → EŞİT\n  y · ALTER ROLE z"}
+
+
+@pytest.mark.parametrize("hal", sorted(_Y2_ADLARI))
+def test_F4_ESITLE_kaniti_SALDIRGAN_ADLI_realpath_hukmunu_MUAF_SAYMAZ_OLCULEMEDI(tmp_path, hal):
+    """TSK-262 düzeltme turu 2 (yeniden inceleme Y2): `--openrouter --esitle`, global hermes `.env` AYRI. Kanıt ölçümünde, global
+    `.env` okunurken (`_dizin_ac`ın realpath katmanında) `~/.hermes` saldırganın ADINI seçtiği bir dizine bağa çevrilir → kopya
+    satırı `OKUNAMADI (ZİNCİR: … realpath … (<saldırgan yolu>))`. ESKİ: kanıtın izin listesi beyanlı kanalları ALT DİZGEYLE muaf
+    tutuyordu (`*" · motor API "*`) → (motor_api) ad bu metni taşıyınca satır muaf, (yeni_satir) yeni satır hükmü ikiye bölüp iki
+    parçayı da muaf yapıyordu — "kopyaları EŞİT", YANLIŞ BAŞARI. YENİ: muafiyet YALNIZ tablonun api/sql satırlarından `_kanal_satiri`
+    ile kurulan TAM satıra (tek kaynak — `_envanter_esitlik` aynı fonksiyonla basar) ve yol kaçışlı → üç adda da ÖLÇÜLEMEDİ, çıkış 2.
+    (duz) kontrol vakası. Kanca yalnız global `.env` YENİDEN YAZILDIKTAN sonra (kanıtta) ateşlenir."""
+    kok, ortam = _sahte_ortam(tmp_path)
+    glob = _global_ayir(kok)
+    isaret = tmp_path / "kanca_atesledi"
+    kosul = f"{BAYAT_OR!r} not in open({str(glob)!r}, encoding='utf-8').read()"
+    _yardimci_on_kodu(tmp_path, ortam, _realpath_kancasi(glob.parent, _Y2_ADLARI[hal], isaret, kosul))
+    r = _kos_sure(ortam, "--openrouter", "--esitle")
+    _iddia(isaret.exists(), f"realpath kancası ATEŞLENMEDİ — çivi kör (pozitif kontrol)\n{_ozet(r)}")
+    _iddia(r is not None and "/home/ubuntu/.hermes/.env [OPENROUTER_API_KEY] → OKUNAMADI (ZİNCİR: " in r.stdout
+           and "realpath beklenen yoldan ayrışıyor" in r.stdout, f"kanıt satırı yok\n{_ozet(r)}")
+    _iddia(r.returncode == 2 and "ÖLÇÜLEMEDİ" in r.stderr and "kopyaları EŞİT" not in r.stdout,
+           f"saldırgan adlı hüküm MUAF sayıldı (yanlış başarı)\n{_ozet(r)}")
+    _iddia("\n  y · ALTER ROLE z" not in r.stdout, "yeni satır hükmü İKİYE BÖLDÜ")
     _sizinti_yok(r)
 
 

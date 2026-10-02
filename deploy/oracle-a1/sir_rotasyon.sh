@@ -1106,7 +1106,11 @@ def _dizin_ac(kok: str, dizin: str, izinli: frozenset[int], olculur: bool) -> tu
                 return None, f"RED: {yol}: {neden}"
         beklenen = os.path.join(os.path.realpath(ust), *parcalar)
         if os.path.realpath(dizin) != beklenen:
-            return None, f"RED: {dizin}: realpath beklenen yoldan ayrışıyor ({os.path.realpath(dizin)})"
+            # Yol `repr` ile (TSK-262 düzeltme turu 2, yeniden inceleme Y2a): çözülen yol bir BAĞIN hedefidir ve ADINI dizin sahibi
+            # seçer — ham basıldığında yeni satır hükmü iki satıra böler (satır tabanlı denetimler — `esitle` kanıtı — bölünmüş
+            # parçaları ayrı okur), ESC dizileri root operatörün terminalini boyar. `repr` tek satır + denetim karakterleri kaçışlı;
+            # yol iletide KALIR (bağın nereye gittiği adli izdir — operatör `stat` ile aynı yere bakar). Çivi: v613 B4 · F4.
+            return None, f"RED: {dizin}: realpath beklenen yoldan ayrışıyor ({os.path.realpath(dizin)!r})"
         acik, fd = fd, -1
         return acik, None
     finally:
@@ -1818,7 +1822,8 @@ def main(argv: list[str]) -> None:
         # BASILAN AD — BİÇİMDEN BAĞIMSIZ KURAL (TSK-262 düzeltme turu 1, inceleme I1): tırnak takibi yalnız satır TAM `AD="` ile
         # başlıyorsa çalışır; `export AD="…` · `AD = "…` · baştaki boşluk · ters bölü devamı · tırnaksız çok satırda base64 devam
         # satırı (`QWER0123==`) yine `^AD=` desenine düşüyor ve "ad" diye basılıyordu (sondası `n1_sonda.log`). Bir ad YALNIZ
-        #   (a) sözleşmeye uyan bir atama olarak İKİ dosyada da var ve değeri farklıysa, ya da
+        #   (a) sözleşmeye uyan bir atama olarak İKİ dosyada da AYNI SAYIDA var ve değeri farklıysa (çokluk şartı: düzeltme
+        #       turu 2, yeniden inceleme Y1 — aşağıdaki `basilan` şerhi), ya da
         #   (b) aracın ARANAN ADLARINDA (`--basilir` ← kabuk `_aranan_adlar`) ya da SIR-ADI SONEKLERİNDEN biriyle bitiyorsa
         #       (`--sonek` ← kabuk `_SIR_ADI_SONEKLERI`; anlam `_sir_adi_mi`ninki: son-ek eşleşmesi — v613 D7 ayrışma çivisi)
         # basılır. Gerekçe: rotasyonda değişen bir PEM parçası yalnız BİR tarafta bulunur ve base64'te `=` yalnız dolguda geçtiği için
@@ -1845,7 +1850,13 @@ def main(argv: list[str]) -> None:
             # Yasa 4 — sessiz değil: UTF-8 dışı bayt ya da bozuk JSON ADIYLA çıkıştır; çağıran "ÖLÇÜLEMEDİ" der.
             sys.exit(f"alan farkı ÖLÇÜLEMEDİ ({type(hata).__name__}) — değer basılmadı")
         fark = sorted(ad for ad in set(a) | set(b) if ad not in haric and a.get(ad) != b.get(ad))
-        basilan = [ad for ad in fark if (ad in a and ad in b) or ad in basilir or ad.endswith(sonekler)]
+        # Kural (a) EŞİT ÇOKLUĞA bağlıdır (düzeltme turu 2, yeniden inceleme Y1): aynı PEM son satırı yedekte bir, güncelde iki kez
+        # geçince (anahtar ikinci bir değişkene kopyalandı / bir kopya silindi) parça iki tarafta da "var" ve değer LİSTESİ farklı
+        # görünüyordu → AD diye basılıyordu. Eşit çoklukta base64 parçasının değerleri (yalnız dolgu `=`/`==`, satır uzunluğuyla
+        # belirli) iki tarafta AYNIDIR — farklı görünemez. BEDEL: gerçek bir adın ÇİFT SATIR'a dönüşmesi (ya da tekleşmesi) adla değil
+        # SAYIYLA söylenir (ön-denetim ve envanter ÇİFT SATIR'ı zaten ADIYLA raporlar — v613 D9).
+        basilan = [ad for ad in fark if (ad in a and ad in b and len(a[ad]) == len(b[ad])) or ad in basilir
+                   or ad.endswith(sonekler)]
         adsiz = (sum(((a_adsiz - b_adsiz) + (b_adsiz - a_adsiz)).values())
                  + sum(len(a.get(ad, [])) + len(b.get(ad, [])) for ad in fark if ad not in basilan))
         parca = [" ".join(basilan)] if basilan else []
@@ -4598,14 +4609,38 @@ vault_cp_rotasyon() {
 # =================================================================================================
 # ENVANTER — DEĞER BASMADAN VARLIK + EŞİTLİK
 # =================================================================================================
+#: BEYANLI KANAL SATIRI — `_kanal_satiri <tur> <sır> <yol>`: `api` (motor API) ve `sql` (ALTER ROLE) kopyaları dosyadan
+#: OKUNAMAZ; envanter onları bu TAM satırla beyan eder. TEK KAYNAK (TSK-262 düzeltme turu 2, yeniden inceleme Y2b):
+#: `_envanter_esitlik` satırı BUNUNLA basar, `esitle` kanıtı muafiyeti YALNIZ tablonun api/sql satırlarından BUNUNLA kurulan
+#: tam satırla tanır — alt dizge ile değil (saldırganın seçtiği bir yol metni ` · motor API ` taşıyınca okunamayan bir kopya
+#: satırı muaf sayılıyordu). Başka tür → 1 (çağıran yalnız api/sql için çağırır).
+_kanal_satiri() {
+  case "$1" in
+    api) printf '  %s · motor API %s → OKUNAMADI (yazma kanalı; motor içinden ölçülür)\n' "$2" "$3" ;;
+    sql) printf '  %s · ALTER ROLE %s → OKUNAMADI (SQL kanalı; kanıt psql ile ölçülür)\n' "$2" "$3" ;;
+    *) return 1 ;;
+  esac
+}
+
+#: `_beyanli_kanal_satirlari <alt>` — bu alt komutun tablodaki api/sql satırlarının BEKLENEN envanter satırları (`_kanal_satiri`
+#: ile, tablodan). Okuyan: `esitle` kanıtının tam satır muafiyeti.
+_beyanli_kanal_satirlari() {
+  local _a _sr _t _y _r
+  while read -r _a _sr _t _y _r; do
+    [ "$_a" = "$1" ] || continue
+    case "$_t" in
+      api|sql) _kanal_satiri "$_t" "$_sr" "$_y" ;;
+    esac
+  done < <(_kopyalar)
+}
+
 _envanter_esitlik() {
   local sadece="${1:-}" _alt sir tur yol alan _m _s onek
   local birinci_tur birinci_yol birinci_alan birinci_onek onceki_sir="" sonuc etiket
   while read -r _alt sir tur yol alan _m _s onek; do
     [ -z "$sadece" ] || [ "$_alt" = "$sadece" ] || continue
     case "$tur" in
-      api) echo "  $sir · motor API $yol → OKUNAMADI (yazma kanalı; motor içinden ölçülür)"; continue ;;
-      sql) echo "  $sir · ALTER ROLE $yol → OKUNAMADI (SQL kanalı; kanıt psql ile ölçülür)"; continue ;;
+      api|sql) _kanal_satiri "$tur" "$sir" "$yol"; continue ;;
     esac
     # `${alan:+…}` ALAN YOKLUĞUNU görmez: tabloda yokluk boş dizge değil `-` ile yazılır, yani
     # `dosya`/`url` satırları operatöre `[-]` diye basılıyordu (inceleme B5). Yokluğun işareti
@@ -4851,12 +4886,18 @@ esitle() {
   # "EŞİT" sayılıyor ve araç YANLIŞ BAŞARI beyan ediyordu (çıkış 0). Şimdi referans satırı `VAR`, öteki her kopya satırı `EŞİT`
   # olmalıdır; değilse ÖLÇÜLEMEDİ (çıkış 2 — aracın ölçülemedi sınıfı). Beyanlı kanallar (`motor API` · `ALTER ROLE`) eşitlemenin
   # kapsamı DIŞIDIR ve `_envanter_esitlik` onları "OKUNAMADI (… kanalı …)" diye BEYANLA basar — sayılmaz. Çivi: v613 F3.
-  local _s olcemeyen=0
+  # MUAFİYET TAM SATIRDIR (düzeltme turu 2, yeniden inceleme Y2b): eskiden ` · motor API ` / ` · ALTER ROLE ` satırın HERHANGİ
+  # bir yerinde aranıyordu; okunamayan bir kopyanın hükmüne giren saldırgan yol metni (ZİNCİR realpath iletisi) bu dizgeyi taşıyınca
+  # satır muaf, kanıt "EŞİT" oluyordu (v613 F4). Beklenen beyanlı satırlar TABLODAN (`_kopyalar` — bu alt komutun api/sql satırları)
+  # ve envanterin KENDİ biçimleyicisiyle (`_kanal_satiri`) kurulur; satır ancak BİREBİR eşitse muaftır (`grep -xF`).
+  local _s olcemeyen=0 kanallar
+  kanallar="$(_beyanli_kanal_satirlari "$alt")"
   while IFS= read -r _s; do
     case "$_s" in
-      ""|*" · motor API "*|*" · ALTER ROLE "*|*" → VAR (referans kopya)"|*" → EŞİT") ;;
-      *) olcemeyen=$((olcemeyen+1)) ;;
+      ""|*" → VAR (referans kopya)"|*" → EŞİT") continue ;;
     esac
+    if [ -n "$kanallar" ] && printf '%s\n' "$kanallar" | grep -qxF -- "$_s"; then continue; fi
+    olcemeyen=$((olcemeyen+1))
   done <<< "$rapor"
   [ "$olcemeyen" = 0 ] || olcum_yok "eşitleme sonrası $olcemeyen satır EŞİT DEĞİL ve AYRI da değil (yukarıda — okunamadı / yok /
      referans okunamadı): kopyalar EŞİT DENEMEZ — yeniden ölç: sudo $0 --envanter; yedek: $YEDEK"
@@ -5172,7 +5213,8 @@ geri_al() {
 #: BÜTÜN DOSYA NOTU — `_butun_dosya_notu <alt> <yol> <yedek dizini>` → tek satır (ya da tek değerli türde hiçbir şey). Çok
 #: anahtarlı kopya (`env` · `api`) BÜTÜN döner: yedekten sonra değişmiş BAŞKA alanlar söylenir — alt komutun kendi
 #: alanları (tablodaki `env` alanları · `api` satırının sır kimliği = depo anahtarı) hariç. Değer basılmaz (`alan-farki`); ad YALNIZ
-#: iki tarafta da varsa ya da aranan ad / sır-adı sonekiyse basılır, öteki farklar SAYIYLA (TSK-262 düzeltme turu 1, inceleme I1).
+#: iki tarafta da AYNI SAYIDA varsa ya da aranan ad / sır-adı sonekiyse basılır, öteki farklar SAYIYLA (TSK-262 düzeltme turları
+#: 1–2, inceleme I1 · Y1).
 #: `dosya`/`url` kopyası tek değerdir ("başka alan" yok). Kıyas ölçülemezse bunu ADIYLA söyler — uyarı susmaz.
 _butun_dosya_notu() {
   local alt="$1" yol="$2" dizin="$3" _alt sir tur y d _alan _m _s _o ilk="" haric="" hal
