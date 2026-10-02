@@ -18,11 +18,29 @@
 # BU DOSYA DEPODA VERSİYONLANIR (bu turdan önce YALNIZ A1'in /etc/systemd/system'inde yaşıyordu —
 # yani hiçbir gözden geçirmeye, hiçbir teste ve hiçbir yeniden kuruluma dahil değildi; taze bir
 # cutover panoyu bu korumasız açardı).
+#
+# 2026-10-02 TSK-265 DİLİM 1 — ROOT'TAN ÇIKTI ("ROOT YÜRÜTÜR, UBUNTU YAZAR" sınıfı):
+#   Bu birimde `User=` YOKTU, yani ROOT koşuyordu ve ExecStart'ı ubuntu'nun yazabildiği
+#   /opt/meridian ağacındaydı (dosyalar ubuntu:ubuntu 755 — Rol-1 A1 ölçümü 03:0xZ). Kum
+#   havuzundaki ele geçirilmiş bir ubuntu birimi (beşi `ReadWritePaths=/opt/meridian` taşır)
+#   tick_watchdog.sh'yi değiştirse, bir sonraki timer tetiğinde ROOT kod yürürdü. Root'un TEK
+#   gerekçesi `systemctl restart meridian.service` idi; o yetki artık DAR bir polkit kuralında
+#   (deploy/oracle-a1/52-meridian-tick-watchdog.rules: manage-units · ubuntu · meridian.service ·
+#   fiil restart). Rol-1 kararı R1: betik root sahipli bir kopyaya TAŞINMADI — root kod kalırdı.
+#   SONUÇ: ExecStart aynı yolda, ama artık ubuntu → ubuntu (yükseltme yok). Betik diske YAZMAZ
+#   (journal'a konuşur) → `ReadWritePaths` BİLEREK YOK; ubuntu sahipli 0600 durum dosyasını
+#   okumak için yetenek de gerekmez → faz-2 drop-in'i boş `CapabilityBoundingSet=` taşır.
+#   KURULUM SIRASI: bu dosya ve 52 kuralı AYNI site.yml koşumunda iner (A0 rolü: birimler →
+#   dropinler → polkit). Kural yokken tetik düşerse restart reddedilir ve betik "RESTART
+#   BAŞARISIZ" satırıyla sıfırdan farklı çıkar — birim `failed` görünür, sessiz başarı yok.
+#   ÇİVİ: tests/test_root_yurutur_ubuntu_yazar_v614.py (sınıf tarayıcısı + bu örnek).
 [Unit]
 Description=Meridian tick-progress bekçisi (scheduler_status.updated 45 dk bayatsa restart + journal kaydı)
 
 [Service]
 Type=oneshot
+User=ubuntu
+Group=ubuntu
 # EŞİĞİ GEÇİCİ OLARAK DEĞİŞTİRMEK GEREKİRSE: `systemctl edit meridian-tick-watchdog.service` ile
 # drop-in'e `Environment=MERIDIAN_TICK_BAYAT_S=...` eklenir. Betik böyle bir sapmayı HER KOŞUDA
 # journal'a BEYAN eder — sessiz gevşetme bu turda kapatılan kusurdur.

@@ -437,8 +437,9 @@ def test_A2c_f9_canli_yollari_MUTLAK():
     assert not goreli, f"`f9_ciftleri` canlı yolu mutlak değil: {goreli}"
 
 
-#: `f9_ciftleri`nin DONMUŞ SÖZLEŞMESİ — 54 (repo yolu, canlı yol) çifti (39 ölçüldü
-#: 2026-09-08; +8 TSK-064 Faz-2 Vault, 2026-09-14; +7 TSK-020 UYGULA-9 Faz A telemetri, 2026-09-28).
+#: `f9_ciftleri`nin DONMUŞ SÖZLEŞMESİ — 56 (repo yolu, canlı yol) çifti (39 ölçüldü
+#: 2026-09-08; +8 TSK-064 Faz-2 Vault, 2026-09-14; +7 TSK-020 UYGULA-9 Faz A telemetri, 2026-09-28;
+#: +2 TSK-265 dilim 1 polkit 51/52, 2026-10-02).
 #: Gerekçe A1c ile aynı sınıf (tek-kaynak yasası, CLAUDE.md §4: kopya kaçınılmazsa türetme +
 #: ayrışma çivisi): kıyasın öteki ucu dagit.sh'ın `F9_LISTE` dizgesiydi, silindi. ÖLÇÜLDÜ
 #: (inceleme bulgusu B2, 2026-09-08): `deploy/apisix/apisix-etcd.service` çifti listeden
@@ -449,6 +450,13 @@ def test_A2c_f9_canli_yollari_MUTLAK():
 F9_CIFTLERI_SOZLESMESI = (
     ('deploy/oracle-a1/meridian-sprint@.service', '/etc/systemd/system/meridian-sprint@.service'),
     ('deploy/oracle-a1/50-meridian-sprint.rules', '/etc/polkit-1/rules.d/50-meridian-sprint.rules'),
+    # TSK-265 dilim 1 (2026-10-02) — polkit kurallarının ikisi daha içerik aynasına girer: 51 (birim
+    # anahtarı; 2026-09-02'den beri A0 rolü kuruyordu ama ayna onu GÖRMÜYORDU) ve 52 (tick-watchdog'un
+    # restart yetkisi). Yetki veren bir dosyanın canlıda sessizce ayrışması raporlanmalı.
+    ('deploy/oracle-a1/51-meridian-birim-anahtari.rules',
+     '/etc/polkit-1/rules.d/51-meridian-birim-anahtari.rules'),
+    ('deploy/oracle-a1/52-meridian-tick-watchdog.rules',
+     '/etc/polkit-1/rules.d/52-meridian-tick-watchdog.rules'),
     ('deploy/hermes/SOUL.md', '/home/ubuntu/.hermes/SOUL.md'),
     ('deploy/hermes/config.yaml', '/home/ubuntu/.hermes/config.yaml'),
     ('deploy/oracle-a1/meridian-tick-watchdog.service', '/etc/systemd/system/meridian-tick-watchdog.service'),

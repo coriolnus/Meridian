@@ -1,0 +1,39 @@
+// Asılı-tick bekçisi (meridian-tick-watchdog.service, User=ubuntu) meridian.service'i YALNIZ
+// yeniden başlatabilsin — TSK-265 dilim 1, 2026-10-02.
+//
+// NEDEN ("ROOT YÜRÜTÜR, UBUNTU YAZAR", Rol-1 A1 ölçümü 2026-10-02): bekçi biriminde `User=` yoktu,
+// yani ROOT koşuyordu ve ubuntu'nun yazabildiği /opt/meridian ağacından yükleniyordu. Kum
+// havuzundaki (NoNewPrivileges) ele geçirilmiş bir ubuntu birimi betiği değiştirse, bir sonraki
+// timer tetiğinde ROOT kod yürürdü — operatör adımı gerekmeden. Root'un TEK gerekçesi
+// `systemctl restart meridian.service` idi. Rol-1 kararı R1: bekçi ubuntu koşar, o tek yetki bu
+// kuralla DBus'ta verilir; root kodu tamamen kalkar (root, ubuntu yazımı JSON'u hiç ayrıştırmaz).
+// Kopya-yol seçeneği (betiği root sahipli bir dizine kurmak) BİLEREK seçilmedi: root kod kalırdı.
+//
+// KAPSAM DAR — DÖRT ŞART BİRDEN: eylem manage-units · özne ubuntu · birim TAM AD
+// `meridian.service` · fiil TAM `restart`. `start` VERİLMEDİ: betik yalnız `systemctl restart`
+// çağırır ve systemd duran birimde de restart'ı başlatma olarak yürütür (fiil yine `restart`).
+// stop / try-restart / kill / set-property / clean / freeze ve öteki birimler DIŞARIDA.
+// AYRI DOSYA, 51'E EK DEĞİL: 51'in birim kümesi API beyaz listesiyle BİREBİR çivili
+// (tests/test_birim_anahtari_v368.py) ve o kural fiil süzmez; bekçinin yetkisi farklı bir özne
+// (zamanlayıcı) ve farklı bir darlık (fiil) taşır — iki gerekçe bir dosyada ayrışırdı.
+//
+// AYRINTI BEKLENTİSİ (beyan — canlı ölçümü tetik-testindedir): systemd manage-units denetiminde
+// polkit'e `unit` ve `verb` ayrıntılarını geçirir; `unit`ın geldiği 51'in manage-units dalında
+// canlıda ölçüldü (2026-09-02), `verb` aynı ayrıntı kümesindendir. `verb` gelmezse kural EŞLEŞMEZ
+// → ret → bekçi "RESTART BAŞARISIZ" adlı satırla ve sıfırdan farklı çıkışla düşer (sessiz başarı
+// yok, tick_watchdog.sh). Doğrulama: `h3_tur2_sertlestir.sh --tetik-testi meridian-tick-watchdog`
+// → journal'da "yeniden başlatıldı" + meridian'ın yeni ActiveEnterTimestamp'ı.
+// manage-unit-files'ta ayrıntı GELMEZ (51'in şerhi) — bu kural o eyleme dokunmaz.
+//
+// BEDEL (R1 ledger): ele geçirilmiş herhangi bir ubuntu süreci worker'ı yeniden başlatabilir; aynı
+// uid'nin worker sürecine zaten erişimi olduğundan sınıf erişilebilirliktir, yükseltme değildir.
+// ÇİVİ: tests/test_root_yurutur_ubuntu_yazar_v614.py (statik dört-şart + node ile davranış matrisi
+// + depo geneli "birim süzgeçsiz YES yok" tarayıcısı).
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.systemd1.manage-units" &&
+        subject.user == "ubuntu" &&
+        action.lookup("unit") == "meridian.service" &&
+        action.lookup("verb") == "restart") {
+        return polkit.Result.YES;
+    }
+});

@@ -427,10 +427,13 @@ def test_dropin_FAZ2_seccomp_ve_yetenek_sifirlama():
             f"{p.name} ({birim}): seccomp satırı kayıp"
         # 2026-08-23 CANLI ÖLÇÜMLE DÜZELTİLDİ (tetik-testi bulgusu): "boş küme" beklentisi
         # root-koşan tick-watchdog'da OKUMAYI kırdı (ubuntu-0600 state dosyasına EACCES) —
-        # çivi artık birime göre: root birimi YALNIZ salt-okuma DAC yeteneği taşır (yazma
-        # yetenekleri geri gelirse kırmızı), User=ubuntu birimi boş küme taşır.
-        beklenen = (r"^CapabilityBoundingSet=CAP_DAC_READ_SEARCH$"
-                    if birim == "meridian-tick-watchdog" else r"^CapabilityBoundingSet=$")
+        # çivi birime göre ayrılmıştı: root birimi YALNIZ salt-okuma DAC yeteneği, User=ubuntu
+        # birimi boş küme.
+        # 2026-10-02 TSK-265 DİLİM 1 — BİLİNÇLİ GÜNCELLEME (sıkılaştırma, gevşetme DEĞİL):
+        # tick-watchdog artık `User=ubuntu` koşar (v614); ubuntu'ya ait dosyayı sahibi okur, DAC
+        # yeteneği gerekmez. İki birim de boş küme taşır — CAP_DAC_READ_SEARCH'ün GERİ gelmesi
+        # artık kırmızıdır (root'a dönüşün ya da gereksiz yeteneğin işareti).
+        beklenen = r"^CapabilityBoundingSet=$"
         assert re.search(beklenen, m, re.M), \
             f"{p.name} ({birim}): CapabilityBoundingSet satırı beklenenden farklı ({beklenen})"
 

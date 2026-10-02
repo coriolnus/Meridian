@@ -7,6 +7,10 @@
 # tavizini VERMEDEN (H3 koruma kalemi yerinde kalır).
 # 51-meridian-birim-anahtari.rules: A1'de canlı (ölçüldü), deploy.sh onu HİÇ kurmuyordu —
 # taze kurulumda eksik kalırdı. Rol ikisini de tek kaynaktan kurar.
+# 52-meridian-tick-watchdog.rules (TSK-265 dilim 1, 2026-10-02): tick-watchdog root'tan çıktı
+# (`User=ubuntu`); tek root gerekçesi olan `systemctl restart meridian.service` bu dar kurala taşındı.
+# Birim dosyası (birimler.yml) ile kural AYNI koşumda iner; aradaki pencerede tetik düşerse bekçi
+# adlı satırla düşer, restart sessizce "başarılı" sayılmaz.
 #
 # DAVRANIŞ FARKI, BİLEREK (README'de de yazılı): deploy.sh polkit'i HER koşuda restart ediyordu;
 # burada restart yalnız kural dosyası GERÇEKTEN değiştiğinde (handler) olur. Her koşuda restart

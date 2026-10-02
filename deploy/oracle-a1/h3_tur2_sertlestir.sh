@@ -10,6 +10,8 @@
 # KAPSAM — filoda sertleştirmesiz kalan İKİ birim (ölçüm 2026-08-23: altı çekirdek birim kümeyi
 # birim dosyasının İÇİNDE taşıyor, bu ikisi taşımıyor):
 #   * meridian-tick-watchdog.service — `User=` yok → ROOT koşar; en yetkili, en az kısıtlı birim.
+#     (2026-10-02 TSK-265 dilim 1: artık `User=ubuntu`; restart yetkisi polkit
+#     52-meridian-tick-watchdog.rules'ta, faz-2 yetenek kümesi BOŞ. Adım 5 o kuralı da ölçer.)
 #   * meridian-fail-notify.service   — birim dosyasında "BİLİNÇLİ sertleştirilmedi" bloğu var;
 #     drop-in ancak oradaki ön-şart dolunca kurulur ve bu betik ön-şartı journal'dan ÖLÇER
 #     ("gonderim sonucu: True" satırı) — sözle geçilmez.
@@ -124,6 +126,10 @@ tetik_testi() {
   systemctl show meridian -p ActiveEnterTimestamp | sed 's/^/   /'
   echo ">> 'yeniden başlatılıyor' YOKSA seccomp/yetenek kümesi restart yolunu kırmış olabilir:"
   echo "   ./h3_tur2_sertlestir.sh --geri-al meridian-tick-watchdog  + gerekçe günlüğe."
+  # TSK-265 dilim 1 (2026-10-02): bekçi User=ubuntu koşar, restart yetkisi polkit'tedir. Başarının
+  # kanıtı artık İKİ satırdır: 'yeniden başlatılıyor' (karar) + 'yeniden başlatıldı' (systemctl 0).
+  echo ">> 'RESTART BAŞARISIZ' görünürse polkit kuralı inmemiştir (ya da 'verb' ayrıntısı gelmiyordur):"
+  echo "   ls -l /etc/polkit-1/rules.d/52-meridian-tick-watchdog.rules  → yoksa site.yml; varsa Rol-1'e (kural/ayrıntı ölçümü)."
 }
 
 geri_al() {

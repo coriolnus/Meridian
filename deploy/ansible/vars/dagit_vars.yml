@@ -88,6 +88,13 @@ f9_ciftleri:
     canli: "/etc/systemd/system/meridian-sprint@.service"
   - repo: "deploy/oracle-a1/50-meridian-sprint.rules"
     canli: "/etc/polkit-1/rules.d/50-meridian-sprint.rules"
+  # TSK-265 dilim 1 (2026-10-02): yetki veren iki polkit kuralı daha aynaya girer. 51'i A0 rolü
+  # 2026-09-02'den beri kuruyordu ama bu ayna onu görmüyordu; 52 tick-watchdog'un TEK restart
+  # yetkisidir (bekçi artık User=ubuntu). Kurulum A0 rolündedir (site.yml) — [F9] yalnız raporlar.
+  - repo: "deploy/oracle-a1/51-meridian-birim-anahtari.rules"
+    canli: "/etc/polkit-1/rules.d/51-meridian-birim-anahtari.rules"
+  - repo: "deploy/oracle-a1/52-meridian-tick-watchdog.rules"
+    canli: "/etc/polkit-1/rules.d/52-meridian-tick-watchdog.rules"
   - repo: "deploy/hermes/SOUL.md"
     canli: "/home/ubuntu/.hermes/SOUL.md"
   - repo: "deploy/hermes/config.yaml"

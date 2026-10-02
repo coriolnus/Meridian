@@ -25,6 +25,15 @@
 //     tanımlarını yeniden okut" (erişilebilirlik sınıfı) ve ubuntu manage-units'in sprint
 //     ailesini zaten taşıyor.
 //
+// TSK-265 R2 (2026-10-02) — DARALTMA ÖLÇÜLDÜ, BU KATMANDA YAPILAMAZ: Rol-1 "manage-unit-files'ı
+// adlı birimlere daralt" dedi. Yukarıdaki ölçüm (bu eylemde unit/verb ayrıntısı GELMEZ) birim adıyla
+// süzgeci imkânsız kılar — uydurma bir `unit ==` şartı hiç eşleşmez ve anahtarı kesin olarak kırar.
+// Tehdit (ölçülen kullanıcı: yalnız API birim anahtarı): ele geçirilmiş HERHANGİ bir ubuntu servisi
+// `systemctl link /opt/meridian/<kötü>.service` + `enable` yapabilir; `User=` yoksa birim sonraki
+// açılışta ROOT koşar. Bu YES depo geneli sınıf çivisinde BEYANLI istisnadır
+// (tests/test_root_yurutur_ubuntu_yazar_v614.py, POLKIT_BEYANI); kapanış yolu API tarafındadır
+// (anahtar enable/disable yerine yalnız birim süzgeçli manage-units kullanır) — Rol-1 kararı.
+//
 // DENETİM İZİ (YASA 6): her YES kararı polkit.log ile journal'a düşer (okuyucu: birim
 // anahtarı denemelerinin canlı doğrulaması — bu vaka journal'da ayrıntı yokluğundan
 // kör kalmıştı, iz o körlüğü kapatır).
