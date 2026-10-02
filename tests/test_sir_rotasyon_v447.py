@@ -3768,6 +3768,11 @@ def test_Q5_esitle_DEGER_ve_HASH_basmaz(tmp_path):
     # yedek dizininin adı deterministik damga taşır (`sir-yedek-<UTC>T..Z-<alt>`): küçük+büyük+rakam
     # üçlüsünü doğal olarak taşır ve sır değildir — biçimiyle soyulur, kalan her belirteç sınanır
     cikti = re.sub(r"sir-yedek-\d{8}T\d{6}Z-[a-z]+", "sir-yedek-<TS>", cikti)
+    # TSK-261'den beri geri alma reçetesi aracın KENDİ mutlak yolunu basar (`<betik> --geri-al <yedek>`) — sır değil,
+    # sahne; ana checkout yolu (`/Users/…/AI-Trading/deploy/oracle-a1/…`) büyük+küçük+rakam taşır ve süzgece takılır,
+    # worktree yolundaki `.claude` noktası belirteci böldüğü için orada GÖRÜNMEZDİ (suite 2026-10-02 00:12Z). Yalnız
+    # bu tam yol soyulur; kalan her belirteç sınanmaya devam eder.
+    cikti = cikti.replace(str(BETIK), "<BETIK>")
     for d in list(ESKI.values()) + [BAYAT_OR]:
         assert d not in cikti, "tohum değeri çıktıya düştü"
     # I2 ile AYNI entropi süzgeci

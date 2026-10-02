@@ -65,6 +65,9 @@ def _atlanan_sinif(rel: str) -> str | None:
 # BEYANLAR — çözülemeyen (harici) çapalar
 # =================================================================================================
 
+_HERMES_V019 = ("HARİCİ — hermes-agent v0.19.0 kaynağı (repo DIŞI; A1 ~/.hermes/hermes-agent ile sha-eşit yerel kopya). "
+                "Sembol 2026-10-02'de bu kopyada elle doğrulandı: ")
+
 #: (kaynak, çapa) → (sınıf, gerekçe, doğrulama yolu | None). Sınıflar v572'ninkiyle aynı (`harici` · `arsiv`).
 BEYANLI_COZULEMEYEN: dict[tuple[str, str], tuple[str, str, str | None]] = {
     ("ops/sef_brifingi.py", "agent/prompt_builder.py::build_context_files_prompt"):
@@ -73,6 +76,17 @@ BEYANLI_COZULEMEYEN: dict[tuple[str, str], tuple[str, str, str | None]] = {
     ("ops/sef_brifingi.py", "test_shell_hooks_consent.py::test_no_tty_no_flag_skips_registration"):
         ("harici", _HERMES_AGENT + "tests/agent/test_shell_hooks_consent.py içinde bir test sınıfının metodu (yol "
                                    "öneksiz; depoda aynı adlı dosya doğarsa hüküm değişir ve bu beyan öter)", None),
+    # G3d (2026-10-02): üretecin şerhi Hermes v0.19.0'ın MCP keşif yolunu ve kapsamlı sır okuyucusunu adıyla gösterir —
+    # yerel v0.18.2 ağacı değil, A1 ile sha-eşit v0.19.0 kopyası ölçüldü (kök neden günlük §39 G3d).
+    ("ops/sohbet_profili_uret.py", "gateway/run.py::start_gateway"):
+        ("harici", _HERMES_V019 + "gateway/run.py içinde async def start_gateway (MCP keşfini açılışta bir kez çağırır)",
+         None),
+    ("ops/sohbet_profili_uret.py", "tools/mcp_tool.py::discover_mcp_tools"):
+        ("harici", _HERMES_V019 + "tools/mcp_tool.py içinde def discover_mcp_tools (yalnız kök HERMES_HOME config'i)",
+         None),
+    ("ops/sohbet_profili_uret.py", "agent/secret_scope.py::get_secret"):
+        ("harici", _HERMES_V019 + "agent/secret_scope.py içinde def get_secret (kapsamsız ${…} → UnscopedSecretError)",
+         None),
 }
 
 #: Modül biçimli, SEMBOL OLMAYAN eşleşmeler (v572 `MODUL_BICIMI_ALAN_ADI` biçimi). Bugün BOŞ.
