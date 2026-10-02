@@ -17,13 +17,22 @@
 // (tests/test_birim_anahtari_v368.py) ve o kural fiil süzmez; bekçinin yetkisi farklı bir özne
 // (zamanlayıcı) ve farklı bir darlık (fiil) taşır — iki gerekçe bir dosyada ayrışırdı.
 //
-// AYRINTI BEKLENTİSİ (beyan — canlı ölçümü tetik-testindedir): systemd manage-units denetiminde
-// polkit'e `unit` ve `verb` ayrıntılarını geçirir; `unit`ın geldiği 51'in manage-units dalında
-// canlıda ölçüldü (2026-09-02), `verb` aynı ayrıntı kümesindendir. `verb` gelmezse kural EŞLEŞMEZ
-// → ret → bekçi "RESTART BAŞARISIZ" adlı satırla ve sıfırdan farklı çıkışla düşer (sessiz başarı
-// yok, tick_watchdog.sh). Doğrulama: `h3_tur2_sertlestir.sh --tetik-testi meridian-tick-watchdog`
-// → journal'da "yeniden başlatıldı" + meridian'ın yeni ActiveEnterTimestamp'ı.
-// manage-unit-files'ta ayrıntı GELMEZ (51'in şerhi) — bu kural o eyleme dokunmaz.
+// AYRINTILARIN KAYNAĞI (systemd v255, TSK-265 güvenlik incelemesi 2026-10-02 — kaynak okuması):
+// manage-units denetimini yapan `bus_verify_manage_units_async_full` işlevi polkit'e `unit` (birimin
+// kimliği) ve `verb` ayrıntılarını geçirir; `verb`, işin türünden (`job_type_to_string`) türer.
+// `systemctl restart` D-Bus'ta `method_restart_unit` olarak gelir ve işi JOB_RESTART ile kurar →
+// verb `restart` — birim dururken de (restart duran birimi başlatır, fiil değişmez). `unit`ın
+// geldiği 51'in manage-units dalında canlıda da ölçüldü (2026-09-02). Ayrıntı gelmezse kural
+// EŞLEŞMEZ → ret → bekçi "RESTART BAŞARISIZ (YETKİ)" ile 4 döner (sessiz başarı yok). Canlı
+// doğrulama: A0 saglik.yml pkcheck kapısı + `h3_tur2_sertlestir.sh --tetik-testi meridian-tick-watchdog`.
+// manage-unit-files ve reload-daemon denetimleri AYRINTISIZDIR (51'in şerhi) — bu kural onlara dokunmaz.
+//
+// ÖZNEYİ DARALTMAK BU MAKİNEDE MÜMKÜN DEĞİL (ölçüldü): polkit 124 `subject.system_unit` ve
+// `subject.no_new_privileges` alanlarını yalnız D-Bus pidfd'yi güvenli verirse (ProcessFD) doldurur;
+// A1'de dbus-daemon 1.14.10 (Rol-1 ölçümü 2026-10-02 04:3xZ) bunu vermez → alan boş gelir ve
+// `subject.system_unit == "meridian-tick-watchdog.service"` şartı hiç eşleşmezdi (bekçi dişsiz kalırdı).
+// Bu yüzden özne `subject.user == "ubuntu"`dur; dbus-broker ya da dbus-daemon ≥1.15.8'e geçilirse
+// daraltma yeniden değerlendirilir.
 //
 // BEDEL (R1 ledger): ele geçirilmiş herhangi bir ubuntu süreci worker'ı yeniden başlatabilir; aynı
 // uid'nin worker sürecine zaten erişimi olduğundan sınıf erişilebilirliktir, yükseltme değildir.

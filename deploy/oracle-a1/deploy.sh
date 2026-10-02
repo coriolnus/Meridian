@@ -704,10 +704,13 @@ if [ "$TICK_TIMER" != "active" ]; then
   echo "!! meridian-tick-watchdog.timer AKTİF DEĞİL — asılı-tick koruması yok"; exit 1
 fi
 case "$TICK_CIKTI" in
-  # TSK-265 dilim 1: bekçi User=ubuntu koşar; restart reddi SON satırı "RESTART BAŞARISIZ" yapar ve
-  # bu bir hüküm değil YETKİ arızasıdır — genel "beklenen satır yok" iletisine düşmeden adıyla durur.
+  # TSK-265 dilim 1: bekçi User=ubuntu koşar; restart'ın kendisi düşerse SON satır "RESTART BAŞARISIZ"
+  # olur ve bu bir hüküm değil ARIZADIR — genel "beklenen satır yok" iletisine düşmeden adıyla durur.
+  # İKİ AD (düzeltme turu 1, M1): YETKİ (polkit reddi → 52 kuralı) ile İŞ (birim başlatılamadı →
+  # meridian'ın kendi journal'ı) ayrı onarım yeridir; ikisini aynı iletiye bağlamak yanlış teşhistir.
   # Başarılı restart'ın son satırı artık "yeniden başlatıldı"dır ("bayat" satırından SONRA basılır).
-  *"RESTART BAŞARISIZ"*) echo "!! tick-watchdog restart yetkisi yok — /etc/polkit-1/rules.d/52-meridian-tick-watchdog.rules kurulu mu? çıktı: $TICK_CIKTI"; exit 1 ;;
+  *"RESTART BAŞARISIZ (YETKİ)"*) echo "!! tick-watchdog restart YETKİSİ yok — /etc/polkit-1/rules.d/52-meridian-tick-watchdog.rules kurulu mu? çıktı: $TICK_CIKTI"; exit 1 ;;
+  *"RESTART BAŞARISIZ (İŞ)"*) echo "!! tick-watchdog meridian.service'i yeniden başlatamadı (İŞ arızası, yetki değil) — journalctl -u meridian -n 100. çıktı: $TICK_CIKTI"; exit 1 ;;
   *"ilerleme var ("[0-9]*|*"bayat"*|*"yeniden başlatıldı"*|*"ÖLÇÜLEMEDİ"*|*"YAS lütfu"*) : ;;
   *) echo "!! tick-watchdog beklenen hüküm satırını basmadı (systemd \$ ikamesi sınıfı?) — çıktı: ${TICK_CIKTI:-(YOK)}"; exit 1 ;;
 esac

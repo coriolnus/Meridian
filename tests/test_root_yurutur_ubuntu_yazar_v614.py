@@ -31,9 +31,22 @@ BÖLÜMLER
   E. Örnek: bekçi birimi ubuntu koşar ve yazım izni taşımaz; 52 kuralı statik olarak dar; `node`
      varsa polkit kurallarının TAMAMI (A0 `polkit_kaynaklari` sırasıyla) bir davranış matrisinden geçer.
   F. Pozitif kontrol: sentetik birim/kural/betikle her denetçinin hem öttüğü hem ötmediği hâller.
+  G. (düzeltme turu 1, güvenlik incelemesi C1/I1) ubuntu birimleri: docker grubundan yetki alan her
+     birim docker soketini birim DOSYASINDA erişilemez kılar (G1); parolasız sudo taşıyan kullanıcıyla
+     koşup yazılabilir ağaçtan yürüten birim NNP'siz olamaz ve NNP'si drop-in'e bırakılamaz (G2/G3);
+     h3 `--geri-al` NNP kaybolursa yüksek sesle düşer (G6/G7).
+  I2. (düzeltme turu 1) A0: polkit kuralı birimlerden ÖNCE kopyalanır ve polkit birimlerin
+     daemon-reload'undan ÖNCE yeniden başlar; saglik.yml 52'yi pkcheck ile müdahalesiz ölçer.
   H. Beyan hijyeni: beyanlar çürümez, gerekçe ≥20 karakter, kalem kimliği taşır, "kurulmuyor"
      iddiası A0 rolünün kurulum kümesine karşı ÖLÇÜLÜR.
   K. Körlük alarmı: taranan birim/kural/çağrı sayıları ölçülen tabanın ALTINA düşerse kırmızı.
+
+DÜZELTME TURU 1 (2026-10-02) KÖR NOKTA KAPANIŞLARI (inceleme M3): A'ya `BindPaths`/`BindReadOnlyPaths`,
+std akış dosyaları (`file:`/`append:`/`truncate:` — servis yöneticisi bunları `User=`'dan ÖNCE root olarak
+açar, kural her birime uygulanır) ve dünya-yazılabilir kökler (`/tmp`, `/var/tmp`, `/dev/shm`) girdi;
+B bir İZİN LİSTESİNE döndü (yalnız manage-units + pozitif birim süzgeci kendiliğinden kabul; set-environment,
+policykit.exec, reload-daemon, önekli ya da kısıtsız YES ihlaldir). `LoadCredential` (veri bütünlüğü,
+yürütme değil) bilerek dışarıda.
 
 TEK KAYNAK: systemd sözdizimi + drop-in birleştirmesi v553'ten İTHAL edilir (kopya değil). Ubuntu
 ağacının türetilen bacağı A0 rolündendir (`repo_kok`, `meridian_kullanici`, `dizinler.yml` sahipleri);
@@ -105,7 +118,7 @@ SINIF_BEYANI: dict[str, dict] = {
     "deploy/hindsight/hindsight-cp.service": {
         "alanlar": ("EnvironmentFile",),
         "kurulu": True,
-        "kalem": "TSK-265",
+        "kalem": "TSK-267",
         "gerekce": (
             "YENİ BULGU (v614 taraması, 2026-10-02): birim root koşar (docker CLI) ve etkin "
             "EnvironmentFile'ı /opt/hindsight/.env-cp.vault — dizin ubuntu sahipli olduğundan dosya "
@@ -124,16 +137,29 @@ SINIF_BEYANI: dict[str, dict] = {
     },
 }
 
-#: B bölümünün bilinen ihlalleri: (depo-göreli kural yolu, eylem kimliği).
+#: B bölümünün bilinen ihlalleri: (depo-göreli kural yolu, eylem kimliği). B bir İZİN LİSTESİDİR
+#: (düzeltme turu 1, inceleme M3): YES yalnız "manage-units + pozitif birim süzgeci" için kendiliğinden
+#: kabul edilir; başka HER eylemin YES'i burada gerekçe + kalemle durmak zorundadır.
 POLKIT_BEYANI: dict[tuple[str, str], dict] = {
     ("deploy/oracle-a1/51-meridian-birim-anahtari.rules", MUF): {
-        "kalem": "TSK-265",
+        "kalem": "TSK-266",
         "gerekce": (
             "R2 ölçümü (2026-10-02): systemd manage-unit-files denetiminde polkit'e unit/verb ayrıntısı "
-            "GEÇİRMEZ (canlı ölçüm 2026-09-02, kuralın şerhi) — birim adıyla daraltma polkit katmanında "
-            "imkânsız, uydurma süzgeç hiç eşleşmez. Tek kullanıcı API birim anahtarı "
-            "(`systemctl enable|disable --now`, learn/barsarchive). Kapanış: anahtar enable/disable'dan "
-            "vazgeçip yalnız manage-units (birim süzgeçli) kullanır — raporun önerisi, Rol-1 kararı."),
+            "GEÇİRMEZ (canlı ölçüm 2026-09-02 + systemd v255 kaynağı) — birim adıyla daraltma polkit "
+            "katmanında imkânsız. ŞİDDET (güvenlik incelemesi C2): ANINDA root — ubuntu ağacına yazılan "
+            "`User=`'sız bir birim link+enable edilir (`WantedBy=meridian-learn.service`), reload-daemon "
+            "YES ile okutulur ve 51'in izinli `start meridian-learn` çağrısı onu Wants= bağımlılığı olarak "
+            "ayrı yetki sormadan ROOT başlatır (ya da `add-wants meridian.service` + 52 restart). Tek "
+            "meşru kullanıcı API birim anahtarı (`systemctl enable|disable --now`, learn/barsarchive). "
+            "Kapanış TSK-266: anahtar root sahipli sabit-komutlu şablon birimlere ya da bayrak dosyası + "
+            "start/stop'a geçer, bu iki YES silinir."),
+    },
+    ("deploy/oracle-a1/51-meridian-birim-anahtari.rules", "org.freedesktop.systemd1.reload-daemon"): {
+        "kalem": "TSK-266",
+        "gerekce": (
+            "Aynı zincirin ikinci halkası (C2): link'lenen birim dosyasını systemd'ye okutur. Ayrıntı "
+            "taşımaz (systemd v255: details NULL); tek kullanıcısı `systemctl enable|disable`ın kendi "
+            "sonundaki Manager.Reload çağrısı. TSK-266 MUF ile birlikte siler (`--no-reload` ya da şablon)."),
     },
 }
 
@@ -221,8 +247,22 @@ def _agac_isabetleri(metin: str, kokler) -> list[str]:
 
 EXEC_ANAHTARLARI = ("ExecCondition", "ExecStartPre", "ExecStart", "ExecStartPost",
                     "ExecReload", "ExecStop", "ExecStopPost")
-BAGLAM_LISTE = ("EnvironmentFile", "Environment", "ExecSearchPath")
+# BindPaths/BindReadOnlyPaths (düzeltme turu 1, M3): ubuntu ağacındaki bir yolu root sürecin görüş
+# alanına bağlar — yürütülen/okunan şeyi ubuntu belirler.
+BAGLAM_LISTE = ("EnvironmentFile", "Environment", "ExecSearchPath", "BindPaths", "BindReadOnlyPaths")
 BAGLAM_SKALER = ("WorkingDirectory", "RootDirectory", "RootImage")
+# Std akış dosyaları (M3): `file:`/`append:`/`truncate:` yolunu servis yöneticisi `User=`'ı uygulamadan
+# ÖNCE açar — yani HER birimde (ubuntu birimi dahil) root, ubuntu'nun yönettiği bir dizindeki bağı izleyip
+# keyfi bir dosyayı yaratır/kırpar. Bu yüzden bu kural root koşmaya bağlı DEĞİLDİR.
+STD_AKIS_ANAHTARLARI = ("StandardInput", "StandardOutput", "StandardError")
+STD_AKIS_ONEKLERI = ("file:", "append:", "truncate:")
+# NoNewPrivileges'i İMA eden yönergeler (systemd.exec(5) NoNewPrivileges=; `User=` ubuntu birimi
+# CAP_SYS_ADMIN taşımadığı için ima koşulsuz geçerlidir).
+NNP_IMA_EDEN = ("SystemCallFilter", "SystemCallArchitectures", "RestrictAddressFamilies",
+                "RestrictNamespaces", "PrivateDevices", "ProtectKernelTunables", "ProtectKernelModules",
+                "ProtectKernelLogs", "ProtectClock", "MemoryDenyWriteExecute", "RestrictRealtime",
+                "RestrictSUIDSGID", "LockPersonality")
+_YANLIS = ("", "no", "false", "0", "off")
 
 
 @dataclasses.dataclass
@@ -234,10 +274,22 @@ class _Birim:
     exec_: dict = dataclasses.field(default_factory=dict)     # anahtar → [(değer, kaynak)]
     baglam: dict = dataclasses.field(default_factory=dict)    # anahtar → [(değer, kaynak)]
     rwp: list = dataclasses.field(default_factory=list)       # ReadWritePaths girdileri
+    std: dict = dataclasses.field(default_factory=dict)       # StandardX → (değer, kaynak)
+    ek_gruplar: list = dataclasses.field(default_factory=list)
+    erisilemez: list = dataclasses.field(default_factory=list)          # birleşik InaccessiblePaths
+    erisilemez_dosyada: list = dataclasses.field(default_factory=list)  # yalnız birim dosyasınınki
+    nnp_izi: dict = dataclasses.field(default_factory=dict)          # birleşik: NNP + ima edenler
+    nnp_izi_dosyada: dict = dataclasses.field(default_factory=dict)  # yalnız birim dosyasınınki
 
     @property
     def root_kosar(self) -> bool:
         return self.kullanici in ("root", "0") and not self.dinamik
+
+
+def _nnp_etkin(iz: dict, dinamik: bool = False) -> bool:
+    if iz.get("NoNewPrivileges", "").strip().lower() in ("yes", "true", "1", "on") or dinamik:
+        return True
+    return any(iz.get(a, "").strip().lower() not in _YANLIS for a in NNP_IMA_EDEN)
 
 
 def _birim_etkin(yol: Path) -> _Birim:
@@ -245,6 +297,7 @@ def _birim_etkin(yol: Path) -> _Birim:
     skalerlerde son yazan kazanır, boş `User=` varsayılana (root) döner."""
     b = _Birim(yol=yol)
     for kaynak in [yol, *_dropinler(yol)]:
+        dosyada = kaynak == yol
         for bolum, anahtar, deger in _yonergeler(kaynak.read_text(encoding="utf-8")):
             if bolum != "Service":
                 continue
@@ -256,6 +309,18 @@ def _birim_etkin(yol: Path) -> _Birim:
                 b.dinamik = deger.strip().lower() in ("yes", "true", "1", "on")
             elif anahtar == "ReadWritePaths":
                 b.rwp = [] if not deger else b.rwp + deger.split()
+            elif anahtar == "SupplementaryGroups":
+                b.ek_gruplar = [] if not deger else b.ek_gruplar + deger.split()
+            elif anahtar == "InaccessiblePaths":
+                b.erisilemez = [] if not deger else b.erisilemez + deger.split()
+                if dosyada:
+                    b.erisilemez_dosyada = [] if not deger else b.erisilemez_dosyada + deger.split()
+            elif anahtar == "NoNewPrivileges" or anahtar in NNP_IMA_EDEN:
+                b.nnp_izi[anahtar] = deger
+                if dosyada:
+                    b.nnp_izi_dosyada[anahtar] = deger
+            elif anahtar in STD_AKIS_ANAHTARLARI:
+                b.std[anahtar] = (deger, kaynak)
             elif anahtar in EXEC_ANAHTARLARI or anahtar in BAGLAM_LISTE:
                 hedef = b.exec_ if anahtar in EXEC_ANAHTARLARI else b.baglam
                 if not deger:
@@ -281,6 +346,13 @@ def _root_satirlari(b: _Birim) -> list[tuple[str, str, Path]]:
     return satirlar
 
 
+def _std_akis_yolu(deger: str) -> str | None:
+    for onek in STD_AKIS_ONEKLERI:
+        if deger.startswith(onek):
+            return deger[len(onek):]
+    return None
+
+
 def _sinif_bulgulari(birimler: list[Path], kokler) -> tuple[list[dict], int]:
     """Dönüş: (bulgular, root yürüten birim sayısı)."""
     bulgular: list[dict] = []
@@ -290,8 +362,10 @@ def _sinif_bulgulari(birimler: list[Path], kokler) -> tuple[list[dict], int]:
         satirlar = _root_satirlari(b)
         if satirlar:
             root_birim += 1
+        # Std akış dosyaları `User=`'dan BAĞIMSIZ olarak root tarafından açılır (M3).
+        satirlar += [(a, d, k) for a, (d, k) in b.std.items() if _std_akis_yolu(d) is not None]
         for alan, deger, kaynak in satirlar:
-            isabet = _agac_isabetleri(deger, kokler)
+            isabet = _agac_isabetleri(_std_akis_yolu(deger) or deger, kokler)
             if isabet:
                 bulgular.append({"birim": _goreli(yol), "alan": alan, "deger": deger[:160],
                                  "kaynak": _goreli(kaynak), "kokler": isabet,
@@ -299,18 +373,32 @@ def _sinif_bulgulari(birimler: list[Path], kokler) -> tuple[list[dict], int]:
     return bulgular, root_birim
 
 
+#: Herkesin yazabildiği dizinler (M3) — root yürütmesinin bağlamında ubuntu ağacıyla AYNI sınıftır:
+#: oraya bir bağ ya da dosya koymak için ubuntu olmak bile gerekmez.
+DUNYA_YAZAR_KOKLER: dict[str, str] = {
+    "/tmp": "1777 — herkes yazar (PrivateTmp'siz root birimin görüşü host /tmp'dir)",
+    "/var/tmp": "1777 — herkes yazar, açılışlar arası kalıcı",
+    "/dev/shm": "1777 tmpfs — herkes yazar",
+}
+
+
+def _yazilabilir_kokler() -> dict[str, str]:
+    """A/G sınıflarının taradığı kökler: ubuntu ağacı + dünya-yazılabilir dizinler."""
+    return {**_ubuntu_agaci(), **DUNYA_YAZAR_KOKLER}
+
+
 def _bicimle(bulgular) -> str:
     return "\n".join(f"  · {b}" for b in bulgular)
 
 
 def test_A1_root_yurutulen_birim_ubuntu_agacina_DOKUNMAZ():
-    bulgular, _ = _sinif_bulgulari(_depo_dosyalari(".service"), _ubuntu_agaci())
+    bulgular, _ = _sinif_bulgulari(_depo_dosyalari(".service"), _yazilabilir_kokler())
     beyansiz = [b for b in bulgular
                 if b["alan"] not in SINIF_BEYANI.get(b["birim"], {}).get("alanlar", ())]
     assert not beyansiz, (
         "ROOT YÜRÜTÜR, UBUNTU YAZAR — root olarak yürütülen bir satır (ya da bağlamı) ubuntu'nun "
         "yazabildiği ağaca dokunuyor:\n" + _bicimle(beyansiz) + "\n"
-        f"ubuntu ağacı: {sorted(_ubuntu_agaci())}\n"
+        f"yazılabilir kökler: {sorted(_yazilabilir_kokler())}\n"
         "ÇARE: birime `User=ubuntu` (root gerekçesi varsa onu DAR bir polkit kuralına taşı — emsal "
         "52-meridian-tick-watchdog.rules) ya da yürütülen dosyayı root sahipli bir yola kur. İstisna "
         "ancak SINIF_BEYANI'na gerekçe + kalem kimliğiyle.")
@@ -505,8 +593,25 @@ def _yes_korumalari(metin: str) -> tuple[list[dict], list[int]]:
     return korumalar, cozumsuz
 
 
+def _verilen_eylemler(ozet: dict) -> set[str]:
+    """Bu YES'in verebildiği eylemler: tam kimlik kümesi; yalnız önek kısıtı varsa `"<önek>*"`;
+    eylem kısıtı hiç yoksa `"*"` (her eylem). Çelişkili kısıtlar boş küme verir (YES hiç ateşlenmez)."""
+    kisitlar = ozet["id_kisitlari"]
+    if not kisitlar:
+        return {"*"}
+    tamlar = [k for k in kisitlar if all(t == "id" for t, _ in k)]
+    if tamlar:
+        return {v for _, v in tamlar[0] if _verir_mi(ozet, v)}
+    return {f"{v}*" for _, v in kisitlar[0]}
+
+
 def _polkit_bulgulari(kurallar: list[Path]) -> tuple[list[tuple[str, str]], list[str], int]:
-    """Dönüş: ((kural, eylem) ihlalleri, çözümlenemeyen-YES iletileri, toplam YES sayısı)."""
+    """Dönüş: ((kural, eylem) ihlalleri, çözümlenemeyen-YES iletileri, toplam YES sayısı).
+
+    İZİN LİSTESİ (düzeltme turu 1, inceleme M3): bir YES yalnız "manage-units + pozitif birim süzgeci"
+    ise kendiliğinden kabul edilir. Başka her eylem — manage-unit-files, reload-daemon,
+    set-environment (PID 1 ortamına LD_PRELOAD), policykit.exec (pkexec), önekli ya da kısıtsız YES —
+    ihlaldir ve ancak POLKIT_BEYANI'nda gerekçe + kalemle durabilir."""
     ihlaller: list[tuple[str, str]] = []
     cozumsuz_ileti: list[str] = []
     toplam = 0
@@ -514,8 +619,8 @@ def _polkit_bulgulari(kurallar: list[Path]) -> tuple[list[tuple[str, str]], list
         korumalar, cozumsuz = _yes_korumalari(kural.read_text(encoding="utf-8"))
         toplam += len(korumalar) + len(cozumsuz)
         for ozet in korumalar:
-            for eylem in BIRIM_EYLEMLERI:
-                if _verir_mi(ozet, eylem) and not ozet["unit_suzgeci"]:
+            for eylem in _verilen_eylemler(ozet):
+                if not (eylem == MU and ozet["unit_suzgeci"]):
                     ihlaller.append((_goreli(kural), eylem))
         cozumsuz_ileti += [f"{_goreli(kural)} jeton {c}: `return` dışında polkit.Result.YES — "
                            "koşulu çözümlenemez (tarayıcı kör kalmaz, öter)" for c in cozumsuz]
@@ -527,11 +632,13 @@ def test_B1_polkit_birim_eylemlerinde_YES_birim_suzgecsiz_OLAMAZ():
     beyansiz = [x for x in ihlaller if x not in POLKIT_BEYANI]
     assert not cozumsuz, "\n".join(cozumsuz)
     assert not beyansiz, (
-        "manage-units / manage-unit-files için birim süzgeçsiz `polkit.Result.YES`:\n"
+        "izin listesi dışı `polkit.Result.YES` (yalnız manage-units + pozitif birim süzgeci kendiliğinden "
+        "kabul edilir):\n"
         + "\n".join(f"  · {k} → {e}" for k, e in beyansiz) + "\n"
         "Ele geçirilmiş bir ubuntu servisi DBus'tan `systemctl link /opt/meridian/<kötü>.service` + "
-        "`enable` yapabilir; `User=` yoksa birim sonraki açılışta ROOT koşar. ÇARE: pozitif birim "
-        "süzgeci (`action.lookup(\"unit\") == \"<ad>\"`); eylem birim ayrıntısı taşımıyorsa YES verme, "
+        "`enable` + izinli bir start ile birimi ANINDA root koşturur; set-environment PID 1 ortamına "
+        "LD_PRELOAD sokar; policykit.exec pkexec'tir. ÇARE: pozitif birim süzgeci "
+        "(`action.lookup(\"unit\") == \"<ad>\"`); eylem birim ayrıntısı taşımıyorsa YES verme, ya da "
         "POLKIT_BEYANI'na gerekçe + kalem.")
 
 
@@ -654,11 +761,37 @@ def test_D3_polkit_reddi_ADLI_satir_ve_SIFIRDAN_FARKLI_cikis(tmp_path):
         tmp_path, durum,
         restart_govdesi='echo "Failed to restart meridian.service: Interactive authentication required." >&2; exit 1')
     assert "restart" in cagrilar, f"restart hiç denenmedi: {cagrilar!r}"
-    assert rc != 0, f"polkit reddinde çıkış 0 — sessiz başarı: out={out!r} err={err!r}"
+    assert rc == 4, f"polkit reddinde çıkış {rc} (YETKİ kodu 4 beklenir; 0 = sessiz başarı): err={err!r}"
     birlesik = out + err
-    assert "RESTART BAŞARISIZ" in birlesik, f"ret adlandırılmadı: {birlesik!r}"
+    assert "RESTART BAŞARISIZ (YETKİ)" in birlesik, f"ret YETKİ olarak adlandırılmadı: {birlesik!r}"
     assert "Interactive authentication required" in birlesik, "systemctl'in kendi gerekçesi yutuldu"
     assert "52-meridian-tick-watchdog.rules" in birlesik, "ret satırı yetkinin nerede olduğunu söylemiyor"
+
+
+@pytest.mark.parametrize("ileti", [
+    "Failed to restart meridian.service: Access denied",
+    "Failed to restart meridian.service: Not authorized",
+])
+def test_D3b_polkit_reddinin_obur_bicimleri_de_YETKI(tmp_path, ileti):
+    durum = _bayat_durum(tmp_path / "scheduler_status.json")
+    rc, out, err, _ = _bekci_kos(tmp_path, durum, restart_govdesi=f'echo "{ileti}" >&2; exit 1')
+    assert rc == 4 and "RESTART BAŞARISIZ (YETKİ)" in out + err, f"{ileti!r} → rc={rc} {err!r}"
+
+
+def test_D5_is_arizasi_YETKI_diye_adlandirilmaz(tmp_path):
+    """İnceleme M1: birim başlatılamadığında (ExecStart düştü) systemctl de sıfırdan farklı döner ama
+    bu bir YETKİ reddi değildir. Satır polkit'i suçlarsa operatör yanlış yeri onarır."""
+    durum = _bayat_durum(tmp_path / "scheduler_status.json")
+    rc, out, err, _ = _bekci_kos(
+        tmp_path, durum,
+        restart_govdesi=('echo "Job for meridian.service failed because the control process exited with '
+                         'error code." >&2; exit 1'))
+    birlesik = out + err
+    assert rc == 5, f"iş arızasında çıkış {rc} (İŞ kodu 5 beklenir): {birlesik!r}"
+    assert "RESTART BAŞARISIZ (İŞ)" in birlesik, f"iş arızası adlandırılmadı: {birlesik!r}"
+    assert "(YETKİ)" not in birlesik and "52-meridian-tick-watchdog.rules" not in birlesik, (
+        f"iş arızası polkit kuralına yönlendiriyor (yanlış teşhis): {birlesik!r}")
+    assert "control process exited" in birlesik, "systemctl'in kendi gerekçesi yutuldu"
 
 
 def test_D4_restart_PAROLA_SORMAZ_ve_basariyi_adlandirir(tmp_path):
@@ -668,6 +801,16 @@ def test_D4_restart_PAROLA_SORMAZ_ve_basariyi_adlandirir(tmp_path):
     assert "--no-ask-password restart meridian.service" in cagrilar, (
         f"restart --no-ask-password taşımıyor (ajansız oturumda yetki sorusu askıda/ belirsiz): {cagrilar!r}")
     assert "yeniden başlatıldı" in out, f"başarı satırı yok: {out!r}"
+
+
+def test_D6_basarili_restartta_systemctl_UYARISI_YUTULMAZ(tmp_path):
+    """İnceleme M2 (bedel yasası): eski hâlde systemctl'in uyarıları journal'a düşüyordu; çıktıyı yakalamak
+    onları başarıda sessizce atmamalı (ör. "unit file changed on disk" = /etc ile depo ayrışmış)."""
+    durum = _bayat_durum(tmp_path / "scheduler_status.json")
+    uyari = "Warning: The unit file, source configuration file or drop-ins of meridian.service changed on disk."
+    rc, out, err, _ = _bekci_kos(tmp_path, durum, restart_govdesi=f'echo "{uyari}" >&2; exit 0')
+    assert rc == 0, f"uyarılı başarıda çıkış {rc}"
+    assert uyari in out + err, f"başarılı restart'ın systemctl uyarısı yutuldu: out={out!r} err={err!r}"
 
 
 # ================================================================================================
@@ -681,6 +824,16 @@ def test_E1_bekci_birimi_ubuntu_kosar_ve_yazim_izni_TASIMAZ():
     assert not b.rwp, f"bekçi diske yazmaz; ReadWritePaths gereksiz yetkidir: {b.rwp}"
     assert not _root_satirlari(b), "bekçide root yürütülen satır kaldı (`+`/`!` öneki?)"
     assert [d for d, _ in b.exec_.get("ExecStart", [])] == ["/opt/meridian/deploy/oracle-a1/tick_watchdog.sh"]
+    # Düzeltme turu 1 (I1): NNP birim DOSYASINDA — drop-in'ler sökülebilir (h3 --geri-al, deploy.sh
+    # drop-in kopyalamaz) ve NNP'siz ubuntu bekçisi ubuntu ağacından yürütürken parolasız sudo ile root'tur.
+    assert b.nnp_izi_dosyada.get("NoNewPrivileges", "").lower() in ("yes", "true"), (
+        f"bekçi biriminin KENDİSİ NoNewPrivileges taşımıyor: {b.nnp_izi_dosyada}")
+    # C1: docker soketi birim dosyasında erişilemez.
+    assert any(g.lstrip("-+") == "/run/docker.sock" for g in b.erisilemez_dosyada), b.erisilemez_dosyada
+    # M1: başarısızlığın etkin okuyucusu — emsal vault-admin-yenile (timer'lı oneshot) ile aynı bağ.
+    unit_bolumu = [(a, d) for bol, a, d in _yonergeler(WATCHDOG_BIRIM.read_text(encoding="utf-8")) if bol == "Unit"]
+    assert ("OnFailure", "meridian-fail-notify.service") in unit_bolumu, (
+        f"bekçinin başarısızlığını okuyan yok (Yasa 6): [Unit] = {unit_bolumu}")
 
 
 def _tek_yes_bilesenleri(kural: Path) -> list[list[tuple]]:
@@ -750,7 +903,15 @@ _MATRIS = [
     ("başka özne VERİLMEZ", "nobody", MU, {"unit": "meridian.service", "verb": "restart"}, None),
     ("başka birim VERİLMEZ", "ubuntu", MU, {"unit": "meridian-evil.service", "verb": "restart"}, None),
     ("önek benzeri birim VERİLMEZ", "ubuntu", MU, {"unit": "meridian.service.d", "verb": "restart"}, None),
-    ("KAYIT 51: pano anahtarı learn start", "ubuntu", MU, {"unit": "meridian-learn.service", "verb": "start"}, "yes"),
+    ("51: pano anahtarı learn start", "ubuntu", MU, {"unit": "meridian-learn.service", "verb": "start"}, "yes"),
+    ("51: pano anahtarı learn stop", "ubuntu", MU, {"unit": "meridian-learn.service", "verb": "stop"}, "yes"),
+    ("51: barsarchive start", "ubuntu", MU, {"unit": "meridian-barsarchive.service", "verb": "start"}, "yes"),
+    # M4 (düzeltme turu 1): 51 fiil süzer — anahtarın ve öğrenme düğmesinin istediği yalnız start/stop.
+    ("51: learn set-property VERİLMEZ", "ubuntu", MU, {"unit": "meridian-learn.service", "verb": "set-property"}, None),
+    ("51: learn kill VERİLMEZ", "ubuntu", MU, {"unit": "meridian-learn.service", "verb": "kill"}, None),
+    ("51: learn clean VERİLMEZ", "ubuntu", MU, {"unit": "meridian-learn.service", "verb": "clean"}, None),
+    ("51: learn restart VERİLMEZ", "ubuntu", MU, {"unit": "meridian-learn.service", "verb": "restart"}, None),
+    ("51: fiil ayrıntısı yoksa VERİLMEZ", "ubuntu", MU, {"unit": "meridian-learn.service"}, None),
     ("KAYIT 50: sprint örneği start", "ubuntu", MU, {"unit": "meridian-sprint@abc.service", "verb": "start"}, "yes"),
     ("KAYIT 51: manage-unit-files koşulsuz (BEYANLI istisna)", "ubuntu", MUF, {}, "yes"),
     ("KAYIT 51: reload-daemon", "ubuntu", "org.freedesktop.systemd1.reload-daemon", {}, "yes"),
@@ -774,6 +935,251 @@ def test_E4_polkit_kurallari_DAVRANIS_matrisi_node():
     sonuc = json.loads(p.stdout)
     sapma = [f"{ad}: beklenen {b!r}, gelen {s!r}" for (ad, _o, _e, _a, b), s in zip(_MATRIS, sonuc) if s != b]
     assert not sapma, "polkit davranışı sözleşmeden saptı:\n  " + "\n  ".join(sapma)
+
+
+# ================================================================================================
+# G — ubuntu birimleri: docker soketi (C1) ve NoNewPrivileges (I1) — düzeltme turu 1
+# ================================================================================================
+#
+# C1 (güvenlik incelemesi, Rol-1 A1 ölçümü 2026-10-02 04:3xZ): `docker:x:110:ubuntu`, `/run/docker.sock`
+# root:docker 660 ve canlı meridian/hindsight-api süreçlerinin Groups satırında 110 VAR. `User=` birimi
+# kullanıcının ek gruplarını alır; NNP ve salt-okur kök soket `connect()`ini DURDURMAZ → kum havuzlu her
+# ubuntu birimi `POST /containers/create {Privileged, Binds:["/:/host"]}` ile ANINDA root. Grup üyeliği
+# operatör kararıdır (TSK-195, dokunulmaz); kapanış birim düzeyinde: `InaccessiblePaths=-/run/docker.sock`
+# (`/var/run` → `/run` bağı olduğundan `/var/run/docker.sock`u da kapsar), birim DOSYASINDA.
+# I1: `User=ubuntu` birimi NNP'siz koşar ve ubuntu ağacından yürütürse, kum havuzlu bir birimin yazdığı
+# kod parolasız sudo ile ROOT olur. NNP drop-in'de durursa sökülebilir → birim DOSYASINDA olmalı.
+
+PAKETLER = ROL / "tasks" / "paketler.yml"
+DOCKER_SOKETLERI = ("/run/docker.sock", "/var/run/docker.sock")
+
+#: G1 istisnaları: depo-göreli birim yolu → {"kalem", "gerekce"}. BOŞ (2026-10-02): hiçbir ubuntu birimi
+#: docker kullanmıyor (Rol-1 depo taraması; docker'ı yalnız root koşan birimler kullanır).
+SOKET_BEYANI: dict[str, dict] = {}
+#: G2/G3 istisnaları: aynı biçim. BOŞ (2026-10-02, 22 ubuntu birimi ölçüldü).
+NNP_BEYANI: dict[str, dict] = {}
+
+
+def _docker_kimlikleri() -> set[str]:
+    """A0'ın docker grubuna eklediği kullanıcılar — `paketler.yml` `ansible.builtin.user` görevlerinden
+    türer (tek kaynak; liste elle yazılmaz)."""
+    d = _defaults()
+    grup = str(d["docker_grubu"])
+    kullanicilar: set[str] = set()
+    for g in yaml.safe_load(PAKETLER.read_text(encoding="utf-8")) or []:
+        arg = g.get("ansible.builtin.user") or g.get("user")
+        if not isinstance(arg, dict):
+            continue
+        gruplar = [x.strip() for x in _sablon(str(arg.get("groups", "")), d).split(",")]
+        if grup in gruplar:
+            kullanicilar.add(_sablon(str(arg.get("name", "")), d))
+    return kullanicilar
+
+
+def _soket_bulgulari(birimler: list[Path], kimlikler: set[str], grup: str) -> tuple[list[dict], int]:
+    """Docker grubundan yetki alan (root olmayan) her birim, docker soketini birleşik yapılandırmada VE
+    birim dosyasının kendisinde erişilemez kılmalı. Dönüş: (bulgular, taranan docker-erişimli birim)."""
+    bulgular, sayi = [], 0
+    for yol in birimler:
+        b = _birim_etkin(yol)
+        if b.root_kosar:
+            continue   # root her şeye erişir — o sınıf A'dadır
+        if not (b.kullanici in kimlikler or b.grup == grup or grup in b.ek_gruplar):
+            continue
+        sayi += 1
+        birlesik = {g.lstrip("-+") for g in b.erisilemez}
+        dosyada = {g.lstrip("-+") for g in b.erisilemez_dosyada}
+        if not birlesik & set(DOCKER_SOKETLERI):
+            bulgular.append({"birim": _goreli(yol), "tur": "soket_erisilebilir", "kullanici": b.kullanici})
+        elif not dosyada & set(DOCKER_SOKETLERI):
+            bulgular.append({"birim": _goreli(yol), "tur": "yalniz_dropinde", "kullanici": b.kullanici})
+    return bulgular, sayi
+
+
+def _agactan_yurutur(b: _Birim, kokler) -> list[str]:
+    return sorted({k for liste in [*b.exec_.values(), *b.baglam.values()] for d, _ in liste
+                   for k in _agac_isabetleri(d, kokler)})
+
+
+def _nnp_bulgulari(birimler: list[Path], kullanicilar: set[str], kokler) -> tuple[list[dict], int]:
+    """G2 (birleşik) + G3 (dosyada): parolasız sudo taşıyan kullanıcıyla koşup yazılabilir ağaçtan
+    yürüten birim NNP'siz olamaz. Dönüş: (bulgular, taranan birim)."""
+    bulgular, sayi = [], 0
+    for yol in birimler:
+        b = _birim_etkin(yol)
+        if b.root_kosar or b.kullanici not in kullanicilar:
+            continue
+        agac = _agactan_yurutur(b, kokler)
+        if not agac:
+            continue
+        sayi += 1
+        if not _nnp_etkin(b.nnp_izi, b.dinamik):
+            bulgular.append({"birim": _goreli(yol), "tur": "nnp_yok", "agac": agac})
+        elif not _nnp_etkin(b.nnp_izi_dosyada, b.dinamik):
+            bulgular.append({"birim": _goreli(yol), "tur": "nnp_yalniz_dropinde", "agac": agac})
+    return bulgular, sayi
+
+
+def _sudo_parolasiz_kullanicilar() -> set[str]:
+    """ubuntu etkileşimli kabuğu `NOPASSWD: ALL` taşır (Rol-1 A1 ölçümü 2026-10-02, TSK-265 brief).
+    A0 sudoers'ı yönetmez (cloud-init); kimlik `meridian_kullanici`dan türer."""
+    return {str(_defaults()["meridian_kullanici"])}
+
+
+def test_G1_docker_grubu_kimligi_docker_soketine_ERISEMEZ():
+    kimlikler = _docker_kimlikleri()
+    assert kimlikler, "A0 kimseyi docker grubuna eklemiyor görünüyor — türetme kırık (paketler.yml)"
+    bulgular, _ = _soket_bulgulari(_depo_dosyalari(".service"), kimlikler, str(_defaults()["docker_grubu"]))
+    beyansiz = [x for x in bulgular if x["birim"] not in SOKET_BEYANI]
+    assert not beyansiz, (
+        f"docker grubu yetkisi taşıyan ({sorted(kimlikler)}) birim docker soketine erişebilir — kum havuzu "
+        "kaçışı + ANINDA root (C1):\n" + _bicimle(beyansiz) + "\n"
+        "ÇARE: birim DOSYASINA `InaccessiblePaths=-/run/docker.sock` (drop-in'e değil: sökülebilir).")
+
+
+def test_G2_G3_ubuntu_birimi_NNPsiz_yazilabilir_agactan_YURUTMEZ():
+    bulgular, _ = _nnp_bulgulari(_depo_dosyalari(".service"), _sudo_parolasiz_kullanicilar(),
+                                 _yazilabilir_kokler())
+    beyansiz = [x for x in bulgular if x["birim"] not in NNP_BEYANI]
+    assert not beyansiz, (
+        "parolasız sudo taşıyan kullanıcıyla koşan birim yazılabilir ağaçtan NNP'siz yürütüyor (root-eşdeğeri) "
+        "ya da NNP'si yalnız sökülebilir bir drop-in'de:\n" + _bicimle(beyansiz) + "\n"
+        "ÇARE: birim DOSYASINA `NoNewPrivileges=yes` (ya da onu ima eden bir yönerge).")
+
+
+def test_G4_fail_notify_NNP_birim_DOSYASINDA():
+    """I1'in ikinci örneği: fail-notify de User=ubuntu, NNP'si yalnız drop-in'deydi."""
+    b = _birim_etkin(ORACLE / "meridian-fail-notify.service")
+    assert b.kullanici == "ubuntu"
+    assert b.nnp_izi_dosyada.get("NoNewPrivileges", "").lower() in ("yes", "true"), b.nnp_izi_dosyada
+
+
+def test_G5_SOKET_ve_NNP_BEYANLARI_curumez():
+    sb, _ = _soket_bulgulari(_depo_dosyalari(".service"), _docker_kimlikleri(), str(_defaults()["docker_grubu"]))
+    nb, _ = _nnp_bulgulari(_depo_dosyalari(".service"), _sudo_parolasiz_kullanicilar(), _yazilabilir_kokler())
+    sorunlar = [f"SOKET_BEYANI {k}: karşılanan bulgu yok" for k in SOKET_BEYANI if k not in {x["birim"] for x in sb}]
+    sorunlar += [f"NNP_BEYANI {k}: karşılanan bulgu yok" for k in NNP_BEYANI if k not in {x["birim"] for x in nb}]
+    for beyan in (SOKET_BEYANI, NNP_BEYANI):
+        sorunlar += [f"{k}: gerekçe/kalem eksik" for k, v in beyan.items()
+                     if len(v.get("gerekce", "")) < 20 or not KALEM_DESENI.match(v.get("kalem", ""))]
+    assert not sorunlar, "\n".join(sorunlar)
+
+
+# ---- h3 --geri-al: NNP'yi KORUR (I1) -------------------------------------------------------------
+
+H3_BETIK = ORACLE / "h3_tur2_sertlestir.sh"
+
+
+def _h3_geri_al(tmp_path: Path, birim: str, nnp_degeri: str) -> tuple[int, str, str, str]:
+    """`--geri-al`ı SAHTE sudo/systemctl ile koşar. Sahte sudo HİÇBİR ŞEY YÜRÜTMEZ (yalnız kaydeder) —
+    betik /etc'yi hedefler; geliştirme makinesine dokunmamak için gerçek sudo PATH'te asla önce gelmez."""
+    kutu = tmp_path / "bin"
+    kutu.mkdir(exist_ok=True)
+    kayit = tmp_path / "sudo_kaydi.txt"
+    (kutu / "sudo").write_text(f'#!/bin/sh\necho "$@" >> "{kayit}"\nexit 0\n')
+    (kutu / "systemctl").write_text(
+        "#!/bin/sh\n"
+        'case "$*" in\n'
+        f'  *NoNewPrivileges*--value*) echo "{nnp_degeri}" ;;\n'
+        f'  *--value*NoNewPrivileges*) echo "{nnp_degeri}" ;;\n'
+        f'  *) echo "NoNewPrivileges={nnp_degeri}"; echo "SystemCallFilter=" ;;\n'
+        "esac\nexit 0\n")
+    for f in ("sudo", "systemctl"):
+        (kutu / f).chmod(0o755)
+    env = {**os.environ, "PATH": f"{kutu}:/usr/bin:/bin"}
+    p = subprocess.run(["bash", str(H3_BETIK), "--geri-al", birim], capture_output=True, text=True,
+                       env=env, stdin=subprocess.DEVNULL, timeout=30)
+    return p.returncode, p.stdout, p.stderr, (kayit.read_text() if kayit.exists() else "")
+
+
+@pytest.mark.parametrize("birim", ["meridian-tick-watchdog", "meridian-fail-notify"])
+def test_G6_h3_geri_al_NNP_KORUNDUysa_gecer(tmp_path, birim):
+    rc, out, err, sudo = _h3_geri_al(tmp_path, birim, "yes")
+    assert f"rm -f /etc/systemd/system/{birim}.service.d/" in sudo, f"sahte sudo kullanılmadı: {sudo!r}"
+    assert rc == 0, f"NNP korunduğu hâlde geri alma düştü: {err!r}"
+    assert "NoNewPrivileges=yes korundu" in out, out
+
+
+@pytest.mark.parametrize("birim", ["meridian-tick-watchdog", "meridian-fail-notify"])
+def test_G7_h3_geri_al_NNP_KAYBOLURSA_YUKSEK_SESLE_duser(tmp_path, birim):
+    rc, out, err, sudo = _h3_geri_al(tmp_path, birim, "no")
+    assert f"rm -f /etc/systemd/system/{birim}.service.d/" in sudo, f"sahte sudo kullanılmadı: {sudo!r}"
+    assert rc != 0, f"NNP kaybolduğu hâlde geri alma 0 döndü (sessiz root-eşdeğeri): out={out!r}"
+    assert "ROOT-EŞDEĞERİ" in err, f"neden adlandırılmadı: {err!r}"
+
+
+# ================================================================================================
+# I2 — A0 sırası: polkit kuralı yeni birimden ÖNCE yürürlüğe girer + saglik.yml pkcheck kapısı
+# ================================================================================================
+
+ROL_TASKS = ROL / "tasks"
+
+
+def _rol_akisi() -> list[tuple[str, dict]]:
+    """main.yml'nin import sırasıyla düzleştirilmiş görev akışı: [(dosya, görev)]."""
+    akis = []
+    for imp in yaml.safe_load((ROL_TASKS / "main.yml").read_text(encoding="utf-8")):
+        ad = imp["ansible.builtin.import_tasks"]
+        akis += [(ad, g) for g in yaml.safe_load((ROL_TASKS / ad).read_text(encoding="utf-8")) or []]
+    return akis
+
+
+def test_I2a_polkit_kurali_birimlerden_ONCE_yururluge_girer():
+    """İnceleme I2: birimler daemon-reload'u kendi flush'ıyla HEMEN yapar; polkit sonra koşuyordu ve
+    aradaki bir assert düşerse (sir_denetimi) `User=ubuntu` bekçi kuralsız kalır — "ilerleme var" basar,
+    ilk gerçek ihtiyaçta RESTART BAŞARISIZ. Sözleşme: polkit kopyası + polkit restart (flush) birim
+    kopyasından ÖNCE. Kural tek başına zararsızdır (yalnız ek yetki)."""
+    akis = _rol_akisi()
+    polkit_kopya = next(i for i, (ad, g) in enumerate(akis)
+                        if "ansible.builtin.copy" in g and "polkit_kaynaklari" in str(g.get("loop", "")))
+    birim_kopya = next(i for i, (ad, g) in enumerate(akis)
+                       if "ansible.builtin.copy" in g and "birim_kaynaklari" in str(g.get("with_fileglob", "")))
+    flushlar = [i for i, (ad, g) in enumerate(akis) if g.get("ansible.builtin.meta") == "flush_handlers"]
+    assert polkit_kopya < birim_kopya, (
+        f"polkit kuralı birim dosyalarından SONRA kopyalanıyor (akış {polkit_kopya} > {birim_kopya})")
+    assert any(polkit_kopya < f < birim_kopya for f in flushlar), (
+        "polkit kopyası ile birim kopyası arasında flush_handlers yok — polkit restart'ı birimin "
+        "daemon-reload'undan SONRA kalır (handler'lar tanım sırasıyla koşar: önce daemon-reload)")
+    assert akis[polkit_kopya][1].get("notify") == "polkit-yeniden-baslat"
+
+
+def _saglik() -> list[dict]:
+    return yaml.safe_load((ROL_TASKS / "saglik.yml").read_text(encoding="utf-8"))
+
+
+def test_I2b_saglik_pkcheck_kapisi_52yi_ubuntu_oznesiyle_OLCER():
+    gorevler = _saglik()
+    pk = [g for g in gorevler if "pkcheck" in str(g.get("ansible.builtin.command", ""))]
+    assert len(pk) == 1, f"saglik.yml'de tek pkcheck ölçümü beklenir, bulunan {len(pk)}"
+    argv = [str(a) for a in pk[0]["ansible.builtin.command"]["argv"]]
+    metin = " ".join(argv)
+    for parca in ("--action-id org.freedesktop.systemd1.manage-units", "--detail unit meridian.service",
+                  "--detail verb restart", "--process"):
+        assert parca in metin, f"pkcheck argv'de `{parca}` yok: {argv}"
+    fw = str(pk[0].get("failed_when", ""))
+    assert "rc" in fw and "not in" in fw and "127" in fw, f"failed_when rc tabanlı değil / 127 yok: {fw!r}"
+    assert pk[0].get("changed_when") is False
+    ozne = [g for g in gorevler if "pgrep" in str(g.get("ansible.builtin.command", ""))]
+    assert ozne and "meridian_kullanici" in str(ozne[0]["ansible.builtin.command"]), (
+        "pkcheck öznesi ubuntu sürecinden türemiyor")
+    kapi = [g for g in gorevler if "ansible.builtin.assert" in g and "pkcheck_sonuc" in str(g)]
+    assert len(kapi) == 1, "pkcheck sonucu bir KAPIYA bağlanmamış"
+    assert "pkcheck_sonuc.rc == 0" in str(kapi[0]["ansible.builtin.assert"]["that"])
+    olculemedi = [g for g in gorevler if "ansible.builtin.debug" in g and "pkcheck" in str(g.get("when", ""))]
+    assert len(olculemedi) == 1, "pkcheck ölçülemediğinde (ikili yok / özne yok / 127 / check-mode) sessiz kalıyor"
+    # Rapor DÖRT ölçülemeyen hâlin HER BİRİNDE basılmalı — biri düşerse o hâl "geçti" gibi sessiz geçer
+    # (mutasyon F16, 2026-10-02: görev adında ÖLÇÜLEMEDİ geçtiği için ilk sürüm hâlleri ölçmüyordu).
+    kosul = re.sub(r"\s+", " ", str(olculemedi[0]["when"]))
+    for hal in ("ansible_check_mode", "pkcheck_ikili.stat.exists", "pkcheck_ozne.rc", "pkcheck_sonuc.rc | default(-1)) == 127"):
+        assert hal in kosul, f"ÖLÇÜLEMEDİ raporu `{hal}` hâlinde basılmıyor: when = {kosul!r}"
+    mesaj = str(olculemedi[0]["ansible.builtin.debug"]["msg"])
+    assert "ÖLÇÜLEMEDİ" in mesaj and "HÜKMÜ DEĞİLDİR" in mesaj, f"rapor ölçülemediğini adlandırmıyor: {mesaj!r}"
+
+
+def test_I2c_deploy_sh_YETKI_ve_IS_arizasini_ayirir():
+    d = (ORACLE / "deploy.sh").read_text(encoding="utf-8")
+    assert '*"RESTART BAŞARISIZ (YETKİ)"*)' in d and '*"RESTART BAŞARISIZ (İŞ)"*)' in d, (
+        "deploy.sh test-ateşleme kapısı YETKİ ile İŞ arızasını ayırmıyor")
 
 
 # ================================================================================================
@@ -811,11 +1217,68 @@ def _birim_yaz(tmp_path: Path, ad: str, govde: str, dropinler: dict[str, str] | 
     ("root-cwd.service", "WorkingDirectory=/opt/meridian\nExecStart=/usr/bin/docker compose up", None, True),
     ("root-ortam.service", "Environment=PATH=/home/ubuntu/.local/bin:/usr/bin\nExecStart=/usr/bin/x", None, True),
     ("yorum-satiri.service", "# ExecStart=/opt/meridian/x.sh\nExecStart=/usr/bin/true", None, False),
+    # M3 (düzeltme turu 1) kör noktaları:
+    ("root-bindpaths.service", "BindReadOnlyPaths=/opt/meridian/x:/etc/x\nExecStart=/usr/bin/true", None, True),
+    ("root-tmp-yurutme.service", "ExecStart=/tmp/x.sh", None, True),
+    ("root-devshm.service", "ExecStart=/usr/bin/env /dev/shm/x", None, True),
+    ("root-vartmp-olmayan.service", "ExecStart=/usr/bin/true /var/tmpx", None, False),
+    ("ubuntu-stdout-file.service", "User=ubuntu\nExecStart=/usr/bin/true\nStandardOutput=append:/opt/meridian/x.log",
+     None, True),
+    ("ubuntu-stderr-truncate-tmp.service", "User=ubuntu\nExecStart=/usr/bin/true\nStandardError=truncate:/tmp/x",
+     None, True),
+    ("ubuntu-stdout-journal.service", "User=ubuntu\nExecStart=/usr/bin/true\nStandardOutput=journal", None, False),
+    ("ubuntu-stdin-file.service", "User=ubuntu\nExecStart=/usr/bin/true\nStandardInput=file:/home/ubuntu/girdi",
+     None, True),
 ])
 def test_F1_birim_denetcisi_POZITIF_KONTROL(tmp_path, ad, govde, dropinler, oter):
     birim = _birim_yaz(tmp_path, ad, govde, dropinler)
-    bulgular, _ = _sinif_bulgulari([birim], _KOKLER)
+    bulgular, _ = _sinif_bulgulari([birim], {**_KOKLER, **DUNYA_YAZAR_KOKLER})
     assert bool(bulgular) is oter, f"{ad}: beklenen öter={oter}, bulgular={bulgular}"
+
+
+@pytest.mark.parametrize("ad,govde,dropinler,beklenen", [
+    ("ubuntu-soketsiz.service", "User=ubuntu\nExecStart=/usr/bin/true", None, "soket_erisilebilir"),
+    ("ubuntu-soketli.service", "User=ubuntu\nInaccessiblePaths=-/run/docker.sock\nExecStart=/usr/bin/true",
+     None, None),
+    ("ubuntu-varrun.service", "User=ubuntu\nInaccessiblePaths=-/var/run/docker.sock\nExecStart=/usr/bin/true",
+     None, None),
+    ("ubuntu-yalniz-dropin.service", "User=ubuntu\nExecStart=/usr/bin/true",
+     {"10.conf": "[Service]\nInaccessiblePaths=-/run/docker.sock\n"}, "yalniz_dropinde"),
+    ("ubuntu-dropin-sifirlar.service", "User=ubuntu\nInaccessiblePaths=-/run/docker.sock\nExecStart=/usr/bin/true",
+     {"10.conf": "[Service]\nInaccessiblePaths=\n"}, "soket_erisilebilir"),
+    ("ubuntu-baska-yol.service", "User=ubuntu\nInaccessiblePaths=-/run/containerd/x.sock\nExecStart=/usr/bin/true",
+     None, "soket_erisilebilir"),
+    ("baska-kullanici-ek-grup.service", "User=nobody\nSupplementaryGroups=docker\nExecStart=/usr/bin/true",
+     None, "soket_erisilebilir"),
+    ("baska-kullanici.service", "User=nobody\nExecStart=/usr/bin/true", None, None),
+    ("root.service", "ExecStart=/usr/bin/true", None, None),
+])
+def test_F5_soket_denetcisi_POZITIF_KONTROL(tmp_path, ad, govde, dropinler, beklenen):
+    birim = _birim_yaz(tmp_path, ad, govde, dropinler)
+    bulgular, _ = _soket_bulgulari([birim], {"ubuntu"}, "docker")
+    gelen = bulgular[0]["tur"] if bulgular else None
+    assert gelen == beklenen, f"{ad}: beklenen {beklenen}, gelen {bulgular}"
+
+
+@pytest.mark.parametrize("ad,govde,dropinler,beklenen", [
+    ("nnp-yok.service", "User=ubuntu\nExecStart=/opt/meridian/x.sh", None, "nnp_yok"),
+    ("nnp-dosyada.service", "User=ubuntu\nNoNewPrivileges=yes\nExecStart=/opt/meridian/x.sh", None, None),
+    ("nnp-ima-dosyada.service", "User=ubuntu\nSystemCallFilter=@system-service\nExecStart=/opt/meridian/x.sh",
+     None, None),
+    ("nnp-yalniz-dropin.service", "User=ubuntu\nExecStart=/opt/meridian/x.sh",
+     {"10.conf": "[Service]\nNoNewPrivileges=true\n"}, "nnp_yalniz_dropinde"),
+    ("nnp-no.service", "User=ubuntu\nNoNewPrivileges=no\nExecStart=/opt/meridian/x.sh", None, "nnp_yok"),
+    ("nnp-ima-no.service", "User=ubuntu\nPrivateDevices=no\nExecStart=/opt/meridian/x.sh", None, "nnp_yok"),
+    ("agac-disi.service", "User=ubuntu\nExecStart=/usr/bin/true", None, None),
+    ("agac-cwd.service", "User=ubuntu\nWorkingDirectory=/opt/meridian\nExecStart=/usr/bin/python3 -m x", None,
+     "nnp_yok"),
+    ("baska-kullanici.service", "User=nobody\nExecStart=/opt/meridian/x.sh", None, None),
+])
+def test_F6_NNP_denetcisi_POZITIF_KONTROL(tmp_path, ad, govde, dropinler, beklenen):
+    birim = _birim_yaz(tmp_path, ad, govde, dropinler)
+    bulgular, _ = _nnp_bulgulari([birim], {"ubuntu"}, _KOKLER)
+    gelen = bulgular[0]["tur"] if bulgular else None
+    assert gelen == beklenen, f"{ad}: beklenen {beklenen}, gelen {bulgular}"
 
 
 @pytest.mark.parametrize("ad,kod,beklenen", [
@@ -823,7 +1286,7 @@ def test_F1_birim_denetcisi_POZITIF_KONTROL(tmp_path, ad, govde, dropinler, oter
                      'if (action.id == "org.freedesktop.systemd1.manage-unit-files") { return polkit.Result.YES; } });',
      {MUF}),
     ("eylem-kisitsiz", 'polkit.addRule(function(action, subject){ if (subject.user == "ubuntu") return polkit.Result.YES; });',
-     {MU, MUF}),
+     {"*"}),
     ("veya-atlatmasi", 'polkit.addRule(function(action, subject){ var unit = action.lookup("unit"); '
                        'if (action.id == "org.freedesktop.systemd1.manage-units" && '
                        '(unit == "a.service" || subject.user == "ubuntu")) { return polkit.Result.YES; } });',
@@ -834,7 +1297,7 @@ def test_F1_birim_denetcisi_POZITIF_KONTROL(tmp_path, ad, govde, dropinler, oter
      {MU}),
     ("onek-eylem", 'polkit.addRule(function(action, subject){ '
                    'if (action.id.indexOf("org.freedesktop.systemd1.") == 0) { return polkit.Result.YES; } });',
-     {MU, MUF}),
+     {"org.freedesktop.systemd1.*"}),
     ("else-dali", 'polkit.addRule(function(action, subject){ var unit = action.lookup("unit"); '
                   'if (action.id == "org.freedesktop.systemd1.manage-units") { if (unit == "a.service") '
                   '{ return polkit.Result.NO; } else { return polkit.Result.YES; } } });',
@@ -848,9 +1311,21 @@ def test_F1_birim_denetcisi_POZITIF_KONTROL(tmp_path, ad, govde, dropinler, oter
                              'if (action.id == "org.freedesktop.systemd1.manage-units") { '
                              'if (unit == "a.service" || unit == "b.service") { return polkit.Result.YES; } } });',
      set()),
-    ("reload-daemon-kapsam-disi", 'polkit.addRule(function(action, subject){ '
+    # İzin listesi (düzeltme turu 1): reload-daemon artık kendiliğinden kabul EDİLMEZ (C2 zincirinin halkası).
+    ("reload-daemon-artik-ihlal", 'polkit.addRule(function(action, subject){ '
                                   'if (action.id == "org.freedesktop.systemd1.reload-daemon") { return polkit.Result.YES; } });',
-     set()),
+     {"org.freedesktop.systemd1.reload-daemon"}),
+    ("set-environment", 'polkit.addRule(function(action, subject){ if (subject.user == "ubuntu" && '
+                        'action.id == "org.freedesktop.systemd1.set-environment") { return polkit.Result.YES; } });',
+     {"org.freedesktop.systemd1.set-environment"}),
+    ("pkexec", 'polkit.addRule(function(action, subject){ '
+               'if (action.id == "org.freedesktop.policykit.exec") { return polkit.Result.YES; } });',
+     {"org.freedesktop.policykit.exec"}),
+    ("mu-muf-veya-birim-suzgecli", 'polkit.addRule(function(action, subject){ '
+                                   'if ((action.id == "org.freedesktop.systemd1.manage-units" || '
+                                   'action.id == "org.freedesktop.systemd1.manage-unit-files") && '
+                                   'action.lookup("unit") == "a.service") { return polkit.Result.YES; } });',
+     {MUF}),
     ("yorumdaki-yes-sayilmaz", '/* return polkit.Result.YES; */ // return polkit.Result.YES;\n'
                                'polkit.addRule(function(action, subject){ });',
      set()),
@@ -904,7 +1379,7 @@ def test_F4_agac_turetimi_A0_dan_ve_beyandan():
 # ================================================================================================
 
 def test_H1_SINIF_BEYANI_curumez_ve_kurulum_iddiasi_OLCULUR():
-    bulgular, _ = _sinif_bulgulari(_depo_dosyalari(".service"), _ubuntu_agaci())
+    bulgular, _ = _sinif_bulgulari(_depo_dosyalari(".service"), _yazilabilir_kokler())
     kurulan = {_goreli(p) for p in _a0_kurulan_birimler()}
     sorunlar = []
     for birim, b in SINIF_BEYANI.items():
@@ -948,11 +1423,26 @@ TABAN_BEKCI_PYTHON = 1
 
 def test_K1_korluk_alarmi_birim_tarayicisi():
     birimler = _depo_dosyalari(".service")
-    _, root_birim = _sinif_bulgulari(birimler, _ubuntu_agaci())
+    _, root_birim = _sinif_bulgulari(birimler, _yazilabilir_kokler())
     assert len(birimler) >= TABAN_BIRIM, f"taranan birim {len(birimler)} < taban {TABAN_BIRIM} — yürüyüş budanmış"
     assert root_birim >= TABAN_ROOT_BIRIM, (
         f"root yürüten birim {root_birim} < taban {TABAN_ROOT_BIRIM} — ayrıştırma her şeyi ubuntu sanıyor olabilir")
     assert (ORACLE / "meridian.service").resolve() in {p.resolve() for p in birimler}
+
+
+#: Ölçüm 2026-10-02 (düzeltme turu 1): docker grubundan yetki alan (User=ubuntu) birim 22; bunların
+#: yazılabilir ağaçtan yürüten 22'si NNP taramasına girer.
+TABAN_DOCKER_BIRIM = 22
+TABAN_NNP_BIRIM = 22
+
+
+def test_K3_korluk_alarmi_G_tarayicilari():
+    birimler = _depo_dosyalari(".service")
+    _, soket_sayi = _soket_bulgulari(birimler, _docker_kimlikleri(), str(_defaults()["docker_grubu"]))
+    _, nnp_sayi = _nnp_bulgulari(birimler, _sudo_parolasiz_kullanicilar(), _yazilabilir_kokler())
+    assert soket_sayi >= TABAN_DOCKER_BIRIM, (
+        f"docker-erişimli birim {soket_sayi} < taban {TABAN_DOCKER_BIRIM} — kimlik türetmesi/ayrıştırma kör")
+    assert nnp_sayi >= TABAN_NNP_BIRIM, f"NNP taraması {nnp_sayi} < taban {TABAN_NNP_BIRIM} — kör"
 
 
 def test_K2_korluk_alarmi_polkit_ve_python():

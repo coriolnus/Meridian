@@ -63,6 +63,9 @@ ExecStart=/opt/meridian/.venv/bin/python /opt/meridian/ops/skill_gorus_uret.py -
 # (o küme birebir-aynı seti ölçer — buraya eklemek ya bu birime gereksiz ağ açmak ya çiviyi
 # gevşetmek olurdu; ikisi de yanlış).
 NoNewPrivileges=true
+# TSK-265 düzeltme turu 1 (C1): ubuntu `docker` grubunda (TSK-195) ve soket root-eşdeğeridir — birim
+# DOSYASINDA erişilemez (drop-in sökülebilir); `/var/run/docker.sock`u da kapsar. Çivi: v614 G1.
+InaccessiblePaths=-/run/docker.sock
 CapabilityBoundingSet=
 ProtectSystem=strict
 ProtectHome=read-only

@@ -6,6 +6,13 @@
 #   dizinler     → birimler ve kum havuzları var olmayan dizine yazamaz
 #   venv         → birimlerin ExecStart'ı .venv/bin/python'a bakar; venv'siz enable edilen birim
 #                  ilk atışta 203/EXEC ile düşerdi
+#   polkit       → BİRİMLERDEN ÖNCE (TSK-265 düzeltme turu 1, güvenlik incelemesi I2). Kural tek başına
+#                  zararsızdır (yalnız ek yetki), ama bir birim yetkisini ondan alabilir: tick-watchdog
+#                  `User=ubuntu` koşar ve restart'ı 52 kuralındadır. Birimler kendi flush'larıyla
+#                  daemon-reload'u HEMEN yapar; polkit sonra koşsaydı aradaki bir kapı (sir_denetimi)
+#                  düştüğünde bekçi kuralsız kalırdı — "ilerleme var" basar, ilk gerçek ihtiyaçta
+#                  RESTART BAŞARISIZ. polkit.yml kendi flush'ıyla polkit'i birimlerden ÖNCE yeniden
+#                  başlatır (handler'lar tanım sırasıyla koşar: ortak flush'ta önce daemon-reload olurdu).
 #   birimler     → drop-in'ler var olmayan birimin .d dizinine yazılmaz
 #   sir_denetimi → DROP-IN'LERDEN ÖNCE (TUR 2, K1). Kopyalanan drop-in'lerin beşi
 #                  `LoadCredential=` taşır ve dosyaların kendi başlıkları şunu yazar: "kaynak
@@ -13,8 +20,7 @@
 #                  koymak, çalışan (ya da çalışacak) meridian.service'i başlatılamaz hâle
 #                  getirmektir. Denetim burada DURUR ve hangi betiğin koşulacağını söyler;
 #                  birim dosyaları o noktada zaten kurulmuş olur (yarım değil, kapılı yakınsama).
-#   dropinler    → polkit/hermes'ten önce: sertleştirme + credential kanalı yerinde olsun
-#   polkit       → sprint tetiği ve birim anahtarı
+#   dropinler    → hermes'ten önce: sertleştirme + credential kanalı yerinde olsun
 #   hermes       → beyin zinciri yapılandırması (ikili kurulumu ROL DIŞI)
 #   saglik       → EN SONDA: "kurulu != çalışır" hükmü (koşullu kapı, bkz. `beklenen_aktif`)
 # `tests/test_ansible_a0_v451.py::test_gorev_zinciri_tam_ve_sirali` ve
@@ -28,6 +34,9 @@
 - name: Uv ve Meridian venv'i
   ansible.builtin.import_tasks: venv.yml
 
+- name: Polkit kuralları (birimlerden ÖNCE — TSK-265 I2)
+  ansible.builtin.import_tasks: polkit.yml
+
 - name: Systemd birimleri ve kadans kapısı
   ansible.builtin.import_tasks: birimler.yml
 
@@ -36,9 +45,6 @@
 
 - name: Systemd drop-in'leri
   ansible.builtin.import_tasks: dropinler.yml
-
-- name: Polkit kuralları
-  ansible.builtin.import_tasks: polkit.yml
 
 - name: Hermes yapılandırması
   ansible.builtin.import_tasks: hermes.yml

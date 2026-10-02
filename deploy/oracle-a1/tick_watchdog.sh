@@ -147,15 +147,30 @@ esac
 # RESTART YETKİSİ POLKIT'TEDİR (TSK-265 dilim 1): birim `User=ubuntu` koşar; `systemctl restart`
 # DBus'tan geçer ve /etc/polkit-1/rules.d/52-meridian-tick-watchdog.rules onu YALNIZ bu birim +
 # bu fiil için verir. `--no-ask-password`: ajansız bir oturumda yetki sorusu sorulmaz, ret ANINDA
-# döner. RET SESSİZ BAŞARI DEĞİLDİR: systemctl'in kendi gerekçesi + kuralın yeri adlı satırla
-# basılır ve betik sıfırdan farklı çıkar → birim `failed` (journal + `systemctl --failed`).
+# döner. RET SESSİZ BAŞARI DEĞİLDİR: systemctl'in kendi gerekçesi adlı satırla basılır ve betik
+# sıfırdan farklı çıkar → birim `failed` → `OnFailure=meridian-fail-notify.service` bildirimi.
+# İKİ ARIZA, İKİ AD (düzeltme turu 1, inceleme M1): systemctl'in iletisi polkit reddini taşıyorsa
+# (Access denied · Interactive authentication required · Not authorized) YETKİ — çıkış 4, kuralın yeri
+# söylenir; taşımıyorsa birim başlatılamamıştır (ExecStart düştü vb.) — İŞ arızası, çıkış 5, polkit
+# SUÇLANMAZ (yanlış teşhis operatörü yanlış yeri onarmaya gönderirdi).
+# BAŞARIDA da çıktı basılır (M2, bedel yasası): yakalama eskiden journal'a düşen uyarıları ("unit file
+# changed on disk" = /etc depodan ayrışmış) sessizce atmamalı.
 if [ "$YAS" -gt "$BAYAT_S" ]; then
   echo "[tick-watchdog] durum ${YAS}s bayat (eşik ${BAYAT_S}s) -> ${BIRIM} yeniden başlatılıyor"
   RESTART_CIKTI="$(systemctl --no-ask-password restart "$BIRIM" 2>&1)"
   RESTART_RC=$?
   if [ "$RESTART_RC" -ne 0 ]; then
-    echo "[tick-watchdog] RESTART BAŞARISIZ: systemctl restart ${BIRIM} çıkış ${RESTART_RC} — ${RESTART_CIKTI:-çıktı yok}. Bekçi User=ubuntu koşar; yetki /etc/polkit-1/rules.d/52-meridian-tick-watchdog.rules kuralındadır (kurulum: site.yml). Bayat süreç YENİDEN BAŞLATILMADI." >&2
-    exit 4
+    case "$RESTART_CIKTI" in
+      *"Access denied"*|*"Interactive authentication required"*|*"ot authorized"*)
+        echo "[tick-watchdog] RESTART BAŞARISIZ (YETKİ): systemctl restart ${BIRIM} çıkış ${RESTART_RC} — ${RESTART_CIKTI}. Bekçi User=ubuntu koşar; yetki /etc/polkit-1/rules.d/52-meridian-tick-watchdog.rules kuralındadır (kurulum: site.yml). Bayat süreç YENİDEN BAŞLATILMADI." >&2
+        exit 4 ;;
+      *)
+        echo "[tick-watchdog] RESTART BAŞARISIZ (İŞ): systemctl restart ${BIRIM} çıkış ${RESTART_RC} — ${RESTART_CIKTI:-çıktı yok}. Yetki reddi DEĞİL (polkit iletisi yok): birim yeniden başlatılamadı — teşhis: journalctl -u ${BIRIM} -n 100." >&2
+        exit 5 ;;
+    esac
+  fi
+  if [ -n "$RESTART_CIKTI" ]; then
+    echo "[tick-watchdog] systemctl çıktısı (başarıda): ${RESTART_CIKTI}"
   fi
   echo "[tick-watchdog] ${BIRIM} yeniden başlatıldı"
 else

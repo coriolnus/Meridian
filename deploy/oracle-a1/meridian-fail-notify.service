@@ -28,6 +28,10 @@ Description=Meridian: meridian.service FAILED bildirimi (oneshot, kanal yoksa no
 [Service]
 Type=oneshot
 User=ubuntu
+# TSK-265 düzeltme turu 1 (2026-10-02) — aşağıdaki "BU BİRİME UYGULANMADI" bloğunun BEYANLI İSTİSNASI:
+# bu iki satır sertleştirme değil GÜVENLİK ŞARTIDIR ve bildirim yolunu kıramaz (gerekçe blokta).
+NoNewPrivileges=yes
+InaccessiblePaths=-/run/docker.sock
 WorkingDirectory=/opt/meridian
 Environment=PATH=/home/ubuntu/.local/bin:/usr/local/bin:/usr/bin:/bin
 # Tek satırlık gövde: kanal varsa gönder, yoksa nedenini journal'a yaz. `|| true` ve `exit 0`
@@ -60,4 +64,14 @@ SuccessExitStatus=0 1
 # doğrulandıktan SONRA, ve sertleştirilmiş hâli AYNI test-ateşlemesiyle (elle `systemctl start` +
 # operatörün telefonuna düşen bildirim) yeniden doğrulanarak. Ölçmeden sertleştirmek, bu birimde
 # "sessiz güvenlik ağı" üretir — hiç güvenlik ağı olmamasından kötüdür.
+#
+# İSTİSNA — TSK-265 düzeltme turu 1 (2026-10-02, güvenlik incelemesi I1 + C1): iki satır birim DOSYASINDA.
+#   * `NoNewPrivileges=yes`: bu birim `User=ubuntu` koşar ve ubuntu'nun yazabildiği ağaçtan yürütür
+#     (`uv run` /opt/meridian'da). ubuntu parolasız sudo taşır → NNP'siz hâli root-EŞDEĞERİDİR; NNP
+#     drop-in'de (10-sertlestirme-faz1.conf) kalırsa h3 `--geri-al` ya da deploy.sh yolu onu söker.
+#     Bildirim yolu setuid ikili çağırmaz (uv → python → HTTPS), yani NNP onu kıramaz.
+#   * `InaccessiblePaths=-/run/docker.sock`: ubuntu `docker` grubunda (TSK-195); soket root-eşdeğeridir.
+#     `-` öneki: soket yoksa satır yok sayılır, birim yine açılır.
+#   İkisi de kurulduğu gün YİNE test-ateşlenir (yukarıdaki reçete): "kurulu ≠ çalışır".
+#   Sınıf çivisi: tests/test_root_yurutur_ubuntu_yazar_v614.py (G1/G2/G3/G4).
 # ==================================================================================================

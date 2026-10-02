@@ -445,9 +445,17 @@ def test_MEVCUT_birim_dosyalari_DEGISMEDI():
     for birim in _BIRIMLER:
         m = (ORACLE / f"{birim}.service").read_text()
         yonergeler = [s for s in m.splitlines() if s and not s.lstrip().startswith("#")]
-        for y in ("SystemCallFilter", "CapabilityBoundingSet", "NoNewPrivileges"):
+        # 2026-10-02 TSK-265 DÜZELTME TURU 1 — BİLİNÇLİ GÜNCELLEME (sıkılaştırma, gevşetme DEĞİL):
+        # `NoNewPrivileges` bu listeden ÇIKTI ve tersine çevrildi — artık birim DOSYASINDA OLMAK
+        # ZORUNDA. Gerekçe (güvenlik incelemesi I1): iki birim de `User=ubuntu` koşar ve ubuntu'nun
+        # yazabildiği ağaçtan yürütür; ubuntu parolasız sudo taşır → NNP'siz hâlleri root-eşdeğeridir.
+        # Drop-in'deki NNP sökülebilir (h3 --geri-al, deploy.sh drop-in kopyalamaz). Seccomp ve yetenek
+        # kümesi drop-in'de kalır (faz sırası: seccomp EN SON) — o yarım değişmedi.
+        for y in ("SystemCallFilter", "CapabilityBoundingSet"):
             assert not any(s.startswith(f"{y}=") for s in yonergeler), \
                 f"{birim}.service içine {y} yazılmış — sertleştirme drop-in'de kalmalıydı"
+        assert "NoNewPrivileges=yes" in yonergeler, \
+            f"{birim}.service NoNewPrivileges=yes TAŞIMIYOR — drop-in'e bırakılan NNP sökülebilir (v614 G3)"
 
 
 def test_h3_uygulama_betigi_VAR_ve_runbook_bolumu_uretildi():

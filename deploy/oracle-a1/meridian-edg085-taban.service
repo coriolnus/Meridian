@@ -17,6 +17,9 @@ ExecStart=/usr/bin/bash /opt/meridian/research/olcumler/edg085_icra_ani_quote/ta
 TimeoutStartSec=60
 # H3 sertleştirme (meridian-karne.service emsali; loopback curl için AF_INET gerekli)
 NoNewPrivileges=true
+# TSK-265 düzeltme turu 1 (C1): ubuntu `docker` grubunda (TSK-195) ve soket root-eşdeğeridir — birim
+# DOSYASINDA erişilemez (drop-in sökülebilir); `/var/run/docker.sock`u da kapsar. Çivi: v614 G1.
+InaccessiblePaths=-/run/docker.sock
 ProtectSystem=strict
 ProtectHome=read-only
 ReadWritePaths=/opt/veri/olcum

@@ -139,6 +139,16 @@ geri_al() {
   sudo systemctl daemon-reload
   echo "✓ $1 sertleştirme drop-in'leri kaldırıldı (birim dosyasına hiç dokunulmamıştı)"
   systemctl show "$1" -p NoNewPrivileges -p SystemCallFilter | sed 's/^/   /'
+  # NNP KORUNUR — ÖLÇÜLÜR, VARSAYILMAZ (TSK-265 düzeltme turu 1, güvenlik incelemesi I1). İki birim de
+  # `User=ubuntu` koşar ve ubuntu'nun yazabildiği /opt/meridian'dan yürütür; ubuntu parolasız sudo taşır.
+  # NNP'siz hâlleri root-EŞDEĞERİDİR. NNP artık birim DOSYASINDA durur, yani drop-in'leri silmek onu
+  # kaldırmaz — ama /etc'deki birim eski (NNP'siz) bir kopyaysa geri alma onu sessizce açardı. Değer
+  # systemd'nin KENDİSİNDEN okunur; "yes" değilse geri alma BAŞARISIZ sayılır ve neden adıyla basılır.
+  NNP="$(systemctl show "$1" -p NoNewPrivileges --value 2>/dev/null || echo "")"
+  if [ "$NNP" != "yes" ]; then
+    die "NoNewPrivileges geri almadan sonra '${NNP:-ölçülemedi}' — $1 User=ubuntu koşar ve ubuntu ağacından yürütür; NNP'siz hâli parolasız sudo ile ROOT-EŞDEĞERİDİR. Birim dosyası NNP taşımalı (depo: deploy/oracle-a1/$1.service); /etc'deki kopya eskiyse site.yml, ardından: sudo systemctl daemon-reload"
+  fi
+  echo "✓ NoNewPrivileges=yes korundu (birim dosyasında)"
 }
 
 case "${1:-}" in

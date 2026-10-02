@@ -156,6 +156,9 @@ TimeoutStartSec=0
 #   Silinmezse zarar yok ama `systemd-analyze cat-config` iki kaynak gösterir; bu turun amacı o.
 # ==================================================================================================
 NoNewPrivileges=true
+# TSK-265 düzeltme turu 1 (C1): ubuntu `docker` grubunda (TSK-195) ve soket root-eşdeğeridir — birim
+# DOSYASINDA erişilemez (drop-in sökülebilir); `/var/run/docker.sock`u da kapsar. Çivi: v614 G1.
+InaccessiblePaths=-/run/docker.sock
 # Süreç zaten User=ubuntu (root DEĞİL) — ama systemd sınırlayıcı kümeyi boş bırakmadıkça `setuid`
 # bir ikili çalıştırılırsa kapasiteler geri gelebilirdi. Boş küme = HİÇBİR yetenek. uvicorn 8080
 # (>1024) dinliyor, CAP_NET_BIND_SERVICE GEREKMİYOR — ölçüldü: ExecStart --port 8080.

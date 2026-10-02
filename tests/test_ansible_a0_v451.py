@@ -621,14 +621,18 @@ TASKS_MAIN_YML = TASKS_DIZIN / "main.yml"
 # Görev zinciri SIRASI sözleşmedir (tasks/main.yml başlığındaki gerekçe): venv birimlerden ÖNCE
 # (ExecStart .venv'e bakar), SIR DENETİMİ drop-in'lerden ÖNCE (K1: `LoadCredential=` kaynağı
 # yoksa credential drop-in'i meridian.service'i BAŞLATILAMAZ hâle getirir), sağlık EN SONDA.
+# 2026-10-02 TSK-265 düzeltme turu 1 — BİLİNÇLİ GÜNCELLEME (güvenlik incelemesi I2): `polkit.yml`
+# `birimler.yml`den ÖNCEYE taşındı. Birimler daemon-reload'u kendi flush'larıyla hemen yapar; polkit sonra
+# koşsaydı `User=ubuntu` tick-watchdog yetkisini (52 kuralı) almadan yürürlüğe girer ve aradaki bir kapı
+# düştüğünde kuralsız kalırdı. Kural tek başına zararsızdır (yalnız ek yetki). Akış çivisi: v614 I2a.
 GOREV_SIRASI = [
     "paketler.yml",
     "dizinler.yml",
     "venv.yml",
+    "polkit.yml",
     "birimler.yml",
     "sir_denetimi.yml",
     "dropinler.yml",
-    "polkit.yml",
     "hermes.yml",
     "saglik.yml",
 ]

@@ -111,6 +111,9 @@ ExecStartPost=/usr/bin/find /home/ubuntu/backups -maxdepth 1 -name state-*.tar.g
 # `Result=success` + yeni tar dosyasını GÖRMEDEN tamamlanmış SAYILMAZ (bakim_h9.sh `[12] son doğrulama paketi` adımındaki yedek unit provası deseni).
 # ==================================================================================================
 NoNewPrivileges=true
+# TSK-265 düzeltme turu 1 (C1): ubuntu `docker` grubunda (TSK-195) ve soket root-eşdeğeridir — birim
+# DOSYASINDA erişilemez (drop-in sökülebilir); `/var/run/docker.sock`u da kapsar. Çivi: v614 G1.
+InaccessiblePaths=-/run/docker.sock
 CapabilityBoundingSet=
 ProtectSystem=strict
 ProtectHome=read-only

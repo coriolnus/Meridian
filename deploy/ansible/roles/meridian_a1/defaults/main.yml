@@ -331,8 +331,9 @@ dropin_kaynaklari:
 # --- polkit kuralları (deploy.sh 6g + A1 ölçümü: /etc/polkit-1/rules.d'de 50 ve 51) ---
 # 52 (TSK-265 dilim 1, 2026-10-02): tick-watchdog artık `User=ubuntu` koşar; meridian.service'i
 # yeniden başlatma yetkisi bu kuraldadır (manage-units · ubuntu · TAM AD meridian.service · fiil
-# restart). Birim değişikliği ile kural AYNI site.yml koşumunda iner — kural inmeden birim inerse
-# bekçi "RESTART BAŞARISIZ" satırıyla düşer (görünür, sessiz değil). Çivi: v614.
+# restart). Rol kuralı birimlerden ÖNCE kopyalar ve polkit'i birimlerin daemon-reload'undan ÖNCE yeniden
+# başlatır (tasks/main.yml sırası, TSK-265 I2); saglik.yml 52'yi pkcheck ile ölçer. Kural yine de yoksa
+# bekçi "RESTART BAŞARISIZ (YETKİ)" satırıyla düşer (görünür, sessiz değil). Çivi: v614.
 polkit_kaynaklari:
   - "{{ playbook_dir }}/../oracle-a1/50-meridian-sprint.rules"
   - "{{ playbook_dir }}/../oracle-a1/51-meridian-birim-anahtari.rules"
