@@ -4229,3 +4229,15 @@ canlıyla aynı (ilk "FARKLI" ölçümüm süreç ikamesindeki stdin hatasıydı
   ve çokluktan bağımsız, `.yarim` + KOKEN, `esitle` ÖLÇÜLEMEDİ'yi EŞİT saymaz, `cd /` + `python3 -I`. Açılan: TSK-263..268.
   Bekleyen: push → CI → dağıtım #91 (site.yml ÖNCE; `InaccessiblePaths` süreç başlarken uygulanır — botlar/telegram/litestream/
   barsarchive/learn/hindsight-api elle yeniden başlatma; watchdog tetik-testi + fail-notify test-ateşlemesi; N1 nsenter doğrulaması).
+- **Dağıtım #91 (06:50–07:01Z, main HEAD 34230aec = deployed_sha; push 06:47Z operatörün sorusu üzerine — engel sonrası İLK yeniden
+  deneme geçti, CI 36975244201 success):** site.yml kuru failed=0 → uygula `ok=64 changed=5 failed=0` (polkit 51/52 + 22 birim + watchdog
+  drop-in'leri + sohbet config'leri; sağlık kapısı pkcheck: 52 ubuntu → meridian.service restart İZİNLİ) → dagit kuru (silinecek 0, [1c]
+  aynı) → uygula `a1 ok=62 changed=5 failed=0`, healthz 200, [5b] koşan her birim dağıtılan kodu taşıyor. Canlı doğrulama: docker.sock
+  maskesi meridian/barsarchive/learn'de (dagit yeniden başlattı) ve elle yeniden başlatılan hindsight-api + litestream'de (mountinfo; worker
+  namespace'inde `s--------- root root`); watchdog User=ubuntu (YAS lütfu) + tetik-testi polkit yoluyla restart ✓ (verb canlıda geliyor);
+  fail-notify NNP + namespace altında teslim etti (operatöre 07:01Z test mesajı). Hindsight 'reflect' LLM doğrulama uyarısı 09-29
+  açılışında da vardı (dağıtımdan bağımsız). TSK-261 + TSK-262 KAPANDI (§8), `--openrouter` yasağı RUNBOOK'tan kalktı.
+- **G3c YENİDEN TEST-ATEŞLEME ✓ (06:59–07:00Z, elle start → stop):** 'MCP: registered 19 tool(s) from 3 server(s)'; `/p/sef` araç sorusu →
+  `role: tool` `mcp__meridian_sef__pano_ozeti` (cevap canlıyla tutarlı); `/p/bekci` `oneri_yaz` → araç yok (tool_search boş, dürüst);
+  anahtar kapsamı 200/401 ×3; öneksiz 401. Stop 208 ms, MCP çocukları öldü; birim `failed (exit-code)` — Hermes SIGTERM'de 1 döner
+  (alarm yok, reset-failed) → açık kalem. Botlar KAPALI; kalıcı etkinleştirme TSK-266 kapısında.

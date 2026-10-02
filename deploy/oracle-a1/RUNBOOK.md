@@ -892,8 +892,8 @@ ssh -i ~/.ssh/oci-a1.key ubuntu@130.61.126.87 'for f in /home/ubuntu/.hermes-bot
 `--esitle`) · 2 var olan dosya okunamadı ya da HEDEF sembolik bağ (sarkık/hedefli — adıyla basılır) · 1 hedef DİZİN reddedildi
 (zincirde sembolik bağ, sahip ubuntu değil, grup/diğer yazabiliyor ya da realpath beklenen yol değil — hiçbir dosya yazılmaz).
 
-**4. Ancak bundan sonra rotasyon.** ⚠️ TSK-261 kapanana dek `--openrouter` KOŞULMAZ (2026-10-01: negatif-kontrol geri alma yolu
-öngörülebilir `<hedef>.yeni` adına `sudo cp -p` yapıyor — hedef dizinin sahibi önceden bağ kurarsa root başka bir yola yazar). `--tenant`, `--api-sunucu`, `--kapi-bot <ad>` ve `--esitle` sohbet `.env`leri yokken
+**4. Ancak bundan sonra rotasyon.** (2026-10-02: `--openrouter` yasağı KALKTI — TSK-261 dağıtım #91 ile canlıda; negatif-kontrol geri alması ve yedek yolları
+fd çekirdeğinde, okuma yolu TSK-262 ile; elle `cp` reçetesi yok, geri alma `--geri-al`.) `--tenant`, `--api-sunucu`, `--kapi-bot <ad>` ve `--esitle` sohbet `.env`leri yokken
 yazım ÖNCESİ ön-denetimde durur (eksik yol ve alanı adıyla basar; kasaya hiçbir şey yazılmaz). Botlar/Telegram etkin
 değilken rotasyon onları BAŞLATMAZ: `ATLANDI (etkin değil: <durum>)` satırı basılır, kanıt "ölçülemedi" der (beklenen).
 `--kapi-bot <ad>` APISIX'i yeniden başlatır (`$env://` yalnız açılışta çözülür — birkaç saniye kapı kesintisi). Kasa kipinde (`--vault`) araç APISIX'i ancak `.env-apisix.vault` yan dosyası YENİ değere render olunca
