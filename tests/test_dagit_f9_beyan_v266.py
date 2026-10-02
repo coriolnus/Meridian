@@ -427,10 +427,13 @@ def test_dropin_FAZ2_seccomp_ve_yetenek_sifirlama():
             f"{p.name} ({birim}): seccomp satırı kayıp"
         # 2026-08-23 CANLI ÖLÇÜMLE DÜZELTİLDİ (tetik-testi bulgusu): "boş küme" beklentisi
         # root-koşan tick-watchdog'da OKUMAYI kırdı (ubuntu-0600 state dosyasına EACCES) —
-        # çivi artık birime göre: root birimi YALNIZ salt-okuma DAC yeteneği taşır (yazma
-        # yetenekleri geri gelirse kırmızı), User=ubuntu birimi boş küme taşır.
-        beklenen = (r"^CapabilityBoundingSet=CAP_DAC_READ_SEARCH$"
-                    if birim == "meridian-tick-watchdog" else r"^CapabilityBoundingSet=$")
+        # çivi birime göre ayrılmıştı: root birimi YALNIZ salt-okuma DAC yeteneği, User=ubuntu
+        # birimi boş küme.
+        # 2026-10-02 TSK-265 DİLİM 1 — BİLİNÇLİ GÜNCELLEME (sıkılaştırma, gevşetme DEĞİL):
+        # tick-watchdog artık `User=ubuntu` koşar (v614); ubuntu'ya ait dosyayı sahibi okur, DAC
+        # yeteneği gerekmez. İki birim de boş küme taşır — CAP_DAC_READ_SEARCH'ün GERİ gelmesi
+        # artık kırmızıdır (root'a dönüşün ya da gereksiz yeteneğin işareti).
+        beklenen = r"^CapabilityBoundingSet=$"
         assert re.search(beklenen, m, re.M), \
             f"{p.name} ({birim}): CapabilityBoundingSet satırı beklenenden farklı ({beklenen})"
 
@@ -442,9 +445,17 @@ def test_MEVCUT_birim_dosyalari_DEGISMEDI():
     for birim in _BIRIMLER:
         m = (ORACLE / f"{birim}.service").read_text()
         yonergeler = [s for s in m.splitlines() if s and not s.lstrip().startswith("#")]
-        for y in ("SystemCallFilter", "CapabilityBoundingSet", "NoNewPrivileges"):
+        # 2026-10-02 TSK-265 DÜZELTME TURU 1 — BİLİNÇLİ GÜNCELLEME (sıkılaştırma, gevşetme DEĞİL):
+        # `NoNewPrivileges` bu listeden ÇIKTI ve tersine çevrildi — artık birim DOSYASINDA OLMAK
+        # ZORUNDA. Gerekçe (güvenlik incelemesi I1): iki birim de `User=ubuntu` koşar ve ubuntu'nun
+        # yazabildiği ağaçtan yürütür; ubuntu parolasız sudo taşır → NNP'siz hâlleri root-eşdeğeridir.
+        # Drop-in'deki NNP sökülebilir (h3 --geri-al, deploy.sh drop-in kopyalamaz). Seccomp ve yetenek
+        # kümesi drop-in'de kalır (faz sırası: seccomp EN SON) — o yarım değişmedi.
+        for y in ("SystemCallFilter", "CapabilityBoundingSet"):
             assert not any(s.startswith(f"{y}=") for s in yonergeler), \
                 f"{birim}.service içine {y} yazılmış — sertleştirme drop-in'de kalmalıydı"
+        assert "NoNewPrivileges=yes" in yonergeler, \
+            f"{birim}.service NoNewPrivileges=yes TAŞIMIYOR — drop-in'e bırakılan NNP sökülebilir (v614 G3)"
 
 
 def test_h3_uygulama_betigi_VAR_ve_runbook_bolumu_uretildi():

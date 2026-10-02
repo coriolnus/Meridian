@@ -64,6 +64,9 @@ RestartSec=10
 # kalem (ReadWritePaths) ve bu birime özgü ölçülmemiş kalem (SystemCallFilter) yazılıdır.
 # ==================================================================================================================
 NoNewPrivileges=true
+# TSK-265 düzeltme turu 1 (C1): ubuntu `docker` grubunda (TSK-195) ve soket root-eşdeğeridir — birim
+# DOSYASINDA erişilemez (drop-in sökülebilir); `/var/run/docker.sock`u da kapsar. Çivi: v614 G1.
+InaccessiblePaths=-/run/docker.sock
 CapabilityBoundingSet=
 ProtectSystem=strict
 ProtectHome=read-only

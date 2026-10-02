@@ -7,6 +7,10 @@
 # tavizini VERMEDEN (H3 koruma kalemi yerinde kalır).
 # 51-meridian-birim-anahtari.rules: A1'de canlı (ölçüldü), deploy.sh onu HİÇ kurmuyordu —
 # taze kurulumda eksik kalırdı. Rol ikisini de tek kaynaktan kurar.
+# 52-meridian-tick-watchdog.rules (TSK-265 dilim 1, 2026-10-02): tick-watchdog root'tan çıktı
+# (`User=ubuntu`); tek root gerekçesi olan `systemctl restart meridian.service` bu dar kurala taşındı.
+# Kural birim dosyasından (birimler.yml) ÖNCE iner ve polkit o birim yürürlüğe girmeden yeniden
+# başlar (aşağıdaki flush; TSK-265 I2) — kısmi bir koşum bekçiyi kuralsız bırakamaz.
 #
 # DAVRANIŞ FARKI, BİLEREK (README'de de yazılı): deploy.sh polkit'i HER koşuda restart ediyordu;
 # burada restart yalnız kural dosyası GERÇEKTEN değiştiğinde (handler) olur. Her koşuda restart
@@ -20,3 +24,11 @@
     mode: "0644"
   loop: "{{ polkit_kaynaklari }}"
   notify: polkit-yeniden-baslat
+
+# SIRA (TSK-265 düzeltme turu 1, I2): bu dosya birimlerden ÖNCE koşar ve polkit restart'ı BURADA
+# boşaltılır. Ortak bir flush'a bırakılsaydı handler'lar TANIM sırasıyla koşar (handlers/main.yml:
+# önce daemon-reload, sonra polkit) — yani yeni birim (`User=ubuntu` bekçi) polkit kuralından ÖNCE
+# yürürlüğe girerdi. Bu noktaya dek bildirim üreten başka görev yok (notify yalnız polkit, birimler,
+# dropinler'de), yani bu flush yalnız polkit restart'ını koşturur. Çivi: v614 I2a.
+- name: Handler'ları burada boşalt (polkit restart, birimlerden ÖNCE)
+  ansible.builtin.meta: flush_handlers

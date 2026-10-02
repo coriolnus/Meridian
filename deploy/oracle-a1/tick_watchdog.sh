@@ -104,31 +104,75 @@ fi
 # sistemin sağlıklı olduğunu İDDİA etmek olurdu; eski gömülü sürüm tam bunu yapıyordu
 # (`|| echo 0`). Burada ölçülemeyen hâl AYRI bir dal ve restart TETİKLEMEZ (bekçinin kendi
 # arızası, izlenen sürecin arızası değil) ama journal'da sessiz de kalmaz.
-YAS="$(python3 - "$DURUM_DOSYASI" <<'PY' 2>/dev/null
-import datetime as dt, json, sys
+#
+# OKUMA SÖZLEŞMESİ (TSK-265 dilim 1, 2026-10-02). Durum dosyasını ubuntu süreçleri yazar; birim
+# 2026-10-02'ye dek ROOT koşuyordu, artık `User=ubuntu` koşar — okuma bir yetki sınırını GEÇMEZ.
+# Arıza şekli yine de sözleşmelidir, çünkü bekçinin bekçisi yoktur:
+#   * `python3 -I` — PYTHONPATH/PYTHONHOME/kullanıcı site-packages ve çalışma dizini yorumlayıcının
+#     ithal yoluna GİRMEZ (betik heredoc'tan koşar; ithal edilen tek şey stdlib).
+#   * `O_NONBLOCK` — yolun yerinde bir FIFO dursaydı düz `open()` bir yazar gelene dek SONSUZA
+#     asılırdı: timer'ın oneshot'u hiç bitmez, sonraki tetikler kuyrukta kalır, bekçi SUSAR.
+#     Bloklamasız açılış anında döner; ardından `fstat` düzenli dosya değilse ÖLÇÜLEMEDİ.
+#   * `O_NOFOLLOW` — son bileşen bir bağsa izlenmez (ELOOP → ÖLÇÜLEMEDİ). Üretici dosyayı atomik
+#     tmp+replace ile DÜZENLİ dosya olarak yazar (`store.write_json`); bağ beklenen bir hâl değildir.
+# ÖLÇÜLEMEDİ'NİN NEDENİ stdout'tan gelir ve journal satırına girer. Eski hâlde neden stderr'e
+# basılıp `2>/dev/null` ile atılıyordu — FIFO, eksik dosya ve bozuk JSON journal'da AYNI satırdı.
+# stderr artık bastırılmaz: yorumlayıcının kendi arızası (ör. bilinmeyen bayrak) journal'a düşer.
+YAS="$(python3 -I - "$DURUM_DOSYASI" <<'PY'
+import datetime as dt, json, os, stat, sys
 try:
-    with open(sys.argv[1]) as f:
-        d = json.load(f)
+    fd = os.open(sys.argv[1], os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW)
+    with os.fdopen(fd, "rb") as f:
+        kip = os.fstat(f.fileno()).st_mode
+        if not stat.S_ISREG(kip):
+            raise ValueError(f"duzenli dosya degil ({stat.filemode(kip)})")
+        d = json.loads(f.read())
     t = dt.datetime.fromisoformat(str(d["updated"]))
     if t.tzinfo is None:
         t = t.replace(tzinfo=dt.timezone.utc)
     print(int((dt.datetime.now(dt.timezone.utc) - t).total_seconds()))
 except Exception as e:
-    print(f"OLCULEMEDI {type(e).__name__}", file=sys.stderr)
+    print(f"OLCULEMEDI {type(e).__name__}: {str(e)[:160]}".replace("\n", " "))
     sys.exit(3)
 PY
 )"
 
 case "$YAS" in
   ''|*[!0-9-]*)
-    echo "[tick-watchdog] ÖLÇÜLEMEDİ: ${DURUM_DOSYASI} okunamadı/ayrıştırılamadı — hüküm VERİLMEDİ (restart YOK). Bekçinin kendi arızası izlenen sürecin arızası sayılmaz."
+    echo "[tick-watchdog] ÖLÇÜLEMEDİ: ${DURUM_DOSYASI} okunamadı/ayrıştırılamadı (${YAS:-neden yok: yorumlayıcı çıktı vermedi}) — hüküm VERİLMEDİ (restart YOK). Bekçinin kendi arızası izlenen sürecin arızası sayılmaz."
     exit 0 ;;
 esac
 
 # ---- (3) HÜKÜM --------------------------------------------------------------------------------
+# RESTART YETKİSİ POLKIT'TEDİR (TSK-265 dilim 1): birim `User=ubuntu` koşar; `systemctl restart`
+# DBus'tan geçer ve /etc/polkit-1/rules.d/52-meridian-tick-watchdog.rules onu YALNIZ bu birim +
+# bu fiil için verir. `--no-ask-password`: ajansız bir oturumda yetki sorusu sorulmaz, ret ANINDA
+# döner. RET SESSİZ BAŞARI DEĞİLDİR: systemctl'in kendi gerekçesi adlı satırla basılır ve betik
+# sıfırdan farklı çıkar → birim `failed` → `OnFailure=meridian-fail-notify.service` bildirimi.
+# İKİ ARIZA, İKİ AD (düzeltme turu 1, inceleme M1): systemctl'in iletisi polkit reddini taşıyorsa
+# (Access denied · Interactive authentication required · Not authorized) YETKİ — çıkış 4, kuralın yeri
+# söylenir; taşımıyorsa birim başlatılamamıştır (ExecStart düştü vb.) — İŞ arızası, çıkış 5, polkit
+# SUÇLANMAZ (yanlış teşhis operatörü yanlış yeri onarmaya gönderirdi).
+# BAŞARIDA da çıktı basılır (M2, bedel yasası): yakalama eskiden journal'a düşen uyarıları ("unit file
+# changed on disk" = /etc depodan ayrışmış) sessizce atmamalı.
 if [ "$YAS" -gt "$BAYAT_S" ]; then
   echo "[tick-watchdog] durum ${YAS}s bayat (eşik ${BAYAT_S}s) -> ${BIRIM} yeniden başlatılıyor"
-  systemctl restart "$BIRIM"
+  RESTART_CIKTI="$(systemctl --no-ask-password restart "$BIRIM" 2>&1)"
+  RESTART_RC=$?
+  if [ "$RESTART_RC" -ne 0 ]; then
+    case "$RESTART_CIKTI" in
+      *"Access denied"*|*"Interactive authentication required"*|*"ot authorized"*)
+        echo "[tick-watchdog] RESTART BAŞARISIZ (YETKİ): systemctl restart ${BIRIM} çıkış ${RESTART_RC} — ${RESTART_CIKTI}. Bekçi User=ubuntu koşar; yetki /etc/polkit-1/rules.d/52-meridian-tick-watchdog.rules kuralındadır (kurulum: site.yml). Bayat süreç YENİDEN BAŞLATILMADI." >&2
+        exit 4 ;;
+      *)
+        echo "[tick-watchdog] RESTART BAŞARISIZ (İŞ): systemctl restart ${BIRIM} çıkış ${RESTART_RC} — ${RESTART_CIKTI:-çıktı yok}. Yetki reddi DEĞİL (polkit iletisi yok): birim yeniden başlatılamadı — teşhis: journalctl -u ${BIRIM} -n 100." >&2
+        exit 5 ;;
+    esac
+  fi
+  if [ -n "$RESTART_CIKTI" ]; then
+    echo "[tick-watchdog] systemctl çıktısı (başarıda): ${RESTART_CIKTI}"
+  fi
+  echo "[tick-watchdog] ${BIRIM} yeniden başlatıldı"
 else
   echo "[tick-watchdog] ilerleme var (${YAS}s / eşik ${BAYAT_S}s)"
 fi

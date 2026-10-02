@@ -18,11 +18,53 @@
 # BU DOSYA DEPODA VERSİYONLANIR (bu turdan önce YALNIZ A1'in /etc/systemd/system'inde yaşıyordu —
 # yani hiçbir gözden geçirmeye, hiçbir teste ve hiçbir yeniden kuruluma dahil değildi; taze bir
 # cutover panoyu bu korumasız açardı).
+#
+# 2026-10-02 TSK-265 DİLİM 1 — ROOT'TAN ÇIKTI ("ROOT YÜRÜTÜR, UBUNTU YAZAR" sınıfı):
+#   Bu birimde `User=` YOKTU, yani ROOT koşuyordu ve ExecStart'ı ubuntu'nun yazabildiği
+#   /opt/meridian ağacındaydı (dosyalar ubuntu:ubuntu 755 — Rol-1 A1 ölçümü 03:0xZ). Kum
+#   havuzundaki ele geçirilmiş bir ubuntu birimi (beşi `ReadWritePaths=/opt/meridian` taşır)
+#   tick_watchdog.sh'yi değiştirse, bir sonraki timer tetiğinde ROOT kod yürürdü. Root'un TEK
+#   gerekçesi `systemctl restart meridian.service` idi; o yetki artık DAR bir polkit kuralında
+#   (deploy/oracle-a1/52-meridian-tick-watchdog.rules: manage-units · ubuntu · meridian.service ·
+#   fiil restart). Rol-1 kararı R1: betik root sahipli bir kopyaya TAŞINMADI — root kod kalırdı.
+#   SONUÇ — KOŞULLU (düzeltme turu 1, güvenlik incelemesi I1): ExecStart aynı yolda, ubuntu →
+#   ubuntu, ama bu YALNIZ `NoNewPrivileges` yürürlükteyken yükseltmesizdir: ubuntu parolasız sudo
+#   taşır, NNP'siz bir ubuntu bekçisi betiğe eklenen `sudo …` ile root olurdu. Bu yüzden NNP BU
+#   DOSYADA durur (drop-in sökülebilir: h3 --geri-al, deploy.sh drop-in kopyalamaz). Kum havuzu
+#   kaçışı başka yollardan da açıktır ve bu dilim onları kapatmaz: 51'in manage-unit-files /
+#   reload-daemon YES'leri (TSK-266) ve ReadWritePaths=/opt/meridian (TSK-268). Docker soketi (C1)
+#   aşağıda kapatıldı. Betik diske YAZMAZ (journal'a konuşur) → `ReadWritePaths` BİLEREK YOK;
+#   ubuntu sahipli 0600 durum dosyasını okumak için yetenek de gerekmez → faz-2 boş küme taşır.
+#   KURULUM SIRASI (düzeltme turu 1, I2): A0 rolü polkit kuralını birimlerden ÖNCE kopyalar ve
+#   polkit'i birimlerin daemon-reload'undan ÖNCE yeniden başlatır; saglik.yml 52'yi pkcheck ile
+#   ölçer. Kural yine de yoksa restart reddedilir, betik "RESTART BAŞARISIZ (YETKİ)" ile 4 döner
+#   → birim `failed` → OnFailure bildirimi. Sessiz başarı yok.
+#   ACİL DURUM (bekçi restart edemiyorsa) — BİRİM ROOT'A DÖNDÜRÜLMEZ (sınıfı yeniden açar):
+#     1) sudo systemctl stop meridian-tick-watchdog.timer   (bekçi duraklar; panodan/journal'dan izle)
+#     2) ls -l /etc/polkit-1/rules.d/52-meridian-tick-watchdog.rules ; journalctl -u polkit -n 20
+#     3) sudo pkcheck --action-id org.freedesktop.systemd1.manage-units --process <ubuntu pid>
+#          --detail unit meridian.service --detail verb restart   (0 = izinli)
+#     4) kural eksikse site.yml; meridian'ı gerekirse ELLE `sudo systemctl restart meridian`;
+#        sonda timer'ı geri başlat.
+#   ÇİVİ: tests/test_root_yurutur_ubuntu_yazar_v614.py (sınıf tarayıcıları + bu örnek).
 [Unit]
 Description=Meridian tick-progress bekçisi (scheduler_status.updated 45 dk bayatsa restart + journal kaydı)
+# BAŞARISIZLIĞIN OKUYUCUSU (Yasa 6, düzeltme turu 1, M1): bekçi restart'ı düşerse (YETKİ 4 / İŞ 5)
+# birim `failed` olur; emsal vault-admin-yenile (timer'lı oneshot) ile aynı bağ bildirimi tetikler.
+# BEDEL BEYANLI: fail-notify'ın metni sabittir ("meridian.service FAILED") — bekçi arızasında da
+# meridian bayattır ve yeniden başlatılamamıştır, yani ileti yanlış YÖNE işaret etmez; birim adını
+# taşıyan ileti (MONITOR_UNIT) ayrı kalem.
+OnFailure=meridian-fail-notify.service
 
 [Service]
 Type=oneshot
+User=ubuntu
+Group=ubuntu
+# NNP BU DOSYADA (I1): drop-in'e bırakılırsa sökülebilir ve NNP'siz ubuntu bekçisi root-eşdeğeridir.
+NoNewPrivileges=yes
+# DOCKER SOKETİ ERİŞİLEMEZ (C1): ubuntu `docker` grubunda (operatör kararı TSK-195); soket root-eşdeğeridir.
+# `/var/run` → `/run` bağı olduğundan /var/run/docker.sock da kapsanır. `-`: soket yoksa birim yine açılır.
+InaccessiblePaths=-/run/docker.sock
 # EŞİĞİ GEÇİCİ OLARAK DEĞİŞTİRMEK GEREKİRSE: `systemctl edit meridian-tick-watchdog.service` ile
 # drop-in'e `Environment=MERIDIAN_TICK_BAYAT_S=...` eklenir. Betik böyle bir sapmayı HER KOŞUDA
 # journal'a BEYAN eder — sessiz gevşetme bu turda kapatılan kusurdur.

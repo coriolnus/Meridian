@@ -28,6 +28,9 @@ ExecStart=/opt/meridian/.venv/bin/python /opt/meridian/ops/vault_sagligi.py
 # BEYANLI AYRIŞMA: `RestrictAddressFamilies=AF_INET AF_UNIX` — bu birim DIŞA çıkmaz, yalnız
 # 127.0.0.1:8200'e bağlanır; AF_INET6 kardeşlerde var, burada yok (en-az-yetki).
 NoNewPrivileges=true
+# TSK-265 düzeltme turu 1 (C1): ubuntu `docker` grubunda (TSK-195) ve soket root-eşdeğeridir — birim
+# DOSYASINDA erişilemez (drop-in sökülebilir); `/var/run/docker.sock`u da kapsar. Çivi: v614 G1.
+InaccessiblePaths=-/run/docker.sock
 CapabilityBoundingSet=
 ProtectSystem=strict
 ProtectHome=read-only

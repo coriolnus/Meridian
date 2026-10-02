@@ -73,6 +73,84 @@
       Bu ATLAMA bir sağlık HÜKMÜ DEĞİLDİR: "kurulu != çalışır" sorusu cevapsız kalmıştır.
   when: (not (beklenen_aktif | bool)) or ansible_check_mode
 
+# TSK-265 düzeltme turu 1 (güvenlik incelemesi I2) — BEKÇİNİN RESTART YETKİSİ "kurulu ≠ çalışır".
+# tick-watchdog `User=ubuntu` koşar; meridian.service'i yeniden başlatma yetkisi YALNIZ
+# 52-meridian-tick-watchdog.rules'tadır. Kural eksik/bozuksa bekçi her koşuda "ilerleme var" basar ve
+# sağlıklı görünür — ilk gerçek ihtiyaçta RESTART BAŞARISIZ. Bu kapı yetkiyi MÜDAHALESİZ ölçer:
+# root olarak `pkcheck`, özne herhangi bir ubuntu süreci (kural `subject.user`a bakar), ayrıntılar
+# systemd'nin restart'ta geçirdiğinin aynısı (unit=meridian.service, verb=restart). Hiçbir şey
+# yeniden başlatılmaz. pkcheck(1) çıkışları: 0 izinli · 1 izinsiz · 2 etkileşim gerekir (kural
+# eşleşmedi) · 3 iptal · 127 sorgu hatası.
+# ÖLÇÜLEMEYEN HÂL KAPI DEĞİL RAPORDUR (K4 disiplini): ikili yok / ubuntu süreci yok / 127 / check-mode
+# → adıyla basılır, "geçti" SAYILMAZ. Beklenti (ÖLÇÜLMEDİ, ilk koşum ölçer): root çağıran başka bir
+# kimliğin süreci için ayrıntılı sorgu yapabilir; root OLMAYAN bir çağıranın ayrıntı geçirmesi
+# polkit'te güvenilir-çağıran kısıtına takılır — bekçinin kendi kendini sınaması bu yüzden yazılmadı.
+- name: Bekçi restart yetkisi — pkcheck ikilisi var mı (ÖLÇÜM)
+  ansible.builtin.stat:
+    path: /usr/bin/pkcheck
+  register: pkcheck_ikili
+
+- name: Bekçi restart yetkisi — ubuntu öznesi (ÖLÇÜM; herhangi bir ubuntu süreci)
+  ansible.builtin.command:
+    cmd: "pgrep -o -u {{ meridian_kullanici }}"
+  register: pkcheck_ozne
+  changed_when: false
+  failed_when: pkcheck_ozne.rc not in [0, 1]
+  when: not ansible_check_mode
+
+- name: Bekçi restart yetkisi — pkcheck (ÖLÇÜM; root çağıran, ubuntu öznesi, restart ayrıntıları)
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/pkcheck
+      - --action-id
+      - org.freedesktop.systemd1.manage-units
+      - --process
+      - "{{ pkcheck_ozne.stdout | trim }}"
+      - --detail
+      - unit
+      - meridian.service
+      - --detail
+      - verb
+      - restart
+  register: pkcheck_sonuc
+  changed_when: false
+  failed_when: pkcheck_sonuc.rc not in [0, 1, 2, 3, 127]
+  when:
+    - not ansible_check_mode
+    - pkcheck_ikili.stat.exists
+    - (pkcheck_ozne.rc | default(1)) == 0
+
+- name: KAPI — 52 kuralı ubuntu öznesine meridian.service restart'ını VERİR
+  ansible.builtin.assert:
+    that:
+      - pkcheck_sonuc.rc == 0
+    fail_msg: >-
+      BEKÇİ YETKİSİZ: pkcheck çıkış {{ pkcheck_sonuc.rc }} (1 izinsiz · 2 kural eşleşmedi, etkileşim
+      ister · 3 iptal). tick-watchdog meridian.service'i yeniden BAŞLATAMAZ — asılı-tick koruması dişsiz.
+      Teşhis: `ls -l /etc/polkit-1/rules.d/52-meridian-tick-watchdog.rules`, `journalctl -u polkit -n 20`.
+      stderr: {{ pkcheck_sonuc.stderr | default('') }}
+    success_msg: "52-meridian-tick-watchdog.rules: ubuntu → meridian.service restart İZİNLİ (pkcheck 0)"
+  when:
+    - not ansible_check_mode
+    - pkcheck_sonuc is not skipped
+    - (pkcheck_sonuc.rc | default(-1)) in [0, 1, 2, 3]
+
+- name: Bekçi restart yetkisi ÖLÇÜLEMEDİ — neden (pkcheck kapısı kapalıyken tek çıktı budur)
+  ansible.builtin.debug:
+    msg: >-
+      BEKÇİ YETKİ KAPISI (pkcheck) ÖLÇÜLEMEDİ — neden:
+      {{ 'check-mode (--check): command görevleri koşmaz' if ansible_check_mode
+         else ('/usr/bin/pkcheck yok' if not pkcheck_ikili.stat.exists
+         else ('ubuntu süreci bulunamadı (pgrep çıkış ' ~ (pkcheck_ozne.rc | default('?')) ~ ')'
+               if (pkcheck_ozne.rc | default(1)) != 0
+         else 'pkcheck sorgu hatası (127): ' ~ (pkcheck_sonuc.stderr | default('')))) }}.
+      Bu bir yetki HÜKMÜ DEĞİLDİR: 52 kuralının çalıştığı bu koşumda ölçülmedi.
+  when: >-
+    ansible_check_mode
+    or (not pkcheck_ikili.stat.exists)
+    or ((pkcheck_ozne.rc | default(1)) != 0)
+    or ((pkcheck_sonuc.rc | default(-1)) == 127)
+
 - name: Timer envanteri  # noqa: command-instead-of-module
   # RAPOR, KAPI DEĞİL (Rol-1 hükmü 6): timer'ların "next elapse" değeri kadans kararına bağlıdır
   # ve kapalı bir kadans arıza DEĞİLDİR — düşürmek yanlış alarm üretirdi.

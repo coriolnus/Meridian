@@ -55,6 +55,9 @@ ExecStart=/usr/bin/python3 /opt/meridian/deploy/oracle-a1/aylik_bucket_kopya.py
 #   journalctl -u meridian-aylik-bucket-kopya --since "2 months ago" | grep '"yuklendi"'
 # ==================================================================================================
 NoNewPrivileges=true
+# TSK-265 düzeltme turu 1 (C1): ubuntu `docker` grubunda (TSK-195) ve soket root-eşdeğeridir — birim
+# DOSYASINDA erişilemez (drop-in sökülebilir); `/var/run/docker.sock`u da kapsar. Çivi: v614 G1.
+InaccessiblePaths=-/run/docker.sock
 CapabilityBoundingSet=
 ProtectSystem=strict
 ProtectHome=read-only

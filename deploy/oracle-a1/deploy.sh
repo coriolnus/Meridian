@@ -25,6 +25,10 @@
 #  ölçülür):
 #   * deploy/oracle-a1/meridian-sprint@.service   → /etc/systemd/system/  (v241 sprint cgroup birimi)
 #   * deploy/oracle-a1/50-meridian-sprint.rules   → /etc/polkit-1/rules.d/  (v241 tetik izni)
+#   * deploy/oracle-a1/51-meridian-birim-anahtari.rules → /etc/polkit-1/rules.d/  (TSK-098 pano birim
+#     anahtarı; KURULUMU BU BETİKTE DEĞİL — A0 rolü `site.yml` kurar)
+#   * deploy/oracle-a1/52-meridian-tick-watchdog.rules → /etc/polkit-1/rules.d/  (TSK-265: bekçi
+#     `User=ubuntu` koşar, meridian.service'i YALNIZ restart edebilsin; A0 rolü ve bu betik kurar)
 #   * deploy/hermes/SOUL.md                       → ~ubuntu/.hermes/SOUL.md  (v242 hermes brifingi)
 #   * deploy/hermes/config.yaml                   → ~ubuntu/.hermes/config.yaml  (v326 ajan duruşu)
 #   * deploy/oracle-a1/meridian-tick-watchdog.service → /etc/systemd/system/  (asılı-tick bekçisi)
@@ -334,6 +338,10 @@ sudo cp deploy/oracle-a1/meridian-sprint@.service       /etc/systemd/system/meri
 # `NoNewPrivileges=no` tavizini VERMEDEN (H3 koruma kalemi yerinde kalır). Eşlik eden satır:
 # meridian.service `Environment=MERIDIAN_SPRINT_SYSTEMCTL=/usr/bin/systemctl` (tetiği sudo'suz yapar).
 sudo cp deploy/oracle-a1/50-meridian-sprint.rules       /etc/polkit-1/rules.d/50-meridian-sprint.rules
+# TICK-WATCHDOG RESTART YETKİSİ (TSK-265 dilim 1, 2026-10-02): bekçi artık `User=ubuntu` koşar (root
+# kodu kalktı); meridian.service'i yeniden başlatma yetkisi bu dar kuraldadır. Birim dosyası yukarıda
+# kopyalandı — kural inmezse aşağıdaki test-ateşlemesi "RESTART BAŞARISIZ" satırında DURUR.
+sudo cp deploy/oracle-a1/52-meridian-tick-watchdog.rules /etc/polkit-1/rules.d/52-meridian-tick-watchdog.rules
 sudo systemctl restart polkit
 # HERMES BRİFİNGİ (SOUL.md) — v242, 2026-08-13. tick-watchdog ve polkit ile AYNI SINIF: dosya
 # CANLIDA elle kurulmuştu ve depoda YOKTU, yani taze bir kurulum beyni brifingsiz açardı (ya da
@@ -696,7 +704,14 @@ if [ "$TICK_TIMER" != "active" ]; then
   echo "!! meridian-tick-watchdog.timer AKTİF DEĞİL — asılı-tick koruması yok"; exit 1
 fi
 case "$TICK_CIKTI" in
-  *"ilerleme var ("[0-9]*|*"bayat"*|*"ÖLÇÜLEMEDİ"*|*"YAS lütfu"*) : ;;
+  # TSK-265 dilim 1: bekçi User=ubuntu koşar; restart'ın kendisi düşerse SON satır "RESTART BAŞARISIZ"
+  # olur ve bu bir hüküm değil ARIZADIR — genel "beklenen satır yok" iletisine düşmeden adıyla durur.
+  # İKİ AD (düzeltme turu 1, M1): YETKİ (polkit reddi → 52 kuralı) ile İŞ (birim başlatılamadı →
+  # meridian'ın kendi journal'ı) ayrı onarım yeridir; ikisini aynı iletiye bağlamak yanlış teşhistir.
+  # Başarılı restart'ın son satırı artık "yeniden başlatıldı"dır ("bayat" satırından SONRA basılır).
+  *"RESTART BAŞARISIZ (YETKİ)"*) echo "!! tick-watchdog restart YETKİSİ yok — /etc/polkit-1/rules.d/52-meridian-tick-watchdog.rules kurulu mu? çıktı: $TICK_CIKTI"; exit 1 ;;
+  *"RESTART BAŞARISIZ (İŞ)"*) echo "!! tick-watchdog meridian.service'i yeniden başlatamadı (İŞ arızası, yetki değil) — journalctl -u meridian -n 100. çıktı: $TICK_CIKTI"; exit 1 ;;
+  *"ilerleme var ("[0-9]*|*"bayat"*|*"yeniden başlatıldı"*|*"ÖLÇÜLEMEDİ"*|*"YAS lütfu"*) : ;;
   *) echo "!! tick-watchdog beklenen hüküm satırını basmadı (systemd \$ ikamesi sınıfı?) — çıktı: ${TICK_CIKTI:-(YOK)}"; exit 1 ;;
 esac
 
